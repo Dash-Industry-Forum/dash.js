@@ -47,6 +47,7 @@ function XHRLoader() {
      * @param {CommonMediaResponse} httpResponse
      */
     function load(httpRequest, httpResponse) {
+        xhr = null;
         xhr = new XMLHttpRequest();
         xhr.open(httpRequest.method, httpRequest.url, true);
 
@@ -85,16 +86,23 @@ function XHRLoader() {
     }
 
     function abort() {
-        xhr.onloadend = xhr.onerror = xhr.onprogress = null; // Ignore events from aborted requests.
-        xhr.abort();
+        if (xhr) {
+            xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null; // Remove event listeners
+            xhr.abort();
+            xhr = null;
+        }
     }
 
     function getXhr() {
         return xhr
     }
 
+    function resetInitialSettings() {
+        abort();
+    }
+
     function reset() {
-        xhr = null;
+        abort();
         instance = null;
     }
 
@@ -102,7 +110,8 @@ function XHRLoader() {
         load,
         abort,
         getXhr,
-        reset
+        reset,
+        resetInitialSettings
     };
 
     return instance;

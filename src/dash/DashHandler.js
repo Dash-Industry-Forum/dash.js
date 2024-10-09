@@ -142,7 +142,7 @@ function DashHandler(config) {
         request.range = representation.range;
         request.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationStartTime, representation, isDynamicManifest);
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
-        request.representation = representation;
+        request.representation = representation.cloneWithoutAdaptation();
 
         if (_setRequestUrl(request, representation.initialization, representation)) {
             request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
@@ -180,7 +180,7 @@ function DashHandler(config) {
         request.wallStartTime = segment.wallStartTime;
         request.index = segment.index;
         request.adaptationIndex = representation.adaptation.index;
-        request.representation = representation;
+        request.representation = representation.cloneWithoutAdaptation();
 
         if (_setRequestUrl(request, url, representation)) {
             return request;

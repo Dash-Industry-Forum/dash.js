@@ -153,6 +153,12 @@ function FragmentLoader(config) {
         }
     }
 
+    function resetInitialSettings() {
+        if (urlLoader) {
+            urlLoader.resetInitialSettings();
+        }
+    }
+
     function reset() {
         if (urlLoader) {
             urlLoader.abort();
@@ -162,10 +168,11 @@ function FragmentLoader(config) {
     }
 
     instance = {
+        abort,
         checkForExistence,
         load,
-        abort,
-        reset
+        reset,
+        resetInitialSettings
     };
 
     setup();

@@ -72,10 +72,18 @@ function URLLoader(cfg) {
         }
     }
 
+    function resetInitialSettings() {
+        if (loader && typeof loader.resetInitialSettings === 'function') {
+            loader.resetInitialSettings();
+        }
+    }
+
     function reset() {
-        schemeLoaderFactory.reset();
-        schemeLoaderFactory = null;
-        if (loader && loader.reset === 'function') {
+        if (schemeLoaderFactory) {
+            schemeLoaderFactory.reset();
+            schemeLoaderFactory = null;
+        }
+        if (loader && typeof loader.reset === 'function') {
             loader.reset();
         }
         loader = null;
@@ -84,7 +92,8 @@ function URLLoader(cfg) {
     instance = {
         abort,
         load,
-        reset
+        reset,
+        resetInitialSettings
     };
 
     return instance;

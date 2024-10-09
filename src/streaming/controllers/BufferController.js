@@ -1256,12 +1256,16 @@ function BufferController(config) {
         if (sourceBufferSink) {
             let tmpSourceBufferSinkToReset = sourceBufferSink;
             sourceBufferSink = null;
-            if (!errored && !keepBuffers) {
-                tmpSourceBufferSinkToReset.abort()
-                    .then(() => {
-                        tmpSourceBufferSinkToReset.reset(keepBuffers);
-                        tmpSourceBufferSinkToReset = null;
-                    });
+            if (!errored) {
+                if (!keepBuffers) {
+                    tmpSourceBufferSinkToReset.abort()
+                        .then(() => {
+                            tmpSourceBufferSinkToReset.reset(keepBuffers);
+                            tmpSourceBufferSinkToReset = null;
+                        });
+                } else {
+                    tmpSourceBufferSinkToReset.removeEventListeners();
+                }
             }
         }
 

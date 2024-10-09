@@ -601,6 +601,7 @@ function BolaRule(config) {
         const mediaType = rulesContext.getMediaType();
         const streamId = rulesContext.getStreamInfo().id;
         if (!bolaStateDict[streamId]) {
+            bolaStateDict = {};
             bolaStateDict[streamId] = {};
         }
         let bolaState = bolaStateDict[streamId][mediaType];

@@ -164,7 +164,7 @@ function SourceBufferSink(config) {
         return type;
     }
 
-    function _removeEventListeners() {
+    function removeEventListeners() {
         try {
             if (typeof buffer.removeEventListener === 'function') {
                 buffer.removeEventListener('updateend', _updateEndHandler, false);
@@ -243,7 +243,7 @@ function SourceBufferSink(config) {
         if (buffer) {
             try {
                 callbacks = [];
-                _removeEventListeners();
+                removeEventListeners();
                 isAppendingInProgress = false;
                 appendQueue = [];
                 if (!buffer.getClassName || buffer.getClassName() !== 'TextSourceBuffer') {
@@ -477,6 +477,7 @@ function SourceBufferSink(config) {
         initializeForFirstUse,
         initializeForStreamSwitch,
         remove,
+        removeEventListeners,
         reset,
         updateAppendWindow,
         updateTimestampOffset,

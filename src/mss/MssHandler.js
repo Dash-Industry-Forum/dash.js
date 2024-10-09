@@ -136,7 +136,7 @@ function MssHandler(config) {
         request.type = initSegmentType;
         request.range = representation.range;
         request.bandwidth = representation.bandwidth;
-        request.representation = representation;
+        request.representation = representation.cloneWithoutAdaptation();
 
         const chunk = createDataChunk(request, mediaInfo.streamInfo.id, e.type !== events.FRAGMENT_LOADING_PROGRESS);
 
