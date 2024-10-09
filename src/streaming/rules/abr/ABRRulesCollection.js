@@ -279,6 +279,14 @@ function ABRRulesCollection(config) {
         eventBus.off(Events.SETTING_UPDATED_ABR_ACTIVE_RULES, _onAbrSettingsActiveRulesUpdated, instance);
     }
 
+    function clearDataForStream(streamId) {
+        [qualitySwitchRules, abandonFragmentRules].forEach(rules => {
+            if (rules && rules.length) {
+                rules.forEach(rule => rule.clearDataForStream && rule.clearDataForStream(streamId));
+            }
+        });
+    }
+
     function getQualitySwitchRules() {
         return qualitySwitchRules;
     }
@@ -300,6 +308,7 @@ function ABRRulesCollection(config) {
     }
 
     instance = {
+        clearDataForStream,
         getAbandonFragmentRules,
         getBestPossibleSwitchRequest,
         getBolaState,
