@@ -74,14 +74,6 @@ class Representation {
         this.width = NaN;
     }
 
-    cloneWithoutAdaptation() {
-        const clonedInstance = new Representation();
-        Object.assign(clonedInstance, this);
-        delete clonedInstance.adaptation; // Remove the adaptation field
-        return clonedInstance;
-    }
-
-
     hasInitialization() {
         return (this.initialization !== null || this.range !== null);
     }

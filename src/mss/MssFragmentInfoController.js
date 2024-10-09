@@ -132,7 +132,7 @@ function MssFragmentInfoController(config) {
         request.bandwidth = representation.bandwidth;
         request.index = index++;
         request.adaptationIndex = representation.adaptation.index;
-        request.representation = representation.cloneWithoutAdaptation();
+        request.representation = representation;
         request.url = baseURLController.resolve(representation.path).url + adaptation.SegmentTemplate.media;
         request.url = request.url.replace('$Bandwidth$', representation.bandwidth);
         request.url = request.url.replace('$Time$', segment.tManifest ? segment.tManifest : segment.t);
