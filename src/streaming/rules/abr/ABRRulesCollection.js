@@ -282,7 +282,7 @@ function ABRRulesCollection(config) {
     function clearDataForStream(streamId) {
         [qualitySwitchRules, abandonFragmentRules].forEach(rules => {
             if (rules && rules.length) {
-                rules.forEach(rule => rule.clearDataForStream && rule.clearDataForStream(streamId));
+                rules.forEach(rule => rule.clearDataForStream && typeof rule.clearDataForStream === 'function' && rule.clearDataForStream(streamId));
             }
         });
     }

@@ -681,7 +681,9 @@ function HTTPLoader(cfg) {
     }
 
     function resetInitialSettings() {
-        xhrLoader.resetInitialSettings();
+        if (xhrLoader) {
+            xhrLoader.resetInitialSettings();
+        }
     }
 
     function reset() {

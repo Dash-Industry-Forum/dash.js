@@ -614,12 +614,6 @@ function BolaRule(config) {
         return bolaState;
     }
 
-    function clearDataForStream(streamId) {
-        if (bolaStateDict[streamId]) {
-            delete bolaStateDict[streamId];
-        }
-    }
-
     function resetInitialSettings() {
         bolaStateDict = {};
     }
@@ -639,7 +633,6 @@ function BolaRule(config) {
     }
 
     instance = {
-        clearDataForStream,
         getSwitchRequest,
         reset
     };
