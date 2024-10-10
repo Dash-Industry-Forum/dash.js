@@ -1225,6 +1225,7 @@ function StreamController() {
             if (!shouldKeepStream) {
                 logger.debug(`Removing stream ${stream.getId()}`);
                 stream.reset(true);
+                stream = null;
             }
 
             return shouldKeepStream;

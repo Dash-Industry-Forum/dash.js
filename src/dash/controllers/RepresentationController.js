@@ -76,6 +76,7 @@ function RepresentationController(config) {
     }
 
     function resetInitialSettings() {
+        currentVoRepresentation = null;
         voAvailableRepresentations = [];
     }
 

@@ -10,6 +10,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import chai from 'chai';
 import spies from 'chai-spies';
 import sinon from 'sinon';
+
 const expect = chai.expect;
 
 chai.use(spies);
@@ -62,6 +63,9 @@ describe('FragmentModel', function () {
             load: () => {
             }, abort: () => {
             }, reset: () => {
+            },
+            resetInitialSettings: () => {
+
             }
         };
         const delay = specHelper.getExecutionDelay();
