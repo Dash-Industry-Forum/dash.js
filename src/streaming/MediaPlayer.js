@@ -1757,6 +1757,14 @@ function MediaPlayer() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
+
+        const canUseTrack = protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+
+        if (!canUseTrack) {
+            logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
+            return
+        }
+
         mediaController.setTrack(track, { noSettingsSave });
     }
 
