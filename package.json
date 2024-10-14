@@ -23,7 +23,7 @@
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
     "prepare": "node githook.cjs",
-    "prepack:": "npm run build",
+    "prepack": "npm run build",
     "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
   },
   "devDependencies": {
