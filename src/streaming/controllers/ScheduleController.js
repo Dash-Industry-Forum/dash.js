@@ -224,8 +224,10 @@ function ScheduleController(config) {
         if (!type || !currentRepresentation) {
             return true;
         }
+        const segmentDuration = currentRepresentation && currentRepresentation.segmentDuration && !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-        return bufferLevel < getBufferTarget();
+
+        return bufferLevel + segmentDuration < getBufferTarget();
     }
 
     /**
