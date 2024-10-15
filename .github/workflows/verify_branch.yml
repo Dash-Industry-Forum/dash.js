@@ -1,0 +1,22 @@
+name: verify_branch
+
+on:
+    push:
+        branches:
+            - '**'  # Triggers on push to any branch
+
+jobs:
+    build_and_unit_test:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version: 'latest'
+                    cache: 'npm'
+            -   run: tsc
+            -   run: npm run lint
+            -   run: npm run test
+            -   run: npm run webpack-build
+    run_functional_smoke_test:
+

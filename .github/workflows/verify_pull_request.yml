@@ -1,0 +1,29 @@
+name: verify_pull_request
+
+on:
+    pull_request:
+        branches:
+            - 'development'
+
+jobs:
+    merge_build_and_unit_test:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0  # Fetch all history for merging
+            - run: |
+                  git config --global user.name "GitHub Action"
+                  git config --global user.email "action@github.com"
+                  git checkout development
+                  git merge ${{ github.head_ref }}  # Merge the pull request branch
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 'latest'
+                  cache: 'npm'
+            - run: tsc
+            - run: npm run lint
+            - run: npm run test
+            - run: npm run webpack-build
+    run_functional_smoke_test:
+

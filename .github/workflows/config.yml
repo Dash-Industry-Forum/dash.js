@@ -1,0 +1,110 @@
+name: CI
+
+on:
+    push:
+        branches:
+            - '**'  # Adjust as needed for your branch strategy
+
+jobs:
+    build-and-unit-test:
+        runs-on: ubuntu-latest
+        env:
+            SAMPLES: "network-interceptor"
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v2
+              with:
+                  node-version: '20.11.1'
+
+            - name: Install dependencies
+              id: dependencies
+              run: |
+                  npm install
+                  echo "::set-output name=cache_key::$(cat package.json | shasum | cut -f1 -d' ')"
+
+            - name: Build and run unit tests
+              run: npm run build
+
+            - name: Install samples
+              run: |
+                  for sample in ${{ env.SAMPLES }}; do
+                    echo "Build sample $sample"
+                    cd samples/$sample
+                    npm install
+                    npm run build
+                  done
+
+    merge-build-and-unit-test:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Merge into development virtually
+              run: |
+                  git config --global user.email "circleci@example.com"
+                  git config --global user.name "CircleCI"
+                  git checkout development
+                  git merge --no-edit --no-ff ${{ github.ref }}
+
+            - name: Install dependencies
+              run: npm install
+
+            - name: Build and run unit tests
+              run: npm run build
+    functional-tests:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v2
+
+            - name: Check preconditions
+              run: |
+                  if [ -z "${{ secrets.LAMBDATEST_ACCESS_KEY }}" ]; then
+                    echo "Lambdatest not configured, functional tests will not be executed."
+                    exit 1
+                  fi
+
+            - name: Download tunnel binary
+              run: |
+                  wget https://downloads.lambdatest.com/tunnel/v3/linux/64bit/LT_Linux.zip
+                  sudo apt-get install -y unzip
+                  unzip LT_Linux.zip
+
+            - name: Execute tunnel binary
+              run: |
+                  ./LT --user ${{ secrets.LAMBDATEST_EMAIL }} --key ${{ secrets.LAMBDATEST_KEY }} &
+                  sleep 40
+
+            - name: Setup environment variables
+              run: |
+                  echo 'export LT_USERNAME="${{ secrets.LAMBDATEST_USER }}"' >> $GITHUB_ENV
+                  echo 'export LT_ACCESS_KEY="${{ secrets.LAMBDATEST_ACCESS_KEY }}"' >> $GITHUB_ENV
+
+            - name: Run functional tests
+              run: |
+                  node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
+
+            - name: Process test results
+              run: |
+                  sudo apt-get install -y xmlstarlet
+                  mkdir -p test/functional/results/test/karma/junit/adjusted
+                  cd test/functional/results/test/karma/junit
+                  for file in **/*.xml; do
+                    xmlstarlet ed -L -u '//testcase[@time="NaN"]/@time' -v '0' "$file"
+                    modified_file="${file//\//_}"
+                    cp "$file" adjusted/$modified_file
+                  done
+
+workflows:
+    version: 2
+    commit-workflow:
+        jobs:
+            - build-and-unit-test
+            - merge-build-and-unit-test:
+                  if: github.ref != 'refs/heads/development'
+            - functional-tests:
+                  if: github.ref != 'refs/heads/development'
