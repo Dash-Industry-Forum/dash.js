@@ -146,7 +146,7 @@ function CapabilitiesFilter() {
             const config = _createConfiguration(type, rep, supplementalCodec);
             const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
             if (supported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${codec} supported. Upgrading Representation with ID ${rep.id}`);
+                logger.debug(`[CapabilitiesFilter] Codec ${supplementalCodec} supported. Upgrading Representation with ID ${rep.id}`);
                 rep.codecs = supplementalCodec;
             }
             return rep;
@@ -172,6 +172,16 @@ function CapabilitiesFilter() {
                         if (!configurationsSet.has(configString)) {
                             configurationsSet.add(configString);
                             configurations.push(config);
+                        }
+
+                        const supplementalCodec = adapter.getSupplementalCodec(rep)
+                        if (supplementalCodec) {
+                            const config = _createConfiguration(type, rep, supplementalCodec);
+                            const configString = JSON.stringify(config);
+                            if (!configurationsSet.has(configString)) {
+                                configurationsSet.add(configString);
+                                configurations.push(config);
+                            }
                         }
                     });
                 }
