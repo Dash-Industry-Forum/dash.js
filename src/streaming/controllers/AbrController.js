@@ -861,7 +861,10 @@ function AbrController() {
         if (abandonmentStateDict[streamId]) {
             delete abandonmentStateDict[streamId];
         }
+
+        abrRulesCollection.clearDataForStream(streamId);
     }
+
 
     instance = {
         checkPlaybackQuality,

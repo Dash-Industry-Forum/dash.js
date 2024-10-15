@@ -328,6 +328,9 @@ function FragmentModel(config) {
     function resetInitialSettings() {
         executedRequests = [];
         loadingRequests = [];
+        if (fragmentLoader) {
+            fragmentLoader.resetInitialSettings();
+        }
     }
 
     function reset() {
