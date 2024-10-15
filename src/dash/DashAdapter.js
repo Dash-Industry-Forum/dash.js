@@ -401,6 +401,19 @@ function DashAdapter() {
     }
 
     /**
+     * Return supplementalCodec of a Representation
+     * @param {object} representation
+     * @returns {null|String}
+     */
+    function getSupplementalCodec(representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS]
+        if (!supplementalCodecs) {
+            return null;
+        }
+        return representation.mimeType + ';codecs="' + supplementalCodecs + '"';
+    }
+
+    /**
      * Returns the period as defined in the DashManifestModel for a given index
      * @param {number} index
      * @return {object}
@@ -1252,6 +1265,7 @@ function DashAdapter() {
         getRepresentationSortFunction,
         getStreamsInfo,
         getSuggestedPresentationDelay,
+        getSupplementalCodec,
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,

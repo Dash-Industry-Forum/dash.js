@@ -139,16 +139,15 @@ function CapabilitiesFilter() {
 
         // handle scte214:supplementalCodecs
         as.Representation = as.Representation.map((rep) => {
-            const supplementalCodecs = rep['scte214:supplementalCodecs']
-            if (!supplementalCodecs) {
-                return rep
+            const supplementalCodec = adapter.getSupplementalCodec(rep);
+            if (!supplementalCodec) {
+                return rep;
             }
-            const codec = rep.mimeType + ';codecs="' + supplementalCodecs + '"';
-            const config = _createConfiguration(type, rep, codec);
+            const config = _createConfiguration(type, rep, supplementalCodec);
             const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
             if (supported) {
                 logger.debug(`[CapabilitiesFilter] Codec ${codec} supported. Upgrading Representation with ID ${rep.id}`);
-                rep.codecs = supplementalCodecs;
+                rep.codecs = supplementalCodec;
             }
             return rep;
         })
