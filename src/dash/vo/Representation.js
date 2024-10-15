@@ -48,6 +48,7 @@ class Representation {
         this.codecFamily = null;
         this.codecPrivateData = null;
         this.codecs = null;
+        this.dependentRepresentation = null;
         this.essentialProperties = [];
         this.fragmentDuration = null;
         this.frameRate = null;
@@ -72,7 +73,6 @@ class Representation {
         this.startNumber = 1;
         this.timescale = 1;
         this.width = NaN;
-        this.dependentRepresentation = null
     }
 
     hasInitialization() {
