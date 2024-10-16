@@ -646,6 +646,10 @@ function DashManifestModel() {
                     voRepresentation.codecs = realRepresentation.codecs;
                     voRepresentation.codecFamily = Utils.getCodecFamily(voRepresentation.codecs);
                 }
+                if (realRepresentation.hasOwnProperty(DashConstants.DEPENDENCY_ID)) {
+                    voRepresentation.dependentRepresentation = new Representation();
+                    voRepresentation.dependentRepresentation.id = realRepresentation[DashConstants.DEPENDENCY_ID].toString();
+                }
                 if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE)) {
                     voRepresentation.mimeType = realRepresentation[DashConstants.MIME_TYPE];
                 }

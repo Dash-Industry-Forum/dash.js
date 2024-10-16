@@ -26,6 +26,14 @@ describe('StreamProcessor', function () {
             expect(streamProcessor.setExplicitBufferingTime.bind(streamProcessor)).to.not.throw();
         });
 
+        it('setEnhancementStreamProcessor should exist', function () {
+            expect(streamProcessor.setEnhancementStreamProcessor).to.be.a('function');
+        });
+
+        it('setEnhancementStreamProcessor should not throw an error', function () {
+            expect(streamProcessor.setEnhancementStreamProcessor.bind(streamProcessor, {})).to.not.throw();
+        });
+
     });
 
 });

@@ -2,14 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>MPEG-5 Part 2 LCEVC example</title>
+    <title>MPEG-5 LCEVC example</title>
     
+    <!-- LCEVCdecJS -->
+    <script class="code" src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
+
     <script class="code" src="../../dist/dash.all.debug.js"></script>
-
-    <!-- MPEG-5 LCEVC Decoder Library -->
-    <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
-
-    <!-- Control bar -->
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
 
     <!-- Bootstrap core CSS -->
@@ -20,7 +18,7 @@
 
     <style>
         video {
-            display: none !important; /* Enhanced frames are rendered on a HTML5CanvasElement.*/
+            display: none !important;
         }
 
         .dash-video-player {
@@ -34,14 +32,31 @@
         /**
          * MPEG-5 LCEVC Integration for Dash.js Player.
          *
-         * These are the changes needed for passing the correct data to lcevc_dec.js.
-        */
+         * These are the changes needed for passing the correct
+         * data to lcevc_dec.js and trigger the correct methods
+         * at the correct time.
+         */
+
+        /**
+         * Let the LCEVC Decoder Library make the decision as to when to switch, based on the currently
+         * rendered frame. If disabled, the player needs to signal LCEVC when there is a render change
+         * after an ABR switch happens.
+         *
+         * @readonly
+         * @enum {number}
+         * @public
+         */
+        const AutoRenderMode = {
+            DISABLED: 0,
+            ENABLED: 1
+        };
+
         dashjs.Extensions = {
             ...dashjs.Extensions,
             /**
              * Attaches LCEVC functionality and methods to the provided Dash.js player instance.
              *
-             * @param {object} player the Dash.js player instance to attach LCEVC
+             * @param {object} player the Dash.js player instance to attach LCEVC to
              */
             useLcevc: function useLcevc(player) {
                 if (!player) {
@@ -52,48 +67,112 @@
                     throw new TypeError('LCEVC Decoder Libraries could not be loaded.');
                 }
 
+                let abrIndex = -1;
+
                 player.attachLcevc = function attachLcevc(media, canvas, LCEVCdecConfig) {
                     player.LCEVCdec = new LCEVCdec.LCEVCdec(
                         media,
                         canvas,
                         LCEVCdecConfig
                     );
-                };
-                /* Let the LCEVC Decoder Library make the decision as to when to switch, based on the currently rendered frame.
-                    If disabled, the player needs to signal LCEVC when there is a render change after an ABR switch happens.
-                */
-                const ENABLE_AUTO_RENDER_MODE = 1;
 
-                /* Intercept source buffers and pass video data to LCEVC */
-                player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, (event) => {
-                    if (player.LCEVCdec && event.mediaType === 'video') {
-                        player.LCEVCdec.appendBuffer(event.response, 'video', event.request.representation.index);
-                        player.LCEVCdec.setLevelSwitching(event.request.representation.index, ENABLE_AUTO_RENDER_MODE);
+                    /* Signal profile information and switches to LCEVCdecJS */
+                    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, handleQualityChange);
+                    player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, handleFragmentLoadingCompleted);
+                    player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, handleRepresentationSwitch);
+                    player.on('externalSourceBufferUpdateStart', handleBufferUpdates);
+                };
+
+                function handleFragmentLoadingCompleted(event) {
+                    if (event.mediaType === 'enhancement') {
+                        abrIndex = event.request.representation.absoluteIndex;
                     }
-                });
-                
+                }
+
+                function handleQualityChange(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const index = event.newRepresentation.absoluteIndex;
+                        console.log('>>> requested:', event.mediaType, index);
+                        player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                    }
+                }
+
+                function handleRepresentationSwitch(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const rep = event.currentRepresentation;
+                        const index = rep.absoluteIndex;
+                        // Workaround for very first representation played for which no QUALITY_CHANGE_REQUESTED arrives
+                        if (rep && rep.dependentRepresentation) {
+                            console.log('>>> rep switch:', event.mediaType, index);
+                            player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                        }
+                    }
+                }
+
+                function handleBufferUpdates(event) {
+                    if (event.request === 'appendBuffer') {
+                        player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, /* isMuxed */ false);
+                    }
+                    else if (event.request === 'remove') {
+                        player.LCEVCdec.flushBuffer(event.start, event.end);
+                    }
+                }
             }
         };
+
+        /* Initialise */
         function init() {
             var video,
                 canvas,
                 player,
-                url = 'https://d3mfda3gpj3dw1.cloudfront.net/vn9s0p86SVbJorX6/master.mpd';
+                url = 'https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_3Mbps_with_dR/master.mpd';
+                const defaultSettings = {
+                    debug: {
+                        logLevel: 5,
+                        dispatchEvent: false
+                    },
+                    streaming: {
+                        abr: {
+                            rules: {
+                                insufficientBufferRule: {
+                                    active: false
+                                }
+                            }
+                        }
+                    }
+                };
 
             video = document.querySelector('video');
             canvas = document.querySelector('canvas');
             player = dashjs.MediaPlayer().create();
-
             /* Configuration for LCEVC Decoder */
-            const LCEVCdecConfig = {};
+            const LCEVCdecConfig = {
+                dynamicPerformanceScaling: false
+            };
+
+            video._getVideoPlaybackQuality = video.getVideoPlaybackQuality;
+            video.getVideoPlaybackQuality = function () {
+                const quality = video._getVideoPlaybackQuality();
+                const { creationTime, totalVideoFrames, droppedVideoFrames, corruptedVideoFrames } = quality;
+                const updatedQuality = {
+                    creationTime,
+                    totalVideoFrames,
+                    droppedVideoFrames: LCEVCdec?.instance?.totalDroppedFrames || 0,
+                    corruptedVideoFrames
+                };
+                return updatedQuality;
+            }
+
             LCEVCdec.ready.then(() => {
                 /* Attach LCEVC to the Dash.js player instance */
                 dashjs.Extensions.useLcevc(player);
                 player.attachLcevc(video, canvas, LCEVCdecConfig);
                 player.initialize(video, url, false);
+                player.updateSettings(defaultSettings);
                 var controlbar = new ControlBar(player);
                 controlbar.initialize();
             });
+
         }
     </script>
 </head>
@@ -109,21 +188,17 @@
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>MPEG-5 Part 2 LCEVC Decoding with SEI carriage</h3>
-                    <p>This example illustrates how MPEG-5 LCEVC-enhanced streams can be decoded in dash.js. 
-                        In this implementation, enhancements are carried as Supplemental Enhancement Information 
-                        within the same track as the base video. The base frames are decoded by the HTML5 Video 
-                        Tag, with the LCEVC Decoder libraries processing the enhancement and rendering it to 
-                        an HTML5 Canvas element. This example is a debug test stream, which will show moving 
-                        squares when the LCEVC enhancement is being decoded and displayed successfully.                        
-                    </p>
+                    <h3>MPEG-5 Part 2 LCEVC Dual Track Implementation</h3>
+                    <p>This example shows how content with LCEVC Enhancements in a separate track can be played
+                        back by the dash.js
+                        player. dash.js allows a switch between Enhanced and Base profiles.</p>
                 </div>
             </div>
             <div class="col-md-8">
                 <div class="dash-video-player code">
                     <div class="videoContainer" id="videoContainer">
                         <video preload="auto" autoplay></video>
-                        <canvas></canvas>
+                        <canvas preload="auto" autoplay></canvas>
                         <div id="videoController" class="video-controller unselectable">
                             <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
                                 <span id="iconPlayPause" class="icon-play"></span>
