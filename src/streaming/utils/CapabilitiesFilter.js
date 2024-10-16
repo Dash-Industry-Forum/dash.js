@@ -128,29 +128,28 @@ function CapabilitiesFilter() {
         as.Representation = as.Representation.filter((rep, i) => {
             const codec = adapter.getCodec(as, i, false);
             const config = _createConfiguration(type, rep, codec);
-
             configurations.push(config);
-            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
-            if (!supported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${configurations[i].codec} not supported. Removing Representation with ID ${rep.id}`);
-            }
-            return supported
-        });
+            const isCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
 
-        // handle scte214:supplementalCodecs
-        as.Representation = as.Representation.map((rep) => {
             const supplementalCodec = adapter.getSupplementalCodec(rep);
-            if (!supplementalCodec) {
-                return rep;
+            let isSupplementalCodecSupported = false;
+            if (supplementalCodec) {
+                const supplementalCodecConfig = _createConfiguration(type, rep, supplementalCodec);
+                configurations.push(supplementalCodecConfig);
+                isSupplementalCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(supplementalCodecConfig, type);
+                if (isSupplementalCodecSupported) {
+                    logger.debug(`[CapabilitiesFilter] Codec ${supplementalCodec} supported. Upgrading Representation with ID ${rep.id}`);
+                    // overriding default codec
+                    rep.codecs = rep[DashConstants.SUPPLEMENTAL_CODECS]
+                }
             }
-            const config = _createConfiguration(type, rep, supplementalCodec);
-            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
-            if (supported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${supplementalCodec} supported. Upgrading Representation with ID ${rep.id}`);
-                rep.codecs = supplementalCodec;
+
+            if (!isCodecSupported && !isSupplementalCodecSupported) {
+                logger.debug(`[CapabilitiesFilter] Codec ${codec} not supported. Removing Representation with ID ${rep.id}`);
             }
-            return rep;
-        })
+
+            return isCodecSupported || isSupplementalCodecSupported;
+        });
     }
 
     function _getConfigurationsToCheck(manifest, type) {
