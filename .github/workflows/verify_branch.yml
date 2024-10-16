@@ -8,7 +8,7 @@ name: verify_branch
 on:
     push:
         branches:
-            - 'feature/migrateCircleCi'
+            - 'feature/migrateCircleCi-off'
 
 jobs:
     build_and_unit_test:
