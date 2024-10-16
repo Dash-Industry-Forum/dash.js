@@ -1,14 +1,9 @@
 name: verify_branch
 
-#on:
-#    push:
-#        branches:
-#            - '**'  # Triggers on push to any branch
-
 on:
     push:
         branches:
-            - 'feature/migrateCircleCi-off'
+            - '**'  # Triggers on push to any branch
 
 jobs:
     build_and_unit_test:

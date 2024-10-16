@@ -3,7 +3,7 @@ name: verify_pull_request
 #on:
 #    pull_request:
 #        branches:
-#           - 'development'
+#            - 'development'
 
 on:
     push:
@@ -12,18 +12,19 @@ on:
 
 jobs:
     merge_build_and_unit_test:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code
                 uses: actions/checkout@v4
                 with:
-                    fetch-depth: 0  # Fetch all history for merging
+                    fetch-depth: 0
             -   name: Merge to development
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
                     git checkout development
-                    git merge --no-edit --no-ff ${{ github.ref }}  # Merge the pull request branch
+                    git merge ${{ github.ref }}  # Merge the pull request branch
             -   name: Setup node
                 uses: actions/setup-node@v4
                 with:
@@ -59,13 +60,13 @@ jobs:
             -   name: Checkout code
                 uses: actions/checkout@v4
                 with:
-                    fetch-depth: 0  # Fetch all history for merging
+                    fetch-depth: 0
             -   name: Merge to development
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
                     git checkout development
-                    git merge ${{ github.head_ref }}  # Merge the pull
+                    git merge ${{ github.ref }}  # Merge the pull request branch
             -   name: Cache node modules
                 id: cache-npm
                 uses: actions/cache@v3
