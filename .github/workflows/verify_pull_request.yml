@@ -47,16 +47,11 @@ jobs:
                 name: List the state of node modules
                 continue-on-error: true
                 run: npm list
-            -   name: Run npm install
-                run: npm install
-            -   name: Run tsc
-                run: tsc
-            -   name: Run linting check
-                run: npm run lint
-            -   name: Run unit tests
-                run: npm run test
-            -   name: Run webpack build
-                run: npm run webpack-build
+            -   run: npm install
+            -   run: tsc
+            -   run: npm run lint
+            -   run: npm run test
+            -   run: npm run webpack-build
 
     run_functional_test_single_stream_lambdatest:
         runs-on: ubuntu-latest
@@ -89,10 +84,8 @@ jobs:
                 name: List the state of node modules
                 continue-on-error: true
                 run: npm list
-            -   name: Run npm install
-                run: npm install
-            -   name: Run webpack build
-                run: npm run webpack-build
+            -   run: npm install
+            -   run: npm run webpack-build
             -   name: Start Tunnel
                 uses: LambdaTest/LambdaTest-tunnel-action@v2
                 id: tunnel
