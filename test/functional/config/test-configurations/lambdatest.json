@@ -9,6 +9,7 @@
   "hostname": "localhost",
   "port": 9876,
   "protocol": "http",
+  "concurrency": 4,
   "customLaunchers": {
     "chrome_windows_11": {
       "base": "WebDriver",

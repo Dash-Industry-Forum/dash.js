@@ -129,8 +129,8 @@ module.exports = function (config) {
         autoWatch: false,
 
         captureTimeout: 600000,
-        browserNoActivityTimeout: 400000,
-        browserDisconnectTimeout: 20000,
+        browserNoActivityTimeout: 90000,
+        browserDisconnectTimeout: 90000,
         browserDisconnectTolerance: 2,
 
         // start these browsers
@@ -177,8 +177,8 @@ function _getExcludedTestfiles(testConfiguration) {
 function _adjustConfigurationForLambdatest(testConfiguration) {
     if (testConfiguration && testConfiguration.customLaunchers) {
         Object.keys(testConfiguration.customLaunchers).forEach((key) => {
-            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
-            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
+            testConfiguration.customLaunchers[key].user = process.env.LT_USERNAME;
+            testConfiguration.customLaunchers[key].accessKey = process.env.LT_ACCESS_KEY;
             testConfiguration.customLaunchers[key].config = {
                 hostname: 'hub.lambdatest.com',
                 port: 80
