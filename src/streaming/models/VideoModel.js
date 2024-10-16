@@ -78,23 +78,20 @@ function VideoModel() {
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
     }
 
-    function onPlaybackCanPlay() {
-        if (element) {
-            element.playbackRate = previousPlaybackRate || 1;
-            element.removeEventListener('canplay', onPlaybackCanPlay);
-        }
-    }
-
     function setPlaybackRate(value, ignoreReadyState = false) {
         if (!element) {
             return;
         }
-        if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
-            // If media element hasn't loaded enough data to play yet, wait until it has
-            element.addEventListener('canplay', onPlaybackCanPlay);
-        } else {
+
+        if (ignoreReadyState) {
             element.playbackRate = value;
+            return;
         }
+
+        // If media element hasn't loaded enough data to play yet, wait until it has
+        waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, () => {
+            element.playbackRate = value;
+        });
     }
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
