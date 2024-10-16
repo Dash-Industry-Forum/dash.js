@@ -244,7 +244,7 @@ function VideoModel() {
 
         stalledStreams.push(type);
 
-        if (element && stalledStreams.length === 1) {
+        if (settings.get().streaming.buffer.enableSyntheticStalls && element && stalledStreams.length === 1) {
             // Halt playback until nothing is stalled
             const event = document.createEvent('Event');
             event.initEvent('waiting', true, false);
@@ -264,8 +264,8 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
 
-        // If nothing is stalled resume playback
-        if (element && !isStalled() && element.playbackRate === 0) {
+        if (settings.get().streaming.buffer.enableSyntheticStalls && element && !isStalled() && element.playbackRate === 0) {
+            // If nothing is stalled resume playback
             setPlaybackRate(previousPlaybackRate || 1);
             if (!element.paused) {
                 const event = document.createEvent('Event');

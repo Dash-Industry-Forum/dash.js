@@ -411,6 +411,8 @@ import Events from './events/Events.js';
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached
+ * @property {boolean} [enableSyntheticStalls=true]
+ * Specifies if we record stalled streams and set the playback rate to 0 once the stall threshold is reached
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
@@ -1099,6 +1101,7 @@ function Settings() {
                 stallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
+                enableSyntheticStalls: true,
                 avoidCurrentTimeRangePruning: false,
                 useChangeType: true,
                 mediaSourceDurationInfinity: true,
