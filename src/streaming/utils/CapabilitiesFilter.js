@@ -131,9 +131,13 @@ function CapabilitiesFilter() {
             configurations.push(config);
             const isCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
 
-            const supplementalCodec = adapter.getSupplementalCodec(rep);
             let isSupplementalCodecSupported = false;
-            if (supplementalCodec) {
+            const supplementalCodecs = adapter.getSupplementalCodecs(rep);
+            if (supplementalCodecs.length > 0) {
+                if (supplementalCodecs.length > 1) {
+                    logger.warn(`[CapabilitiesFilter] Multiple supplemental codecs not supported; using first in list`);
+                }
+                const supplementalCodec = supplementalCodecs[0];
                 const supplementalCodecConfig = _createConfiguration(type, rep, supplementalCodec);
                 configurations.push(supplementalCodecConfig);
                 isSupplementalCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(supplementalCodecConfig, type);
@@ -173,9 +177,9 @@ function CapabilitiesFilter() {
                             configurations.push(config);
                         }
 
-                        const supplementalCodec = adapter.getSupplementalCodec(rep)
-                        if (supplementalCodec) {
-                            const config = _createConfiguration(type, rep, supplementalCodec);
+                        const supplementalCodecs = adapter.getSupplementalCodecs(rep)
+                        if (supplementalCodecs.length > 0) {
+                            const config = _createConfiguration(type, rep, supplementalCodecs[0]);
                             const configString = JSON.stringify(config);
                             if (!configurationsSet.has(configString)) {
                                 configurationsSet.add(configString);

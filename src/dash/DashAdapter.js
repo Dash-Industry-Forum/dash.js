@@ -401,16 +401,16 @@ function DashAdapter() {
     }
 
     /**
-     * Return supplementalCodec of a Representation
+     * Return supplementalCodecs of a Representation
      * @param {object} representation
-     * @returns {null|String}
+     * @returns {array}
      */
-    function getSupplementalCodec(representation) {
-        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS]
+    function getSupplementalCodecs(representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS];
         if (!supplementalCodecs) {
-            return null;
+            return [];
         }
-        return representation.mimeType + ';codecs="' + supplementalCodecs + '"';
+        return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
     }
 
     /**
@@ -1265,7 +1265,7 @@ function DashAdapter() {
         getRepresentationSortFunction,
         getStreamsInfo,
         getSuggestedPresentationDelay,
-        getSupplementalCodec,
+        getSupplementalCodecs,
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,
