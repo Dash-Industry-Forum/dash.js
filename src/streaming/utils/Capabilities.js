@@ -297,12 +297,12 @@ function Capabilities() {
                     robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
                 }
                 const protData = keySystemMetadata.protData
-                const audioRobustness = (protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
-                const videoRobustness = (protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
 
-                if (type === 'audio') {
+                if (type === Constants.AUDIO) {
                     curr.keySystemConfiguration[type] = { robustness: audioRobustness }
-                } else if (type === 'video') {
+                } else if (type === Constants.VIDEO) {
                     curr.keySystemConfiguration[type] = { robustness: videoRobustness }
                 }
             }
