@@ -18,7 +18,8 @@ jobs:
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
-                    git merge ${{ github.event.pull_request.head.ref }} --no-ff
+                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+                    git merge pr-branch --no-ff
             -   name: Setup node
                 uses: actions/setup-node@v4
                 with:
@@ -61,7 +62,8 @@ jobs:
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
-                    git merge ${{ github.event.pull_request.head.ref }} --no-ff
+                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+                    git merge pr-branch --no-ff
             -   name: Cache node modules
                 id: cache-npm
                 uses: actions/cache@v3
