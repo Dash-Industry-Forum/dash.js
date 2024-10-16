@@ -1,18 +1,12 @@
 name: verify_pull_request
 
-#on:
-#    pull_request:
-#        branches:
-#            - 'development'
-
 on:
-    push:
+    pull_request:
         branches:
-            - 'feature/migrateCircleCi'
+            - 'development'
 
 jobs:
     merge_build_and_unit_test:
-        if: github.repository == 'Dash-Industry-Forum/dash.js'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code
@@ -55,6 +49,7 @@ jobs:
             -   run: npm run webpack-build
 
     run_functional_test_single_stream_lambdatest:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
         runs-on: ubuntu-latest
         steps:
             -   name: Checkout code
