@@ -177,8 +177,8 @@ function _getExcludedTestfiles(testConfiguration) {
 function _adjustConfigurationForLambdatest(testConfiguration) {
     if (testConfiguration && testConfiguration.customLaunchers) {
         Object.keys(testConfiguration.customLaunchers).forEach((key) => {
-            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
-            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
+            testConfiguration.customLaunchers[key].user = process.env.LT_USERNAME;
+            testConfiguration.customLaunchers[key].accessKey = process.env.LT_ACCESS_KEY;
             testConfiguration.customLaunchers[key].config = {
                 hostname: 'hub.lambdatest.com',
                 port: 80

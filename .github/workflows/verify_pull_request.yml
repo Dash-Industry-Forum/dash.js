@@ -92,8 +92,11 @@ jobs:
                 with:
                     user: ${{ secrets.LT_USERNAME }}
                     accessKey: ${{ secrets.LT_ACCESS_KEY }}
-                    tunnelName: "dashjs tunnel"
+                    tunnelName: "dashjs-tunnel-${{github.run_number}}"
             -   name: Run functional tests for a single vector on Lambdatest
+                env:
+                    LT_USERNAME: ${{ secrets.LT_USERNAME }}
+                    LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
                 run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
 
 
