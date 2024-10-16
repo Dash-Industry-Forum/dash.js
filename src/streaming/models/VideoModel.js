@@ -243,6 +243,15 @@ function VideoModel() {
         }
 
         stalledStreams.push(type);
+
+        if (element && stalledStreams.length === 1) {
+            // Halt playback until nothing is stalled
+            const event = document.createEvent('Event');
+            event.initEvent('waiting', true, false);
+            previousPlaybackRate = element.playbackRate;
+            setPlaybackRate(0);
+            element.dispatchEvent(event);
+        }
     }
 
     function removeStalledStream(type) {
@@ -255,6 +264,15 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
 
+        // If nothing is stalled resume playback
+        if (element && !isStalled() && element.playbackRate === 0) {
+            setPlaybackRate(previousPlaybackRate || 1);
+            if (!element.paused) {
+                const event = document.createEvent('Event');
+                event.initEvent('playing', true, false);
+                element.dispatchEvent(event);
+            }
+        }
     }
 
     function stallStream(type, isStalled) {
