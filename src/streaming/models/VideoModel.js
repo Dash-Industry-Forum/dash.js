@@ -51,6 +51,7 @@ function VideoModel() {
         element,
         _currentTime,
         setCurrentTimeReadyStateFunction,
+        resumeReadyStateFunction,
         TTMLRenderingDiv,
         vttRenderingDiv,
         previousPlaybackRate,
@@ -237,19 +238,19 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-
         if (type === null || !element || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
         stalledStreams.push(type);
 
-        if (settings.get().streaming.buffer.enableSyntheticStalls && element && stalledStreams.length === 1) {
+        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && stalledStreams.length === 1 && (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState || getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)) {
             // Halt playback until nothing is stalled
+            previousPlaybackRate = element.playbackRate;
+            setPlaybackRate(0, true);
+
             const event = document.createEvent('Event');
             event.initEvent('waiting', true, false);
-            previousPlaybackRate = element.playbackRate;
-            setPlaybackRate(0);
             element.dispatchEvent(event);
         }
     }
@@ -264,13 +265,24 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
 
-        if (settings.get().streaming.buffer.enableSyntheticStalls && element && !isStalled() && element.playbackRate === 0) {
-            // If nothing is stalled resume playback
-            setPlaybackRate(previousPlaybackRate || 1);
-            if (!element.paused) {
-                const event = document.createEvent('Event');
-                event.initEvent('playing', true, false);
-                element.dispatchEvent(event);
+        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && !isStalled()) {
+            const resume = () => {
+                setPlaybackRate(previousPlaybackRate || 1, settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState);
+
+                if (!element.paused) {
+                    const event = document.createEvent('Event');
+                    event.initEvent('playing', true, false);
+                    element.dispatchEvent(event);
+                }
+            }
+            
+            if (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState) {
+                resume();
+            } else {
+                if (resumeReadyStateFunction && resumeReadyStateFunction.func && resumeReadyStateFunction.event) {
+                    removeEventListener(resumeReadyStateFunction.event, resumeReadyStateFunction.func);
+                }
+                resumeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, resume);
             }
         }
     }
