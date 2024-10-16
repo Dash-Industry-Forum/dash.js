@@ -23,7 +23,7 @@ jobs:
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
                     git checkout development
-                    git merge ${{ github.head_ref }}  # Merge the pull request branch
+                    git merge --no-edit --no-ff ${{ github.ref }}  # Merge the pull request branch
             -   name: Setup node
                 uses: actions/setup-node@v4
                 with:
