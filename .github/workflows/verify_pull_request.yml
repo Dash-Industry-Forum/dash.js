@@ -60,6 +60,12 @@ jobs:
                 uses: actions/checkout@v4
                 with:
                     fetch-depth: 0  # Fetch all history for merging
+            -   name: Merge to development
+                run: |
+                    git config --global user.name "GitHub Action"
+                    git config --global user.email "action@github.com"
+                    git checkout development
+                    git merge ${{ github.head_ref }}  # Merge the pull
             -   name: Cache node modules
                 id: cache-npm
                 uses: actions/cache@v3
