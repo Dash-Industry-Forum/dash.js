@@ -79,11 +79,11 @@ function SchemeLoaderFactory() {
     setup();
 
     instance = {
-        getLoader: getLoader,
-        registerLoader: registerLoader,
-        unregisterLoader: unregisterLoader,
-        unregisterAllLoader: unregisterAllLoader,
-        reset: reset
+        getLoader,
+        registerLoader,
+        unregisterLoader,
+        unregisterAllLoader,
+        reset
     };
 
     return instance;

@@ -57,6 +57,6 @@ jobs:
                 with:
                     key: ${{ secrets.private_key }}
                     known_hosts: unnecessary
-
-            -   name: Deploy with rsync
-                run: rsync -av -c -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
+            -   name: Deploy with scp
+                run: |
+                    scp -r -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
