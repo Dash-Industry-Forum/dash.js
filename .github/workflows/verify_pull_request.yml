@@ -61,10 +61,6 @@ jobs:
     run_functional_test_single_stream_lambdatest:
         runs-on: ubuntu-latest
         steps:
-            -   name: Check Secrets
-                run: echo "Secrets are not defined. Terminating."
-                if: ${{ !secrets.LT_USERNAME || !secrets.LT_ACCESS_KEY }}
-                continue-on-error: false
             -   name: Checkout code
                 uses: actions/checkout@v4
                 with:
