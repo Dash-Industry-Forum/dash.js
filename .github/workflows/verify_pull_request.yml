@@ -9,16 +9,16 @@ jobs:
     merge_build_and_unit_test:
         runs-on: ubuntu-latest
         steps:
-            -   name: Checkout code
+            -   name: Checkout development branch of origin
                 uses: actions/checkout@v4
                 with:
-                    fetch-depth: 0
+                    repository: Dash-Industry-Forum/dash.js
+                    ref: development
             -   name: Merge to development
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
-                    git checkout development
-                    git merge ${{ github.ref }}  # Merge the pull request branch
+                    git merge ${{ github.event.pull_request.head.ref }} --no-ff
             -   name: Setup node
                 uses: actions/setup-node@v4
                 with:
@@ -49,19 +49,19 @@ jobs:
             -   run: npm run webpack-build
 
     run_functional_test_single_stream_lambdatest:
-        if: github.repository == 'Dash-Industry-Forum/dash.js'
+        if: !github.event.pull_request.head.repo.fork
         runs-on: ubuntu-latest
         steps:
-            -   name: Checkout code
+            -   name: Checkout development branch of origin
                 uses: actions/checkout@v4
                 with:
-                    fetch-depth: 0
+                    repository: Dash-Industry-Forum/dash.js
+                    ref: development
             -   name: Merge to development
                 run: |
                     git config --global user.name "GitHub Action"
                     git config --global user.email "action@github.com"
-                    git checkout development
-                    git merge ${{ github.ref }}  # Merge the pull request branch
+                    git merge ${{ github.event.pull_request.head.ref }} --no-ff
             -   name: Cache node modules
                 id: cache-npm
                 uses: actions/cache@v3
