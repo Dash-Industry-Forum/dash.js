@@ -175,6 +175,11 @@
       "type": "vod",
       "includedTestfiles": [
         "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
       ]
     },
     {

@@ -38,7 +38,7 @@ function EventBus() {
 
     let handlers = {};
 
-    function on(type, listener, scope, options = {}) {
+    function _commonOn(type, listener, scope, options = {}, executeOnlyOnce = false) {
 
         if (!type) {
             throw new Error('event type cannot be null or undefined');
@@ -58,7 +58,8 @@ function EventBus() {
         const handler = {
             callback: listener,
             scope,
-            priority
+            priority,
+            executeOnlyOnce
         };
 
         if (scope && scope.getStreamId) {
@@ -81,6 +82,14 @@ function EventBus() {
         if (!inserted) {
             handlers[type].push(handler);
         }
+    }
+
+    function on(type, listener, scope, options = {}) {
+        _commonOn(type, listener, scope, options);
+    }
+
+    function once(type, listener, scope, options = {}) {
+        _commonOn(type, listener, scope, options, true)
     }
 
     function off(type, listener, scope) {
@@ -114,6 +123,7 @@ function EventBus() {
             payload.mediaType = filters.mediaType;
         }
 
+        const handlersToRemove = [];
         handlers[type]
             .filter((handler) => {
                 if (!handler) {
@@ -131,7 +141,16 @@ function EventBus() {
                 }
                 return true;
             })
-            .forEach(handler => handler && handler.callback.call(handler.scope, payload));
+            .forEach((handler) => {
+                handler && handler.callback.call(handler.scope, payload);
+                if (handler.executeOnlyOnce) {
+                    handlersToRemove.push(handler);
+                }
+            });
+
+        handlersToRemove.forEach((handler) => {
+            off(type, handler.callback, handler.scope);
+        })
     }
 
     function getHandlerIdx(type, listener, scope) {
@@ -156,10 +175,11 @@ function EventBus() {
     }
 
     const instance = {
-        on: on,
-        off: off,
-        trigger: trigger,
-        reset: reset
+        on,
+        once,
+        off,
+        trigger,
+        reset
     };
 
     return instance;

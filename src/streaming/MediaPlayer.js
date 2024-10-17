@@ -290,7 +290,8 @@ function MediaPlayer() {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
-                settings
+                settings,
+                protectionController
             })
         }
 
@@ -1652,7 +1653,10 @@ function MediaPlayer() {
             return [];
         }
 
-        return mediaController.getTracksFor(type, streamInfo.id);
+        const tracks = mediaController.getTracksFor(type, streamInfo.id);
+        return tracks.filter((track) => {
+            return protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+        })
     }
 
     /**
@@ -1753,7 +1757,15 @@ function MediaPlayer() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setTrack(track, noSettingsSave);
+
+        const canUseTrack = protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+
+        if (!canUseTrack) {
+            logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
+            return
+        }
+
+        mediaController.setTrack(track, { noSettingsSave });
     }
 
     /*
@@ -2436,6 +2448,7 @@ function MediaPlayer() {
 
         abrController.setConfig({
             streamController,
+            capabilities,
             domStorage,
             mediaPlayerModel,
             customParametersModel,
@@ -2503,9 +2516,7 @@ function MediaPlayer() {
                 publicOnly: true
             });
             Errors.extend(detectedProtection.errors);
-            if (!capabilities) {
-                capabilities = Capabilities(context).getInstance();
-            }
+
             protectionController = protection.createProtectionSystem({
                 debug,
                 errHandler,
@@ -2519,6 +2530,12 @@ function MediaPlayer() {
                 cmcdModel,
                 settings
             });
+
+            if (!capabilities) {
+                capabilities = Capabilities(context).getInstance();
+            }
+
+            capabilities.setProtectionController(protectionController);
 
             return protectionController;
         }

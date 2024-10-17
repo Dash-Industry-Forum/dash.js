@@ -46,6 +46,7 @@ function Capabilities() {
 
     let instance,
         settings,
+        protectionController,
         testedCodecConfigurations,
         encryptedMediaSupported,
         logger;
@@ -67,6 +68,30 @@ function Capabilities() {
         if (config.settings) {
             settings = config.settings;
         }
+
+        if (config.protectionController) {
+            protectionController = config.protectionController;
+        }
+    }
+
+    function setProtectionController(data) {
+        protectionController = data;
+    }
+
+    function areKeyIdsUsable(mediaInfo) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+            return true
+        }
+
+        return protectionController.areKeyIdsUsable(mediaInfo.normalizedKeyIds)
+    }
+
+    function areKeyIdsExpired(mediaInfo) {
+        if (!protectionController || !mediaInfo || !mediaInfo.normalizedKeyIds || mediaInfo.normalizedKeyIds.size === 0) {
+            return false
+        }
+
+        return protectionController.areKeyIdsExpired(mediaInfo.normalizedKeyIds)
     }
 
     function isProtectionCompatible(previousStreamInfo, newStreamInfo) {
@@ -84,6 +109,14 @@ function Capabilities() {
      */
     function supportsEncryptedMedia() {
         return encryptedMediaSupported;
+    }
+
+    /**
+     * Checks whether SourceBuffer.changeType() is available
+     * @return {boolean} true is changeType() is available
+     */
+    function supportsChangeType() {
+        return !!window.SourceBuffer && !!SourceBuffer.prototype && !!SourceBuffer.prototype.changeType;
     }
 
     /**
@@ -401,11 +434,15 @@ function Capabilities() {
     }
 
     instance = {
+        areKeyIdsExpired,
+        areKeyIdsUsable,
         isCodecSupportedBasedOnTestedConfigurations,
         isProtectionCompatible,
         runCodecSupportCheck,
         setConfig,
         setEncryptedMediaSupported,
+        setProtectionController,
+        supportsChangeType,
         supportsEncryptedMedia,
         supportsEssentialProperty,
         supportsMediaSource,

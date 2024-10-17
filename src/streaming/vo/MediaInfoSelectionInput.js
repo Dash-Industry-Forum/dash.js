@@ -28,67 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker.js';
-import HTTPLoader from '../../streaming/net/HTTPLoader.js';
-
 /**
- * @module
- * @description Choose right url loader for scheme
+ * @class
  * @ignore
  */
-function SchemeLoaderFactory() {
-
-    let instance;
-
-    let schemeLoaderMap;
-
-    function registerLoader(scheme, loader) {
-        schemeLoaderMap[scheme] = loader;
+class MediaInfoSelectionInput {
+    constructor(data) {
+        this.newMediaInfo = data.newMediaInfo;
+        this.previouslySelectedRepresentation = data.previouslySelectedRepresentation;
+        this.newRepresentation = data.newRepresentation;
     }
-
-    function unregisterLoader(scheme) {
-        if (schemeLoaderMap[scheme]) {
-            delete schemeLoaderMap[scheme];
-        }
-    }
-
-    function unregisterAllLoader() {
-        schemeLoaderMap = {};
-    }
-
-    function getLoader(url) {
-
-        // iterates through schemeLoaderMap to find a loader for the scheme
-        for (var scheme in schemeLoaderMap) {
-            if (schemeLoaderMap.hasOwnProperty(scheme) && url.startsWith(scheme)) {
-                return schemeLoaderMap[scheme];
-            }
-        }
-
-        return HTTPLoader;
-    }
-
-    function reset() {
-        unregisterAllLoader();
-    }
-
-    function setup() {
-        reset();
-    }
-
-    setup();
-
-    instance = {
-        getLoader,
-        registerLoader,
-        unregisterLoader,
-        unregisterAllLoader,
-        reset
-    };
-
-    return instance;
 }
 
-SchemeLoaderFactory.__dashjs_factory_name = 'SchemeLoaderFactory';
-const factory = FactoryMaker.getSingletonFactory(SchemeLoaderFactory);
-export default factory;
+export default MediaInfoSelectionInput;
