@@ -128,8 +128,7 @@ class Utils {
      */
     static parseQueryParams(queryParamString) {
         const params = [];
-        const url = new URL('http://dummyurl.com?' + queryParamString);
-        const searchParams = new URLSearchParams(url.search);
+        const searchParams = new URLSearchParams(queryParamString);
         for (const [key, value] of searchParams.entries()) {
             params.push({ key: decodeURIComponent(key), value: decodeURIComponent(value) });
         }
