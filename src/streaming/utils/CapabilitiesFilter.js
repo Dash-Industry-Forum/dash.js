@@ -128,13 +128,31 @@ function CapabilitiesFilter() {
         as.Representation = as.Representation.filter((rep, i) => {
             const codec = adapter.getCodec(as, i, false);
             const config = _createConfiguration(type, rep, codec);
-
             configurations.push(config);
-            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
-            if (!supported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${configurations[i].codec} not supported. Removing Representation with ID ${rep.id}`);
+            const isCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
+
+            let isSupplementalCodecSupported = false;
+            const supplementalCodecs = adapter.getSupplementalCodecs(rep);
+            if (supplementalCodecs.length > 0) {
+                if (supplementalCodecs.length > 1) {
+                    logger.warn(`[CapabilitiesFilter] Multiple supplemental codecs not supported; using first in list`);
+                }
+                const supplementalCodec = supplementalCodecs[0];
+                const supplementalCodecConfig = _createConfiguration(type, rep, supplementalCodec);
+                configurations.push(supplementalCodecConfig);
+                isSupplementalCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(supplementalCodecConfig, type);
+                if (isSupplementalCodecSupported) {
+                    logger.debug(`[CapabilitiesFilter] Codec ${supplementalCodec} supported. Upgrading Representation with ID ${rep.id}`);
+                    // overriding default codec
+                    rep.codecs = rep[DashConstants.SUPPLEMENTAL_CODECS]
+                }
             }
-            return supported
+
+            if (!isCodecSupported && !isSupplementalCodecSupported) {
+                logger.debug(`[CapabilitiesFilter] Codec ${codec} not supported. Removing Representation with ID ${rep.id}`);
+            }
+
+            return isCodecSupported || isSupplementalCodecSupported;
         });
     }
 
@@ -157,6 +175,16 @@ function CapabilitiesFilter() {
                         if (!configurationsSet.has(configString)) {
                             configurationsSet.add(configString);
                             configurations.push(config);
+                        }
+
+                        const supplementalCodecs = adapter.getSupplementalCodecs(rep)
+                        if (supplementalCodecs.length > 0) {
+                            const config = _createConfiguration(type, rep, supplementalCodecs[0]);
+                            const configString = JSON.stringify(config);
+                            if (!configurationsSet.has(configString)) {
+                                configurationsSet.add(configString);
+                                configurations.push(config);
+                            }
                         }
                     });
                 }
