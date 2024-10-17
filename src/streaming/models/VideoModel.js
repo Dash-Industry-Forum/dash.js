@@ -48,6 +48,7 @@ function VideoModel() {
 
     let instance,
         logger,
+        settings,
         element,
         _currentTime,
         setCurrentTimeReadyStateFunction,
@@ -61,11 +62,11 @@ function VideoModel() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
-    const settings = Settings(context).getInstance();
     const stalledStreams = [];
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        settings = Settings(context).getInstance();
         _currentTime = NaN;
     }
 
@@ -76,6 +77,17 @@ function VideoModel() {
     function reset() {
         clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
+        stalledStreams.length = 0;
+    }
+
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     function setPlaybackRate(value, ignoreReadyState = false) {
@@ -540,6 +552,7 @@ function VideoModel() {
         removeChild,
         removeEventListener,
         reset,
+        setConfig,
         setCurrentTime,
         setDisableRemotePlayback,
         setElement,
