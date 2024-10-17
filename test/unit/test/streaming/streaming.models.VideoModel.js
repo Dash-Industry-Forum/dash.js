@@ -40,7 +40,7 @@ describe('VideoModel', () => {
     });
 
     describe('setStallState()', () => {        
-        describe('syntheticStallEvents enabled', () => {
+        describe('syntheticStallEvents enabled', () => {            
             beforeEach(() => {
                 settings.update({ streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: false } }}});
                 videoModel.setConfig({ settings });
@@ -65,6 +65,32 @@ describe('VideoModel', () => {
                 videoElementMock.addEventListener('waiting', onWaiting);
 
                 videoModel.setStallState('video', true);
+            });
+
+            it('Should emit a playing event on stall end even if not in ready state if ignoring ready state', (done) => {
+                settings.update({ streaming: { buffer: { syntheticStallEvents: { enabled: true, ignoreReadyState: true } }}});
+                
+                videoElementMock.readyState = Constants.VIDEO_ELEMENT_READY_STATES.HAVE_NOTHING;
+
+                const onPlaying = () => {
+                    videoElementMock.removeEventListener('playing', onPlaying);
+                    done();
+                }
+                videoElementMock.addEventListener('playing', onPlaying);
+
+                videoModel.setStallState('video', false);
+            });
+
+            it('Should emit a playing event on stall end if video element is in ready state', (done) => {
+                videoElementMock.readyState = Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA;
+
+                const onPlaying = () => {
+                    videoElementMock.removeEventListener('playing', onPlaying);
+                    done();
+                }
+                videoElementMock.addEventListener('playing', onPlaying);
+
+                videoModel.setStallState('video', false);
             });
         });
     });
