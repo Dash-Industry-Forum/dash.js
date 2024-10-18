@@ -2873,8 +2873,6 @@ declare namespace dashjs {
 
         reset(): void;
 
-        onPlaybackCanPlay(): void;
-
         setPlaybackRate(value: number, ignoreReadyState?: boolean): void;
 
         setcurrentTime(currentTime: number, stickToBuffered: boolean): void;
