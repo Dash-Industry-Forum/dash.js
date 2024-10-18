@@ -864,8 +864,30 @@
         "section": "MPEG-5 Part 2 - LCEVC",
         "samples": [
             {
-                "title": "SEI Implementation",
-                "description": "A sample showing how to use the MPEG-5 Part 2 LCEVC in an SEI Based enhancement delivery.",
+                "title": "Scalable LCEVC carriage",
+                "description": "A sample showing how to use MPEG-5 Part 2 LCEVC with scalable delivery where higher resolution representations are created by LCEVC applied to the corresponding lower resolution ones",
+                "href": "lcevc-dual-track/lcevc-dual-track.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "Scalable with Debug Residuals",
+                "description": "A similar scalable delivery example with Debug Residuals. These display moving squares when LCEVC is being correctly decoded",
+                "href": "lcevc-dual-track/lcevc-dual-track-debug.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Module",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
+                "title": "LCEVC using SEI carriage",
+                "description": "A sample showing how to use MPEG-5 Part 2 LCEVC using SEI carriage to enhance the stream it is included in",
                 "href": "lcevc-sei/lcevc-sei.html",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
