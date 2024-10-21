@@ -338,4 +338,14 @@ export default {
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
     DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
+    CODEC_FAMILIES: {
+        MP3: 'mp3',
+        AAC: 'aac',
+        AC3: 'ac3',
+        EC3: 'ec3',
+        DTSX: 'dtsx',
+        DTSC: 'dtsc',
+        AVC: 'avc',
+        HEVC: 'hevc'
+    }
 }

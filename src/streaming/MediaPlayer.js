@@ -290,7 +290,8 @@ function MediaPlayer() {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
-                settings
+                settings,
+                protectionController
             })
         }
 
@@ -529,6 +530,19 @@ function MediaPlayer() {
      */
     function off(type, listener, scope) {
         eventBus.off(type, listener, scope);
+    }
+
+    /**
+     * Use this method to trigger an event via the eventBus {@link MediaPlayerEvents}
+     *
+     * @param {string} type - {@link MediaPlayerEvents}
+     * @param {object} payload - Payload of the event
+     * @param {Object} filters - Define a "streamId" and/or a "mediaType" for which this event is valid, e.g. {streamId, mediaType}
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function trigger(type, payload, filters) {
+        eventBus.trigger(type, payload, filters);
     }
 
     /**
@@ -1519,7 +1533,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
@@ -1554,7 +1568,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Sets the current quality for media type instead of letting the ABR Heuristics automatically selecting it.
+     * Sets the current quality for media type instead of letting the ABR Heuristics automatically select it.
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      * Note that you need to specify a relative index based on the position of the target entry in the return value of getRepresentationsByType().
      * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
@@ -1639,7 +1653,10 @@ function MediaPlayer() {
             return [];
         }
 
-        return mediaController.getTracksFor(type, streamInfo.id);
+        const tracks = mediaController.getTracksFor(type, streamInfo.id);
+        return tracks.filter((track) => {
+            return protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+        })
     }
 
     /**
@@ -1740,7 +1757,15 @@ function MediaPlayer() {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
-        mediaController.setTrack(track, noSettingsSave);
+
+        const canUseTrack = protectionController ? protectionController.areKeyIdsUsable(track.normalizedKeyIds) : true
+
+        if (!canUseTrack) {
+            logger.error(`Can not switch to track with index ${track.index} because key is not usable`);
+            return
+        }
+
+        mediaController.setTrack(track, { noSettingsSave });
     }
 
     /*
@@ -2358,6 +2383,7 @@ function MediaPlayer() {
             customParametersModel,
             adapter,
             settings,
+            protectionController,
             manifestModel,
             errHandler
         });
@@ -2422,6 +2448,7 @@ function MediaPlayer() {
 
         abrController.setConfig({
             streamController,
+            capabilities,
             domStorage,
             mediaPlayerModel,
             customParametersModel,
@@ -2489,9 +2516,7 @@ function MediaPlayer() {
                 publicOnly: true
             });
             Errors.extend(detectedProtection.errors);
-            if (!capabilities) {
-                capabilities = Capabilities(context).getInstance();
-            }
+
             protectionController = protection.createProtectionSystem({
                 debug,
                 errHandler,
@@ -2505,6 +2530,12 @@ function MediaPlayer() {
                 cmcdModel,
                 settings
             });
+
+            if (!capabilities) {
+                capabilities = Capabilities(context).getInstance();
+            }
+
+            capabilities.setProtectionController(protectionController);
 
             return protectionController;
         }
@@ -2800,6 +2831,7 @@ function MediaPlayer() {
         time,
         timeAsUtc,
         timeInDvrWindow,
+        trigger,
         triggerSteeringRequest,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,

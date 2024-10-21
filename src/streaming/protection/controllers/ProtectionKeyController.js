@@ -39,6 +39,7 @@ import Widevine from './../servers/Widevine.js';
 import ClearKey from './../servers/ClearKey.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import KeySystemMetadata from '../vo/KeySystemMetadata.js';
 
 /**
  * @module ProtectionKeyController
@@ -83,20 +84,20 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64, settings: settings });
+        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
+        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
+        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
+        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, debug: debug});
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -207,8 +208,8 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
-        let cp, ks, ksIdx, cpIdx;
+    function getSupportedKeySystemMetadataFromContentProtection(contentProtectionElements, applicationSpecifiedProtectionData, sessionType) {
+        let contentProtectionElement, keySystem, ksIdx, cpIdx;
         let supportedKS = [];
 
         if (!contentProtectionElements || !contentProtectionElements.length) {
@@ -216,27 +217,32 @@ function ProtectionKeyController() {
         }
 
         const mp4ProtectionElement = CommonEncryption.findMp4ProtectionElement(contentProtectionElements);
-        for (ksIdx = 0; ksIdx < keySystems.length; ++ksIdx) {
-            ks = keySystems[ksIdx];
+        for (ksIdx = 0; ksIdx < keySystems.length; ksIdx++) {
+            keySystem = keySystems[ksIdx];
 
             // Get protection data that applies for current key system
-            const protData = _getProtDataForKeySystem(ks.systemString, applicationSpecifiedProtectionData);
+            const protData = _getProtDataForKeySystem(keySystem.systemString, applicationSpecifiedProtectionData);
 
-            for (cpIdx = 0; cpIdx < contentProtectionElements.length; ++cpIdx) {
-                cp = contentProtectionElements[cpIdx];
-                if (cp.schemeIdUri.toLowerCase() === ks.schemeIdURI) {
+            for (cpIdx = 0; cpIdx < contentProtectionElements.length; cpIdx++) {
+                contentProtectionElement = contentProtectionElements[cpIdx];
+                if (contentProtectionElement.schemeIdUri.toLowerCase() === keySystem.schemeIdURI) {
                     // Look for DRM-specific ContentProtection
-                    let initData = ks.getInitData(cp, mp4ProtectionElement);
-
-                    supportedKS.push({
+                    let initData = keySystem.getInitData(contentProtectionElement, mp4ProtectionElement);
+                    const keySystemMetadata = new KeySystemMetadata({
                         ks: keySystems[ksIdx],
-                        keyId: cp.keyId,
+                        keyId: contentProtectionElement.keyId,
                         initData: initData,
                         protData: protData,
-                        cdmData: ks.getCDMData(protData ? protData.cdmData : null),
-                        sessionId: _getSessionId(protData, cp),
+                        cdmData: keySystem.getCDMData(protData ? protData.cdmData : null),
+                        sessionId: _getSessionId(protData, contentProtectionElement),
                         sessionType: _getSessionType(protData, sessionType)
-                    });
+                    })
+
+                    if (protData) {
+                        supportedKS.unshift(keySystemMetadata);
+                    } else {
+                        supportedKS.push(keySystemMetadata);
+                    }
                 }
             }
         }
@@ -307,13 +313,13 @@ function ProtectionKeyController() {
 
         // Our default server implementations do not do anything with "license-release" or
         // "individualization-request" messages, so we just send a success event
-        if (messageType === 'license-release' || messageType === 'individualization-request') {
+        if (messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE || messageType === ProtectionConstants.MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
             return null;
         }
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
+            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {
@@ -385,18 +391,18 @@ function ProtectionKeyController() {
     }
 
     instance = {
-        initialize,
-        setProtectionData,
-        isClearKey,
-        initDataEquals,
-        getKeySystems,
-        setKeySystems,
         getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection,
-        getSupportedKeySystemsFromSegmentPssh,
+        getKeySystems,
         getLicenseServerModelInstance,
+        getSupportedKeySystemMetadataFromContentProtection,
+        getSupportedKeySystemsFromSegmentPssh,
+        initDataEquals,
+        initialize,
+        isClearKey,
         processClearKeyLicenseRequest,
-        setConfig
+        setConfig,
+        setKeySystems,
+        setProtectionData,
     };
 
     return instance;

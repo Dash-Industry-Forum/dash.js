@@ -40,6 +40,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 expect(currentTrack.bitrateList.bandwidth).to.be.equal(track.bitrateList.bandwidth);
 
                 await checkIsProgressing(playerAdapter);
+                await playerAdapter.sleep(500);
             }
         });
 

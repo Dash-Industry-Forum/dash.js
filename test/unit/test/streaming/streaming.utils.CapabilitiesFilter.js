@@ -96,7 +96,7 @@ describe('CapabilitiesFilter', function () {
                 };
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function () {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function () {
                         return false;
                     }
                 });
@@ -133,7 +133,7 @@ describe('CapabilitiesFilter', function () {
                 };
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function (config) {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.codec === 'audio/mp4;codecs="mp4a.40.2"';
                     }
                 });
@@ -181,7 +181,7 @@ describe('CapabilitiesFilter', function () {
                 };
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function (config) {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.colorGamut === 'srgb' && config.transferFunction === 'srgb';
                     }
                 });
@@ -221,7 +221,7 @@ describe('CapabilitiesFilter', function () {
                 };
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function (config) {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.colorGamut === 'rec2020' && config.transferFunction === 'pq';
                     }
                 });
@@ -293,7 +293,7 @@ describe('CapabilitiesFilter', function () {
                 };
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function (config) {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.isSupported;
                     }
                 });
@@ -376,7 +376,7 @@ describe('CapabilitiesFilter', function () {
                 settings.update({ streaming: { capabilities: { filterHDRMetadataFormatEssentialProperties: true } } });
 
                 prepareCapabilitiesMock({
-                    name: 'supportsCodec', definition: function (config) {
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.colorGamut === 'srgb' && config.hdrMetadataType === 'smpteSt2094-10';
                     }
                 });

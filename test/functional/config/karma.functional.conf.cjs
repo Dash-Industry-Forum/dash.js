@@ -1,6 +1,7 @@
 const fs = require('fs');
-const yargs = require('yargs/yargs')
-const { hideBin } = require('yargs/helpers')
+const yargs = require('yargs/yargs');
+const { hideBin } = require('yargs/helpers');
+const path = require('path');
 
 module.exports = function (config) {
 
@@ -41,14 +42,14 @@ module.exports = function (config) {
         plugins: [
             'karma-*',  // default plugins
             '@*/karma-*', // default scoped plugins
+            require('./launchers/karma-webos-launcher.cjs'),
+            require('./launchers/karma-tizen-launcher.cjs')
         ],
 
         // list of files / patterns to load in the browser
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
-            { pattern: 'https://imasdk.googleapis.com/js/sdkloader/ima3_dai.js', watched: false, nocache: true },
-            { pattern: 'dist/dash.all.debug.js', watched: false, nocache: true },
-            { pattern: 'dist/dash.mss.min.js', watched: false, nocache: true },
+            { pattern: 'test/functional/lib/ima3_dai.js', watched: false, nocache: true },
             { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
         ].concat(includedTestfiles),
 
@@ -108,9 +109,9 @@ module.exports = function (config) {
         webpack: {},
 
         client: {
-            useIframe: false,
+            useIframe: testConfiguration && testConfiguration.hasOwnProperty('useIframe') ? testConfiguration.useIframe : false,
             mocha: {
-                timeout: 90000
+                timeout: 100000
             },
             testvectors
         },
@@ -128,8 +129,8 @@ module.exports = function (config) {
         autoWatch: false,
 
         captureTimeout: 600000,
-        browserNoActivityTimeout: 400000,
-        browserDisconnectTimeout: 20000,
+        browserNoActivityTimeout: 90000,
+        browserDisconnectTimeout: 90000,
         browserDisconnectTolerance: 2,
 
         // start these browsers
@@ -144,7 +145,7 @@ module.exports = function (config) {
 
         // Concurrency level
         // how many browser should be started simultaneous
-        concurrency: 2
+        concurrency: !isNaN(testConfiguration.concurrency) ? testConfiguration.concurrency : 2
     })
 }
 
@@ -176,8 +177,8 @@ function _getExcludedTestfiles(testConfiguration) {
 function _adjustConfigurationForLambdatest(testConfiguration) {
     if (testConfiguration && testConfiguration.customLaunchers) {
         Object.keys(testConfiguration.customLaunchers).forEach((key) => {
-            testConfiguration.customLaunchers[key].user = process.env.LAMBDATEST_USER;
-            testConfiguration.customLaunchers[key].accessKey = process.env.LAMBDATEST_ACCESS_KEY;
+            testConfiguration.customLaunchers[key].user = process.env.LT_USERNAME;
+            testConfiguration.customLaunchers[key].accessKey = process.env.LT_ACCESS_KEY;
             testConfiguration.customLaunchers[key].config = {
                 hostname: 'hub.lambdatest.com',
                 port: 80

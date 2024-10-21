@@ -33,8 +33,8 @@ describe('ProtectionController', function () {
             expect(protectionController.initializeForMedia.bind(protectionController, {})).to.throw('Missing config parameter(s)');
         });
 
-        it('should throw an error when getSupportedKeySystemsFromContentProtection is called and config object has not been set properly', function () {
-            expect(protectionController.getSupportedKeySystemsFromContentProtection.bind(protectionController)).to.throw('Missing config parameter(s)');
+        it('should throw an error when getSupportedKeySystemMetadataFromContentProtection is called and config object has not been set properly', function () {
+            expect(protectionController.getSupportedKeySystemMetadataFromContentProtection.bind(protectionController)).to.throw('Missing config parameter(s)');
         });
 
         it('should throw an error when loadKeySession is called and config object has not been set properly', function () {
@@ -122,8 +122,8 @@ describe('ProtectionController', function () {
             protectionController.createKeySession();
         });
 
-        it('should return the mocked array of ProtectionKeyControllerMock when getSupportedKeySystemsFromContentProtection is called', function () {
-            const keySystems = protectionController.getSupportedKeySystemsFromContentProtection();
+        it('should return the mocked array of ProtectionKeyControllerMock when getSupportedKeySystemMetadataFromContentProtection is called', function () {
+            const keySystems = protectionController.getSupportedKeySystemMetadataFromContentProtection();
 
             expect(keySystems).to.be.instanceOf(Array);
             expect(keySystems).not.to.be.empty;

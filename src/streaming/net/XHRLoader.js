@@ -47,6 +47,7 @@ function XHRLoader() {
      * @param {CommonMediaResponse} httpResponse
      */
     function load(httpRequest, httpResponse) {
+        xhr = null;
         xhr = new XMLHttpRequest();
         xhr.open(httpRequest.method, httpRequest.url, true);
 
@@ -66,7 +67,7 @@ function XHRLoader() {
         xhr.withCredentials = httpRequest.credentials === 'include';
         xhr.timeout = httpRequest.timeout;
 
-        xhr.onload = function() {
+        xhr.onload = function () {
             httpResponse.url = this.responseURL;
             httpResponse.status = this.status;
             httpResponse.statusText = this.statusText;
@@ -85,18 +86,32 @@ function XHRLoader() {
     }
 
     function abort() {
-        xhr.onloadend = xhr.onerror = xhr.onprogress = null; // Ignore events from aborted requests.
-        xhr.abort();
+        if (xhr) {
+            xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null; // Remove event listeners
+            xhr.abort();
+            xhr = null;
+        }
     }
 
     function getXhr() {
         return xhr
     }
 
+    function resetInitialSettings() {
+        abort();
+    }
+
+    function reset() {
+        abort();
+        instance = null;
+    }
+
     instance = {
         load,
         abort,
-        getXhr
+        getXhr,
+        reset,
+        resetInitialSettings
     };
 
     return instance;

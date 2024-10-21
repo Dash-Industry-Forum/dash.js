@@ -389,6 +389,10 @@ function FetchLoader() {
         }
     }
 
+    function reset() {
+
+    }
+
     /**
      * Default throughput calculation
      * @param downloadedData
@@ -473,10 +477,11 @@ function FetchLoader() {
     }
 
     instance = {
-        load,
         abort,
+        calculateDownloadedTime,
+        load,
+        reset,
         setConfig,
-        calculateDownloadedTime
     };
 
     return instance;

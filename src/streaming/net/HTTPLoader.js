@@ -573,8 +573,12 @@ function HTTPLoader(cfg) {
      * @private
      */
     function _updateRequestUrlAndHeaders(request) {
-        _updateRequestUrlAndHeadersWithCMCD(request);
+        _updateRequestUrlAndHeadersWithCmcd(request);
+        _addPathwayCloningParameters(request);
+        _addCommonAccessToken(request);
+    }
 
+    function _addPathwayCloningParameters(request) {
         // Add queryParams that came from pathway cloning
         if (request.queryParams) {
             const queryParams = Object.keys(request.queryParams).map((key) => {
@@ -583,10 +587,11 @@ function HTTPLoader(cfg) {
                     value: request.queryParams[key]
                 }
             })
-            request.url = Utils.addAditionalQueryParameterToUrl(request.url, queryParams);
+            request.url = Utils.addAdditionalQueryParameterToUrl(request.url, queryParams);
         }
+    }
 
-        // Add headers from CommonAccessToken
+    function _addCommonAccessToken(request) {
         const commonAccessToken = commonAccessTokenController.getCommonAccessTokenForUrl(request.url)
         if (commonAccessToken) {
             request.headers[Constants.COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken
@@ -598,7 +603,7 @@ function HTTPLoader(cfg) {
      * @param request
      * @private
      */
-    function _updateRequestUrlAndHeadersWithCMCD(request) {
+    function _updateRequestUrlAndHeadersWithCmcd(request) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
@@ -608,7 +613,7 @@ function HTTPLoader(cfg) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
-                request.url = Utils.addAditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 request.headers = Object.assign(request.headers, cmcdModel.getHeaderParameters(request));
             }
@@ -675,10 +680,32 @@ function HTTPLoader(cfg) {
         httpRequests = [];
     }
 
+    function resetInitialSettings() {
+        if (xhrLoader) {
+            xhrLoader.resetInitialSettings();
+        }
+    }
+
+    function reset() {
+        httpRequests = [];
+        delayedRequests = [];
+        retryRequests = [];
+        if (xhrLoader) {
+            xhrLoader.reset();
+        }
+        if (fetchLoader) {
+            fetchLoader.reset();
+        }
+        xhrLoader = null;
+        fetchLoader = null;
+    }
+
     instance = {
-        load,
         abort,
-        setConfig
+        load,
+        reset,
+        resetInitialSettings,
+        setConfig,
     };
 
     setup();

@@ -36,6 +36,7 @@
 
 import path from 'path-browserify'
 import {UAParser} from 'ua-parser-js'
+import Constants from '../streaming/constants/Constants.js';
 
 class Utils {
     static mixin(dest, source, copy) {
@@ -80,23 +81,18 @@ class Utils {
         return Utils.mixin(r, src, Utils.clone);
     }
 
-    static addAditionalQueryParameterToUrl(url, params) {
+    static addAdditionalQueryParameterToUrl(url, params) {
         try {
             if (!params || params.length === 0) {
                 return url;
             }
 
-            let modifiedUrl = new URL(url);
-
-            params.forEach((param) => {
-                if (param.key && param.value) {
-                    modifiedUrl.searchParams.set(param.key, param.value);
-                }
+            let updatedUrl = url;
+            params.forEach(({ key, value }) => {
+                const separator = updatedUrl.includes('?') ? '&' : '?';
+                updatedUrl += `${separator}${(encodeURIComponent(key))}=${(encodeURIComponent(value))}`;
             });
-
-            return modifiedUrl.href;
-
-
+            return updatedUrl;
         } catch (e) {
             return url;
         }
@@ -208,6 +204,100 @@ class Utils {
     static stringHasProtocol(string) {
         return (/(http(s?)):\/\//i.test(string))
     }
+
+    static bufferSourceToDataView(bufferSource) {
+        return Utils.toDataView(bufferSource, DataView);
+    }
+
+    static bufferSourceToInt8(bufferSource) {
+        return Utils.toDataView(bufferSource, Uint8Array)
+    }
+
+    static bufferSourceToHex(data) {
+        const arr = Utils.bufferSourceToInt8(data)
+        let hex = '';
+        for (let value of arr) {
+            value = value.toString(16);
+            if (value.length === 1) {
+                value = '0' + value;
+            }
+            hex += value;
+        }
+        return hex;
+    }
+
+    static toDataView(bufferSource, Type) {
+        const buffer = Utils.getArrayBuffer(bufferSource);
+        let bytesPerElement = 1;
+        if ('BYTES_PER_ELEMENT' in DataView) {
+            bytesPerElement = DataView.BYTES_PER_ELEMENT;
+        }
+
+        const dataEnd = ((bufferSource.byteOffset || 0) + bufferSource.byteLength) /
+            bytesPerElement;
+        const rawStart = ((bufferSource.byteOffset || 0)) / bytesPerElement;
+        const start = Math.floor(Math.max(0, Math.min(rawStart, dataEnd)));
+        const end = Math.floor(Math.min(start + Math.max(Infinity, 0), dataEnd));
+        return new Type(buffer, start, end - start);
+    }
+
+    static getArrayBuffer(view) {
+        if (view instanceof ArrayBuffer) {
+            return view;
+        } else {
+            return view.buffer;
+        }
+    }
+
+    static getCodecFamily(codecString) {
+        const { base, profile } = Utils._getCodecParts(codecString)
+
+        switch (base) {
+            case 'mp4a':
+                switch (profile) {
+                    case '69':
+                    case '6b':
+                    case '40.34':
+                        return Constants.CODEC_FAMILIES.MP3
+                    case '66':
+                    case '67':
+                    case '68':
+                    case '40.2':
+                    case '40.02':
+                    case '40.5':
+                    case '40.05':
+                    case '40.29':
+                    case '40.42':
+                        return Constants.CODEC_FAMILIES.AAC
+                    case 'a5':
+                        return Constants.CODEC_FAMILIES.AC3
+                    case 'e6':
+                        return Constants.CODEC_FAMILIES.EC3
+                    case 'b2':
+                        return Constants.CODEC_FAMILIES.DTSX
+                    case 'a9':
+                        return Constants.CODEC_FAMILIES.DTSC
+                }
+                break;
+            case 'avc1':
+            case 'avc3':
+                return Constants.CODEC_FAMILIES.AVC
+            case 'hvc1':
+            case 'hvc3':
+                return Constants.CODEC_FAMILIES.HEVC
+            default:
+                return base
+        }
+
+        return base;
+    }
+
+    static _getCodecParts(codecString) {
+        const [base, ...rest] = codecString.split('.');
+        const profile = rest.join('.');
+        return { base, profile };
+    }
+
 }
 
 export default Utils;

@@ -4,16 +4,17 @@
       "all"
     ],
     "excluded": [
+      "buffer/buffer-to-keep-seek",
       "vendor/google-ad-manager-emsg"
     ]
   },
   "testvectors": [
     {
-      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
-      "type": "live",
-      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "name": "Segment Base",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
       "includedTestfiles": [
-        "playback/seek-to-presentation-time"
+        "playback-advanced/switch-quality"
       ]
     }
   ]

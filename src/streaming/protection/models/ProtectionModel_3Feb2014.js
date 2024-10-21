@@ -46,6 +46,7 @@ import KeyMessage from '../vo/KeyMessage.js';
 import KeySystemConfiguration from '../vo/KeySystemConfiguration.js';
 import KeySystemAccess from '../vo/KeySystemAccess.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
 
 function ProtectionModel_3Feb2014(config) {
 
@@ -62,7 +63,7 @@ function ProtectionModel_3Feb2014(config) {
         keySystem,
         mediaKeys,
         keySystemAccess,
-        sessions,
+        sessionTokens,
         eventHandler,
         protectionKeyController;
 
@@ -72,15 +73,15 @@ function ProtectionModel_3Feb2014(config) {
         keySystem = null;
         mediaKeys = null;
         keySystemAccess = null;
-        sessions = [];
+        sessionTokens = [];
         protectionKeyController = ProtectionKeyController(context).getInstance();
         eventHandler = createEventHandler();
     }
 
     function reset() {
         try {
-            for (let i = 0; i < sessions.length; i++) {
-                closeKeySession(sessions[i]);
+            for (let i = 0; i < sessionTokens.length; i++) {
+                closeKeySession(sessionTokens[i]);
             }
             if (videoElement) {
                 videoElement.removeEventListener(api.needkey, eventHandler);
@@ -93,14 +94,14 @@ function ProtectionModel_3Feb2014(config) {
 
     function getAllInitData() {
         const retVal = [];
-        for (let i = 0; i < sessions.length; i++) {
-            retVal.push(sessions[i].initData);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            retVal.push(sessionTokens[i].initData);
         }
         return retVal;
     }
 
-    function getSessions() {
-        return sessions;
+    function getSessionTokens() {
+        return sessionTokens;
     }
 
     function requestKeySystemAccess(ksConfigurations) {
@@ -237,7 +238,7 @@ function ProtectionModel_3Feb2014(config) {
         session.addEventListener(api.close, sessionToken);
 
         // Add to our session list
-        sessions.push(sessionToken);
+        sessionTokens.push(sessionToken);
         logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
         eventBus.trigger(events.KEY_SESSION_CREATED, { data: sessionToken });
     }
@@ -271,9 +272,9 @@ function ProtectionModel_3Feb2014(config) {
         session.removeEventListener(api.close, sessionToken);
 
         // Remove from our session list
-        for (let i = 0; i < sessions.length; i++) {
-            if (sessions[i] === sessionToken) {
-                sessions.splice(i, 1);
+        for (let i = 0; i < sessionTokens.length; i++) {
+            if (sessionTokens[i] === sessionToken) {
+                sessionTokens.splice(i, 1);
                 break;
             }
         }
@@ -300,7 +301,7 @@ function ProtectionModel_3Feb2014(config) {
                     case api.needkey:
                         if (event.initData) {
                             const initData = ArrayBuffer.isView(event.initData) ? event.initData.buffer : event.initData;
-                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, 'cenc') });
+                            eventBus.trigger(events.NEED_KEY, { key: new NeedKey(initData, ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) });
                         }
                         break;
                 }
@@ -353,6 +354,18 @@ function ProtectionModel_3Feb2014(config) {
                 return 'temporary';
             },
 
+            getKeyStatuses: function () {
+                return {
+                    size: 0,
+                    has: () => {
+                        return false
+                    },
+                    get: () => {
+                        return undefined
+                    }
+                }
+            },
+
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the
             // same events
@@ -382,7 +395,7 @@ function ProtectionModel_3Feb2014(config) {
 
     instance = {
         getAllInitData,
-        getSessions,
+        getSessionTokens,
         requestKeySystemAccess,
         selectKeySystem,
         setMediaElement,

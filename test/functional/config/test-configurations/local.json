@@ -1,11 +1,13 @@
 {
   "browsers": [
     "chrome_custom",
-    "firefox_custom"
+    "firefox_custom",
+    "safari_custom"
   ],
   "hostname": "localhost",
   "port": 4200,
   "protocol": "http",
+  "concurrency": 3,
   "customLaunchers": {
     "chrome_custom": {
       "base": "Chrome",
@@ -19,6 +21,12 @@
     "firefox_custom": {
       "base": "Firefox",
       "prefs": {}
+    },
+    "safari_custom": {
+      "base": "SafariNative",
+      "flags": [
+        "--disable-popup-blocking"
+      ]
     }
   },
   "reporters": [

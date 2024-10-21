@@ -1,5 +1,6 @@
 import Utils from '../../../../src/core/Utils.js'
 import {expect} from 'chai';
+import {Constants} from '../../../../index.js';
 
 describe('Utils', () => {
     describe('getRelativeUrl', () => {
@@ -110,6 +111,42 @@ describe('Utils', () => {
         })
     })
 
+    describe('addAdditionalQueryParameterToUrl', () => {
+
+        it('Should escape URL with whitespaces correctly', () => {
+            const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, [{ key: 'test', value: 'testvalue' }]);
+            expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces&test=testvalue');
+        })
+
+        it('Should escape URL with CMCD parameters correctly', () => {
+            const params = [{
+                key: 'CMCD',
+                value: 'bl=4000,br=14932,d=4000,dl=4000,mtp=84100,nor="bbb_30fps_3840x2160_12000k_3.m4v",ot=v,rtp=74700,sf=d,sid="4dba0bf4-e517-4b7c-b34a-d1a75206cd53",st=v,tb=14932'
+            }];
+            const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, params);
+            expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces&CMCD=bl%3D4000%2Cbr%3D14932%2Cd%3D4000%2Cdl%3D4000%2Cmtp%3D84100%2Cnor%3D%22bbb_30fps_3840x2160_12000k_3.m4v%22%2Cot%3Dv%2Crtp%3D74700%2Csf%3Dd%2Csid%3D%224dba0bf4-e517-4b7c-b34a-d1a75206cd53%22%2Cst%3Dv%2Ctb%3D14932');
+        })
+
+        it('Should return the original URL if no query parameters are provided', () => {
+            const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces';
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url);
+            expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=something with spaces');
+        })
+
+        it('Should not change capitalization of existing query parameters', () => {
+            const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=%3d';
+            const params = [{
+                key: 'CMCD',
+                value: 'bl=4000,br=14932,d=4000,dl=4000,mtp=84100,nor="bbb_30fps_3840x2160_12000k_3.m4v",ot=v,rtp=74700,sf=d,sid="4dba0bf4-e517-4b7c-b34a-d1a75206cd53",st=v,tb=14932'
+            }];
+            const modifiedUrl = Utils.addAdditionalQueryParameterToUrl(url, params);
+            expect(modifiedUrl).to.be.equal('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd?a=%3d&CMCD=bl%3D4000%2Cbr%3D14932%2Cd%3D4000%2Cdl%3D4000%2Cmtp%3D84100%2Cnor%3D%22bbb_30fps_3840x2160_12000k_3.m4v%22%2Cot%3Dv%2Crtp%3D74700%2Csf%3Dd%2Csid%3D%224dba0bf4-e517-4b7c-b34a-d1a75206cd53%22%2Cst%3Dv%2Ctb%3D14932');
+
+        })
+    })
+
     describe('getHostFromUrl', () => {
 
         it('Should return a valid host for an http URL', () => {
@@ -119,6 +156,16 @@ describe('Utils', () => {
         it('Should return a valid host for an http URL', () => {
             expect(Utils.getHostFromUrl('https://dash.akamaized.net')).to.be.equal('dash.akamaized.net');
         })
+    })
 
+    describe('getCodecFamily', () => {
+
+        it('should return AAC codec family', () => {
+            expect(Utils.getCodecFamily('mp4a.40.2')).to.be.equal(Constants.CODEC_FAMILIES.AAC);
+        })
+
+        it('should return default base for unknown family', () => {
+            expect(Utils.getCodecFamily('vp09.00.10.08.00.02.02.02.00')).to.be.equal('vp09');
+        })
     })
 })

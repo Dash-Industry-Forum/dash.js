@@ -45,6 +45,8 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
+import ProtectionEvents from '../protection/ProtectionEvents.js';
+import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -57,12 +59,11 @@ function StreamController() {
     let instance, logger, capabilities, capabilitiesFilter, manifestUpdater, manifestLoader, manifestModel, adapter,
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
-        initCache,
-        errHandler, timelineConverter, streams, activeStream, protectionController, textController, protectionData,
+        initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController,
+        protectionData,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -141,6 +142,8 @@ function StreamController() {
         eventBus.on(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+
+        eventBus.on(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
 
     function unRegisterEvents() {
@@ -165,6 +168,8 @@ function StreamController() {
         eventBus.off(Events.CURRENT_TRACK_CHANGED, _onCurrentTrackChanged, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY, _onLiveDelaySettingUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT, _onLiveDelaySettingUpdated, instance);
+
+        eventBus.off(ProtectionEvents.INTERNAL_KEY_STATUSES_CHANGED, _onInternalKeyStatusesChanged, instance);
     }
 
     function _checkConfig() {
@@ -423,7 +428,7 @@ function StreamController() {
             activeStream = stream;
 
             if (previousStream) {
-                keepBuffers = _canSourceBuffersBeReused(stream, previousStream);
+                keepBuffers = _canSourceBuffersBeKept(stream, previousStream);
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
@@ -516,12 +521,7 @@ function StreamController() {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
         activeStream.activate(mediaSource, inputParameters.keepBuffers ? bufferSinks : undefined, representationsFromPreviousPeriod)
             .then((sinks) => {
-                // check if change type is supported by the browser
                 if (sinks) {
-                    const keys = Object.keys(sinks);
-                    if (keys.length > 0 && sinks[keys[0]].getBuffer().changeType) {
-                        supportsChangeType = true;
-                    }
                     bufferSinks = sinks;
                 }
 
@@ -667,14 +667,14 @@ function StreamController() {
      * @return {boolean}
      * @private
      */
-    function _canSourceBuffersBeReused(nextStream, previousStream) {
+    function _canSourceBuffersBeKept(nextStream, previousStream) {
         try {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method is implemented
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
-                && (supportsChangeType && settings.get().streaming.buffer.useChangeTypeForTrackSwitch));
+                && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
         } catch (e) {
             return false;
         }
@@ -689,7 +689,7 @@ function StreamController() {
     function _onStreamCanLoadNext(nextStream, previousStream = null) {
 
         if (mediaSource && !nextStream.getPreloaded()) {
-            let seamlessPeriodSwitch = _canSourceBuffersBeReused(nextStream, previousStream);
+            let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
 
             if (seamlessPeriodSwitch) {
                 const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
@@ -778,13 +778,12 @@ function StreamController() {
     }
 
     /**
-     * When the quality is changed in the currently active stream, and we do an aggressive replacement we must stop prebuffering. This is similar to a replacing track switch
-     * Otherwise preloading can go on.
+     * When the quality is changed in the currently active stream we stop the prebuffering to avoid inconsistencies in the buffer settings like codec and append window
      * @param e
      * @private
      */
     function _onQualityChanged(e) {
-        if (e.streamInfo.id === activeStream.getId() && e.reason && e.reason.forceReplace) {
+        if (e.streamInfo.id === activeStream.getId()) {
             _deactivateAllPreloadingStreams();
         }
 
@@ -1226,6 +1225,7 @@ function StreamController() {
             if (!shouldKeepStream) {
                 logger.debug(`Removing stream ${stream.getId()}`);
                 stream.reset(true);
+                stream = null;
             }
 
             return shouldKeepStream;
@@ -1328,6 +1328,80 @@ function StreamController() {
         dashMetrics.createPlaylistMetrics(playbackController.getTime() * 1000, startReason);
     }
 
+    function _onInternalKeyStatusesChanged(e) {
+        protectionController.updateKeyStatusesMap(e);
+        _handleKeyStatuses();
+    }
+
+    function _handleKeyStatuses() {
+        const streamProcessors = getActiveStreamProcessors();
+        let hasUnusableKey = false;
+
+        streamProcessors.forEach((streamProcessor) => {
+            const currentMediaInfo = streamProcessor.getMediaInfo();
+            const areKeyIdsUsable =
+                currentMediaInfo ? capabilities.areKeyIdsUsable(currentMediaInfo) : true;
+
+            if (!areKeyIdsUsable) {
+                hasUnusableKey = true;
+                _handleUnusableKeyId(streamProcessor)
+            } else {
+                const areKeyIdsExpired = currentMediaInfo ? capabilities.areKeyIdsExpired(currentMediaInfo) : false;
+                if (areKeyIdsExpired) {
+                    _handleExpiredKeyId(streamProcessor);
+                }
+            }
+        })
+        // we observed that playback still stalls if we replace the buffer when playhead is at 0. Do a minimal seek to avoid this
+        if (hasUnusableKey) {
+            _handleUnusableKeyStall();
+        }
+    }
+
+    function _handleUnusableKeyStall() {
+        if (playbackController.getTime() === 0) {
+            eventBus.once(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, () => {
+                _triggerUnusableKeySeek();
+            }, instance)
+        } else {
+            playbackController.isProgressing(500)
+                .then((isProgressing) => {
+                    if (!isProgressing) {
+                        _triggerUnusableKeySeek();
+                    }
+                })
+        }
+    }
+
+    function _triggerUnusableKeySeek() {
+        const time = playbackController.getTime()
+        playbackController.seek(time + 0.01, false, false);
+    }
+
+    function _handleUnusableKeyId(streamProcessor) {
+        const possibleMediaInfos = streamProcessor.getAllMediaInfos();
+        const supportedMediaInfos = possibleMediaInfos.filter((mediaInfo) => {
+            return capabilities.areKeyIdsUsable(mediaInfo);
+        })
+
+        if (!supportedMediaInfos || supportedMediaInfos.length === 0) {
+            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
+            return
+        }
+
+        mediaController.setTrack(supportedMediaInfos[0], { replaceBuffer: true })
+    }
+
+    function _handleExpiredKeyId(streamProcessor) {
+        const streamId = streamProcessor.getStreamId();
+        const stream = getStreamById(streamId);
+
+        if (stream) {
+            stream.triggerProtectionError({ error: new DashJSError(ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE, ProtectionErrors.KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE) })
+        }
+
+    }
+
     function _onPlaybackError(e) {
         if (!e.error) {
             return;
@@ -1386,13 +1460,13 @@ function StreamController() {
      * @private
      */
     function _handleMediaErrorDecode() {
-        logger.warn('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
+        logger.error('A MEDIA_ERR_DECODE occured: Resetting the MediaSource');
         const seekTime = playbackController.getTime();
         // Deactivate the current stream.
         activeStream.deactivate(false);
 
         // Reset MSE
-        logger.warn(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
+        logger.info(`MediaSource has been resetted. Resuming playback from time ${seekTime}`);
         _openMediaSource({ seekTime, keepBuffers: false, streamActivated: false });
     }
 
@@ -1523,7 +1597,6 @@ function StreamController() {
         autoPlay = true;
         playbackEndedTimerInterval = null;
         firstLicenseIsFetched = false;
-        supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         errorInformation = {

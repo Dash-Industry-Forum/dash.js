@@ -80,7 +80,7 @@ import Events from './events/Events.js';
  *                   { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
- *               useMediaCapabilitiesApi: false,
+ *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
  *               filterHDRMetadataFormatEssentialProperties: false
  *            },
@@ -117,7 +117,7 @@ import Events from './events/Events.js';
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
- *                useChangeTypeForTrackSwitch: true,
+ *                useChangeType: true,
  *                mediaSourceDurationInfinity: true,
  *                resetSourceBuffersForTrackSwitch: false
  *            },
@@ -302,6 +302,7 @@ import Events from './events/Events.js';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+ *                includeInRequests: ['segment', 'mpd']
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -414,8 +415,8 @@ import Events from './events/Events.js';
  * Avoids pruning of the buffered range that contains the current playback time.
  *
  * That buffered range is likely to have been enqueued for playback. Pruning it causes a flush and reenqueue in WPE and WebKitGTK based browsers. This stresses the video decoder and can cause stuttering on embedded platforms.
- * @property {boolean} [useChangeTypeForTrackSwitch=true]
- * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different track.
+ * @property {boolean} [useChangeType=true]
+ * If this flag is set to true then dash.js will use the MSE v.2 API call "changeType()" before switching to a different codec family.
  * Note that some platforms might not implement the changeType function. dash.js is checking for the availability before trying to call it.
  * @property {boolean} [mediaSourceDurationInfinity=true]
  * If this flag is set to true then dash.js will allow `Infinity` to be set as the MediaSource duration otherwise the duration will be set to `Math.pow(2,32)` instead of `Infinity` to allow appending segments indefinitely.
@@ -660,7 +661,7 @@ import Events from './events/Events.js';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {Array.<string>} [supportedEssentialProperties]
  * List of supported \<EssentialProperty\> elements
- * @property {boolean} [useMediaCapabilitiesApi=false]
+ * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
  * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
@@ -1062,7 +1063,7 @@ function Settings() {
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
                 ],
-                useMediaCapabilitiesApi: false,
+                useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
                 filterHDRMetadataFormatEssentialProperties: false
             },
@@ -1099,7 +1100,7 @@ function Settings() {
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
-                useChangeTypeForTrackSwitch: true,
+                useChangeType: true,
                 mediaSourceDurationInfinity: true,
                 resetSourceBuffersForTrackSwitch: false
             },
@@ -1299,7 +1300,7 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
-                includeInRequests: ['segment'],
+                includeInRequests: ['segment', 'mpd'],
                 reporting: {
                     requestMode: {
                         version: 1

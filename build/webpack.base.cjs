@@ -8,23 +8,24 @@ const commonConfig = {
         rules: [
             {
                 test: /\.(js)$/,
-                loader: 'string-replace-loader',
-                options: {
-                    search: '__VERSION__',
-                    replace: pkg.version,
-                }
-            },
-            {
-                test: /\.(js)$/,
-                exclude: /node_modules/,
                 use: [
                     {
-                        loader: `babel-loader`,
-                        options: { presets: ['@babel/env'] }
-                    }
-                ]
-            }
-        ]
+                        loader: 'string-replace-loader',
+                        options: {
+                            search: '__VERSION__',
+                            replace: pkg.version,
+                        },
+                    },
+                    {
+                        loader: 'babel-loader',
+                        options: {
+                            targets: 'defaults',
+                            presets: ['@babel/preset-env']
+                        },
+                    },
+                ],
+            },
+        ],
     },
     //Webpack 5 no longer polyfills Node.js core modules automatically
     resolve: {

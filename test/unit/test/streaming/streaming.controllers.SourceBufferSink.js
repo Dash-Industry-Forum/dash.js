@@ -52,10 +52,11 @@ describe('SourceBufferSink', function () {
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="stpp"', function (done) {
             let mediaInfo = {
-                codec: 'application/mp4;codecs="stpp"'
+                codec: 'application/mp4;codecs="stpp"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
                     done();
@@ -67,10 +68,11 @@ describe('SourceBufferSink', function () {
 
         it('should create and return a text buffer if codec is of type application/mp4;codecs="wvtt"', function (done) {
             let mediaInfo = {
-                codec: 'application/mp4;codecs="wvtt"'
+                codec: 'application/mp4;codecs="wvtt"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
                     done();
@@ -83,10 +85,11 @@ describe('SourceBufferSink', function () {
         it('should create and return a text buffer if of type text and not fragmented', function (done) {
             let mediaInfo = {
                 type: 'text',
-                isFragmented: false
+                isFragmented: false,
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(sink.getBuffer()).to.be.instanceOf(TextSourceBufferMock); // jshint ignore:line
                     done();
@@ -98,10 +101,11 @@ describe('SourceBufferSink', function () {
 
         it('should throw an error if codec is unknown', function (done) {
             let mediaInfo = {
-                codec: 'unknown'
+                codec: 'unknown',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     done(new Error('Should reject creation'));
                 })
@@ -114,10 +118,11 @@ describe('SourceBufferSink', function () {
     describe('Method removeSourceBuffer', function () {
         it('should remove a created buffer', function (done) {
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(mediaSource.buffers).to.have.lengthOf(1);
                     sink.reset();
@@ -135,10 +140,11 @@ describe('SourceBufferSink', function () {
 
         beforeEach(function (done) {
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(mediaSource.buffers).to.have.lengthOf(1);
                     buffer = mediaSource.buffers[0];
@@ -177,10 +183,11 @@ describe('SourceBufferSink', function () {
 
         beforeEach(function (done) {
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(mediaSource.buffers).to.have.lengthOf(1);
                     done();
@@ -220,10 +227,11 @@ describe('SourceBufferSink', function () {
 
         beforeEach(function (done) {
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(mediaSource.buffers).to.have.lengthOf(1);
                     done();
@@ -253,10 +261,11 @@ describe('SourceBufferSink', function () {
 
         beforeEach(function (done) {
             let mediaInfo = {
-                codec: 'video/webm; codecs="vp8, vorbis"'
+                codec: 'video/webm; codecs="vp8, vorbis"',
+                streamInfo
             };
 
-            sink.initializeForFirstUse(streamInfo, mediaInfo)
+            sink.initializeForFirstUse(mediaInfo)
                 .then(() => {
                     expect(mediaSource.buffers).to.have.lengthOf(1);
                     done();
@@ -269,10 +278,10 @@ describe('SourceBufferSink', function () {
         it('should abort', function (done) {
             let buffer = mediaSource.buffers[0];
 
-            expect(buffer.aborted).to.be.false; // jshint ignore:line
+            expect(buffer.aborted).to.be.false;
             sink.abort()
                 .then(() => {
-                    expect(buffer.aborted).to.be.true; // jshint ignore:line
+                    expect(buffer.aborted).to.be.true;
                     done();
                 })
                 .catch((e) => {
@@ -284,10 +293,10 @@ describe('SourceBufferSink', function () {
             mediaSource.readyState = 'closed';
             let buffer = mediaSource.buffers[0];
 
-            expect(buffer.aborted).to.be.false; // jshint ignore:line
+            expect(buffer.aborted).to.be.false;
             sink.abort()
                 .then(() => {
-                    expect(buffer.aborted).to.be.false; // jshint ignore:line
+                    expect(buffer.aborted).to.be.false;
                     done();
                 })
                 .catch((e) => {
