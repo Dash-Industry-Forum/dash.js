@@ -1,9 +1,9 @@
 name: verify_pull_request
 
 on:
-    push:
+    pull_request:
         branches:
-            - '**'  # Triggers on push to any branch
+            - 'development'
 
 jobs:
     merge_build_and_unit_test:
