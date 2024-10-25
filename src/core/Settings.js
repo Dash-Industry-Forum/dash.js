@@ -73,7 +73,8 @@ import Events from './events/Events';
  *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
- *               useMediaCapabilitiesApi: false
+ *               useMediaCapabilitiesApi: false,
+ *               replaceCodecs: []
  *            },
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
@@ -589,6 +590,8 @@ import Events from './events/Events';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ * @property {Array.<[string, string]>} [replaceCodecs=[]]
+ * List of codecs to be replaced.
  */
 
 /**
@@ -891,7 +894,8 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
-                useMediaCapabilitiesApi: false
+                useMediaCapabilitiesApi: false,
+                replaceCodecs: []
             },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
