@@ -44,11 +44,11 @@ describe('ManifestUpdater', function () {
             error: { code: Errors.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
-        expect(spy).to.have.not.been.called(); // jshint ignore:line
+        expect(spy).to.have.not.been.called();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 
-        expect(errHandlerMock.errorCode).to.equal(undefined); // jshint ignore:line
+        expect(errHandlerMock.errorCode).to.equal(undefined);
     });
 
     it('should not call MANIFEST_UPDATED if a parsing error occurs, errorHandler should send an error', function () {
@@ -59,11 +59,11 @@ describe('ManifestUpdater', function () {
             error: { code: Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE, message: manifestErrorMockText }
         });
 
-        expect(spy).to.have.not.been.called(); // jshint ignore:line
+        expect(spy).to.have.not.been.called();
 
         eventBus.off(Events.MANIFEST_UPDATED, spy);
 
-        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE); // jshint ignore:line
+        expect(errHandlerMock.errorCode).to.equal(Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE);
     });
 
     it('should call MANIFEST_UPDATED with existing manifest if update provided 204', function () {
@@ -81,7 +81,7 @@ describe('ManifestUpdater', function () {
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
         expect(inMemoryManifest.loadedTime).to.not.equal(originalTime);
-        expect(spy.calledOnce).to.be.true; // jshint ignore:line
+        expect(spy.calledOnce).to.be.true;
         expect(spy.firstCall.args[0].manifest).to.equal(inMemoryManifest);
 
         manifestModelMock.setValue(null);
@@ -110,10 +110,10 @@ describe('ManifestUpdater', function () {
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
         expect(inMemoryManifest.loadedTime).to.not.equal(originalTime);
-        expect(patchCheckStub.called).to.be.true; // jshint ignore:line
-        expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
-        expect(applyPatchStub.calledWith(inMemoryManifest, patch)).to.be.true; // jshint ignore:line
-        expect(spy.calledOnce).to.be.true; // jshint ignore:line
+        expect(patchCheckStub.called).to.be.true;
+        expect(isPatchValidStub.called).to.be.true;
+        expect(applyPatchStub.calledWith(inMemoryManifest, patch)).to.be.true;
+        expect(spy.calledOnce).to.be.true;
         expect(spy.firstCall.args[0].manifest).to.equal(inMemoryManifest);
 
         manifestModelMock.setValue(null);
@@ -143,10 +143,10 @@ describe('ManifestUpdater', function () {
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: patch });
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
-        expect(patchCheckStub.called).to.be.true; // jshint ignore:line
-        expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
-        expect(applyPatchStub.called).to.be.false; // jshint ignore:line
-        expect(loaderStub.called).to.be.true; // jshint ignore:line
+        expect(patchCheckStub.called).to.be.true;
+        expect(isPatchValidStub.called).to.be.true;
+        expect(applyPatchStub.called).to.be.false;
+        expect(loaderStub.called).to.be.true;
 
         manifestModelMock.setValue(null);
         patchCheckStub.restore();
@@ -173,10 +173,10 @@ describe('ManifestUpdater', function () {
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: patch });
 
         expect(manifestModelMock.getValue()).to.equal(inMemoryManifest);
-        expect(patchCheckStub.called).to.be.true; // jshint ignore:line
-        expect(isPatchValidStub.called).to.be.true; // jshint ignore:line
-        expect(applyPatchStub.called).to.be.true; // jshint ignore:line
-        expect(loaderStub.called).to.be.true; // jshint ignore:line
+        expect(patchCheckStub.called).to.be.true;
+        expect(isPatchValidStub.called).to.be.true;
+        expect(applyPatchStub.called).to.be.true;
+        expect(loaderStub.called).to.be.true;
 
         manifestModelMock.setValue(null);
         patchCheckStub.restore();
@@ -219,7 +219,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(patchLocation[0].url)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(patchLocation[0].url)).to.be.true;
         });
 
         it('should utilize location for update if provided one and no patch location', function () {
@@ -228,7 +228,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(location[0].url)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(location[0].url)).to.be.true;
         });
 
         it('should utilize original mpd location if no other signal provided', function () {
@@ -237,7 +237,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(manifest.url)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(manifest.url)).to.be.true;
         });
 
         it('should make relative locations absolute relative to the manifest', function () {
@@ -246,7 +246,7 @@ describe('ManifestUpdater', function () {
 
             manifestUpdater.refreshManifest();
 
-            expect(loadStub.calledWith(location[0].url)).to.be.true; // jshint ignore:line
+            expect(loadStub.calledWith(location[0].url)).to.be.true;
         });
     });
 });
