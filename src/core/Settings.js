@@ -92,6 +92,7 @@ import Events from './events/Events';
  *                keepProtectionMediaKeys: false,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
+ *                downgradePlayReadyPSSH: false
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -580,7 +581,7 @@ import Events from './events/Events';
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
- * @property {boolean} downgradePlayReadyPSSH
+ * @property {boolean} [downgradePlayReadyPSSH=false]
  * If set to true the player will downgrade v1 PSSH boxes to v0.
  */
 
