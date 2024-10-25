@@ -98,6 +98,29 @@ class Utils {
         }
     }
 
+    static removeQueryParameterFromUrl(url, queryParameter) {
+        if (!url || !queryParameter) {
+            return url;
+        }
+        // Parse the URL
+        const parsedUrl = new URL(url);
+
+        // Get the search parameters
+        const params = new URLSearchParams(parsedUrl.search);
+
+        if (!params || params.size === 0) {
+            return url;
+        }
+
+        // Remove the CMCD parameter
+        params.delete(queryParameter);
+
+        // Reconstruct the URL without the CMCD parameter
+        parsedUrl.search = params.toString();
+
+        return parsedUrl.toString();
+    }
+
     static parseHttpHeaders(headerStr) {
         let headers = {};
         if (!headerStr) {
