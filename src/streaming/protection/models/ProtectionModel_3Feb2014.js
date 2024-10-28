@@ -165,6 +165,22 @@ function ProtectionModel_3Feb2014(config) {
         })
     }
 
+    function _getErrorDetails(error) {
+        try {
+            if (typeof error === 'string') {
+                return error;
+            }
+            if (typeof error !== 'object') {
+                return 'unknown error';
+            }
+            const { code, message, name } = error;
+
+            return `Code: ${code} (${error[code]}) Name: ${name} Message: ${message}`;
+        } catch (e) {
+            return 'failed to get error details';
+        }
+    }
+
     function selectKeySystem(ksAccess) {
         return new Promise((resolve, reject) => {
             try {
@@ -176,7 +192,7 @@ function ProtectionModel_3Feb2014(config) {
                 }
                 resolve(keySystem);
             } catch (error) {
-                reject({ error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- TODO' });
+                reject({ error: 'Error selecting keys system (' + keySystem.systemString + ')! Could not create MediaKeys -- ' + _getErrorDetails(error) });
             }
         })
     }

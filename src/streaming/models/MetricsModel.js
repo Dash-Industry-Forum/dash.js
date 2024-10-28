@@ -35,6 +35,7 @@ import {HTTPRequest, HTTPRequestTrace} from '../vo/metrics/HTTPRequest';
 import TrackSwitch from '../vo/metrics/RepresentationSwitch';
 import BufferLevel from '../vo/metrics/BufferLevel';
 import BufferState from '../vo/metrics/BufferState';
+import BufferingTime from '../vo/metrics/BufferingTime';
 import DVRInfo from '../vo/metrics/DVRInfo';
 import DroppedFrames from '../vo/metrics/DroppedFrames';
 import {ManifestUpdate, ManifestUpdateStreamInfo, ManifestUpdateRepresentationInfo} from '../vo/metrics/ManifestUpdate';
@@ -237,6 +238,13 @@ function MetricsModel(config) {
         pushAndNotify(mediaType, MetricsConstants.BUFFER_STATE, vo);
     }
 
+    function addBufferingTime(mediaType, time) {
+        let vo = new BufferingTime();
+        vo.time = time;
+
+        pushAndNotify(mediaType, MetricsConstants.BUFFERING_TIME, vo);
+    }
+
     function addDVRInfo(mediaType, currentTime, mpd, range) {
         let vo = new DVRInfo();
         vo.time = currentTime;
@@ -377,6 +385,7 @@ function MetricsModel(config) {
         addRepresentationSwitch: addRepresentationSwitch,
         addBufferLevel: addBufferLevel,
         addBufferState: addBufferState,
+        addBufferingTime: addBufferingTime,
         addDVRInfo: addDVRInfo,
         addDroppedFrames: addDroppedFrames,
         addSchedulingInfo: addSchedulingInfo,

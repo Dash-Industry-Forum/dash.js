@@ -39,6 +39,7 @@ class MetricsList {
         this.RepSwitchList = [];
         this.BufferLevel = [];
         this.BufferState = [];
+        this.BufferingTime = [];
         this.PlayList = [];
         this.DroppedFrames = [];
         this.SchedulingInfo = [];

@@ -974,7 +974,8 @@ declare namespace dashjs {
             parseInbandPrft?: boolean,
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
-                useMediaCapabilitiesApi?: boolean
+                useMediaCapabilitiesApi?: boolean,
+                replaceCodecs?: [string, string][]
             },
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
@@ -992,10 +993,14 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
                 ignoreEmeEncryptedEvent?: boolean,
                 detectPlayreadyMessageFormat?: boolean,
+                downgradePlayReadyPSSH?: boolean
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
                 fastSwitchEnabled?: boolean,
+                fastSwitchFragmentCount?: number,
+                fastSwitchSafeMinBufferDuration?: number,
+                fastSwitchSafeMinFragmentCount?: number,
                 flushBufferAtTrackSwitch?: boolean,
                 reuseExistingSourceBuffers?: boolean,
                 bufferPruningInterval?: number,
@@ -1012,6 +1017,7 @@ declare namespace dashjs {
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
+                enableLiveSeekableRangeFix?: boolean
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -2884,7 +2890,7 @@ declare namespace dashjs {
 
         setProtectionData(data: object): void;
 
-        getSupportedKeySystemsFromContentProtection(cps: object[]): object[]; 
+        getSupportedKeySystemsFromContentProtection(cps: object[]): KeySystemInfo[]; 
 
         getKeySystems(): any[];
 
@@ -4114,6 +4120,7 @@ declare namespace dashjs {
         height: number;
         scanType: string;
         qualityIndex: number;
+        drmDefaultKeyId: string | null;
     }
 
     interface DashJSError {

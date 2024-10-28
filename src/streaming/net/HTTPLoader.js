@@ -123,12 +123,12 @@ function HTTPLoader(cfg) {
             const responseStatus = httpRequest.response ? httpRequest.response.status : null;
             const responseHeaders = httpRequest.response && httpRequest.response.getAllResponseHeaders ? httpRequest.response.getAllResponseHeaders() :
                 httpRequest.response ? httpRequest.response.responseHeaders : null;
-    
+
             const cmsd = responseHeaders && settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(responseHeaders, request.mediaType) : null;
-    
+
             dashMetrics.addHttpRequest(request, responseUrl, responseStatus, responseHeaders, success ? traces : null, cmsd);
         }
-    
+
         const handleLoaded = function (success) {
             needFailureReport = false;
 
@@ -140,7 +140,10 @@ function HTTPLoader(cfg) {
             }
         };
 
-        const onloadend = function () {
+        /**
+         * @param {Error} [error] httpRequest.onerror in the FetchLoader is called with the Error object
+         */
+        const onloadend = function (error) {
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
@@ -185,7 +188,12 @@ function HTTPLoader(cfg) {
                         return;
                     }
 
-                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], request.url + ' is not available', {
+                    const message = request.url + ' is not available';
+                    if (error instanceof Error) {
+                        message += ` (${error.message})`;
+                    }
+
+                    errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[request.type], message, {
                         request: request,
                         response: httpRequest.response
                     }));

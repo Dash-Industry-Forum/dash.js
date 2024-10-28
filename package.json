@@ -1,6 +1,6 @@
 {
     "name": "dashjs",
-    "version": "4.7.4",
+    "version": "4.7.5",
     "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
     "author": "Dash Industry Forum",
     "license": "BSD-3-Clause",
@@ -27,9 +27,9 @@
         "babel": "^5.3.1",
         "babel-eslint": "^10.1.0",
         "babel-loader": "^8.2.2",
-        "clean-jsdoc-theme": "^4.2.17",
         "chai": "^3.4.1",
         "chai-spies": "^1.0.0",
+        "clean-jsdoc-theme": "^4.2.17",
         "eslint": "^7.23.0",
         "eslint-webpack-plugin": "^2.5.3",
         "ftp-deploy": "^2.4.1",

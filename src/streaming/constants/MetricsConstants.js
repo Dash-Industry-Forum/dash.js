@@ -42,6 +42,7 @@ class MetricsConstants {
         this.TRACK_SWITCH = 'RepSwitchList';
         this.BUFFER_LEVEL = 'BufferLevel';
         this.BUFFER_LOADED = 'bufferLoaded';
+        this.BUFFERING_TIME = 'BufferingTime';
         this.ABANDON_LOAD = 'abandonload';
         this.ALLOW_LOAD = 'allowload';
         this.BUFFER_EMPTY = 'bufferStalled';

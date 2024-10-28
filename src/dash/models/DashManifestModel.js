@@ -491,12 +491,23 @@ function DashManifestModel() {
         const realRepresentations = processedRealAdaptation && Array.isArray(processedRealAdaptation.Representation_asArray) ? processedRealAdaptation.Representation_asArray : [];
 
         return realRepresentations.map((realRepresentation) => {
+            let drmDefaultKeyId = null;
+            const contentProtection = realRepresentation.ContentProtection_asArray || realRepresentation.ContentProtection;
+            if (contentProtection) {
+                // Get the default key ID
+                const keyIds = contentProtection.map(cp => this.getKID(cp)).filter(kid => kid !== null);
+                if (keyIds.length) {
+                    drmDefaultKeyId = keyIds[0];
+                }
+            }
+
             return {
                 bandwidth: realRepresentation.bandwidth,
                 width: realRepresentation.width || 0,
                 height: realRepresentation.height || 0,
                 scanType: realRepresentation.scanType || null,
-                id: realRepresentation.id || null
+                id: realRepresentation.id || null,
+                drmDefaultKeyId
             };
         });
     }
@@ -630,11 +641,16 @@ function DashManifestModel() {
                             // initialization source url will be determined from
                             // BaseURL when resolved at load time.
                         }
-                    } else if (getIsText(processedRealAdaptation) &&
-                        getIsFragmented(processedRealAdaptation) &&
-                        processedRealAdaptation.mimeType &&
-                        processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
-                        voRepresentation.range = 0;
+                    } else {
+                        const mimeType = processedRealAdaptation.mimeType || getMimeType(processedRealAdaptation);
+                        if (
+                            getIsText(processedRealAdaptation) &&
+                            getIsFragmented(processedRealAdaptation) &&
+                            mimeType &&
+                            mimeType.indexOf('application/mp4') === -1
+                        ) {
+                            voRepresentation.range = 0;
+                        }
                     }
 
                     if (segmentInfo.hasOwnProperty(DashConstants.TIMESCALE)) {

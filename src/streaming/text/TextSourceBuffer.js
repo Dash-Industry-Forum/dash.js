@@ -58,6 +58,7 @@ function TextSourceBuffer(config) {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     let embeddedInitialized = false;
+    let processedChunks = new Map();
 
     let instance,
         logger,
@@ -175,9 +176,13 @@ function TextSourceBuffer(config) {
 
     function _onVideoChunkReceived(e) {
         const chunk = e.chunk;
+        const chunkId = `${chunk.streamId}_${chunk.mediaInfo.id}_${chunk.index}`;
 
-        if (chunk.mediaInfo.embeddedCaptions) {
+        if (chunk.mediaInfo.embeddedCaptions && !processedChunks.has(chunkId)) {
             append(chunk.bytes, chunk);
+            if (chunk.segmentType === 'MediaSegment') {
+                processedChunks.set(chunkId, { start: chunk.start, end: chunk.end });
+            }
         }
     }
 
@@ -330,7 +335,6 @@ function TextSourceBuffer(config) {
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
                 const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
-            
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
                 this.remove();
@@ -621,6 +625,16 @@ function TextSourceBuffer(config) {
             const trackIdx = textTracks.getTrackIdxForId(track.id);
             if (trackIdx >= 0) {
                 textTracks.deleteCuesFromTrackIdx(trackIdx, e.from, e.to);
+                Array.from(processedChunks.entries())
+                    .forEach((entry) => {
+                        const chunkId = entry[0];
+                        const start = entry[1].start;
+                        const end = entry[1].end;
+                        const intersects = Math.max(start, e.from) < Math.min(end, e.to);
+                        if (intersects) {
+                            processedChunks.delete(chunkId);
+                        }
+                    })
             }
         });
     }

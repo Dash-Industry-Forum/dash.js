@@ -73,7 +73,8 @@ import Events from './events/Events';
  *            parseInbandPrft: false,
  *            capabilities: {
  *               filterUnsupportedEssentialProperties: true,
- *               useMediaCapabilitiesApi: false
+ *               useMediaCapabilitiesApi: false,
+ *               replaceCodecs: []
  *            },
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
@@ -91,6 +92,7 @@ import Events from './events/Events';
  *                keepProtectionMediaKeys: false,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
+ *                downgradePlayReadyPSSH: false
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -110,7 +112,8 @@ import Events from './events/Events';
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
- *                resetSourceBuffersForTrackSwitch: false
+ *                resetSourceBuffersForTrackSwitch: false,
+ *                enableLiveSeekableRangeFix: true
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -350,6 +353,8 @@ import Events from './events/Events';
  * @property {boolean} [resetSourceBuffersForTrackSwitch=false]
  * When switching to a track that is not compatible with the currently active MSE SourceBuffers, MSE will be reset. This happens when we switch codecs on a system
  * that does not properly implement "changeType()", such as webOS 4.0 and before.
+ * @property {boolean} [enableLiveSeekableRangeFix=true]
+ * Sets `mediaSource.duration` when live seekable range changes if `mediaSource.setLiveSeekableRange` is unavailable.
  */
 
 /**
@@ -578,6 +583,9 @@ import Events from './events/Events';
  *
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
+ *
+ * @property {boolean} [downgradePlayReadyPSSH=false]
+ * If set to true the player will downgrade v1 PSSH boxes to v0.
  */
 
 /**
@@ -586,6 +594,8 @@ import Events from './events/Events';
  * Enable to filter all the AdaptationSets and Representations which contain an unsupported \<EssentialProperty\> element.
  * @property {boolean} [useMediaCapabilitiesApi=false]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
+ * @property {Array.<[string, string]>} [replaceCodecs=[]]
+ * List of codecs to be replaced.
  */
 
 /**
@@ -888,7 +898,8 @@ function Settings() {
             enableManifestTimescaleMismatchFix: false,
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
-                useMediaCapabilitiesApi: false
+                useMediaCapabilitiesApi: false,
+                replaceCodecs: []
             },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
@@ -906,10 +917,14 @@ function Settings() {
                 keepProtectionMediaKeys: false,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
+                downgradePlayReadyPSSH: false
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
                 fastSwitchEnabled: true,
+                fastSwitchFragmentCount: 1.5,
+                fastSwitchSafeMinBufferDuration: 12,
+                fastSwitchSafeMinFragmentCount: 2,
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
                 bufferPruningInterval: 10,
@@ -925,7 +940,8 @@ function Settings() {
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
                 mediaSourceDurationInfinity: true,
-                resetSourceBuffersForTrackSwitch: false
+                resetSourceBuffersForTrackSwitch: false,
+                enableLiveSeekableRangeFix: true
             },
             gaps: {
                 jumpGaps: true,

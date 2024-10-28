@@ -112,6 +112,8 @@ function StreamProcessor(config) {
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -193,7 +195,7 @@ function StreamProcessor(config) {
 
         scheduleController.initialize(hasVideoTrack);
 
-        bufferingTime = 0;
+        _setBufferingTime(0);
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
     }
@@ -213,7 +215,7 @@ function StreamProcessor(config) {
     function resetInitialSettings() {
         mediaInfoArr = [];
         mediaInfo = null;
-        bufferingTime = 0;
+        _setBufferingTime(0);
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
@@ -263,7 +265,8 @@ function StreamProcessor(config) {
         eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PROGRESS, _onPlaybackProgression, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onPlaybackProgression, instance);
 
         resetInitialSettings();
         type = null;
@@ -449,7 +452,7 @@ function StreamProcessor(config) {
      */
     function _mediaRequestGenerated(request) {
         if (!isNaN(request.startTime + request.duration)) {
-            bufferingTime = request.startTime + request.duration;
+            _setBufferingTime(request.startTime + request.duration);
         }
         request.delayLoadingTime = new Date().getTime() + scheduleController.getTimeToLoadDelay();
         scheduleController.setTimeToLoadDelay(0);
@@ -729,15 +732,28 @@ function StreamProcessor(config) {
 
     function _prepareForFastQualitySwitch(representationInfo) {
         // if we switch up in quality and need to replace existing parts in the buffer we need to adjust the buffer target
+
+        // target at which point to start redownloading segments in higher quality
+        const fragmentCount = settings.get().streaming.buffer.fastSwitchFragmentCount;
+        // minimum forward buffer duration in seconds required to allow fast switching
+        const safeMinBufferDuration = settings.get().streaming.buffer.fastSwitchSafeMinBufferDuration;
+        // minimum forward buffer duration in fragment counts required to allow fast switching
+        const safeMinFragmentCount = settings.get().streaming.buffer.fastSwitchSafeMinFragmentCount;
+
+        const fragmentDuration = (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
+
         const time = playbackController.getTime();
-        let safeBufferLevel = 1.5 * (!isNaN(representationInfo.fragmentDuration) ? representationInfo.fragmentDuration : 1);
+        const targetDeltaTime = fragmentCount * fragmentDuration;
+        const targetTime = time + targetDeltaTime;
+
         const request = fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
-            time: time + safeBufferLevel,
+            time: targetTime,
             threshold: 0
         })[0];
 
         if (request && !getIsTextTrack()) {
+            const safeBufferLevel = Math.max(safeMinBufferDuration, fragmentDuration * safeMinFragmentCount);
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
@@ -752,6 +768,7 @@ function StreamProcessor(config) {
                         const targetTime = time + safeBufferLevel;
                         setExplicitBufferingTime(targetTime);
                         scheduleController.setCheckPlaybackQuality(false);
+                        scheduleController.setTimeToLoadDelay(0);
                         scheduleController.startScheduleTimer();
                         qualityChangeInProgress = false;
                     })
@@ -1336,12 +1353,27 @@ function StreamProcessor(config) {
     }
 
     function setExplicitBufferingTime(value) {
-        bufferingTime = value;
+        _setBufferingTime(value);
         shouldUseExplicitTimeForRequest = true;
     }
 
     function finalisePlayList(time, reason) {
         dashMetrics.pushPlayListTraceMetrics(time, reason);
+    }
+
+    function _setBufferingTime(value) {
+        bufferingTime = value;
+        _updateBufferingTime();
+    }
+
+    function _updateBufferingTime() {
+        const time = playbackController.getTime() || 0;
+        const bufferingTimeDelta = bufferingTime - time;
+        dashMetrics.addBufferingTime(type, bufferingTimeDelta);
+    }
+
+    function _onPlaybackProgression() {
+        _updateBufferingTime();
     }
 
     instance = {

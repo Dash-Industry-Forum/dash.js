@@ -158,7 +158,7 @@ function BolaRule(config) {
                 // 1. do not change effective buffer level at effectiveBufferLevel === MINIMUM_BUFFER_S ( === Vp * gp )
                 // 2. scale placeholder buffer by Vp subject to offset indicated in 1.
 
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+                const bufferLevel = getBufferLevel(mediaType);
                 let effectiveBufferLevel = bufferLevel + bolaState.placeholderBuffer;
 
                 effectiveBufferLevel -= MINIMUM_BUFFER_S;
@@ -335,7 +335,7 @@ function BolaRule(config) {
 
             // Find what maximum buffer corresponding to last segment was, and ensure placeholder is not relatively larger.
             if (!isNaN(bolaState.lastSegmentFinishTimeMs)) {
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+                const bufferLevel = getBufferLevel(mediaType);
                 const bufferAtLastSegmentRequest = bufferLevel + 0.001 * (bolaState.lastSegmentFinishTimeMs - bolaState.lastSegmentRequestTimeMs); // estimate
                 const maxEffectiveBufferForLastSegment = maxBufferLevelForQuality(bolaState, bolaState.lastQuality);
                 const maxPlaceholderBuffer = Math.max(0, maxEffectiveBufferForLastSegment - bufferAtLastSegmentRequest);
@@ -369,7 +369,7 @@ function BolaRule(config) {
             const bolaState = bolaStateDict[e.mediaType];
             if (bolaState && bolaState.state !== BOLA_STATE_ONE_BITRATE) {
                 // deflate placeholderBuffer - note that we want to be conservative when abandoning
-                const bufferLevel = dashMetrics.getCurrentBufferLevel(e.mediaType);
+                const bufferLevel = getBufferLevel(e.mediaType);
                 let wantEffectiveBufferLevel;
                 if (bolaState.abrQuality > 0) {
                     // deflate to point where BOLA just chooses newQuality over newQuality-1
@@ -415,7 +415,7 @@ function BolaRule(config) {
             return switchRequest;
         }
 
-        const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+        const bufferLevel = getBufferLevel(mediaType);
         const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
         const safeThroughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
         const latency = throughputHistory.getAverageLatency(mediaType);
@@ -527,6 +527,12 @@ function BolaRule(config) {
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_ABANDONED, onFragmentLoadingAbandoned, instance);
 
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, onMediaFragmentLoaded, instance);
+    }
+
+    function getBufferLevel(type) {
+        const bufferingTime = dashMetrics.getCurrentBufferingTime(type);
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        return Math.min(bufferingTime, bufferLevel);
     }
 
     instance = {
