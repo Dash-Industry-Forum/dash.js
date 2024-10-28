@@ -214,7 +214,6 @@ function Capabilities() {
             supported: false
         }
 
-        // eslint-disable-next-line no-undef
         if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
             decodingInfo.supported = true;
         } else if ('MediaSource' in window && MediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {

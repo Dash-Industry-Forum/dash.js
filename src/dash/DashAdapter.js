@@ -1015,11 +1015,11 @@ function DashAdapter() {
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
         if ((!mediaInfo.essentialProperties || mediaInfo.essentialProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.essentialProperties = _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation);
+            mediaInfo.essentialProperties = _getCommonRepresentationEssentialProperties(realAdaptation);
         }
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
         if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation);
+            mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(realAdaptation);
         }
 
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
@@ -1080,7 +1080,7 @@ function DashAdapter() {
         return normalizedKeyIds
     }
 
-    function _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation) {
+    function _getCommonRepresentationEssentialProperties(realAdaptation) {
         let arr = realAdaptation.Representation.map(repr => {
             return dashManifestModel.getEssentialPropertiesForRepresentation(repr);
         });
@@ -1093,7 +1093,7 @@ function DashAdapter() {
         return []
     }
 
-    function _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation) {
+    function _getCommonRepresentationSupplementalProperties(realAdaptation) {
         let arr = realAdaptation.Representation.map(repr => {
             return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
         });
