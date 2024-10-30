@@ -140,6 +140,20 @@ class Utils {
         return headers;
     }
 
+    /**
+     * Parses query parameters from a string and returns them as an array of key-value pairs.
+     * @param {string} queryParamString - A string containing the query parameters.
+     * @return {Array<{key: string, value: string}>} An array of objects representing the query parameters.
+     */
+    static parseQueryParams(queryParamString) {
+        const params = [];
+        const searchParams = new URLSearchParams(queryParamString);
+        for (const [key, value] of searchParams.entries()) {
+            params.push({ key: decodeURIComponent(key), value: decodeURIComponent(value) });
+        }
+        return params;
+    }
+
     static generateUuid() {
         let dt = new Date().getTime();
         const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
