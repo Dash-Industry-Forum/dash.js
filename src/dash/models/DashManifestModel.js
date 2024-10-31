@@ -1431,10 +1431,10 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
             return [];
         }
-        return adaptation.SupplementalProperty.map(supp => {
+        return adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
             const s = new DescriptorType();
             s.init(supp);
             return s
@@ -1442,10 +1442,10 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) {
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
             return [];
         }
-        return representation.SupplementalProperty.map(supp => {
+        return representation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
             const s = new DescriptorType();
             s.init(supp);
             return s

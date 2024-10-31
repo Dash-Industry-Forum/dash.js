@@ -1028,10 +1028,6 @@ function DashAdapter() {
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptationSet(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(realAdaptation);
-        }
-
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
@@ -1088,19 +1084,6 @@ function DashAdapter() {
         })
 
         return normalizedKeyIds
-    }
-
-    function _getCommonRepresentationSupplementalProperties(realAdaptation) {
-        let arr = realAdaptation.Representation.map(repr => {
-            return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
-        });
-
-        if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
-            // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
-            return arr[0];
-        }
-
-        return []
     }
 
     function _getAdaptationSetSwitchingCompatibleIds(mediaInfo) {
