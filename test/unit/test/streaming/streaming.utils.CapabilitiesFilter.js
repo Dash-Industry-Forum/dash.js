@@ -4,7 +4,7 @@ import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
 import Settings from '../../../../src/core/Settings.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
-import { expect } from 'chai';
+import {expect} from 'chai';
 
 let adapterMock;
 let capabilitiesFilter;
@@ -166,14 +166,15 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L90.B0',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '1'
-                                    },
-                                    {
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
-                                        value: '1'
-                                    }]
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '1'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                            value: '1'
+                                        }]
                                 }
                             ]
                         }]
@@ -206,14 +207,15 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L90.B0',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '9'
-                                    },
-                                    {
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
-                                        value: '16'
-                                    }]
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '9'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                            value: '16'
+                                        }]
                                 }
                             ]
                         }]
@@ -246,14 +248,15 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L90.B0',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '1'
-                                    },
-                                    {
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
-                                        value: '1'
-                                    }]
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '1'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                            value: '1'
+                                        }]
                                 },
                                 {
                                     mimeType: 'video/mp4',
@@ -266,26 +269,28 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L120.B0',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '1'
-                                    },
-                                    {
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
-                                        value: '99'
-                                    }]
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '1'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                            value: '99'
+                                        }]
                                 },
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L120.B0',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '99'
-                                    },
-                                    {
-                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
-                                        value: '1'
-                                    }]
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '99'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+                                            value: '1'
+                                        }]
                                 }
                             ]
                         }]
@@ -318,56 +323,60 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'video/mp4',
                                     codecs: 'hvc1.2.4.L90.B0',
-                                    EssentialProperty: [{
+                                    EssentialProperty: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                            value: '1'
+                                        },
+                                        {
+                                            schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                            value: 'ST2094-10'
+                                        }]
+                                }]
+                        }, {
+                            mimeType: 'video/mp4',
+                            Representation: [{
+                                mimeType: 'video/mp4',
+                                codecs: 'hvc1.2.4.L90.B0',
+                                EssentialProperty: [
+                                    {
                                         schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                        value: '1'
+                                        value: '99'
                                     },
                                     {
                                         schemeIdUri: 'urn:dvb:dash:hdr-dmi',
                                         value: 'ST2094-10'
                                     }]
-                                }]
-                        }, {
-                            mimeType: 'video/mp4',
-                            Representation: [{
-                                mimeType: 'video/mp4',
-                                codecs: 'hvc1.2.4.L90.B0',
-                                EssentialProperty: [{
-                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                    value: '99'
-                                },
-                                {
-                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
-                                    value: 'ST2094-10'
-                                }]
                             }]
                         }, {
                             mimeType: 'video/mp4',
                             Representation: [{
                                 mimeType: 'video/mp4',
                                 codecs: 'hvc1.2.4.L90.B0',
-                                EssentialProperty: [{
-                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                    value: '18'
-                                },
-                                {
-                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
-                                    value: 'ST2094-40'
-                                }]
+                                EssentialProperty: [
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '18'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                        value: 'ST2094-40'
+                                    }]
                             }]
                         }, {
                             mimeType: 'video/mp4',
                             Representation: [{
                                 mimeType: 'video/mp4',
                                 codecs: 'hvc1.2.4.L90.B0',
-                                EssentialProperty: [{
-                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
-                                    value: '1'
-                                },
-                                {
-                                    schemeIdUri: 'urn:dvb:dash:hdr-dmi',
-                                    value: 'ST2094-40'
-                                }]
+                                EssentialProperty: [
+                                    {
+                                        schemeIdUri: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+                                        value: '1'
+                                    },
+                                    {
+                                        schemeIdUri: 'urn:dvb:dash:hdr-dmi',
+                                        value: 'ST2094-40'
+                                    }]
                             }]
                         }]
                     }]
@@ -450,43 +459,45 @@ describe('CapabilitiesFilter', function () {
             it('should not filter AdaptationSets and Representations if EssentialProperties value is supported', function (done) {
                 const manifest = {
                     Period: [{
-                        AdaptationSet: [{
-                            mimeType: 'audio/mp4',
-                            Representation: [
-                                {
-                                    mimeType: 'audio/mp4',
-                                    codecs: 'mp4a.40.2',
-                                    audioSamplingRate: '48000',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'http://dashif.org/thumbnail_tile',
-                                        value: 'somevalue'
-                                    }]
-                                },
-                                {
-                                    mimeType: 'audio/mp4',
-                                    codecs: 'mp4a.40.2',
-                                    audioSamplingRate: '48000',
-                                    EssentialProperty: [{
-                                        schemeIdUri: 'http://dashif.org/thumbnail_tile',
-                                        value: 'somevalue'
-                                    }]
-                                }
-                            ]
-                        },
-                        {
-                            mimeType: 'application/mp4',
-                            Representation_asArray: [
-                                {
-                                    mimeType: 'application/mp4',
-                                    codecs: 'stpp.ttml.etd1|im1t',
-                                    EssentialProperty_asArray: [{
-                                        schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
-                                        value: '1',
-                                        // dvb extension properties...
-                                    }]
-                                }
-                            ]
-                        }]
+                        AdaptationSet: [
+                            {
+                                mimeType: 'audio/mp4',
+                                Representation: [
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        EssentialProperty: [
+                                            {
+                                                schemeIdUri: 'http://dashif.org/thumbnail_tile',
+                                                value: 'somevalue'
+                                            }]
+                                    },
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        EssentialProperty: [{
+                                            schemeIdUri: 'http://dashif.org/thumbnail_tile',
+                                            value: 'somevalue'
+                                        }]
+                                    }
+                                ]
+                            },
+                            {
+                                mimeType: 'application/mp4',
+                                Representation_asArray: [
+                                    {
+                                        mimeType: 'application/mp4',
+                                        codecs: 'stpp.ttml.etd1|im1t',
+                                        EssentialProperty_asArray: [{
+                                            schemeIdUri: 'urn:dvb:dash:fontdownload:2014',
+                                            value: '1',
+                                            // dvb extension properties...
+                                        }]
+                                    }
+                                ]
+                            }]
                     }]
                 };
                 prepareCapabilitiesMock({
@@ -507,7 +518,7 @@ describe('CapabilitiesFilter', function () {
 
             });
 
-            it('should filter AdaptationSets if EssentialProperty value is not supported', function (done) {
+            it('should filter AdaptationSets if EssentialProperty value in Representation is not supported', function (done) {
                 const manifest = {
                     Period: [{
                         AdaptationSet: [{
@@ -530,6 +541,48 @@ describe('CapabilitiesFilter', function () {
                                         schemeIdUri: 'http://dashif.org/thumbnail_tile',
                                         value: 'somevalue'
                                     }]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'supportsEssentialProperty', definition: function () {
+                        return false;
+                    }
+                });
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(0);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+
+            });
+
+            it('should filter AdaptationSets if EssentialProperty value in AdaptationSet is not supported', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            EssentialProperty: [{
+                                schemeIdUri: 'http://dashif.org/thumbnail_tile',
+                                value: 'somevalue'
+                            }],
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000'
+                                },
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000'
                                 }
                             ]
                         }]
@@ -602,7 +655,9 @@ describe('CapabilitiesFilter', function () {
                 return representation.height >= 720;
             };
             const repHeightFilterAsync = function (representation) {
-                return new Promise(resolve => { resolve(representation.height <= 720) });
+                return new Promise(resolve => {
+                    resolve(representation.height <= 720)
+                });
             };
             const customFilterRejects = function () {
                 return Promise.reject('always rejected');

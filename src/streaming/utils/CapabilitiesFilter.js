@@ -304,27 +304,38 @@ function CapabilitiesFilter() {
                     return true;
                 }
 
+                const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
+                const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
+
+                if (!doesSupportEssentialProperties) {
+                    return false;
+                }
+
                 as.Representation = as.Representation.filter((rep) => {
                     const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
-
-                    if (essentialProperties && essentialProperties.length > 0) {
-                        let i = 0;
-                        while (i < essentialProperties.length) {
-                            if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
-                                logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
-                                return false;
-                            }
-                            i += 1;
-                        }
-                    }
-
-                    return true;
+                    return _doesSupportEssentialProperties(essentialProperties);
                 });
 
                 return as.Representation && as.Representation.length > 0;
             });
         });
+    }
 
+    function _doesSupportEssentialProperties(essentialProperties) {
+        if (!essentialProperties || essentialProperties.length === 0) {
+            return true
+        }
+
+        let i = 0;
+        while (i < essentialProperties.length) {
+            if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
+                logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
+                return false;
+            }
+            i += 1;
+        }
+
+        return true
     }
 
     function _applyCustomFilters(manifest) {
@@ -418,7 +429,7 @@ function CapabilitiesFilter() {
 
     instance = {
         setConfig,
-        filterUnsupportedFeatures
+        filterUnsupportedFeatures,
     };
 
     setup();

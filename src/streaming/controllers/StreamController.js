@@ -1284,10 +1284,10 @@ function StreamController() {
                         });
                     }
 
-                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
-
                     let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
+
+                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 });
         } else {
             hasInitialisationError = true;
