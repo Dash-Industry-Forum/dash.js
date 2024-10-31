@@ -148,6 +148,124 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
             });
+
+            it('should filter Representations with unsupported main codec and unsupported supplemental codec', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.1',
+                                    audioSamplingRate: '48000',
+                                    'scte214:supplementalCodecs': 'dvh1.08.01'
+                                },
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000'
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.codec === 'audio/mp4;codecs="mp4a.40.2"';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
+
+            it('should keep Representations with unsupported main codec but supported supplemental codec', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.1',
+                                    audioSamplingRate: '48000',
+                                    'scte214:supplementalCodecs': 'dvh1.08.01'
+                                },
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000'
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.codec === 'audio/mp4;codecs="mp4a.40.2"' || config.codec === 'audio/mp4;codecs="dvh1.08.01"';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation[0].codecs).to.be.equal(manifest.Period[0].AdaptationSet[0].Representation[0]['scte214:supplementalCodecs']);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
+
+            it('should keep Representations with supported main codec but unsupported supplemental codec', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.1',
+                                    audioSamplingRate: '48000',
+                                    'scte214:supplementalCodecs': 'dvh1.08.01'
+                                },
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000'
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.codec === 'audio/mp4;codecs="mp4a.40.2"' || config.codec === 'audio/mp4;codecs="mp4a.40.1"';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(2);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+            });
         });
 
         describe('filter codecs using essentialProperties', function () {
