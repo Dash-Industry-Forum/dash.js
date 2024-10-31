@@ -34,11 +34,17 @@ import Utils from '../../core/Utils.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import Constants from '../constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import Debug from '../../core/Debug.js';
 
 function ExtUrlQueryInfoController() {
     let instance,
+        logger,
         mpdQueryStringInformation;
+    const context = this.context;
 
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
 
     function _generateQueryParams(resultObject, manifestObject, mpdUrlQuery, parentLevelInfo, mpdElement) {
         const property = _getDescriptorTypeFromManifestObject(manifestObject, mpdElement);
@@ -117,7 +123,7 @@ function ExtUrlQueryInfoController() {
         };
 
         const mpdUrlQuery = manifest.url.split('?')[1];
-        const initialMpdObject = {initialQueryString: '', includeInRequests: []};
+        const initialMpdObject = { initialQueryString: '', includeInRequests: [] };
 
         _generateQueryParams(mpdQueryStringInformation, manifest, mpdUrlQuery, initialMpdObject, DashConstants.MPD);
 
@@ -146,35 +152,42 @@ function ExtUrlQueryInfoController() {
     }
 
     function getFinalQueryString(request) {
-        if (!mpdQueryStringInformation) {
-            return
-        }
-        if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-            const representation = request.representation;
-            const adaptation = representation.adaptation;
-            const period = adaptation.period;
-            const queryInfo = mpdQueryStringInformation
-                .period[period.index]
-                .adaptation[adaptation.index]
-                .representation[representation.index];
-            const requestUrl = new URL(request.url);
-            const canSendToOrigin = !queryInfo.sameOriginOnly || mpdQueryStringInformation.origin === requestUrl.origin;
-            const inRequest = queryInfo.includeInRequests.includes(DashConstants.SEGMENT_TYPE);
-            if (inRequest && canSendToOrigin) {
-                return queryInfo.queryParams;
+        try {
+            if (!mpdQueryStringInformation) {
+                return
             }
-        } else if (request.type === HTTPRequest.MPD_TYPE) {
-            const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE].some(r => mpdQueryStringInformation.includeInRequests.includes(r));
-            if (inRequest) {
-                return mpdQueryStringInformation.queryParams;
+            if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+                const representation = request.representation;
+                const adaptation = representation.adaptation;
+                const period = adaptation.period;
+                const queryInfo = mpdQueryStringInformation
+                    .period[period.index]
+                    .adaptation[adaptation.index]
+                    .representation[representation.index];
+                const requestUrl = new URL(request.url);
+                const canSendToOrigin = !queryInfo.sameOriginOnly || mpdQueryStringInformation.origin === requestUrl.origin;
+                const inRequest = queryInfo.includeInRequests.includes(DashConstants.SEGMENT_TYPE);
+                if (inRequest && canSendToOrigin) {
+                    return queryInfo.queryParams;
+                }
+            } else if (request.type === HTTPRequest.MPD_TYPE) {
+                const inRequest = [DashConstants.MPD_TYPE, DashConstants.MPD_PATCH_TYPE].some(r => mpdQueryStringInformation.includeInRequests.includes(r));
+                if (inRequest) {
+                    return mpdQueryStringInformation.queryParams;
+                }
+            } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
+                const inRequest = mpdQueryStringInformation.includeInRequests.includes(DashConstants.STEERING_TYPE);
+                if (inRequest) {
+                    return mpdQueryStringInformation.queryParams;
+                }
             }
-        } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-            const inRequest = mpdQueryStringInformation.includeInRequests.includes(DashConstants.STEERING_TYPE);
-            if (inRequest) {
-                return mpdQueryStringInformation.queryParams;
-            }
+        } catch (e) {
+            logger.error(e);
+            return null
         }
     }
+
+    setup();
 
     instance = {
         getFinalQueryString,

@@ -128,7 +128,8 @@ function SegmentBaseLoader() {
             searching: false,
             bytesLoaded: 0,
             bytesToLoad: 1500,
-            mediaType: mediaType
+            mediaType: mediaType,
+            representation
         };
 
         logger.debug('Start searching for initialization.');
@@ -183,7 +184,8 @@ function SegmentBaseLoader() {
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
             bytesToLoad: 1500,
-            mediaType: mediaType
+            mediaType: mediaType,
+            representation
         };
 
         const request = getFragmentRequest(info);
