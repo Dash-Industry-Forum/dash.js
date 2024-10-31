@@ -1,3 +1,5 @@
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
+
 function AdapterMock() {
     this.metricsList = {
         BUFFER_STATE: 'BUFFER_STATE'
@@ -161,8 +163,12 @@ function AdapterMock() {
         return codec;
     };
 
-    this.getSupplementalCodecs = function () {
-        return [];
+    this.getSupplementalCodecs = function (representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS];
+        if (!supplementalCodecs) {
+            return [];
+        }
+        return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
     }
 
     this.getEssentialPropertiesForRepresentation = function (realRepresentation) {

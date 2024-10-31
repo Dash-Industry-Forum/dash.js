@@ -123,37 +123,44 @@ function CapabilitiesFilter() {
         if (!as.Representation || as.Representation.length === 0) {
             return;
         }
-        const configurations = [];
 
         as.Representation = as.Representation.filter((rep, i) => {
             const codec = adapter.getCodec(as, i, false);
-            const config = _createConfiguration(type, rep, codec);
-            configurations.push(config);
-            const isCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
+            const isMainCodecSupported = _isCodecSupported(type, rep, codec);
 
-            let isSupplementalCodecSupported = false;
-            const supplementalCodecs = adapter.getSupplementalCodecs(rep);
-            if (supplementalCodecs.length > 0) {
-                if (supplementalCodecs.length > 1) {
-                    logger.warn(`[CapabilitiesFilter] Multiple supplemental codecs not supported; using first in list`);
-                }
-                const supplementalCodec = supplementalCodecs[0];
-                const supplementalCodecConfig = _createConfiguration(type, rep, supplementalCodec);
-                configurations.push(supplementalCodecConfig);
-                isSupplementalCodecSupported = capabilities.isCodecSupportedBasedOnTestedConfigurations(supplementalCodecConfig, type);
-                if (isSupplementalCodecSupported) {
-                    logger.debug(`[CapabilitiesFilter] Codec ${supplementalCodec} supported. Upgrading Representation with ID ${rep.id}`);
-                    // overriding default codec
-                    rep.codecs = rep[DashConstants.SUPPLEMENTAL_CODECS]
-                }
+            let isSupplementalCodecSupported = _isSupplementalCodecSupported(rep, type);
+            if (isSupplementalCodecSupported) {
+                logger.debug(`[CapabilitiesFilter] Codec supported. Upgrading codecs string of Representation with ID ${rep.id}`);
+                rep.codecs = rep[DashConstants.SUPPLEMENTAL_CODECS]
             }
 
-            if (!isCodecSupported && !isSupplementalCodecSupported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${codec} not supported. Removing Representation with ID ${rep.id}`);
+            if (!isMainCodecSupported && !isSupplementalCodecSupported) {
+                logger.warn(`[CapabilitiesFilter] Codec ${codec} not supported. Removing Representation with ID ${rep.id}`);
             }
 
-            return isCodecSupported || isSupplementalCodecSupported;
+            return isMainCodecSupported || isSupplementalCodecSupported;
         });
+    }
+
+    function _isSupplementalCodecSupported(rep, type) {
+        let isSupplementalCodecSupported = false;
+        const supplementalCodecs = adapter.getSupplementalCodecs(rep);
+
+        if (supplementalCodecs.length > 0) {
+            if (supplementalCodecs.length > 1) {
+                logger.warn(`[CapabilitiesFilter] Multiple supplemental codecs not supported; using the first in list`);
+            }
+            const supplementalCodec = supplementalCodecs[0];
+            isSupplementalCodecSupported = _isCodecSupported(type, rep, supplementalCodec);
+        }
+
+        return isSupplementalCodecSupported
+    }
+
+    function _isCodecSupported(type, rep, codec) {
+        const config = _createConfiguration(type, rep, codec);
+
+        return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
 
     function _getConfigurationsToCheck(manifest, type) {
@@ -169,22 +176,11 @@ function CapabilitiesFilter() {
                 if (adapter.getIsTypeOf(as, type)) {
                     as.Representation.forEach((rep, i) => {
                         const codec = adapter.getCodec(as, i, false);
-                        const config = _createConfiguration(type, rep, codec);
-                        const configString = JSON.stringify(config);
-
-                        if (!configurationsSet.has(configString)) {
-                            configurationsSet.add(configString);
-                            configurations.push(config);
-                        }
+                        _processCodecToCheck(type, rep, codec, configurationsSet, configurations);
 
                         const supplementalCodecs = adapter.getSupplementalCodecs(rep)
                         if (supplementalCodecs.length > 0) {
-                            const config = _createConfiguration(type, rep, supplementalCodecs[0]);
-                            const configString = JSON.stringify(config);
-                            if (!configurationsSet.has(configString)) {
-                                configurationsSet.add(configString);
-                                configurations.push(config);
-                            }
+                            _processCodecToCheck(type, rep, supplementalCodecs[0], configurationsSet, configurations);
                         }
                     });
                 }
@@ -194,6 +190,15 @@ function CapabilitiesFilter() {
         return configurations;
     }
 
+    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations) {
+        const config = _createConfiguration(type, rep, codec);
+        const configString = JSON.stringify(config);
+
+        if (!configurationsSet.has(configString)) {
+            configurationsSet.add(configString);
+            configurations.push(config);
+        }
+    }
 
     function _createConfiguration(type, rep, codec) {
         let config = null;
