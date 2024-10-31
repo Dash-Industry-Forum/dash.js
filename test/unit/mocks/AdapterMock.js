@@ -161,6 +161,10 @@ function AdapterMock() {
         return codec;
     };
 
+    this.getSupplementalCodecs = function () {
+        return [];
+    }
+
     this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
         if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
             return null;

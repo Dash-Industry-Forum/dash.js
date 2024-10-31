@@ -183,6 +183,7 @@ export default {
     SUB_SEGMENT_ALIGNMENT: 'subsegmentAlignment',
     SUGGESTED_PRESENTATION_DELAY: 'suggestedPresentationDelay',
     SUPPLEMENTAL_PROPERTY: 'SupplementalProperty',
+    SUPPLEMENTAL_CODECS: 'scte214:supplementalCodecs',
     TIMESCALE: 'timescale',
     TIMESHIFT_BUFFER_DEPTH: 'timeShiftBufferDepth',
     TTL: 'ttl',
