@@ -39,8 +39,6 @@ module.exports = function (config) {
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor
         preprocessors: {
-            // add webpack as preprocessor
-            'src/**/*.js': ['coverage'],
             'test/unit/**/*.js': ['webpack'],
         },
 
@@ -69,6 +67,22 @@ module.exports = function (config) {
 
 
         webpack: {
+            module: {
+                rules: [
+                    {
+                        test: /\.js$/,
+                        use: [
+                            {
+                                loader: "babel-loader",
+                                options: {
+                                    plugins: ["istanbul"]
+                                }
+                            }
+                        ]
+                    }
+                ]
+            },
+            mode: "development",
             cache: false,
             resolve: {
                 fallback: {

@@ -54,8 +54,6 @@ class RepresentationBaseValuesMap extends MapNode {
             DashConstants.FRAME_PACKING,
             DashConstants.AUDIO_CHANNEL_CONFIGURATION,
             DashConstants.CONTENT_PROTECTION,
-            DashConstants.ESSENTIAL_PROPERTY,
-            DashConstants.SUPPLEMENTAL_PROPERTY,
             DashConstants.INBAND_EVENT_STREAM
         ];
 

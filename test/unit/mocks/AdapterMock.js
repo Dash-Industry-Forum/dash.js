@@ -174,6 +174,19 @@ function AdapterMock() {
         });
     };
 
+    this.getEssentialPropertiesForAdaptationSet = function (adaptationSet) {
+        if (!adaptationSet || !adaptationSet.EssentialProperty || !adaptationSet.EssentialProperty.length) {
+            return null;
+        }
+
+        return adaptationSet.EssentialProperty.map((prop) => {
+            return {
+                schemeIdUri: prop.schemeIdUri,
+                value: prop.value
+            };
+        });
+    };
+
 
     this.getLocation = function () {
         return [];

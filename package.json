@@ -33,6 +33,7 @@
     "@chiragrupani/karma-chromium-edge-launcher": "^2.4.1",
     "@eslint/js": "^9.13.0",
     "babel-loader": "^9.1.3",
+    "babel-plugin-istanbul": "^7.0.0",
     "chai": "^4.4.1",
     "chai-spies": "^1.1.0",
     "clean-jsdoc-theme": "^4.2.17",
