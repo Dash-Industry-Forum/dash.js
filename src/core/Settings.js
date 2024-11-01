@@ -119,7 +119,11 @@ import Events from './events/Events.js';
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeType: true,
  *                mediaSourceDurationInfinity: true,
- *                resetSourceBuffersForTrackSwitch: false
+ *                resetSourceBuffersForTrackSwitch: false,
+ *                syntheticStallEvents: {
+ *                    enabled: false,
+ *                    ignoreReadyState: false
+ *                }
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -412,7 +416,7 @@ import Events from './events/Events.js';
  * @property {boolean} [setStallState=true]
  * Specifies if we fire manual waiting events once the stall threshold is reached.
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
- * Specified if manual stall events are to be fired once the stall threshold is reached.
+ * Specifies if manual stall events are to be fired once the stall threshold is reached.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *

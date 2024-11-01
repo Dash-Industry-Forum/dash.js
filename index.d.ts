@@ -1108,6 +1108,10 @@ declare namespace dashjs {
                 useChangeType?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
+                syntheticStallEvents?: {
+                    enabled?: boolean
+                    ignoreReadyState?: boolean
+                }
             },
             gaps?: {
                 jumpGaps?: boolean,
