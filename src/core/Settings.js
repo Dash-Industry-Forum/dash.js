@@ -121,7 +121,11 @@ import Events from './events/Events.js';
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeType: true,
  *                mediaSourceDurationInfinity: true,
- *                resetSourceBuffersForTrackSwitch: false
+ *                resetSourceBuffersForTrackSwitch: false,
+ *                syntheticStallEvents: {
+ *                    enabled: false,
+ *                    ignoreReadyState: false
+ *                }
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -412,7 +416,9 @@ import Events from './events/Events.js';
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
- * Specifies if we fire manual waiting events once the stall threshold is reached
+ * Specifies if we fire manual waiting events once the stall threshold is reached.
+ * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
+ * Specifies if manual stall events are to be fired once the stall threshold is reached.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
@@ -434,6 +440,17 @@ import Events from './events/Events.js';
  * Configuration for audio media type of tracks.
  * @property {number|boolean|string} [video]
  * Configuration for video media type of tracks.
+ */
+
+/**
+ * @typedef {Object} module:Settings~SyntheticStallSettings
+ * @property {boolean} [enabled]
+ * Enables manual stall events and sets the playback rate to 0 once the stall threshold is reached.
+ * @property {boolean} [ignoreReadyState]
+ * Ignore the media element's ready state when entering or exiting a stall.
+ * Enable this when either of these scenarios still occur with synthetic stalls enabled:
+ * - If the buffer is empty, but playback is not stalled.
+ * - If playback resumes, but a playing event isn't reported.
  */
 
 /**
@@ -1106,7 +1123,11 @@ function Settings() {
                 avoidCurrentTimeRangePruning: false,
                 useChangeType: true,
                 mediaSourceDurationInfinity: true,
-                resetSourceBuffersForTrackSwitch: false
+                resetSourceBuffersForTrackSwitch: false,
+                syntheticStallEvents: {
+                    enabled: false,
+                    ignoreReadyState: false
+                }
             },
             gaps: {
                 jumpGaps: true,

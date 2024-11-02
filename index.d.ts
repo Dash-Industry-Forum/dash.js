@@ -1108,6 +1108,10 @@ declare namespace dashjs {
                 useChangeType?: boolean
                 mediaSourceDurationInfinity?: boolean
                 resetSourceBuffersForTrackSwitch?: boolean
+                syntheticStallEvents?: {
+                    enabled?: boolean
+                    ignoreReadyState?: boolean
+                }
             },
             gaps?: {
                 jumpGaps?: boolean,
@@ -2872,8 +2876,6 @@ declare namespace dashjs {
         initialize(): void;
 
         reset(): void;
-
-        onPlaybackCanPlay(): void;
 
         setPlaybackRate(value: number, ignoreReadyState?: boolean): void;
 
