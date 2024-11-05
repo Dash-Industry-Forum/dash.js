@@ -509,7 +509,7 @@ declare namespace dashjs {
         type: string;
         duration: number;
         presentationTime: number;
-        id: string | number;
+        id: number;
         messageData: string;
         eventStream: EventStream;
         presentationTimeDelta: number;
