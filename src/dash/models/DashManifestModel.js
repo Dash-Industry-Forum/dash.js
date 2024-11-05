@@ -189,7 +189,7 @@ function DashManifestModel() {
             const entry = new ProducerReferenceTime();
 
             if (prt.hasOwnProperty(DashConstants.ID)) {
-                entry[DashConstants.ID] = prt[DashConstants.ID];
+                entry[DashConstants.ID] = parseInt(prt[DashConstants.ID]);
             } else {
                 // Ignore. Missing mandatory attribute
                 return;
