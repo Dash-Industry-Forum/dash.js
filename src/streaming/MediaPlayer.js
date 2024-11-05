@@ -170,6 +170,7 @@ function MediaPlayer() {
         uriFragmentModel,
         domStorage,
         segmentBaseController,
+        alternativePlayer,
         clientDataReportingController;
 
     /*
@@ -286,7 +287,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, autoPlay, startTime = NaN) {
+    function initialize(view, source, autoPlay,startTime = NaN) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -457,8 +458,12 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function reset() {
-        attachSource(null);
+    function reset(onlyControllers) {
+
+        if (!onlyControllers) {
+            attachSource(null);
+        }
+
         attachView(null);
         protectionData = null;
         if (protectionController) {
@@ -585,12 +590,14 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
      * @instance
      */
-    function preload() {
-        if (videoModel.getElement() || streamingInitialized) {
+    function preload(time) {
+        if (videoModel.getElement() || (streamingInitialized && !time)) {
             return;
         }
         if (source) {
-            _initializePlayback(providedStartTime);
+            const playbackTime = time ? time : providedStartTime;
+            console.log(playbackTime)
+            _initializePlayback(playbackTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
         }
@@ -2732,6 +2739,42 @@ function MediaPlayer() {
         }
     }
 
+    let videoNew
+    function setAlternativePlayer() {
+        videoNew = videoModel.getElement().cloneNode(true);
+        const mediaPlayerFactory = FactoryMaker.getClassFactory(MediaPlayer);
+        alternativePlayer = mediaPlayerFactory().create()
+        // const alternativeUrl = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
+        // const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        const alternativeUrl = 'http://localhost:3000/stream.mpd'
+        const parent = videoModel.getElement().parentNode
+        parent.append(videoNew)
+        alternativePlayer.initialize(null, alternativeUrl, false);
+        alternativePlayer.updateSettings({
+            // debug: {logLevel: 5},
+            streaming: {cacheInitSegments: true}
+        });
+        alternativePlayer.preload(10)
+    }
+
+    async function switchView() {
+        const video = videoModel.getElement();
+        // const alternativeVideo = alternativePlayer.getVideoElement()
+        pause()
+        const currentTime = time()
+        preload(currentTime)
+        alternativePlayer.attachView(video)
+        alternativePlayer.play()
+        setTimeout(async () => {
+            await alternativePlayer.attachView(null)
+            attachView(video);
+            alternativePlayer.destroy();
+            alternativePlayer = null;
+            play();
+        }, 7000)
+    }
+
+
     instance = {
         addABRCustomRule,
         addRequestInterceptor,
@@ -2815,6 +2858,7 @@ function MediaPlayer() {
         seek,
         seekToOriginalLive,
         seekToPresentationTime,
+        setAlternativePlayer,
         setAutoPlay,
         setConfig,
         setCurrentTrack,
@@ -2828,6 +2872,7 @@ function MediaPlayer() {
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
+        switchView,
         time,
         timeAsUtc,
         timeInDvrWindow,
