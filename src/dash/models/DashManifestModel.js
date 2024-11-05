@@ -1056,7 +1056,7 @@ function DashManifestModel() {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
-                        event.id = currentMpdEvent.id;
+                        event.id = parseInt(currentMpdEvent.id);
                     } else {
                         event.id = null;
                     }
