@@ -780,40 +780,31 @@ declare namespace dashjs {
     }
 
     export interface DashHandler {
-        initialize(isDynamic: boolean): void;
-
-        getStreamId(): string;
-
-        getType(): string;
-
-        on(type: AdaptationSetRemovedNoCapabilitiesEvent['type'], listener: (e: AdaptationSetRemovedNoCapabilitiesEvent) => void, scope?: object): void;
-
-        on(type: string, listener: (e: MediaPlayerEvent) => void, scope?: object): void;
-
-
-        off(type: string, listener: (e: any) => void, scope?: object): void;
-
-        getStreamInfo(): StreamInfo;
-
-        reset(): void;
+        getCurrentIndex(): number;
 
         getInitRequest(mediaInfo: MediaInfo, representation: Representation): Request | null;
 
-        isLastSegmentRequested(representation: Representation, bufferingTime: number): boolean;
-
-        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): Request;
+        getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
         getNextSegmentRequestIdempotent(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
-        getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
+        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): Request;
+
+        getStreamId(): string;
+
+        getStreamInfo(): StreamInfo;
+
+        getType(): string;
+
+        getValidTimeAheadOfTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation, targetThreshold: number): number;
+
+        initialize(isDynamic: boolean): void;
+
+        isLastSegmentRequested(representation: Representation, bufferingTime: number): boolean;
 
         repeatSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
-        getValidTimeCloseToTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation, targetThreshold: number): number;
-
-        getValidTimeAheadOfTargetTime(time: number, mediaInfo: MediaInfo, representation: Representation): number;
-
-        getCurrentIndex(): number;
+        reset(): void;
     }
 
     export interface DashMetrics {
