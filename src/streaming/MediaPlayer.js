@@ -1461,7 +1461,35 @@ function MediaPlayer() {
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
         }
+        console.log(providedStartTime);
+        
+        _initializePlayback(providedStartTime);
+    }
 
+    function _attachViewAlt(element, config) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        videoModel.setElement(element);
+
+        if (element) {
+            _detectProtection();
+            _detectMetricsReporting();
+            _detectMss();
+
+            if (streamController) {
+                streamController.switchToVideoElement(10);
+            }
+        }
+
+        streamController.setConfig(config);
+
+        if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
+            _resetPlaybackControllers();
+        }
+        console.log(providedStartTime);
+        
         _initializePlayback(providedStartTime);
     }
 
@@ -2337,6 +2365,11 @@ function MediaPlayer() {
     // PRIVATE METHODS
     //***********************************
 
+    function _resetControllers() {
+        const streams = streamController.resetAlt();
+        return streams;
+    }
+
     function _resetPlaybackControllers() {
         playbackInitialized = false;
         streamingInitialized = false;
@@ -2739,35 +2772,38 @@ function MediaPlayer() {
         }
     }
 
-    let videoNew
     function setAlternativePlayer() {
-        videoNew = videoModel.getElement().cloneNode(true);
         const mediaPlayerFactory = FactoryMaker.getClassFactory(MediaPlayer);
         alternativePlayer = mediaPlayerFactory().create()
         // const alternativeUrl = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
-        // const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-        const alternativeUrl = 'http://localhost:3000/stream.mpd'
-        const parent = videoModel.getElement().parentNode
-        parent.append(videoNew)
+        const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        // const alternativeUrl = 'http://localhost:3000/stream.mpd'
         alternativePlayer.initialize(null, alternativeUrl, false);
         alternativePlayer.updateSettings({
             // debug: {logLevel: 5},
             streaming: {cacheInitSegments: true}
         });
-        alternativePlayer.preload(10)
+        alternativePlayer.preload()
     }
 
     async function switchView() {
         const video = videoModel.getElement();
         // const alternativeVideo = alternativePlayer.getVideoElement()
         pause()
-        const currentTime = time()
-        preload(currentTime)
+        // attachView(null);
+        updateSettings({
+            // debug: {logLevel: 5},
+            streaming: {cacheInitSegments: true}
+        });
+        // const currentTime = time()
+        // providedStartTime = 5;
+        // preload()
+        const streams = _resetControllers();
         alternativePlayer.attachView(video)
         alternativePlayer.play()
         setTimeout(async () => {
             await alternativePlayer.attachView(null)
-            attachView(video);
+            _attachViewAlt(video, streams);
             alternativePlayer.destroy();
             alternativePlayer = null;
             play();

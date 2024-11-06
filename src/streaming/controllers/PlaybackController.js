@@ -703,7 +703,9 @@ function PlaybackController() {
     }
 
     function _onPlaybackProgress() {
-        eventBus.trigger(Events.PLAYBACK_PROGRESS, { streamId: streamInfo.id });
+        if (streamInfo){
+            eventBus.trigger(Events.PLAYBACK_PROGRESS, { streamId: streamInfo.id });
+        }
     }
 
     function _onPlaybackRateChanged() {
