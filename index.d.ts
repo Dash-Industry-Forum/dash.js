@@ -782,13 +782,13 @@ declare namespace dashjs {
     export interface DashHandler {
         getCurrentIndex(): number;
 
-        getInitRequest(mediaInfo: MediaInfo, representation: Representation): Request | null;
+        getInitRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
         getNextSegmentRequest(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
         getNextSegmentRequestIdempotent(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
-        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): Request;
+        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): FragmentRequest;
 
         getStreamId(): string;
 
