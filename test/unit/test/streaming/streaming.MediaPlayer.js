@@ -658,6 +658,10 @@ describe('MediaPlayer', function () {
 
         it('should configure fastSwitchEnabled', function () {
             let fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
+            expect(fastSwitchEnabled).to.be.null;
+
+            player.updateSettings({ 'streaming': { 'buffer': { 'fastSwitchEnabled': true } } });
+            fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.true;
 
             player.updateSettings({ 'streaming': { 'buffer': { 'fastSwitchEnabled': false } } });

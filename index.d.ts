@@ -1763,6 +1763,7 @@ declare namespace dashjs {
         type: string
 
     }
+
     export interface AstInFutureEvent extends MediaPlayerEvent {
         type: MediaPlayerEvents['AST_IN_FUTURE'];
         delay: number;
@@ -2797,41 +2798,44 @@ declare namespace dashjs {
     }
 
     export interface MediaPlayerModel {
-        getABRCustomRules(): object[];
 
         addABRCustomRule(type: string, rulename: string, rule: any): void;
 
-        removeABRCustomRule(rulename: string): void;
+        addUTCTimingSource(schemeIdUri: string, value: string): void;
+
+        clearDefaultUTCTimingSources(): void;
+
+        getABRCustomRules(): object[];
+
+        getBufferTimeDefault(): number;
+
+        getDefaultUtcTimingSource(): UTCTiming;
+
+        getFastSwitchEnabled(): boolean;
 
         getInitialBufferLevel(): number;
 
-        getBufferTimeDefault(): number;
+        getLiveCatchupLatencyThreshold(): number;
+
+        getLiveDelay(): number;
 
         getRetryAttemptsForType(type: string): number;
 
         getRetryIntervalsForType(type: string): any;
 
-        getLiveDelay(): number;
+        getUTCTimingSources(): UTCTiming[];
 
-        getLiveCatchupLatencyThreshold(): number;
+        getXHRWithCredentialsForType(type: string): object;
 
-        addUTCTimingSource(schemeIdUri: string, value: string): void;
+        removeABRCustomRule(rulename: string): void;
 
         removeUTCTimingSource(schemeIdUri: string, value: string): void;
 
-        getUTCTimingSources(): UTCTiming[];
-
-        clearDefaultUTCTimingSources(): void;
+        reset(): void;
 
         restoreDefaultUTCTimingSources(): void;
 
         setXHRWithCredentialsForType(type: string, value: any): void;
-
-        getXHRWithCredentialsForType(type: string): object;
-
-        getDefaultUtcTimingSource(): UTCTiming;
-
-        reset(): void;
     }
 
     export interface MetricsModel {
