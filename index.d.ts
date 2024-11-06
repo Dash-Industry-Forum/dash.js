@@ -788,7 +788,7 @@ declare namespace dashjs {
 
         getNextSegmentRequestIdempotent(mediaInfo: MediaInfo, representation: Representation): FragmentRequest | null;
 
-        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): FragmentRequest;
+        getSegmentRequestForTime(mediaInfo: MediaInfo, representation: Representation, time: number): FragmentRequest | null;
 
         getStreamId(): string;
 
