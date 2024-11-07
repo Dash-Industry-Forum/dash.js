@@ -19,7 +19,7 @@ const commonConfig = {
                     {
                         loader: 'babel-loader',
                         options: {
-                            'targets': {
+                            targets: {
                                 'chrome': '51'
                             },
                             presets: ['@babel/preset-env']
