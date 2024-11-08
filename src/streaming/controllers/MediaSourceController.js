@@ -55,6 +55,7 @@ function MediaSourceController() {
         let hasManagedMediaSource = ('ManagedMediaSource' in window);
 
         if (hasManagedMediaSource) {
+            // eslint-disable-next-line no-undef
             mediaSource = new ManagedMediaSource();
             mediaSourceType = 'managedMediaSource';
             logger.info(`Created ManagedMediaSource`)

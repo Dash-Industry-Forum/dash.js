@@ -48,11 +48,9 @@ function VideoModel() {
 
     let instance,
         logger,
-        settings,
         element,
         _currentTime,
         setCurrentTimeReadyStateFunction,
-        resumeReadyStateFunction,
         TTMLRenderingDiv,
         vttRenderingDiv,
         previousPlaybackRate,
@@ -62,11 +60,11 @@ function VideoModel() {
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
     const stalledStreams = [];
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        settings = Settings(context).getInstance();
         _currentTime = NaN;
     }
 
@@ -77,16 +75,12 @@ function VideoModel() {
     function reset() {
         clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
-        stalledStreams.length = 0;
     }
 
-    function setConfig(config) {
-        if (!config) {
-            return;
-        }
-
-        if (config.settings) {
-            settings = config.settings;
+    function onPlaybackCanPlay() {
+        if (element) {
+            element.playbackRate = previousPlaybackRate || 1;
+            element.removeEventListener('canplay', onPlaybackCanPlay);
         }
     }
 
@@ -94,16 +88,12 @@ function VideoModel() {
         if (!element) {
             return;
         }
-
-        if (ignoreReadyState) {
+        if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
+            // If media element hasn't loaded enough data to play yet, wait until it has
+            element.addEventListener('canplay', onPlaybackCanPlay);
+        } else {
             element.playbackRate = value;
-            return;
         }
-
-        // If media element hasn't loaded enough data to play yet, wait until it has
-        waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, () => {
-            element.playbackRate = value;
-        });
     }
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
@@ -247,21 +237,12 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
+
         if (type === null || !element || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
         stalledStreams.push(type);
-
-        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && stalledStreams.length === 1 && (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState || getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)) {
-            // Halt playback until nothing is stalled
-            previousPlaybackRate = element.playbackRate;
-            setPlaybackRate(0, true);
-
-            const event = document.createEvent('Event');
-            event.initEvent('waiting', true, false);
-            element.dispatchEvent(event);
-        }
     }
 
     function removeStalledStream(type) {
@@ -274,26 +255,6 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
 
-        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && !isStalled()) {
-            const resume = () => {
-                setPlaybackRate(previousPlaybackRate || 1, settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState);
-
-                if (!element.paused) {
-                    const event = document.createEvent('Event');
-                    event.initEvent('playing', true, false);
-                    element.dispatchEvent(event);
-                }
-            }
-            
-            if (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState) {
-                resume();
-            } else {
-                if (resumeReadyStateFunction && resumeReadyStateFunction.func && resumeReadyStateFunction.event) {
-                    removeEventListener(resumeReadyStateFunction.event, resumeReadyStateFunction.func);
-                }
-                resumeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, resume);
-            }
-        }
     }
 
     function stallStream(type, isStalled) {
@@ -552,7 +513,6 @@ function VideoModel() {
         removeChild,
         removeEventListener,
         reset,
-        setConfig,
         setCurrentTime,
         setDisableRemotePlayback,
         setElement,

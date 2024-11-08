@@ -85,7 +85,7 @@ function DashManifestModel() {
         // Check for thumbnail images
         if (adaptation.Representation && adaptation.Representation.length) {
             const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
-            if (essentialProperties && essentialProperties.some(essentialProperty => Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
+            if (essentialProperties && essentialProperties.length > 0 && Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperties[0].schemeIdUri) >= 0) {
                 return (type === Constants.IMAGE);
             }
         }
@@ -189,7 +189,7 @@ function DashManifestModel() {
             const entry = new ProducerReferenceTime();
 
             if (prt.hasOwnProperty(DashConstants.ID)) {
-                entry[DashConstants.ID] = parseInt(prt[DashConstants.ID]);
+                entry[DashConstants.ID] = prt[DashConstants.ID];
             } else {
                 // Ignore. Missing mandatory attribute
                 return;
@@ -578,11 +578,11 @@ function DashManifestModel() {
         }
     }
 
-    function getEssentialPropertiesForAdaptationSet(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation[DashConstants.ESSENTIAL_PROPERTY].length) {
+    function getEssentialPropertiesForAdaptation(adaptation) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation.EssentialProperty.length) {
             return [];
         }
-        return adaptation[DashConstants.ESSENTIAL_PROPERTY].map(essentialProperty => {
+        return adaptation.EssentialProperty.map(essentialProperty => {
             const s = new DescriptorType();
             s.init(essentialProperty);
             return s
@@ -590,11 +590,11 @@ function DashManifestModel() {
     }
 
     function getEssentialPropertiesForRepresentation(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !realRepresentation[DashConstants.ESSENTIAL_PROPERTY].length) {
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
             return [];
         }
 
-        return realRepresentation[DashConstants.ESSENTIAL_PROPERTY].map((essentialProperty) => {
+        return realRepresentation.EssentialProperty.map((essentialProperty) => {
             const s = new DescriptorType();
             s.init(essentialProperty);
             return s
@@ -717,7 +717,6 @@ function DashManifestModel() {
                 }
 
                 voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
-                voRepresentation.supplementalProperties = getSupplementalPropertiesForRepresentation(realRepresentation);
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
@@ -779,6 +778,8 @@ function DashManifestModel() {
                     }
                 }
 
+                voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
+                voRepresentation.supplementalProperties = getSupplementalPropertiesForRepresentation(realRepresentation);
                 voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);
                 voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, i];
 
@@ -1056,7 +1057,7 @@ function DashManifestModel() {
                         event.duration = currentMpdEvent.duration / eventStream.timescale;
                     }
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ID)) {
-                        event.id = parseInt(currentMpdEvent.id);
+                        event.id = currentMpdEvent.id;
                     } else {
                         event.id = null;
                     }
@@ -1431,10 +1432,10 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForAdaptation(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
+        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation.SupplementalProperty.length) {
             return [];
         }
-        return adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
+        return adaptation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             s.init(supp);
             return s
@@ -1442,10 +1443,10 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
+        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation.SupplementalProperty.length) {
             return [];
         }
-        return representation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
+        return representation.SupplementalProperty.map(supp => {
             const s = new DescriptorType();
             s.init(supp);
             return s
@@ -1484,7 +1485,7 @@ function DashManifestModel() {
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
+        getEssentialPropertiesForAdaptation,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,

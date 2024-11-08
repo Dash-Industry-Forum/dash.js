@@ -94,6 +94,7 @@ const TEST_INPUTS = {
         TOLERANCE: 5
     },
     BUFFER_TO_KEEP_SEEK: {
+        TOLERANCE: 1,
         SEEK_OFFSET: 40
     },
     SWITCH_QUALITY: {

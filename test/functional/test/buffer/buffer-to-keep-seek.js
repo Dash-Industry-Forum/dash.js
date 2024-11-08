@@ -16,8 +16,7 @@ const TESTCASE = Constants.TESTCASES.BUFFER.TO_KEEP_SEEK;
 const item = {
     url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
     type: 'vod',
-    name: 'Segment Template BBB',
-    segmentDuration: 4
+    name: 'Segment Template BBB'
 }
 
 const mpd = item.url;
@@ -62,7 +61,7 @@ describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
     });
 
     it(`Wait for forward buffer to be filled`, async () => {
-        await reachedTargetForwardBuffer(playerAdapter, TARGET_BUFFER, item.segmentDuration);
+        await reachedTargetForwardBuffer(playerAdapter, TARGET_BUFFER, Constants.TEST_INPUTS.BUFFER_TO_KEEP_SEEK.TOLERANCE);
     });
 
     it(`Seek to an unbuffered range`, () => {

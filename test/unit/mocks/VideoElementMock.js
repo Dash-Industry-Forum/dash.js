@@ -26,8 +26,6 @@ class VideoElementMock {
         this.nodeName = 'VIDEO';
         this.videoWidth = 800;
         this.videoHeight = 600;
-        this.readyState = 0;
-        this.events = {};
     }
 
     constructor() {
@@ -46,39 +44,6 @@ class VideoElementMock {
 
     getCurrentCue(textTrack) {
         return textTrack.getCurrentCue();
-    }
-
-    addEventListener(type, handler) {
-        if (this.events.hasOwnProperty(type)) {
-            this.events[type].push(handler);
-        } else {
-            this.events[type] = [handler];
-        }
-    }
-
-    removeEventListener(type, handler) {
-        if (!this.events.hasOwnProperty(type)) {
-            return;
-        }
-
-        let index = this.events[type].indexOf(handler);
-        if (index != -1) {
-            this.events[type].splice(index, 1);
-        }
-    }
-
-    dispatchEvent(event) {   
-        const { type } = event;
-        
-        if (!this.events.hasOwnProperty(type)) {
-            return;
-        }
-
-        let evs = this.events[type];
-        let l = evs.length;
-        for (let i = 0; i < l; i++) {
-            evs[i]();
-        }
     }
 
     reset() {

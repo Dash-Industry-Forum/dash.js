@@ -709,17 +709,6 @@
                 ]
             },
             {
-                "title": "Flexible Insertion of URL Parameters Sample",
-                "description": "This sample demonstrates the Flexible Insertion of URL Parameters in dash.js.",
-                "href": "advanced/ext-url-query-info.html",
-                "image": "lib/img/bbb-1.jpg",
-                "labels": [
-                    "VoD",
-                    "Video",
-                    "Audio"
-                ]
-            },
-            {
                 "title": "Custom Capabilities Filters",
                 "description": "This sample shows how to filter representations.",
                 "href": "advanced/custom-capabilities-filters.html",
