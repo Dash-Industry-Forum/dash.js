@@ -388,6 +388,19 @@ function DashAdapter() {
     }
 
     /**
+     * Return all EssentialProperties of an AdaptationSet
+     * @param {object} adaptationSet
+     * @return {array}
+     */
+    function getEssentialPropertiesForAdaptationSet(adaptationSet) {
+        try {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(adaptationSet);
+        } catch (e) {
+            return [];
+        }
+    }
+
+    /**
      * Return all EssentialProperties of a Representation
      * @param {object} representation
      * @return {array}
@@ -398,6 +411,19 @@ function DashAdapter() {
         } catch (e) {
             return [];
         }
+    }
+
+    /**
+     * Return supplementalCodecs of a Representation
+     * @param {object} representation
+     * @returns {array}
+     */
+    function getSupplementalCodecs(representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS];
+        if (!supplementalCodecs) {
+            return [];
+        }
+        return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
     }
 
     /**
@@ -1013,15 +1039,8 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);
-        if ((!mediaInfo.essentialProperties || mediaInfo.essentialProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.essentialProperties = _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation);
-        }
+        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptationSet(realAdaptation);
         mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        if ((!mediaInfo.supplementalProperties || mediaInfo.supplementalProperties.length === 0) && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
-            mediaInfo.supplementalProperties = _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation);
-        }
-
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
@@ -1078,32 +1097,6 @@ function DashAdapter() {
         })
 
         return normalizedKeyIds
-    }
-
-    function _getCommonRepresentationEssentialProperties(mediaInfo, realAdaptation) {
-        let arr = realAdaptation.Representation.map(repr => {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(repr);
-        });
-
-        if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
-            // only output Representation.essentialProperties to mediaInfo, if they are present on all Representations
-            return arr[0];
-        }
-
-        return []
-    }
-
-    function _getCommonRepresentationSupplementalProperties(mediaInfo, realAdaptation) {
-        let arr = realAdaptation.Representation.map(repr => {
-            return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
-        });
-
-        if (arr.every(v => JSON.stringify(v) === JSON.stringify(arr[0]))) {
-            // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
-            return arr[0];
-        }
-
-        return []
     }
 
     function _getAdaptationSetSwitchingCompatibleIds(mediaInfo) {
@@ -1228,6 +1221,7 @@ function DashAdapter() {
         getCodec,
         getContentSteering,
         getDuration,
+        getEssentialPropertiesForAdaptationSet,
         getEssentialPropertiesForRepresentation,
         getEvent,
         getEventsFor,
@@ -1252,6 +1246,7 @@ function DashAdapter() {
         getRepresentationSortFunction,
         getStreamsInfo,
         getSuggestedPresentationDelay,
+        getSupplementalCodecs,
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,

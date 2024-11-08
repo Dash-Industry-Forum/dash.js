@@ -37,6 +37,7 @@ import Errors from '../core/errors/Errors.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import URLUtils from './utils/URLUtils.js';
 import LocationSelector from './utils/LocationSelector.js';
+import Utils from '../core/Utils.js';
 
 function ManifestUpdater() {
 
@@ -153,6 +154,11 @@ function ManifestUpdater() {
 
         // default to the original url in the manifest
         let url = manifest.url;
+
+        // Remove previous CMCD parameters from URL
+        if (url) {
+            url = Utils.removeQueryParameterFromUrl(url, 'CMCD');
+        }
 
         // Check for PatchLocation and Location alternatives
         let serviceLocation = null;
