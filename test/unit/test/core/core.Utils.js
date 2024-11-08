@@ -168,4 +168,31 @@ describe('Utils', () => {
             expect(Utils.getCodecFamily('vp09.00.10.08.00.02.02.02.00')).to.be.equal('vp09');
         })
     })
+
+    describe('removeQueryParameterFromUrl', () => {
+
+        it('Should remove query parameter from URL', () => {
+            const url = 'http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd?CMCD=ot%3Dm%2Cpr%3D0.9900013331200346%2Csf%3Dd%2Csid%3D%22f3a875e8-da06-4261-b9fb-124ea694c524%22%2Cst%3Dl';
+            const modifiedUrl = Utils.removeQueryParameterFromUrl(url, 'CMCD');
+            expect(modifiedUrl).to.be.equal('http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd');
+        })
+
+        it('Should return original URL as query parameter to be removed is not included', () => {
+            const url = 'http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd?CMCD=ot%3Dm%2Cpr%3D0.9900013331200346%2Csf%3Dd%2Csid%3D%22f3a875e8-da06-4261-b9fb-124ea694c524%22%2Cst%3Dl';
+            const modifiedUrl = Utils.removeQueryParameterFromUrl(url, 'C');
+            expect(modifiedUrl).to.be.equal('http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd?CMCD=ot%3Dm%2Cpr%3D0.9900013331200346%2Csf%3Dd%2Csid%3D%22f3a875e8-da06-4261-b9fb-124ea694c524%22%2Cst%3Dl');
+        })
+
+        it('Should return original URL if no parameter to be removed is specified', () => {
+            const url = 'http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd?CMCD=ot%3Dm%2Cpr%3D0.9900013331200346%2Csf%3Dd%2Csid%3D%22f3a875e8-da06-4261-b9fb-124ea694c524%22%2Cst%3Dl';
+            const modifiedUrl = Utils.removeQueryParameterFromUrl(url,);
+            expect(modifiedUrl).to.be.equal('http://13.38.43.87:8080/packeng/dash_ll.toml/ateme.mpd?CMCD=ot%3Dm%2Cpr%3D0.9900013331200346%2Csf%3Dd%2Csid%3D%22f3a875e8-da06-4261-b9fb-124ea694c524%22%2Cst%3Dl');
+        })
+
+        it('Do not modify a string without query parameters', () => {
+            const url = 'http://example.com';
+            const modifiedUrl = Utils.removeQueryParameterFromUrl(url, 'CMCD');
+            expect(modifiedUrl).to.be.equal(url);
+        })
+    })
 })

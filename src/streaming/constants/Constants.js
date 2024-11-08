@@ -216,20 +216,20 @@ export default {
     CMCD_MODE_HEADER: 'header',
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the availables keys for CMCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the availables keys for CMCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
      *  @memberof Constants#
      *  @static
      */
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CMCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */
@@ -252,6 +252,8 @@ export default {
     THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
     COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+    URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
+    EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',

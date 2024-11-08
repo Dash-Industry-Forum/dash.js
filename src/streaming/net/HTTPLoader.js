@@ -44,6 +44,7 @@ import Constants from '../constants/Constants.js';
 import CustomParametersModel from '../models/CustomParametersModel.js';
 import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
+import ExtUrlQueryInfoController from '../controllers/ExtUrlQueryInfoController.js';
 
 /**
  * @module HTTPLoader
@@ -77,6 +78,7 @@ function HTTPLoader(cfg) {
         customParametersModel,
         commonAccessTokenController,
         clientDataReportingController,
+        extUrlQueryInfoController,
         logger;
 
     function setup() {
@@ -89,6 +91,7 @@ function HTTPLoader(cfg) {
         cmsdModel = CmsdModel(context).getInstance();
         customParametersModel = CustomParametersModel(context).getInstance();
         commonAccessTokenController = CommonAccessTokenController(context).getInstance();
+        extUrlQueryInfoController = ExtUrlQueryInfoController(context).getInstance();
 
         downloadErrorToRequestTypeMap = {
             [HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
@@ -108,6 +111,10 @@ function HTTPLoader(cfg) {
 
         if (config.commonAccessTokenController) {
             commonAccessTokenController = config.commonAccessTokenController
+        }
+
+        if (config.extUrlQueryInfoController) {
+            extUrlQueryInfoController = config.extUrlQueryInfoController;
         }
     }
 
@@ -574,8 +581,17 @@ function HTTPLoader(cfg) {
      */
     function _updateRequestUrlAndHeaders(request) {
         _updateRequestUrlAndHeadersWithCmcd(request);
+        _addExtUrlQueryParameters(request);
         _addPathwayCloningParameters(request);
         _addCommonAccessToken(request);
+    }
+
+    function _addExtUrlQueryParameters(request) {
+        // Add ExtUrlQueryInfo parameters
+        let finalQueryString = extUrlQueryInfoController.getFinalQueryString(request);
+        if (finalQueryString) {
+            request.url = Utils.addAdditionalQueryParameterToUrl(request.url, finalQueryString);
+        }
     }
 
     function _addPathwayCloningParameters(request) {

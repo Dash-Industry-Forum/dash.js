@@ -98,6 +98,29 @@ class Utils {
         }
     }
 
+    static removeQueryParameterFromUrl(url, queryParameter) {
+        if (!url || !queryParameter) {
+            return url;
+        }
+        // Parse the URL
+        const parsedUrl = new URL(url);
+
+        // Get the search parameters
+        const params = new URLSearchParams(parsedUrl.search);
+
+        if (!params || params.size === 0) {
+            return url;
+        }
+
+        // Remove the CMCD parameter
+        params.delete(queryParameter);
+
+        // Reconstruct the URL without the CMCD parameter
+        parsedUrl.search = params.toString();
+
+        return parsedUrl.toString();
+    }
+
     static parseHttpHeaders(headerStr) {
         let headers = {};
         if (!headerStr) {
@@ -115,6 +138,20 @@ class Utils {
             }
         }
         return headers;
+    }
+
+    /**
+     * Parses query parameters from a string and returns them as an array of key-value pairs.
+     * @param {string} queryParamString - A string containing the query parameters.
+     * @return {Array<{key: string, value: string}>} An array of objects representing the query parameters.
+     */
+    static parseQueryParams(queryParamString) {
+        const params = [];
+        const searchParams = new URLSearchParams(queryParamString);
+        for (const [key, value] of searchParams.entries()) {
+            params.push({ key: decodeURIComponent(key), value: decodeURIComponent(value) });
+        }
+        return params;
     }
 
     static generateUuid() {
