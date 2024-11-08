@@ -729,11 +729,7 @@ describe('CmcdModel', function () {
                         settings.update({
                             streaming: {
                                 cmcd: {
-                                    reporting: {
-                                        requestMode: {
-                                            version: 2
-                                        }
-                                    },
+                                    version: 2,
                                     enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                                 }
                             }
@@ -764,11 +760,7 @@ describe('CmcdModel', function () {
                             streaming: {
                                 cmcd: {
                                     enabled: true,
-                                    reporting: {
-                                        requestMode: {
-                                            version: 1
-                                        }
-                                    },
+                                    version: 1
                                 },
                                 enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                             }
@@ -1481,11 +1473,7 @@ describe('CmcdModel', function () {
                 settings.update({
                     streaming: {
                         cmcd: {
-                            reporting: {
-                                requestMode: {
-                                    version: 2
-                                }
-                            }, 
+                            version: 2,
                             enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                         }
                     }
@@ -1515,11 +1503,7 @@ describe('CmcdModel', function () {
                     streaming: {
                         cmcd: {
                             enabled: true,
-                            reporting: {
-                                requestMode: {
-                                    version: 1
-                                }
-                            },
+                            version: 1,
                             enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                         }
                     }
