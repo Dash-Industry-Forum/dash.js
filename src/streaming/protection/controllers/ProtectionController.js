@@ -1163,14 +1163,10 @@ function ProtectionController(config) {
                 return true;
             }
 
-            let usable = true
-
-            normalizedKeyIds.forEach((normalizedKeyId) => {
-                const keyStatus = keyStatusMap.get(normalizedKeyId)
-                usable = keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED;
-            })
-
-            return usable
+            return [...normalizedKeyIds].some((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId);
+                return keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED;
+            });
         } catch (error) {
             logger.error(error);
             return true
