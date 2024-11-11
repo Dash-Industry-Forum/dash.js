@@ -1159,7 +1159,7 @@ function ProtectionController(config) {
 
     function areKeyIdsUsable(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+            if (!normalizedKeyIds || normalizedKeyIds.size === 0 || !keyStatusMap || keyStatusMap.size === 0) {
                 return true;
             }
 
@@ -1167,7 +1167,7 @@ function ProtectionController(config) {
 
             normalizedKeyIds.forEach((normalizedKeyId) => {
                 const keyStatus = keyStatusMap.get(normalizedKeyId)
-                usable = !keyStatus || (keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED);
+                usable = keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED;
             })
 
             return usable
