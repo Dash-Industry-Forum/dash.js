@@ -190,6 +190,7 @@ function StreamController() {
      * @param {number} startTime
      */
     function load(url, startTime = NaN) {
+        console.log('Streamcontroller - load')
         _checkConfig();
         providedStartTime = startTime;
         manifestLoader.load(url);
@@ -1501,6 +1502,63 @@ function StreamController() {
         }
     }
 
+    function restoreBuffer(data){
+        activeStream.getStreamProcessors()[0].restoreBuffer(data.videoBuffer)
+        activeStream.getStreamProcessors()[1].restoreBuffer(data.audioBuffer)
+    }
+
+    function getBufferBackup(){
+
+        console.log('video buffer is', activeStream.getStreamProcessors()[0].getBuffer().getType())
+        console.log('audio buffer is', activeStream.getStreamProcessors()[1].getBuffer().getType())
+
+        const videoBuffer = activeStream.getStreamProcessors()[0].getSavedBuffer()
+        const audioBuffer = activeStream.getStreamProcessors()[1].getSavedBuffer()
+
+        return {
+            videoBuffer,
+            audioBuffer,
+        };
+
+        // console.log("MediaSource - duration", mediaSourceController.getDuration())
+        // console.log("MediaSoruce - buffers", mediaSourceController.getSourceBuffers())
+        // console.log("StreamProcessors", activeStream.getStreamProcessors())
+        // console.log("StreamProcessor 0 - type:", activeStream.getStreamProcessors()[0].getType())
+        // console.log("StreamProcessor 1 - type:", activeStream.getStreamProcessors()[1].getType())
+        // console.log("SourceBufferSink 0 - buffer:", activeStream.getStreamProcessors()[0].getBuffer().getBuffer())
+        // console.log("SourceBufferSink 1 - buffer:", activeStream.getStreamProcessors()[1].getBuffer().getBuffer())
+    }
+
+    function getConfig(){
+        return {
+            streams,
+            capabilities,
+            capabilitiesFilter,
+            manifestLoader,
+            manifestModel,
+            mediaPlayerModel,
+            customParametersModel,
+            protectionController,
+            adapter,
+            dashMetrics,
+            errHandler,
+            timelineConverter,
+            videoModel,
+            playbackController,
+            throughputController,
+            serviceDescriptionController,
+            contentSteeringController,
+            textController,
+            abrController,
+            mediaController,
+            settings,
+            baseURLController,
+            uriFragmentModel,
+            segmentBaseController,
+            manifestUpdater,
+        }
+    }
+
     function setConfig(config) {
         if (!config) {
             return;
@@ -1740,9 +1798,12 @@ function StreamController() {
         refreshManifest,
         reset,
         resetAlt,
+        getConfig,
         setConfig,
         setProtectionData,
         switchToVideoElement,
+        restoreBuffer,
+        getBufferBackup,
     };
 
     setup();

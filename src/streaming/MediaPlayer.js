@@ -596,7 +596,7 @@ function MediaPlayer() {
         }
         if (source) {
             const playbackTime = time ? time : providedStartTime;
-            console.log(playbackTime)
+            console.log('Preload initialized!')
             _initializePlayback(playbackTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
@@ -1461,8 +1461,6 @@ function MediaPlayer() {
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
         }
-        console.log(providedStartTime);
-        
         _initializePlayback(providedStartTime);
     }
 
@@ -1488,8 +1486,6 @@ function MediaPlayer() {
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
         }
-        console.log(providedStartTime);
-        
         _initializePlayback(providedStartTime);
     }
 
@@ -2365,11 +2361,6 @@ function MediaPlayer() {
     // PRIVATE METHODS
     //***********************************
 
-    function _resetControllers() {
-        const streams = streamController.resetAlt();
-        return streams;
-    }
-
     function _resetPlaybackControllers() {
         playbackInitialized = false;
         streamingInitialized = false;
@@ -2776,8 +2767,8 @@ function MediaPlayer() {
         const mediaPlayerFactory = FactoryMaker.getClassFactory(MediaPlayer);
         alternativePlayer = mediaPlayerFactory().create()
         // const alternativeUrl = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
-        const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-        // const alternativeUrl = 'http://localhost:3000/stream.mpd'
+        // const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        const alternativeUrl = 'https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd'
         alternativePlayer.initialize(null, alternativeUrl, false);
         alternativePlayer.updateSettings({
             // debug: {logLevel: 5},
@@ -2788,26 +2779,31 @@ function MediaPlayer() {
 
     async function switchView() {
         const video = videoModel.getElement();
-        // const alternativeVideo = alternativePlayer.getVideoElement()
         pause()
-        // attachView(null);
         updateSettings({
             // debug: {logLevel: 5},
             streaming: {cacheInitSegments: true}
         });
-        // const currentTime = time()
-        // providedStartTime = 5;
-        // preload()
-        const streams = _resetControllers();
+        const streamConfig = streamController.getConfig()
+        
+        let time = getVideoElement().currentTime;
+        const savedbuffers = streamController.getBufferBackup()
+        console.log('the data to restore is', savedbuffers)
+        console.log('current time is', time)
         alternativePlayer.attachView(video)
         alternativePlayer.play()
         setTimeout(async () => {
             await alternativePlayer.attachView(null)
-            _attachViewAlt(video, streams);
+            _attachViewAlt(video, streamConfig);
+            
+            setTimeout(() => {
+                streamController.restoreBuffer(savedbuffers)
+                play()
+                // seek(time);
+            }, 100)
             alternativePlayer.destroy();
             alternativePlayer = null;
-            play();
-        }, 7000)
+        }, 5000)
     }
 
 

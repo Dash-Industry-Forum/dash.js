@@ -271,6 +271,24 @@ function SourceBufferSink(config) {
         }
     }
 
+    let savedSegments = [];
+
+    function restoreSavedBuffer(segments) {
+        if (segments.length > 0) {
+            segments.forEach(chunk => {
+                appendQueue.push({ data: chunk, promise: {resolve: ()=>{}, reject: ()=>{}}});
+                _waitForUpdateEnd(_appendNextInQueue.bind(this));
+            });
+        } else {
+            console.error('No saved buffer to restore');
+        }
+        savedSegments = [];
+    }
+
+    function getSavedBuffer(){
+        return savedSegments;
+    }
+
     function append(chunk, request = null) {
         return new Promise((resolve, reject) => {
             if (!chunk) {
@@ -280,6 +298,7 @@ function SourceBufferSink(config) {
                 });
                 return;
             }
+            savedSegments.push({ ...chunk });
             appendQueue.push({ data: chunk, promise: { resolve, reject }, request });
             _waitForUpdateEnd(_appendNextInQueue.bind(this));
         });
@@ -481,6 +500,8 @@ function SourceBufferSink(config) {
         reset,
         updateAppendWindow,
         updateTimestampOffset,
+        restoreSavedBuffer,
+        getSavedBuffer,
     };
 
     setup();

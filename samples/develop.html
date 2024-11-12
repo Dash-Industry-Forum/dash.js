@@ -21,7 +21,7 @@
         <main>
             <div class="container py-4">
                     <div class="col-md-8">
-                        <video controls="true"></video>
+                        <video controls="true" autoplay muted></video>
                     </div>
                 </div>
                 <footer class="pt-3 mt-4 text-muted border-top">
@@ -48,7 +48,7 @@
                 player,
                 // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/case1.mpd";
                 url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-                // url = "http://localhost:3000/stream.mpd"
+                // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd"
       
               video = document.querySelector("video");
               player = dashjs.MediaPlayer().create();
@@ -67,7 +67,6 @@
               //   },
               // });
               player.initialize(video, url, true);
-             
               player.setAlternativePlayer()
               setTimeout(()=> {
                 // player.attachView(video);
