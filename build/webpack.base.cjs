@@ -8,15 +8,12 @@ const commonConfig = {
         rules: [
             {
                 test: /\.(js)$/,
-                exclude: [
-                    /node_modules\/codem-isoboxer/,
-                    /node_modules\/fast-deep-equal/,
-                    /node_modules\/html-entities/,
-                    /node_modules\/imsc/,
-                    /node_modules\/localforage/,
-                    /node_modules\/path-browserify/,
-                    /node_modules\/ua-parser-js/
-                ],
+                include: {
+                    and: [
+                        /node_modules/
+                    ],
+                    not: [/core-js/]
+                },
                 use: [
                     {
                         loader: 'string-replace-loader',
