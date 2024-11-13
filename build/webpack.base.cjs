@@ -8,12 +8,7 @@ const commonConfig = {
         rules: [
             {
                 test: /\.(js)$/,
-                include: {
-                    and: [
-                        /node_modules/
-                    ],
-                    not: [/core-js/]
-                },
+                exclude: [/core-js/],
                 use: [
                     {
                         loader: 'string-replace-loader',
