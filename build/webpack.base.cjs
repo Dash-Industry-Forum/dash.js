@@ -8,6 +8,15 @@ const commonConfig = {
         rules: [
             {
                 test: /\.(js)$/,
+                exclude: [
+                    /node_modules\/codem-isoboxer/,
+                    /node_modules\/fast-deep-equal/,
+                    /node_modules\/html-entities/,
+                    /node_modules\/imsc/,
+                    /node_modules\/localforage/,
+                    /node_modules\/path-browserify/,
+                    /node_modules\/ua-parser-js/
+                ],
                 use: [
                     {
                         loader: 'string-replace-loader',
@@ -19,14 +28,26 @@ const commonConfig = {
                     {
                         loader: 'babel-loader',
                         options: {
-                            presets: ['@babel/preset-env']
+                            sourceType: 'unambiguous',
+                            presets: [
+                                [
+                                    '@babel/preset-env',
+                                    {
+                                        useBuiltIns: 'usage',
+                                        corejs: '3.39.0',
+                                    }
+                                ],
+                            ],
+                            plugins: [
+                                '@babel/plugin-transform-runtime',
+                                '@babel/plugin-transform-parameters'
+                            ],
                         },
                     },
                 ],
             },
         ],
     },
-    //Webpack 5 no longer polyfills Node.js core modules automatically
     resolve: {
         fallback: {
             stream: require.resolve('stream-browserify'),
