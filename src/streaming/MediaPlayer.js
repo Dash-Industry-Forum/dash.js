@@ -2482,7 +2482,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        cmcdModel.initialize();
+        cmcdModel.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
