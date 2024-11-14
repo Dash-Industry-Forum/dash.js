@@ -43,45 +43,45 @@ function XHRLoader() {
 
     /**
      * Load request
-     * @param {CommonMediaRequest} httpRequest
-     * @param {CommonMediaResponse} httpResponse
+     * @param {CommonMediaRequest} commonMediaRequest
+     * @param {CommonMediaResponse} commonMediaResponse
      */
-    function load(httpRequest, httpResponse) {
+    function load(commonMediaRequest, commonMediaResponse) {
         xhr = null;
         xhr = new XMLHttpRequest();
-        xhr.open(httpRequest.method, httpRequest.url, true);
+        xhr.open(commonMediaRequest.method, commonMediaRequest.url, true);
 
-        if (httpRequest.responseType) {
-            xhr.responseType = httpRequest.responseType;
+        if (commonMediaRequest.responseType) {
+            xhr.responseType = commonMediaRequest.responseType;
         }
 
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
+        if (commonMediaRequest.headers) {
+            for (let header in commonMediaRequest.headers) {
+                let value = commonMediaRequest.headers[header];
                 if (value) {
                     xhr.setRequestHeader(header, value);
                 }
             }
         }
 
-        xhr.withCredentials = httpRequest.credentials === 'include';
-        xhr.timeout = httpRequest.timeout;
+        xhr.withCredentials = commonMediaRequest.credentials === 'include';
+        xhr.timeout = commonMediaRequest.timeout;
 
         xhr.onload = function () {
-            httpResponse.url = this.responseURL;
-            httpResponse.status = this.status;
-            httpResponse.statusText = this.statusText;
-            httpResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
-            httpResponse.data = this.response;
+            commonMediaResponse.url = this.responseURL;
+            commonMediaResponse.status = this.status;
+            commonMediaResponse.statusText = this.statusText;
+            commonMediaResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
+            commonMediaResponse.data = this.response;
         }
-        xhr.onloadend = httpRequest.customData.onloadend;
-        xhr.onprogress = httpRequest.customData.onprogress;
-        xhr.onabort = httpRequest.customData.onabort;
-        xhr.ontimeout = httpRequest.customData.ontimeout;
+        xhr.onloadend = commonMediaRequest.customData.onloadend;
+        xhr.onprogress = commonMediaRequest.customData.onprogress;
+        xhr.onabort = commonMediaRequest.customData.onabort;
+        xhr.ontimeout = commonMediaRequest.customData.ontimeout;
 
         xhr.send();
 
-        httpRequest.customData.abort = abort.bind(this);
+        commonMediaRequest.customData.abort = abort.bind(this);
         return true;
     }
 
