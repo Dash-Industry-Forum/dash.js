@@ -294,7 +294,6 @@ function HTTPLoader(cfg) {
                     _retriggerRequest();
                 }
             });
-
         };
 
         const _updateRequestTimingInfo = function () {

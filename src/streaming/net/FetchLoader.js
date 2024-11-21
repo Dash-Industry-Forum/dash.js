@@ -140,6 +140,10 @@ function FetchLoader() {
             commonMediaRequest.customData.onloadend();
         }
 
+        function _getDownloadTimeForMoofParsing() {
+
+        }
+
         /**
          * Called every time we received data if the request is not completed
          * @param value
@@ -191,19 +195,8 @@ function FetchLoader() {
                 });
             }
 
-            // Make the data that we received available for playback
-            // If we are going to pass full buffer, avoid copying it and pass
-            // complete buffer. Otherwise, clone the part of the buffer that is completed
-            // and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
-            // keeps a reference to the original data
-            let data;
-            if (endOfLastBox === receivedData.length) {
-                data = receivedData;
-                receivedData = new Uint8Array();
-            } else {
-                data = new Uint8Array(receivedData.subarray(0, endOfLastBox));
-                receivedData = receivedData.subarray(endOfLastBox);
-            }
+
+            const data = _handleReceivedData(endOfLastBox);
 
             // Announce progress but don't track traces. Throughput measures are quite unstable
             // when they are based in small amount of data
@@ -214,6 +207,30 @@ function FetchLoader() {
             });
 
             offset = 0;
+        }
+
+        /**
+         * Make the data that we received available for playback
+         * If we are going to pass full buffer, avoid copying it and pass
+         * complete buffer. Otherwise, clone the part of the buffer that is completed
+         * and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
+         * keeps a reference to the original data
+         * @param endOfLastBox
+         * @returns {Uint8Array}
+         * @private
+         */
+        function _handleReceivedData(endOfLastBox) {
+            let data;
+
+            if (endOfLastBox === receivedData.length) {
+                data = receivedData;
+                receivedData = new Uint8Array();
+            } else {
+                data = new Uint8Array(receivedData.subarray(0, endOfLastBox));
+                receivedData = receivedData.subarray(endOfLastBox);
+            }
+
+            return data
         }
 
         function _handleNoCompletedTopIsoBox(boxesInfo) {
