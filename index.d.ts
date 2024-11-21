@@ -1079,6 +1079,7 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
                 ignoreEmeEncryptedEvent?: boolean,
                 detectPlayreadyMessageFormat?: boolean,
+                ignoreKeyStatuses?: boolean,
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
