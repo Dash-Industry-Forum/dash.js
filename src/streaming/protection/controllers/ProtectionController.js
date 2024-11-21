@@ -1138,7 +1138,9 @@ function ProtectionController(config) {
                 }
 
                 const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
-                keyStatusMap.set(keyIdInHex, keyStatus.status);
+                if (keyIdInHex && keyIdInHex !== '') {
+                    keyStatusMap.set(keyIdInHex, keyStatus.status);
+                }
             })
             eventBus.trigger(events.KEY_STATUSES_MAP_UPDATED, { keyStatusMap });
         } catch (e) {
@@ -1159,7 +1161,7 @@ function ProtectionController(config) {
 
     function areKeyIdsUsable(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0 || !keyStatusMap || keyStatusMap.size === 0) {
+            if (!normalizedKeyIds || normalizedKeyIds.size === 0 || !keyStatusMap || keyStatusMap.size === 0 || settings.get().streaming.protection.ignoreKeyStatuses) {
                 return true;
             }
 

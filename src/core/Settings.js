@@ -102,6 +102,7 @@ import Events from './events/Events.js';
  *                keepProtectionMediaKeys: false,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
+ *                ignoreKeyStatuses: false
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -673,6 +674,9 @@ import Events from './events/Events.js';
  *
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
+ *
+ * @property {boolean} [ignoreKeyStatusest=false]
+ * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
  */
 
 /**
@@ -885,7 +889,7 @@ import Events from './events/Events.js';
  * If not specified this value defaults to ['segment'].
  * @property {number} [version=1]
  * The version of the CMCD to use.
- * 
+ *
  * If not specified this value defaults to 1.
  */
 
@@ -1109,6 +1113,7 @@ function Settings() {
                 keepProtectionMediaKeys: false,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
+                ignoreKeyStatuses: false
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
