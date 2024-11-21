@@ -45,6 +45,7 @@ import DashJSError from '../vo/DashJSError.js';
 import Errors from '../../core/errors/Errors.js';
 import EventController from './EventController.js';
 import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
+import ExtUrlQueryInfoController from './ExtUrlQueryInfoController.js';
 import ProtectionEvents from '../protection/ProtectionEvents.js';
 import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
 
@@ -60,7 +61,7 @@ function StreamController() {
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
         initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController,
-        protectionData,
+        protectionData, extUrlQueryInfoController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
@@ -99,6 +100,7 @@ function StreamController() {
         });
         eventController.start();
 
+        extUrlQueryInfoController = ExtUrlQueryInfoController(context).getInstance();
 
         timeSyncController.setConfig({
             dashMetrics, baseURLController, errHandler, settings
@@ -1284,6 +1286,8 @@ function StreamController() {
 
                     let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
+
+                    extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 });
         } else {
             hasInitialisationError = true;

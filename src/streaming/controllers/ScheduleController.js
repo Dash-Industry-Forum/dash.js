@@ -228,7 +228,8 @@ function ScheduleController(config) {
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
         const bufferTarget = getBufferTarget();
 
-        if (bufferTarget <= segmentDurationToAddToBufferLevel) {
+        // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
+        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled()) {
             segmentDurationToAddToBufferLevel = 0;
         }
 

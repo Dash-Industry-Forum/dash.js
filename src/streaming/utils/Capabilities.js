@@ -218,7 +218,6 @@ function Capabilities() {
             supported: false
         }
 
-        // eslint-disable-next-line no-undef
         if ('ManagedMediaSource' in window && ManagedMediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
             decodingInfo.supported = true;
         } else if ('MediaSource' in window && MediaSource.isTypeSupported(configurationToTest.mediaSourceCodecString)) {
@@ -295,9 +294,19 @@ function Capabilities() {
                 if (keySystemMetadata.ks.systemString) {
                     curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
                 }
-                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
-                    curr.keySystemConfiguration[type] = { robustness: ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO };
 
+                let robustnessLevel = ''
+                if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
+                    robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
+                }
+                const protData = keySystemMetadata.protData
+                const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
+                const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
+
+                if (type === Constants.AUDIO) {
+                    curr.keySystemConfiguration[type] = { robustness: audioRobustness }
+                } else if (type === Constants.VIDEO) {
+                    curr.keySystemConfiguration[type] = { robustness: videoRobustness }
                 }
             }
             return curr

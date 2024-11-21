@@ -844,7 +844,7 @@ function StreamProcessor(config) {
         }
 
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
-        else if (settings.get().streaming.buffer.fastSwitchEnabled) {
+        else if (mediaPlayerModel.getFastSwitchEnabled()) {
             _prepareForFastQualitySwitch(newRepresentation, oldRepresentation);
         }
 

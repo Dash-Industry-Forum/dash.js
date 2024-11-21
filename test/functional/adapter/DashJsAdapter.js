@@ -643,7 +643,7 @@ class DashJsAdapter {
 
             const _checkBuffer = () => {
                 const buffer = this.getBufferLengthByType();
-                if (buffer >= targetBuffer) {
+                if (buffer >= targetBuffer - tolerance) {
                     _onComplete(true);
                 }
             };

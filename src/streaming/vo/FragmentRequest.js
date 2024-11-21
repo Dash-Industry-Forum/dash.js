@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { HTTPRequest } from './metrics/HTTPRequest.js';
+import {HTTPRequest} from './metrics/HTTPRequest.js';
 
 /**
  * @class
@@ -72,6 +72,7 @@ class FragmentRequest {
         this.url = info && info.url ? info.url : null;
         this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
         this.mediaType = info && info.mediaType ? info.mediaType : null;
+        this.representation = info && info.representation ? info.representation : null;
     }
 }
 
