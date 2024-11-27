@@ -90,7 +90,7 @@ function BoxParser(/*config*/) {
         const data = (buffer instanceof ArrayBuffer) ? new Uint8Array(buffer) : buffer;
         let boxInfo;
         let startOffsetOfLastCompletedBox = 0;
-        let sizeOfLastCompletedBox = NaN;
+        let sizeOfLastCompletedBox = 0;
         let typeOfLastCompletedBox = null;
         while (offset < data.byteLength) {
             const boxSize = parseUint32(data, offset);
