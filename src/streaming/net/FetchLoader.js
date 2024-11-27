@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import Constants from '../constants/Constants.js';
+import Debug from '../../core/Debug.js';
 
 /**
  * @module FetchLoader
@@ -42,10 +43,14 @@ function FetchLoader() {
 
     const context = this.context;
     const settings = Settings(context).getInstance();
-    let instance, boxParser;
+    let instance, boxParser, logger;
 
     function setConfig(cfg) {
         boxParser = cfg.boxParser
+    }
+
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
     }
 
     /**
@@ -75,11 +80,10 @@ function FetchLoader() {
             commonMediaRequest.customData.onloadend();
         }
 
-        const totalBytes = parseInt(fetchResponse.headers.get('Content-Length'), 10);
-        let bytesReceived = 0;
+        let totalBytesReceived = 0;
         let signaledFirstByte = false;
         let receivedData = new Uint8Array();
-        let offset = 0;
+        let endPositionOfLastProcessedBoxInReceivedData = 0;
 
         commonMediaRequest.customData.reader = fetchResponse.body.getReader();
         let downloadedData = [];
@@ -94,7 +98,7 @@ function FetchLoader() {
          * @param value - chunk data. Always undefined when done is true.
          * @param done - true if the stream has already given you all its data.
          */
-        const _processResult = ({ value, done }) => { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
+        const _processResult = ({ value, done }) => {
 
             if (done) {
                 _handleRequestComplete()
@@ -114,25 +118,13 @@ function FetchLoader() {
          */
         function _handleRequestComplete() {
             if (receivedData) {
-                // If there is pending data, call progress so network metrics
-                // are correctly generated
-                // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-                let calculatedThroughput = null;
-                let calculatedTime = null;
-                if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
-                    calculatedThroughput = _calculateThroughputByChunkData(moofStartTimeData, mdatEndTimeData);
-                    if (calculatedThroughput) {
-                        calculatedTime = bytesReceived * 8 / calculatedThroughput;
-                    }
-                } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
-                    calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
-                }
+                const calculatedDownloadTime = _calculateDownloadValues();
 
                 commonMediaRequest.customData.onprogress({
-                    loaded: bytesReceived,
-                    total: isNaN(totalBytes) ? bytesReceived : totalBytes,
+                    loaded: totalBytesReceived,
+                    total: totalBytesReceived,
                     lengthComputable: true,
-                    time: calculatedTime
+                    time: calculatedDownloadTime
                 });
 
                 commonMediaResponse.data = receivedData.buffer;
@@ -140,8 +132,32 @@ function FetchLoader() {
             commonMediaRequest.customData.onloadend();
         }
 
-        function _getDownloadTimeForMoofParsing() {
+        function _calculateDownloadValues() {
+            // If there is pending data, call progress so network metrics
+            // are correctly generated
+            // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
+            let downloadValues = null;
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
+                downloadValues = _getDownloadValuesMoofParsing();
+            } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
+                downloadValues = _getDownloadTimeForDownloadedData()
+            }
 
+            return downloadValues;
+        }
+
+        function _getDownloadValuesMoofParsing() {
+            const calculatedThroughput = _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData);
+
+            if (calculatedThroughput) {
+                return totalBytesReceived * 8 / calculatedThroughput;
+            }
+
+            return null;
+        }
+
+        function _getDownloadTimeForDownloadedData() {
+            return calculateDownloadedTime(downloadedData, totalBytesReceived);
         }
 
         /**
@@ -151,7 +167,7 @@ function FetchLoader() {
          */
         function _handleReceivedChunkData(value) {
             receivedData = _concatTypedArray(receivedData, value);
-            bytesReceived += value.length;
+            totalBytesReceived += value.length;
 
             downloadedData.push({
                 timestamp: _getCurrentTimestamp(),
@@ -159,10 +175,10 @@ function FetchLoader() {
             });
 
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && lastChunkWasFinished) {
-                _handleFinishedChunkForMoofParsing(value);
+                _findMoofBoxInChunkData();
             }
 
-            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], receivedData, offset);
+            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
             if (boxesInfo.found) {
                 _handleTopIsoBoxCompleted(boxesInfo);
             } else {
@@ -170,21 +186,19 @@ function FetchLoader() {
             }
         }
 
-        function _handleFinishedChunkForMoofParsing(value) {
-            // Parse the payload and capture  the 'moof' box
-            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], receivedData, offset);
+        function _findMoofBoxInChunkData() {
+            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
+
             if (boxesInfo.found) {
-                // Store the beginning time of each chunk download in array StartTimeData
                 lastChunkWasFinished = false;
                 moofStartTimeData.push({
-                    timestamp: _getCurrentTimestamp(),
-                    bytes: value.length
+                    timestamp: _getCurrentTimestamp()
                 });
             }
         }
 
         function _handleTopIsoBoxCompleted(boxesInfo) {
-            const endOfLastBox = boxesInfo.lastCompletedOffset + boxesInfo.size;
+            const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox + boxesInfo.sizeOfLastFoundTargetBox;
 
             // Store the end time of each chunk download  with its size in array EndTimeData
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
@@ -195,8 +209,8 @@ function FetchLoader() {
                 });
             }
 
-
-            const data = _handleReceivedData(endOfLastBox);
+            const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
+            console.log(`data length: ${data.length}`);
 
             // Announce progress but don't track traces. Throughput measures are quite unstable
             // when they are based in small amount of data
@@ -206,7 +220,7 @@ function FetchLoader() {
                 noTrace: true
             });
 
-            offset = 0;
+            endPositionOfLastProcessedBoxInReceivedData = 0;
         }
 
         /**
@@ -215,26 +229,26 @@ function FetchLoader() {
          * complete buffer. Otherwise, clone the part of the buffer that is completed
          * and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
          * keeps a reference to the original data
-         * @param endOfLastBox
+         * @param endPositionOfLastTargetBox
          * @returns {Uint8Array}
          * @private
          */
-        function _handleReceivedData(endOfLastBox) {
+        function _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox) {
             let data;
 
-            if (endOfLastBox === receivedData.length) {
+            if (endPositionOfLastTargetBox === receivedData.length) {
                 data = receivedData;
                 receivedData = new Uint8Array();
             } else {
-                data = new Uint8Array(receivedData.subarray(0, endOfLastBox));
-                receivedData = receivedData.subarray(endOfLastBox);
+                data = new Uint8Array(receivedData.subarray(0, endPositionOfLastTargetBox));
+                receivedData = receivedData.subarray(endPositionOfLastTargetBox);
             }
 
             return data
         }
 
         function _handleNoCompletedTopIsoBox(boxesInfo) {
-            offset = boxesInfo.lastCompletedOffset;
+            endPositionOfLastProcessedBoxInReceivedData = boxesInfo.startOffsetOfLastCompletedBox + boxesInfo.sizeOfLastCompletedBox;
             // Call progress, so it generates traces that will be later used to know when the first byte
             // were received
             if (!signaledFirstByte) {
@@ -404,43 +418,43 @@ function FetchLoader() {
         }
     }
 
-    /**
-     * Moof based throughput calculation
-     * @param startTimeData
-     * @param endTimeData
-     * @returns {number|null}
-     * @private
-     */
-    function _calculateThroughputByChunkData(startTimeData, endTimeData) {
+    function _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData) {
         try {
-            let datum, datumE;
+            let filteredMoofStartTimeData,
+                filteredMdatEndTimeData;
+
             // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = startTimeData.filter((data, i) => i < startTimeData.length - 1);
-            datumE = endTimeData.filter((dataE, i) => i < endTimeData.length - 1);
+            filteredMoofStartTimeData = moofStartTimeData.slice(0, -1);
+            filteredMdatEndTimeData = mdatEndTimeData.slice(0, -1);
+
+            if (filteredMoofStartTimeData.length !== filteredMdatEndTimeData.length) {
+                logger.warn(`[FetchLoader] Moof and Mdat data arrays have different lengths. Moof: ${filteredMoofStartTimeData.length}, Mdat: ${filteredMdatEndTimeData.length}`);
+            }
+
             let chunkThroughputs = [];
             // Compute the average throughput of the filtered chunk data
-            if (datum.length > 1) {
+            if (filteredMoofStartTimeData.length > 1) {
                 let shortDurationBytesReceived = 0;
                 let shortDurationStartTime = 0;
-                for (let i = 0; i < datum.length; i++) {
-                    if (datum[i] && datumE[i]) {
-                        let chunkDownloadTime = datumE[i].timestamp - datum[i].timestamp;
+                for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
+                    if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
+                        let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
                         if (chunkDownloadTime > 1) {
-                            chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
+                            chunkThroughputs.push((8 * filteredMdatEndTimeData[i].bytes) / chunkDownloadTime);
                             shortDurationStartTime = 0;
                         } else {
                             if (shortDurationStartTime === 0) {
-                                shortDurationStartTime = datum[i].timestamp;
+                                shortDurationStartTime = filteredMoofStartTimeData[i].timestamp;
                                 shortDurationBytesReceived = 0;
                             }
-                            let cumulatedChunkDownloadTime = datumE[i].timestamp - shortDurationStartTime;
+                            let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
                             if (cumulatedChunkDownloadTime > 1) {
-                                shortDurationBytesReceived += datumE[i].bytes;
+                                shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
                                 chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
                                 shortDurationStartTime = 0;
                             } else {
                                 // continue cumulating short duration data
-                                shortDurationBytesReceived += datumE[i].bytes;
+                                shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
                             }
                         }
                     }
@@ -457,6 +471,8 @@ function FetchLoader() {
             return null;
         }
     }
+
+    setup();
 
     instance = {
         abort,

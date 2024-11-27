@@ -3991,8 +3991,6 @@ declare namespace dashjs {
         getSamplesInfo(ab: ArrayBuffer): object;
 
         findInitRange(data: ArrayBuffer): Range;
-
-        parsePayload(types: string[], buffer: ArrayBuffer, offset: number): IsoBoxSearchInfo;
     }
 
     export interface Capabilities {
