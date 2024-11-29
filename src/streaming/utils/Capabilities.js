@@ -344,13 +344,27 @@ function Capabilities() {
         }
 
         return testedCodecConfigurations.find((current) => {
-            const audioEqual = configuration && configuration.audio ? objectUtils.areEqual(configuration.audio, current.audio) : true;
-            const videoEqual = configuration && configuration.video ? objectUtils.areEqual(configuration.video, current.video) : true;
-            const keySystemEqual = configuration && configuration.keySystemConfiguration ? objectUtils.areEqual(configuration.keySystemConfiguration, current.keySystemConfiguration) : true;
+            const audioEqual = _isConfigEqual(configuration, current, Constants.AUDIO);
+            const videoEqual = _isConfigEqual(configuration, current, Constants.VIDEO);
+            const keySystemEqual = _isConfigEqual(configuration, current, 'keySystemConfiguration');
 
             return audioEqual && videoEqual && keySystemEqual
         })
+    }
 
+    function _isConfigEqual(configuration, current, attribute) {
+
+        // Config not present in both of them
+        if (!configuration[attribute] && !current[attribute]) {
+            return true
+        }
+
+        // Config present in both we need to compare
+        if (configuration[attribute] && current[attribute]) {
+            return objectUtils.areEqual(configuration[attribute], current[attribute])
+        }
+
+        return false
     }
 
     function _getGenericMediaCapabilitiesVideoConfig(inputConfig) {
