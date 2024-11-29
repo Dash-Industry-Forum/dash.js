@@ -56,6 +56,21 @@
       ]
     },
     {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      },
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
