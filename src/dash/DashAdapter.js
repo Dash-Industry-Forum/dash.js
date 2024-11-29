@@ -1249,7 +1249,6 @@ function DashAdapter() {
         getIsPatch,
         getIsTextTrack,
         getIsTypeOf,
-        getLinkPeriods,
         getLocation,
         getMainAdaptationForType,
         getManifestUpdatePeriod,
