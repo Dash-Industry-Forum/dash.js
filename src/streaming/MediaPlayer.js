@@ -2489,7 +2489,8 @@ function MediaPlayer() {
     }
 
     function _createManifestLoader() {
-        return ManifestLoader(context).create({
+        const manifestLoader = ManifestLoader(context).getInstance();
+        manifestLoader.setConfig({
             debug: debug,
             errHandler: errHandler,
             dashMetrics: dashMetrics,
@@ -2497,6 +2498,7 @@ function MediaPlayer() {
             mssHandler: mssHandler,
             settings: settings
         });
+        return manifestLoader
     }
 
     function _detectProtection() {

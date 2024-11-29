@@ -306,7 +306,25 @@ function DashAdapter() {
 
         checkConfig();
 
+        if (newManifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
+            for (let linkPerdioManifest of newManifest.linkPerdioManifests) {
+                mergeManifests(newManifest, linkPerdioManifest);
+            }
+        } 
         voPeriods = getRegularPeriods(newManifest);
+    }
+
+    function mergeManifests(newManifest, linkedPeriodManifests) {
+        const periodIndex = newManifest.Period.findIndex(period => period.mpdUrl === linkedPeriodManifests.url)
+        // TODO: Resolve multiple periods
+        console.log('test new period', linkedPeriodManifests.manifest.Period[0])
+        const newPeriod = {
+            ...linkedPeriodManifests.manifest.Period[0],
+            baseUri : linkedPeriodManifests.manifest.baseUri
+        }
+        // eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { newDuration: newDuration });
+        // MANIFEST_VALIDITY_CHANGED
+        newManifest.Period[periodIndex] = newPeriod
     }
 
     /**
@@ -327,7 +345,7 @@ function DashAdapter() {
             checkConfig();
             voLocalPeriods = getRegularPeriods(externalManifest);
         }
-
+        console.log('test', voLocalPeriods)
         if (voLocalPeriods.length > 0) {
             if (!maxStreamsInfo || maxStreamsInfo > voLocalPeriods.length) {
                 maxStreamsInfo = voLocalPeriods.length;
@@ -1231,6 +1249,7 @@ function DashAdapter() {
         getIsPatch,
         getIsTextTrack,
         getIsTypeOf,
+        getLinkPeriods,
         getLocation,
         getMainAdaptationForType,
         getManifestUpdatePeriod,

@@ -858,10 +858,10 @@ function DashManifestModel() {
         let voPeriod = null;
         let len,
             i;
-
+        console.log('test period', mpd.manifest.Period)
         for (i = 0, len = mpd && mpd.manifest && mpd.manifest.Period ? mpd.manifest.Period.length : 0; i < len; i++) {
             realPeriod = mpd.manifest.Period[i];
-
+            console.log('test real period', realPeriod)
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
