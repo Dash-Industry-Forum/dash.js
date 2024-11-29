@@ -149,6 +149,8 @@ function FetchLoader() {
         function _getDownloadValuesMoofParsing() {
             const calculatedThroughput = _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData);
 
+            console.log(`---dsi: ${calculatedThroughput}`);
+
             if (calculatedThroughput) {
                 return totalBytesReceived * 8 / calculatedThroughput;
             }
@@ -199,18 +201,16 @@ function FetchLoader() {
 
         function _handleTopIsoBoxCompleted(boxesInfo) {
             const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox + boxesInfo.sizeOfLastFoundTargetBox;
+            const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
 
             // Store the end time of each chunk download  with its size in array EndTimeData
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
                 lastChunkWasFinished = true;
                 mdatEndTimeData.push({
                     timestamp: _getCurrentTimestamp(),
-                    bytes: receivedData.length
+                    bytes: data.length
                 });
             }
-
-            const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
-            console.log(`data length: ${data.length}`);
 
             // Announce progress but don't track traces. Throughput measures are quite unstable
             // when they are based in small amount of data
@@ -431,45 +431,53 @@ function FetchLoader() {
                 logger.warn(`[FetchLoader] Moof and Mdat data arrays have different lengths. Moof: ${filteredMoofStartTimeData.length}, Mdat: ${filteredMdatEndTimeData.length}`);
             }
 
-            let chunkThroughputs = [];
-            // Compute the average throughput of the filtered chunk data
-            if (filteredMoofStartTimeData.length > 1) {
-                let shortDurationBytesReceived = 0;
-                let shortDurationStartTime = 0;
-                for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
-                    if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
-                        let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
-                        if (chunkDownloadTime > 1) {
-                            chunkThroughputs.push((8 * filteredMdatEndTimeData[i].bytes) / chunkDownloadTime);
+            if (filteredMoofStartTimeData.length <= 1) {
+                return null;
+            }
+
+            let chunkThroughputValues = [];
+            let shortDurationBytesReceived = 0;
+            let shortDurationStartTime = 0;
+
+            for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
+                if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
+                    let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
+                    if (chunkDownloadTime > 1) {
+                        const throughput = _getThroughputInBitPerMs(filteredMdatEndTimeData[i].bytes, chunkDownloadTime);
+                        chunkThroughputValues.push(throughput);
+                        shortDurationStartTime = 0;
+                    } else {
+                        if (shortDurationStartTime === 0) {
+                            shortDurationStartTime = filteredMoofStartTimeData[i].timestamp;
+                            shortDurationBytesReceived = 0;
+                        }
+                        let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
+                        if (cumulatedChunkDownloadTime > 1) {
+                            shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
+                            const throughput = _getThroughputInBitPerMs(shortDurationBytesReceived, cumulatedChunkDownloadTime);
+                            chunkThroughputValues.push(throughput);
                             shortDurationStartTime = 0;
                         } else {
-                            if (shortDurationStartTime === 0) {
-                                shortDurationStartTime = filteredMoofStartTimeData[i].timestamp;
-                                shortDurationBytesReceived = 0;
-                            }
-                            let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
-                            if (cumulatedChunkDownloadTime > 1) {
-                                shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
-                                chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
-                                shortDurationStartTime = 0;
-                            } else {
-                                // continue cumulating short duration data
-                                shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
-                            }
+                            // continue cumulating short duration data
+                            shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
                         }
                     }
                 }
+            }
 
-                if (chunkThroughputs.length > 0) {
-                    const sumOfChunkThroughputs = chunkThroughputs.reduce((a, b) => a + b, 0);
-                    return sumOfChunkThroughputs / chunkThroughputs.length;
-                }
+            if (chunkThroughputValues.length > 0) {
+                const sumOfChunkThroughputValues = chunkThroughputValues.reduce((a, b) => a + b, 0);
+                return sumOfChunkThroughputValues / chunkThroughputValues.length;
             }
 
             return null;
         } catch (e) {
             return null;
         }
+    }
+
+    function _getThroughputInBitPerMs(bytes, timeInMs) {
+        return (8 * bytes) / timeInMs
     }
 
     setup();
