@@ -305,7 +305,6 @@ function DashAdapter() {
         }
 
         checkConfig();
-
         if (newManifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
             for (let linkPerdioManifest of newManifest.linkPerdioManifests) {
                 mergeManifests(newManifest, linkPerdioManifest);
@@ -316,14 +315,14 @@ function DashAdapter() {
 
     function mergeManifests(newManifest, linkedPeriodManifests) {
         const periodIndex = newManifest.Period.findIndex(period => period.mpdUrl === linkedPeriodManifests.url)
-        // TODO: Resolve multiple periods
-        console.log('test new period', linkedPeriodManifests.manifest.Period[0])
+        // The imported manifest should be a single period manidest
+        linkedPeriodManifests.manifest.Period[0]
+        // TODO: Implement the merge resolution defined in the standar
         const newPeriod = {
             ...linkedPeriodManifests.manifest.Period[0],
-            baseUri : linkedPeriodManifests.manifest.baseUri
+            baseUri : linkedPeriodManifests.manifest.baseUri,
+            duration: 634.566,
         }
-        // eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { newDuration: newDuration });
-        // MANIFEST_VALIDITY_CHANGED
         newManifest.Period[periodIndex] = newPeriod
     }
 
@@ -345,7 +344,6 @@ function DashAdapter() {
             checkConfig();
             voLocalPeriods = getRegularPeriods(externalManifest);
         }
-        console.log('test', voLocalPeriods)
         if (voLocalPeriods.length > 0) {
             if (!maxStreamsInfo || maxStreamsInfo > voLocalPeriods.length) {
                 maxStreamsInfo = voLocalPeriods.length;
@@ -630,6 +628,18 @@ function DashAdapter() {
     function getDuration(externalManifest) {
         const manifest = getManifest(externalManifest);
         return dashManifestModel.getDuration(manifest);
+    }
+
+    /**
+     * Returns all linked periods of the MPD
+     * @param {object} externalManifest Omit this value if no external manifest should be used
+     * @returns {Array} linked periods
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getLinkPeriods(externalManifest) {
+        const mpd = getMpd(externalManifest);
+        return dashManifestModel.getLinkPeriods(mpd);
     }
 
     /**
@@ -1250,6 +1260,7 @@ function DashAdapter() {
         getIsTextTrack,
         getIsTypeOf,
         getLocation,
+        getLinkPeriods,
         getMainAdaptationForType,
         getManifestUpdatePeriod,
         getMediaInfoForType,

@@ -858,10 +858,9 @@ function DashManifestModel() {
         let voPeriod = null;
         let len,
             i;
-        console.log('test period', mpd.manifest.Period)
+
         for (i = 0, len = mpd && mpd.manifest && mpd.manifest.Period ? mpd.manifest.Period.length : 0; i < len; i++) {
             realPeriod = mpd.manifest.Period[i];
-            console.log('test real period', realPeriod)
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
@@ -904,7 +903,7 @@ function DashManifestModel() {
                 if (voPreviousPeriod) {
                     voPreviousPeriod.nextPeriodId = voPeriod.id;
                 }
-
+                console.log('periods', voPeriod)
                 voPeriods.push(voPeriod);
                 realPreviousPeriod = realPeriod;
                 voPreviousPeriod = voPeriod;
@@ -926,6 +925,23 @@ function DashManifestModel() {
         }
 
         return voPeriods;
+    }
+
+    function getLinkPeriods(mpd) {
+        const linkedPeriods = []
+
+        if (!mpd || !mpd.manifest || !mpd.manifest.Period) {
+            return linkedPeriods
+        }
+
+        let currentPeriod = null;
+        for (let i = 0, len = mpd.manifest.Period.length; i < len; i++) {
+            currentPeriod = mpd.manifest.Period[i];
+            if (currentPeriod.hasOwnProperty(DashConstants.MPD_LINK)) {
+                linkedPeriods.push(currentPeriod)
+            }
+        }
+        return linkedPeriods
     }
 
     function getPeriodId(realPeriod, i) {
@@ -1497,6 +1513,7 @@ function DashManifestModel() {
         getIsTypeOf,
         getLabelsForAdaptation,
         getLanguageForAdaptation,
+        getLinkPeriods,
         getLocation,
         getManifestUpdatePeriod,
         getMimeType,

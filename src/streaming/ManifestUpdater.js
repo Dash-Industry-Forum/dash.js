@@ -257,7 +257,6 @@ function ManifestUpdater() {
         if (manifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
             manifest.linkPerdioManifests = [];
             const linkPeriods = adapter.getLinkPeriods(manifest)
-            // TODO: Resolve multiple linke periods
             const linkPeriodUrl = linkPeriods.pop().mpdLink
             manifestLoader.load(linkPeriodUrl, null, null, true).then((linkPerdioManifest) => {
                 manifest.linkPerdioManifests.push({
