@@ -937,9 +937,15 @@ function DashManifestModel() {
         let currentPeriod = null;
         for (let i = 0, len = mpd.manifest.Period.length; i < len; i++) {
             currentPeriod = mpd.manifest.Period[i];
-            if (currentPeriod.hasOwnProperty(DashConstants.MPD_LINK)) {
+            if (currentPeriod.ImportedMPD) {
                 linkedPeriods.push(currentPeriod)
             }
+        }
+        if (linkedPeriods.length > 0 && !mpd.hasOwnProperty(DashConstants.MPD_LIST)) {
+            throw new Error('Linked periods are only allowed in a list MPD');
+        }
+        if (linkedPeriods[0]?.start !== 0) {
+            throw new Error('The first period in a lint MPD must have start time equal to 0');
         }
         return linkedPeriods
     }

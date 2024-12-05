@@ -121,7 +121,7 @@ export default {
     MIN_BUFFER_TIME: 'minBufferTime',
     MP4_PROTECTION_SCHEME: 'urn:mpeg:dash:mp4protection:2011',
     MPD: 'MPD',
-    MPD_LINK: 'mpdLink',
+    MPD_LIST: 'list',
     MPD_TYPE: 'mpd',
     MPD_PATCH_TYPE: 'mpdpatch',
     ORIGINAL_MPD_ID: 'mpdId',

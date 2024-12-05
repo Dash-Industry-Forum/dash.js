@@ -255,12 +255,12 @@ function ManifestUpdater() {
             refreshDelay = 0x7FFFFFFF / 1000;
         }
         if (manifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
-            manifest.linkPerdioManifests = [];
+            manifest.linkPeriodManifests = [];
             const linkPeriods = adapter.getLinkPeriods(manifest)
-            const linkPeriodUrl = linkPeriods.pop().mpdLink
-            manifestLoader.load(linkPeriodUrl, null, null, true).then((linkPerdioManifest) => {
-                manifest.linkPerdioManifests.push({
-                    manifest: linkPerdioManifest,
+            const linkPeriodUrl = linkPeriods.pop()?.mpdLink
+            manifestLoader.load(linkPeriodUrl, null, null, true).then((linkPeriodManifest) => {
+                manifest.linkPeriodManifests.push({
+                    manifest: linkPeriodManifest,
                     linkPeriodUrl: linkPeriodUrl,
                 })
                 eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
@@ -270,8 +270,8 @@ function ManifestUpdater() {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
             logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
         }
-        
-        
+
+
 
         if (!isPaused) {
             startManifestRefreshTimer();
