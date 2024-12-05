@@ -47,8 +47,9 @@
               var video,
                 player,
                 // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/case1.mpd";
-                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+                // url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
                 // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd"
+                url = 'http://localhost:3030/manifest.mpd'
       
               video = document.querySelector("video");
               player = dashjs.MediaPlayer().create();
@@ -67,11 +68,11 @@
               //   },
               // });
               player.initialize(video, url, true);
-              player.setAlternativePlayer()
-              setTimeout(()=> {
+              // player.setAlternativePlayer()
+              //setTimeout(()=> {
                 // player.attachView(video);
-                player.switchView()
-              }, '5000')
+                // player.switchView()
+              //}, '5000')
             });
           </script>
     </body>

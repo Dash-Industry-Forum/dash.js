@@ -31,6 +31,7 @@
 import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import Constants from './constants/Constants.js';
 import DashConstants from '../dash/constants/DashConstants.js';
+import AlternativeMpdController from './controllers/AlternativeMpdController.js';
 import MetricsConstants from './constants/MetricsConstants.js';
 import PlaybackController from './controllers/PlaybackController.js';
 import StreamController from './controllers/StreamController.js';
@@ -143,6 +144,7 @@ function MediaPlayer() {
         throughputController,
         schemeLoaderFactory,
         timelineConverter,
+        alternativeMpdController,
         mediaController,
         protectionController,
         metricsReportingController,
@@ -225,6 +227,9 @@ function MediaPlayer() {
         if (config.gapController) {
             gapController = config.gapController;
         }
+        if (config.alternativeMpdController) {
+            alternativeMpdController = config.alternativeMpdController;
+        }
         if (config.throughputController) {
             throughputController = config.throughputController
         }
@@ -287,7 +292,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, autoPlay,startTime = NaN) {
+    function initialize(view, source, autoPlay, startTime = NaN, alternativeContext = null) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -319,6 +324,10 @@ function MediaPlayer() {
 
             if (!schemeLoaderFactory) {
                 schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+            }
+
+            if (!alternativeMpdController) {
+                alternativeMpdController = AlternativeMpdController(alternativeContext ? alternativeContext : context).getInstance();
             }
 
             if (!playbackController) {
@@ -389,6 +398,15 @@ function MediaPlayer() {
 
             serviceDescriptionController.setConfig({
                 adapter
+            });
+
+            alternativeMpdController.setConfig({
+                videoModel,
+                manifestModel,
+                DashConstants,
+                mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
+                playbackController,
+                alternativeContext: context
             });
 
             if (!segmentBaseController) {
@@ -2513,6 +2531,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
+        alternativeMpdController.initialize();
         cmcdModel.initialize();
         cmsdModel.initialize();
         contentSteeringController.initialize();
@@ -2785,7 +2804,7 @@ function MediaPlayer() {
             streaming: {cacheInitSegments: true}
         });
         const streamConfig = streamController.getConfig()
-        
+
         let time = getVideoElement().currentTime;
         const savedbuffers = streamController.getBufferBackup()
         console.log('the data to restore is', savedbuffers)
@@ -2795,7 +2814,7 @@ function MediaPlayer() {
         setTimeout(async () => {
             await alternativePlayer.attachView(null)
             _attachViewAlt(video, streamConfig);
-            
+
             setTimeout(() => {
                 streamController.restoreBuffer(savedbuffers)
                 play()

@@ -50,6 +50,7 @@ import PatchLocation from '../vo/PatchLocation.js';
 import Period from '../vo/Period.js';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
 import Representation from '../vo/Representation.js';
+import AlternativeMpd from '../vo/AlternativeMpd.js';
 import URLUtils from '../../streaming/utils/URLUtils.js';
 import UTCTiming from '../vo/UTCTiming.js';
 import Utils from '../../core/Utils.js';
@@ -1062,6 +1063,13 @@ function DashManifestModel() {
                         event.id = null;
                     }
 
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD)) {
+                        event.alternativeMpd = getAlternativeMpd(currentMpdEvent.AlternativeMPD);
+                        event.calculatedPresentationTime = event.calculatedPresentationTime - event.alternativeMpd.earliestResolutionTimeOffset;
+                    } else {
+                        event.alternativeMpd = null;
+                    }
+
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
                         // toString is used to manage both regular and namespaced tags
                         event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
@@ -1082,6 +1090,16 @@ function DashManifestModel() {
         }
 
         return events;
+    }
+
+    function getAlternativeMpd(event) {
+        const alternativeMpd = new AlternativeMpd();
+        alternativeMpd.uri = event.uri ?? null;
+        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset ?? null;
+        alternativeMpd.mode = event.mode ?? null;
+        alternativeMpd.disableJumpTimeOffest = event.disableJumpTimeOffest ?? null;
+        alternativeMpd.playTimes = event.playTimes ?? null;
+        return alternativeMpd;
     }
 
     function getEventStreams(inbandStreams, representation, period) {
