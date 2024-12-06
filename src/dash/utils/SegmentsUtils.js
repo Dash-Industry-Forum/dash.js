@@ -147,9 +147,9 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
     const voPeriod = representation.adaptation.period;
 
-    // Avoid requesting segments that overlap the period boundary
+    // Avoid requesting segments that overlap the period boundary for periods that are not the last
     if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
-        return false;
+        return !isDynamic && voPeriod.nextPeriodId === null;
     }
 
     if (isDynamic) {
