@@ -257,15 +257,21 @@ function ManifestUpdater() {
         if (manifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
             manifest.linkPeriodManifests = [];
             const linkPeriods = adapter.getLinkPeriods(manifest)
-            const linkPeriodUrl = linkPeriods.pop()?.mpdLink
+            const linkPeriodUrl = linkPeriods.pop()?.ImportedMPD.uri;
             manifestLoader.load(linkPeriodUrl, null, null, true).then((linkPeriodManifest) => {
                 manifest.linkPeriodManifests.push({
                     manifest: linkPeriodManifest,
                     linkPeriodUrl: linkPeriodUrl,
-                })
+                });
                 eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
                 logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
-            })
+            }, () => {
+                manifest.linkPeriodManifests.push({
+                    linkPeriodUrl: linkPeriodUrl,
+                });
+                eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
+                logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
+            });
         } else {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
             logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');

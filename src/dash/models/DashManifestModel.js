@@ -931,16 +931,21 @@ function DashManifestModel() {
         const linkedPeriods = []
 
         if (!mpd || !mpd.manifest || !mpd.manifest.Period) {
-            return linkedPeriods
+            return linkedPeriods;
+        }
+
+        if (mpd.availabilityEndTime < Date.now()) {
+            throw new Error('availabilityEndTime must be greater than current time');
         }
 
         let currentPeriod = null;
         for (let i = 0, len = mpd.manifest.Period.length; i < len; i++) {
             currentPeriod = mpd.manifest.Period[i];
             if (currentPeriod.ImportedMPD) {
-                linkedPeriods.push(currentPeriod)
+                linkedPeriods.push(currentPeriod);
             }
         }
+
         if (linkedPeriods.length > 0) {
             if (mpd.manifest.type !== DashConstants.MPD_LIST) {
                 throw new Error('Linked periods are only allowed in a list MPD');
@@ -949,6 +954,7 @@ function DashManifestModel() {
                 throw new Error('The first period in a lint MPD must have start time equal to 0');
             }
         }
+
         return linkedPeriods
     }
 

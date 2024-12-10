@@ -138,6 +138,7 @@ export default {
         APPLICATION: 'application'
     },
     PROFILES: 'profiles',
+    PROGRAM_INFORMATION: 'ProgramInformation',
     PSSH: 'pssh',
     PUBLISH_TIME: 'publishTime',
     QUALITY_RANKING : 'qualityRanking',

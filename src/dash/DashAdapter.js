@@ -306,24 +306,74 @@ function DashAdapter() {
 
         checkConfig();
         if (newManifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
-            for (let linkPerdioManifest of newManifest.linkPerdioManifests) {
-                mergeManifests(newManifest, linkPerdioManifest);
+            for (let linkPeriodManifest of newManifest.linkPeriodManifests) {
+                mergeManifests(newManifest, linkPeriodManifest);
             }
-        } 
+        }
         voPeriods = getRegularPeriods(newManifest);
     }
 
-    function mergeManifests(newManifest, linkedPeriodManifests) {
-        const periodIndex = newManifest.Period.findIndex(period => period.mpdUrl === linkedPeriodManifests.url)
-        // The imported manifest should be a single period manidest
-        linkedPeriodManifests.manifest.Period[0]
-        // TODO: Implement the merge resolution defined in the standar
-        const newPeriod = {
-            ...linkedPeriodManifests.manifest.Period[0],
-            baseUri : linkedPeriodManifests.manifest.baseUri,
-            duration: 634.566,
+    function mergeManifests(newManifest, importedManifest) {
+        const periodIndex = newManifest.Period.findIndex(period => period.ImportedMPD?.uri === importedManifest.linkPeriodUrl)
+        // The imported manifest should be a single period manifest
+        let newPeriod = {};
+        if (importedManifest.manifest) {
+            const importedPeriod = importedManifest.manifest.Period[0]
+
+            if (importedManifest.manifest.hasOwnProperty(DashConstants.PROFILES)) {
+                importedPeriod.profiles = importedManifest.manifest.profiles;
+            }
+            if (importedManifest.manifest.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+                importedPeriod.SupplementalProperty.concat(importedManifest.manifest.SupplementalProperty);
+            }
+            if (importedManifest.manifest.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY)) {
+                importedPeriod.EssentialProperty.concat(importedManifest.manifest.EssentialProperty);
+            }
+            if (importedManifest.manifest.hasOwnProperty(DashConstants.PROGRAM_INFORMATION)) {
+                newManifest.ProgramInformation = importedManifest.manifest.ProgramInformation;
+            }
+
+            newPeriod = {
+                baseUri: importedManifest.manifest.baseUri,
+                minBufferTime: importedManifest.manifest.minBufferTime,
+                start: newManifest.Period[periodIndex].start || importedPeriod.start,
+                id: newManifest.Period[periodIndex].id || importedPeriod.id,
+                duration: Math.min(importedPeriod.duration, newManifest.Period[periodIndex].duration) || newManifest.Period[periodIndex].duration,
+                ServiceDescription: newManifest.Period[periodIndex].ServiceDescription || [],
+                SupplementalProperty: newManifest.Period[periodIndex].SupplementalProperty || [],
+                EssentialProperty: newManifest.Period[periodIndex].EssentialProperty || [],
+                EventStream: newManifest.Period[periodIndex].EventStream || [],
+            };
+            const propertiesFromOtherNamespaces = Object.keys(newManifest.Period[periodIndex]).filter(function (name) {return name.includes(':')});
+            Object.assign(newPeriod, newPeriod, propertiesFromOtherNamespaces);
+
+            for (let item in importedPeriod.ServiceDescription) {
+                const index = newPeriod.ServiceDescription.findIndex(sd => sd.id === item.id);
+                index != -1 ? newPeriod.ServiceDescription[index] = item : newPeriod.ServiceDescription.push(item);
+            }
+            for (let item in importedPeriod.SupplementalProperty) {
+                const index = newPeriod.SupplementalProperty.findIndex(sp => sp.schemeIdUri === item.schemeIdUri && sp.value === item.value);
+                index != -1 ? newPeriod.SupplementalProperty[index] = item : newPeriod.SupplementalProperty.push(item);
+            }
+            for (let item in importedPeriod.EssentialProperty) {
+                const index = newPeriod.SupplementalProperty.findIndex(ep => ep.schemeIdUri === item.schemeIdUri && ep.value === item.value);
+                index != -1 ? newPeriod.EssentialProperty[index] = item : newPeriod.EssentialProperty.push(item);
+            }
+            for (let item in importedPeriod.EventStream) {
+                const index = newPeriod.SupplementalProperty.findIndex(es => es.schemeIdUri === item.schemeIdUri && es.value === item.value);
+                index != -1 ? newPeriod.EventStream[index] = item : newPeriod.EventStream.push(item);
+            }
+
+            newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
+        } else {
+            newPeriod = newManifest.Period[periodIndex];
+            delete newPeriod.ImportedMPD;
         }
-        newManifest.Period[periodIndex] = newPeriod
+        if (newPeriod.AdaptationSet) {
+            newManifest.Period[periodIndex] = newPeriod;
+        } else {
+            newManifest.Period.splice(periodIndex, 1);
+        }
     }
 
     /**
