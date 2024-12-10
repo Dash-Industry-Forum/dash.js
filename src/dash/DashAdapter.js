@@ -305,25 +305,21 @@ function DashAdapter() {
         }
 
         checkConfig();
-        if (newManifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
-            for (let linkPerdioManifest of newManifest.linkPerdioManifests) {
-                mergeManifests(newManifest, linkPerdioManifest);
-            }
-        } 
         voPeriods = getRegularPeriods(newManifest);
     }
 
-    function mergeManifests(newManifest, linkedPeriodManifests) {
-        const periodIndex = newManifest.Period.findIndex(period => period.mpdUrl === linkedPeriodManifests.url)
-        // The imported manifest should be a single period manidest
-        linkedPeriodManifests.manifest.Period[0]
+    function mergeManifests(newManifest, linkedPeriodManifests, periodId) {
+        const periodIndex = newManifest.Period.findIndex(period => period.id === periodId)
+        const linkedPeriod = linkedPeriodManifests.Period[0];
+        const templatePeriod = newManifest.Period[periodIndex];
+        delete templatePeriod.ImportedMPD;
+        delete templatePeriod.earliestResolutionTimeOffset;
         // TODO: Implement the merge resolution defined in the standar
         const newPeriod = {
-            ...linkedPeriodManifests.manifest.Period[0],
-            baseUri : linkedPeriodManifests.manifest.baseUri,
-            duration: 634.566,
+            ...newManifest.Period[periodIndex],
+            ...linkedPeriod
         }
-        newManifest.Period[periodIndex] = newPeriod
+        newManifest.Period[periodIndex] = newPeriod;
     }
 
     /**
@@ -1279,6 +1275,7 @@ function DashAdapter() {
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,
+        mergeManifests,
         reset,
         setConfig,
         updatePeriods,

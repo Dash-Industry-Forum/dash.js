@@ -312,7 +312,7 @@ function ManifestLoader() {
                     parser = createParser(data);
                 }
 
-                if (parser === null && !linkPeriod) {
+                if (parser === null) {
                     eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
                         error: new DashJSError(
@@ -366,13 +366,8 @@ function ManifestLoader() {
                     manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
-
-                    if (!linkPeriod) {
-                        eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
-                    } else {
-                        return new Promise
-                    }
-                } else if (!linkPeriod) {
+                    eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
+                } else {
                     eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,
                         error: new DashJSError(
