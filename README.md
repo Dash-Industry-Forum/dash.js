@@ -2,14 +2,20 @@
 
 ## Overview
 
-dash.js is a JavaScript implementation for the playback of MPEG DASH content in browser based
+dash.js is a JavaScript based implementation for the playback of MPEG DASH content in browser based
 environments that support the [Media Source Extensions](https://w3c.github.io/media-source/) and
 the [Encrypted Media Extensions](https://www.w3.org/TR/encrypted-media/).
 
-## Getting Started
+## Documentation
 
-To get started, checkout our [documentation](https://dashif.org/dash.js/) that includes
-a [quickstart guide](https://dashif.org/dash.js/pages/quickstart/) , usage instructions and contribution guidelines.
+To get started, check out our [documentation](https://dashif.org/dash.js/) that includes
+a [quickstart guide](https://dashif.org/dash.js/pages/quickstart/index.html) , [usage instructions](https://dashif.org/dash.js/pages/usage/index.html)
+and [contribution guidelines](https://dashif.org/dash.js/pages/developers/how-to-contribute.html).
+
+## Hosted Examples
+
+* [Reference Player](https://reference.dashif.org/dash.js/latest/samples/dash-if-reference-player/index.html)
+* [Samples](https://reference.dashif.org/dash.js/latest/samples/index.html)
 
 ## Quickstart
 
