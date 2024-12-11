@@ -51,6 +51,6 @@ The full [API Documentation](http://cdn.dashjs.org/latest/jsdoc/module-MediaPlay
 For help, join our [Slack channel](https://dashif-slack.azurewebsites.net),
 our [email list](https://groups.google.com/d/forum/dashjs) and read the documentation on this website.
 
-### License
+# License
 
 dash.js is released under [BSD license](https://github.com/Dash-Industry-Forum/dash.js/blob/development/LICENSE.md)

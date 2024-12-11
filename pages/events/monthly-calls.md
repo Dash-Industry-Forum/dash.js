@@ -10,18 +10,14 @@ We have decided to have a monthly call to coordinate all the ongoing activities 
 features and issues which are relevant for the upcoming sprints. The monthly call is scheduled for every third Tuesday
 of a month.
 
-* Next call: 26th March 2024 16:00 - 17:00 CET
-
-### Meeting notes
-
-* [2024](https://github.com/Dash-Industry-Forum/dash.js/wiki/Meeting-minutes-2024)
+The schedule of the dash.js monthly call can be found in the [SVTA calendar](https://www.svta.org/svta-calendar/).
 
 ### Dial in data:
 
 Monthly dash.js call
-Hosted by DASH-IF Administration
+Hosted by SVTA
 
-* [https://dashif.my.webex.com/dashif.my/j.php?MTID=mc377a1ce36815009ebd7c688a66fcd60](https://dashif.my.webex.com/dashif.my/j.php?MTID=mc377a1ce36815009ebd7c688a66fcd60)
-* Meeting number: 2557 611 0549
-* Password: p6vXBcNx523
+* [https://us02web.zoom.us/j/89247434788?pwd=QmqAt7aq2IabW3LZr5Ix6Vk8ebjVEU.1](https://us02web.zoom.us/j/89247434788?pwd=QmqAt7aq2IabW3LZr5Ix6Vk8ebjVEU.1)
+* Meeting ID: 892 4743 4788
+* Passcode: 340802
  

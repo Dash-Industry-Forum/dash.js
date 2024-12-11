@@ -1,9 +1,6 @@
 ---
 layout: default
-title: Debugging
+title: Migration Guides
 parent: Developers
+has_children: true
 ---
-
-# Debugging
-
-To be done

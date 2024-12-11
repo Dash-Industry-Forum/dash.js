@@ -1,8 +1,7 @@
 ---
-layout: default 
+layout: default
 title: How to contribute
 parent: Developers
-nav_order: 1
 ---
 
 <details  markdown="block">
@@ -22,11 +21,12 @@ contributions of any kind. Naturally this includes software contributions, but w
 testing, project coordination, marketing and more.
 
 For any kind of contribution your first port of call should be to join
-our [mailing list]( https://groups.google.com/d/forum/dashjs) and our [Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg). We welcome all contributions to the mailing list (
-including asking questions which demonstrate our documentation needs to be improved).
+our [mailing list]( https://groups.google.com/d/forum/dashjs) and
+our [Slack channel](https://join.slack.com/t/dashif/shared_invite/zt-egme869x-JH~UPUuLoKJB26fw7wj3Gg). We welcome all
+contributions (including asking questions which demonstrate our documentation needs to be improved).
 
 The dash.js project serves as the reference player for the DASH Industry Forum. Respecting this, if you wish to
-contribute features or behavior which are non-conforming with the [interop guidelines](https://dashif.org/guidelines/),
+contribute features or behavior which are non-conforming with the [interop guidelines](https://dashif.org/guidelines/iop-v5/),
 then that feature must be explicitly enabled behind a compatibility flag.
 
 ## Submitting and managing Issues
@@ -84,16 +84,14 @@ contribute a fix yourself (or have someone else create a fix on your behalf).
 
 1. Before starting work on a new feature, enhancement or fix, ask the group if anyone else is already working on the
    same task. This will avoid duplication of effort.
-1. Read and understand the wiki sections
-   on [Developer Getting Started Guide](https://github.com/Dash-Industry-Forum/dash.js/wiki/Developer-Getting-Started-Guide)
-   and [JSLint compliance](https://github.com/Dash-Industry-Forum/dash.js/wiki/JSLint-Compliance).
 1. Read and understand the project's [Branching Strategy](http://nvie.com/posts/a-successful-git-branching-model/).
 1. Fork the repository and setup a new branch to work in.
 1. In each of your files, include the required BSD-3 header
    available [here](https://dashif.org/docs/dash.js.license-header.May2013.txt). Be sure to replace the placeholder
    text "YOUR_COMPANY_NAME_HERE" with the name of your company before adding it to the header.
 1. Add or modify unit tests for any new or modified functionality in your patch.
-1. Run `npm run build` before you commit so that you may catch test failures, lint issues, or syntax errors. Pull requests that
+1. Run `npm run build` before you commit so that you may catch test failures, lint issues, or syntax errors. Pull
+   requests that
    do not compile or pass linter checks or pass all unit tests will not be accepted.
 1. If you are submitting code as an individual or on behalf of a company who is _not a member_ of the
    DASH [Industry Forum](http://dashif.org/members), then download, sign, scan and email back to the email list

@@ -17,7 +17,7 @@ parent: Testing
 
 Functional testing in the context of media players refers to the process of testing the functionality and behavior of a
 media player. It involves verifying that the media player performs its intended tasks correctly, such as playing various
-types of media files (e.g. DASH manifests and segments), managing playback (e.g. play, pause, seek) and
+types of media files (e.g. DASH manifests and segments), managing playback (e.g. `play`, `pause`, `seek`) and
 controlling external events (e.g. a user induced switch of the audio or subtitle language). Ideally, the functionality
 of a media player can be completely tested in an automated fashion obsoleting the need to perform time-consuming and
 resource-consuming manual tests.
