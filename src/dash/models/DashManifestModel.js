@@ -364,10 +364,11 @@ function DashManifestModel() {
         let i,
             len;
         const adaptations = [];
-
-        for (i = 0, len = realAdaptations.length; i < len; i++) {
-            if (getIsTypeOf(realAdaptations[i], type)) {
-                adaptations.push(processAdaptation(realAdaptations[i]));
+        if (realAdaptations) {
+            for (i = 0, len = realAdaptations.length; i < len; i++) {
+                if (getIsTypeOf(realAdaptations[i], type)) {
+                    adaptations.push(processAdaptation(realAdaptations[i]));
+                }
             }
         }
 
@@ -903,7 +904,7 @@ function DashManifestModel() {
                 if (voPreviousPeriod) {
                     voPreviousPeriod.nextPeriodId = voPeriod.id;
                 }
-                console.log('periods', voPeriod)
+
                 voPeriods.push(voPeriod);
                 realPreviousPeriod = realPeriod;
                 voPreviousPeriod = voPeriod;
@@ -950,9 +951,9 @@ function DashManifestModel() {
             if (mpd.manifest.type !== DashConstants.MPD_LIST) {
                 throw new Error('Linked periods are only allowed in a list MPD');
             }
-            if (linkedPeriods[0].start && linkedPeriods[0].start !== 0) {
-                throw new Error('The first period in a lint MPD must have start time equal to 0');
-            }
+            // if (linkedPeriods[0].start && linkedPeriods[0].start !== 0) {
+            //     throw new Error('The first period in a list MPD must have start time equal to 0');
+            // }
         }
 
         return linkedPeriods

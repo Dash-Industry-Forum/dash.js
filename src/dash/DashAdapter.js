@@ -305,46 +305,42 @@ function DashAdapter() {
         }
 
         checkConfig();
-        if (newManifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
-            for (let linkPeriodManifest of newManifest.linkPeriodManifests) {
-                mergeManifests(newManifest, linkPeriodManifest);
-            }
-        }
         voPeriods = getRegularPeriods(newManifest);
     }
 
-    function mergeManifests(newManifest, importedManifest) {
-        const periodIndex = newManifest.Period.findIndex(period => period.ImportedMPD?.uri === importedManifest.linkPeriodUrl)
+    function mergeManifests(newManifest, importedManifest, periodId) {
+        const periodIndex = newManifest.Period.findIndex(period => period.id === periodId);
         // The imported manifest should be a single period manifest
         let newPeriod = {};
-        if (importedManifest.manifest) {
-            const importedPeriod = importedManifest.manifest.Period[0]
+        const linkedPeriod = newManifest.Period[periodIndex];
+        if (importedManifest) {
+            const importedPeriod = importedManifest.Period[0]
 
-            if (importedManifest.manifest.hasOwnProperty(DashConstants.PROFILES)) {
-                importedPeriod.profiles = importedManifest.manifest.profiles;
+            if (importedManifest.hasOwnProperty(DashConstants.PROFILES)) {
+                importedPeriod.profiles = importedManifest.profiles;
             }
-            if (importedManifest.manifest.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
-                importedPeriod.SupplementalProperty.concat(importedManifest.manifest.SupplementalProperty);
+            if (importedManifest.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
+                importedPeriod.SupplementalProperty.concat(importedManifest.SupplementalProperty);
             }
-            if (importedManifest.manifest.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY)) {
-                importedPeriod.EssentialProperty.concat(importedManifest.manifest.EssentialProperty);
+            if (importedManifest.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY)) {
+                importedPeriod.EssentialProperty.concat(importedManifest.EssentialProperty);
             }
-            if (importedManifest.manifest.hasOwnProperty(DashConstants.PROGRAM_INFORMATION)) {
-                newManifest.ProgramInformation = importedManifest.manifest.ProgramInformation;
+            if (importedManifest.hasOwnProperty(DashConstants.PROGRAM_INFORMATION)) {
+                newManifest.ProgramInformation = importedManifest.ProgramInformation;
             }
 
             newPeriod = {
-                baseUri: importedManifest.manifest.baseUri,
-                minBufferTime: importedManifest.manifest.minBufferTime,
-                start: newManifest.Period[periodIndex].start || importedPeriod.start,
-                id: newManifest.Period[periodIndex].id || importedPeriod.id,
-                duration: Math.min(importedPeriod.duration, newManifest.Period[periodIndex].duration) || newManifest.Period[periodIndex].duration,
-                ServiceDescription: newManifest.Period[periodIndex].ServiceDescription || [],
-                SupplementalProperty: newManifest.Period[periodIndex].SupplementalProperty || [],
-                EssentialProperty: newManifest.Period[periodIndex].EssentialProperty || [],
-                EventStream: newManifest.Period[periodIndex].EventStream || [],
+                baseUri: importedManifest.baseUri,
+                minBufferTime: importedManifest.minBufferTime,
+                start: linkedPeriod.start || importedPeriod.start,
+                id: linkedPeriod.id || importedPeriod.id,
+                duration: Math.min(importedPeriod.duration, linkedPeriod.duration) || linkedPeriod.duration || importedPeriod.duration,
+                ServiceDescription: linkedPeriod.ServiceDescription || [],
+                SupplementalProperty: linkedPeriod.SupplementalProperty || [],
+                EssentialProperty: linkedPeriod.EssentialProperty || [],
+                EventStream: linkedPeriod.EventStream || [],
             };
-            const propertiesFromOtherNamespaces = Object.keys(newManifest.Period[periodIndex]).filter(function (name) {return name.includes(':')});
+            const propertiesFromOtherNamespaces = Object.keys(linkedPeriod).filter(function (name) {return name.includes(':')});
             Object.assign(newPeriod, newPeriod, propertiesFromOtherNamespaces);
 
             for (let item in importedPeriod.ServiceDescription) {
@@ -356,20 +352,21 @@ function DashAdapter() {
                 index != -1 ? newPeriod.SupplementalProperty[index] = item : newPeriod.SupplementalProperty.push(item);
             }
             for (let item in importedPeriod.EssentialProperty) {
-                const index = newPeriod.SupplementalProperty.findIndex(ep => ep.schemeIdUri === item.schemeIdUri && ep.value === item.value);
+                const index = newPeriod.EssentialProperty.findIndex(ep => ep.schemeIdUri === item.schemeIdUri && ep.value === item.value);
                 index != -1 ? newPeriod.EssentialProperty[index] = item : newPeriod.EssentialProperty.push(item);
             }
             for (let item in importedPeriod.EventStream) {
-                const index = newPeriod.SupplementalProperty.findIndex(es => es.schemeIdUri === item.schemeIdUri && es.value === item.value);
+                const index = newPeriod.EventStream.findIndex(es => es.schemeIdUri === item.schemeIdUri && es.value === item.value);
                 index != -1 ? newPeriod.EventStream[index] = item : newPeriod.EventStream.push(item);
             }
 
             newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
         } else {
-            newPeriod = newManifest.Period[periodIndex];
+            newPeriod = linkedPeriod;
             delete newPeriod.ImportedMPD;
+            delete newPeriod.earliestResolutionTimeOffset;
         }
-        if (newPeriod.AdaptationSet) {
+        if (newPeriod.minBufferTime && (newPeriod.AdaptationSet || newPeriod.duration === 0)) {
             newManifest.Period[periodIndex] = newPeriod;
         } else {
             newManifest.Period.splice(periodIndex, 1);
@@ -1329,6 +1326,7 @@ function DashAdapter() {
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,
+        mergeManifests,
         reset,
         setConfig,
         updatePeriods,

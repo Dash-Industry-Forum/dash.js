@@ -81,6 +81,7 @@ import TextController from './text/TextController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
 import ClientDataReportingController from './controllers/ClientDataReportingController.js';
+import ListMpdController from './controllers/ListMpdController.js';
 
 /**
  * The media types
@@ -162,6 +163,7 @@ function MediaPlayer() {
         serviceDescriptionController,
         contentSteeringController,
         catchupController,
+        listMpdController,
         dashMetrics,
         manifestModel,
         cmcdModel,
@@ -352,6 +354,10 @@ function MediaPlayer() {
                 capabilitiesFilter = CapabilitiesFilter(context).getInstance();
             }
 
+            if (!listMpdController) {
+                listMpdController = ListMpdController(context).getInstance();
+            }
+
             adapter = DashAdapter(context).getInstance();
 
             manifestModel = ManifestModel(context).getInstance();
@@ -428,6 +434,12 @@ function MediaPlayer() {
                 throughputController,
                 eventBus
             })
+
+            listMpdController.setConfig({
+                dashAdapter: adapter
+            });
+
+            listMpdController.initialize();
 
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
