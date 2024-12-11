@@ -43,7 +43,7 @@ When it is all done, it should look similar to this:
 <!doctype html>
 <html>
 <head>
-    <title>Dash.js Rocks</title>
+    <title>dash.js Rocks</title>
     <style>
         video {
             width: 640px;
