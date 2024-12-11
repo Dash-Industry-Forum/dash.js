@@ -1038,7 +1038,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function timeAsUtc() {
+    function timeAsUTC() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
@@ -2833,7 +2833,7 @@ function MediaPlayer() {
         setVolume,
         setXHRWithCredentialsForType,
         time,
-        timeAsUtc,
+        timeAsUTC,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,
