@@ -258,10 +258,10 @@ function ManifestUpdater() {
         if (manifest.profiles === DashConstants.LIST_PROFILE_SCHEME) {
             const linkedPeriods = adapter.getLinkPeriods(manifest)
             eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+        } else {
+            eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
+            logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
         }
-
-        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
-        logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
 
         if (!isPaused) {
             startManifestRefreshTimer();

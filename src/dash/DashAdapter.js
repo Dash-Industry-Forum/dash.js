@@ -332,9 +332,9 @@ function DashAdapter() {
             newPeriod = {
                 baseUri: importedManifest.baseUri,
                 minBufferTime: importedManifest.minBufferTime,
-                start: linkedPeriod.start || importedPeriod.start,
-                id: linkedPeriod.id || importedPeriod.id,
-                duration: Math.min(importedPeriod.duration, linkedPeriod.duration) || linkedPeriod.duration || importedPeriod.duration,
+                start: linkedPeriod.start ?? importedPeriod.start,
+                id: linkedPeriod.id ?? importedPeriod.id,
+                duration: Math.min(importedPeriod.duration, linkedPeriod.duration) ?? linkedPeriod.duration ?? importedPeriod.duration,
                 ServiceDescription: linkedPeriod.ServiceDescription || [],
                 SupplementalProperty: linkedPeriod.SupplementalProperty || [],
                 EssentialProperty: linkedPeriod.EssentialProperty || [],
@@ -347,17 +347,29 @@ function DashAdapter() {
                 const index = newPeriod.ServiceDescription.findIndex(sd => sd.id === item.id);
                 index != -1 ? newPeriod.ServiceDescription[index] = item : newPeriod.ServiceDescription.push(item);
             }
+            if (newPeriod.ServiceDescription.length === 0) {
+                delete newPeriod.ServiceDescription;
+            }
             for (let item in importedPeriod.SupplementalProperty) {
                 const index = newPeriod.SupplementalProperty.findIndex(sp => sp.schemeIdUri === item.schemeIdUri && sp.value === item.value);
                 index != -1 ? newPeriod.SupplementalProperty[index] = item : newPeriod.SupplementalProperty.push(item);
+            }
+            if (newPeriod.SupplementalProperty.length === 0) {
+                delete newPeriod.SupplementalProperty;
             }
             for (let item in importedPeriod.EssentialProperty) {
                 const index = newPeriod.EssentialProperty.findIndex(ep => ep.schemeIdUri === item.schemeIdUri && ep.value === item.value);
                 index != -1 ? newPeriod.EssentialProperty[index] = item : newPeriod.EssentialProperty.push(item);
             }
+            if (newPeriod.EssentialProperty.length === 0) {
+                delete newPeriod.EssentialProperty;
+            }
             for (let item in importedPeriod.EventStream) {
                 const index = newPeriod.EventStream.findIndex(es => es.schemeIdUri === item.schemeIdUri && es.value === item.value);
                 index != -1 ? newPeriod.EventStream[index] = item : newPeriod.EventStream.push(item);
+            }
+            if (newPeriod.EventStream.length === 0) {
+                delete newPeriod.EventStream;
             }
 
             newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
