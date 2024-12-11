@@ -32,6 +32,12 @@ aux_links:
   "dash.js on GitHub":
     - "//github.com/Dash-Industry-Forum/dash.js"
 
+nav_external_links:
+  - title: API documentation
+    url: https://cdn.dashjs.org/latest/jsdoc/index.html
+    hide_icon: false # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
+
 # Build settings
 theme: just-the-docs
 color_scheme: custom
