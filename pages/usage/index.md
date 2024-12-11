@@ -15,5 +15,7 @@ We suggest to make yourself familiar with the basic concepts of dash.js. This in
 * [Add dash.js to your project](../quickstart/index.html)
 * [Change the default Settings](settings.html)
 
+Many samples demonstrating the dash.js features can be found in our [sample section](https://reference.dashif.org/dash.js/nightly/samples/index.html).
+
 Depending on your concrete use case you can find additional information linked in the table below:
 

@@ -1,5 +1,5 @@
 ---
-layout: default 
+layout: default
 title: Digital Rights Management (DRM)
 parent: Usage
 ---
@@ -70,22 +70,22 @@ dash.js allows the application to define a system string priority for each key s
 
 ````js
 var protData = {
-  'com.widevine.alpha': {
-    'serverURL': 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
-    'systemStringPriority': [
-      'com.widevine.something',
-      'com.widevine.alpha'
-    ]
-  },
-  'com.microsoft.playready': {
-    'serverURL': 'https://drm-playready-licensing.axtest.net/AcquireLicense',
-    'systemStringPriority': [
-      'com.microsoft.playready.something',
-      'com.microsoft.playready.recommendation',
-      'com.microsoft.playready.hardware',
-      'com.microsoft.playready'
-    ]
-  }
+    'com.widevine.alpha': {
+        'serverURL': 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+        'systemStringPriority': [
+            'com.widevine.something',
+            'com.widevine.alpha'
+        ]
+    },
+    'com.microsoft.playready': {
+        'serverURL': 'https://drm-playready-licensing.axtest.net/AcquireLicense',
+        'systemStringPriority': [
+            'com.microsoft.playready.something',
+            'com.microsoft.playready.recommendation',
+            'com.microsoft.playready.hardware',
+            'com.microsoft.playready'
+        ]
+    }
 };
 ````
 
@@ -96,12 +96,12 @@ headers using the `httpRequestHeaders` attribute:
 
 ```js
 const protData = {
-  "com.microsoft.playready": {
-    "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
-    "httpRequestHeaders": {
-      "custom-header": "data"
+    "com.microsoft.playready": {
+        "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+        "httpRequestHeaders": {
+            "custom-header": "data"
+        }
     }
-  }
 };
 player.setProtectionData(protData)
 ```
@@ -113,11 +113,11 @@ be set as part of the protection data in the following way:
 
 ````js
 const protData = {
-  "com.widevine.alpha": {
-    "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
-    "audioRobustness": "SW_SECURE_CRYPTO",
-    "videoRobustness": "HW_SECURE_ALL"
-  }
+    "com.widevine.alpha": {
+        "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+        "audioRobustness": "SW_SECURE_CRYPTO",
+        "videoRobustness": "HW_SECURE_ALL"
+    }
 }
 ````
 
@@ -129,14 +129,15 @@ ContentProtection descriptor, with the value of the element being the URL to sen
 the following:
 
 ````xml
+
 <ContentProtection
         schemeIdUri="urn:uuid:d0ee2730-09b5-459f-8452-200e52b37567"
         value="FirstDRM 2.0">
-  <cenc:pssh>
-    YmFzZTY0IGVuY29kZWQgY29udGVudHMgb2YgkXBzc2iSIGJveCB3aXRoIHRoaXMgU3lzdGVtSUQ=
-  </cenc:pssh>
-  <dashif:Authzurl>https://example.com/tenants/5341/authorize</dashif:Authzurl>
-  <dashif:Laurl>https://example.com/AcquireLicense</dashif:Laurl>
+    <cenc:pssh>
+        YmFzZTY0IGVuY29kZWQgY29udGVudHMgb2YgkXBzc2iSIGJveCB3aXRoIHRoaXMgU3lzdGVtSUQ=
+    </cenc:pssh>
+    <dashif:Authzurl>https://example.com/tenants/5341/authorize</dashif:Authzurl>
+    <dashif:Laurl>https://example.com/AcquireLicense</dashif:Laurl>
 </ContentProtection>
 ````
 
@@ -154,11 +155,11 @@ initialization and media segments the settings object needs to be adjusted:
 
 ````js
 player.updateSettings({
-  streaming: {
-    protection: {
-      ignoreEmeEncryptedEvent: true
+    streaming: {
+        protection: {
+            ignoreEmeEncryptedEvent: true
+        }
     }
-  }
 })
 ````
 
@@ -175,9 +176,9 @@ Note: The filter functions are reset when calling `player.destroy()`.
 ```js
 const player = dashjs.MediaPlayer().create();
 const callback = (payload) => {
-  return new Promise((resolve, reject) => {
-    resolve(payload)
-  })
+    return new Promise((resolve, reject) => {
+        resolve(payload)
+    })
 }
 player.initialize(video, url, false);
 player.registerLicenseRequestFilter(callback)
@@ -227,14 +228,25 @@ To enable MediaKeySession reusage `keepProtectionMediaKeys` needs to be enabled.
 
 ```js
 player.updateSettings({
-  streaming: {
-    protection: {
-      keepProtectionMediaKeys: true
+    streaming: {
+        protection: {
+            keepProtectionMediaKeys: true
+        }
     }
-  }
 })
 ```
 
+## Key status changes
+
+After a successful license request or even during playback, the key status of a MediaKeySession can change. With version
+5 dash.js handles such key status changes and switches to a different track or a different Representation if required.
+
+If the application needs to know about such key status updates it can register for the `KEY_STATUSES_MAP_UPDATED`
+event. This event is triggered once the internal key status map of dash.js was updated.
+
+````js
+player.on(dashjs.protectionEvents.KEY_STATUSES_MAP_UPDATED, eventHandler, null);
+````
 ## Different versions of the EME
 
 The [EME](https://www.w3.org/TR/encrypted-media/) is the API that enables playback of protected content in the browser.
@@ -271,7 +283,6 @@ if ((!videoElement || videoElement.onencrypted !== undefined) &&
     return null;
 }
 ```
-
 
 ## References
 

@@ -31,11 +31,10 @@ The `schemeIdUri` and the `value` of inband events need to be signaled in the MP
 An example of an `InbandEventStream` element and the structure of the `emsg` box are depicted below:
 
 ```xml
-
 <InbandEventStream schemeIdUri="urn:scte:scte35:2013:xml" value="999"/>
 ```
 
-```
+```text
 aligned(8) class DASHEventMessageBox extends FullBox('emsg', version, flags=0){
    if (version==0) {
       string scheme_id_uri;
@@ -108,8 +107,7 @@ the `event.parsedMessageData`
 field. The raw ID3 message data is available via the `event.messageData` field. As an example:
 
 ````js
-event.messageData = Uint8Array(89)[
-...]
+event.messageData = Uint8Array(89)[...]
 event.parsedMessageData = [
     {
         "key": "PRIV",

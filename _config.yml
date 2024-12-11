@@ -37,6 +37,14 @@ nav_external_links:
     url: https://cdn.dashjs.org/latest/jsdoc/index.html
     hide_icon: false # set to true to hide the external link icon - defaults to false
     opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
+  - title: Sample Section
+    url: https://reference.dashif.org/dash.js/nightly/samples/index.html
+    hide_icon: false # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
+  - title: Reference Client
+    url: https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html
+    hide_icon: false # set to true to hide the external link icon - defaults to false
+    opens_in_new_tab: true # set to true to open this link in a new tab - defaults to false
 
 # Build settings
 theme: just-the-docs
