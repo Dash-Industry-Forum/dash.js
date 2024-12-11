@@ -977,6 +977,10 @@ function MediaPlayer() {
         return t
     }
 
+    /**
+     * Returns information about the current DVR window including the start time, the end time, the window size.
+     * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
+     */
     function getDvrWindow() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
