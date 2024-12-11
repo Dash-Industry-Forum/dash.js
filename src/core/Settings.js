@@ -857,6 +857,8 @@ import Events from './events/Events.js';
 
 /**
  * @typedef {Object} CmcdSettings
+ * @property {boolean} [applyParametersFromMpd=true]
+ * Set to true if dash.js should use the CMCD parameters defined in the MDP.
  * @property {boolean} [enable=false]
  * Enable or disable the CMCD reporting.
  * @property {string} [sid]
@@ -886,7 +888,7 @@ import Events from './events/Events.js';
  * @property {Array.<string>} [includeInRequests]
  * Specifies which HTTP GET requests shall carry parameters.
  *
- * If not specified this value defaults to ['segment'].
+ * If not specified this value defaults to ['segment', 'mpd].
  * @property {number} [version=1]
  * The version of the CMCD to use.
  *
@@ -935,8 +937,6 @@ import Events from './events/Events.js';
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
- * @property {boolean} [applyParametersFromMpd=true]
- * Set to true if dash.js should use the cmcd parameters defined in MDP or js elements.
  * @property {number} [eventControllerRefreshDelay=100]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestDurationMismatchFix=true]
@@ -1091,7 +1091,9 @@ function Settings() {
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
-                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
+                    ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
+                        return { 'schemeIdUri': ep };
+                    })
                 ],
                 useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
