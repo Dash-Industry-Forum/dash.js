@@ -480,7 +480,8 @@ App.prototype._unregisterDashEventHandler = function () {
 App.prototype._onRepresentationSwitch = function (e) {
     try {
         if (e.mediaType === 'video') {
-            this.domElements.metrics.videoMaxIndex.innerHTML = e.numberOfRepresentations
+            var numberOfRepresentations = this.player.getRepresentationsByType('video').length;
+            this.domElements.metrics.videoMaxIndex.innerHTML = numberOfRepresentations
             this.domElements.metrics.videoIndex.innerHTML = e.currentRepresentation.index + 1;
             var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
             this.domElements.metrics.videoBitrate.innerHTML = bitrate;
