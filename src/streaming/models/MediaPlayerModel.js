@@ -47,6 +47,7 @@ const LOW_LATENCY_REDUCTION_FACTOR = 10;
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
  * @class
+ * @ignore
  * @constructor
  */
 function MediaPlayerModel() {
