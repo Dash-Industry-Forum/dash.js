@@ -26,37 +26,44 @@ development. The dependencies are listed in `package.json` and are installed whe
 
 ## Dev Dependencies
 
-| Package                       | Usage                                                                                                   |
-|:------------------------------|:--------------------------------------------------------------------------------------------------------|
-| `@babel/core`                 | Required by babel-loader for Webpack and transpiling to ES5                                             |
-| `@babel/eslint-parser`        | Allows ESLint to run on source code that is transformed by Babel.                                       |
-| `@babel/preset-env`           | Required by babel-loader for Webpack and transpiling to ES5                                             |
-| `babel-loader`                | Used for transpiling JavaScript by Webpack                                                              |
-| `chai`                        | Assertion library used by the Karma testing framework                                                   |
-| `chai-spies`                  | Addon plugin for the chai assertion library. It provides the most basic function spy ability and tests. |
-| `clean-jsdoc-theme`           | Clean and fully responsive theme to generate the JSDoc.                                                 |
-| `eslint`                      | Tool for identifying and reporting on patterns found in JavaScript code                                 |
-| `eslint-webpack-plugin`       | Webpack plugin to run ESLint                                                                            |
-| `karma`                       | Testrunner for unit and functional tests                                                                | |
-| `karma-browserstack-launcher` | Launch tests on Browserstack via Karma                                                                  |
-| `karma-chai`                  | Use asserts like "expect" from the chai library                                                         |
-| `karma-chrome-launcher`       | Launches Chrome for unit and functional tests                                                           |
-| `karma-coverage`              | Creates coverage report for unit tests                                                                  |
-| `karma-firefox-launcher`      | Launches Firefox for unit and functional tests                                                          |
-| `karma-htmlfile-reporter`     | Creates an HTML test report for functional tests                                                        |
-| `karma-junit-reporter`        | Creates a JUnit test report for unit and functional test                                                |
-| `karma-mocha`                 | Testframework for unit and functional tests                                                             |
-| `karma-mocha-reporter`        | Mocha like test output for unit tests                                                                   |
-| `karma-webdriver-launche`     | Run Karma tests using Webdriver. Required for test execution via Selenium                               |
-| `karma-webpack`               | Webpack bundler for Karma testcases.                                                                    |
-| `mocha`                       | JavaScript test framework for our unit and functional tests                                             |
-| `rimraf`                      | Dependency to remove `dist` folder before building dash.js                                              |
-| `sinon`                       | Standalone and test framework agnostic JavaScript test spies, stubs and mocks                           |
-| `stream-browserify`           | The stream module from node core, for browsers                                                          |
-| `string-replace-loader`       | Used to perform text replacements when building with webpack                                            |
-| `typescript`                  | TypeScript adds optional types to JavaScript                                                            |
-| `webpack`                     | Module bundler used to create the dash.js builds                                                        |
-| `webpack-cli`                 | Allows setup of webpack custom configuration                                                            |
-| `webpack-dev-server`          | Development server that uses webpack for bundling                                                       |
-| `webpack-merge`               | Used to merge Webpack configuration files                                                               |
-| `yargs`                       | Parses arguments provided via command line for execution of functional tests                            |
+| Package                                      | Usage                                                                                                   |
+|:---------------------------------------------|:--------------------------------------------------------------------------------------------------------|
+| `@babel/core`                                | Required by babel-loader for Webpack and transpiling to ES5                                             |
+| `@babel/eslint-parser`                       | Allows ESLint to run on source code that is transformed by Babel.                                       |
+| `@babel/plugin-transform-parameters`         | Transforms ES2015 parameters to ES5 as part of the Webpack process.                                     |
+| `@babel/plugin-transform-runtime`            | A plugin that enables the re-use of Babel's injected helper code to save on codesize.                   |
+| `@babel/preset-env`                          | Required by babel-loader for Webpack and transpiling to ES5                                             |
+| `@chiragrupani/karma-chromium-edge-launcher` | An Edge launcher for Karma that is used for executing function tests in the Edge browser                |
+| `@eslint/js`                                 | ESLint JavaScript language implementation                                                               |
+| `babel-loader`                               | Used for transpiling JavaScript by Webpack                                                              |
+| `chai`                                       | Assertion library used by the Karma testing framework                                                   |
+| `chai-spies`                                 | Addon plugin for the chai assertion library. It provides the most basic function spy ability and tests. |
+| `clean-jsdoc-theme`                          | Clean and fully responsive theme to generate the JSDoc.                                                 |
+| `core-js`                                    | Modular standard library for JavaScript to polyfill ECMAScript features.                                |
+| `eslint`                                     | Tool for identifying and reporting on patterns found in JavaScript code                                 |
+| `eslint-webpack-plugin`                      | Webpack plugin to run ESLint                                                                            |
+| `globals`                                    | Global identifiers from different JavaScript environments                                               |
+| `karma`                                      | Testrunner for unit and functional tests                                                                | |
+| `karma-browserstack-launcher`                | Launch tests on Browserstack via Karma                                                                  |
+| `karma-chai`                                 | Use asserts like "expect" from the chai library                                                         |
+| `karma-chrome-launcher`                      | Launches Chrome for unit and functional tests                                                           |
+| `karma-coverage`                             | Creates coverage report for unit tests                                                                  |
+| `karma-firefox-launcher`                     | Launches Firefox for unit and functional tests                                                          |
+| `karma-htmlfile-reporter`                    | Creates an HTML test report for functional tests                                                        |
+| `karma-junit-reporter`                       | Creates a JUnit test report for unit and functional test                                                |
+| `karma-mocha`                                | Testframework for unit and functional tests                                                             |
+| `karma-mocha-reporter`                       | Mocha like test output for unit tests                                                                   |
+| `karma-webdriver-launcher`                   | Run Karma tests using Webdriver. Required for test execution via Selenium                               |
+| `karma-webpack`                              | Webpack bundler for Karma testcases.                                                                    |
+| `mocha`                                      | JavaScript test framework for our unit and functional tests                                             |
+| `rimraf`                                     | Dependency to remove `dist` folder before building dash.js                                              |
+| `sinon`                                      | Standalone and test framework agnostic JavaScript test spies, stubs and mocks                           |
+| `stream-browserify`                          | The stream module from node core, for browsers                                                          |
+| `string-replace-loader`                      | Used to perform text replacements when building with webpack                                            |
+| `timers-browserify`                          | Adds support for the timers module to browserify.                                                       |
+| `typescript`                                 | TypeScript adds optional types to JavaScript                                                            |
+| `webpack`                                    | Module bundler used to create the dash.js builds                                                        |
+| `webpack-cli`                                | Allows setup of webpack custom configuration                                                            |
+| `webpack-dev-server`                         | Development server that uses webpack for bundling                                                       |
+| `webpack-merge`                              | Used to merge Webpack configuration files                                                               |
+| `yargs`                                      | Parses arguments provided via command line for execution of functional tests                            |
