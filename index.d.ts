@@ -1450,7 +1450,7 @@ declare namespace dashjs {
 
         duration(): number;
 
-        timeAsUtc(): number;
+        timeAsUTC(): number;
 
         getActiveStream(): Stream | null;
 

@@ -977,6 +977,10 @@ function MediaPlayer() {
         return t
     }
 
+    /**
+     * Returns information about the current DVR window including the start time, the end time, the window size.
+     * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
+     */
     function getDvrWindow() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -1034,7 +1038,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function timeAsUtc() {
+    function timeAsUTC() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
@@ -1537,7 +1541,7 @@ function MediaPlayer() {
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
+     * @param {number} id , The ID of the Representation
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -2758,21 +2762,21 @@ function MediaPlayer() {
         getAverageThroughput,
         getBufferLength,
         getCurrentLiveLatency,
+        getCurrentRepresentationForType,
         getCurrentSteeringResponseData,
         getCurrentTextTrackIndex,
         getCurrentTrackFor,
-        getDvrSeekOffset,
-        getDvrWindow,
         getDashAdapter,
         getDashMetrics,
         getDebug,
+        getDvrSeekOffset,
+        getDvrWindow,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
+        getManifest,
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
-        getCurrentRepresentationForType,
-        getManifest,
         getRepresentationsByType,
         getSettings,
         getSource,
@@ -2798,6 +2802,7 @@ function MediaPlayer() {
         play,
         preload,
         provideThumbnail,
+        refreshManifest,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -2806,7 +2811,6 @@ function MediaPlayer() {
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
-        refreshManifest,
         reset,
         resetCustomInitialTrackSelectionFunction,
         resetSettings,
@@ -2823,13 +2827,13 @@ function MediaPlayer() {
         setMute,
         setPlaybackRate,
         setProtectionData,
-        setRepresentationForTypeByIndex,
         setRepresentationForTypeById,
+        setRepresentationForTypeByIndex,
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
         time,
-        timeAsUtc,
+        timeAsUTC,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

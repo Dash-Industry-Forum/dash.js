@@ -22,7 +22,7 @@
                     document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
                     var minutes = d.getMinutes();
                     document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
-                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUtc()));
+                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUTC()));
                     document.querySelector('#videoBuffer').innerHTML = player.getBufferLength() + 's';
                 }
             }, 1000);
