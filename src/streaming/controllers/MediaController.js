@@ -891,6 +891,7 @@ function MediaController() {
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,
+        getTracksWithHighestSelectionPriority,
         getTracksWithHighestBitrate,
         getTracksWithHighestEfficiency,
         getTracksWithWidestRange,

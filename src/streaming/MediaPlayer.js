@@ -1578,7 +1578,7 @@ function MediaPlayer() {
      * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest possible index
+     * @param {number} index - the quality index, 0 corresponding to the lowest possible index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -2044,7 +2044,7 @@ function MediaPlayer() {
     /**
      * Sets the source to a new manifest URL or object without reloading
      * Useful for updating CDN tokens
-     * @param urlOrManifest
+     * @param {string | object} urlOrManifest
      */
     function updateSource(urlOrManifest) {
         source = urlOrManifest
