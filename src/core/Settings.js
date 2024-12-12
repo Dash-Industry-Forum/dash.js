@@ -858,7 +858,7 @@ import Events from './events/Events.js';
 /**
  * @typedef {Object} CmcdSettings
  * @property {boolean} [applyParametersFromMpd=true]
- * Set to true if dash.js should use the CMCD parameters defined in the MDP.
+ * Set to true if dash.js should use the CMCD parameters defined in the MPD.
  * @property {boolean} [enable=false]
  * Enable or disable the CMCD reporting.
  * @property {string} [sid]
