@@ -452,7 +452,7 @@ declare namespace dashjs {
 
         getContentProtectionByPeriod(period: Period): any;
 
-        getContentProtectionByManifest(manifest: object): any[]; //BOOKMARK
+        getContentProtectionByManifest(manifest: object): any[];
 
         getContentProtectionByAdaptation(adaptation: object): any;
 
@@ -1038,14 +1038,6 @@ declare namespace dashjs {
 
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
 
-        // /**
-        //  * This method returns the current max index based on what is defined in the MPD.
-        //  *
-        //  * @param bufferType String 'audio' or 'video',
-        //  * @param periodIdx Make sure this is the period index not id
-        //  */
-        // getMaxIndexForBufferType(bufferType: MediaType, periodIdx: number): number;
-
         getPeriodbyId(id: string): object | null;
 
         getIsTypeOf(adaptation: object, type: string): boolean;
@@ -1268,7 +1260,7 @@ declare namespace dashjs {
 
     class OfflineConstants {
         OFFLINE_SCHEME : 'offline_indexeddb';
-        OFFLINE_URL_REGEX : RegExp; // BOOKMARK
+        OFFLINE_URL_REGEX : RegExp;
         OFFLINE_STATUS_CREATED : 'created';
         OFFLINE_STATUS_STARTED : 'started';
         OFFLINE_STATUS_STOPPED : 'stopped';
@@ -2738,7 +2730,7 @@ declare namespace dashjs {
      * Streaming - Constants
      **/
 
-    export interface conformanceViolationConstants { // TODO: NACHFRAGEN
+    export interface conformanceViolationConstants {
         LEVELS: {
             SUGGESTION: 'Suggestion',
             WARNING: 'Warning',
@@ -3663,7 +3655,7 @@ declare namespace dashjs {
         initialize(): void;
     }
 
-    export interface CmsdModel { // CHECK!
+    export interface CmsdModel {
         initialize(): void; // NOT IMPLEMENTED!
 
         setConfig(): void; // NOT IMPLEMENTED!
@@ -3985,7 +3977,7 @@ declare namespace dashjs {
         
         getLoader(url: string): HTTPLoader;
 
-        unregisterAllLoader(): void; // Does the same as reset! Should this even be exported?
+        unregisterAllLoader(): void;
 
         reset(): void;
     }
@@ -5331,7 +5323,7 @@ declare namespace dashjs {
         lto: number | null;
     }
 
-    export interface PlayListTrace { // No longer there?
+    export interface PlayListTrace {
         representationid: string | null;
         subreplevel: number | null;
         start: number | null;
@@ -5341,7 +5333,7 @@ declare namespace dashjs {
         stopreason: string | null;
     }
 
-    export interface RequestSwitch { // No longer there?
+    export interface RequestSwitch {
         t: number | null;
         mt: number | null;
         to: string | null;
@@ -5492,7 +5484,7 @@ declare namespace dashjs {
         TcpList: TCPConnection[];
     }
 
-    export class MediaInfoSelectionInput { // No longer exists?
+    export class MediaInfoSelectionInput {
         newMediaInfo: MediaInfo;
         previouslySelectedRepresentation: Representation | null;
         newRepresentation: Representation | null
@@ -5607,8 +5599,6 @@ declare namespace dashjs {
     }
 
     export function MediaPlayer(): MediaPlayerFactory;
-
-    // Might need interface for MediaPlayer?
 
     export interface PreBufferSink {
         getAllBufferRanges(): TimeRanges;
