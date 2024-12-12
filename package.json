@@ -73,7 +73,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@svta/common-media-library": "^0.7.1",
+    "@svta/common-media-library": "^0.7.4",
     "bcp-47-match": "^2.0.3",
     "bcp-47-normalize": "^2.3.0",
     "codem-isoboxer": "0.3.10",
