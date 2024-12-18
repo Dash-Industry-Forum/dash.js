@@ -1065,7 +1065,7 @@ function DashManifestModel() {
 
                     if (currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD)) {
                         event.alternativeMpd = getAlternativeMpd(currentMpdEvent.AlternativeMPD);
-                        event.calculatedPresentationTime = event.calculatedPresentationTime - event.alternativeMpd.earliestResolutionTimeOffset;
+                        event.calculatedPresentationTime = 0;
                     } else {
                         event.alternativeMpd = null;
                     }
@@ -1095,10 +1095,12 @@ function DashManifestModel() {
     function getAlternativeMpd(event) {
         const alternativeMpd = new AlternativeMpd();
         alternativeMpd.uri = event.uri ?? null;
-        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset ?? null;
+        alternativeMpd.duration = event.duration ?? null;
+        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
         alternativeMpd.mode = event.mode ?? null;
         alternativeMpd.disableJumpTimeOffest = event.disableJumpTimeOffest ?? null;
         alternativeMpd.playTimes = event.playTimes ?? null;
+        alternativeMpd.returnOffset = event.returnOffset ?? null;
         return alternativeMpd;
     }
 

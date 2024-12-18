@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>Alternative Config</title>
+        <script src="../dist/dash.all.debug.js"></script>
+        <link href="./lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
+        <link href="./lib/main.css" rel="stylesheet" />
+        <style>
+            video {
+                width: 640px;
+                height: 360px;
+            }
+        </style>
+    </head>
+    <body>
+        <main>
+            <div class="container py-4">
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label>Manifest URL:</label>
+                        <input type="text" id="manifestUrl" class="form-control" value="http://localhost:3030/manifest.mpd" />
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-12 mb-2">
+                        <button id="addAlt" class="btn btn-primary">Add Alternative</button>
+                        <button id="addRecommended" class="btn btn-secondary">Add Recommended</button>
+                    </div>
+                </div>
+                <div class="row mb-2">
+                    <div class="col-md-2"><strong>URI</strong></div>
+                    <div class="col-md-2"><strong>presentationTime(ms)</strong></div>
+                    <div class="col-md-2"><strong>duration(ms)</strong></div>
+                    <div class="col-md-2"><strong>eRTO(ms)</strong></div>
+                    <div class="col-md-2"><strong>mode(insert/replace)</strong></div>
+                    <div class="col-md-1"><strong>returnOffset(ms)</strong></div>
+                </div>
+                <div id="alternativesContainer"></div>
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <button id="loadPlayer" class="btn btn-success">Load Player</button>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-8">
+                        <video controls="true" autoplay muted></video>
+                    </div>
+                </div>
+                <footer class="pt-3 mt-4 text-muted border-top">
+                    &copy; DASH-IF
+                </footer>
+            </div>
+        </main>
+        <style>
+            .hide-controls::-webkit-media-controls {
+                display: none !important;
+            }
+            .hide-controls::-moz-media-controls {
+                display: none !important;
+            }
+            .hide-controls::-ms-media-controls {
+                display: none !important;
+            }
+        </style>
+        <script>
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.bottom = '10px';
+            overlay.style.right = '10px';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+
+            const logoImg1 = document.createElement('img');
+            logoImg1.src = 'https://www.qualabs.com/packages/website/images/logos/qualabs.svg';
+            logoImg1.style.width = '250px';
+            logoImg1.style.height = 'auto';
+
+            const plusSign = document.createElement('span');
+            plusSign.textContent = '+';
+            plusSign.style.margin = '0 10px';
+            plusSign.style.fontSize = '60px';
+            plusSign.style.paddingBottom = '10px';
+            plusSign.style.fontWeight = 'bold';
+            plusSign.style.display = 'flex';
+            plusSign.style.alignItems = 'center';
+            plusSign.style.justifyContent = 'center';
+
+            const logoImg2 = document.createElement('img');
+            logoImg2.src = 'https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/app/img/if.png';
+            logoImg2.style.width = '250px';
+            logoImg2.style.height = 'auto';
+
+            overlay.appendChild(logoImg1);
+            overlay.appendChild(plusSign);
+            overlay.appendChild(logoImg2);
+
+            document.body.appendChild(overlay);
+
+
+
+
+            document.addEventListener("DOMContentLoaded", function () {
+              var video = document.querySelector("video");
+              var manifestUrlInput = document.getElementById('manifestUrl');
+              var container = document.getElementById('alternativesContainer');
+              var addAltBtn = document.getElementById('addAlt');
+              var addRecommendedBtn = document.getElementById('addRecommended');
+              var loadPlayerBtn = document.getElementById('loadPlayer');
+
+              var recommendedUris = [
+                'https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd',
+                'https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd'
+              ];
+
+              var recommendedCount = 0; 
+
+              function createAltRow(uri, pt, dur, ero, mode, ro) {
+                var row = document.createElement('div');
+                row.className = 'row mb-2';
+
+                var colUri = document.createElement('div');
+                colUri.className = 'col-md-2';
+                var uriInput = document.createElement('input');
+                uriInput.type = 'text';
+                uriInput.placeholder = 'URI';
+                uriInput.className = 'form-control alt-uri';
+                uriInput.value = uri || '';
+                colUri.appendChild(uriInput);
+
+                var colPT = document.createElement('div');
+                colPT.className = 'col-md-2';
+                var ptInput = document.createElement('input');
+                ptInput.type = 'number';
+                ptInput.placeholder = 'presentationTime(ms)';
+                ptInput.className = 'form-control alt-presentationTime';
+                ptInput.value = pt || '';
+                colPT.appendChild(ptInput);
+
+                var colDur = document.createElement('div');
+                colDur.className = 'col-md-2';
+                var durInput = document.createElement('input');
+                durInput.type = 'number';
+                durInput.placeholder = 'duration(ms)';
+                durInput.className = 'form-control alt-duration';
+                durInput.value = dur || '';
+                colDur.appendChild(durInput);
+
+                var colERO = document.createElement('div');
+                colERO.className = 'col-md-2';
+                var eroInput = document.createElement('input');
+                eroInput.type = 'number';
+                eroInput.placeholder = 'earliestResolutionTimeOffset(ms)';
+                eroInput.className = 'form-control alt-earliestResolutionTimeOffset';
+                eroInput.value = ero || '';
+                colERO.appendChild(eroInput);
+
+                var colMode = document.createElement('div');
+                colMode.className = 'col-md-2';
+
+                var modeSelect = document.createElement('select');
+                modeSelect.className = 'form-control alt-mode';
+                var optionInsert = document.createElement('option');
+                optionInsert.value = 'insert';
+                optionInsert.textContent = 'insert';
+                var optionReplace = document.createElement('option');
+                optionReplace.value = 'replace';
+                optionReplace.textContent = 'replace';
+                modeSelect.appendChild(optionInsert);
+                modeSelect.appendChild(optionReplace);
+                if (mode) {
+                  modeSelect.value = mode;
+                }
+                colMode.appendChild(modeSelect);
+
+                var colRO = document.createElement('div');
+                colRO.className = 'col-md-1';
+                var roInput = document.createElement('input');
+                roInput.type = 'number';
+                roInput.placeholder = 'returnOffset(ms)';
+                roInput.className = 'form-control alt-returnOffset';
+                roInput.value = ro || '';
+                colRO.appendChild(roInput);
+
+                var colRemove = document.createElement('div');
+                colRemove.className = 'col-md-1';
+                var removeBtn = document.createElement('button');
+                removeBtn.className = 'btn btn-danger';
+                removeBtn.textContent = 'X';
+                removeBtn.addEventListener('click', function() {
+                  container.removeChild(row);
+                });
+                colRemove.appendChild(removeBtn);
+
+                row.appendChild(colUri);
+                row.appendChild(colPT);
+                row.appendChild(colDur);
+                row.appendChild(colERO);
+                row.appendChild(colMode);
+                row.appendChild(colRO);
+                row.appendChild(colRemove);
+
+                return row;
+              }
+
+              addAltBtn.addEventListener('click', function() {
+                var row = createAltRow('', '0', '10000', '0', 'insert', '0');
+                container.appendChild(row);
+              });
+
+              addRecommendedBtn.addEventListener('click', function() {
+                var uriIndex = recommendedCount % recommendedUris.length;
+                var uri = recommendedUris[uriIndex];
+
+                var pt = 10000 + (recommendedCount * 30000);
+                var dur = 5000;
+                var ero = 5000;
+                var mode = Math.random() < 0.5 ? 'insert' : 'replace';
+                var ro = 0;
+
+                var row = createAltRow(uri, pt.toString(), dur.toString(), ero.toString(), mode, ro.toString());
+                container.appendChild(row);
+
+                recommendedCount++;
+              });
+
+              loadPlayerBtn.addEventListener('click', function() {
+                var baseUrl = manifestUrlInput.value;
+                var params = [];
+
+                var rows = container.querySelectorAll('.row');
+                rows.forEach(function(row) {
+                  var uri = row.querySelector('.alt-uri').value || '';
+                  var pt = row.querySelector('.alt-presentationTime').value || '0';
+                  var dur = row.querySelector('.alt-duration').value || '10000';
+                  var ero = row.querySelector('.alt-earliestResolutionTimeOffset').value || '0';
+                  var mode = row.querySelector('.alt-mode').value || 'insert';
+                  var ro = row.querySelector('.alt-returnOffset').value || '0';
+
+                  if (uri) {
+                    params.push('alt=' + encodeURIComponent(uri) + '|' + pt + '|' + dur + '|' + ero + '|' + mode + '|' + ro);
+                  }
+                });
+
+                var finalUrl = baseUrl;
+                if (params.length > 0) {
+                  finalUrl += '?' + params.join('&');
+                }
+
+                // Remove the old player if any
+                var oldVideo = document.querySelector('video');
+                var newVideo = document.createElement('video');
+                newVideo.setAttribute('controls', 'true');
+                newVideo.setAttribute('autoplay', '');
+                newVideo.setAttribute('muted', '');
+                oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+
+                var player = dashjs.MediaPlayer().create();
+                player.initialize(newVideo, finalUrl, true);
+              });
+
+              var defaultRow = createAltRow('', '', '', '', '', '');
+              container.appendChild(defaultRow);
+            });
+        </script>
+    </body>
+</html>

@@ -323,6 +323,13 @@ export default {
     ABANDON_FRAGMENT_RULES: {
         ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
     },
+    ALTERNATIVE_MPD: {
+        MODES: {
+            REPLACE: 'replace',
+            INSERT: 'insert'
+        },
+        URI: 'urn:mpeg:dash:event:alternativeMPD:2022'
+    },
 
     /**
      *  @constant {string} ID3_SCHEME_ID_URI specifies scheme ID URI for ID3 timed metadata

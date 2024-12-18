@@ -474,6 +474,7 @@ function EventController() {
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
                 event.triggeredReceivedEvent = true;
+                console.log(`Triggered: ${event.eventStream.schemeIdUri}`);
                 eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
                 return;
             }

@@ -41,7 +41,8 @@ class AlternativeMpd {
         this.disableJumpTimeOffest = NaN;
         this.playTimes = '';
         this.presentationTime = NaN;
-        this.duration = NaN
+        this.duration = NaN;
+        this.returnOffset = NaN;
     }
 }
 

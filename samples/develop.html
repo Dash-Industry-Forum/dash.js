@@ -46,33 +46,13 @@
             document.addEventListener("DOMContentLoaded", function () {
               var video,
                 player,
-                // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/case1.mpd";
-                // url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-                // url = "https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd"
-                url = 'http://localhost:3030/manifest.mpd'
+                url = 'http://localhost:3030/manifest.mpd?alt=https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd|10000|10000|2000|insert|0&alt=https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd|40000|13000|5000|replace|5000&alt=https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd|80000|10000|2000|replace|0'
+
       
               video = document.querySelector("video");
               player = dashjs.MediaPlayer().create();
-              // player.updateSettings({
-              //   streaming: {
-              //     cmcd: {
-              //       enabled: false,
-              //       mode: "header",
-              //       enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc'],
-              //       reporting: {
-              //         requestMode: {
-              //           version: 2
-              //         }
-              //       }
-              //     },
-              //   },
-              // });
+
               player.initialize(video, url, true);
-              // player.setAlternativePlayer()
-              //setTimeout(()=> {
-                // player.attachView(video);
-                // player.switchView()
-              //}, '5000')
             });
           </script>
     </body>

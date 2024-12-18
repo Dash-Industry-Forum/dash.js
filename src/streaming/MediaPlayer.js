@@ -2782,20 +2782,6 @@ function MediaPlayer() {
         }
     }
 
-    function setAlternativePlayer() {
-        const mediaPlayerFactory = FactoryMaker.getClassFactory(MediaPlayer);
-        alternativePlayer = mediaPlayerFactory().create()
-        // const alternativeUrl = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
-        // const alternativeUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
-        const alternativeUrl = 'https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd'
-        alternativePlayer.initialize(null, alternativeUrl, false);
-        alternativePlayer.updateSettings({
-            // debug: {logLevel: 5},
-            streaming: {cacheInitSegments: true}
-        });
-        alternativePlayer.preload()
-    }
-
     async function switchView() {
         const video = videoModel.getElement();
         pause()
@@ -2909,7 +2895,6 @@ function MediaPlayer() {
         seek,
         seekToOriginalLive,
         seekToPresentationTime,
-        setAlternativePlayer,
         setAutoPlay,
         setConfig,
         setCurrentTrack,
