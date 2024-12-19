@@ -3,11 +3,9 @@
     <head>
         <meta charset="utf-8" />
         <title>Alternative Config</title>
-
         <script src="../dist/dash.all.debug.js"></script>
         <link href="./lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
         <link href="./lib/main.css" rel="stylesheet" />
-
         <style>
             video {
                 width: 640px;
@@ -34,7 +32,7 @@
                     <div class="col-md-2"><strong>URI</strong></div>
                     <div class="col-md-2"><strong>presentationTime(ms)</strong></div>
                     <div class="col-md-2"><strong>duration(ms)</strong></div>
-                    <div class="col-md-2"><strong>eRTIO(ms)</strong></div>
+                    <div class="col-md-2"><strong>eRTO(ms)</strong></div>
                     <div class="col-md-2"><strong>mode(insert/replace)</strong></div>
                     <div class="col-md-1"><strong>returnOffset(ms)</strong></div>
                 </div>
@@ -54,7 +52,6 @@
                 </footer>
             </div>
         </main>
-
         <style>
             .hide-controls::-webkit-media-controls {
                 display: none !important;
@@ -67,6 +64,43 @@
             }
         </style>
         <script>
+            const overlay = document.createElement('div');
+            overlay.style.position = 'fixed';
+            overlay.style.bottom = '10px';
+            overlay.style.right = '10px';
+            overlay.style.zIndex = '9999';
+            overlay.style.display = 'flex';
+            overlay.style.alignItems = 'center';
+
+            const logoImg1 = document.createElement('img');
+            logoImg1.src = 'https://www.qualabs.com/packages/website/images/logos/qualabs.svg';
+            logoImg1.style.width = '250px';
+            logoImg1.style.height = 'auto';
+
+            const plusSign = document.createElement('span');
+            plusSign.textContent = '+';
+            plusSign.style.margin = '0 10px';
+            plusSign.style.fontSize = '60px';
+            plusSign.style.paddingBottom = '10px';
+            plusSign.style.fontWeight = 'bold';
+            plusSign.style.display = 'flex';
+            plusSign.style.alignItems = 'center';
+            plusSign.style.justifyContent = 'center';
+
+            const logoImg2 = document.createElement('img');
+            logoImg2.src = 'https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/app/img/if.png';
+            logoImg2.style.width = '250px';
+            logoImg2.style.height = 'auto';
+
+            overlay.appendChild(logoImg1);
+            overlay.appendChild(plusSign);
+            overlay.appendChild(logoImg2);
+
+            document.body.appendChild(overlay);
+
+
+
+
             document.addEventListener("DOMContentLoaded", function () {
               var video = document.querySelector("video");
               var manifestUrlInput = document.getElementById('manifestUrl');
@@ -80,7 +114,7 @@
                 'https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/TestAssets/MediaOfflineErrorAsset/stream.mpd'
               ];
 
-              var recommendedCount = 0; // Counts how many recommended have been added to calculate presentationTime
+              var recommendedCount = 0; 
 
               function createAltRow(uri, pt, dur, ero, mode, ro) {
                 var row = document.createElement('div');
@@ -176,11 +210,9 @@
               });
 
               addRecommendedBtn.addEventListener('click', function() {
-                // pick one uri from recommendedUris
                 var uriIndex = recommendedCount % recommendedUris.length;
                 var uri = recommendedUris[uriIndex];
 
-                // presentationTime starts at 10000 and increases by 30000 each time
                 var pt = 10000 + (recommendedCount * 30000);
                 var dur = 5000;
                 var ero = 5000;
@@ -216,8 +248,16 @@
                   finalUrl += '?' + params.join('&');
                 }
 
+                // Remove the old player if any
+                var oldVideo = document.querySelector('video');
+                var newVideo = document.createElement('video');
+                newVideo.setAttribute('controls', 'true');
+                newVideo.setAttribute('autoplay', '');
+                newVideo.setAttribute('muted', '');
+                oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+
                 var player = dashjs.MediaPlayer().create();
-                player.initialize(video, finalUrl, true);
+                player.initialize(newVideo, finalUrl, true);
               });
 
               var defaultRow = createAltRow('', '', '', '', '', '');
