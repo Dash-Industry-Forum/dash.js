@@ -95,6 +95,8 @@ function ListMpdController() {
                     dashAdapter.mergeManifests(manifest, null, startPeriod.id);
                     eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
                 });
+        } else {
+            eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         }
     }
 
