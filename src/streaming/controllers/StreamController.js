@@ -892,7 +892,8 @@ function StreamController() {
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
+            const isLinkedPeriod = manifestModel.getValue().Period[stream.getId()].ImportedMPD;
+            if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering() && !isLinkedPeriod) {
                 if (mediaSource) {
                     _onStreamCanLoadNext(stream, previousStream);
                 }
