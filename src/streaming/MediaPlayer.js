@@ -172,7 +172,6 @@ function MediaPlayer() {
         uriFragmentModel,
         domStorage,
         segmentBaseController,
-        alternativePlayer,
         clientDataReportingController;
 
     /*
@@ -614,7 +613,7 @@ function MediaPlayer() {
         }
         if (source) {
             const playbackTime = time ? time : providedStartTime;
-            console.log('Preload initialized!')
+            console.log(playbackTime)
             _initializePlayback(playbackTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
@@ -1479,31 +1478,8 @@ function MediaPlayer() {
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
         }
-        _initializePlayback(providedStartTime);
-    }
+        console.log(providedStartTime);
 
-    function _attachViewAlt(element, config) {
-        if (!mediaPlayerInitialized) {
-            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
-        }
-
-        videoModel.setElement(element);
-
-        if (element) {
-            _detectProtection();
-            _detectMetricsReporting();
-            _detectMss();
-
-            if (streamController) {
-                streamController.switchToVideoElement(10);
-            }
-        }
-
-        streamController.setConfig(config);
-
-        if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
-            _resetPlaybackControllers();
-        }
         _initializePlayback(providedStartTime);
     }
 
@@ -2782,36 +2758,6 @@ function MediaPlayer() {
         }
     }
 
-    async function switchView() {
-        const video = videoModel.getElement();
-        pause()
-        updateSettings({
-            // debug: {logLevel: 5},
-            streaming: {cacheInitSegments: true}
-        });
-        const streamConfig = streamController.getConfig()
-
-        let time = getVideoElement().currentTime;
-        const savedbuffers = streamController.getBufferBackup()
-        console.log('the data to restore is', savedbuffers)
-        console.log('current time is', time)
-        alternativePlayer.attachView(video)
-        alternativePlayer.play()
-        setTimeout(async () => {
-            await alternativePlayer.attachView(null)
-            _attachViewAlt(video, streamConfig);
-
-            setTimeout(() => {
-                streamController.restoreBuffer(savedbuffers)
-                play()
-                // seek(time);
-            }, 100)
-            alternativePlayer.destroy();
-            alternativePlayer = null;
-        }, 5000)
-    }
-
-
     instance = {
         addABRCustomRule,
         addRequestInterceptor,
@@ -2908,7 +2854,6 @@ function MediaPlayer() {
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
-        switchView,
         time,
         timeAsUtc,
         timeInDvrWindow,

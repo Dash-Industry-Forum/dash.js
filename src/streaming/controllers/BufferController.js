@@ -1169,14 +1169,6 @@ function BufferController(config) {
         return isPruningInProgress;
     }
 
-    function restoreBuffer(buffer) {
-        sourceBufferSink.restoreSavedBuffer(buffer);
-    }
-
-    function getSavedBuffer(){
-        return sourceBufferSink.getSavedBuffer()
-    }
-
     function getTotalBufferedTime() {
         try {
             const ranges = sourceBufferSink.getAllBufferRanges();
@@ -1329,8 +1321,6 @@ function BufferController(config) {
         setSeekTarget,
         updateAppendWindow,
         updateBufferTimestampOffset,
-        restoreBuffer,
-        getSavedBuffer,
     };
 
     setup();

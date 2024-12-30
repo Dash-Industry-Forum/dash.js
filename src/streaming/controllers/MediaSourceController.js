@@ -167,20 +167,10 @@ function MediaSourceController() {
         }
     }
 
-    function getDuration(){
-        return mediaSource.duration;
-    }
-
-    function getSourceBuffers(){
-        return mediaSource.sourceBuffers;
-    }
-
     instance = {
         attachMediaSource,
         createMediaSource,
         detachMediaSource,
-        getDuration,
-        getSourceBuffers,
         setConfig,
         setDuration,
         setSeekable,

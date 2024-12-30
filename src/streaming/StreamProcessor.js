@@ -206,10 +206,6 @@ function StreamProcessor(config) {
         return type;
     }
 
-    function getMimeType() {
-        return mimeType;
-    }
-
     function resetInitialSettings() {
         mediaInfoArr = [];
         currentMediaInfo = null;
@@ -1072,14 +1068,6 @@ function StreamProcessor(config) {
         return bufferController ? bufferController.getBuffer() : null;
     }
 
-    function getSavedBuffer() {
-        return bufferController.getSavedBuffer();
-    }
-
-    function restoreBuffer(buffer){
-        bufferController.restoreBuffer(buffer);
-    }
-
     function getBufferController() {
         return bufferController;
     }
@@ -1533,9 +1521,6 @@ function StreamProcessor(config) {
         setMediaSource,
         setTrackSwitchInProgress,
         updateStreamInfo,
-        getMimeType,
-        getSavedBuffer,
-        restoreBuffer,
     };
 
     setup();
