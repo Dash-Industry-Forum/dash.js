@@ -20,6 +20,7 @@
                 white-space: pre;
                 overflow: auto;
                 border: 1px solid #444;
+                font-size: 10px;
                 border-radius: 4px;
               }
               #manifestViewer .token\.tag { color: #569CD6; }
@@ -41,7 +42,7 @@
                 <div class="row mb-3">
                     <div class="col-md-12">
                         <label>Manifest URL:</label>
-                        <input type="text" id="manifestUrl" class="form-control" value="http://localhost:3030/manifest.mpd" />
+                        <input type="text" id="manifestUrl" class="form-control" value="https://d1lokaqrj4szvo.cloudfront.net/manifest.mpd" />
                     </div>
                 </div>
                 <div class="row mb-3">
@@ -64,11 +65,11 @@
                         <button id="loadPlayer" class="btn btn-success">Load Player</button>
                     </div>
                 </div>
-                <div class="row mb-3">
-                    <div class="col-md-7">
+                <div class="row mb-0">
+                    <div class="col-md-6">
                         <video controls="true" autoplay muted></video>
                     </div>
-                    <div class="col-md-5">
+                    <div class="col-md-6">
                         <div id="manifestViewer" class="manifest-container">Manifest will appear here...</div>
                     </div>
                 </div>
