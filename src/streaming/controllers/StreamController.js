@@ -48,6 +48,7 @@ import ConformanceViolationConstants from '../constants/ConformanceViolationCons
 import ExtUrlQueryInfoController from './ExtUrlQueryInfoController.js';
 import ProtectionEvents from '../protection/ProtectionEvents.js';
 import ProtectionErrors from '../protection/errors/ProtectionErrors.js';
+import ListMpdController from './ListMpdController.js';
 
 const PLAYBACK_ENDED_TIMER_INTERVAL = 200;
 const DVR_WAITING_OFFSET = 2;
@@ -61,7 +62,7 @@ function StreamController() {
         dashMetrics, mediaSourceController, timeSyncController, contentSteeringController, baseURLController,
         segmentBaseController, uriFragmentModel, abrController, throughputController, mediaController, eventController,
         initCache, errHandler, timelineConverter, streams, activeStream, protectionController, textController,
-        protectionData, extUrlQueryInfoController,
+        protectionData, extUrlQueryInfoController, listMpdController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
@@ -101,6 +102,7 @@ function StreamController() {
         eventController.start();
 
         extUrlQueryInfoController = ExtUrlQueryInfoController(context).getInstance();
+        listMpdController = ListMpdController(context).getInstance();
 
         timeSyncController.setConfig({
             dashMetrics, baseURLController, errHandler, settings
@@ -630,7 +632,12 @@ function StreamController() {
         });
 
         Promise.all(promises)
-            .then(() => {
+            .then(async () => {
+                const seekToPeriod = manifestModel.getValue().Period[seekToStream.getId()];
+                if (seekToPeriod.ImportedMPD) {
+                    const updatedManifest = await listMpdController.loadLinkedPeriod(manifestModel.getValue(), seekToPeriod);
+                    _onManifestUpdated({ manifest: updatedManifest });
+                }
                 _switchStream(seekToStream, activeStream, seekTime);
             })
             .catch((e) => {
