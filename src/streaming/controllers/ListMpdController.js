@@ -66,17 +66,7 @@ function ListMpdController() {
     function loadListMpdManifest(time) {
         linkedPeriodList.forEach(linkedPeriod => {
             if (_shouldLoadLinkedPeriod(linkedPeriod, time)) {
-                const baseUri = currentManifest.baseUri + linkedPeriod.ImportedMPD.uri;
-                manifestLoader.load(baseUri, null, null, true)
-                    .then((importedManifest) =>{
-                        dashAdapter.mergeManifests(currentManifest, importedManifest, linkedPeriod.id);
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: currentManifest });
-                        linkedPeriodList = linkedPeriodList.filter((element) => element.id !== linkedPeriod.id)
-                    }, () => {
-                        dashAdapter.mergeManifests(currentManifest, null, linkedPeriod.id);
-                        eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: currentManifest });
-                        linkedPeriodList = linkedPeriodList.filter((element) => element.id !== linkedPeriod.id)
-                    });
+                _loadLinkedPeriod(currentManifest, linkedPeriod);
             }
         });
     }
@@ -86,18 +76,24 @@ function ListMpdController() {
         linkedPeriodList = linkedPeriods;
         const startPeriod = linkedPeriodList.find(period => period.start === 0);
         if (startPeriod) {
-            const baseUri = manifest.baseUri + startPeriod.ImportedMPD.uri
-            manifestLoader.load(baseUri, null, null, true)
-                .then((importedManifest) => {
-                    dashAdapter.mergeManifests(manifest, importedManifest, startPeriod.id);
-                    eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
-                }, () => {
-                    dashAdapter.mergeManifests(manifest, null, startPeriod.id);
-                    eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
-                });
+            _loadLinkedPeriod(manifest, startPeriod);
         } else {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         }
+    }
+
+    function _loadLinkedPeriod(manifest, period) {
+        const baseUri = manifest.baseUri + period.ImportedMPD.uri
+        manifestLoader.load(baseUri, null, null, true)
+            .then((importedManifest) => {
+                dashAdapter.mergeManifests(manifest, importedManifest, period.id);
+            }, () => {
+                dashAdapter.mergeManifests(manifest, null, period.id);
+            })
+            .then(() => {
+                eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
+                linkedPeriodList = linkedPeriodList.filter((element) => element.id !== period.id)
+            });
     }
 
     function _triggerLoadImportMpd(e) {
