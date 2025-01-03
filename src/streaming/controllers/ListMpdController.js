@@ -83,7 +83,7 @@ function ListMpdController() {
     }
 
     function loadLinkedPeriod(manifest, period) {
-        const baseUri = manifest.baseUri + period.ImportedMPD.uri
+        const baseUri = manifest.baseUri + period.ImportedMPD.uri;
         const updatedManifest = new Promise(resolve => {
             manifestLoader.load(baseUri, null, null, true)
                 .then((importedManifest) => {
@@ -93,7 +93,7 @@ function ListMpdController() {
                 })
                 .then(() => {
                     eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
-                    linkedPeriodList = linkedPeriodList.filter((element) => element.id !== period.id)
+                    linkedPeriodList = linkedPeriodList.filter((element) => element.id !== period.id);
                     resolve(manifest);
                 });
         });
@@ -102,10 +102,10 @@ function ListMpdController() {
 
     function _triggerLoadImportMpd(e) {
         if (!linkedPeriodList || linkedPeriodList.lenght) {
-            return
+            return;
         }
 
-        loadListMpdManifest(e.time)
+        loadListMpdManifest(e.time);
     }
 
     function _shouldLoadLinkedPeriod(linkedPeriod, time) {
@@ -113,7 +113,7 @@ function ListMpdController() {
     }
 
     function reset() {
-        linkedPeriodList = []
+        linkedPeriodList = [];
     }
 
     instance = {
