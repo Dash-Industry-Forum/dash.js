@@ -66,7 +66,7 @@ function ListMpdController() {
     function loadListMpdManifest(time) {
         linkedPeriodList.forEach(linkedPeriod => {
             if (_shouldLoadLinkedPeriod(linkedPeriod, time)) {
-                _loadLinkedPeriod(currentManifest, linkedPeriod);
+                loadLinkedPeriod(currentManifest, linkedPeriod);
             }
         });
     }
@@ -76,32 +76,36 @@ function ListMpdController() {
         linkedPeriodList = linkedPeriods;
         const startPeriod = linkedPeriodList.find(period => period.start === 0);
         if (startPeriod) {
-            _loadLinkedPeriod(manifest, startPeriod);
+            loadLinkedPeriod(manifest, startPeriod);
         } else {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         }
     }
 
-    function _loadLinkedPeriod(manifest, period) {
-        const baseUri = manifest.baseUri + period.ImportedMPD.uri
-        manifestLoader.load(baseUri, null, null, true)
-            .then((importedManifest) => {
-                dashAdapter.mergeManifests(manifest, importedManifest, period.id);
-            }, () => {
-                dashAdapter.mergeManifests(manifest, null, period.id);
-            })
-            .then(() => {
-                eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
-                linkedPeriodList = linkedPeriodList.filter((element) => element.id !== period.id)
-            });
+    function loadLinkedPeriod(manifest, period) {
+        const baseUri = manifest.baseUri + period.ImportedMPD.uri;
+        const updatedManifest = new Promise(resolve => {
+            manifestLoader.load(baseUri, null, null, true)
+                .then((importedManifest) => {
+                    dashAdapter.mergeManifests(manifest, importedManifest, period.id);
+                }, () => {
+                    dashAdapter.mergeManifests(manifest, null, period.id);
+                })
+                .then(() => {
+                    eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
+                    linkedPeriodList = linkedPeriodList.filter((element) => element.id !== period.id);
+                    resolve(manifest);
+                });
+        });
+        return updatedManifest;
     }
 
     function _triggerLoadImportMpd(e) {
         if (!linkedPeriodList || linkedPeriodList.lenght) {
-            return
+            return;
         }
 
-        loadListMpdManifest(e.time)
+        loadListMpdManifest(e.time);
     }
 
     function _shouldLoadLinkedPeriod(linkedPeriod, time) {
@@ -109,12 +113,13 @@ function ListMpdController() {
     }
 
     function reset() {
-        linkedPeriodList = []
+        linkedPeriodList = [];
     }
 
     instance = {
         initialize,
         loadListMpdManifest,
+        loadLinkedPeriod,
         reset,
         setConfig
     };
