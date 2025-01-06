@@ -109,6 +109,9 @@ function ListMpdController() {
     }
 
     function _shouldLoadLinkedPeriod(linkedPeriod, time) {
+        if (!linkedPeriod.ImportedMPD) {
+            return false
+        }
         return time >= linkedPeriod.start - linkedPeriod.ImportedMPD.earliestResolutionTimeOffset;
     }
 
