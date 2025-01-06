@@ -157,6 +157,32 @@
       "excludedTestfiles": [
         "playback-advanced/preload"
       ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-2-keys-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-1-key-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
     }
   ]
 }
