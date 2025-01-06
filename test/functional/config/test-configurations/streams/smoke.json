@@ -93,7 +93,8 @@
       "includedTestfiles": [
         "playback/*",
         "audio/initial-audio",
-        "text/*"
+        "text/*",
+        "drm/keep-media-key-sessions"
       ],
       "excludedPlatforms": [
         {
@@ -106,7 +107,8 @@
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
       "includedTestfiles": [
-        "playback/*"
+        "playback/*",
+        "drm/keep-media-key-sessions"
       ],
       "excludedPlatforms": [
         {
@@ -119,7 +121,8 @@
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
       "includedTestfiles": [
-        "playback/*"
+        "playback/*",
+        "drm/keep-media-key-sessions"
       ],
       "excludedPlatforms": [
         {

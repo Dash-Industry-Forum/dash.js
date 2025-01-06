@@ -3,6 +3,7 @@ const TESTCASES = {
         ADVANCED: 'advanced/',
         AUDIO: 'audio/',
         BUFFER: 'buffer/',
+        DRM: 'drm/',
         FEATURE_SUPPORT: 'feature-support/',
         LIVE: 'live/',
         PLAYBACK: 'playback/',
@@ -14,6 +15,7 @@ const TESTCASES = {
     ADVANCED: {},
     AUDIO: {},
     BUFFER: {},
+    DRM: {},
     FEATURE_SUPPORT: {},
     LIVE: {},
     PLAYBACK: {},
@@ -150,6 +152,8 @@ TESTCASES.BUFFER.CLEANUP = TESTCASES.CATEGORIES.BUFFER + 'buffer-cleanup';
 TESTCASES.BUFFER.INITIAL_TARGET = TESTCASES.CATEGORIES.BUFFER + 'initial-buffer-target';
 TESTCASES.BUFFER.TARGET = TESTCASES.CATEGORIES.BUFFER + 'buffer-target';
 TESTCASES.BUFFER.TO_KEEP_SEEK = TESTCASES.CATEGORIES.BUFFER + 'buffer-to-keep-seek';
+
+TESTCASES.DRM.KEEP_MEDIA_KEY_SESSIONS = TESTCASES.CATEGORIES.DRM + 'keep-media-key-sessions';
 
 TESTCASES.FEATURE_SUPPORT.EMSG_TRIGGERED = TESTCASES.CATEGORIES.FEATURE_SUPPORT + 'emsg-triggered';
 TESTCASES.FEATURE_SUPPORT.MPD_PATCHING = TESTCASES.CATEGORIES.FEATURE_SUPPORT + 'mpd-patching';
