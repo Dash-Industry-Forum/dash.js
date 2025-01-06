@@ -131,16 +131,8 @@ function ManifestLoader() {
             request.startDate = requestStartDate;
         }
 
-        if (!linkPeriod) {
-            eventBus.trigger(
-                Events.MANIFEST_LOADING_STARTED, {
-                    request
-                }
-            );
-        }
-
-        function loadUrl(resolve = null, reject = null) {
-            urlLoader.load({
+        function createUrlLoaderObject(resolve, reject) {
+            return {
                 request: request,
                 success: function (data, textStatus, responseURL) {
                     // Manage situations in which success is called after calling reset
@@ -265,13 +257,20 @@ function ManifestLoader() {
                         reject();
                     }
                 }
-            });
+            }
         }
 
         if (linkPeriod) {
-            return new Promise(loadUrl);
+            return new Promise((resolve, reject) => {
+                urlLoader.load(createUrlLoaderObject(resolve, reject));
+            });
         } else {
-            loadUrl();
+            eventBus.trigger(
+                Events.MANIFEST_LOADING_STARTED, {
+                    request
+                }
+            );
+            urlLoader.load(createUrlLoaderObject());
         }
     }
 
