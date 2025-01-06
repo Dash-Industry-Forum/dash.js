@@ -359,6 +359,7 @@ function DefaultProtectionModel(config) {
 
         const session = mediaKeys.createSession(keySystemMetadata.sessionType);
         const sessionToken = _createSessionToken(session, keySystemMetadata);
+        sessionToken.hasTriggeredKeyStatusMapUpdate = true;
 
         // Load persisted session data into our newly created session object
         session.load(sessionId).then(function (success) {
@@ -455,9 +456,11 @@ function DefaultProtectionModel(config) {
         const token = { // Implements SessionToken
             session: session,
             keyId: keySystemMetadata.keyId,
+            normalizedKeyId: keySystemMetadata.keyId.replace(/-/g, '').toLowerCase(),
             initData: keySystemMetadata.initData,
             sessionId: keySystemMetadata.sessionId,
             sessionType: keySystemMetadata.sessionType,
+            hasTriggeredKeyStatusMapUpdate: false,
 
             // This is our main event handler for all desired MediaKeySession events
             // These events are translated into our API-independent versions of the

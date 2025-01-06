@@ -1101,6 +1101,16 @@
                     }
                 },
                 {
+                    "name": "Livesim 2 DRM EZDRM-2-keys-cbcs",
+                    "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
+                    "provider": "dashif"
+                },
+                {
+                    "name": "Livesim 2 DRM EZDRM-1-key-cbcs",
+                    "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
+                    "provider": "dashif"
+                },
+                {
                     "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
                     "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
                     "provider": "dashif"

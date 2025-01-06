@@ -1389,7 +1389,8 @@ function StreamController() {
         })
 
         if (!supportedMediaInfos || supportedMediaInfos.length === 0) {
-            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
+            const type = streamProcessor.getType();
+            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, `Type: ${type}: ${Errors.NO_SUPPORTED_KEY_IDS_MESSAGE}`));
             return
         }
 
