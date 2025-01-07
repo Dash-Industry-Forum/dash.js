@@ -334,12 +334,21 @@ function DashAdapter() {
                 minBufferTime: importedManifest.minBufferTime,
                 start: linkedPeriod.start ?? importedPeriod.start,
                 id: linkedPeriod.id ?? importedPeriod.id,
-                duration: Math.min(importedPeriod.duration, linkedPeriod.duration) ?? linkedPeriod.duration ?? importedPeriod.duration,
+                duration: linkedPeriod.duration,
                 ServiceDescription: linkedPeriod.ServiceDescription || [],
                 SupplementalProperty: linkedPeriod.SupplementalProperty || [],
                 EssentialProperty: linkedPeriod.EssentialProperty || [],
                 EventStream: linkedPeriod.EventStream || [],
             };
+            if (importedPeriod.duration < linkedPeriod.duration) {
+                newPeriod.duration = importedPeriod.duration;
+            }
+            if (newManifest.mediaPresentationDuration === undefined) {
+                newManifest.mediaPresentationDuration = 0;
+            }
+            if (newPeriod.duration) {
+                newManifest.mediaPresentationDuration += newPeriod.duration;
+            }
             const propertiesFromOtherNamespaces = Object.keys(linkedPeriod).filter(function (name) {return name.includes(':')});
             Object.assign(newPeriod, newPeriod, propertiesFromOtherNamespaces);
 
