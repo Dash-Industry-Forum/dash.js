@@ -308,7 +308,7 @@ function DashAdapter() {
         voPeriods = getRegularPeriods(newManifest);
     }
 
-    function mergeManifests(newManifest, importedManifest, periodId) {
+    function mergeManifests(newManifest, importedManifest, periodId, mpdHasDuration) {
         const periodIndex = newManifest.Period.findIndex(period => period.id === periodId);
         // The imported manifest should be a single period manifest
         let newPeriod = {};
@@ -340,14 +340,12 @@ function DashAdapter() {
                 EssentialProperty: linkedPeriod.EssentialProperty || [],
                 EventStream: linkedPeriod.EventStream || [],
             };
-            if (importedPeriod.duration < linkedPeriod.duration) {
+            if (!mpdHasDuration && importedPeriod.duration && importedPeriod.duration < linkedPeriod.duration) {
                 newPeriod.duration = importedPeriod.duration;
-            }
-            if (newManifest.mediaPresentationDuration === undefined) {
-                newManifest.mediaPresentationDuration = 0;
-            }
-            if (newPeriod.duration) {
                 newManifest.mediaPresentationDuration += newPeriod.duration;
+                if (linkedPeriod.duration) {
+                    newManifest.mediaPresentationDuration -= linkedPeriod.duration;
+                }
             }
             const propertiesFromOtherNamespaces = Object.keys(linkedPeriod).filter(function (name) {return name.includes(':')});
             Object.assign(newPeriod, newPeriod, propertiesFromOtherNamespaces);

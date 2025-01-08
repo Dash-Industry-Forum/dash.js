@@ -34,6 +34,7 @@ import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import ManifestLoader from '../ManifestLoader.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 
 function ListMpdController() {
@@ -45,7 +46,8 @@ function ListMpdController() {
         linkedPeriodList,
         dashAdapter,
         currentManifest,
-        manifestLoader
+        manifestLoader,
+        mpdHasDuration
 
     function setConfig(config) {
         if (!config) {
@@ -71,9 +73,22 @@ function ListMpdController() {
         });
     }
 
-    function _onLinkedPeriodsLoaded({ manifest, linkedPeriods}) {
+    function _onLinkedPeriodsLoaded({ manifest, linkedPeriods }) {
         currentManifest = manifest;
         linkedPeriodList = linkedPeriods;
+
+        mpdHasDuration = manifest.hasOwnProperty(DashConstants.MEDIA_PRESENTATION_DURATION);
+        if (!mpdHasDuration) {
+            manifest.mediaPresentationDuration = 0;
+            for (let i = manifest.Period.length - 1; i >= 0; i--) {
+                manifest.mediaPresentationDuration += manifest.Period[i].duration;
+                if (manifest.Period[i].start) {
+                    manifest.mediaPresentationDuration += manifest.Period[i].start;
+                    break;
+                }
+            }
+        }
+
         const startPeriod = linkedPeriodList.find(period => period.start === 0);
         if (startPeriod) {
             loadLinkedPeriod(manifest, startPeriod);
@@ -87,9 +102,9 @@ function ListMpdController() {
         const updatedManifest = new Promise(resolve => {
             manifestLoader.load(baseUri, null, null, true)
                 .then((importedManifest) => {
-                    dashAdapter.mergeManifests(manifest, importedManifest, period.id);
+                    dashAdapter.mergeManifests(manifest, importedManifest, period.id, mpdHasDuration);
                 }, () => {
-                    dashAdapter.mergeManifests(manifest, null, period.id);
+                    dashAdapter.mergeManifests(manifest, null, period.id, mpdHasDuration);
                 })
                 .then(() => {
                     eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
