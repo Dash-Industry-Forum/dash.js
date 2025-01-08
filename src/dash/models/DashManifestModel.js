@@ -925,10 +925,6 @@ function DashManifestModel() {
             voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
         }
 
-        if (mpd.manifest.type !== DashConstants.MPD_LIST && voPeriods[0].start && voPeriods[0].start !== 0) {
-            throw new Error('The first period in a list MPD must have start time equal to 0');
-        }
-        
         return voPeriods;
     }
 
