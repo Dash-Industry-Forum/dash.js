@@ -7,24 +7,28 @@
   "exports": {
     ".": {
       "types": "./index.d.ts",
-      "import": "./dist/esm/dash.all.debug.esm.js",
-      "default": "./dist/esm/dash.all.debug.esm.js",
-      "browser": "./dist/dash.all.min.js",
-      "script": "./dist/dash.all.min.js"
+      "import": "./dist/modern/esm/dash.all.min.esm.js",
+      "default": "./dist/modern/esm/dash.all.min.esm.js",
+      "browser": "./dist/modern/umd/dash.all.min.js",
+      "script": "./dist/modern/umd/dash.all.min.js"
     }
   },
   "type": "module",
   "scripts": {
-    "dev": "tsc && webpack --config build/webpack.dev.cjs --mode development --watch --progress",
-    "start": "webpack serve --config build/webpack.dev.cjs",
-    "lint": "eslint \"src/**/*.js\" \"test/unit/mocks/*.js\" \"test/unit/test/**/*.js\"",
-    "build": "tsc && npm run test && npm run lint && npm run webpack-build",
+    "build": "npm run prebuild && npm run webpack-build-modern && npm run webpack-build-legacy",
+    "build-legacy": "npm run prebuild && npm run webpack-build-legacy",
+    "build-modern": "npm run prebuild && npm run webpack-build-modern",
+    "dev": "tsc && webpack --config build/webpack/modern/webpack.modern.dev.cjs --mode development --watch --progress",
     "doc": "jsdoc -c build/jsdoc/jsdoc_conf.json -d docs/jsdoc",
+    "lint": "eslint \"src/**/*.js\" \"test/unit/mocks/*.js\" \"test/unit/test/**/*.js\"",
+    "prebuild": "rimraf dist && tsc && npm run test && npm run lint",
+    "prepack": "npm run build",
+    "prepare": "node githook.cjs",
+    "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
-    "prepare": "node githook.cjs",
-    "prepack": "npm run build",
-    "webpack-build": "rimraf dist && webpack --config build/webpack.prod.cjs"
+    "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
+    "webpack-build-modern": "webpack --config build/webpack/modern/webpack.modern.prod.cjs"
   },
   "devDependencies": {
     "@babel/core": "^7.26.0",
