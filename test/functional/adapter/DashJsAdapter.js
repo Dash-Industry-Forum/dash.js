@@ -1,7 +1,7 @@
 import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
-import {MediaPlayer, Debug} from '../../../dist/esm/dash.all.min.esm.js';
-import '../../../dist/dash.mss.min.js';
+import {MediaPlayer, Debug} from '../../../dist/modern/esm/dash.all.min.esm.js';
+import '../../../dist/modern/umd/dash.mss.min.js';
 
 class DashJsAdapter {
 

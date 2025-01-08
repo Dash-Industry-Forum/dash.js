@@ -5,7 +5,7 @@
     <meta charset="UTF-8"/>
     <title>Dash.js Network Interceptor sample</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
     <script src="dist/app.js"></script>
 
     <!-- Bootstrap core CSS -->
@@ -20,7 +20,7 @@
     </style>
 
     <script class="code" type="text/typescript">
-        
+
         import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
         import { CmcdObjectType } from '@svta/common-media-library/cmcd'
         import * as dashjs from 'dashjs'
@@ -39,7 +39,7 @@
 
             constructor() {
             }
-            
+
             public init(): void {
                 this.player = dashjs.MediaPlayer().create()
                 this.player.initialize(document.querySelector('video') as HTMLMediaElement, this.mpd, true)

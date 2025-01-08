@@ -8,7 +8,7 @@
             class="code"
             src="../../contrib/akamai/controlbar/ControlBar.js"
         ></script>
-        <script src="../../dist/dash.all.debug.js"></script>
+        <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
         <!-- Bootstrap core CSS -->
         <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet" />
@@ -61,11 +61,11 @@
                     subtitle.setAttribute("id", "subtitle-" + e.cueID)
                     subtitle.innerHTML = e.text;
                     document.getElementById("subtitles").appendChild(subtitle);
-                }); 
+                });
                 player.on("cueExit", function (e) {
                     console.log("cueExit ", e);
                     document.getElementById("subtitle-" + e.cueID).remove();
-                }); 
+                });
 
                 controlbar = new ControlBar(player);
                 controlbar.initialize();
