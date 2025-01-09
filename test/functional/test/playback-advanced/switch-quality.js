@@ -28,7 +28,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsProgressing(playerAdapter)
         });
 
-
         it(`Switch video qualities`, async () => {
             await _executeSwitchesForMediaType(Constants.DASH_JS.MEDIA_TYPES.VIDEO);
         });
