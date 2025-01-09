@@ -83,7 +83,7 @@ function ListMpdController() {
     }
 
     function loadLinkedPeriod(manifest, period) {
-        const baseUri = manifest.baseUri + period.ImportedMPD.uri;
+        const baseUri = manifest.BaseURL[0] ? manifest.BaseURL[0].__text + period.ImportedMPD.uri : period.ImportedMPD.uri;
         const updatedManifest = new Promise(resolve => {
             manifestLoader.load(baseUri, null, null, true)
                 .then((importedManifest) => {
