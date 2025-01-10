@@ -436,6 +436,7 @@ function MediaPlayer() {
             })
 
             listMpdController.setConfig({
+                settings: settings,
                 dashAdapter: adapter
             });
 

@@ -43,6 +43,7 @@ function ListMpdController() {
     let eventBus = EventBus(context).getInstance();
 
     let instance,
+        settings,
         linkedPeriodList,
         dashAdapter,
         currentManifest,
@@ -52,6 +53,10 @@ function ListMpdController() {
     function setConfig(config) {
         if (!config) {
             return;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
         }
 
         if (config.dashAdapter) {
@@ -133,7 +138,12 @@ function ListMpdController() {
         if (!linkedPeriod.ImportedMPD) {
             return false
         }
-        return time >= linkedPeriod.start - linkedPeriod.ImportedMPD.earliestResolutionTimeOffset;
+
+        const { minEarliestResolutionTimeOffset } = settings.get().streaming.listMpd;
+        const { earliestResolutionTimeOffset } = linkedPeriod.ImportedMPD;
+        const resolutionTime = Math.max(earliestResolutionTimeOffset, minEarliestResolutionTimeOffset);
+        
+        return time >= linkedPeriod.start - resolutionTime;
     }
 
     function reset() {

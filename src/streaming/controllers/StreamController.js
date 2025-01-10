@@ -632,16 +632,21 @@ function StreamController() {
         });
 
         Promise.all(promises)
-            .then(async () => {
+            .then(() => {
                 const seekToPeriod = manifestModel.getValue().Period[seekToStream.getId()];
                 if (seekToPeriod.ImportedMPD) {
-                    const updatedManifest = await listMpdController.loadLinkedPeriod(manifestModel.getValue(), seekToPeriod);
-                    _onManifestUpdated({ manifest: updatedManifest });
+                    return listMpdController
+                        .loadLinkedPeriod(manifestModel.getValue(), seekToPeriod)
+                        .then(updatedManifest => {
+                            baseURLController.update(updatedManifest);
+                        });
                 }
+            })
+            .then(() => {
                 _switchStream(seekToStream, activeStream, seekTime);
             })
-            .catch((e) => {
-                errHandler.error(e);
+            .catch(error => {
+                console.error(error);
             });
     }
 
@@ -987,8 +992,12 @@ function StreamController() {
             activeStream.setIsEndedEventSignaled(true);
             const nextStream = _getNextStream();
             if (nextStream) {
-                logger.debug(`StreamController onEnded, found next stream with id ${nextStream.getStreamInfo().id}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
-                _switchStream(nextStream, activeStream, NaN);
+                const streamId = nextStream.getStreamInfo().id;
+                logger.debug(`StreamController onEnded, found next stream with id ${streamId}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
+                const nextPeriod = manifestModel.getValue().Period[streamId];
+                if (!nextPeriod.ImportedMPD) {
+                    _switchStream(nextStream, activeStream, NaN);
+                }
             } else {
                 logger.debug('StreamController no next stream found');
                 activeStream.setIsEndedEventSignaled(false);
