@@ -18,7 +18,6 @@
     "noFallthroughCasesInSwitch": true,
 
     "paths": {
-      "dashjs": ["../../index.d.ts"]
     },
   },
   "include": ["src"]
