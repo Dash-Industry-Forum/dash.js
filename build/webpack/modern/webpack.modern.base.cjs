@@ -12,16 +12,11 @@ modernConfig.module.rules[0].use.push({
         sourceType: 'unambiguous',
         presets: [
             [
-                '@babel/preset-env',
-                {
-                    useBuiltIns: 'usage',
-                    corejs: '3.39.0',
-                }
+                '@babel/preset-env'
             ],
         ],
         plugins: [
-            '@babel/plugin-transform-runtime',
-            '@babel/plugin-transform-parameters'
+            '@babel/plugin-transform-runtime'
         ],
     },
 },)
