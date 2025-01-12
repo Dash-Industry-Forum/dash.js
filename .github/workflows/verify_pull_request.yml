@@ -75,6 +75,7 @@ jobs:
                 continue-on-error: true
                 run: npm list
             -   run: npm install
+            -   run: npm run webpack-build-modern
             -   name: Start Tunnel
                 uses: LambdaTest/LambdaTest-tunnel-action@v2
                 id: tunnel
