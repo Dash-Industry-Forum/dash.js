@@ -15,7 +15,7 @@
   },
   "type": "module",
   "scripts": {
-    "build": "npm run prebuild && npm run webpack-build-modern && npm run webpack-build-legacy",
+    "build": "npm run webpack-build-modern && npm run webpack-build-legacy",
     "build-legacy": "npm run prebuild && npm run webpack-build-legacy",
     "build-modern": "npm run prebuild && npm run webpack-build-modern",
     "dev": "tsc && webpack --config build/webpack/modern/webpack.modern.dev.cjs --mode development --watch --progress",
