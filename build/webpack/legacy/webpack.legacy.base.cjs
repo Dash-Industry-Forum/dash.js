@@ -39,18 +39,4 @@ const umdConfig = merge(legacyConfig, {
     },
 });
 
-const esmConfig = merge(legacyConfig, {
-    experiments: {
-        outputModule: true
-    },
-    output: {
-        path: path.resolve(__dirname, '../../../dist/legacy/esm'),
-        publicPath: '/dist/legacy/esm/',
-        library: {
-            type: 'module',
-        },
-        libraryExport: 'default',
-    },
-});
-
-module.exports = { umdConfig, esmConfig };
+module.exports = { umdConfig };
