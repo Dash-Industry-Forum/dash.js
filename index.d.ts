@@ -345,8 +345,6 @@ declare namespace dashjs {
 
         updateData(newRealAdaptation: object, availableRepresentations: object[], type: string, isFragmented: boolean, quality: number): any;
 
-        //Promise.all(iterable) can be solved promise, asynchronous promise, pending promise
-
         getCurrentRepresentation(): object;
 
         getCurrentRepresentation(): Representation;
@@ -677,63 +675,55 @@ declare namespace dashjs {
     }
 
     export interface ThroughputDictEntry {
-
         downloadTimeInMs: number;
-
         downloadedBytes: number;
-
         latencyInMs: number;
-
         serviceLocation: string;
-
         value: number;
     }
 
     export interface ThroughputEwmaDictEntry {
-
         fastEstimate: number;
-
         slowEstimate: number;
-
         totalWeight: number;
     }
 
     export interface BaseURL {
-        url: string;
-        serviceLocation: string;
+        availabilityTimeComplete: boolean;
+        availabilityTimeOffset: number;
         dvbPriority: number;
         dvbWeight: number;
-        availabilityTimeOffset: number;
-        availabilityTimeComplete: boolean;
         queryParams: object;
+        serviceLocation: string;
+        url: string;
     }
 
     export interface ClientDataReporting {
+        adaptationSets: AdaptationSet;
+        adaptationSetsArray: Array<AdaptationSet>;
         cmcdParameters: CMCDParameters;
         serviceLocations: any;
         serviceLocationsArray: Array<any>;
-        adaptationSets: AdaptationSet;
-        adaptationSetsArray: Array<AdaptationSet>;
     }
 
     export class CMCDParameters extends DescriptorType {
-        version: number;
-        sessionID: string;
         contentID: string;
-        mode: string;
         keys: Array<string>;
+        mode: string;
         schemeIdUri: string;
+        sessionID: string;
+        version: number;
     }
 
     export class ContentProtection extends DescriptorType {
+        cencDefaultKid: any;
+        keyId: any;
+        laUrl: string;
+        pro: any;
+        pssh: any;
         ref: any;
         refId: any;
         robustness: any;
-        keyId: any;
-        cencDefaultKid: any;
-        pssh: any;
-        pro: any;
-        laUrl: string;
 
         init(data: any): void;
 
@@ -741,11 +731,11 @@ declare namespace dashjs {
     }
 
     export class ContentSteering {
+        clientRequirement: boolean;
         defaultServiceLocation: string;
         defaultServiceLocationArray: string[];
         queryBeforeStart: boolean;
         serverUrl: string;
-        clientRequirement: boolean;
     }
 
     export class ContentSteeringRequest {
@@ -755,92 +745,92 @@ declare namespace dashjs {
     }
 
     export class ContentSteeringResponse {
-        version: number;
-        ttl: number;
-        reloadUri: string;
-        pathwayPriority: string[];
         pathwayClones: object[];
+        pathwayPriority: string[];
+        reloadUri: string;
+        ttl: number;
+        version: number;
     }
 
     export class DescriptorType {
+        dvbFontFamily?: string;
+        dvbMimeType?: string;
+        dvbUrl?: string;
+        id: string;
         schemeIdUri: string;
         value: string;
-        id: string;
-        dvbUrl?: string;
-        dvbMimeType?: string;
-        dvbFontFamily?: string;
     }
 
     export interface Event {
-        type: string;
         duration: number;
-        presentationTime: number;
+        eventStream: EventStream;
         id: number;
         messageData: string;
-        eventStream: EventStream;
-        presentationTimeDelta: number;
         parsedMessageData: any;
+        presentationTime: number;
+        presentationTimeDelta: number;
+        type: string;
     }
 
     export interface EventStream {
         adaptationSet: AdaptationSet | null;
-        representation: Representation | null;
         period: Period | null;
+        presentationTimeOffset: number;
+        representation: Representation | null;
+        schemeIdUri: string;
         timescale: number;
         value: string;
-        schemeIdUri: string;
-        presentationTimeOffset: number;
     }
 
     export interface IManifestInfo {
-        dvrWindowSize: number;
         availableFrom: Date;
         duration: number;
+        dvrWindowSize: number;
         isDynamic: boolean;
         loadedTime: Date;
         maxFragmentDuration: number;
         minBufferTime: number;
-        serviceDescriptions: serviceDescriptions[]
         protocol?: string;
+        serviceDescriptions: serviceDescriptions[]
     }
 
     export class MediaInfo {
-        id: string | null;
-        index: number | null;
-        type: MediaType | null;
-        streamInfo: StreamInfo | null;
-        representationCount: number;
-        labels: { text: string, lang?: string }[];
-        lang: string | null;
-        viewpoint: DescriptorType[] | null;
+        KID: any | null;
         accessibility: DescriptorType[] | null;
         audioChannelConfiguration: DescriptorType[] | null;
-        roles: DescriptorType[] | null;
-        codec: string | null;
-        mimeType: string | null;
-        contentProtection: any | null;
-        isText: boolean;
-        KID: any | null;
         bitrateList: Bitrate[];
-        isFragmented: any | null;
-        isEmbedded: any | null;
-        selectionPriority: number;
-        supplementalProperties: object;
+        codec: string | null;
+        contentProtection: any | null;
         essentialProperties: object;
+        id: string | null;
+        index: number | null;
+        isEmbedded: any | null;
+        isFragmented: any | null;
+        isText: boolean;
+        labels: { text: string, lang?: string }[];
+        lang: string | null;
+        mimeType: string | null;
+        representationCount: number;
+        roles: DescriptorType[] | null;
         segmentAlignment: boolean;
+        selectionPriority: number;
+        streamInfo: StreamInfo | null;
         subSegmentAlignment: boolean;
+        supplementalProperties: object;
+        type: MediaType | null;
+        viewpoint: DescriptorType[] | null;
     }
 
     export interface Mpd {
-        manifest: object;
-        suggestedPresentationDelay: number;
-        availabiliyStartTime: number | null;
         availabilityEndTime: number;
-        timeShiftBufferDepth: number;
+        availabilityStartTime: number | null;
+        manifest: object;
         maxSegmentDuration: number;
-        publishTime: number | null;
-        minimumUpdatePeriod: number;
         mediaPresentationDuration: number;
+        minimumUpdatePeriod: number;
+        publishTime: number | null;
+        suggestedPresentationDelay: number;
+        timeShiftBufferDepth: number;
     }
 
     export class MpdLocation {
@@ -872,24 +862,23 @@ declare namespace dashjs {
     }
 
     export interface Period {
+        duration: number;
         id: string | null;
         index: number;
-        duration: number;
-        start: number;
+        isEncrypted: boolean;
         mpd: Mpd;
         nextPeriodId: string | null;
-        isEncrypted: boolean;
+        start: number;
     }
 
     export interface ProducerReferenceTime {
+        UTCTiming: any;
+        applicationSchme: any;
         id: any;
         inband: boolean;
-        type: 'encoder';
-        applicationSchme: any;
-        wallClockTime: any;
         presentationTime: number;
-        UTCTiming: any;
-
+        type: 'encoder';
+        wallClockTime: any;
     }
 
     export interface Representation {
@@ -930,19 +919,19 @@ declare namespace dashjs {
     }
 
     export interface Segment {
-        indexRange: any;
-        index: number | null;
-        mediaRange: any;
-        media: any;
+        availabilityEndTime: number;
+        availabilityStartTime: number;
         duration: number;
-        replacementTime: number;
-        replacementNumber: number;
+        index: number | null;
+        indexRange: any;
+        media: any;
+        mediaRange: any;
         mediaStartTime: number;
         presentationStartTime: number;
-        availabilityStartTime: number;
-        availabilityEndTime: number;
-        wallStartTime: number;
+        replacementNumber: number;
+        replacementTime: number;
         representation: Representation | null;
+        wallStartTime: number;
     }
 
     export class SimpleXPath {
@@ -950,13 +939,13 @@ declare namespace dashjs {
     }
 
     export class StreamInfo {
+        duration: number;
         id: string;
         index: number;
-        start: number;
-        duration: number;
-        manifestInfo: IManifestInfo;
-        isLast: boolean;
         isEncrypted: boolean;
+        isLast: boolean;
+        manifestInfo: IManifestInfo;
+        start: number;
     }
 
     export class UTCTiming {
@@ -969,85 +958,85 @@ declare namespace dashjs {
      **/
 
     export interface DashAdapter {
-        getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
-
-        getIsMain(adaptation: object): boolean;
-
-        getAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): object | null;
+        applyPatchToManifest(manifest: object, patch: object): void;
 
         areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
 
+        getAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): object | null;
+
         getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
 
-        getStreamsInfo(externalManifest: object, maxStreamsInfo: number): Array<any>;
+        getAvailabilityStartTime(externalManifest?: object): number;
 
-        getRealAdaptation(streamInfo: StreamInfo, mediaInfo: MediaInfo): object;
+        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
 
-        getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
+        getBaseURLsFromElement(node: object): BaseURL[];
+
+        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
+
+        getContentSteering(manifest: object): object;
+
+        getDuration(externalManifest?: object): number;
 
         getEssentialPropertiesAdaptationSet(adaptationSet: AdaptationSet): object | [];
 
         getEssentialPropertiesForRepresentation(representation: Representation): any[];
 
-        getSupplementalCodex(representation: Representation): Array<any>;
-
-        getRealPeriodByIndex(index: number): object;
-
-        getVoRepresentation(mediaInfo: MediaInfo): Representation[];
-
         getEvent(eventBox: object, eventStreams: object, mediaStartTime: number, voRepresentation: object): null | Event;
 
         getEventsFor(info: object, voRepresentation: object): Array<Event>;
 
-        getIsTextTrack(adaptation: object): boolean;
+        getIndexForRepresentation(representationId: string, periodIdx: number): number;
 
-        getUTCTimingSources(): any[];
-
-        getSuggestedPresentationDelay(): string;
-
-        getAvailabilityStartTime(externalManifest?: object): number;
+        getIsDVB(manifest: object): boolean;
 
         getIsDynamic(externalManifest?: object): boolean;
 
-        getDuration(externalManifest?: object): number;
+        getIsMain(adaptation: object): boolean;
 
-        getRegularPeriods(externalManifest?: object): any[];
+        getIsPatch(manifest: object): boolean;
 
-        getMpd(externalManifest?: object): Mpd;
+        getIsTextTrack(adaptation: object): boolean;
 
-        getContentSteering(manifest: object): object;
+        getIsTypeOf(adaptation: object, type: string): boolean;
 
         getLocation(manifest: object): MpdLocation[];
 
         getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
-        getPublishTime(manifest: object): number | null;
+        getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
+
+        getMpd(externalManifest?: object): Mpd;
 
         getPatchLocation(manifest: object): PatchLocation[];
 
-        getIsDVB(manifest: object): boolean;
+        getPeriodbyId(id: string): object | null;
 
-        getIsPatch(manifest: object): boolean;
+        getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
 
-        getBaseURLsFromElement(node: object): BaseURL[];
+        getPublishTime(manifest: object): number | null;
+
+        getRealAdaptation(streamInfo: StreamInfo, mediaInfo: MediaInfo): object;
+
+        getRealPeriodByIndex(index: number): object;
+
+        getRegularPeriods(externalManifest?: object): any[];
 
         getRepresentationSortFunction(): (a: object, b: object) => number;
 
-        getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
+        getStreamsInfo(externalManifest: object, maxStreamsInfo: number): Array<any>;
 
-        getBandwidthForRepresentation(representationId: string, periodIdx: number): number;
+        getSuggestedPresentationDelay(): string;
 
-        getIndexForRepresentation(representationId: string, periodIdx: number): number;
+        getSupplementalCodex(representation: Representation): Array<any>;
 
-        getPeriodbyId(id: string): object | null;
+        getUTCTimingSources(): any[];
 
-        getIsTypeOf(adaptation: object, type: string): boolean;
-
-        reset(): void;
+        getVoRepresentation(mediaInfo: MediaInfo): Representation[];
 
         isPatchValid(manifest: object, patch: object): boolean;
 
-        applyPatchToManifest(manifest: object, patch: object): void;
+        reset(): void;
     }
 
     export interface DashHandler {
@@ -1079,91 +1068,93 @@ declare namespace dashjs {
     }
 
     export interface DashMetrics {
-        getCurrentRepresentationSwitch(type: MediaType): ICurrentRepresentationSwitch;
 
-        addRepresentationSwitch(mediaType: MediaType, t: Date, mt: Date, to: string, lto: string): void;
-
-        getCurrentBufferState(type: MediaType): IBufferState;
-
-        getCurrentBufferLevel(type: MediaType): number;
 
         addBufferLevel(mediaType: MediaType, t: number, level: number): void;
 
         addBufferState(mediaType: MediaType, state: string, target: number): void;
 
-        clearAllCurrentMetrics(): void;
-
-        getCurrentHttpRequest(type: MediaType): object;
-
-        getHttpRequests(type: MediaType): object[];
-
-        addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
-
-        getCurrent(metrics: MetricsList, metricName: string): DroppedFrames;
-
-        getCurrentDroppedFrames(): DroppedFrames;
-
-        addDroppedFrames(quality: number): void;
-
-        getCurrentSchedulingInfo(type: MediaType): object;
-
-        addSchedulingInfo(request: SchedulingInfo, state: string): void;
-
-        getCurrentManifestUpdate(): any;
-
-        updateManifestUpdateInfo(updateFields: any[]): void;
-
-        addManifestUpdateStreamInfo(streamInfo: StreamInfo): void;
-
-        addManifestUpdate(request: ManifestUpdate): void;
-
-        addHttpRequest(request: HTTPRequest, responseURL: string, responseStatus: number, responseHeaders: object, traces: object): void;
-
-        addManifestUpdateRepresentationInfo(representation: Representation, mediaType: MediaType): void;
-
-        getCurrentDVRInfo(type?: MediaType): DVRInfo;
+        addDVBErrors(errors: object): void;
 
         addDVRInfo(mediaType: MediaType, currentTime: Date, mpd: Mpd, range: Range): void;
 
-        getLatestMPDRequestHeaderValueByID(type: MediaType, id: string): string;
+        addDroppedFrames(quality: number): void;
 
-        getLatestFragmentRequestHeaderValueByID(id: string): string;
+        addHttpRequest(request: HTTPRequest, responseURL: string, responseStatus: number, responseHeaders: object, traces: object): void;
+
+        addManifestUpdate(request: ManifestUpdate): void;
+
+        addManifestUpdateRepresentationInfo(representation: Representation, mediaType: MediaType): void;
+
+        addManifestUpdateStreamInfo(streamInfo: StreamInfo): void;
 
         addPlayList(): void;
+
+        addRepresentationSwitch(mediaType: MediaType, t: Date, mt: Date, to: string, lto: string): void;
+
+        addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
+
+        addSchedulingInfo(request: SchedulingInfo, state: string): void;
+
+        clearAllCurrentMetrics(): void;
 
         createPlaylistMetrics(mediaStartTime: number, startReason: string): void;
 
         createPlaylistTraceMetrics(representationId: number, mediaStartTime: number, speed: number): void;
 
-        updatePlayListTraceMetrics(traceToUpdate: object): void;
+        getCurrent(metrics: MetricsList, metricName: string): DroppedFrames;
+
+        getCurrentBufferLevel(type: MediaType): number;
+
+        getCurrentBufferState(type: MediaType): IBufferState;
+
+        getCurrentDVRInfo(type?: MediaType): DVRInfo;
+
+        getCurrentDroppedFrames(): DroppedFrames;
+
+        getCurrentHttpRequest(type: MediaType): object;
+
+        getCurrentManifestUpdate(): any;
+
+        getCurrentRepresentationSwitch(type: MediaType): ICurrentRepresentationSwitch;
+
+        getCurrentSchedulingInfo(type: MediaType): object;
+
+        getHttpRequests(type: MediaType): object[];
+
+        getLatestFragmentRequestHeaderValueByID(id: string): string;
+
+        getLatestMPDRequestHeaderValueByID(type: MediaType, id: string): string;
 
         pushPlaylistTraceMetrics(endTime: number, reason: string): void;
 
-        addDVBErrors(errors: object): void;
+        updateManifestUpdateInfo(updateFields: any[]): void;
+
+        updatePlayListTraceMetrics(traceToUpdate: object): void;
     }
 
     export interface SegmentBaseLoader {
         initialize(): void;
 
-        setConfig(config: object): void;
-
         loadInitialization(representation: Representation, mediaType: MediaType): Promise<any>;
 
         loadSegments(representation: Representation, mediaType: MediaType, range: Range): Promise<any>;
 
         reset(): any;
+
+        setConfig(config: object): void;
     }
 
     export interface WebSegmentBaseLoader {
         initialize(): void;
 
-        setConfig(config: object): void;
-
         loadInitialization(representation: Representation, mediaType: MediaType): Promise<any>;
 
         loadSegments(representation: Representation, mediaType: MediaType, range: Range): Promise<any>;
 
         reset(): any;
+
+        setConfig(config: object): void;
     }
 
     /**
@@ -1171,17 +1162,9 @@ declare namespace dashjs {
      **/
 
     export interface MssError extends ErrorsBase {
-        /**
-         * Error code returned when no tfrf box is detected in MSS live stream
-         */
         MSS_NO_TFRF_CODE: 200;
-
-        /**
-         * Error code returned when one of the codecs defined in the manifest is not supported
-         */
-        MSS_UNSUPPORTED_CODEC_CODE: 201;
-
         MSS_NO_TFRF_MESSAGE: 'Missing tfrf in live media segment';
+        MSS_UNSUPPORTED_CODEC_CODE: 201;
         MSS_UNSUPPORTED_CODEC_MESSAGE: 'Unsupported codec';
     }
 
@@ -1190,23 +1173,13 @@ declare namespace dashjs {
      **/
 
     export interface MssParser {
-        setup(): void;
-
-        getAttributeAsBoolean(node: object, attrName: string): boolean;
-
-        // mapPeriod(smoothStreamingMedia: HTMLElement, timescale: number): Period;
-
-        // mapAdaptationSet(streamIndex: HTMLElement, timescale: number): AdaptationSet;
-
-        // mapRepresentation(qualityLevel: HTMLElement, streamIndex: HTMLElement): Representation;
+        getIron(): null;
 
         parse(data: any): object;
 
-        getMatchers(): null; //Entire function consists of "return null"
-
-        getIron(): null;
-
         reset(): void;
+
+        setup(): void;
     }
 
     /**
@@ -1214,25 +1187,25 @@ declare namespace dashjs {
      **/
 
     export interface MssFragmentInfoController {
-        initialize(): void;
-
         controllerType: 'MssFragmentInfoController';
-
-        start(): void;
-
-        reset(): void; //Calls stop()
 
         fragmentInfoLoaded(e: object): void;
 
         getType(): string;
+
+        initialize(): void;
+
+        reset(): void;
+
+        start(): void;
     }
 
     export interface MssFragmentMoofProcessor {
         convertFragment(e: object, streamProcessor: any): void;
 
-        updateSegmentList(e: object, streamProcessor: any): void;
-
         getType(): string;
+
+        updateSegmentList(e: object, streamProcessor: any): void;
     }
 
     export interface MssFragmentMoovProcessor {
@@ -1246,13 +1219,13 @@ declare namespace dashjs {
     }
 
     export interface MssHandler {
-        reset(): void;
+        createMssFragmentProcessor(): void;
 
         createMssParser(): void;
 
-        createMssFragmentProcessor(): void;
-
         registerEvents(): void;
+
+        reset(): void;
     }
 
     /**
@@ -1261,12 +1234,12 @@ declare namespace dashjs {
 
     class OfflineConstants {
         OFFLINE_SCHEME: 'offline_indexeddb';
-        OFFLINE_URL_REGEX: RegExp;
         OFFLINE_STATUS_CREATED: 'created';
+        OFFLINE_STATUS_ERROR: 'error';
+        OFFLINE_STATUS_FINISHED: 'finished';
         OFFLINE_STATUS_STARTED: 'started';
         OFFLINE_STATUS_STOPPED: 'stopped';
-        OFFLINE_STATUS_FINISHED: 'finished';
-        OFFLINE_STATUS_ERROR: 'error';
+        OFFLINE_URL_REGEX: RegExp;
     }
 
     /**
@@ -1275,71 +1248,58 @@ declare namespace dashjs {
 
     export interface OfflineRecord {
         id: string;
-        progress: number;
-        url: string;
         originalUrl: string;
+        progress: number;
         status: string;
+        url: string;
     }
 
     interface OfflineController {
-        // // Download List Functions
-        // getDownloadFromId(id: string): object;
+        createRecord(manifestURL: string): Promise<string>;
 
-        // createDownloadFromId(id: string): object;
-
-        // createDownloadFromStorage(offline: any): object;
-
-        // removeDownloadFromId(id: string): void;
-
-        // generateManifestId(): number;
-
-        // OfflineControllerAPI
-
-        loadRecordsFromStorage(): Promise<void>;
+        deleteRecord(id: string): void;
 
         getAllRecords(): OfflineRecord[];
 
-        createRecord(manifestURL: string): Promise<string>;
+        getRecordProgression(id: string): number;
+
+        loadRecordsFromStorage(): Promise<void>;
+
+        reset(): void;
+
+        resetRecords(): void;
+
+        resumeRecord(id: string): void;
 
         startRecord(id: string, mediaInfos: MediaInfo[]): void;
 
         stopRecord(id: string): void;
-
-        resumeRecord(id: string): void;
-
-        deleteRecord(id: string): void;
-
-        getRecordProgression(id: string): number;
-
-        resetRecords(): void;
-
-        reset(): void;
     }
 
     interface OfflineStoreController {
-        createFramentStore(manifestId: number | string, storeName: string): void;
-
-        storeFrament(manifestId: number | string, framentId: number | string, fragmentData: any): object;
+        createFragmentStore(manifestId: number | string, storeName: string): void;
 
         createOfflineManifest(manifest: object): object;
 
-        updateOfflineManifest(manifest: object): object;
-
-        getManifestById(manifestId: number | string): object;
-
-        saveSelectedRepresentations(manifestId: number | string, selected: Representation): object;
-
-        getCurrentHigherManifestId(): object;
+        deleteDownloadById(manifestId: number | string): object;
 
         getAllManifests(): object;
 
-        deleteDownloadById(manifestId: number | string): object;
+        getCurrentHigherManifestId(): object;
+
+        getManifestById(manifestId: number | string): object;
+
+        getRepresentationCurrentState(manifestId: number | string, representationId: number | string): object;
+
+        saveSelectedRepresentations(manifestId: number | string, selected: Representation): object;
 
         setDownloadingStatus(manifestId: number | string, status: any): object;
 
         setRepresentationCurrentState(manifestId: number | string, representationId: number | string, state: any): object;
 
-        getRepresentationCurrentState(manifestId: number | string, representationId: number | string): object;
+        storeFragment(manifestId: number | string, fragmentId: number | string, fragmentData: any): object;
+
+        updateOfflineManifest(manifest: object): object;
     }
 
     /**
@@ -1399,11 +1359,11 @@ declare namespace dashjs {
      */
 
     export class IndexDBOfflineLoader {
+        abort(): void;
+
         config: object | {};
 
         load(config: object | {}): void;
-
-        abort(): void;
     }
 
     /**
@@ -1413,35 +1373,33 @@ declare namespace dashjs {
     export class IndexDBStore {
         createFragmentStore(storeName: string): void;
 
-        setDownloadingStatus(manifestId: number, newStatus: number): Promise<string | Error>;
-
-        setRepresentationCurrentState(manifestId: number, representationId: string, state: number): Promise<string | Error>;
-
-        getRepresentationCurrentState(manifestId: number, state: number): Promise<number | Error>;
-
-        getFragmentByKey(manifestId: number, key: number): Promise<any>;
-
-        getManifestById(id: number): Promise<Object[] | String | Error>;
-
-        getAllManifests(): Promise<Object[] | String | Error>;
-
-        getCurrentHigherManifestId(): Promise<number>;
-
-        updateManifest(manifest: object): Promise<Object[] | Error>;
-
-        saveSelectedRepresentation(manifest: object, selected: object): Promise<string | Error>;
-
-        storeManifest(manifest: object): Object[];
-
-        storeFragment(manifestI: number, fragmentId: string, fragmentData: object): Promise<string | Error>;
+        deleteDownloadById(manifestId: number): Promise<string | any>;
 
         dropAll(): Promise<any>;
 
         dropFragmentStore(storeName: string): void;
 
-        deleteDownloadById(manifestId: number): Promise<string | any>;
+        getAllManifests(): Promise<Object[] | String | Error>;
 
-        // deleteFragmentStore(storename: string): Promise<any>;
+        getCurrentHigherManifestId(): Promise<number>;
+
+        getFragmentByKey(manifestId: number, key: number): Promise<any>;
+
+        getManifestById(id: number): Promise<Object[] | String | Error>;
+
+        getRepresentationCurrentState(manifestId: number, state: number): Promise<number | Error>;
+
+        saveSelectedRepresentation(manifest: object, selected: object): Promise<string | Error>;
+
+        setDownloadingStatus(manifestId: number, newStatus: number): Promise<string | Error>;
+
+        setRepresentationCurrentState(manifestId: number, representationId: string, state: number): Promise<string | Error>;
+
+        storeFragment(manifestI: number, fragmentId: string, fragmentData: object): Promise<string | Error>;
+
+        storeManifest(manifest: object): Object[];
+
+        updateManifest(manifest: object): Promise<Object[] | Error>;
     }
 
     /**
@@ -1457,9 +1415,9 @@ declare namespace dashjs {
     export class OfflineUrlUtils {
         getRegex(): RegExp | undefined;
 
-        removeHostName(url: string): string;
-
         isRelative(): boolean;
+
+        removeHostName(url: string): string;
 
         resolve(url: string, baseUrl: string): string;
     }
@@ -1470,10 +1428,10 @@ declare namespace dashjs {
 
     export class OfflineDownload {
         id: object;
-        url: object;
         originalUrl: object;
-        status: object;
         progress: object;
+        status: object;
+        url: object;
     }
 
     /**
@@ -1483,87 +1441,87 @@ declare namespace dashjs {
     export interface OfflineDownload {
         config: object | {};
 
+        deleteDownload(): void;
+
+        downloadFromUrl(url: string): object;
+
+        getDownloadProgression(): number;
+
         getId(): number;
 
         getManifestUrl(): string;
 
+        getMediaInfos(): void;
+
         getStatus(): number;
-
-        setInitialState(state: object): void;
-
-        downloadFromUrl(url: string): object;
 
         initDownload(): void;
 
         isDownloading(): boolean;
 
-        getMediaInfos(): void;
+        reset(): void;
+
+        resetDownload(): void;
+
+        resumeDownload(): void;
+
+        setInitialState(state: object): void;
 
         startDownload(mediaInfos: MediaInfo[]): any;
 
         stopDownload(): void;
-
-        resumeDownload(): void;
-
-        deleteDownload(): void;
-
-        getDownloadProgression(): number;
-
-        resetDownload(): void;
-
-        reset(): void;
     }
 
     export class OfflineStream {
-        initialize(initStreamInfo: StreamInfo): void;
+        getMediaInfos(): MediaInfo[];
 
         getStreamId(): string;
 
-        getMediaInfos(): MediaInfo[];
+        getStreamInfo(): StreamInfo;
+
+        initialize(initStreamInfo: StreamInfo): void;
 
         initializeAllMediaInfoList(mediaInfoList: object): void;
 
-        getStreamInfo(): StreamInfo;
-
-        stopOfflineStreamProcessors(): void;
+        reset(): void;
 
         startOfflineStreamProcessors(): void;
 
-        reset(): void;
+        stopOfflineStreamProcessors(): void;
     }
 
     export class OfflineStreamProcessor {
         config: object | void;
 
-        initialize(_mediaInfo: MediaInfo): void;
+        getAvailableSegmentsNumber(): number;
+
+        getMediaInfo(): MediaInfo;
 
         getRepresentationController(): RepresentationController;
 
         getRepresentationId(): number | string;
 
-        stop(): void;
+        getType(): any;
 
-        removeExecutedRequestsBeforeTime(time: any): void;
-
-        start(): void;
+        initialize(_mediaInfo: MediaInfo): void;
 
         isUpdating(): boolean;
 
-        getType(): any;
-
-        getMediaInfo(): MediaInfo;
-
-        getAvailableSegmentsNumber(): number;
+        removeExecutedRequestsBeforeTime(time: any): void;
 
         reset(): void;
+
+        start(): void;
+
+        stop(): void;
     }
 
     export interface Bitrate {
-        id?: string;
-        width?: number;
-        height?: number;
         bandwidth?: number;
+        height?: number;
+        id?: string;
         scanType?: string;
+        width?: number;
     }
 
     export type MediaType = 'video' | 'audio' | 'text' | 'image';
@@ -1877,18 +1835,18 @@ declare namespace dashjs {
     }
 
     export interface MediaFinishedInformation {
-        numberOfSegments: number,
         mediaTimeOfLastSignaledSegment: number
+        numberOfSegments: number,
     }
 
     export type TrackSelectionFunction = (tracks: MediaInfo[]) => MediaInfo[];
 
     export interface DvrWindow {
-        start: number;
         end: number;
-        startAsUtc: number;
         endAsUtc: number;
         size: number;
+        start: number;
+        startAsUtc: number;
     }
 
     export interface MediaPlayerClass {
@@ -1938,7 +1896,7 @@ declare namespace dashjs {
 
         on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
 
-        on(type: OfflineRecordLoademetadataEvent['type'], listener: (e: OfflineRecordLoademetadataEvent) => void, scope?: object): void;
+        on(type: OfflineRecordLoadedmetadataEvent['type'], listener: (e: OfflineRecordLoadedmetadataEvent) => void, scope?: object): void;
 
         on(type: PeriodSwitchEvent['type'], listener: (e: PeriodSwitchEvent) => void, scope?: object): void;
 
@@ -1978,259 +1936,271 @@ declare namespace dashjs {
 
         off(type: string, listener: (e: any) => void, scope?: object): void;
 
-        extend(parentNameString: string, childInstance: object, override: boolean): void;
-
-        attachView(element: HTMLMediaElement): void;
-
-        attachSource(urlOrManifest: string | object, startTime?: number | string): void;
-
-        refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
-
-        isReady(): boolean;
-
-        preload(): void;
-
-        play(): void;
-
-        isPaused(): boolean;
-
-        pause(): void;
-
-        isSeeking(): boolean;
-
-        isDynamic(): boolean;
-
-        seek(value: number): void;
-
-        seekToPresentationTime(value: number): void;
-
-        seekToOriginalLive(): void;
-
-        setPlaybackRate(value: number): void;
-
-        getPlaybackRate(): number;
-
-        setMute(value: boolean): void;
-
-        isMuted(): boolean;
-
-        setVolume(value: number): void;
-
-        getVolume(): number;
-
-        time(periodId?: string): number;
-
-        timeInDvrWindow(): number;
-
-        getDvrWindow(): DvrWindow;
-
-        duration(): number;
-
-        timeAsUTC(): number;
-
-        getActiveStream(): Stream | null;
-
-        getDvrSeekOffset(value: number): number;
-
-        getTargetLiveDelay(): number;
-
-        convertToTimeCode(value: number): string;
-
-        formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
-
-        getVersion(): string;
-
-        getDebug(): Debug;
-
-        getBufferLength(type: MediaType): number;
-
-        getTTMLRenderingDiv(): HTMLDivElement | null;
-
-        getVideoElement(): HTMLVideoElement;
-
-        getSource(): string | object;
-
-        updateSource(urlOrManifest: string | object): void;
-
-        getCurrentLiveLatency(): number;
-
-        getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
-
-        setAutoPlay(value: boolean): void;
-
-        getAutoPlay(): boolean;
-
-        getDashMetrics(): DashMetrics;
-
-        getCurrentRepresentationForType(type: MediaType): Representation | null;
-
-        setRepresentationForTypeById(type: MediaType, id: number, forceReplace?: boolean): void;
-
-        setRepresentationForTypeByIndex(type: MediaType, index: number, forceReplace?: boolean): void;
-
-        enableText(enable: boolean): boolean;
-
-        enableForcedTextStreaming(enable: boolean): boolean;
-
-        isTextEnabled(): boolean;
-
-        setTextTrack(idx: number): void;
-
-        getStreamsFromManifest(manifest: object): StreamInfo[];
-
-        getTracksFor(type: MediaType): MediaInfo[];
-
-        getTracksForTypeFromManifest(type: MediaType, manifest: object, streamInfo: StreamInfo): MediaInfo[];
-
-        getCurrentTrackFor(type: MediaType): MediaInfo | null;
-
-        setInitialMediaSettingsFor(type: MediaType, value: MediaSettings): void;
-
-        getInitialMediaSettingsFor(type: MediaType): MediaSettings;
-
-        setCurrentTrack(track: MediaInfo, noSettingsSave?: boolean): void;
-
         addABRCustomRule(type: string, rulename: string, rule: object): void;
-
-        removeABRCustomRule(rulename: string): void;
-
-        removeAllABRCustomRule(): void;
-
-        getAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
-
-        retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
-
-        addUTCTimingSource(schemeIdUri: string, value: string): void;
-
-        removeUTCTimingSource(schemeIdUri: string, value: string): void;
-
-        clearDefaultUTCTimingSources(): void;
-
-        restoreDefaultUTCTimingSources(): void;
-
-        setXHRWithCredentialsForType(type: string, value: boolean): void;
-
-        getXHRWithCredentialsForType(type: string): boolean;
-
-        getProtectionController(): ProtectionController;
-
-        attachProtectionController(value: ProtectionController): void;
-
-        setProtectionData(value: ProtectionDataSet): void;
 
         addRequestInterceptor(interceptor: RequestInterceptor): void;
 
-        removeRequestInterceptor(interceptor: RequestInterceptor): void;
-
         addResponseInterceptor(interceptor: ResponseInterceptor): void;
 
-        removeResponseInterceptor(interceptor: ResponseInterceptor): void;
+        addUTCTimingSource(schemeIdUri: string, value: string): void;
 
-        registerLicenseRequestFilter(filter: RequestFilter): void;
+        attachProtectionController(value: ProtectionController): void;
 
-        registerLicenseResponseFilter(filter: ResponseFilter): void;
-
-        unregisterLicenseRequestFilter(filter: RequestFilter): void;
-
-        unregisterLicenseResponseFilter(filter: ResponseFilter): void;
-
-        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
-
-        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
-
-        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
-
-        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
+        attachSource(urlOrManifest: string | object, startTime?: number | string): void;
 
         attachTTMLRenderingDiv(div: HTMLDivElement): void;
 
-        getCurrentTextTrackIndex(): number;
+        attachView(element: HTMLMediaElement): void;
 
-        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
+        clearDefaultUTCTimingSources(): void;
 
-        getDashAdapter(): DashAdapter;
+        convertToTimeCode(value: number): string;
 
-        getOfflineController(): OfflineController;
+        destroy(): void;
 
-        triggerSteeringRequest(): Promise<any>;
+        duration(): number;
 
-        getCurrentSteeringResponseData(): object;
+        enableForcedTextStreaming(enable: boolean): boolean;
+
+        enableText(enable: boolean): boolean;
+
+        extend(parentNameString: string, childInstance: object, override: boolean): void;
+
+        formatUTC(time: number, locales: string, hour12: boolean, withDate?: boolean): string;
+
+        getABRCustomRules(): any[];
+
+        getActiveStream(): Stream | null;
+
+        getAutoPlay(): boolean;
 
         getAvailableBaseUrls(): BaseURL[];
 
         getAvailableLocations(): MpdLocation[];
 
+        getAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
+
+        getBufferLength(type: MediaType): number;
+
+        getCurrentLiveLatency(): number;
+
+        getCurrentRepresentationForType(type: MediaType): Representation | null;
+
+        getCurrentSteeringResponseData(): object;
+
+        getCurrentTextTrackIndex(): number;
+
+        getCurrentTrackFor(type: MediaType): MediaInfo | null;
+
+        getDashAdapter(): DashAdapter;
+
+        getDashMetrics(): DashMetrics;
+
+        getDebug(): Debug;
+
+        getDvrSeekOffset(value: number): number;
+
+        getDvrWindow(): DvrWindow;
+
+        getInitialMediaSettingsFor(type: MediaType): MediaSettings;
+
+        getLowLatencyModeEnabled(): boolean;
+
+        getManifest(): object;
+
+        getOfflineController(): OfflineController;
+
+        getPlaybackRate(): number;
+
+        getProtectionController(): ProtectionController;
+
+        getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
+
         getSettings(): MediaPlayerSettingClass;
 
-        updateSettings(settings: MediaPlayerSettingClass): void;
+        getSource(): string | object;
 
-        resetSettings(): void;
+        getStreamsFromManifest(manifest: object): StreamInfo[];
+
+        getTTMLRenderingDiv(): HTMLDivElement | null;
+
+        getTargetLiveDelay(): number;
+
+        getTracksFor(type: MediaType): MediaInfo[];
+
+        getTracksForTypeFromManifest(type: MediaType, manifest: object, streamInfo: StreamInfo): MediaInfo[];
+
+        getVersion(): string;
+
+        getVideoElement(): HTMLVideoElement;
+
+        getVolume(): number;
+
+        getXHRWithCredentialsForType(type: string): boolean;
+
+        initialize(view: HTMLVideoElement, source: string, autoPlay: boolean, startTime: number | string): void;
+
+        isDynamic(): boolean;
+
+        isMuted(): boolean;
+
+        isPaused(): boolean;
+
+        isReady(): boolean;
+
+        isSeeking(): boolean;
+
+        isTextEnabled(): boolean;
+
+        off(type: string, listener: (e: any) => void, scope?: object): void;
+
+        on(type: string, listener: (e: any) => void, scope?: object, options?: object): void;
+
+        pause(): void;
+
+        play(): void;
+
+        preload(): void;
+
+        provideThumbnail(time: number, callback: (thumbnail: Thumbnail | null) => void): void;
+
+        refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
+
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
+
+        registerLicenseRequestFilter(filter: RequestFilter): void;
+
+        registerLicenseResponseFilter(filter: ResponseFilter): void;
+
+        removeABRCustomRule(rulename: string): void;
+
+        removeAllABRCustomRule(): void;
+
+        removeRequestInterceptor(interceptor: RequestInterceptor): void;
+
+        removeResponseInterceptor(interceptor: ResponseInterceptor): void;
+
+        removeUTCTimingSource(schemeIdUri: string, value: string): void;
 
         reset(): void;
 
-        destroy(): void;
+        resetCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
 
-        getManifest(): object;
+        resetSettings(): void;
+
+        restoreDefaultUTCTimingSources(): void;
+
+        retrieveManifest(url: string, callback: (manifest: object | null, error: any) => void): void;
+
+        seek(value: number): void;
+
+        seekToOriginalLive(): void;
+
+        seekToPresentationTime(value: number): void;
+
+        setAutoPlay(value: boolean): void;
+
+        setConfig(config: object): void;
+
+        setCurrentTrack(track: MediaInfo, noSettingsSave?: boolean): void;
+
+        setCustomInitialTrackSelectionFunction(fn: TrackSelectionFunction): void;
+
+        setInitialMediaSettingsFor(type: MediaType, value: MediaSettings): void;
+
+        setMute(value: boolean): void;
+
+        setPlaybackRate(value: number): void;
+
+        setProtectionData(value: ProtectionDataSet): void;
+
+        setRepresentationForTypeById(type: MediaType, id: number, forceReplace?: boolean): void;
+
+        setRepresentationForTypeByIndex(type: MediaType, index: number, forceReplace?: boolean): void;
+
+        setTextTrack(idx: number): void;
+
+        setVolume(value: number): void;
+
+        setXHRWithCredentialsForType(type: string, value: boolean): void;
+
+        time(periodId?: string): number;
+
+        timeAsUTC(): number;
+
+        timeInDvrWindow(): number;
+
+        trigger(type: MediaPlayerEvent, payload: object, filters: object): void;
+
+        triggerSteeringRequest(): Promise<any>;
+
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
+
+        unregisterLicenseRequestFilter(filter: RequestFilter): void;
+
+        unregisterLicenseResponseFilter(filter: ResponseFilter): void;
+
+        updateSettings(settings: MediaPlayerSettingClass): void;
+
+        updateSource(urlOrManifest: string | object): void;
 
     }
 
     interface MediaPlayerErrors {
-        MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE: 10;
-        MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE: 11;
-        XLINK_LOADER_LOADING_FAILURE_ERROR_CODE: 12;
-        SEGMENT_BASE_LOADER_ERROR_CODE: 15;
-        TIME_SYNC_FAILED_ERROR_CODE: 16;
-        FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE: 17;
-        FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE: 18;
-        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE: 19;
         APPEND_ERROR_CODE: 20;
-        REMOVE_ERROR_CODE: 21;
-        DATA_UPDATE_FAILED_ERROR_CODE: 22;
-        CAPABILITY_MEDIASOURCE_ERROR_CODE: 23;
         CAPABILITY_MEDIAKEYS_ERROR_CODE: 24;
-        DOWNLOAD_ERROR_ID_MANIFEST_CODE: 25;
-        DOWNLOAD_ERROR_ID_SIDX_CODE: 26;
+        CAPABILITY_MEDIASOURCE_ERROR_CODE: 23;
+        DATA_UPDATE_FAILED_ERROR_CODE: 22;
         DOWNLOAD_ERROR_ID_CONTENT_CODE: 27;
         DOWNLOAD_ERROR_ID_INITIALIZATION_CODE: 28;
+        DOWNLOAD_ERROR_ID_MANIFEST_CODE: 25;
+        DOWNLOAD_ERROR_ID_SIDX_CODE: 26;
         DOWNLOAD_ERROR_ID_XLINK_CODE: 29;
-        MANIFEST_ERROR_ID_PARSE_CODE: 31;
-        MANIFEST_ERROR_ID_NOSTREAMS_CODE: 32;
-        TIMED_TEXT_ERROR_ID_PARSE_CODE: 33;
-        MANIFEST_ERROR_ID_MULTIPLEXED_CODE: 34;
-        MEDIASOURCE_TYPE_UNSUPPORTED_CODE: 35;
-        MEDIA_KEYERR_CODE: 100;
-        MEDIA_KEYERR_UNKNOWN_CODE: 101;
-        MEDIA_KEYERR_CLIENT_CODE: 102;
-        MEDIA_KEYERR_SERVICE_CODE: 103;
-        MEDIA_KEYERR_OUTPUT_CODE: 104;
-        MEDIA_KEYERR_HARDWARECHANGE_CODE: 105;
-        MEDIA_KEYERR_DOMAIN_CODE: 106;
-        MEDIA_KEY_MESSAGE_ERROR_CODE: 107;
-        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE: 108;
-        SERVER_CERTIFICATE_UPDATED_ERROR_CODE: 109;
-        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE: 110;
-        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
-        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE: 112;
+        FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE: 17;
+        FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE: 18;
+        INDEXEDDB_ABORT_ERROR: 11012;
+        INDEXEDDB_DATA_ERROR: 11006;
+        INDEXEDDB_INVALID_STATE_ERROR: 11002;
+        INDEXEDDB_NETWORK_ERROR: 11005;
+        INDEXEDDB_NOT_ALLOWED_ERROR: 11008;
+        INDEXEDDB_NOT_FOUND_ERROR: 11004;
+        INDEXEDDB_NOT_READABLE_ERROR: 11003;
+        INDEXEDDB_NOT_SUPPORTED_ERROR: 11009;
+        INDEXEDDB_QUOTA_EXCEED_ERROR: 11001;
+        INDEXEDDB_TIMEOUT_ERROR: 11011;
+        INDEXEDDB_TRANSACTION_INACTIVE_ERROR: 11007;
+        INDEXEDDB_UNKNOWN_ERROR: 11013;
+        INDEXEDDB_VERSION_ERROR: 11010;
         KEY_SESSION_CREATED_ERROR_CODE: 113;
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE: 110;
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE: 112;
+        MANIFEST_ERROR_ID_MULTIPLEXED_CODE: 34;
+        MANIFEST_ERROR_ID_NOSTREAMS_CODE: 32;
+        MANIFEST_ERROR_ID_PARSE_CODE: 31;
+        MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE: 11;
+        MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE: 10;
+        MEDIASOURCE_TYPE_UNSUPPORTED_CODE: 35;
+        MEDIA_KEYERR_CLIENT_CODE: 102;
+        MEDIA_KEYERR_CODE: 100;
+        MEDIA_KEYERR_DOMAIN_CODE: 106;
+        MEDIA_KEYERR_HARDWARECHANGE_CODE: 105;
+        MEDIA_KEYERR_OUTPUT_CODE: 104;
+        MEDIA_KEYERR_SERVICE_CODE: 103;
+        MEDIA_KEYERR_UNKNOWN_CODE: 101;
+        MEDIA_KEY_MESSAGE_ERROR_CODE: 107;
         MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE: 114;
-        // MSS errors
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE: 108;
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
         MSS_NO_TFRF_CODE: 200;
         MSS_UNSUPPORTED_CODEC_CODE: 201;
-        // Offline errors
         OFFLINE_ERROR: 11000;
-        INDEXEDDB_QUOTA_EXCEED_ERROR: 11001;
-        INDEXEDDB_INVALID_STATE_ERROR: 11002;
-        INDEXEDDB_NOT_READABLE_ERROR: 11003;
-        INDEXEDDB_NOT_FOUND_ERROR: 11004;
-        INDEXEDDB_NETWORK_ERROR: 11005;
-        INDEXEDDB_DATA_ERROR: 11006;
-        INDEXEDDB_TRANSACTION_INACTIVE_ERROR: 11007;
-        INDEXEDDB_NOT_ALLOWED_ERROR: 11008;
-        INDEXEDDB_NOT_SUPPORTED_ERROR: 11009;
-        INDEXEDDB_VERSION_ERROR: 11010;
-        INDEXEDDB_TIMEOUT_ERROR: 11011;
-        INDEXEDDB_ABORT_ERROR: 11012;
-        INDEXEDDB_UNKNOWN_ERROR: 11013;
+        REMOVE_ERROR_CODE: 21;
+        SEGMENT_BASE_LOADER_ERROR_CODE: 15;
+        SERVER_CERTIFICATE_UPDATED_ERROR_CODE: 109;
+        TIMED_TEXT_ERROR_ID_PARSE_CODE: 33;
+        TIME_SYNC_FAILED_ERROR_CODE: 16;
+        URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE: 19;
+        XLINK_LOADER_LOADING_FAILURE_ERROR_CODE: 12;
     }
 
     interface MediaPlayerEvents {
@@ -2324,45 +2294,43 @@ declare namespace dashjs {
 
     export interface MediaPlayerEvent {
         type: string
-
     }
 
     export interface AstInFutureEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['AST_IN_FUTURE'];
         delay: number;
+        type: MediaPlayerEvents['AST_IN_FUTURE'];
     }
 
     export interface BufferEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['BUFFER_EMPTY' | 'BUFFER_LOADED'];
         mediaType: MediaType;
+        type: MediaPlayerEvents['BUFFER_EMPTY' | 'BUFFER_LOADED'];
     }
 
     export interface BufferStateChangedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['BUFFER_LEVEL_STATE_CHANGED'];
         mediaType: MediaType;
         sender: object;
         state: 'bufferStalled' | 'bufferLoaded';
         streamInfo: StreamInfo;
+        type: MediaPlayerEvents['BUFFER_LEVEL_STATE_CHANGED'];
     }
 
     export interface GenericErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ERROR'];
         error: 'capability' | 'mediasource' | 'key_session' | 'key_message';
         event: string;
+        type: MediaPlayerEvents['ERROR'];
     }
 
     export interface DownloadErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ERROR'];
         error: 'download';
         event: {
             id: string;
             url: string;
             request: XMLHttpRequest;
         };
+        type: MediaPlayerEvents['ERROR'];
     }
 
     export interface ManifestErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ERROR'];
         error: 'manifestError';
         event: {
             id: string;
@@ -2370,20 +2338,20 @@ declare namespace dashjs {
             manifest?: object;
             event?: string;
         };
+        type: MediaPlayerEvents['ERROR'];
     }
 
     export interface TimedTextErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ERROR'];
         error: 'cc';
         event: {
             id: string;
             message: string;
             cc: string;
         };
+        type: MediaPlayerEvents['ERROR'];
     }
 
     export interface MediaPlayerErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ERROR'];
         error: {
             code: MediaPlayerErrors['MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE'] |
                 MediaPlayerErrors['MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE'] |
@@ -2444,6 +2412,7 @@ declare namespace dashjs {
             message: string,
             data: object,
         }
+        type: MediaPlayerEvents['ERROR'];
     }
 
     export type ErrorEvent =
@@ -2454,9 +2423,9 @@ declare namespace dashjs {
         | MediaPlayerErrorEvent;
 
     export interface CaptionRenderedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['CAPTION_RENDERED'];
         captionDiv: HTMLDivElement;
         currentTrackIdx: number;
+        type: MediaPlayerEvents['CAPTION_RENDERED'];
     }
 
     export interface CaptionContainerResizeEvent extends MediaPlayerEvent {
@@ -2464,18 +2433,18 @@ declare namespace dashjs {
     }
 
     export interface dvbFontDownloadAdded extends MediaPlayerEvent {
-        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
         font: FontInfo;
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_ADDED'];
     }
 
     export interface dvbFontDownloadComplete extends MediaPlayerEvent {
-        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
         font: FontInfo;
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_COMPLETE'];
     }
 
     export interface dvbFontDownloadFailed extends MediaPlayerEvent {
-        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
         font: FontInfo;
+        type: MediaPlayerEvents['DVB_FONT_DOWNLOAD_FAILED'];
     }
 
     export interface DynamicToStaticEvent extends MediaPlayerEvent {
@@ -2483,52 +2452,52 @@ declare namespace dashjs {
     }
 
     export interface FragmentLoadingCompletedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];
         request: FragmentRequest;
         response: ArrayBuffer;
         sender: object;
+        type: MediaPlayerEvents['FRAGMENT_LOADING_COMPLETED'];
     }
 
     export interface FragmentLoadingAbandonedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['FRAGMENT_LOADING_ABANDONED'];
-        streamProcessor: object;
-        request: object;
         mediaType: MediaType;
+        request: object;
+        streamProcessor: object;
+        type: MediaPlayerEvents['FRAGMENT_LOADING_ABANDONED'];
     }
 
     export interface InbandPrftReceivedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['INBAND_PRFT_RECEIVED'];
-        streamInfo: StreamInfo;
-        mediaType: MediaType;
         data: object
+        mediaType: MediaType;
+        streamInfo: StreamInfo;
+        type: MediaPlayerEvents['INBAND_PRFT_RECEIVED'];
     }
 
     export interface KeyErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['KEY_ERROR'];
         error: DashJSError;
+        type: MediaPlayerEvents['KEY_ERROR'];
     }
 
     export interface KeyMessageEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['KEY_MESSAGE'];
         data: KeyMessage;
+        type: MediaPlayerEvents['KEY_MESSAGE'];
     }
 
     export interface KeySessionClosedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['KEY_SESSION_CLOSED' | 'KEY_SESSION_REMOVED'];
         data: string | null;
         error?: string;
+        type: MediaPlayerEvents['KEY_SESSION_CLOSED' | 'KEY_SESSION_REMOVED'];
     }
 
     export interface KeySessionEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['KEY_SESSION_CREATED'];
         data: SessionToken | null;
         error?: DashJSError;
+        type: MediaPlayerEvents['KEY_SESSION_CREATED'];
     }
 
     export interface KeyStatusesChangedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
         data: SessionToken;
         error?: DashJSError;
+        type: MediaPlayerEvents['KEY_STATUSES_CHANGED'];
     }
 
     export interface KeySystemSelectedEvent extends MediaPlayerEvent {
@@ -2538,185 +2507,185 @@ declare namespace dashjs {
     }
 
     export interface LicenseRequestCompleteEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['LICENSE_REQUEST_COMPLETE'];
         data: {
             sessionToken: SessionToken;
             messageType: string;
         };
         error?: DashJSError;
+        type: MediaPlayerEvents['LICENSE_REQUEST_COMPLETE'];
     }
 
     export interface LogEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['LOG'];
         message: string;
+        type: MediaPlayerEvents['LOG'];
     }
 
     export interface ManifestLoadedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['MANIFEST_LOADED'];
         data: object;
+        type: MediaPlayerEvents['MANIFEST_LOADED'];
     }
 
     export interface MetricEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['METRIC_ADDED' | 'METRIC_UPDATED'];
         mediaType: MediaType;
         metric: MetricType;
+        type: MediaPlayerEvents['METRIC_ADDED' | 'METRIC_UPDATED'];
         value: object;
     }
 
     export interface MetricChangedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['METRIC_CHANGED'];
         mediaType: MediaType;
+        type: MediaPlayerEvents['METRIC_CHANGED'];
     }
 
     export interface OfflineRecordEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['OFFLINE_RECORD_FINISHED' | 'OFFLINE_RECORD_STARTED' | 'OFFLINE_RECORD_STOPPED'];
         id: string;
+        type: MediaPlayerEvents['OFFLINE_RECORD_FINISHED' | 'OFFLINE_RECORD_STARTED' | 'OFFLINE_RECORD_STOPPED'];
     }
 
-    export interface OfflineRecordLoademetadataEvent extends MediaPlayerEvent {
+    export interface OfflineRecordLoadedmetadataEvent extends MediaPlayerEvent {
+        mediaInfos: MediaInfo[];
         type: MediaPlayerEvents['OFFLINE_RECORD_LOADEDMETADATA'];
-        madiaInfos: MediaInfo[];
     }
 
     export interface PeriodSwitchEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PERIOD_SWITCH_COMPLETED' | 'PERIOD_SWITCH_STARTED'];
-        toStreamInfo: StreamInfo | null;
         fromStreamInfo?: StreamInfo | null;
+        toStreamInfo: StreamInfo | null;
+        type: MediaPlayerEvents['PERIOD_SWITCH_COMPLETED' | 'PERIOD_SWITCH_STARTED'];
     }
 
     export interface PlaybackErrorEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_ERROR'];
         error: MediaError;
+        type: MediaPlayerEvents['PLAYBACK_ERROR'];
     }
 
     export interface PlaybackPausedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_PAUSED'];
         ended: boolean | null;
+        type: MediaPlayerEvents['PLAYBACK_PAUSED'];
     }
 
     export interface PlaybackPlayingEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_PLAYING'];
         playingTime: number | null;
+        type: MediaPlayerEvents['PLAYBACK_PLAYING'];
     }
 
     export interface PlaybackRateChangedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_RATE_CHANGED'];
         playbackRate: number | null;
+        type: MediaPlayerEvents['PLAYBACK_RATE_CHANGED'];
     }
 
     export interface PlaybackSeekingEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_SEEKING'];
         seekTime: number | null;
+        type: MediaPlayerEvents['PLAYBACK_SEEKING'];
     }
 
     export interface PlaybackStartedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_STARTED'];
         startTime: number | null;
+        type: MediaPlayerEvents['PLAYBACK_STARTED'];
     }
 
     export interface PlaybackTimeUpdatedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_TIME_UPDATED'];
         time: number | null;
         timeToEnd: number;
+        type: MediaPlayerEvents['PLAYBACK_TIME_UPDATED'];
     }
 
     export interface PlaybackWaitingEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PLAYBACK_WAITING'];
         playingTime: number | null;
+        type: MediaPlayerEvents['PLAYBACK_WAITING'];
     }
 
     export interface ProtectionCreatedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PROTECTION_CREATED'];
         controller: object;
+        type: MediaPlayerEvents['PROTECTION_CREATED'];
     }
 
     export interface ProtectionDestroyedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['PROTECTION_DESTROYED'];
         data: string;
+        type: MediaPlayerEvents['PROTECTION_DESTROYED'];
     }
 
     export interface TrackChangeRenderedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
         mediaType: MediaType;
-        oldMediaInfo: MediaInfo;
         newMediaInfo: MediaInfo;
+        oldMediaInfo: MediaInfo;
+        type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
     }
 
     export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['QUALITY_CHANGE_RENDERED'];
         mediaType: MediaType;
-        oldQuality: number;
         newQuality: number;
+        oldQuality: number;
+        type: MediaPlayerEvents['QUALITY_CHANGE_RENDERED'];
     }
 
     export interface QualityChangeRequestedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['QUALITY_CHANGE_REQUESTED'];
         mediaType: MediaType;
-        oldQuality: number;
         newQuality: number;
-        streamInfo: StreamInfo | null;
+        oldQuality: number;
         reason: {
             name?: string;
             droppedFrames?: number;
         } | null;
+        streamInfo: StreamInfo | null;
+        type: MediaPlayerEvents['QUALITY_CHANGE_REQUESTED'];
     }
 
     export interface StreamInitializedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['STREAM_INITIALIZED'];
-        streamInfo: StreamInfo;
         error: Error | null;
+        streamInfo: StreamInfo;
+        type: MediaPlayerEvents['STREAM_INITIALIZED'];
     }
 
     export interface TextTracksAddedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['TEXT_TRACKS_ADDED'];
         enabled: boolean;
         index: number;
         tracks: TextTrackInfo[];
+        type: MediaPlayerEvents['TEXT_TRACKS_ADDED'];
     }
 
     export interface TtmlParsedEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['TTML_PARSED'];
-        ttmlString: string;
         ttmlDoc: object;
+        ttmlString: string;
+        type: MediaPlayerEvents['TTML_PARSED'];
     }
 
     export interface TtmlToParseEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['TTML_TO_PARSE'];
         content: object;
+        type: MediaPlayerEvents['TTML_TO_PARSE'];
     }
 
     export interface CueEnterEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['CUE_ENTER'];
-        id: string,
-        text: string,
-        start: number,
         end: number
+        id: string,
+        start: number,
+        text: string,
+        type: MediaPlayerEvents['CUE_ENTER'];
     }
 
     export interface CueExitEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['CUE_EXIT'];
         id: string,
+        type: MediaPlayerEvents['CUE_EXIT'];
     }
 
     export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEvent {
-        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
         adaptationSet: object;
+        type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
     }
 
     export interface MediaSettings {
-        lang?: string;
-        viewpoint?: any;
-        audioChannelConfiguration?: any[];
         accessibility?: any;
+        audioChannelConfiguration?: any[];
+        lang?: string;
         role?: string;
+        viewpoint?: any;
     }
 
     export class serviceDescriptions {
+        contentSteering: ContentSteering | null;
         id: number;
-        schemeIdUri: string;
         latency: number | null;
         playbackrate: number;
-        contentSteering: ContentSteering | null;
+        schemeIdUri: string;
     }
 
     export interface ICurrentRepresentationSwitch {
@@ -2725,8 +2694,8 @@ declare namespace dashjs {
     }
 
     export interface IBufferState {
-        target: number;
         state: string;
+        target: number;
     }
 
     /**
@@ -3029,109 +2998,109 @@ declare namespace dashjs {
     }
 
     export interface BufferController {
-        initialize(mediaSource: MediaSource): void;
+        appendInitSegmentFromCache(representationId: string): boolean;
 
-        getStreamId(): string;
-
-        getType(): string;
-
-        getBufferControllerType(): string;
-
-        setMediaSource(value: object, mediaInfo: MediaInfo | null): void;
+        clearBuffers(ranges: Range[]): Promise<any>;
 
         createBufferSink(mediaInfo: MediaInfo, oldBufferSinks?: any[]): Promise<any>;
 
         dischargePreBuffer(): void;
 
-        appendInitSegmentFromCache(representationId: string): boolean;
+        getAllRangesWithSafetyFactor(seekTime: number): { start: number, end: number }[];
 
-        prepareForPlaybackSeek(): any;
+        getBuffer(): SourceBufferSink;
 
-        prepareForabandonQualitySwitch(newRepresentation: Representation, oldRepresentation: Representation): Promise<any>;
+        getBufferControllerType(): string;
+
+        getBufferLevel(): number;
+
+        getContinuousBufferTimeForTargetTime(targetTime: number): number;
+
+        getIsBufferingCompleted(): boolean;
+
+        getIsPruningInProgress(): boolean;
+
+        getMediaSource(): MediaSource;
+
+        getRangeAt(time: number, tolerance: number): Range | null;
+
+        getStreamId(): string;
+
+        getType(): string;
+
+        hasBufferAtTime(time: number): boolean;
+
+        initialize(mediaSource: MediaSource): void;
 
         prepareForFastQualitySwitch(newRepresentation: Representation, oldRepresentation: Representation): Promise<any>;
-
-        prepareForReplacementTrackSwitch(codec: string): Promise<any>;
 
         prepareForForceReplacementQualitySwitch(voRepresentation: Representation): Promise<any>;
 
         prepareForNonReplacementTrackSwitch(codec: string): Promise<any>;
 
+        prepareForPlaybackSeek(): any;
+
+        prepareForReplacementTrackSwitch(codec: string): Promise<any>;
+
+        prepareForabandonQualitySwitch(newRepresentation: Representation, oldRepresentation: Representation): Promise<any>;
+
         pruneAllSafely(): Promise<any>;
-
-        getAllRangesWithSafetyFactor(seekTime: number): { start: number, end: number }[];
-
-        hasBufferAtTime(time: number): boolean;
-
-        getRangeAt(time: number, tolerance: number): Range | null;
 
         pruneBuffer(): void;
 
-        clearBuffers(ranges: Range[]): Promise<any>;
-
-        updateBufferTimestampOffset(voRepresentation: Representation): Promise<any>;
-
-        updateAppendWindow(): Promise<any>;
+        reset(errored: any, keepBuffers: boolean): void;
 
         segmentRequestingCompleted(segmentIndex: number): void;
 
-        getBuffer(): SourceBufferSink;
-
-        getBufferLevel(): number;
-
-        getMediaSource(): MediaSource;
-
-        getIsBufferingCompleted(): boolean;
-
         setIsBufferingCopleted(value: object): void;
 
-        getIsPruningInProgress(): boolean;
-
-        getContinuousBufferTimeForTargetTime(targetTime: number): number;
+        setMediaSource(value: object, mediaInfo: MediaInfo | null): void;
 
         setSeekTarget(value: object): void;
 
-        reset(errored: any, keepBuffers: boolean): void;
+        updateAppendWindow(): Promise<any>;
+
+        updateBufferTimestampOffset(voRepresentation: Representation): Promise<any>;
     }
 
     export interface CatchupController {
         initialize(): void;
 
-        setConfig(config: any): void;
-
         reset(): void;
+
+        setConfig(config: any): void;
     }
 
     export interface ClientDataReportingController {
-        setconfig(conifg: any): void;
+        isAdaptationsIncluded(adaptationSet: AdaptationSet): boolean;
 
         isServiceLocationIncluded(requestType: string, serviceLocation: any): boolean;
 
-        isAdaptationsIncluded(adaptationSet: AdaptationSet): boolean;
+        setConfig(config: any): void;
     }
 
     export interface CommonAccessTokenController {
-        processResponseHeaders(httpResponse: object): void;
-
         getCommonAccessTokenForUrl(url: URL): any;
+
+        processResponseHeaders(httpResponse: object): void;
 
         reset(): void;
     }
 
     export interface EventController {
-        start(): void;
+        addInbandEvents(values: object[], periodId: string | number): void;
 
         addInlineEvents(values: object[], periodId: string | number): void;
 
-        addInbandEvents(values: object[], periodId: string | number): void;
-
-        setConfig(config: object): void;
+        getInbandEvents(): object;
 
         getInlineEvents(): object;
 
-        getInbandEvents(): object;
-
         reset(): void;
+
+        setConfig(config: object): void;
+
+        start(): void;
     }
 
     export interface ExtUrlQueryInfoController {
@@ -3141,55 +3110,45 @@ declare namespace dashjs {
     }
 
     export interface FragmentController {
-        getStreamId(): string;
-
         getModel(type: string): any;
+
+        getStreamId(): string;
 
         reset(): void;
     }
 
     export interface GapController {
+        initialize(): void;
+
         reset(): void;
 
         setConfig(config: object): void;
-
-        initialize(): void;
     }
 
     export interface MediaController {
-        setConfig(config: object): void;
-
-        initialize(): void;
-
-        setInitialMediaSettingsForType(type: string, streamInfo: StreamInfo): void;
-
         addTrack(track: MediaInfo): void;
-
-        getTracksFor(type: string, streamId: string): MediaInfo[];
-
-        getCurrentTrackFor(type: string, streamId: string): MediaInfo;
-
-        isCurrentTrack(track: MediaInfo): boolean;
-
-        setTrack(track: MediaInfo, options: object): void;
-
-        setInitialSettings(type: string, value: object): void;
-
-        getInitialSettings(type: string): object | null;
-
-        saveTextSettingsDisabled(): void;
 
         areTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
 
-        reset(): void;
+        getCurrentTrackFor(type: string, streamId: string): MediaInfo;
 
-        matchSettingsLang(settings: object, track: MediaInfo): any;
+        getInitialSettings(type: string): object | null;
 
-        matchSettingsIndex(settings: object, track: MediaInfo): any;
+        getTracksFor(type: string, streamId: string): MediaInfo[];
 
-        matchSettingsViewPoint(settings: object, track: MediaInfo): any;
+        getTracksWithHighestBitrate(trackArr: MediaInfo[]): MediaInfo[];
 
-        matchSettingsRole(settings: object, track: MediaInfo): any;
+        getTracksWithHighestEfficiency(trackArr: MediaInfo[]): MediaInfo[];
+
+        getTracksWithHighestSelectionPriority(trackArr: MediaInfo[]): MediaInfo[];
+
+        getTracksWithWidestRange(trackArr: MediaInfo[]): MediaInfo[];
+
+        initialize(): void;
+
+        isCurrentTrack(track: MediaInfo): boolean;
+
+        matchSettings(settings: object, track: MediaInfo, isTrackActive?: boolean): any;
 
         matchSettingsAccessibility(settings: object, track: MediaInfo): any;
 
@@ -3197,23 +3156,33 @@ declare namespace dashjs {
 
         matchSettingsCodec(settings: object, track: MediaInfo): any;
 
-        matchSettings(settings: object, track: MediaInfo, isTrackActive?: boolean): any;
+        matchSettingsIndex(settings: object, track: MediaInfo): any;
 
-        getTracksWithHighestSelectionPriority(trackArr: MediaInfo[]): MediaInfo[];
+        matchSettingsLang(settings: object, track: MediaInfo): any;
 
-        getTracksWithHighestBitrate(trackArr: MediaInfo[]): MediaInfo[];
+        matchSettingsRole(settings: object, track: MediaInfo): any;
 
-        getTracksWithHighestEfficiency(trackArr: MediaInfo[]): MediaInfo[];
+        matchSettingsViewPoint(settings: object, track: MediaInfo): any;
 
-        getTracksWithWidestRange(trackArr: MediaInfo[]): MediaInfo[];
+        reset(): void;
+
+        saveTextSettingsDisabled(): void;
 
         selectInitialTrack(type: string, tracks: MediaInfo[]): MediaInfo;
+
+        setConfig(config: object): void;
+
+        setInitialMediaSettingsForType(type: string, streamInfo: StreamInfo): void;
+
+        setInitialSettings(type: string, value: object): void;
+
+        setTrack(track: MediaInfo, options: object): void;
     }
 
     export interface MediaSourceController {
-        createMediaSource(): MediaSource;
-
         attachMediaSource(videoModel: object): string;
+
+        createMediaSource(): MediaSource;
 
         detachMediaSource(videoModel: object): void;
 
@@ -3225,89 +3194,85 @@ declare namespace dashjs {
     }
 
     export interface PlaybackController {
-        initialize(sInfo: StreamInfo, periodSwitch: boolean): void;
+        computeAndSetLiveDelay(fragmentDuration: number, manifestInfo: IManifestInfo): number;
+
+        getAvailabilityStartTime(): number;
+
+        getBufferLevel(filterList?: any[]): number | null;
+
+        getCurrentLiveLatency(): number;
+
+        getEnded(): boolean | null;
+
+        getInitialCatchupModeActivated(): boolean;
+
+        getIsDynamic(): boolean;
+
+        getIsManifestUpdateInProgress(): boolean;
+
+        getLiveDelay(): number;
+
+        getLowLatencyModeEnabled(): boolean;
+
+        getOriginalLiveDelay(): number;
+
+        getPlaybackRate(): number | null;
 
         getPlaybackStalled(): boolean;
 
-        getTimeToStreamEnd(sInfo?: StreamInfo): number;
+        getPlayedRanges(): TimeRanges | null;
+
+        getStreamController(): object;
 
         getStreamEndTime(sInfo: StreamInfo): number;
 
-        play(): void;
-
-        pause(): void;
-
-        seek(time: number, stickToBuffered: boolean, internal: boolean): void;
-
-        seekToOriginalLive(stickToBuffered?: boolean, internal?: boolean, adjustLiveDelay?: boolean): void;
-
-        seekToCurrentLive(stickToBuffered?: boolean, internal?: boolean, adjustLiveDelay?: boolean): void;
-
         getTime(): number | null;
 
+        getTimeToStreamEnd(sInfo?: StreamInfo): number;
+
+        initialize(sInfo: StreamInfo, periodSwitch: boolean): void;
+
         isPaused(): boolean | null;
+
+        isProgressing(): Promise<any>;
 
         isSeeking(): boolean | null;
 
         isStalled(): boolean | null;
 
-        isProgressing(): Promise<any>;
+        pause(): void;
 
-        getPlaybackRate(): number | null;
-
-        getPlayedRanges(): TimeRanges | null;
-
-        getEnded(): boolean | null;
-
-        getIsDynamic(): boolean;
-
-        getStreamController(): object;
-
-        getIsManifestUpdateInProgress(): boolean;
-
-        getAvailabilityStartTime(): number;
-
-        getLiveDelay(): number;
-
-        getOriginalLiveDelay(): number;
-
-        getCurrentLiveLatency(): number;
-
-        computeAndSetLiveDelay(fragmentDuration: number, manifestInfo: IManifestInfo): number;
+        play(): void;
 
         reset(): void;
+
+        seek(time: number, stickToBuffered: boolean, internal: boolean): void;
+
+        seekToCurrentLive(stickToBuffered?: boolean, internal?: boolean, adjustLiveDelay?: boolean): void;
+
+        seekToOriginalLive(stickToBuffered?: boolean, internal?: boolean, adjustLiveDelay?: boolean): void;
 
         setConfig(config: object): void;
 
         updateCurrentTime(mediaType?: MediaType): void;
-
-        getBufferLevel(filterList?: any[]): number | null;
-
-        getLowLatencyModeEnabled(): boolean;
-
-        getInitialCatchupModeActivated(): boolean;
     }
 
     export interface ScheduleController {
-        initialize(_hasVideoTrack: boolean): void;
-
-        getType(): string;
-
-        getStreamId(): string;
-
-        startScheduleTimer(value: object): void;
-
         clearScheduleTimer(): void;
 
         getBufferTarget(): number;
 
-        setSwitchTrack(value: object): void;
+        getStreamId(): string;
 
         getSwitchTrack(): any;
 
-        setTimeToLoadDelay(value: object): void;
-
         getTimeToLoadDelay(): number;
+
+        getType(): string;
+
+        initialize(_hasVideoTrack: boolean): void;
+
+        reset(): void;
 
         setCheckPlaybackQuality(value: object): void;
 
@@ -3315,104 +3280,107 @@ declare namespace dashjs {
 
         setLastInitializedRepresentationId(value: number): void;
 
-        reset(): void;
+        setSwitchTrack(value: object): void;
+
+        setTimeToLoadDelay(value: object): void;
+
+        startScheduleTimer(value: object): void;
     }
 
     export interface StreamController {
+        addDVRMetric(): void;
+
+        getActiveStream(): object;
+
+        getActiveStreamInfo(): StreamInfo | null;
+
+        getActiveStreamProcessors(): any[];
+
+        getAutoPlay(): boolean;
+
+        getHasMediaOrInitialisationError(): boolean;
+
+        getInitialPlayback(): any;
+
+        getIsStreamSwitchInProgress(): boolean;
+
+        getStreamById(id: string): object | null;
+
+        getStreamForTime(time: number): object | null;
+
+        getStreams(): any[];
+
+        getTimeRelativeToStreamId(time: number, id: string): number | null;
+
+        hasAudioTrack(): void;
+
+        hasVideoTrack(): void;
+
         initialize(autoPl: any, protData: object): void;
 
         load(url: string, startTime?: number): void;
 
         loadWithManifest(manifest: object): void;
 
-        getStreamForTime(time: number): object | null;
+        refreshManifest(): void;
 
-        addDVRMetric(): void;
-
-        getTimeRelativeToStreamId(time: number, id: string): number | null;
-
-        getActiveStreamProcessors(): any[];
-
-        getActiveStream(): object;
-
-        getInitialPlayback(): any;
-
-        getAutoPlay(): boolean;
-
-        hasVideoTrack(): void;
-
-        hasAudioTrack(): void;
-
-        switchToVideoElement(seekTime: number): void;
-
-        getActiveStreamInfo(): StreamInfo | null;
-
-        getIsStreamSwitchInProgress(): boolean;
-
-        getHasMediaOrInitialisationError(): boolean;
-
-        getStreamById(id: string): object | null;
+        reset(): void;
 
         setConfig(config: object): void;
 
         setProtectionData(protData: object): void;
 
-        reset(): void;
-
-        refreshManifest(): void;
-
-        getStreams(): any[];
+        switchToVideoElement(seekTime: number): void;
     }
 
     export interface ThroughputController {
-
-        initialize(): void;
-
-        setConfig(config: object): void;
-
         getArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getAverageLatency(mediaType: MediaType, calculationMode: string, sampleSize: number): number
+
+        getAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
         getByteSizeWeightedArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
 
-        getDateWeightedArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
-
-        getHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
-
         getByteSizeWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
+
+        getDateWeightedArithmeticMean(dict: ThroughputDictEntry[], sampleSize: number): number
 
         getDateWeightedHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
 
         getEwma(dict: ThroughputEwmaDictEntry[], halfLife: object, useMin: boolean): number
 
-        getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
-
-        getAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
-
-        getSafeAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
-
-        getAverageLatency(mediaType: MediaType, calculationMode: string, sampleSize: number): number
+        getHarmonicMean(dict: ThroughputDictEntry[], sampleSize: number): number
 
         getRawThroughputData(mediaType: MediaType): number
 
-        reset(): void;
-    }
+        getSafeAverageThroughput(mediaType: MediaType, calculationMode: string, sampleSize: number): number
 
-    export interface TimeSyncController {
-        setConfig(config: object): void;
+        getZlema(dict: ThroughputDictEntry[], sampleSize: number): number
 
         initialize(): void;
 
+        reset(): void;
+
+        setConfig(config: object): void;
+    }
+
+    export interface TimeSyncController {
         attemptSync(tSources: number[], isDynamic: boolean): void;
+
+        initialize(): void;
+
+        setConfig(config: object): void;
 
         reset(): void;
     }
 
     export interface XlinkController {
+        reset(): void;
+
         resolveManifestOnLoad(mpd: Mpd): void;
 
         setParser(value: object): void;
-
-        reset(): void;
     }
 
     /**
@@ -3438,17 +3406,17 @@ declare namespace dashjs {
     export interface RangeController {
         initialize(rs: object[]): void;
 
-        reset(): void;
-
         isEnabled(): boolean;
+
+        reset(): void;
     }
 
     export interface ReportingController {
         initialize(rangeController: RangeController): void;
 
-        reset(): void;
-
         report(type: string, vos: any[]): void;
+
+        reset(): void;
     }
 
     /**
@@ -3458,33 +3426,33 @@ declare namespace dashjs {
     export interface BufferLevelHandler {
         initialize(basename: string, rc: RangeController, n_ms: string): void;
 
-        reset(): void;
-
         handleNewMetric(metric: any, vo: any, type: string): void;
+
+        reset(): void;
     }
 
     export interface DVBErrorsHandler {
         initialize(unused: any, rc: RangeController): void; //unused does nothing
 
-        reset(): void;
-
         handleNewMetric(metric: any, vo: any): void;
+
+        reset(): void;
     }
 
     export interface GenericMetricHandler {
         initialize(name: string, rc: RangeController): void;
 
-        reset(): void;
-
         handleNewMetric(metric: any, vo: any): void;
+
+        reset(): void;
     }
 
     export interface HttpListHandler {
         initialize(basename: string, rc: RangeController, n_ms: string, requestType: string): void;
 
-        reset(): void;
-
         handleNewMetric(metric: any, vo: any): void;
+
+        reset(): void;
     }
 
     /**
@@ -3504,9 +3472,9 @@ declare namespace dashjs {
      **/
 
     export interface DVBReporting {
-        report(type: string, vos: any[]): void;
-
         initialize(entry: object, rc: RangeController): void;
+
+        report(type: string, vos: any[]): void;
 
         reset(): void;
     }
@@ -3554,22 +3522,22 @@ declare namespace dashjs {
      **/
 
     export class DVBErrors {
-        mpdurl: string | null;
         errorcode: string | null;
+        ipaddress: string | null;
+        mpdurl: string | null;
+        servicelocation: string | null;
         terror: Date | null;
         url: string | null;
-        ipaddress: string | null;
-        servicelocation: string | null;
 
-        SSL_CONNECTION_FAILED_PREFIX: 'SSL';
-        DNS_RESOLUTION_FAILED: 'C00';
-        HOST_UNREACHABLE: 'C01';
-        CONNECTION_REFUSED: 'C02';
-        CONNECTION_ERROR: 'C03';
-        CORRUPT_MEDIA_ISOBMFF: 'M00';
-        CORRUPT_MEDIA_OTHER: 'M01';
         BASE_URL_CHANGED: 'F00';
         BECAME_REPORTER: 'S00';
+        CONNECTION_ERROR: 'C03';
+        CONNECTION_REFUSED: 'C02';
+        CORRUPT_MEDIA_ISOBMFF: 'M00';
+        CORRUPT_MEDIA_OTHER: 'M01';
+        DNS_RESOLUTION_FAILED: 'C00';
+        HOST_UNREACHABLE: 'C01';
+        SSL_CONNECTION_FAILED_PREFIX: 'SSL';
     }
 
     export interface Metrics {
@@ -3579,18 +3547,18 @@ declare namespace dashjs {
     }
 
     export interface Range {
-        starttime: number;
-        duration: number;
         _useWallClockTime: boolean;
+        duration: number;
+        starttime: number;
     }
 
     export interface Reporting {
         DEFAULT_DVB_PROBABILITY: 1000;
 
+        dvbProbability: number;
+        dvbReportingUrl: string;
         schemeIdUri: string;
         value: string;
-        dvbReportingUrl: string;
-        dvbProbability: number;
     }
 
     /**
@@ -3600,16 +3568,15 @@ declare namespace dashjs {
     export interface MetricsReporting {
         createMetricsReporting(config: object): void;
 
-        getReportingFactory(): ReportingFactory;
-
         getMetricsHandlerFactory(): MetricsHandlerFactory;
+
+        getReportingFactory(): ReportingFactory;
     }
 
     export class MetricsReportingEvents extends EventsBase {
-        METRICS_INITIALISATION_COMPLETE: 'internal_metricsReportingInitialized';
         BECAME_REPORTING_PLAYER: 'internal_becameReportingPlayer';
-
         CMCD_DATA_GENERATED: 'cmcdDataGenerated';
+        METRICS_INITIALISATION_COMPLETE: 'internal_metricsReportingInitialized';
     }
 
     /**
@@ -3617,71 +3584,78 @@ declare namespace dashjs {
      **/
 
     export interface AastLowLatencyThroughputModel {
-        setup(): void;
+        addMeasurement(request: HTTPRequest, chunkMeasurements: any[], requestTimeMs: number, throughputCapacityDelayMS: number): void;
 
         getEstimatedDownloadDurationMS(request: HTTPRequest): number;
 
         getThroughputCapacityDelayMS(request: HTTPRequest, currentBufferLevelMS: number): number;
 
-        addMeasurement(request: HTTPRequest, chunkMeasurements: any[], requestTimeMs: number, throughputCapacityDelayMS: number): void;
+        setup(): void;
     }
 
     export interface BaseURLTreeModel {
-        reset(): void;
-
-        update(manifest: object): void;
+        getBaseUrls(root: any): BaseURL[];
 
         getForPath(path: any): any;
 
         invalidateSelectedIndexes(serviceLocation: string): void;
 
-        getBaseUrls(root: any): BaseURL[];
+        reset(): void;
 
         setConfig(config: object): void;
+
+        update(manifest: object): void;
     }
 
     export interface CmcdModel {
-        getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
-
-        getHeaderParameters(request: HTTPRequest): object | null;
-
-        isCmcdEnabled(): boolean;
+        getCmcdData(request: HTTPRequest): object;
 
         getCmcdParametersFromManifest(): CMCDParameters;
 
-        getCmcdData(request: HTTPRequest): object;
+        getHeaderParameters(request: HTTPRequest): object | null;
 
-        setConfig(config: object): void;
+        getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
+
+        initialize(): void;
+
+        isCmcdEnabled(): boolean;
 
         reset(): void;
 
-        initialize(): void;
+        setConfig(config: object): void;
     }
 
     export interface CmsdModel {
-        initialize(): void; // NOT IMPLEMENTED!
-
-        setConfig(): void; // NOT IMPLEMENTED!
-
-        parseResponseHeader(responseHeaders: object, mediaType: MediaType): void;
+        getEstimatedThroughput(type: string): number;
 
         getMaxBitrate(type: string): number;
-
-        getEstimatedThroughput(type: string): number;
 
         getResponseDelay(type: string): number;
 
         getRoundTripTime(type: string): number;
 
+        initialize(): void; // NOT IMPLEMENTED!
+        parseResponseHeader(responseHeaders: object, mediaType: MediaType): void;
+
         reset(): void;
+
+        setConfig(): void; // NOT IMPLEMENTED!
     }
 
     export interface CustomParametersModel {
-        setConfig(): void; // NOT IMPLEMENTED
+        addAbrCustomRule(type: string, rulename: string, rule: object): void;
 
-        setCustomInitialTrackSelectionFunction(customFunc: Function): void;
+        addRequestInterceptor(interceptor: Function): void;
 
-        resetCustomInitialTrackSelectionFunction(): void;
+        addResponseInterceptor(interceptor: Function): void;
+
+        addUTCTimingSource(schemeIdUri: string, value: string): void;
+
+        clearDefaultUTCTimingSources(): void;
+
+        getAbrCustomRules(): Array<object>;
+
+        getCustomCapabilitiesFilters(): Array<Function>;
 
         getCustomInitialTrackSelectionFunction(): Function;
 
@@ -3689,58 +3663,55 @@ declare namespace dashjs {
 
         getLicenseResponseFilters(): Array<Function>;
 
-        registerLicenseRequestFilter(filter: Function): void;
+        getRequestInterceptors(): void;
 
-        registerLicenseResponseFilter(filter: Function): void;
+        getResponseInterceptors(): void;
 
-        unregisterLicenseRequestFilter(filter: Function): void;
+        getUTCTimingSources(): Array<object>;
 
-        unregisterLicenseResponseFilter(filter: Function): void
-
-        getCustomCapabilitiesFilters(): Array<Function>;
+        getXHRWithCredentialsForType(type: string): any;
 
         registerCustomCapabilitiesFilter(filter: Function): void;
 
-        unregisterCustomCapabilitiesFilter(filter: Function): void;
+        registerLicenseRequestFilter(filter: Function): void;
 
-        addAbrCustomRule(type: string, rulename: string, rule: object): void;
+        registerLicenseResponseFilter(filter: Function): void;
 
         removeAbrCustomRule(ruleName: string): void;
 
         removeAllAbrCustomRule(): void;
 
-        getAbrCustomRules(): Array<object>;
-
-        addRequestInterceptor(interceptor: Function): void;
-
-        addResponseInterceptor(interceptor: Function): void;
-
         removeRequestInterceptor(interceptor: Function): void;
 
         removeResponseInterceptor(interceptor: Function): void;
 
-        getRequestInterceptors(): void;
-
-        getResponseInterceptors(): void;
-
-        addUTCTimingSource(schemeIdUri: string, value: string): void;
-
-        getUTCTimingSources(): Array<object>;
-
         removeUTCTimingSource(schemeIdUri: string, value: string): void;
 
-        clearDefaultUTCTimingSources(): void;
+        reset(): void;
+
+        resetCustomInitialTrackSelectionFunction(): void;
 
         restoreDefaultUTCTimingSources(): void;
 
+        setConfig(): void; // NOT IMPLEMENTED
+        setCustomInitialTrackSelectionFunction(customFunc: Function): void;
+
         setXHRWithCredentialsForType(type: string, value: string): void;
 
-        getXHRWithCredentialsForType(type: string): any;
+        unregisterCustomCapabilitiesFilter(filter: Function): void;
 
-        reset(): void;
+        unregisterLicenseRequestFilter(filter: Function): void;
+
+        unregisterLicenseResponseFilter(filter: Function): void
     }
 
     export interface FragmentModel {
+        abortRequests(): void;
+
+        executeRequest(request: HTTPRequest): void;
+
+        getRequests(filter: any): HTTPRequest[];
+
         getStreamId(): string;
 
         getType(): string;
@@ -3749,21 +3720,15 @@ declare namespace dashjs {
 
         isFragmentLoadedOrPending(request: HTTPRequest): boolean;
 
-        getRequests(filter: any): HTTPRequest[];
-
-        removeExecutedRequestsBeforeTime(time: number): boolean;
-
         removeExecutedRequestAfterTime(time: number): boolean;
 
-        syncExecutedRequestsWithBufferedRange(bufferedRanges: Range[], streamDuration: number): void;
-
-        abortRequests(): void;
-
-        executeRequest(request: HTTPRequest): void;
+        removeExecutedRequestsBeforeTime(time: number): boolean;
 
         reset(): void;
 
         resetInitialSettings(): void;
+
+        syncExecutedRequestsWithBufferedRange(bufferedRanges: Range[], streamDuration: number): void;
     }
 
     export interface ManifestModel {
@@ -3773,15 +3738,15 @@ declare namespace dashjs {
     }
 
     export interface MediaPlayerModel {
-        setConfig(config: object): void;
+        getAbrBitrateParameter(field: string, mediaType: string): object | -1;
+
+        getBufferTimeDefault(): number;
 
         getCatchupMaxDrift(): number;
 
-        getCatchupPlaybackRates(log: any): number;
-
         getCatchupModeEnabled(): boolean;
 
-        getBufferTimeDefault(): number;
+        getCatchupPlaybackRates(log: any): number;
 
         getFastSwitchEnabled(): boolean;
 
@@ -3791,49 +3756,47 @@ declare namespace dashjs {
 
         getRetryIntervalsForType(type: string): any;
 
-        getAbrBitrateParameter(field: string, mediaType: string): object | -1;
-
         reset(): void;
+
+        setConfig(config: object): void;
     }
 
     export interface MetricsModel {
         config: object;
 
-        clearCurrentMetricsForType(type: string): void;
-
-        clearAllCurrentMetrics(): void;
-
-        getMetricsFor(type: string, readOnly: boolean): object;
-
-        //addHttpRequest(mediaType: MediaType, tcpid: string, type: string, url: string, quality: number, actualurl: string, servicelocation: string, rage: Range, trequest: Date, tresponse: Date, tfinish: Date, responsecode: number, mediaduration: number, responseHeaders: any[], traces: object): void;
-
-        addHttpRequest(request: HTTPRequest, response: object, traces: object, cmsd: object): void;
-
-        addRepresentationSwitch(mediaType: MediaType, t: Date, mt: Date, to: string, lto: string): void;
-
         addBufferLevel(mediaType: MediaType, t: Date, level: number): void;
 
         addBufferState(mediaType: MediaType, state: string, target: number): void;
+
+        addDVBErrors(vo: any): void;
 
         addDVRInfo(mediaType: MediaType, currentTime: number, mpd: Mpd, range: Range): void;
 
         addDroppedFrames(mediaType: MediaType, quality: number): void;
 
-        addSchedulingInfo(mediaType: MediaType, t: number, startTime: number, availabilityStartTime: number, duration: number, quality: number, range: Range, state: string): void;
-
-        addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
+        addHttpRequest(request: HTTPRequest, response: object, traces: object, cmsd: object): void;
 
         addManifestUpdate(mediaType: MediaType, type: string, requestTime: number, fetchTime: number): void;
 
-        updateManifestUpdateInfo(manifestUpdate: ManifestUpdate, updatedFields: any[]): void;
+        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, representation: Representation, mediaType: MediaType): void;
 
         addManifestUpdateStreamInfo(manifestUpdate: ManifestUpdate, id: string, index: number, start: number, duration: number): void;
 
-        addManifestUpdateRepresentationInfo(manifestUpdate: ManifestUpdate, representation: Representation, mediaType: MediaType): void;
-
         addPlayList(vo: any): void;
 
-        addDVBErrors(vo: any): void;
+        addRepresentationSwitch(mediaType: MediaType, t: Date, mt: Date, to: string, lto: string): void;
+
+        addRequestsQueue(mediaType: MediaType, loadingRequests: any[], executedRequests: any[]): void;
+
+        addSchedulingInfo(mediaType: MediaType, t: number, startTime: number, availabilityStartTime: number, duration: number, quality: number, range: Range, state: string): void;
+
+        clearAllCurrentMetrics(): void;
+
+        clearCurrentMetricsForType(type: string): void;
+
+        getMetricsFor(type: string, readOnly: boolean): object;
+
+        updateManifestUpdateInfo(manifestUpdate: ManifestUpdate, updatedFields: any[]): void;
     }
 
     export interface ThroughputModel {
@@ -3853,93 +3816,93 @@ declare namespace dashjs {
     }
 
     export interface URIFragmentModel {
-        initialize(uri: string): void;
-
         getURIFragmentData(): URIFragmentData;
+
+        initialize(uri: string): void;
     }
 
     interface VideoModel {
-        initialize(): void;
-
-        reset(): void;
-
-        setPlaybackRate(value: number, ignoreReadyState?: boolean): void;
-
-        setcurrentTime(currentTime: number, stickToBuffered: boolean): void;
-
-        getElement(): HTMLVideoElement | HTMLAudioElement;
-
-        setElement(value: HTMLVideoElement | HTMLAudioElement): void;
-
-        setSource(source: string): void;
-
-        setDisableRemotePlayback(value: boolean): void;
-
-        getSource(): string | null;
-
-        getTTMLRenderingDiv(): HTMLDivElement | null;
-
-        getVttRenderingDiv(): HTMLDivElement | null;
-
-        setTTMLRenderingDiv(div: HTMLDivElement): void;
-
-        setVttRenderingDiv(div: HTMLDivElement): void;
-
-        setStallState(type: MediaType, state: boolean): void;
-
-        isStalled(): boolean;
-
-        stallStream(type: MediaType, isStalled: boolean): void;
-
-        onPlaying(): void;
-
-        getPlaybackQuality(): number;
-
-        play(): void;
-
-        isPaused(): void;
-
-        pause(): void;
-
-        isSeeking(): void;
-
-        getTime(): number | null;
-
-        getPlaybackRate(): number | null;
-
-        getPlayedRanges(): TimeRanges | null;
-
-        getEnded(): boolean | null;
-
         addEventListener(): void;
-
-        removeEventListener(): void;
-
-        getReadyState(): number;
-
-        getBufferRange(): TimeRanges | null;
-
-        getClientWidth(): number;
-
-        getClientHeight(): number;
-
-        getVideoWidth(): number;
-
-        getVideoHeight(): number;
-
-        getVideoRelativeOffsetTop(): number;
-
-        getVideoRelativeOffsetLeft(): number;
-
-        getTextTracks(): TextTrackList[];
-
-        getTextTrack(kind: TextTrackType, label: string | number | undefined, isTTML: boolean, isEmbedded: boolean): TextTrackInfo | null;
 
         addTextTrack(kind: TextTrackType, label: string | number | undefined, isTTML: boolean, isEmbedded: boolean): TextTrackInfo;
 
         appendChild(childElement: any): void;
 
+        getBufferRange(): TimeRanges | null;
+
+        getClientHeight(): number;
+
+        getClientWidth(): number;
+
+        getElement(): HTMLVideoElement | HTMLAudioElement;
+
+        getEnded(): boolean | null;
+
+        getPlaybackQuality(): number;
+
+        getPlaybackRate(): number | null;
+
+        getPlayedRanges(): TimeRanges | null;
+
+        getReadyState(): number;
+
+        getSource(): string | null;
+
+        getTTMLRenderingDiv(): HTMLDivElement | null;
+
+        getTextTrack(kind: TextTrackType, label: string | number | undefined, isTTML: boolean, isEmbedded: boolean): TextTrackInfo | null;
+
+        getTextTracks(): TextTrackList[];
+
+        getTime(): number | null;
+
+        getVideoHeight(): number;
+
+        getVideoRelativeOffsetLeft(): number;
+
+        getVideoRelativeOffsetTop(): number;
+
+        getVideoWidth(): number;
+
+        getVttRenderingDiv(): HTMLDivElement | null;
+
+        initialize(): void;
+
+        isPaused(): void;
+
+        isSeeking(): void;
+
+        isStalled(): boolean;
+
+        onPlaying(): void;
+
+        pause(): void;
+
+        play(): void;
+
         removeChild(childElement: any): void;
+
+        removeEventListener(): void;
+
+        reset(): void;
+
+        setDisableRemotePlayback(value: boolean): void;
+
+        setElement(value: HTMLVideoElement | HTMLAudioElement): void;
+
+        setPlaybackRate(value: number, ignoreReadyState?: boolean): void;
+
+        setSource(source: string): void;
+
+        setStallState(type: MediaType, state: boolean): void;
+
+        setTTMLRenderingDiv(div: HTMLDivElement): void;
+
+        setVttRenderingDiv(div: HTMLDivElement): void;
+
+        setcurrentTime(currentTime: number, stickToBuffered: boolean): void;
+
+        stallStream(type: MediaType, isStalled: boolean): void;
 
         waitForReadyState(targetReadyState: number, callback: () => any): void;
 
@@ -3950,11 +3913,13 @@ declare namespace dashjs {
      **/
 
     export interface FetchLoader {
-        load(httpRequest: HTTPRequest, httpResponse: object): void;
-
         abort(): void;
 
         calculateDownloadedTime(downloadedData: any, bytesReceived: any): number | null;
+
+        load(httpRequest: HTTPRequest, httpResponse: object): void;
+
+        reset(): void;
 
         setup(cfg: object): void;
     }
@@ -3962,49 +3927,49 @@ declare namespace dashjs {
     export interface HTTPLoader {
         cfg: object;
 
-        setConfig(config: object): void;
+        abort(): void;
 
         load(config: object): void;
 
-        abort(): void;
+        reset(): void;
 
         resetInitialSettings(): void;
 
-        reset(): void;
+        setConfig(config: object): void;
     }
 
     export interface SchemeLoaderFactory {
+        getLoader(url: string): HTTPLoader;
+
         registerLoader(scheme: string, loader: any): void;
 
-        unregisterLoader(scheme: string): void;
-
-        getLoader(url: string): HTTPLoader;
+        reset(): void;
 
         unregisterAllLoader(): void;
 
-        reset(): void;
+        unregisterLoader(scheme: string): void;
     }
 
     export interface URLLoader {
-        load(config: object): any;
-
         abort(): void;
 
-        resetInitialsettings(): void;
+        load(config: object): any;
 
         reset(): void;
+
+        resetInitialSettings(): void;
     }
 
     export interface XHRLoader {
-        load(httpRequest: HTTPRequest): HTTPRequest;
-
         abort(request: HTTPRequest): void;
 
         getXhr(httpRequest: CommonMediaRequest, httpResponse: CommonMediaResponse): boolean;
 
-        resetInitialsettings(): void;
+        load(httpRequest: HTTPRequest): HTTPRequest;
 
         reset(): void;
+
+        resetInitialSettings(): void;
     }
 
     /**
@@ -4012,69 +3977,69 @@ declare namespace dashjs {
      **/
 
     interface ProtectionController {
-        initializeForMedia(mediaInfo: MediaInfo): void;
+        areKeyIdsExpired(normalizedKeyIds: Array<string | number>): boolean;
+
+        areKeyIdsUsable(normalizedKeyIds: Array<string | number>): boolean;
 
         clearMediaInfoArray(): void;
 
-        handleKeySystemFromManifest(): void;
+        closeKeySession(sessionToken: SessionToken): void;
 
         createKeySession(keySystemInfo: KeySystemInfo): void;
+
+        getKeySystems(): any[];
+
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[]): object[];
+
+        handleKeySystemFromManifest(): void;
+
+        initializeForMedia(mediaInfo: MediaInfo): void;
 
         loadKeySession(keySystemInfo: KeySystemInfo): void;
 
         removeKeySession(sessionToken: SessionToken): void;
 
-        closeKeySession(sessionToken: SessionToken): void;
-
-        setServerCertificate(serverCertificate: ArrayBuffer): void;
-
-        setMediaElement(element: HTMLMediaElement): void;
-
-        setSessionType(value: string): void;
-
-        setRobustnessLevel(level: string): void;
-
-        setProtectionData(data: object): void;
-
-        getSupportedKeySystemMetadataFromContentProtection(cps: object[]): object[];
-
-        getKeySystems(): any[];
+        reset(): void;
 
         setKeySystems(keySystems: KeySystem[]): void;
 
-        updateKeyStatusesMap(e: object): void;
+        setMediaElement(element: HTMLMediaElement): void;
+
+        setProtectionData(data: object): void;
+
+        setRobustnessLevel(level: string): void;
+
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        setSessionType(value: string): void;
 
         stop(): void;
 
-        reset(): void;
-
-        areKeyIdsUsable(normalizedKeyIds: Array<string | number>): boolean;
-
-        areKeyIdsExpired(normalizedKeyIds: Array<string | number>): boolean;
+        updateKeyStatusesMap(e: object): void;
     }
 
     export interface ProtectionKeyController {
-        setConfig(config: object): void;
-
-        initialize(): void;
+        getKeySystemBySystemString(systemString: string): KeySystem | null;
 
         getKeySystems(): KeySystem[];
 
-        setKeySystems(newKeySystems: KeySystem[]): void;
+        getLicenseServerModelInstance(keySystem: KeySystem, protData: ProtectionData, messageType: string): any | null;
 
-        getKeySystemBySystemString(systemString: string): KeySystem | null;
-
-        isClearKey(keySystem: KeySystem): boolean;
-
-        initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
-
-        getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[]; //it says protDataSet but param is marked as protData
+        getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[];
 
         getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
-        getLicenseServerModelInstance(keySystem: KeySystem, protData: ProtectionData, messageType: string): any | null; // LicenseServer instead of any
+        initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
+
+        initialize(): void;
+
+        isClearKey(keySystem: KeySystem): boolean;
 
         processClearKeyLicenseRequest(clearKeySystem: KeySystem, ProtectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet | null;
+
+        setConfig(config: object): void;
+
+        setKeySystems(newKeySystems: KeySystem[]): void;
 
         setProtectionData(protectionDataSet: ProtectionDataSet): ProtectionData;
     }
@@ -4084,39 +4049,39 @@ declare namespace dashjs {
      **/
 
     export interface KeySystem {
+        schemeIdURI: string;
         systemString: string;
         uuid: string;
-        schemeIdURI: string;
+
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
 
         getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
-
-        getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
 
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
-        getCDMData(cdmData: string | null): ArrayBuffer | null;
+        getRequestHeadersFromMessage(message: ArrayBuffer): object | null;
 
         getSessionId(): string | null;
     }
 
     export interface KeySystemClearKey {
         uuid: string;
-        systemString: string;
         schemeIdURI: string;
+        systemString: string;
+
+        getCDMData(): null;
+
+        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
 
         getInitData(cp: object, cencContentProtection: object | null): ArrayBuffer | null;
-
-        getRequestHeadersFromMessage(): object;
 
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(): null;
 
-        getCDMData(): null;
-
-        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
+        getRequestHeadersFromMessage(): object;
     }
 
     export interface KeySystemPlayReady {
@@ -4124,15 +4089,15 @@ declare namespace dashjs {
         schemeIdURI: string;
         systemString: string;
 
-        getInitData(cpData: object): ArrayBuffer;
+        getCDMData(cdmData: string | null): ArrayBuffer | null;
 
-        getRequestHeadersFromMessage(message: ArrayBuffer): object;
+        getInitData(cpData: object): ArrayBuffer;
 
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(initData: ArrayBuffer): string | null;
 
-        getCDMData(cdmData: string | null): ArrayBuffer | null;
+        getRequestHeadersFromMessage(message: ArrayBuffer): object;
 
         setPlayReadyMessageFormat(format: string): void;
     }
@@ -4142,17 +4107,17 @@ declare namespace dashjs {
         systemString: string;
         schemeIdURI: string;
 
-        getInitData(cp: object): ArrayBuffer | null;
+        getCDMData(): null;
 
-        getRequestHeadersFromMessage(): null;
+        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
+
+        getInitData(cp: object): ArrayBuffer | null;
 
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(): null;
 
-        getCDMData(): null;
-
-        getClearKeysFromProtectionData(protectionData: ProtectionData, message: ArrayBuffer): ClearKeyKeySet;
+        getRequestHeadersFromMessage(): null;
     }
 
     export interface KeySystemWidevine {
@@ -4160,15 +4125,15 @@ declare namespace dashjs {
         schemeIdURI: string;
         systemString: string;
 
-        getInitData(cp: object): ArrayBuffer | null;
+        getCDMData(): null;
 
-        getRequestHeadersFromMessage(): null;
+        getInitData(cp: object): ArrayBuffer | null;
 
         getLicenseRequestFromMessage(message: ArrayBuffer): Uint8Array | null;
 
         getLicenseServerURLFromInitData(): null;
 
-        getCDMData(): null;
+        getRequestHeadersFromMessage(): null;
     }
 
     /**
@@ -4176,36 +4141,36 @@ declare namespace dashjs {
      **/
 
     interface ProtectionErrors {
-        MEDIA_KEYERR_CODE: 100;
-        MEDIA_KEYERR_UNKNOWN_CODE: 101;
-        MEDIA_KEYERR_CLIENT_CODE: 102;
-        MEDIA_KEYERR_SERVICE_CODE: 103;
-        MEDIA_KEYERR_OUTPUT_CODE: 104;
-        MEDIA_KEYERR_HARDWARECHANGE_CODE: 105;
-        MEDIA_KEYERR_DOMAIN_CODE: 106;
-        MEDIA_KEY_MESSAGE_ERROR_CODE: 107;
-        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE: 108;
-        SERVER_CERTIFICATE_UPDATED_ERROR_CODE: 109;
-        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE: 110;
-        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
-        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE: 112;
         KEY_SESSION_CREATED_ERROR_CODE: 113;
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_CODE: 110;
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_CODE: 112;
+        MEDIA_KEYERR_CLIENT_CODE: 102;
+        MEDIA_KEYERR_CODE: 100;
+        MEDIA_KEYERR_DOMAIN_CODE: 106;
+        MEDIA_KEYERR_HARDWARECHANGE_CODE: 105;
+        MEDIA_KEYERR_OUTPUT_CODE: 104;
+        MEDIA_KEYERR_SERVICE_CODE: 103;
+        MEDIA_KEYERR_UNKNOWN_CODE: 101;
+        MEDIA_KEY_MESSAGE_ERROR_CODE: 107;
         MEDIA_KEY_MESSAGE_LICENSER_ERROR_CODE: 114;
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_CODE: 108;
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_CODE: 111;
+        SERVER_CERTIFICATE_UPDATED_ERROR_CODE: 109;
 
-        MEDIA_KEYERR_UNKNOWN_MESSAGE: 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
-        MEDIA_KEYERR_CLIENT_MESSAGE: 'The Key System could not be installed or updated.';
-        MEDIA_KEYERR_SERVICE_MESSAGE: 'The message passed into update indicated an error from the license service.';
-        MEDIA_KEYERR_OUTPUT_MESSAGE: 'There is no available output device with the required characteristics for the content protection system.';
-        MEDIA_KEYERR_HARDWARECHANGE_MESSAGE: 'A hardware configuration change caused a content protection error.';
-        MEDIA_KEYERR_DOMAIN_MESSAGE: 'An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
-        MEDIA_KEY_MESSAGE_ERROR_MESSAGE: 'Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!';
-        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE: 'DRM: Empty key message from CDM';
-        SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE: 'Error updating server certificate -- ';
-        KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE: 'DRM: KeyStatusChange error! -- License has expired';
-        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE: 'DRM: No license server URL specified!';
-        KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE: 'DRM: KeySystem Access Denied! -- ';
         KEY_SESSION_CREATED_ERROR_MESSAGE: 'DRM: unable to create session! --';
+        KEY_STATUS_CHANGED_EXPIRED_ERROR_MESSAGE: 'DRM: KeyStatusChange error! -- License has expired';
+        KEY_SYSTEM_ACCESS_DENIED_ERROR_MESSAGE: 'DRM: KeySystem Access Denied! -- ';
+        MEDIA_KEYERR_CLIENT_MESSAGE: 'The Key System could not be installed or updated.';
+        MEDIA_KEYERR_DOMAIN_MESSAGE: 'An error occurred in a multi-device domain licensing configuration. The most common error is a failure to join the domain.';
+        MEDIA_KEYERR_HARDWARECHANGE_MESSAGE: 'A hardware configuration change caused a content protection error.';
+        MEDIA_KEYERR_OUTPUT_MESSAGE: 'There is no available output device with the required characteristics for the content protection system.';
+        MEDIA_KEYERR_SERVICE_MESSAGE: 'The message passed into update indicated an error from the license service.';
+        MEDIA_KEYERR_UNKNOWN_MESSAGE: 'An unspecified error occurred. This value is used for errors that don\'t match any of the other codes.';
+        MEDIA_KEY_MESSAGE_ERROR_MESSAGE: 'Multiple key sessions were creates with a user-agent that does not support sessionIDs!! Unpredictable behavior ahead!';
         MEDIA_KEY_MESSAGE_LICENSER_ERROR_MESSAGE: 'DRM: licenser error! --';
+        MEDIA_KEY_MESSAGE_NO_CHALLENGE_ERROR_MESSAGE: 'DRM: Empty key message from CDM';
+        MEDIA_KEY_MESSAGE_NO_LICENSE_SERVER_URL_ERROR_MESSAGE: 'DRM: No license server URL specified!';
+        SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE: 'Error updating server certificate -- ';
     }
 
     /**
@@ -4213,113 +4178,113 @@ declare namespace dashjs {
      **/
 
     export interface DefaultProtectionModel {
-        getAllInitData(): ArrayBuffer[];
-
-        getSessionTokens(): any[]; // Is this MediaSession[] ?
-
-        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
-
-        selectKeySystem(keySystemAccess: KeySystemAccess): Promise<any>;
-
-        setMediaElement(mediaElement: HTMLMediaElement): void;
-
-        setServerCertificate(serverCertificate: ArrayBuffer): void;
+        closeKeySession(sessionToken: SessionToken): void;
 
         createKeySession(ksInfo: KeySystemInfo): any;
 
-        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+        getAllInitData(): ArrayBuffer[];
+
+        getSessionTokens(): any[];
 
         loadKeySession(ksInfo: KeySystemInfo): void;
 
         removeKeySession(sessionToken: SessionToken): void;
 
-        closeKeySession(sessionToken: SessionToken): void;
-
-        stop(): void;
-
-        reset(): void;
-    }
-
-    export interface ProtectionModel_01b {
-        getAllInitData(): ArrayBuffer[];
-
-        getSessionTokens(): any[]; // Is this MediaSession[] ?
-
         requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
-        selectKeySystem(keySystemAccess: any): Promise<any>;
-
-        setMediaElement(mediaElement: HTMLMediaElement): void;
-
-        createKeySession(ksInfo: KeySystemInfo): any;
-
-        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
-
-        closeKeySession(sessionToken: SessionToken): void;
-
-        setServerCertificate(): void; // Not supproted
-
-        loadKeySession(): void; // Not supproted
-
-        removeKeySession(): void; // Not supproted
-
-        stop(): void;
-
         reset(): void;
-    }
-
-    export interface ProtectionModel_3Fe2014 {
-        getAllInitData(): ArrayBuffer[];
-
-        getSessionTokens(): any[]; // Is this MediaSession[] ?
-
-        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
-
-        selectKeySystem(keySystemAccess: any): Promise<any>;
-
-        setMediaElement(mediaElement: HTMLMediaElement): void;
-
-        createKeySession(ksInfo: KeySystemInfo): any;
-
-        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
-
-        closeKeySession(sessionToken: SessionToken): void;
-
-        setServerCertificate(): void; // Not supproted
-
-        loadKeySession(): void; // Not supproted
-
-        removeKeySession(): void; // Not supproted
-
-        stop(): void;
-
-        reset(): void;
-    }
-
-    export interface ProtectionModel {
-        getAllInitData(): ArrayBuffer[];
-
-        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
         selectKeySystem(keySystemAccess: KeySystemAccess): Promise<any>;
 
         setMediaElement(mediaElement: HTMLMediaElement): void;
 
-        createKeySession(initData: ArrayBuffer, protData: ProtectionData, sessionType: string): void;
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        stop(): void;
 
         updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+    }
 
+    export interface ProtectionModel_01b {
         closeKeySession(sessionToken: SessionToken): void;
 
-        setServerCertificate(serverCertificate: ArrayBuffer): void;
+        createKeySession(ksInfo: KeySystemInfo): any;
+
+        getAllInitData(): ArrayBuffer[];
+
+        getSessionTokens(): any[];
+
+        loadKeySession(): void;
+
+        removeKeySession(): void;
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        reset(): void;
+
+        selectKeySystem(keySystemAccess: any): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        setServerCertificate(): void;
+
+        stop(): void;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+    }
+
+    export interface ProtectionModel_3Fe2014 {
+        closeKeySession(sessionToken: SessionToken): void;
+
+        createKeySession(ksInfo: KeySystemInfo): any;
+
+        getAllInitData(): ArrayBuffer[];
+
+        getSessionTokens(): any[];
+
+        loadKeySession(): void;
+
+        removeKeySession(): void;
+
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
+
+        reset(): void;
+
+        selectKeySystem(keySystemAccess: any): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        setServerCertificate(): void;
+
+        stop(): void;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
+    }
+
+    export interface ProtectionModel {
+        closeKeySession(sessionToken: SessionToken): void;
+
+        createKeySession(initData: ArrayBuffer, protData: ProtectionData, sessionType: string): void;
+
+        getAllInitData(): ArrayBuffer[];
 
         loadKeySession(sessionId: string, initData: ArrayBuffer): void;
 
         removeKeySession(sessionToken: SessionToken): void;
 
-        stop(): void;
+        requestKeySystemAccess(ksConfigurations: object[]): Promise<any>;
 
         reset(): void;
+
+        selectKeySystem(keySystemAccess: KeySystemAccess): Promise<any>;
+
+        setMediaElement(mediaElement: HTMLMediaElement): void;
+
+        setServerCertificate(serverCertificate: ArrayBuffer): void;
+
+        stop(): void;
+
+        updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
     }
 
     /**
@@ -4327,63 +4292,63 @@ declare namespace dashjs {
      **/
 
     export interface ClearKey {
-        getServerURLFromMessage(url: string): string;
+        getErrorResponse(serverResponse: object): string;
 
         getHTTPMethod(): 'POST';
-
-        getResponseType(): 'json';
 
         getLicenseMessage(serverResponse: object): ClearKeyKeySet;
 
-        getErrorResponse(serverResponse: object): string;
+        getResponseType(): 'json';
+
+        getServerURLFromMessage(url: string): string;
     }
 
     export interface DRMToday {
-        getServerURLFromMessage(url: string): string;
+        getErrorResponse(serverResponse: object): string;
 
         getHTTPMethod(): 'POST';
-
-        getResponseType(keySystemStr: string): string;
 
         getLicenseMessage(serverResponse: object, keySystemStr: string): any;
 
-        getErrorResponse(serverResponse: object): string;
+        getResponseType(keySystemStr: string): string;
+
+        getServerURLFromMessage(url: string): string;
     }
 
     export interface LicenseServer {
-        getServerURLFromMessage(url: string, message: ArrayBuffer, messageType: string): string;
+        getErrorResponse(serverResponse: object): string;
 
         getHTTPMethod(messageType: string): string;
 
-        getResponseType(keySystemStr: string, messageType: string): string;
-
         getLicenseMessage(serverResponse: object, keySystemStr: string): ArrayBuffer | null;
 
-        getErrorResponse(serverResponse: object): string;
+        getResponseType(keySystemStr: string, messageType: string): string;
+
+        getServerURLFromMessage(url: string, message: ArrayBuffer, messageType: string): string;
     }
 
     export interface PlayReady {
-        getServerURLFromMessage(url: string): string;
+        getErrorResponse(serverResponse: object): string;
 
         getHTTPMethod(): 'POST';
-
-        getResponseType(): 'arraybuffer';
 
         getLicenseMessage(serverResponse: object): any;
 
-        getErrorResponse(serverResponse: object): string;
+        getResponseType(): 'arraybuffer';
+
+        getServerURLFromMessage(url: string): string;
     }
 
     export interface Widevine {
-        getServerURLFromMessage(url: string): string;
+        getErrorResponse(serverResponse: object): string;
 
         getHTTPMethod(): 'POST';
 
-        getResponseType(): 'arraybuffer';
-
         getLicenseMessage(serverResponse: object): object;
 
-        getErrorResponse(serverResponse: object): string;
+        getResponseType(): 'arraybuffer';
+
+        getServerURLFromMessage(url: string): string;
     }
 
     /**
@@ -4398,10 +4363,10 @@ declare namespace dashjs {
     export class KeyMessage {
         constructor(sessionToken: SessionToken, message: ArrayBuffer, defaultURL: string, messageType?: string);
 
-        sessionToken: SessionToken;
-        message: ArrayBuffer;
         defaultURL: string;
+        message: ArrayBuffer;
         messageType: string;
+        sessionToken: SessionToken;
     }
 
     export class KeyPair {
@@ -4416,7 +4381,7 @@ declare namespace dashjs {
 
         keySystem: KeySystem;
         ksConfiguration: KeySystemConfiguration;
-        nativeMediaKrxSystemAccessObject: object | null;
+        nativeMediaKeySystemAccessObject: object | null;
         selectedSystemString: string | null;
     }
 
@@ -4424,10 +4389,10 @@ declare namespace dashjs {
         constructor(audioCapabilities: MediaCapability[], videoCapabilities: MediaCapability[], distinctiveIdentifier: string, persistentState: string, sessionTypes: string[])
 
         audioCapabilities: MediaCapability[];
-        videoCapabilities: MediaCapability[];
         distinctiveIdentifier: string;
         persistentState: string;
         sessionTypes: string[];
+        videoCapabilities: MediaCapability[];
     }
 
     export class KeySystemMetadata {
@@ -4441,30 +4406,30 @@ declare namespace dashjs {
             [key: string]: string
         }, withCredentials: boolean, messageType: string, sessionId: string, data: ArrayBuffer)
 
-        url: string;
+        data: ArrayBuffer;
+        headers: { [key: string]: string };
+        messageType: string;
         method: string;
         responseType: string;
-        headers: { [key: string]: string };
-        withCredentials: boolean;
-        messageType: string;
         sessionId: string;
-        data: ArrayBuffer;
+        url: string;
+        withCredentials: boolean;
     }
 
     export class LicenseRequestComplete {
         constructor(message: Uint8Array, sessionToken: SessionToken, messageType: string)
 
         message: Uint8Array;
-        sessionToken: SessionToken;
         messageType: string;
+        sessionToken: SessionToken;
     }
 
     export class LicenseResponse {
         constructor(url: string, headers: object, data: ArrayBuffer)
 
-        url: string;
-        headers: object;
         data: ArrayBuffer;
+        headers: object;
+        url: string;
     }
 
     export class MediaCapability {
@@ -4537,11 +4502,11 @@ declare namespace dashjs {
         session: MediaKeySession;
         initData: any;
 
-        getSessionId(): string;
-
         getExpirationTime(): number;
 
         getKeyStatuses(): MediaKeyStatusMap;
+
+        getSessionId(): string;
 
         getSessionType(): string;
     }
@@ -4557,6 +4522,7 @@ declare namespace dashjs {
         KEY_SESSION_CLOSED: 'public_keySessionClosed';
         KEY_SESSION_CREATED: 'public_keySessionCreated';
         KEY_SESSION_REMOVED: 'public_keySessionRemoved';
+        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
         KEY_STATUSES_CHANGED: 'public_keyStatusesChanged';
         KEY_SYSTEM_ACCESS_COMPLETE: 'public_keySystemAccessComplete';
         KEY_SYSTEM_SELECTED: 'public_keySystemSelected';
@@ -4568,7 +4534,6 @@ declare namespace dashjs {
         SERVER_CERTIFICATE_UPDATED: 'serverCertificateUpdated';
         TEARDOWN_COMPLETE: 'protectionTeardownComplete';
         VIDEO_ELEMENT_SELECTED: 'videoElementSelected';
-        KEY_SESSION_UPDATED: 'public_keySessionUpdated';
     }
 
     export interface CommonEncryption {
@@ -4589,21 +4554,21 @@ declare namespace dashjs {
      */
 
     export interface LearningAbrController {
-        getNextoQuality(mediaInfo: MediaInfo, throughput: number, latency: number, bufferSize: number, playbackRate: number, currentQualityIndex: number, dynamicWeightSelector: object): any | null;
+        getNextQuality(mediaInfo: MediaInfo, throughput: number, latency: number, bufferSize: number, playbackRate: number, currentQualityIndex: number, dynamicWeightSelector: object): any | null;
 
         reset(): void;
     }
 
     export interface LoLpQoEEvaluator {
-        setupPerSegmentQoe(sDuration: number, maxBrKbps: number, minBrKbs: number): void;
-
-        logSegmentMetrics(segmentBitrate: number, segmentRebufferTime: number, currentLatency: number, currentPlaybackSpeed: number): void;
+        calculateSingleUseQoe(segmentBitrate: number, segmentRebufferTime: number, currentLatency: number, currentPlaybackSpeed: number): number;
 
         getPerSegmentQoe(): QoeInfo;
 
-        calculateSingleUseQoe(segmentBitrate: number, segmentRebufferTime: number, currentLatency: number, currentPlaybackSpeed: number): number;
+        logSegmentMetrics(segmentBitrate: number, segmentRebufferTime: number, currentLatency: number, currentPlaybackSpeed: number): void;
 
         reset(): void;
+
+        setupPerSegmentQoe(sDuration: number, maxBrKbps: number, minBrKbs: number): void;
     }
 
     export interface LoLpRule {
@@ -4613,20 +4578,26 @@ declare namespace dashjs {
     }
 
     export interface LoLpWeightSelector {
+        findWeightVector(neurons: any[], currentLatency: number, currentBuffer: number, currentRebuffer: number, currentThroughput: number, playbackRate: number): number | null;
+
         getMinBuffer(): number;
-
-        getSegmentDuration(): number;
-
-        getNextBufferWithBitrate(bitrateToDownload: number, currentBuffer: number, currentThroughput: number): number;
 
         getNextBuffer(currentBuffer: number, downloadTime: number): number;
 
-        findWeightVector(neurons: any[], currentLatency: number, currentBuffer: number, currentRebuffer: number, currentThroughput: number, playbackRate: number): number | null;
+        getNextBufferWithBitrate(bitrateToDownload: number, currentBuffer: number, currentThroughput: number): number;
+
+        getSegmentDuration(): number;
     }
 
     export class QoeInfo {
-        type: string | null;
+        bitrateSwitchSum: number;
+        bitrateWSum: number;
         lastBitrate: number | null;
+        latencyWSum: number;
+        playbackSpeedWSum: number;
+        rebufferWSum: number;
+        totalQoe: number;
+        type: string | null;
         weights: {
             bitrateReward: number | null,
             bitrateSwitchPenalty: number | null,
@@ -4634,13 +4605,6 @@ declare namespace dashjs {
             latencyPenalty: number | null,
             playbackSpeedPenalty: number | null
         };
-        bitrateWSum: number;
-        bitrateSwitchSum: number;
-        rebufferWSum: number;
-        latencyWSum: number;
-        playbackSpeedWSum: number;
-        totalQoe: number;
-
     }
 
     /**
@@ -4654,27 +4618,25 @@ declare namespace dashjs {
     }
 
     export interface ABRRulesCollection {
-        initialize(): void;
+        clearDataForStream(streamId: string | number): void;
 
-        getMinSwitchRequest(srArray: any[]): SwitchRequest;
+        getAbandonFragmentRules(): object;
 
         getBestPossibleSwitchRequest(rulesContext: RulesContext): SwitchRequest;
 
-        shouldAbandonFragment(rulesContext: RulesContext, streamId: string): SwitchRequest;
+        getBolaState(mediaType: MediaType): string;
+
+        getMinSwitchRequest(srArray: any[]): SwitchRequest;
 
         getQualitySwitchRules(): any[];
 
+        initialize(): void;
+
         reset(): void;
-
-        clearDataForStream(streamId: string | number): void;
-
-        getQualitySwitchRules(): object;
-
-        getabandonFragmentRules(): object;
 
         setBolaState(mediaType: MediaType, value: string): void;
 
-        getBolaState(mediaType: MediaType): string;
+        shouldAbandonFragment(rulesContext: RulesContext, streamId: string): SwitchRequest;
     }
 
     export interface BolaRule {
@@ -4714,52 +4676,52 @@ declare namespace dashjs {
      **/
 
     export interface DroppedFramesHistory {
-        push(streamId: string, index: number, playbackQuality: number): void;
+        clearDataForStream(streamId: string): void;
 
         getFrameHistory(streamId: string): object;
 
-        clearDataForStream(streamId: string): void;
+        push(streamId: string, index: number, playbackQuality: number): void;
 
         reset(): void;
     }
 
     export interface RulesContext {
-        getMediaType(): string;
-
-        getMediaInfo(): MediaInfo;
-
-        getDroppedFramesHistory(): DroppedFramesHistory;
+        getAbrController(): AbrController;
 
         getCurrentRequest(): SwitchRequest;
 
-        getSwitchHistory(): SwitchRequestHistory; //pot. just Switch History
+        getDroppedFramesHistory(): DroppedFramesHistory;
 
-        getStreamInfo(): StreamInfo;
+        getMediaInfo(): MediaInfo;
+
+        getMediaType(): string;
+
+        getRepresentation(): Representation;
 
         getScheduleController(): ScheduleController;
 
+        getStreamInfo(): StreamInfo;
+
+        getSwitchHistory(): SwitchRequestHistory;
+
         getThroughputController(): ThroughputController;
-
-        getAbrController(): AbrController;
-
-        getRepresentation(): Representation;
 
         getVideoModel(): VideoModel;
     }
 
     export interface SwitchRequest {
-        representation: Representation;
         priority: number | null;
         reason: string | null;
+        representation: Representation;
         rule: any
     }
 
     export interface SwitchRequestHistory {
-        push(switchRequest: SwitchRequest): void;
+        clearForStream(streamId: string | number): object;
 
         getSwitchRequests(): SwitchRequest[];
 
-        clearForStream(streamId: string | number): object;
+        push(switchRequest: SwitchRequest): void;
 
         reset(): void;
     }
@@ -4773,14 +4735,14 @@ declare namespace dashjs {
     export type FontDownloadStatus = 'unloaded' | 'loaded' | 'error';
 
     export interface FontInfo {
-        fontFamily: string;
-        url: string;
-        mimeType: string;
-        trackId: number;
-        streamId: string;
-        isEssential: boolean;
-        status: FontDownloadStatus;
         fontFace: FontFace;
+        fontFamily: string;
+        isEssential: boolean;
+        mimeType: string;
+        status: FontDownloadStatus;
+        streamId: string;
+        trackId: number;
+        url: string;
     }
 
     export interface DVBFonts {
@@ -4800,149 +4762,149 @@ declare namespace dashjs {
     }
 
     export interface NotFragmentTextBufferController {
-        initialize(source: MediaSource): void;
+        appendInitSegmentFromCache(representationId: string): void;
+
+        clearBuffers(): Promise<any>;
+
+        createBufferSink(mediaInfo: MediaInfo): void;
+
+        dischargePreBuffer(): void;
+
+        getAllRangesWithSafetyFactor(): [];
+
+        getBuffer(): SourceBufferSink;
+
+        getBufferControllerType(): string;
+
+        getBufferLevel(): 0;
+
+        getContinuousBufferTimeForTargetTime(): number;
+
+        getIsBufferingCompleted(): boolean;
+
+        getIsPruningInProgress(): false;
+
+        getMediaSource(): MediaSource;
+
+        getRangeAt(): null;
 
         getStreamId(): string;
 
         getType(): string;
 
-        getBufferControllerType(): string;
+        hasBufferAtTime(): boolean;
 
-        createBufferSink(mediaInfo: MediaInfo): void;
-
-        dischargePreBuffer(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
-
-        getBuffer(): SourceBufferSink;
-
-        getBufferLevel(): 0;
-
-        getRangeAt(): null;
-
-        hasBufferAtTime(): boolean; // DECLARED AND EXPORTED BUT ALWAYS RETURNS TRUE
-
-        getAllRangesWithSafetyFactor(): [];
-
-        getContinuousBufferTimeForTargetTime(): number;
-
-        setMediaSource(value: MediaSource): void;
-
-        getMediaSource(): MediaSource;
-
-        appendInitSegmentFromCache(representationId: string): void;
-
-        getIsBufferingCompleted(): boolean;
-
-        setIsBufferingCompleted(value: boolean): void;
-
-        getIsPruningInProgress(): false;
-
-        reset(): void;
-
-        clearBuffers(): Promise<any>;
-
-        pruneBuffer(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
+        initialize(source: MediaSource): void;
 
         prepareForPlaybackSeek(): Promise<any>;
 
         prepareForReplacementTrackSwitch(): Promise<any>;
 
-        setSeekTarget(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
+        pruneAllSafely(): Promise<any>;
+
+        pruneBuffer(): void;
+
+        reset(): void;
+
+        segmentRequestingCompleted(): void
+
+        setIsBufferingCompleted(value: boolean): void;
+
+        setMediaSource(value: MediaSource): void;
+
+        setSeekTarget(): void;
 
         updateAppendWindow(): Promise<any>;
 
-        pruneAllSafely(): Promise<any>;
-
         updateBufferTimestampOffset(): Promise<any>;
-
-        segmentRequestingCompleted(): void // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
     }
 
     export interface TextController {
+        addEmbeddedTrack(streamInfo: StreamInfo, mediaInfo: MediaInfo): void;
+
+        addMediaInfosToBuffer(streamInfo: StreamInfo, mInfos: MediaInfo[], mimeType: string | null, fragmentModel?: FragmentModel): void;
+
+        createTracks(streamInfo: StreamInfo): void;
+
         deactivateStream(streamInfo: StreamInfo): void;
+
+        enableForcedTextStreaming(enable: boolean): void;
+
+        enableText(streamId: string, enable: boolean): void;
+
+        getAllTracksAreDisabled(): boolean;
+
+        getCurrentTrackIdx(streamId: string): number;
+
+        getTextSourceBuffer(streamInfo: StreamInfo): TextSourceBuffer;
 
         initialize(): void;
 
         initializeForStream(streamInfo: StreamInfo): void;
 
-        createTracks(streamInfo: StreamInfo): void;
-
-        getTextSourceBuffer(streamInfo: StreamInfo): TextSourceBuffer;
-
-        getAllTracksAreDisabled(): boolean;
-
-        addEmbeddedTrack(streamInfo: StreamInfo, mediaInfo: MediaInfo): void;
-
-        enableText(streamId: string, enable: boolean): void;
-
         isTextEnabled(): boolean;
 
-        setTextTrack(streamId: string, idx: number): void;
-
-        getCurrentTrackIdx(streamId: string): number;
-
-        enableForcedTextStreaming(enable: boolean): void;
-
-        addMediaInfosToBuffer(streamInfo: StreamInfo, mInfos: MediaInfo[], mimeType: string | null, fragmentModel?: FragmentModel): void;
-
         reset(): void;
+
+        setTextTrack(streamId: string, idx: number): void;
     }
 
     export interface TextSourceBuffer {
-        initialize(): void;
-
-        addMediaInfos(type: string, mInfos: MediaInfo[], fModel: FragmentModel): void;
-
-        resetMediaInfos(): void;
-
-        getStreamId(): string;
-
-        append(bytes: number[], chunk: DataChunk): void;
-
-        abort(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
+        abort(): void;
 
         addEmbeddedTrack(mediaInfo: MediaInfo): void;
 
-        resetEmbedded(): void;
+        addMediaInfos(type: string, mInfos: MediaInfo[], fModel: FragmentModel): void;
+
+        append(bytes: number[], chunk: DataChunk): void;
 
         getConfig(): object;
 
-        setCurrentFragmentedTrackIdx(idx: number): void;
+        getStreamId(): string;
+
+        initialize(): void;
 
         remove(start?: number, end?: number): void;
 
         reset(): void;
+
+        resetEmbedded(): void;
+
+        resetMediaInfos(): void;
+
+        setCurrentFragmentedTrackIdx(idx: number): void;
     }
 
     export interface TextTracks {
-        initialize(): void;
-
-        getStreamId(): string;
-
-        createTracks(): void;
+        addCaptions(trackIdx: number, timeOffset: number, captionData: object): void;
 
         addTextTrack(textTrackInfoVO: TextTrackInfo): void;
 
-        addCaptions(trackIdx: number, timeOffset: number, captionData: object): void;
+        createTracks(): void;
 
-        manualProcessing(time: number): void;
-
-        disableManualTracks(): void;
-
-        getTrackByIdx(idx: number): object;
-
-        getCurrentTrackIdx(): number;
-
-        setCurrentTrackIdx(idx: number): void;
-
-        getTrackIdxForId(trackId: string): number;
-
-        getCurrentTrackInfo(): TextTrackInfo;
-
-        setModeForTrackIdx(idx: number, mode: string): void;
+        deleteAllTextTracks(): void;
 
         deleteCuesFromTrackIdx(trackIdx: number, start: number, end: number): void;
 
-        deleteAllTextTracks(): void;
+        disableManualTracks(): void;
+
+        getCurrentTrackIdx(): number;
+
+        getCurrentTrackInfo(): TextTrackInfo;
+
+        getStreamId(): string;
+
+        getTrackByIdx(idx: number): object;
+
+        getTrackIdxForId(trackId: string): number;
+
+        initialize(): void;
+
+        manualProcessing(time: number): void;
+
+        setCurrentTrackIdx(idx: number): void;
+
+        setModeForTrackIdx(idx: number, mode: string): void;
     }
 
     /**
@@ -4950,35 +4912,27 @@ declare namespace dashjs {
      **/
 
     export interface ThumbnailController {
-        initialize(): void;
-
-        getStreamId(): string;
-
-        provide(time: number, callback: Function): void;
-
-        setTrackByIndex(index: number): void;
-
-        setTrackById(id: number): void;
+        getCurrentTrack(): object;
 
         getCurrentTrackIndex(): number;
 
-        getCurrentTrack(): object;
-
         getPossibleVoRepresentations(): Representation[];
 
+        getStreamId(): string;
+
+        initialize(): void;
+
+        provide(time: number, callback: Function): void;
+
         reset(): void;
+
+        setTrackById(id: number): void;
+
+        setTrackByIndex(index: number): void;
     }
 
     export interface ThumbnailTracks {
-        getTracks(): any[];
-
         addTracks(): void;
-
-        reset(): void;
-
-        setTrackByIndex(index: number): void;
-
-        setTrackById(id: number): void;
 
         getCurrentTrack(): any | null;
 
@@ -4987,6 +4941,14 @@ declare namespace dashjs {
         getRepresentations(): Representation[];
 
         getThumbnailRequestForTime(time: number): Request;
+
+        getTracks(): any[];
+
+        reset(): void;
+
+        setTrackById(id: number): void;
+
+        setTrackByIndex(index: number): void;
     }
 
     /**
@@ -5016,15 +4978,15 @@ declare namespace dashjs {
     export interface BaseURLSelector {
         chooseSelector(isDVB: boolean): void;
 
-        select(data: ArrayBuffer): void;
-
         reset(): void;
+
+        select(data: ArrayBuffer): void;
 
         setConfig(config: object): void;
     }
 
     export interface BoxParser {
-        parse(data: ArrayBuffer): IsoFile | null;
+        findInitRange(data: ArrayBuffer): Range;
 
         findLastTopIsoBoxCompleted(types: string[], buffer: ArrayBuffer | Uint8Array, offset: number): IsoBoxSearchInfo;
 
@@ -5032,43 +4994,43 @@ declare namespace dashjs {
 
         getSamplesInfo(ab: ArrayBuffer): object;
 
-        findInitRange(data: ArrayBuffer): Range;
+        parse(data: ArrayBuffer): IsoFile | null;
 
         parsePayload(types: string[], buffer: ArrayBuffer, offset: number): IsoBoxSearchInfo;
     }
 
     export interface Capabilities {
-        supportsMediaSource(): boolean;
-
-        setConfig(config: object): void;
-
-        setProtectionController(data: any): void;
+        areKeyIdsExpired(mediaInfo: MediaInfo): boolean;
 
         areKeyIdsUsable(mediaInfo: MediaInfo): boolean;
 
-        areKeyIdsExpired(mediaInfo: MediaInfo): boolean;
-
-        isProtectionCompatible(previousStreamInfo: StreamInfo, newStreamInfo: StreamInfo): boolean;
-
-        supportsEncryptedMedia(): boolean;
-
-        supportsChangeType(): boolean;
-
-        setEncryptedMediaSupported(value: boolean): void;
-
-        runCodecSupportCheck(basicConfiguration: object, type: string): Promise<void>;
+        codecRootCompatibleWithCodec(codec1: string, codec2: string): boolean;
 
         isCodecSupportedBasedOnTestedConfigurations(basicConfiguration: object, type: string): boolean;
 
+        isProtectionCompatible(previousStreamInfo: StreamInfo, newStreamInfo: StreamInfo): boolean;
+
+        runCodecSupportCheck(basicConfiguration: object, type: string): Promise<void>;
+
+        setConfig(config: object): void;
+
+        setEncryptedMediaSupported(value: boolean): void;
+
+        setProtectionController(data: any): void;
+
+        supportsChangeType(): boolean;
+
+        supportsEncryptedMedia(): boolean;
+
         supportsEssentialProperty(ep: object): boolean;
 
-        codecRootCompatibleWithCodec(codec1: string, codec2: string): boolean;
+        supportsMediaSource(): boolean;
     }
 
     export interface CapabilitiesFilter {
-        setConfig(config: object): void;
-
         filterUnsupportedFeatures(manifest: object): Promise<any>;
+
+        setConfig(config: object): void;
     }
 
     export interface CustomTimeRanges {
@@ -5079,31 +5041,31 @@ declare namespace dashjs {
 
         clear(): void;
 
-        remove(start: number, end: number): void;
+        end(index: number): number;
 
         mergeRanges(rangeIndex1: number, rangeIndex2: number): boolean;
 
-        start(index: number): number;
+        remove(start: number, end: number): void;
 
-        end(index: number): number;
+        start(index: number): number;
     }
 
     export interface DefaultURLUtils {
+        isHTTPS(url: string): boolean;
+
+        isHTTPURL(url: string): boolean;
+
+        isPathAbsolute(url: string): boolean;
+
+        isRelative(url: string): boolean;
+
+        isSchemeRelative(url: string): boolean;
+
         parseBaseUrl(url: string): string;
 
         parseOrigin(url: string): string;
 
         parseScheme(url: string): string;
-
-        isRelative(url: string): boolean;
-
-        isPathAbsolute(url: string): boolean;
-
-        isSchemeRelative(url: string): boolean;
-
-        isHTTPURL(url: string): boolean;
-
-        isHTTPS(url: string): boolean;
 
         removeHostname(url: string): string;
 
@@ -5113,25 +5075,17 @@ declare namespace dashjs {
     export interface DOMStorage {
         getSavedBitrateSettings(type: string): number;
 
-        setSavedBitrateSettings(type: string, bitrate: number): void;
-
         getSavedMediaSettings(type: string): object;
+
+        setSavedBitrateSettings(type: string, bitrate: number): void;
 
         setSavedMediaSettings(type: string, value: any): void;
     }
 
     export interface EBMLParser {
-        getPos(): number;
-
-        setPos(value: number): void;
-
         consumeTag(tag: object, test: boolean): boolean;
 
         consumeTagAndSize(tag: object, test: boolean): boolean;
-
-        parseTag(tag: object): boolean;
-
-        skipOverElement(tag: object, test: boolean): boolean;
 
         getMatroskaCodedNum(retainMSB: boolean): number;
 
@@ -5139,7 +5093,15 @@ declare namespace dashjs {
 
         getMatroskaUint(size: number): number;
 
+        getPos(): number;
+
         moreData(): boolean;
+
+        parseTag(tag: object): boolean;
+
+        setPos(value: number): void;
+
+        skipOverElement(tag: object, test: boolean): boolean;
     }
 
     export interface ErrorHandler {
@@ -5147,9 +5109,9 @@ declare namespace dashjs {
     }
 
     export interface InitCache {
-        save(chunk: DataChunk): void;
-
         extract(streamId: string, representationId: string): any | null;
+
+        save(chunk: DataChunk): void;
 
         reset(): void;
     }
@@ -5159,9 +5121,9 @@ declare namespace dashjs {
 
         getBoxes(type: string): IsoBox[];
 
-        setData(value: string): void;
-
         getLastBox(): IsoBox | null;
+
+        setData(value: string): void;
     }
 
     export interface LocationSelector { // DOUBLED UP?
@@ -5171,9 +5133,9 @@ declare namespace dashjs {
     }
 
     export interface LocationSelector {
-        select(mpdLocations: MpdLocation[]): MpdLocation | null;
-
         reset(): void;
+
+        select(mpdLocations: MpdLocation[]): MpdLocation | null;
 
         setConfig(config: object): void;
     }
@@ -5183,13 +5145,13 @@ declare namespace dashjs {
     }
 
     export interface SupervisorTools { // BASE FILE DIFFERENT LAYOUT FROM ALL OTHERS
-        checkParameterType(parameter: any, type: string): void;
-
         checkInteger(parameter: any): void;
 
-        checkRange(parameter: any, min: number, max: number): void;
-
         checkIsVideoOrAudioType(type: string): void;
+
+        checkParameterType(parameter: any, type: string): void;
+
+        checkRange(parameter: any, min: number, max: number): void;
     }
 
     export interface TimeUtils {
@@ -5209,7 +5171,15 @@ declare namespace dashjs {
     }
 
     export interface URLUtils {
-        registerUrlRegex(regex: RegExp, utils: object): void;
+        isHTTPS(url: string): boolean;
+
+        isHTTPURL(url: string): boolean;
+
+        isPathAbsolute(url: string): boolean;
+
+        isRelative(url: string): boolean;
+
+        isSchemeRelative(url: string): boolean;
 
         parseBaseUrl(url: string): string;
 
@@ -5217,15 +5187,7 @@ declare namespace dashjs {
 
         parseScheme(url: string): string;
 
-        isRelative(url: string): boolean;
-
-        isPathAbsolute(url: string): boolean;
-
-        isSchemeRelative(url: string): boolean;
-
-        isHTTPURL(url: string): boolean;
-
-        isHTTPS(url: string): boolean;
+        registerUrlRegex(regex: RegExp, utils: object): void;
 
         removeHostname(url: string): string;
 
@@ -5237,9 +5199,9 @@ declare namespace dashjs {
     }
 
     export interface VTTParser {
-        parse(data: ArrayBuffer): { start: number, end: number, data: string, styles: any };
-
         getCaptionStyles(arr: Array<any>): object;
+
+        parse(data: ArrayBuffer): { start: number, end: number, data: string, styles: any };
     }
 
     /**
@@ -5268,41 +5230,40 @@ declare namespace dashjs {
     }
 
     export interface HTTPRequest {
-        tcpid: string | null;
-        type?: string | null;
-        url: string | null;
-        actualurl: string | null;
-        range: any[];
-        trequest: Date | null;
-        tresponse: Date | null;
-        responsecode: number | null;
-        interval: number | null;
-        trace: any[];
-        cmsd: object;
-        _stream: MediaType;
-        _tfinish: Date | null;
+        _fileLoaderType: string;
         _mediaduration: number | null;
         _quality: number | null;
+        _resourceTimingValues: object;
         _responseHeaders: any[] | null;
         _serviceLocation: string | null;
-        _fileLoaderType: string;
-        _resourceTimingValues: object;
+        _stream: MediaType;
+        _tfinish: Date | null;
+        actualurl: string | null;
+        cmsd: object;
+        interval: number | null;
+        range: any[];
+        responsecode: number | null;
+        tcpid: string | null;
+        trace: any[];
+        trequest: Date | null;
+        tresponse: Date | null;
+        type?: string | null;
+        url: string | null;
     }
 
     export interface ManifestUpdate {
-        mediaType: MediaType | null;
-        type: string | null;
-        requestTime: number | null;
-        fetchTime: number | null;
         availabilityStartTime: number | null;
-        presentationStartTime: number;
+        buffered: object | null;
         clientTimeOffset: number;
         currentTime: number | null;
-        buffered: object | null;
+        fetchTime: number | null;
         latency: number;
-        streamInfo: StreamInfo[];
+        mediaType: MediaType | null;
+        presentationStartTime: number;
         representationInfo: ManifestUpdateRepresentationInfo[];
-
+        requestTime: number | null;
+        streamInfo: StreamInfo[];
+        type: string | null;
     }
 
     export interface ManifestUpdateRepresentationInfo {
@@ -5314,34 +5275,34 @@ declare namespace dashjs {
     }
 
     export interface PlayList {
-        start: number | null;
         mstart: number | null;
+        start: number | null;
         starttype: string | null;
         trace: any[];
     }
 
     export interface RepresentationSwitch {
-        t: number | null;
-        mt: number | null;
-        to: number | null;
         lto: number | null;
+        mt: number | null;
+        t: number | null;
+        to: number | null;
     }
 
     export interface PlayListTrace {
-        representationid: string | null;
-        subreplevel: number | null;
-        start: number | null;
-        mstart: number | null;
         duration: number | null;
+        mstart: number | null;
         playbackspeed: number | null;
+        representationid: string | null;
+        start: number | null;
         stopreason: string | null;
+        subreplevel: number | null;
     }
 
     export interface RequestSwitch {
-        t: number | null;
-        mt: number | null;
-        to: string | null;
         lto: string | null;
+        mt: number | null;
+        t: number | null;
+        to: string | null;
     }
 
     export class RequestsQueue {
@@ -5358,23 +5319,23 @@ declare namespace dashjs {
 
     //eg. duration initialized with null; should be NaN?
     export interface SchedulingInfo {
-        mediaType: MediaType | null;
-        t: number | null;
-        type: string | null;
-        startTime: number | null;
         availabilityStartTime: number | null;
         duration: number | null;
+        mediaType: MediaType | null;
         quality: number | null;
         range: Range | null;
+        startTime: number | null;
         state: string | null;
+        t: number | null;
+        type: string | null;
     }
 
     export interface TCPConnection {
-        tcpid: string | null;
         dest: string | null;
-        topen: number | null;
         tclose: number | null;
         tconnect: number | null
+        tcpid: string | null;
+        topen: number | null;
     }
 
     /**
@@ -5382,32 +5343,32 @@ declare namespace dashjs {
      */
 
     export class BitrateInfo {
-        mediaType: MediaType;
         bitrate: number;
-        width: number;
         height: number;
-        scanType: string;
+        mediaType: MediaType;
         qualityIndex: number;
+        scanType: string;
+        width: number;
     }
 
     interface DashJSError {
         code: number | null;
-        message: string | null;
         data: unknown | null;
+        message: string | null;
     }
 
     export interface DataChunk {
-        streamId: string | null;
-        mediaInfo: MediaInfo | null;
-        segmentType: string | null;
-        quality: number;
-        index: number;
         bytes: number[] | null;
-        start: number;
-        end: number;
         duration: number;
-        representationId: string | null;
+        end: number;
         endFragment: object | null;
+        index: number;
+        mediaInfo: MediaInfo | null;
+        quality: number;
+        representationId: string | null;
+        segmentType: string | null;
+        start: number;
+        streamId: string | null;
     }
 
     export class FragmentRequest {
@@ -5427,10 +5388,10 @@ declare namespace dashjs {
         mediaType: MediaType;
         quality: number;
         representationId: string;
-        startDate: Date;
         requestEndDate: Date | null;
         responseType: string;
         serviceLocation: string;
+        startDate: Date;
         startTime: number;
         timescale: number;
         type: 'InitializationSegment' | 'MediaSegment' | null;
@@ -5445,20 +5406,20 @@ declare namespace dashjs {
     }
 
     export class HttpLoaderRequest {
-        url: string;
+        headers: object;
+        loader: object;
         method: string;
-        withCredentials: boolean;
-        request: FragmentRequest;
+        onerror: Function;
         onload: Function;
         onloadend: Function;
-        onerror: Function;
-        progress: Function;
         ontimeout: Function;
-        loader: object;
-        timeout: number;
-        headers: object;
-        response: object;
+        progress: Function;
         reader: object;
+        request: FragmentRequest;
+        response: object;
+        timeout: number;
+        url: string;
+        withCredentials: boolean;
     }
 
     export class IsoBox {
@@ -5468,8 +5429,8 @@ declare namespace dashjs {
     export class IsoBoxSearchInfo {
         constructor(lastCompletedOffset: number, found: boolean, size: number);
 
-        lastCompletedOffset: number;
         found: boolean;
+        lastCompletedOffset: number;
         size: number;
     }
 
@@ -5490,59 +5451,59 @@ declare namespace dashjs {
 
     export class MediaInfoSelectionInput {
         newMediaInfo: MediaInfo;
-        previouslySelectedRepresentation: Representation | null;
         newRepresentation: Representation | null
+        previouslySelectedRepresentation: Representation | null;
     }
 
     export class TextRequest extends FragmentRequest {
         constructor(url: string, type: string);
 
-        url: string | null;
-        type: 'InitializationSegment' | 'MediaSegment' | null;
         mediaType: MediaType;
         responseType: string;
+        type: 'InitializationSegment' | 'MediaSegment' | null;
+        url: string | null;
     }
 
     export class TextTrackInfo extends MediaInfo {
         captionData: CaptionData[] | null;
-        label: string | null;
         defaultTrack: boolean;
-        kind: string;
-        isFragmented: boolean;
         isEmbedded: boolean;
+        isFragmented: boolean;
         isTTML: boolean;
+        kind: string;
+        label: string | null;
     }
 
     export interface Thumbnail {
+        height: number;
         url: string;
         width: number;
-        height: number;
         x: number;
         y: number;
     }
 
     export interface ThumbnailTrackInfo {
         bitrate: number;
-        width: number;
         height: number;
+        heightPerTile: number;
+        id: string;
+        segmentDuration: number;
+        startNumber: number;
+        templateUrl: string;
         tilesHor: number;
         tilesVert: number;
-        widthPerTile: number;
-        heightPerTile: number;
-        startNumber: number;
-        segmentDuration: number;
         timescale: number;
-        templateUrl: string;
-        id: string;
+        width: number;
+        widthPerTile: number;
     }
 
     export interface URIFragmentData {
-        t: number | null;
-        xywh: any | null;
-        track: any | null;
         id: string | null;
-        s: any | null;
         r: any | null;
+        s: any | null;
+        t: number | null;
+        track: any | null;
+        xywh: any | null;
     }
 
     /**
@@ -5550,25 +5511,25 @@ declare namespace dashjs {
      **/
 
     export interface FragmentLoader {
+        abort(): void;
+
         checkForExistence(request: Request): void;
 
         load(request: Request): void;
 
-        abort(): void;
+        reset(): void;
 
         resetInitialSettings(): void;
-
-        reset(): void;
     }
 
     export interface FragmentSink {
-        append(chunk: DataChunk): void;
-
-        remove(start?: number, end?: number): void;
-
         abort(): void;
 
+        append(chunk: DataChunk): void;
+
         getAllBufferRanges(): any[];
+
+        remove(start?: number, end?: number): void;
 
         reset(): void;
     }
@@ -5580,17 +5541,17 @@ declare namespace dashjs {
     }
 
     export interface ManifestUpdater {
-        initialize(): void;
+        getIsUpdating(): boolean;
 
-        setManifest(manifest: object): void;
+        initialize(): void;
 
         refreshManifest(ignorePatch?: boolean): void;
 
-        getIsUpdating(): boolean;
+        reset(): void;
 
         setConfig(config: object): void;
 
-        reset(): void;
+        setManifest(manifest: object): void;
     }
 
     export namespace MediaPlayer {
@@ -5605,227 +5566,224 @@ declare namespace dashjs {
     export function MediaPlayer(): MediaPlayerFactory;
 
     export interface PreBufferSink {
-        getAllBufferRanges(): TimeRanges;
+        abort(): void;
 
         append(chunk: DataChunk): void;
 
-        remove(start: number, end: number): void;
-
-        abort(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
-
         discharge(start?: number, end?: number): void;
+
+        getAllBufferRanges(): TimeRanges;
+
+        getBuffer(): PreBufferSink;
+
+        remove(start: number, end: number): void;
 
         reset(): void;
 
-        updateTimestampOffset(): void; // DECLARED AND EXPORTED BUT NOT IMPLEMENTED
+        updateTimestampOffset(): void;
 
         waitForUpdateEnd(callback: Function): void;
-
-        getBuffer(): PreBufferSink;
     }
 
     export interface SourceBufferSink {
-        getType(): string;
+        abort(): Promise<any>;
+
+        append(chunk: DataChunk, request?: Request): Promise<any>;
+
+        changeType(codec: string): Promise<any>;
 
         getAllBufferRanges(): object;
 
         getBuffer(): Buffer;
 
-        append(chunk: DataChunk, request?: Request): Promise<any>;
+        getSessionType(): string;
 
-        remove(range: Range): Promise<any>;
+        getType(): string;
 
-        abort(): Promise<any>;
-
-        reset(): void;
-
-        updateTimestampOffset(mseTimeOffset: number): void;
-
-        initializeForStreamSwitch(mInfo: MediaInfo, selectedRepresentation: Representation, oldSourceBufferSink: SourceBufferSink): Promise<any>;
+        getUsable(): boolean;
 
         initializeForFirstUse(streamInfo: StreamInfo, mInfo: MediaInfo, selectedRepresentation: Representation): void;
 
+        initializeForStreamSwitch(mInfo: MediaInfo, selectedRepresentation: Representation, oldSourceBufferSink: SourceBufferSink): Promise<any>;
+
+        remove(range: Range): Promise<any>;
+
+        reset(): void;
+
         updateAppendWindow(sInfo: StreamInfo): void;
 
-        changeType(codec: string): Promise<any>;
-
-        getSessionType(): string;
-
-        getUsable(): boolean;
+        updateTimestampOffset(mseTimeOffset: number): void;
     }
 
     export interface Stream {
-        initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
-
-        getStreamId(): string;
-
         activate(mediaSource: MediaSource, previousBufferSinks: any[]): void;
 
         deactivate(keepBuffers: boolean): void;
 
-        getIsActive(): boolean;
+        getAdapter(): DashAdapter
 
         getDuration(): number;
 
-        getStartTime(): number;
-
-        getId(): string;
-
-        getStreamInfo(): StreamInfo | null;
-
         getHasAudioTrack(): boolean;
+
+        getHasFinishedBuffering(): boolean
 
         getHasVideoTrack(): boolean;
 
-        startPreloading(mediaSource: MediaSource, previousBuffers: any[], representationsFromPreviousPeriod: Representation[]): void;
+        getId(): string;
 
-        getThumbnailController(): object;
+        getIsActive(): boolean;
 
-        updateData(updatedStreamInfo: StreamInfo): void;
+        getIsEndedEventSignaled(): boolean
 
-        reset(): void;
+        getPreloaded(): boolean
+
+        getStartTime(): number;
+
+        getStreamId(): string;
+
+        getStreamInfo(): StreamInfo | null;
 
         getStreamProcessors(): any[];
 
-        setMediaSource(mediaSource: MediaSource): void;
+        getThumbnailController(): object;
+
+        initialize(streamInfo: StreamInfo, protectionController: ProtectionController): void;
 
         isMediaCodecCompatible(newStream: Stream, previousStream: Stream | null): boolean;
 
         isProtectionCompatible(newStream: Stream): boolean
 
-        getPreloaded(): boolean
-
-        getIsEndedEventSignaled(): boolean
-
-        setIsEndedEventSignaled(value: boolean): void
-
-        getAdapter(): DashAdapter
-
-        getHasFinishedBuffering(): boolean
-
-        startScheduleControllers(): void
+        prepareQualityChange(e: object): void
 
         prepareTrackChange(e: object): void
 
-        prepareQualityChange(e: object): void
+        reset(): void;
+
+        setIsEndedEventSignaled(value: boolean): void
+
+        setMediaSource(mediaSource: MediaSource): void;
+
+        startPreloading(mediaSource: MediaSource, previousBuffers: any[], representationsFromPreviousPeriod: Representation[]): void;
+
+        startScheduleControllers(): void
+
+        updateData(updatedStreamInfo: StreamInfo): void;
     }
 
     export interface StreamProcessor {
-        initialize(mediaSource: MediaSource, hasVideoTrack: boolean, isFragmented: boolean): void;
-
-        getStreamId(): string;
-
-        getType(): string;
-
-        isUpdating(): boolean;
-
-        getBufferController(): BufferController;
-
-        getFragmentModel(): FragmentModel;
-
-        getScheduleController(): ScheduleController;
-
-        getRepresentationController(): RepresentationController;
-
-        getVoRepresentation(quality: number): Representation;
-
-        getBufferLevel(): number;
-
-        isBufferingCompleted(): boolean;
-
-        createBufferSinks(previousBufferSinks: any[]): Promise<any>;
-
-        updateStreamInfo(newStreamInfo: StreamInfo): Promise<any>;
-
-        getStreamInfo(): StreamInfo;
-
-        selectMediaInfo(selectionInput: object): Promise<any>;
+        addMediaInfo(newMediaInfo: MediaInfo): void;
 
         clearMediaInfoArray(): void;
 
-        addMediaInfo(newMediaInfo: MediaInfo): void;
+        createBufferSinks(previousBufferSinks: any[]): Promise<any>;
 
-        prepareTrackSwitch(previousBufferSinks: any[]): Promise<any>;
+        finalisePlayList(time: number, reason: string): void;
 
-        prepareQualityChange(e: object): void;
+        getBuffer(): Buffer;
+
+        getBufferController(): BufferController;
+
+        getBufferLevel(): number;
+
+        getFragmentModel(): FragmentModel;
 
         getMediaInfo(): MediaInfo;
 
         getMediaSource(): MediaSource;
 
-        setMediaSource(mediaSource: MediaSource): void;
+        getRepresentationController(): RepresentationController;
 
-        getBuffer(): Buffer;
+        getScheduleController(): ScheduleController;
 
-        setExplicitBufferingTime(value: number): void;
+        getStreamId(): string;
 
-        finalisePlayList(time: number, reason: string): void;
+        getStreamInfo(): StreamInfo;
 
-        probeNextRequest(): Request;
+        getType(): string;
+
+        getVoRepresentation(quality: number): Representation;
+
+        initialize(mediaSource: MediaSource, hasVideoTrack: boolean, isFragmented: boolean): void;
+
+        isBufferingCompleted(): boolean;
+
+        isUpdating(): boolean;
 
         prepareInnerPeriodPlaybackSeeking(e: object): Promise<any>;
 
         prepareOuterPeriodPlaybackSeeking(): Promise<unknown>;
 
+        prepareQualityChange(e: object): void;
+
+        prepareTrackSwitch(previousBufferSinks: any[]): Promise<any>;
+
+        probeNextRequest(): Request;
+
         reset(errored: boolean, keepBuffers: boolean): void;
+
+        selectMediaInfo(selectionInput: object): Promise<any>;
+
+        setExplicitBufferingTime(value: number): void;
+
+        setMediaSource(mediaSource: MediaSource): void;
+
+        updateStreamInfo(newStreamInfo: StreamInfo): Promise<any>;
     }
 
     export interface Constants {
-        STREAM: 'stream';
-        VIDEO: 'video';
+        ABANDON_FRAGMENT_RULES: {
+            ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
+        }
+        ARRAY_BUFFER: 'ArrayBuffer';
         AUDIO: 'audio';
-        TEXT: 'text';
-        MUXED: 'muxed';
-        IMAGE: 'image';
-        STPP: 'stpp';
-        TTML: 'ttml';
-        VTT: 'vtt';
-        WVTT: 'wvtt';
-        CONTENT_STEERING: 'contentSteering';
-        LIVE_CATCHUP_MODE_DEFAULT: 'liveCatchupModeDefault';
-        LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP';
-        MOVING_AVERAGE_SLIDING_WINDOW: 'slidingWindow';
-        MOVING_AVERAGE_EWMA: 'ewma';
         BAD_ARGUMENT_ERROR: 'Invalid Arguments';
-        MISSING_CONFIG_ERROR: 'Missing config parameter(s)';
-        TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace';
-        TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace';
-        TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack';
-        TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate';
-        TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency';
-        TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange';
-        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority';
-        CMCD_MODE_QUERY: 'query';
-        CMCD_MODE_HEADER: 'header';
-        INITIALIZE: 'initialize';
-        TEXT_SHOWING: 'showing';
-        TEXT_HIDDEN: 'hidden';
         CC1: 'CC1';
         CC3: 'CC3';
-        UTF8: 'utf-8';
-        SCHEME_ID_URI: 'schemeIdUri';
-        START_TIME: 'starttime';
-        SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019';
-        SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019';
-        XML: 'XML';
-        ARRAY_BUFFER: 'ArrayBuffer';
-        DVB_REPORTING_URL: 'dvb:reportingUrl';
+        CMCD_MODE_HEADER: 'header';
+        CMCD_MODE_QUERY: 'query';
+        CONTENT_STEERING: 'contentSteering';
         DVB_PROBABILITY: 'dvb:probability';
-        VIDEO_ELEMENT_READY_STATES: {
-            HAVE_NOTHING: 0;
-            HAVE_METADATA: 1;
-            HAVE_CURRENT_DATA: 2;
-            HAVE_FUTURE_DATA: 3;
-            HAVE_ENOUGH_DATA: 4
-        };
+        DVB_REPORTING_URL: 'dvb:reportingUrl';
         FILE_LOADER_TYPES: {
             FETCH: 'fetch_loader';
             XHR: 'xhr_loader'
         };
-        THROUGHPUT_TYPES: {
-            LATENCY: 'throughput_type_latency';
-            BANDWIDTH: 'throughput_type_bandwidth'
+        IMAGE: 'image';
+        INITIALIZE: 'initialize';
+        LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
+            MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing';
+            DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData';
+            AAST: 'lowLatencyDownloadTimeCalculationModeAast';
         };
+        LIVE_CATCHUP_MODE_DEFAULT: 'liveCatchupModeDefault';
+        LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP';
+        MISSING_CONFIG_ERROR: 'Missing config parameter(s)';
+        MOVING_AVERAGE_EWMA: 'ewma';
+        MOVING_AVERAGE_SLIDING_WINDOW: 'slidingWindow';
+        MUXED: 'muxed';
+        QUALITY_SWITCH_RULES: {
+            BOLA_RULE: 'BolaRule';
+            THROUGHPUT_RULE: 'ThroughputRule';
+            INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule';
+            SWITCH_HISTORY_RULE: 'SwitchHistoryRule';
+            DROPPED_FRAMES_RULE: 'DroppedFramesRule';
+            LEARN_TO_ADAPT_RULE: 'L2ARule';
+            LOL_PLUS_RULE: 'LoLPRule'
+        };
+        RULES_TYPES: {
+            QUALITY_SWITCH_RULES: 'qualitySwitchRules';
+            ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
+        };
+        SCHEME_ID_URI: 'schemeIdUri';
+        SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019';
+        START_TIME: 'starttime';
+        STPP: 'stpp';
+        STREAM: 'stream';
+        SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019';
+        TEXT: 'text';
+        TEXT_HIDDEN: 'hidden';
+        TEXT_SHOWING: 'showing';
         THROUGHPUT_CALCULATION_MODES: {
             EWMA: 'throughputCalculationModeEwma';
             ZLEMA: 'throughputCalculationModeZlema';
@@ -5836,28 +5794,30 @@ declare namespace dashjs {
             BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean';
             DATE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeDateWeightedHarmonicMean';
         };
-        LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
-            MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing';
-            DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData';
-            AAST: 'lowLatencyDownloadTimeCalculationModeAast';
+        THROUGHPUT_TYPES: {
+            LATENCY: 'throughput_type_latency';
+            BANDWIDTH: 'throughput_type_bandwidth'
         };
-        RULES_TYPES: {
-            QUALITY_SWITCH_RULES: 'qualitySwitchRules';
-            ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
+        TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack';
+        TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate';
+        TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency';
+        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority';
+        TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange';
+        TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace';
+        TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace';
+        TTML: 'ttml';
+        UTF8: 'utf-8';
+        VIDEO: 'video';
+        VIDEO_ELEMENT_READY_STATES: {
+            HAVE_NOTHING: 0;
+            HAVE_METADATA: 1;
+            HAVE_CURRENT_DATA: 2;
+            HAVE_FUTURE_DATA: 3;
+            HAVE_ENOUGH_DATA: 4
         };
-        QUALITY_SWITCH_RULES: {
-            BOLA_RULE: 'BolaRule';
-            THROUGHPUT_RULE: 'ThroughputRule';
-            INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule';
-            SWITCH_HISTORY_RULE: 'SwitchHistoryRule';
-            DROPPED_FRAMES_RULE: 'DroppedFramesRule';
-            LEARN_TO_ADAPT_RULE: 'L2ARule';
-            LOL_PLUS_RULE: 'LoLPRule'
-        };
-        ABANDON_FRAGMENT_RULES: {
-            ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
-        }
-
+        VTT: 'vtt';
+        WVTT: 'wvtt';
+        XML: 'XML';
     }
 
     export interface XlinkLoader {
@@ -5867,9 +5827,13 @@ declare namespace dashjs {
     }
 
     export interface CaptionData {
-        start: number;
-        end: number;
+        cueID?: string;
         data?: string;
+        embeddedImages?: { [id: string]: string };
+        end: number;
+        images?: string[];
+        isd?: object;
+        start: number;
         styles?: {
             align?: string;
             line?: string;
@@ -5877,10 +5841,6 @@ declare namespace dashjs {
             size?: string;
         };
         type?: string;
-        cueID?: string;
-        isd?: object;
-        images?: string[];
-        embeddedImages?: { [id: string]: string };
     }
 
     export type MetricType = 'ManifestUpdate' | 'RequestsQueue';
@@ -5912,13 +5872,13 @@ declare namespace dashjs {
     }
 
     export interface KeySystemInfo {
+        cdmData?: ArrayBuffer;
+        initData?: ArrayBuffer;
+        keyId?: string,
         ks: KeySystem;
+        protData?: ProtectionData
         sessionId?: string,
         sessionType?: string,
-        keyId?: string,
-        initData?: ArrayBuffer;
-        cdmData?: ArrayBuffer;
-        protData?: ProtectionData
     }
 
     export type RequestFilter = (request: LicenseRequest) => Promise<any>;
