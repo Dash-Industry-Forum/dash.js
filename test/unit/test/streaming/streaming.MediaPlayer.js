@@ -588,7 +588,7 @@ describe('MediaPlayer', function () {
         });
 
         describe('When it is not initialized', function () {
-            it('Method getQualityFor should throw an exception', function () {
+            it('Method getCurrentRepresentationForType should throw an exception', function () {
                 expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
 
