@@ -985,7 +985,7 @@ describe('MediaPlayer', function () {
 
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
-            it('Method getBitrateInfoListFor should throw an exception', function () {
+            it('Method getCurrentRepresentationForType should throw an exception', function () {
                 expect(player.getCurrentRepresentationForType).to.throw('You must first call initialize() and set a source before calling this method');
             });
 
