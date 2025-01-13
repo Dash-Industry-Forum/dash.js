@@ -1010,7 +1010,7 @@ declare namespace dashjs {
 
         getPatchLocation(manifest: object): PatchLocation[];
 
-        getPeriodbyId(id: string): object | null;
+        getPeriodById(id: string): Period | null;
 
         getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
 
@@ -2689,8 +2689,10 @@ declare namespace dashjs {
     }
 
     export interface ICurrentRepresentationSwitch {
-        mt: Date;
+        mt: number;
         t: Date;
+        to: string;
+        lto: string;
     }
 
     export interface IBufferState {
