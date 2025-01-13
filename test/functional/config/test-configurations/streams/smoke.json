@@ -56,6 +56,21 @@
       ]
     },
     {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      },
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
       "name": "1080p with PlayReady and Widevine DRM, single key",
       "type": "vod",
       "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
@@ -78,7 +93,36 @@
       "includedTestfiles": [
         "playback/*",
         "audio/initial-audio",
-        "text/*"
+        "text/*",
+        "drm/keep-media-key-sessions"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-2-keys-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "drm/keep-media-key-sessions"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-1-key-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "drm/keep-media-key-sessions"
       ],
       "excludedPlatforms": [
         {

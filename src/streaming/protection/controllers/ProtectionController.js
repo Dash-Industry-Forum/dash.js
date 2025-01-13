@@ -717,7 +717,7 @@ function ProtectionController(config) {
      * @param {object} error
      * @private
      */
-    function _sendLicenseRequestCompleteEvent(data, error) {
+    function _sendLicenseRequestCompleteEvent(data, error = null) {
         eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, { data: data, error: error });
     }
 
@@ -1127,6 +1127,7 @@ function ProtectionController(config) {
                 return
             }
 
+            e.sessionToken.hasTriggeredKeyStatusMapUpdate = true;
             const parsedKeyStatuses = e.parsedKeyStatuses;
             const ua = Utils.parseUserAgent();
             const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
@@ -1138,7 +1139,9 @@ function ProtectionController(config) {
                 }
 
                 const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
-                keyStatusMap.set(keyIdInHex, keyStatus.status);
+                if (keyIdInHex && keyIdInHex !== '') {
+                    keyStatusMap.set(keyIdInHex, keyStatus.status);
+                }
             })
             eventBus.trigger(events.KEY_STATUSES_MAP_UPDATED, { keyStatusMap });
         } catch (e) {
@@ -1159,7 +1162,7 @@ function ProtectionController(config) {
 
     function areKeyIdsUsable(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0 || !keyStatusMap || keyStatusMap.size === 0) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
                 return true;
             }
 
@@ -1175,22 +1178,35 @@ function ProtectionController(config) {
 
     function areKeyIdsExpired(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
                 return false;
             }
 
-            let expired = false
-
-            normalizedKeyIds.forEach((normalizedKeyId) => {
-                const keyStatus = keyStatusMap.get(normalizedKeyId)
-                expired = keyStatus && keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED
+            return [...normalizedKeyIds].every((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId);
+                return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED;
             })
-
-            return expired
         } catch (error) {
             logger.error(error);
-            return true
+            return false
         }
+    }
+
+    function _shouldCheckKeyStatusMap(normalizedKeyIds) {
+        const sessionTokens = protectionModel.getSessionTokens();
+
+        if (sessionTokens && sessionTokens.length > 0) {
+            const targetSessionTokens = sessionTokens.filter((sessionToken) => {
+                return [...normalizedKeyIds].includes(sessionToken.normalizedKeyId);
+            })
+            const hasNotTriggeredKeyStatusMapUpdate = targetSessionTokens.some((sessionToken) => {
+                return !sessionToken.hasTriggeredKeyStatusMapUpdate;
+            })
+            if (hasNotTriggeredKeyStatusMapUpdate) {
+                return false;
+            }
+        }
+        return !settings.get().streaming.protection.ignoreKeyStatuses && normalizedKeyIds && normalizedKeyIds.size > 0 && keyStatusMap && keyStatusMap.size > 0
     }
 
     instance = {

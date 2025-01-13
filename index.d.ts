@@ -1079,6 +1079,7 @@ declare namespace dashjs {
                 keepProtectionMediaKeys?: boolean,
                 ignoreEmeEncryptedEvent?: boolean,
                 detectPlayreadyMessageFormat?: boolean,
+                ignoreKeyStatuses?: boolean,
             },
             buffer?: {
                 enableSeekDecorrelationFix?: boolean,
@@ -1449,7 +1450,7 @@ declare namespace dashjs {
 
         duration(): number;
 
-        timeAsUtc(): number;
+        timeAsUTC(): number;
 
         getActiveStream(): Stream | null;
 

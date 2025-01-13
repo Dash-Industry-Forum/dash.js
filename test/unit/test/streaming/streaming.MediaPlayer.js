@@ -186,8 +186,8 @@ describe('MediaPlayer', function () {
                 expect(player.duration).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method timeAsUtc should throw an exception', function () {
-                expect(player.timeAsUtc).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method timeAsUTC should throw an exception', function () {
+                expect(player.timeAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getDvrWindow should throw an exception', function () {
@@ -457,8 +457,8 @@ describe('MediaPlayer', function () {
                 expect(dvrWindow.size).to.be.equal(30);
             });
 
-            it('timeAsUtc should return time() VoD content', function () {
-                let time = player.timeAsUtc();
+            it('timeAsUTC should return time() VoD content', function () {
+                let time = player.timeAsUTC();
                 expect(time).to.be.NaN
             });
 
