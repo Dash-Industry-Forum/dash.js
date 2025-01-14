@@ -135,14 +135,16 @@ function AlternativeMpdController() {
         manifestInfo.originalUrl = manifest.originalUrl;
 
         scheduledEvents.forEach((scheduledEvent) => {
-            if (scheduledEvent.alternativeMPD.uri == manifestInfo.originalUrl) { 
+            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) { 
                 scheduledEvent.type = manifestInfo.type;
             } 
         });
     }
 
     function _onAlternativeEventeReceived(event) {
+        console.log('Normal', event)
         const alternativeEvent = _parseAlternativeMPDEvent(event)
+        console.log('parsed', alternativeEvent)
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
         } else {
@@ -231,7 +233,7 @@ function AlternativeMpdController() {
     function _initializeAlternativePlayer(event) {
         // Initialize alternative player
         altPlayer = MediaPlayer().create();
-        altPlayer.initialize(altVideoElement, event.alternativeMPD.uri, false, NaN, alternativeContext);
+        altPlayer.initialize(altVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
         altPlayer.setAutoPlay(false);
 
         altPlayer.on(Events.ERROR, (e) => {
@@ -247,9 +249,9 @@ function AlternativeMpdController() {
            
             return {
                 presentationTime: event.presentationTime / timescale,
-                duration: event.duration / timescale,
+                duration: event.duration,
                 alternativeMPD: {
-                    uri: alternativeMpdNode.uri,
+                    url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
                 },
                 mode: mode,
