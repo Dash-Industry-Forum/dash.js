@@ -184,7 +184,8 @@ function AlternativeMpdController() {
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    _switchToAlternativeContent(event);
+                    const timeToSwitch = event.startAtPlayhead ? lastTimestamp - event.presentationTime : 0
+                    _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
             } 
@@ -193,7 +194,7 @@ function AlternativeMpdController() {
                 return; 
             }
 
-            if (Math.round(e.time - lastTimestamp) != 0) {
+            if (Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
 
@@ -205,7 +206,6 @@ function AlternativeMpdController() {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            console.log(lastTimestamp);
             console.error('Error in onDashPlaybackTimeUpdated:', err);
         }
     }
@@ -255,7 +255,6 @@ function AlternativeMpdController() {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || 'insert';
-           
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: alternativeMpdNode.maxDuration ? Math.min(alternativeMpdNode.maxDuration / timescale, event.duration) : event.duration,
@@ -269,6 +268,7 @@ function AlternativeMpdController() {
                 watched: false,
                 type: 'static',
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
+                ...(!alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
             };
         }
     }
@@ -356,7 +356,7 @@ function AlternativeMpdController() {
         }, this);
     }
 
-    function _switchToAlternativeContent(event) {
+    function _switchToAlternativeContent(event, time = 0) {
         if (isSwitching) { return };
         isSwitching = true;
         const idx = scheduledEvents.findIndex(e => e === event);
@@ -374,6 +374,10 @@ function AlternativeMpdController() {
 
         videoModel.getElement().style.display = 'none';
         altVideoElement.style.display = 'block';
+
+        if (time) {
+            altPlayer.seek(time);
+        }
 
         altPlayer.play();
 
