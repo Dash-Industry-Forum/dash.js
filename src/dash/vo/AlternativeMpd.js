@@ -35,7 +35,7 @@
 
 class AlternativeMpd {
     constructor() {
-        this.uri = '';
+        this.url = '';
         this.earliestResolutionTimeOffset = NaN;
         this.mode = '';
         this.maxDuration = '';
