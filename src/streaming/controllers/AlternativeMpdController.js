@@ -418,7 +418,8 @@ function AlternativeMpdController() {
         eventTimeouts = [];
 
         if (altPlayer) {
-            altPlayer.off(MediaPlayerEvents.EVENTS_UPDATED, _onAlternativeEventeReceived, this);
+            altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+            altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
             altPlayer.reset();
             altPlayer = null;
         }
@@ -435,7 +436,8 @@ function AlternativeMpdController() {
         isSwitching = false;
         currentEvent = null;
 
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onAlternativeEventeReceived, this);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+        eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
     }
 
     instance = {
