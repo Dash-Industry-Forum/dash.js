@@ -191,8 +191,7 @@ function AlternativeMpdController() {
                 }
             }
         } catch (err) {
-            logger.info(lastTimestamp);
-            console.error('Error in onDashPlaybackTimeUpdated:', err);
+            logger.error(`Error at ${lastTimestamp} in onDashPlaybackTimeUpdated:`, err);
         }
     }
 
@@ -232,7 +231,7 @@ function AlternativeMpdController() {
         altPlayer.setAutoPlay(false);
 
         altPlayer.on(Events.ERROR, (e) => {
-            console.error('Alternative player error:', e);
+            logger.error('Alternative player error:', e);
         }, this);
     }
 
