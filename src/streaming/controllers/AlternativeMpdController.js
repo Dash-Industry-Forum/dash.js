@@ -249,7 +249,7 @@ function AlternativeMpdController() {
            
             return {
                 presentationTime: event.presentationTime / timescale,
-                duration: event.duration,
+                duration: alternativeMpdNode.maxDuration ? Math.min(alternativeMpdNode.maxDuration / timescale, event.duration) : event.duration,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
