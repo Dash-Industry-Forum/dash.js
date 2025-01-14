@@ -44,7 +44,7 @@ class AlternativeMpd {
         // Replace
         this.returnOffset = NaN;
         this.returnOffset = NaN;
-        this.clip = false;
+        this.clip = true;
         this.startAtPlayhead = false;
 
         // Old attributes
