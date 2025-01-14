@@ -34,6 +34,8 @@ import Debug from '../../core/Debug.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
+import Constants from '../constants/Constants.js';
+import Events from '../../core/events/Events.js'
 
 function EventController() {
 
@@ -294,6 +296,17 @@ function EventController() {
 
         if (!events[schemeIdUri]) {
             events[schemeIdUri] = [];
+        }
+
+        if (
+            schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
+            schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT
+        ) {
+            // "type" is reserved for the eventBus
+            delete event.type
+            eventBus.trigger(Events.ALTERNATIVE_EVENT_RECEIVED, event);
+            eventState = EVENT_HANDLED_STATES.DISCARDED;
+            return eventState;
         }
 
         const indexOfExistingEvent = events[schemeIdUri].findIndex((e) => {

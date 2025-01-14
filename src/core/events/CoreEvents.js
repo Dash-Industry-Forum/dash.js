@@ -40,6 +40,7 @@ import EventsBase from './EventsBase.js';
 class CoreEvents extends EventsBase {
     constructor () {
         super();
+        this.ALTERNATIVE_EVENT_RECEIVED = 'alternativeEventReceived';
         this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
