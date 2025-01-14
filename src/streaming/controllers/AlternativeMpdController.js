@@ -142,9 +142,7 @@ function AlternativeMpdController() {
     }
 
     function _onAlternativeEventeReceived(event) {
-        console.log('Normal', event)
         const alternativeEvent = _parseAlternativeMPDEvent(event)
-        console.log('parsed', alternativeEvent)
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
         } else {
@@ -179,14 +177,8 @@ function AlternativeMpdController() {
 
     function _onDashPlaybackTimeUpdated(e) {
         try {
-            if (currentEvent) {
-                if (currentEvent.type == 'dynamic') { return; }
-                if (currentEvent.duration <= e.time && Math.round(e.time - lastTimestamp) != 0) {
-                    _switchBackToMainContent(currentEvent);
-                }
-            }
-            else {
-                const currentTime = e.time;
+            const currentTime = e.time;
+            if (!currentEvent) {
                 lastTimestamp = e.time;
                 const event = _getCurrentEvent(currentTime);
 
@@ -194,6 +186,23 @@ function AlternativeMpdController() {
                     currentEvent = event;
                     _switchToAlternativeContent(event);
                 }
+                return;
+            } 
+
+            if (currentEvent.type == 'dynamic') { 
+                return; 
+            }
+
+            if (Math.round(e.time - lastTimestamp) != 0) {
+                return
+            }
+
+            const { presentationTime, duration, clip } = currentEvent;
+
+            if (clip && lastTimestamp + e.time >= presentationTime + duration) {
+                _switchBackToMainContent(currentEvent);
+            } else if (duration <= e.time) {
+                _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
             console.log(lastTimestamp);
@@ -258,7 +267,8 @@ function AlternativeMpdController() {
                 returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
                 watched: false,
-                type: 'static'
+                type: 'static',
+                ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
             };
         }
     }
@@ -312,7 +322,6 @@ function AlternativeMpdController() {
             setTimeout(() => {
                 _switchBackToMainContent(event);
             }, event.duration * 1000);
-            // currentEvent = null;
         }
     }
 
