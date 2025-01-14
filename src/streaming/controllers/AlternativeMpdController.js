@@ -120,7 +120,6 @@ function AlternativeMpdController() {
             }
         });
 
-        // Borrar por el amor de dios
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
