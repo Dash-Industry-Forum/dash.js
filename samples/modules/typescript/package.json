@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Test using dash.js in a Typescript based project",
   "dependencies": {
-    "dashjs": "latest"
+    "dashjs": "file:../../.."
   },
   "scripts": {
     "build": "webpack --config webpack.config.js"
