@@ -34,7 +34,7 @@ const configCommonDebugProdEsm = {
     mode: 'development',
     entry: prodEntries,
     output: {
-        filename: '[name].debug.esm.js'
+        filename: '[name].debug.js'
     }
 };
 
@@ -42,7 +42,7 @@ const configCommonMinProdEsm = {
     mode: 'production',
     entry: prodEntries,
     output: {
-        filename: '[name].min.esm.js'
+        filename: '[name].min.js'
     },
     optimization: {
         usedExports: false,
