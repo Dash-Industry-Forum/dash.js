@@ -33,6 +33,8 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from './../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 /*
 TODOS:
@@ -150,13 +152,13 @@ function AlternativeMpdController() {
         }
 
         switch (manifestInfo.type) {
-            case 'dynamic':
+            case DashConstants.DYNAMIC:
                 if (!currentEvent && !altPlayer) {
                     isMainDynamic = true;
                     _scheduleAlternativeMPDEvents();
                 }
                 break;
-            case 'static':
+            case DashConstants.STATIC:
                 if (!isMainDynamic) {
                     _prebufferNextAlternative();
                     _startDashEventPlaybackTimeMonitoring();
@@ -190,7 +192,7 @@ function AlternativeMpdController() {
                 return;
             } 
 
-            if (currentEvent.type == 'dynamic') { 
+            if (currentEvent.type == DashConstants.DYNAMIC) { 
                 return; 
             }
 
@@ -212,7 +214,7 @@ function AlternativeMpdController() {
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.watched && event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
                 return false;
             }
             return currentTime >= event.presentationTime &&
@@ -254,7 +256,7 @@ function AlternativeMpdController() {
         if (event.alternativeMpd) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
-            const mode = alternativeMpdNode.mode || 'insert';
+            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: alternativeMpdNode.maxDuration ? Math.min(alternativeMpdNode.maxDuration / timescale, event.duration) : event.duration,
@@ -266,7 +268,7 @@ function AlternativeMpdController() {
                 returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
                 watched: false,
-                type: 'static',
+                type: DashConstants.STATIC,
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
                 ...(!alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
             };
@@ -327,7 +329,7 @@ function AlternativeMpdController() {
 
     function _prebufferNextAlternative() {
         const nextEvent = scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.watched && event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
                 return false;
             }
             return !event.triggered;
@@ -366,7 +368,7 @@ function AlternativeMpdController() {
 
         _initializeAlternativePlayerElement(event);
 
-        if (event.type == 'dynamic') {
+        if (event.type == DashConstants.DYNAMIC) {
             _descheduleAlternativeMPDEvents(currentEvent);
         }
 
@@ -394,9 +396,9 @@ function AlternativeMpdController() {
         videoModel.getElement().style.display = 'block';
 
         let seekTime;
-        if (event.mode === 'replace') {
+        if (event.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
             seekTime = event.presentationTime + event.duration - event.returnOffset;
-        } else if (event.mode === 'insert') {
+        } else if (event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
             if (!event.watched) {
                 const idx = scheduledEvents.findIndex(e => e === event);
                 if (idx !== -1) {
