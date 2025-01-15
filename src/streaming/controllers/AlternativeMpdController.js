@@ -193,15 +193,14 @@ function AlternativeMpdController() {
                 return; 
             }
 
-            if (Math.round(e.time - lastTimestamp) != 0) {
+            const { presentationTime, maxDuration, clip } = currentEvent;
+            if (!maxDuration || Math.round(e.time - lastTimestamp) != 0) {
                 return
             }
 
-            const { presentationTime, duration, clip } = currentEvent;
-
-            if (clip && lastTimestamp + e.time >= presentationTime + duration) {
+            if (clip && lastTimestamp + e.time >= presentationTime + maxDuration) {
                 _switchBackToMainContent(currentEvent);
-            } else if (duration <= e.time) {
+            } else if (maxDuration <= e.time) {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
@@ -258,7 +257,8 @@ function AlternativeMpdController() {
            
             return {
                 presentationTime: event.presentationTime / timescale,
-                duration: alternativeMpdNode.maxDuration ? Math.min(alternativeMpdNode.maxDuration / timescale, event.duration) : event.duration,
+                duration: event.duration,
+                maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
