@@ -101,11 +101,11 @@ function AlternativeMpdController() {
     }
 
     function initialize() {
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
 
         if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+            altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
             altPlayer.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
         }
 
@@ -129,7 +129,7 @@ function AlternativeMpdController() {
         }
     }
 
-    function _onManifestUpdated(e) {
+    function _onManifestLoaded(e) {
         const manifest = e.data
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
@@ -142,9 +142,7 @@ function AlternativeMpdController() {
     }
 
     function _onAlternativeEventeReceived(event) {
-        console.log('Normal', event)
         const alternativeEvent = _parseAlternativeMPDEvent(event)
-        console.log('parsed', alternativeEvent)
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
         } else {
@@ -420,7 +418,7 @@ function AlternativeMpdController() {
         eventTimeouts = [];
 
         if (altPlayer) {
-            altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+            altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
             altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
             altPlayer.reset();
             altPlayer = null;
@@ -438,7 +436,7 @@ function AlternativeMpdController() {
         isSwitching = false;
         currentEvent = null;
 
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestUpdated, this);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
     }
 
