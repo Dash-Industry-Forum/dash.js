@@ -172,6 +172,7 @@ function AlternativeMpdController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
         if (altPlayer) {
             altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+            altPlayer.on(MediaPlayerEvents.PLAYBACK_ENDED, _endStreamSwitchBack, this);
         }
     }
 
@@ -194,7 +195,7 @@ function AlternativeMpdController() {
             }
 
             const { presentationTime, maxDuration, clip } = currentEvent;
-            if (!maxDuration || Math.round(e.time - lastTimestamp) != 0) {
+            if (!maxDuration || Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
 
@@ -204,7 +205,6 @@ function AlternativeMpdController() {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            console.log(lastTimestamp);
             console.error('Error in onDashPlaybackTimeUpdated:', err);
         }
     }
@@ -379,6 +379,13 @@ function AlternativeMpdController() {
 
         isSwitching = false;
         bufferedEvent = null;
+    }
+
+    function _endStreamSwitchBack() {
+        if (!currentEvent) {
+            return;
+        }
+        _switchBackToMainContent(currentEvent);
     }
 
     function _switchBackToMainContent(event) {
