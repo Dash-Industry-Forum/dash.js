@@ -22,7 +22,7 @@ instance `v3.1.0`.
 - [http://cdn.dashjs.org/vx.x.x/dash.all.min.js](http://cdn.dashjs.org/v3.1.0/dash.all.min.js)
 - [http://cdn.dashjs.org/vx.x.x/dash.all.debug.js](http://cdn.dashjs.org/v3.1.0/dash.all.debug.js)
 
-An overview of the dash.js releases can be found on [Github](https://github.com/Dash-Industry-Forum/dash.js/releases).
+An overview of the dash.js releases can be found on [GitHub](https://github.com/Dash-Industry-Forum/dash.js/releases).
 
 ## Build dist files yourself
 
