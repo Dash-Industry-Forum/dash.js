@@ -198,11 +198,12 @@ function AlternativeMpdController() {
                 return
             }
             
-            if (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) {
-                _switchBackToMainContent(currentEvent);
-            } else if (clip && lastTimestamp + e.time >= presentationTime + maxDuration) {
-                _switchBackToMainContent(currentEvent);
-            } else if (maxDuration <= e.time) {
+            const shouldSwitchBack = 
+            (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) ||
+            (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
+            (maxDuration <= e.time);
+
+            if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
