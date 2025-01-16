@@ -794,6 +794,77 @@ declare namespace dashjs {
         serviceDescriptions: serviceDescriptions[]
     }
 
+    export interface IAdaptation {
+        ContentProtection: IContentProtection | IContentProtection[];
+        Role: IRole | IRole[];
+        SegmentTemplate: ISegmentTemplate | ISegmentTemplate[];
+        Representation: Representation | Representation[];
+        id: string;
+        group: number;
+        contentType: string;
+        lang: string;
+        par: string;
+        minBandwidth: number;
+        maxBandwidth: number;
+        maxWidth: number;
+        maxHeight: number;
+        SegmentAlignment: boolean;
+        sar: string;
+        frameRate: number;
+        mimeType: string;
+        startWithSAP: number;
+    }
+
+    export interface IRole { // same content as UTCTiming ?
+        schemeIdUri: string;
+        value: string;
+    }
+
+    export interface ISegmentTemplate {
+        SegmentTimeline: ISegmentTimeline | ISegmentTimeline[];
+        timescale: number;
+        initialization: string;
+        media: string;
+    }
+
+    export interface ISegmentTimeline {
+        S: ISegmentTimelineProperty | ISegmentTimelineProperty[];
+    }
+
+    export interface ISegmentTimelineProperty {
+        d?: number;
+        r?: number;
+        t?: number;
+    }
+
+    export interface IRepresentation {
+        id: string;
+        bandwidth: number;
+        width: number;
+        height: number;
+        codecs: string;
+        scanType: string;
+        SegmentTemplate: ISegmentTemplate;
+        sar: string;
+        frameRate: number;
+        mimeType: string,
+        startWithSAP: number;
+        ContentProtection: IContentProtection[];
+    }
+
+    export interface IContentProtection {
+        keyId: string;
+        schemeIdUri: string;
+        "cenc:default_KID"?: string;
+        value?: string;
+        pssh?: IPssh | IPssh[];
+    }
+
+    export interface IPssh {
+        __prefix: string;
+        __text: string;
+    }
+
     export class MediaInfo {
         KID: any | null;
         accessibility: DescriptorType[] | null;
@@ -962,7 +1033,7 @@ declare namespace dashjs {
 
         areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
 
-        getAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): object | null;
+        getMainAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): IAdaptation | null;
 
         getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
 
@@ -2756,7 +2827,6 @@ declare namespace dashjs {
         CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
         CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
         CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
-
         INITIALIZE: 'initialize',
         TEXT_SHOWING: 'showing',
         TEXT_HIDDEN: 'hidden',
@@ -5731,95 +5801,6 @@ declare namespace dashjs {
         setMediaSource(mediaSource: MediaSource): void;
 
         updateStreamInfo(newStreamInfo: StreamInfo): Promise<any>;
-    }
-
-    export interface Constants {
-        ABANDON_FRAGMENT_RULES: {
-            ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
-        }
-        ARRAY_BUFFER: 'ArrayBuffer';
-        AUDIO: 'audio';
-        BAD_ARGUMENT_ERROR: 'Invalid Arguments';
-        CC1: 'CC1';
-        CC3: 'CC3';
-        CMCD_MODE_HEADER: 'header';
-        CMCD_MODE_QUERY: 'query';
-        CONTENT_STEERING: 'contentSteering';
-        DVB_PROBABILITY: 'dvb:probability';
-        DVB_REPORTING_URL: 'dvb:reportingUrl';
-        FILE_LOADER_TYPES: {
-            FETCH: 'fetch_loader';
-            XHR: 'xhr_loader'
-        };
-        IMAGE: 'image';
-        INITIALIZE: 'initialize';
-        LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
-            MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing';
-            DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData';
-            AAST: 'lowLatencyDownloadTimeCalculationModeAast';
-        };
-        LIVE_CATCHUP_MODE_DEFAULT: 'liveCatchupModeDefault';
-        LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP';
-        MISSING_CONFIG_ERROR: 'Missing config parameter(s)';
-        MOVING_AVERAGE_EWMA: 'ewma';
-        MOVING_AVERAGE_SLIDING_WINDOW: 'slidingWindow';
-        MUXED: 'muxed';
-        QUALITY_SWITCH_RULES: {
-            BOLA_RULE: 'BolaRule';
-            THROUGHPUT_RULE: 'ThroughputRule';
-            INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule';
-            SWITCH_HISTORY_RULE: 'SwitchHistoryRule';
-            DROPPED_FRAMES_RULE: 'DroppedFramesRule';
-            LEARN_TO_ADAPT_RULE: 'L2ARule';
-            LOL_PLUS_RULE: 'LoLPRule'
-        };
-        RULES_TYPES: {
-            QUALITY_SWITCH_RULES: 'qualitySwitchRules';
-            ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
-        };
-        SCHEME_ID_URI: 'schemeIdUri';
-        SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019';
-        START_TIME: 'starttime';
-        STPP: 'stpp';
-        STREAM: 'stream';
-        SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019';
-        TEXT: 'text';
-        TEXT_HIDDEN: 'hidden';
-        TEXT_SHOWING: 'showing';
-        THROUGHPUT_CALCULATION_MODES: {
-            EWMA: 'throughputCalculationModeEwma';
-            ZLEMA: 'throughputCalculationModeZlema';
-            ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean';
-            BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean';
-            DATE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeDateWeightedArithmeticMean';
-            HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean';
-            BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean';
-            DATE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeDateWeightedHarmonicMean';
-        };
-        THROUGHPUT_TYPES: {
-            LATENCY: 'throughput_type_latency';
-            BANDWIDTH: 'throughput_type_bandwidth'
-        };
-        TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack';
-        TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate';
-        TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency';
-        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority';
-        TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange';
-        TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace';
-        TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace';
-        TTML: 'ttml';
-        UTF8: 'utf-8';
-        VIDEO: 'video';
-        VIDEO_ELEMENT_READY_STATES: {
-            HAVE_NOTHING: 0;
-            HAVE_METADATA: 1;
-            HAVE_CURRENT_DATA: 2;
-            HAVE_FUTURE_DATA: 3;
-            HAVE_ENOUGH_DATA: 4
-        };
-        VTT: 'vtt';
-        WVTT: 'wvtt';
-        XML: 'XML';
     }
 
     export interface XlinkLoader {
