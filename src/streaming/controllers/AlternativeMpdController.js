@@ -135,9 +135,9 @@ function AlternativeMpdController() {
         manifestInfo.originalUrl = manifest.originalUrl;
 
         scheduledEvents.forEach((scheduledEvent) => {
-            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) { 
+            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) {
                 scheduledEvent.type = manifestInfo.type;
-            } 
+            }
         });
     }
 
@@ -177,7 +177,7 @@ function AlternativeMpdController() {
 
     function _onDashPlaybackTimeUpdated(e) {
         try {
-            const currentTime = e.time;
+            const { time: currentTime, timeToEnd } = e;
             if (!currentEvent) {
                 lastTimestamp = e.time;
                 const event = _getCurrentEvent(currentTime);
@@ -188,21 +188,22 @@ function AlternativeMpdController() {
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
-            } 
-
-            if (currentEvent.type == 'dynamic') { 
-                return; 
             }
 
+            if (currentEvent.type == 'dynamic') {
+                return;
+            }
+
+            const { presentationTime, maxDuration, clip } = currentEvent;
             if (Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
 
-            const { presentationTime, duration, clip } = currentEvent;
-
-            if (clip && lastTimestamp + e.time >= presentationTime + duration) {
+            if (!maxDuration && timeToEnd <= 0) {
                 _switchBackToMainContent(currentEvent);
-            } else if (duration <= e.time) {
+            } else if (clip && lastTimestamp + e.time >= presentationTime + maxDuration) {
+                _switchBackToMainContent(currentEvent);
+            } else if (maxDuration <= e.time) {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
@@ -257,7 +258,8 @@ function AlternativeMpdController() {
             const mode = alternativeMpdNode.mode || 'insert';
             return {
                 presentationTime: event.presentationTime / timescale,
-                duration: alternativeMpdNode.maxDuration ? Math.min(alternativeMpdNode.maxDuration / timescale, event.duration) : event.duration,
+                duration: event.duration,
+                maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
