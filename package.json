@@ -10,7 +10,8 @@
       "import": "./dist/modern/esm/dash.all.min.js",
       "default": "./dist/modern/esm/dash.all.min.js",
       "browser": "./dist/modern/umd/dash.all.min.js",
-      "script": "./dist/modern/umd/dash.all.min.js"
+      "script": "./dist/modern/umd/dash.all.min.js",
+      "require": "./dist/modern/umd/dash.all.min.js"
     }
   },
   "type": "module",
