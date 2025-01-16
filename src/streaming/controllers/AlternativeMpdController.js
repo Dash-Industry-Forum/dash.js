@@ -177,7 +177,7 @@ function AlternativeMpdController() {
 
     function _onDashPlaybackTimeUpdated(e) {
         try {
-            const { time: currentTime, timeToEnd } = e;
+            const currentTime = e.time;
             if (!currentEvent) {
                 lastTimestamp = e.time;
                 const event = _getCurrentEvent(currentTime);
@@ -194,11 +194,11 @@ function AlternativeMpdController() {
             }
 
             const { presentationTime, maxDuration, clip } = currentEvent;
-            if (Math.round(e.time - lastTimestamp) <= 0) {
+            if (Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
-
-            if (!maxDuration && timeToEnd === 0) {
+            
+            if (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) {
                 _switchBackToMainContent(currentEvent);
             } else if (clip && lastTimestamp + e.time >= presentationTime + maxDuration) {
                 _switchBackToMainContent(currentEvent);
@@ -392,7 +392,12 @@ function AlternativeMpdController() {
 
         let seekTime;
         if (event.mode === 'replace') {
-            seekTime = event.presentationTime + event.duration - event.returnOffset;
+            if (event.returnOffset || event.returnOffset === 0) {
+                seekTime = event.presentationTime + event.returnOffset;
+            } else {
+                seekTime = event.presentationTime + (event.maxDuration ? event.maxDuration : altPlayer.duration());
+            }
+            seekTime = event.presentationTime + event.maxDuration - event.returnOffset;
         } else if (event.mode === 'insert') {
             if (!event.watched) {
                 const idx = scheduledEvents.findIndex(e => e === event);
