@@ -35,14 +35,21 @@
 
 class AlternativeMpd {
     constructor() {
-        this.uri = '';
+        this.url = '';
         this.earliestResolutionTimeOffset = NaN;
         this.mode = '';
+        this.maxDuration = '';
+        this.serviceDescriptionId = NaN;
+
+        // Replace
+        this.returnOffset = NaN;
+        this.returnOffset = NaN;
+        this.clip = true;
+        this.startAtPlayhead = false;
+
+        // Old attributes
         this.disableJumpTimeOffest = NaN;
         this.playTimes = '';
-        this.presentationTime = NaN;
-        this.duration = NaN;
-        this.returnOffset = NaN;
     }
 }
 

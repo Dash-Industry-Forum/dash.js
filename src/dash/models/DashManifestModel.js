@@ -1062,9 +1062,18 @@ function DashManifestModel() {
                     } else {
                         event.id = null;
                     }
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.STATUS)) {
+                        event.status = currentMpdEvent.status;
+                    } else {
+                        event.status = null;
+                    }
 
-                    if (currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD)) {
-                        event.alternativeMpd = getAlternativeMpd(currentMpdEvent.AlternativeMPD);
+                    const alternativeMpdKey = Object.keys(DashConstants.ALTERNATIVE_MPD).find(key =>
+                        currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD[key])
+                    );
+                    
+                    if (alternativeMpdKey) {
+                        event.alternativeMpd = getAlternativeMpd(currentMpdEvent[DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]], DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]);
                         event.calculatedPresentationTime = 0;
                     } else {
                         event.alternativeMpd = null;
@@ -1092,16 +1101,37 @@ function DashManifestModel() {
         return events;
     }
 
-    function getAlternativeMpd(event) {
+    function getAlternativeMpd(event, mode) {
+        if (!mode) {
+            return
+        }
         const alternativeMpd = new AlternativeMpd();
-        alternativeMpd.uri = event.uri ?? null;
-        alternativeMpd.duration = event.duration ?? null;
-        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
-        alternativeMpd.mode = event.mode ?? null;
+
+        getAlternativeMpdCommonData(alternativeMpd, event);
+
+        // Keep to avoid errors with the old signaling
         alternativeMpd.disableJumpTimeOffest = event.disableJumpTimeOffest ?? null;
         alternativeMpd.playTimes = event.playTimes ?? null;
-        alternativeMpd.returnOffset = event.returnOffset ?? null;
-        return alternativeMpd;
+
+        if (mode === DashConstants.ALTERNATIVE_MPD.INSERT) {
+            alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.INSERT;
+            return alternativeMpd;
+        }
+
+        if (mode === DashConstants.ALTERNATIVE_MPD.REPLACE) {
+            alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.REPLACE;
+            alternativeMpd.returnOffset = event.returnOffset ?? null;
+            alternativeMpd.clip = event.clip ?? null;
+            alternativeMpd.startAtPlayhead = event.startAtPlayhead ?? null;
+            return alternativeMpd;
+        }
+    }
+
+    function getAlternativeMpdCommonData(alternativeMpd, event) {
+        alternativeMpd.url = event.url ?? null;
+        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
+        alternativeMpd.serviceDescriptionId = event.serviceDescriptionId;
+        alternativeMpd.maxDuration = event.maxDuration;
     }
 
     function getEventStreams(inbandStreams, representation, period) {

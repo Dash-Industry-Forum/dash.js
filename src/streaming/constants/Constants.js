@@ -328,7 +328,11 @@ export default {
             REPLACE: 'replace',
             INSERT: 'insert'
         },
-        URI: 'urn:mpeg:dash:event:alternativeMPD:2022'
+        URIS: {
+            REPLACE: 'urn:mpeg:dash:event:alternativeMPD:replace:2025',
+            INSERT: 'urn:mpeg:dash:event:alternativeMPD:insert:2025'
+        }
+        
     },
 
     /**

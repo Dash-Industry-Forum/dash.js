@@ -33,7 +33,6 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from './../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Constants from '../constants/Constants.js';
 
 /*
 TODOS:
@@ -49,7 +48,6 @@ function AlternativeMpdController() {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        dashConstants,
         scheduledEvents = [],
         eventTimeouts = [],
         videoModel,
@@ -64,7 +62,8 @@ function AlternativeMpdController() {
         altVideoElement,
         alternativeContext,
         isMainDynamic = false,
-        lastTimestamp = 0;
+        lastTimestamp = 0,
+        manifestInfo = {};
 
     function setConfig(config) {
         if (!config) {
@@ -74,13 +73,6 @@ function AlternativeMpdController() {
         if (!videoModel) {
             videoModel = config.videoModel;
         }
-        // manifestModel = config.manifestModel;
-        dashConstants = config.DashConstants;
-
-        // if (!altPlayer) {
-        //     let mediaPlayerFactory = config.mediaPlayerFactory;
-        //     altPlayer = mediaPlayerFactory.create();
-        // }
 
         if (!!config.playbackController && !playbackController) {
             playbackController = config.playbackController;
@@ -110,8 +102,11 @@ function AlternativeMpdController() {
 
     function initialize() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
+
         if (altPlayer) {
             altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+            altPlayer.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
         }
 
         document.addEventListener('fullscreenchange', () => {
@@ -132,27 +127,29 @@ function AlternativeMpdController() {
             videoModel.getElement().parentNode.insertBefore(fullscreenDiv, videoModel.getElement());
             fullscreenDiv.appendChild(videoModel.getElement());
         }
-
-        eventBus.on(Constants.ALTERNATIVE_MPD.URI, _onAlternativeLoad);
-    }
-
-    function _onAlternativeLoad(e) {
-        console.log(e);
-        console.log('I\'m coming from an alternative based event');
     }
 
     function _onManifestLoaded(e) {
-        const manifest = e.data;
-        const events = _parseAlternativeMPDEvents(manifest)
+        const manifest = e.data
+        manifestInfo.type = manifest.type;
+        manifestInfo.originalUrl = manifest.originalUrl;
+
+        scheduledEvents.forEach((scheduledEvent) => {
+            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) { 
+                scheduledEvent.type = manifestInfo.type;
+            } 
+        });
+    }
+
+    function _onAlternativeEventeReceived(event) {
+        const alternativeEvent = _parseAlternativeMPDEvent(event)
         if (scheduledEvents && scheduledEvents.length > 0) {
-            scheduledEvents.push(...events)
+            scheduledEvents.push(alternativeEvent)
         } else {
-            scheduledEvents = events
+            scheduledEvents = [alternativeEvent]
         }
 
-        scheduledEvents.forEach((d) => { if (d.alternativeMPD.uri == e.data.originalUrl) { d.type = e.data.type } });
-
-        switch (manifest.type) {
+        switch (manifestInfo.type) {
             case 'dynamic':
                 if (!currentEvent && !altPlayer) {
                     isMainDynamic = true;
@@ -234,7 +231,7 @@ function AlternativeMpdController() {
     function _initializeAlternativePlayer(event) {
         // Initialize alternative player
         altPlayer = MediaPlayer().create();
-        altPlayer.initialize(altVideoElement, event.alternativeMPD.uri, false, NaN, alternativeContext);
+        altPlayer.initialize(altVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
         altPlayer.setAutoPlay(false);
 
         altPlayer.on(Events.ERROR, (e) => {
@@ -242,41 +239,26 @@ function AlternativeMpdController() {
         }, this);
     }
 
-    function _parseAlternativeMPDEvents(manifest) {
-        const events = [];
-        const periods = manifest.Period || [];
-
-        periods.forEach(period => {
-            const eventStreams = period.EventStream || [];
-            eventStreams.forEach(eventStream => {
-                if (eventStream.schemeIdUri === dashConstants.ALTERNATIVE_MPD_SCHEME_ID) {
-                    const timescale = eventStream.timescale || 1;
-                    const eventsArray = eventStream.Event || [];
-                    eventsArray.forEach(ev => {
-                        if (ev && ev.AlternativeMPD) {
-                            const alternativeMPDNode = ev.AlternativeMPD;
-                            const mode = alternativeMPDNode.mode || 'insert';
-                            const eventObj = { //This should be casted using an AlternativeMpdObject
-                                presentationTime: ev.presentationTime / timescale,
-                                duration: ev.duration / timescale,
-                                alternativeMPD: {
-                                    uri: alternativeMPDNode.uri,
-                                    earliestResolutionTimeOffset: parseInt(alternativeMPDNode.earliestResolutionTimeOffset || '0', 10) / 1000,
-                                },
-                                mode: mode,
-                                returnOffset: parseInt(alternativeMPDNode.returnOffset || '0', 10) / 1000,
-                                triggered: false,
-                                watched: false,
-                                type: 'static'
-                            };
-                            events.push(eventObj);
-                        }
-                    });
-                }
-            });
-        });
-
-        return events;
+    function _parseAlternativeMPDEvent(event) {
+        if (event.alternativeMpd) {
+            const timescale = event.eventStream.timescale || 1;
+            const alternativeMpdNode = event.alternativeMpd;
+            const mode = alternativeMpdNode.mode || 'insert';
+           
+            return {
+                presentationTime: event.presentationTime / timescale,
+                duration: event.duration,
+                alternativeMPD: {
+                    url: alternativeMpdNode.url,
+                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
+                },
+                mode: mode,
+                returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
+                triggered: false,
+                watched: false,
+                type: 'static'
+            };
+        }
     }
 
     function _scheduleAlternativeMPDEvents() {
@@ -437,6 +419,7 @@ function AlternativeMpdController() {
 
         if (altPlayer) {
             altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+            altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
             altPlayer.reset();
             altPlayer = null;
         }
@@ -454,6 +437,7 @@ function AlternativeMpdController() {
         currentEvent = null;
 
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
     }
 
     instance = {
