@@ -456,7 +456,7 @@ function DefaultProtectionModel(config) {
         const token = { // Implements SessionToken
             session: session,
             keyId: keySystemMetadata.keyId,
-            normalizedKeyId: keySystemMetadata.keyId.replace(/-/g, '').toLowerCase(),
+            normalizedKeyId: keySystemMetadata && keySystemMetadata.keyId ? keySystemMetadata.keyId.replace(/-/g, '').toLowerCase() : '',
             initData: keySystemMetadata.initData,
             sessionId: keySystemMetadata.sessionId,
             sessionType: keySystemMetadata.sessionType,
