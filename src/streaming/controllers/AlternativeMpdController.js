@@ -171,7 +171,7 @@ function AlternativeMpdController() {
     function _startDashEventPlaybackTimeMonitoring() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
         if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);    
+            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
         }
     }
 
@@ -213,8 +213,8 @@ function AlternativeMpdController() {
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
-            if (event.watched) {
-                event.watched = !(currentTime > event.presentationTime + event.duration)
+            if (event.completed) {
+                event.completed = !(currentTime > event.presentationTime + event.duration)
                 return false;
             }
             return currentTime >= event.presentationTime &&
@@ -269,7 +269,7 @@ function AlternativeMpdController() {
                 mode: mode,
                 returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
-                watched: false,
+                completed: false,
                 type: 'static',
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
             };
@@ -330,7 +330,7 @@ function AlternativeMpdController() {
 
     function _prebufferNextAlternative() {
         const nextEvent = scheduledEvents.find(event => {
-            if (event.watched) {
+            if (event.completed) {
                 return false;
             }
             return !event.triggered;
@@ -397,8 +397,8 @@ function AlternativeMpdController() {
             seekTime = event.presentationTime;
         }
 
-        if (!event.watched) {
-            event.watched = true;
+        if (!event.completed) {
+            event.completed = true;
         }
 
         if (playbackController.getIsDynamic()) {
