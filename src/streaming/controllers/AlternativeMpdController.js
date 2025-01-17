@@ -171,7 +171,7 @@ function AlternativeMpdController() {
     function _startDashEventPlaybackTimeMonitoring() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
         if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);    
+            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
         }
     }
 
@@ -197,7 +197,7 @@ function AlternativeMpdController() {
             if (Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
-            
+
             const shouldSwitchBack = 
             (Math.round(altPlayer.duration() - currentTime) === 0) ||
             (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
@@ -213,11 +213,12 @@ function AlternativeMpdController() {
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.completed) {
+                event.completed = !(currentTime > event.presentationTime + event.duration)
                 return false;
             }
             return currentTime >= event.presentationTime &&
-                currentTime < event.presentationTime + event.duration - event.returnOffset;
+                currentTime < event.presentationTime + event.duration;
         });
     }
 
@@ -268,7 +269,7 @@ function AlternativeMpdController() {
                 mode: mode,
                 returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
-                watched: false,
+                completed: false,
                 type: 'static',
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
             };
@@ -329,7 +330,7 @@ function AlternativeMpdController() {
 
     function _prebufferNextAlternative() {
         const nextEvent = scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.completed) {
                 return false;
             }
             return !event.triggered;
@@ -343,10 +344,7 @@ function AlternativeMpdController() {
 
     function _prebufferAlternativeContent(event) {
         if (event.triggered) { return };
-        const idx = scheduledEvents.findIndex(e => e == event);
-        if (idx !== -1) {
-            scheduledEvents[idx].triggered = true;
-        }
+        event.triggered = true;
 
         _initializeAlternativePlayerElement(event);
         bufferedEvent = event;
@@ -361,10 +359,7 @@ function AlternativeMpdController() {
     function _switchToAlternativeContent(event) {
         if (isSwitching) { return };
         isSwitching = true;
-        const idx = scheduledEvents.findIndex(e => e === event);
-        if (idx !== -1) {
-            scheduledEvents[idx].triggered = true;
-        }
+        event.triggered = true;
 
         _initializeAlternativePlayerElement(event);
 
@@ -393,15 +388,17 @@ function AlternativeMpdController() {
 
         let seekTime;
         if (event.mode === 'replace') {
-            seekTime = event.presentationTime + event.duration - event.returnOffset;
-        } else if (event.mode === 'insert') {
-            if (!event.watched) {
-                const idx = scheduledEvents.findIndex(e => e === event);
-                if (idx !== -1) {
-                    scheduledEvents[idx].watched = true;
-                }
+            if (event.returnOffset || event.returnOffset === 0) {
+                seekTime = event.presentationTime + event.returnOffset;
+            } else {
+                seekTime = event.presentationTime + (event.maxDuration || event.maxDuration === 0 ? event.maxDuration : altPlayer.duration());
             }
+        } else if (event.mode === 'insert') {
             seekTime = event.presentationTime;
+        }
+
+        if (!event.completed) {
+            event.completed = true;
         }
 
         if (playbackController.getIsDynamic()) {
