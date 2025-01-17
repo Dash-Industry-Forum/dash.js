@@ -199,9 +199,9 @@ function AlternativeMpdController() {
             }
             
             const shouldSwitchBack = 
-            (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) ||
+            (Math.round(altPlayer.duration() - currentTime) === 0) ||
             (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
-            (maxDuration <= e.time);
+            (maxDuration && maxDuration <= e.time);
 
             if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
