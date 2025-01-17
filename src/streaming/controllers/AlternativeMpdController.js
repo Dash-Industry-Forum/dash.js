@@ -197,12 +197,13 @@ function AlternativeMpdController() {
             if (Math.round(e.time - lastTimestamp) === 0) {
                 return
             }
-            
-            if (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) {
-                _switchBackToMainContent(currentEvent);
-            } else if (clip && lastTimestamp + e.time >= presentationTime + maxDuration) {
-                _switchBackToMainContent(currentEvent);
-            } else if (maxDuration <= e.time) {
+
+            const shouldSwitchBack = 
+            (!maxDuration && Math.round(altPlayer.duration() - currentTime) === 0) ||
+            (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
+            (maxDuration <= e.time);
+
+            if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
@@ -212,11 +213,12 @@ function AlternativeMpdController() {
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.watched) {
+                event.watched = !(currentTime > event.presentationTime + event.duration)
                 return false;
             }
             return currentTime >= event.presentationTime &&
-                currentTime < event.presentationTime + event.duration - event.returnOffset;
+                currentTime < event.presentationTime + event.duration;
         });
     }
 
@@ -328,7 +330,7 @@ function AlternativeMpdController() {
 
     function _prebufferNextAlternative() {
         const nextEvent = scheduledEvents.find(event => {
-            if (event.watched && event.mode === 'insert') {
+            if (event.watched) {
                 return false;
             }
             return !event.triggered;
@@ -342,10 +344,7 @@ function AlternativeMpdController() {
 
     function _prebufferAlternativeContent(event) {
         if (event.triggered) { return };
-        const idx = scheduledEvents.findIndex(e => e == event);
-        if (idx !== -1) {
-            scheduledEvents[idx].triggered = true;
-        }
+        event.triggered = true;
 
         _initializeAlternativePlayerElement(event);
         bufferedEvent = event;
@@ -360,10 +359,7 @@ function AlternativeMpdController() {
     function _switchToAlternativeContent(event) {
         if (isSwitching) { return };
         isSwitching = true;
-        const idx = scheduledEvents.findIndex(e => e === event);
-        if (idx !== -1) {
-            scheduledEvents[idx].triggered = true;
-        }
+        event.triggered = true;
 
         _initializeAlternativePlayerElement(event);
 
@@ -395,17 +391,14 @@ function AlternativeMpdController() {
             if (event.returnOffset || event.returnOffset === 0) {
                 seekTime = event.presentationTime + event.returnOffset;
             } else {
-                seekTime = event.presentationTime + (event.maxDuration ? event.maxDuration : altPlayer.duration());
+                seekTime = event.presentationTime + (event.maxDuration || event.maxDuration === 0 ? event.maxDuration : altPlayer.duration());
             }
-            seekTime = event.presentationTime + event.maxDuration - event.returnOffset;
         } else if (event.mode === 'insert') {
-            if (!event.watched) {
-                const idx = scheduledEvents.findIndex(e => e === event);
-                if (idx !== -1) {
-                    scheduledEvents[idx].watched = true;
-                }
-            }
             seekTime = event.presentationTime;
+        }
+
+        if (!event.watched) {
+            event.watched = true;
         }
 
         if (playbackController.getIsDynamic()) {
