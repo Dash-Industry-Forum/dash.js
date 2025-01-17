@@ -135,9 +135,9 @@ function AlternativeMpdController() {
         manifestInfo.originalUrl = manifest.originalUrl;
 
         scheduledEvents.forEach((scheduledEvent) => {
-            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) { 
+            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) {
                 scheduledEvent.type = manifestInfo.type;
-            } 
+            }
         });
     }
 
@@ -184,13 +184,14 @@ function AlternativeMpdController() {
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    _switchToAlternativeContent(event);
+                    const timeToSwitch = event.startAtPlayhead ? lastTimestamp - event.presentationTime : 0
+                    _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
-            } 
+            }
 
-            if (currentEvent.type == 'dynamic') { 
-                return; 
+            if (currentEvent.type == 'dynamic') {
+                return;
             }
 
             const { presentationTime, maxDuration, clip } = currentEvent;
@@ -257,7 +258,6 @@ function AlternativeMpdController() {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || 'insert';
-           
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
@@ -272,6 +272,7 @@ function AlternativeMpdController() {
                 completed: false,
                 type: 'static',
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
+                ...(!alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
             };
         }
     }
@@ -356,7 +357,7 @@ function AlternativeMpdController() {
         }, this);
     }
 
-    function _switchToAlternativeContent(event) {
+    function _switchToAlternativeContent(event, time = 0) {
         if (isSwitching) { return };
         isSwitching = true;
         event.triggered = true;
@@ -371,6 +372,10 @@ function AlternativeMpdController() {
 
         videoModel.getElement().style.display = 'none';
         altVideoElement.style.display = 'block';
+
+        if (time) {
+            altPlayer.seek(time);
+        }
 
         altPlayer.play();
 

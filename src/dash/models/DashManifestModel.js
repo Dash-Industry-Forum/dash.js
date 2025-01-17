@@ -604,7 +604,7 @@ function DashManifestModel() {
 
     function getRepresentationFor(index, adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 &&
-        isInteger(index) ? adaptation.Representation[index] : null;
+            isInteger(index) ? adaptation.Representation[index] : null;
     }
 
     function getRealAdaptationFor(voAdaptation) {
@@ -1071,7 +1071,7 @@ function DashManifestModel() {
                     const alternativeMpdKey = Object.keys(DashConstants.ALTERNATIVE_MPD).find(key =>
                         currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD[key])
                     );
-                    
+
                     if (alternativeMpdKey) {
                         event.alternativeMpd = getAlternativeMpd(currentMpdEvent[DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]], DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]);
                         event.calculatedPresentationTime = 0;
@@ -1122,7 +1122,7 @@ function DashManifestModel() {
             alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.REPLACE;
             alternativeMpd.returnOffset = event.returnOffset ?? null;
             alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
-            alternativeMpd.startAtPlayhead = event.startAtPlayhead ?? null;
+            alternativeMpd.startAtPlayhead = event.startAtPlayhead ? event.startAtPlayhead === 'true' : false;
             return alternativeMpd;
         }
     }
