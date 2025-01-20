@@ -267,12 +267,12 @@ function AlternativeMpdController() {
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
                 },
                 mode: mode,
-                returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
                 completed: false,
                 type: 'static',
+                ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(!alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
+                ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
             };
         }
     }
@@ -396,7 +396,8 @@ function AlternativeMpdController() {
             if (event.returnOffset || event.returnOffset === 0) {
                 seekTime = event.presentationTime + event.returnOffset;
             } else {
-                seekTime = event.presentationTime + (event.maxDuration || event.maxDuration === 0 ? event.maxDuration : altPlayer.duration());
+                const alternativeDuration = (event.maxDuration || event.maxDuration === 0) ? event.maxDuration : altPlayer.duration()
+                seekTime = event.presentationTime + alternativeDuration;
             }
         } else if (event.mode === 'insert') {
             seekTime = event.presentationTime;
