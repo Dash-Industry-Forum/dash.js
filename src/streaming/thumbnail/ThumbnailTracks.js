@@ -325,6 +325,10 @@ function ThumbnailTracks(config) {
         representations = [];
         currentTrackIndex = -1;
         mediaInfo = null;
+        if (dashHandler) {
+            dashHandler.reset();
+            dashHandler = null;
+        }
     }
 
     instance = {

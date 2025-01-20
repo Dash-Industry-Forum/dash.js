@@ -552,6 +552,10 @@ function Stream(config) {
         if (textController) {
             textController.deactivateStream(streamInfo);
         }
+        if (thumbnailController) {
+            thumbnailController.reset();
+            thumbnailController = null;
+        }
         streamProcessors = [];
         isActive = false;
         hasFinishedBuffering = false;
@@ -622,6 +626,10 @@ function Stream(config) {
         if (segmentBlacklistController) {
             segmentBlacklistController.reset();
             segmentBlacklistController = null;
+        }
+
+        if (textController && streamInfo) {
+            textController.clearDataForStream(streamInfo.id);
         }
 
         resetInitialSettings(keepBuffers);
