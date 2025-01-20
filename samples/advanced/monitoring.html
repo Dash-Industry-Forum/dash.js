@@ -45,8 +45,8 @@
 
                 if (dashMetrics && streamInfo) {
                     const periodIdx = streamInfo.index;
-                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video', true);
-                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video', true);
+                    var repSwitch = dashMetrics.getCurrentRepresentationSwitch('video');
+                    var bufferLevel = dashMetrics.getCurrentBufferLevel('video');
                     var bitrate = repSwitch ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000) : NaN;
                     var currentRep = player.getCurrentRepresentationForType('video');
                     var frameRate = currentRep.frameRate;

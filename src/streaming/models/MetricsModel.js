@@ -373,23 +373,23 @@ function MetricsModel(config) {
     }
 
     instance = {
-        clearCurrentMetricsForType,
-        clearAllCurrentMetrics,
-        getMetricsFor,
-        addHttpRequest,
-        addRepresentationSwitch,
         addBufferLevel,
         addBufferState,
+        addDVBErrors,
         addDVRInfo,
         addDroppedFrames,
-        addSchedulingInfo,
-        addRequestsQueue,
+        addHttpRequest,
         addManifestUpdate,
-        updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo,
+        addManifestUpdateStreamInfo,
         addPlayList,
-        addDVBErrors
+        addRepresentationSwitch,
+        addRequestsQueue,
+        addSchedulingInfo,
+        clearAllCurrentMetrics,
+        clearCurrentMetricsForType,
+        getMetricsFor,
+        updateManifestUpdateInfo,
     };
 
     setup();
