@@ -158,8 +158,7 @@ function AlternativeMpdController() {
                 break;
             case 'static':
                 if (!isMainDynamic) {
-                    _prebufferNextAlternative();
-                    _startDashEventPlaybackTimeMonitoring();
+                    _startPlaybackTimeMonitoring();
                 }
                 break;
             default:
@@ -168,16 +167,22 @@ function AlternativeMpdController() {
         }
     }
 
-    function _startDashEventPlaybackTimeMonitoring() {
+    function _startPlaybackTimeMonitoring() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
-        if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
-        }
+    }
+
+    function _startAltnerativePlaybackTimeMonitoring() {
+        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
     }
 
     function _onDashPlaybackTimeUpdated(e) {
         try {
             const currentTime = e.time;
+            const nextEvent = _getEventToPrebuff(currentTime)
+            if (nextEvent) {
+                _prebufferNextAlternative(nextEvent);
+            }
+
             if (!currentEvent) {
                 lastTimestamp = e.time;
                 const event = _getCurrentEvent(currentTime);
@@ -215,11 +220,25 @@ function AlternativeMpdController() {
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
             if (event.completed) {
-                event.completed = !(currentTime > event.presentationTime + event.duration)
+                event.completed = !(currentTime > event.presentationTime + event.duration || currentTime < event.presentationTime)
                 return false;
             }
             return currentTime >= event.presentationTime &&
                 currentTime < event.presentationTime + event.duration;
+        });
+    }
+
+    function _getEventToPrebuff(currentTime) {
+        return scheduledEvents.find(event => {
+            if (event.triggered) {
+                event.triggered = !(
+                    currentTime > event.presentationTime + event.duration ||
+                    currentTime < event.presentationTime - event.earliestResolutionTimeOffset
+                );
+                return false;
+            }
+            return currentTime >= event.presentationTime - event.alternativeMPD.earliestResolutionTimeOffset &&
+                currentTime < event.presentationTime;
         });
     }
 
@@ -239,7 +258,7 @@ function AlternativeMpdController() {
         // Initialize alternative player
         if (event != bufferedEvent) {
             _initializeAlternativePlayer(event);
-            _startDashEventPlaybackTimeMonitoring();
+            _startAltnerativePlaybackTimeMonitoring();
         }
     }
 
@@ -265,7 +284,7 @@ function AlternativeMpdController() {
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
-                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
+                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10),
                 },
                 mode: mode,
                 triggered: false,
@@ -330,14 +349,7 @@ function AlternativeMpdController() {
         }
     }
 
-    function _prebufferNextAlternative() {
-        const nextEvent = scheduledEvents.find(event => {
-            if (event.completed) {
-                return false;
-            }
-            return !event.triggered;
-        });
-
+    function _prebufferNextAlternative(nextEvent) {
         if (nextEvent && !bufferedEvent) {
             console.log(`Preloading event starting at ${nextEvent.presentationTime}`)
             _prebufferAlternativeContent(nextEvent);
