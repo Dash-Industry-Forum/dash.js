@@ -239,6 +239,7 @@ function AlternativeMpdController() {
         // Initialize alternative player
         if (event != bufferedEvent) {
             _initializeAlternativePlayer(event);
+            _startDashEventPlaybackTimeMonitoring();
         }
     }
 
