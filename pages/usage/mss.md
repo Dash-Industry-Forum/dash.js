@@ -19,11 +19,14 @@ the [sample section](https://reference.dashif.org/dash.js/nightly/samples/smooth
 The Smooth Streaming layer in dash.js is implemented as a separate module. To enable Smooth Streaming support in dash.js
 import `dash.mss.min.js` or `dash.mss.debug.js` right after the main build files:
 
-```xml
-<script src="../../dist/umd/dash.all.debug.js"></script>
-<!-- add mss package which is required to play Smooth Streaming streams -->
-<script class="code" src="../../dist/umd/dash.mss.debug.js"></script>
-```
+````xml
+
+<head>
+    <script src="../../dist/umd/dash.all.debug.js"></script>
+    <!-- add mss package which is required to play Smooth Streaming streams -->
+    <script class="code" src="../../dist/umd/dash.mss.debug.js"></script>
+</head>
+````
 
 Initialization of dash.js for Smooth Streaming is similar to initialization for DASH content:
 

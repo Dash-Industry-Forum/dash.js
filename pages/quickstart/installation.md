@@ -35,7 +35,7 @@ the `UMD modern` build.
 
 Note that only the `master` branch of dash.js includes the `dist` folder. If you are working with the `development`
 branch, you need to build the bundles yourself. For that reason, check
-the [Build dist files yourself](#build-dist-files-yourself) section below.
+the [Building the `dist` files](#building-the-dist-files) section below.
 
 ## CDN hosted files
 
