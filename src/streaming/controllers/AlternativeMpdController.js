@@ -81,7 +81,9 @@ function AlternativeMpdController() {
             DashConstants = config.DashConstants
         }
 
-        logger = config.debug.getLogger(instance);
+        if (config.logger) {
+            logger = config.logger;
+        }
 
         if (!!config.playbackController && !playbackController) {
             playbackController = config.playbackController;
@@ -132,12 +134,6 @@ function AlternativeMpdController() {
             videoModel.getElement().parentNode.insertBefore(fullscreenDiv, videoModel.getElement());
             fullscreenDiv.appendChild(videoModel.getElement());
         }
-
-        eventBus.on(Constants.ALTERNATIVE_MPD.URI, _onAlternativeLoad);
-    }
-
-    function _onAlternativeLoad(e) {
-        logger.info('Alternative loaded', e);
     }
 
     function _onManifestLoaded(e) {
