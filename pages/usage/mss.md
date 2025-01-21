@@ -20,9 +20,9 @@ The Smooth Streaming layer in dash.js is implemented as a separate module. To en
 import `dash.mss.min.js` or `dash.mss.debug.js` right after the main build files:
 
 ```xml
-<script src="../../dist/dash.all.debug.js"></script>
+<script src="../../dist/umd/dash.all.debug.js"></script>
 <!-- add mss package which is required to play Smooth Streaming streams -->
-<script class="code" src="../../dist/dash.mss.debug.js"></script>
+<script class="code" src="../../dist/umd/dash.mss.debug.js"></script>
 ```
 
 Initialization of dash.js for Smooth Streaming is similar to initialization for DASH content:
