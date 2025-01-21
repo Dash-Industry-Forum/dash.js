@@ -1233,6 +1233,20 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns the average latency computed in the ThroughputController in milliseconds
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getAverageLatency(type, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
      * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
@@ -1244,6 +1258,32 @@ function MediaPlayer() {
      */
     function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSafeAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
+     *
+     * @param {MediaType} type
+     * @return {Array} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getRawThroughputData(type) {
+        return throughputController ? throughputController.getRawThroughputData(type) : [];
     }
 
     /**
@@ -2759,6 +2799,7 @@ function MediaPlayer() {
         getAutoPlay,
         getAvailableBaseUrls,
         getAvailableLocations,
+        getAverageLatency,
         getAverageThroughput,
         getBufferLength,
         getCurrentLiveLatency,
@@ -2777,7 +2818,9 @@ function MediaPlayer() {
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
+        getRawThroughputData,
         getRepresentationsByType,
+        getSafeAverageThroughput,
         getSettings,
         getSource,
         getStreamsFromManifest,

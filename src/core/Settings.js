@@ -267,7 +267,7 @@ import Events from './events/Events.js';
  *                     useResourceTimingApi: true,
  *                     useNetworkInformationApi: {
  *                         xhr: false,
- *                         fetch: true
+ *                         fetch: false
  *                     },
  *                     useDeadTimeLatency: true,
  *                     bandwidthSafetyFactor: 0.9,
@@ -284,7 +284,8 @@ import Events from './events/Events.js';
  *                         throughputSlowHalfLifeSeconds: 8,
  *                         throughputFastHalfLifeSeconds: 3,
  *                         latencySlowHalfLifeCount: 2,
- *                         latencyFastHalfLifeCount: 1
+ *                         latencyFastHalfLifeCount: 1,
+ *                         weightDownloadTimeMultiplicationFactor: 0.0015
  *                     }
  *                 },
  *                 maxBitrate: {
@@ -840,7 +841,7 @@ import Events from './events/Events.js';
  * @property {boolean} [useResourceTimingApi=true]
  * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
  * This option has no effect for low latency streaming as the download time equals the segment duration in most of the cases and therefor does not provide reliable values
- * @property {object} [useNetworkInformationApi = { xhr=false, fetch=true}]
+ * @property {object} [useNetworkInformationApi = { xhr=false, fetch=false}]
  * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only available in Chrome and Edge.
  * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
@@ -860,12 +861,13 @@ import Events from './events/Events.js';
  * - `increaseScale`: Increase sample size by one if the ratio of current and previous sample is higher or equal this value
  * - `maxMeasurementsToKeep`: Number of samples to keep before sliding samples out of the window
  * - `averageLatencySampleAmount`: Number of latency samples to use (sample size)
- * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1}]
+ * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1, weightDownloadTimeMultiplicationFactor=0.0015}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
  * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
  * - `throughputFastHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
  * - `latencySlowHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
  * - `latencyFastHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
+ * - `weightDownloadTimeMultiplicationFactor`: This value is multiplied with the download time in milliseconds to derive the weight for the EWMA calculation.
  */
 
 /**
@@ -1305,7 +1307,7 @@ function Settings() {
                     useResourceTimingApi: true,
                     useNetworkInformationApi: {
                         xhr: false,
-                        fetch: true
+                        fetch: false
                     },
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
