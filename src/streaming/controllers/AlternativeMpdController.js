@@ -33,6 +33,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from './../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
 
 /*
 TODOS:
@@ -63,7 +64,8 @@ function AlternativeMpdController() {
         alternativeContext,
         isMainDynamic = false,
         lastTimestamp = 0,
-        manifestInfo = {};
+        manifestInfo = {},
+        logger;
 
     function setConfig(config) {
         if (!config) {
@@ -74,6 +76,8 @@ function AlternativeMpdController() {
             videoModel = config.videoModel;
         }
 
+        logger = config.debug.getLogger(instance);
+
         if (!!config.playbackController && !playbackController) {
             playbackController = config.playbackController;
         }
@@ -83,7 +87,7 @@ function AlternativeMpdController() {
         }
 
         if (!!config.useDashEventsForScheduling && !useDashEventsForScheduling) {
-            console.log(`Event strategy: ${'Timestamps based' ? config.useDashEventsForScheduling : 'Interval based'}`)
+            logger.info(`Event strategy: ${'Timestamps based' ? config.useDashEventsForScheduling : 'Interval based'}`)
             useDashEventsForScheduling = config.useDashEventsForScheduling;
         }
 
@@ -111,22 +115,24 @@ function AlternativeMpdController() {
 
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement === videoModel.getElement()) {
-                console.log('Ay ay');
-                // document.exitFullscreen();
-                // fullscreenDiv.requestFullscreen();
+                // Implement full scren
             } else {
-                console.log('Esto no se va a triggerear nunca');
-                // document.exitFullscreen();
+                // handle error
             }
         });
 
-        // Borrar por el amor de dios
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
             videoModel.getElement().parentNode.insertBefore(fullscreenDiv, videoModel.getElement());
             fullscreenDiv.appendChild(videoModel.getElement());
         }
+
+        eventBus.on(Constants.ALTERNATIVE_MPD.URI, _onAlternativeLoad);
+    }
+
+    function _onAlternativeLoad(e) {
+        logger.info('Alternative loaded', e);
     }
 
     function _onManifestLoaded(e) {
@@ -162,7 +168,7 @@ function AlternativeMpdController() {
                 }
                 break;
             default:
-                console.log('Unknown manifest type')
+                logger.debug('Unknown manifest type')
                 break;
         }
     }
@@ -213,7 +219,7 @@ function AlternativeMpdController() {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            console.error('Error in onDashPlaybackTimeUpdated:', err);
+            logger.error(`Error at ${lastTimestamp} in onDashPlaybackTimeUpdated:`, err);
         }
     }
 
@@ -246,7 +252,7 @@ function AlternativeMpdController() {
         if (!altVideoElement) {
             // Create a new video element for the alternative content
             altVideoElement = document.createElement('video');
-            altVideoElement.style.display = 'none'; // Hide the alternative video element initially
+            altVideoElement.style.display = 'none';
             altVideoElement.autoplay = false;
             altVideoElement.controls = !hideAlternativePlayerControls;
             fullscreenDiv.appendChild(altVideoElement);
@@ -269,12 +275,12 @@ function AlternativeMpdController() {
         altPlayer.setAutoPlay(false);
 
         altPlayer.on(Events.ERROR, (e) => {
-            console.error('Alternative player error:', e);
+            logger.error('Alternative player error:', e);
         }, this);
     }
 
     function _parseAlternativeMPDEvent(event) {
-        if (event.alternativeMpd) {
+        if (event.alternativeMpd && !(event.mode === 'insert' && !manifestInfo.type === 'dynamic')) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || 'insert';
@@ -351,7 +357,7 @@ function AlternativeMpdController() {
 
     function _prebufferNextAlternative(nextEvent) {
         if (nextEvent && !bufferedEvent) {
-            console.log(`Preloading event starting at ${nextEvent.presentationTime}`)
+            logger.info(`Preloading event starting at ${nextEvent.presentationTime}`)
             _prebufferAlternativeContent(nextEvent);
         }
     }
@@ -364,8 +370,7 @@ function AlternativeMpdController() {
         bufferedEvent = event;
 
         altPlayer.on(Events.STREAM_INITIALIZED, () => {
-            console.log('I\'m buffering')
-            // altPlayer.seek(event.earliestResolutionTimeOffset);
+            logger.info('Buffering alternative content')
             // Do not play yet, just buffer
         }, this);
     }

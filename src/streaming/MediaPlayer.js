@@ -405,7 +405,8 @@ function MediaPlayer() {
                 DashConstants,
                 mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
                 playbackController,
-                alternativeContext: context
+                alternativeContext: context,
+                logger
             });
 
             if (!segmentBaseController) {
