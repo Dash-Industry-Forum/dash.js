@@ -281,6 +281,11 @@
                     "provider": "dashif"
                 },
                 {
+                    "url": "https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks",
+                    "name": "Annex I query parameters in the Video AdaptationSet",
+                    "provider": "dashif"
+                },
+                {
                     "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",

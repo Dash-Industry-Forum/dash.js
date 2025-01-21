@@ -129,7 +129,8 @@ describe('BoxParser', function () {
 
             const res = boxParser.findLastTopIsoBoxCompleted(['moov'], data.buffer);
             expect(res.found).to.be.false;
-            expect(res.lastCompletedOffset).to.equal(36);
+            expect(res.startOffsetOfLastCompletedBox).to.equal(28);
+            expect(res.sizeOfLastCompletedBox).to.equal(8);
         });
 
         it('should not return null when looking for init range in a completed init segment', () => {

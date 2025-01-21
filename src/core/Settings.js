@@ -67,7 +67,6 @@ import Events from './events/Events.js';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
- *            eventControllerRefreshDelay: 100,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -86,6 +85,10 @@ import Events from './events/Events.js';
  *               filterVideoColorimetryEssentialProperties: false,
  *               filterHDRMetadataFormatEssentialProperties: false
  *            },
+ *            events: {
+ *              eventControllerRefreshDelay: 100,
+ *              deleteEventMessageDataAfterEventStarted: true
+ *            }
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
  *                fallbackToSegmentTimeline: true
@@ -264,7 +267,7 @@ import Events from './events/Events.js';
  *                     useResourceTimingApi: true,
  *                     useNetworkInformationApi: {
  *                         xhr: false,
- *                         fetch: true
+ *                         fetch: false
  *                     },
  *                     useDeadTimeLatency: true,
  *                     bandwidthSafetyFactor: 0.9,
@@ -281,7 +284,8 @@ import Events from './events/Events.js';
  *                         throughputSlowHalfLifeSeconds: 8,
  *                         throughputFastHalfLifeSeconds: 3,
  *                         latencySlowHalfLifeCount: 2,
- *                         latencyFastHalfLifeCount: 1
+ *                         latencyFastHalfLifeCount: 1,
+ *                         weightDownloadTimeMultiplicationFactor: 0.0015
  *                     }
  *                 },
  *                 maxBitrate: {
@@ -340,6 +344,16 @@ import Events from './events/Events.js';
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
  *  * @property {boolean} [fallbackToSegmentTimeline=true]
  * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
+ */
+
+/**
+ * @typedef {Object} EventSettings
+ * @property {number} [eventControllerRefreshDelay=100]
+ * Interval timer used by the EventController to check if events need to be triggered or removed.
+ * @property {boolean} [deleteEventMessageDataAfterEventStarted=true]
+ * If this flag is enabled the EventController will delete the message data of events after they have been started. This is to save memory in case events have a long duration and need to be persisted in the EventController.
+ * Note: Applications will receive a copy of the original event data when they subscribe to an event. This copy contains the original message data and is not affected by this setting.
+ * Only if an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included in the dispatched event.
  */
 
 /**
@@ -827,7 +841,7 @@ import Events from './events/Events.js';
  * @property {boolean} [useResourceTimingApi=true]
  * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
  * This option has no effect for low latency streaming as the download time equals the segment duration in most of the cases and therefor does not provide reliable values
- * @property {object} [useNetworkInformationApi = { xhr=false, fetch=true}]
+ * @property {object} [useNetworkInformationApi = { xhr=false, fetch=false}]
  * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only available in Chrome and Edge.
  * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
@@ -847,12 +861,13 @@ import Events from './events/Events.js';
  * - `increaseScale`: Increase sample size by one if the ratio of current and previous sample is higher or equal this value
  * - `maxMeasurementsToKeep`: Number of samples to keep before sliding samples out of the window
  * - `averageLatencySampleAmount`: Number of latency samples to use (sample size)
- * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1}]
+ * @property {object} [ewma={throughputSlowHalfLifeSeconds=8,throughputFastHalfLifeSeconds=3,latencySlowHalfLifeCount=2,latencyFastHalfLifeCount=1, weightDownloadTimeMultiplicationFactor=0.0015}]
  * When deriving the throughput based on the exponential weighted moving average these settings define:
  * - `throughputSlowHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
  * - `throughputFastHalfLifeSeconds`: Number by which the weight of the current throughput measurement is divided, see ThroughputModel._updateEwmaValues
  * - `latencySlowHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
  * - `latencyFastHalfLifeCount`: Number by which the weight of the current latency is divided, see ThroughputModel._updateEwmaValues
+ * - `weightDownloadTimeMultiplicationFactor`: This value is multiplied with the download time in milliseconds to derive the weight for the EWMA calculation.
  */
 
 /**
@@ -937,8 +952,6 @@ import Events from './events/Events.js';
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
- * @property {number} [eventControllerRefreshDelay=100]
- * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -947,6 +960,7 @@ import Events from './events/Events.js';
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
  * @property {module:Settings~LiveDelay} delay Live Delay settings
+ * @property {module:Settings~EventSettings} events Event settings
  * @property {module:Settings~TimeShiftBuffer} timeShiftBuffer TimeShiftBuffer settings
  * @property {module:Settings~Protection} protection DRM related settings
  * @property {module:Settings~Capabilities} capabilities Capability related settings
@@ -1078,7 +1092,6 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
-            eventControllerRefreshDelay: 100,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,
@@ -1098,6 +1111,10 @@ function Settings() {
                 useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
                 filterHDRMetadataFormatEssentialProperties: false
+            },
+            events: {
+                eventControllerRefreshDelay: 100,
+                deleteEventMessageDataAfterEventStarted: true
             },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,
@@ -1290,7 +1307,7 @@ function Settings() {
                     useResourceTimingApi: true,
                     useNetworkInformationApi: {
                         xhr: false,
-                        fetch: true
+                        fetch: false
                     },
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,

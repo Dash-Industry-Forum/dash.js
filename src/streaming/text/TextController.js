@@ -508,6 +508,23 @@ function TextController(config) {
         }
     }
 
+    function clearDataForStream(streamId) {
+        if (textSourceBuffers[streamId]) {
+            textSourceBuffers[streamId].resetEmbedded();
+            textSourceBuffers[streamId].reset();
+            delete textSourceBuffers[streamId];
+        }
+
+        if (textTracks[streamId]) {
+            textTracks[streamId].deleteAllTextTracks();
+            delete textTracks[streamId];
+        }
+
+        if (streamData[streamId]) {
+            delete streamData[streamId];
+        }
+    }
+
     function resetInitialSettings() {
         textSourceBuffers = {};
         textTracks = {};
@@ -518,6 +535,11 @@ function TextController(config) {
     }
 
     function reset() {
+        Object.keys(textSourceBuffers).forEach((key) => {
+            textSourceBuffers[key].resetEmbedded();
+            textSourceBuffers[key].reset();
+        });
+
         dvbFonts.reset();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
@@ -528,11 +550,6 @@ function TextController(config) {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
         }
-
-        Object.keys(textSourceBuffers).forEach((key) => {
-            textSourceBuffers[key].resetEmbedded();
-            textSourceBuffers[key].reset();
-        });
     }
 
     instance = {
@@ -550,6 +567,7 @@ function TextController(config) {
         isTextEnabled,
         reset,
         setTextTrack,
+        clearDataForStream,
     };
     setup();
     return instance;

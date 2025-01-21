@@ -1024,6 +1024,14 @@ declare namespace dashjs {
         value: string;
     }
 
+    export interface ThroughputDictValue {
+        downloadTimeInMs: number,
+        downloadedBytes: number,
+        latencyInMs: number
+        serviceLocation: string,
+        value: number,
+    }
+
     /**
      * Dash
      **/
@@ -1630,7 +1638,6 @@ declare namespace dashjs {
             applyServiceDescription?: boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
-            eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
             parseInbandPrft?: boolean,
             enableManifestTimescaleMismatchFix?: boolean,
@@ -1643,6 +1650,10 @@ declare namespace dashjs {
                 filterHDRMetadataFormatEssentialProperties?: boolean,
                 filterVideoColometryEssentialProperties?: boolean
             },
+            events?: {
+                eventControllerRefreshDelay?: number,
+                deleteEventMessageDataAfterEventStarted?: boolean
+            }
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
                 fallbackToSegmentTimeline?: boolean
@@ -2049,6 +2060,8 @@ declare namespace dashjs {
 
         getAvailableLocations(): MpdLocation[];
 
+        getAverageLatency(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
+
         getAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
         getBufferLength(type: MediaType): number;
@@ -2085,7 +2098,11 @@ declare namespace dashjs {
 
         getProtectionController(): ProtectionController;
 
+        getRawThroughputData(type: MediaType): ThroughputDictValue[];
+
         getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
+
+        getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
         getSettings(): MediaPlayerSettingClass;
 
@@ -5499,11 +5516,21 @@ declare namespace dashjs {
     }
 
     export class IsoBoxSearchInfo {
-        constructor(lastCompletedOffset: number, found: boolean, size: number);
+        constructor(found: boolean,
+                    sizeOfLastCompletedBox: number,
+                    sizeOfLastFoundTargetBox: number,
+                    startOffsetOfLastCompletedBox: number,
+                    startOffsetOfLastFoundTargetBox: number,
+                    typeOfLastCompletedBox: string,
+                    typeOfLastTargetBox: string);
 
         found: boolean;
-        lastCompletedOffset: number;
-        size: number;
+        sizeOfLastCompletedBox: number;
+        sizeOfLastFoundTargetBox: number;
+        startOffsetOfLastCompletedBox: number;
+        startOffsetOfLastFoundTargetBox: number;
+        typeOfLastCompletedBox: string | null;
+        typeOfLastTargetBox: string | null;
     }
 
     export class MetricsList {
