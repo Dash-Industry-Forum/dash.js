@@ -65,6 +65,7 @@ function AlternativeMpdController() {
         isMainDynamic = false,
         lastTimestamp = 0,
         manifestInfo = {},
+        DashConstants,
         logger;
 
     function setConfig(config) {
@@ -74,6 +75,10 @@ function AlternativeMpdController() {
 
         if (!videoModel) {
             videoModel = config.videoModel;
+        }
+
+        if (config.DashConstants) {
+            DashConstants = config.DashConstants
         }
 
         logger = config.debug.getLogger(instance);
@@ -115,7 +120,7 @@ function AlternativeMpdController() {
 
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement === videoModel.getElement()) {
-                // Implement full scren
+                // Implement fullscreen
             } else {
                 // handle error
             }
@@ -156,13 +161,13 @@ function AlternativeMpdController() {
         }
 
         switch (manifestInfo.type) {
-            case 'dynamic':
+            case DashConstants.DYNAMIC:
                 if (!currentEvent && !altPlayer) {
                     isMainDynamic = true;
                     _scheduleAlternativeMPDEvents();
                 }
                 break;
-            case 'static':
+            case DashConstants.STATIC:
                 if (!isMainDynamic) {
                     _startPlaybackTimeMonitoring();
                 }
@@ -199,6 +204,10 @@ function AlternativeMpdController() {
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
+            } 
+
+            if (currentEvent.type == DashConstants.DYNAMIC) { 
+                return; 
             }
 
             if (currentEvent.type == 'dynamic') {
@@ -283,7 +292,7 @@ function AlternativeMpdController() {
         if (event.alternativeMpd && !(event.mode === 'insert' && !manifestInfo.type === 'dynamic')) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
-            const mode = alternativeMpdNode.mode || 'insert';
+            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
@@ -295,7 +304,7 @@ function AlternativeMpdController() {
                 mode: mode,
                 triggered: false,
                 completed: false,
-                type: 'static',
+                type: DashConstants.STATIC,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
                 ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
@@ -382,7 +391,7 @@ function AlternativeMpdController() {
 
         _initializeAlternativePlayerElement(event);
 
-        if (event.type == 'dynamic') {
+        if (event.type == DashConstants.DYNAMIC) {
             _descheduleAlternativeMPDEvents(currentEvent);
         }
 
@@ -410,14 +419,14 @@ function AlternativeMpdController() {
         videoModel.getElement().style.display = 'block';
 
         let seekTime;
-        if (event.mode === 'replace') {
+        if (event.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
             if (event.returnOffset || event.returnOffset === 0) {
                 seekTime = event.presentationTime + event.returnOffset;
             } else {
                 const alternativeDuration = (event.maxDuration || event.maxDuration === 0) ? event.maxDuration : altPlayer.duration()
                 seekTime = event.presentationTime + alternativeDuration;
             }
-        } else if (event.mode === 'insert') {
+        } else if (event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
             seekTime = event.presentationTime;
         }
 
