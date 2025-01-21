@@ -211,10 +211,6 @@ function AlternativeMpdController() {
                 return;
             }
 
-            if (currentEvent.type == 'dynamic') {
-                return;
-            }
-
             const { presentationTime, maxDuration, clip } = currentEvent;
             if (Math.round(e.time - lastTimestamp) === 0) {
                 return
@@ -236,21 +232,26 @@ function AlternativeMpdController() {
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
             if (event.completed) {
-                event.completed = !(currentTime > event.presentationTime + event.duration || currentTime < event.presentationTime)
+                const hasDuration = !isNaN(event.duration);
+                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+                const isBeforeStart = currentTime < event.presentationTime;
+            
+                event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
-            return currentTime >= event.presentationTime &&
-                currentTime < event.presentationTime + event.duration;
+            return currentTime >= event.presentationTime && (isNaN(event.duration) ||
+                currentTime < event.presentationTime + event.duration);
         });
     }
 
     function _getEventToPrebuff(currentTime) {
         return scheduledEvents.find(event => {
             if (event.triggered) {
-                event.triggered = !(
-                    currentTime > event.presentationTime + event.duration ||
-                    currentTime < event.presentationTime - event.earliestResolutionTimeOffset
-                );
+                const hasDuration = !isNaN(event.duration);
+                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+                const isBeforeStart = currentTime < event.presentationTime - event.earliestResolutionTimeOffset;
+
+                event.triggered = !(isPastEnd || isBeforeStart);
                 return false;
             }
             return currentTime >= event.presentationTime - event.alternativeMPD.earliestResolutionTimeOffset &&
