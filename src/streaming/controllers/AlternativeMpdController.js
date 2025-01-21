@@ -149,6 +149,11 @@ function AlternativeMpdController() {
     }
 
     function _onAlternativeEventeReceived(event) {
+        // Only Alternative MPD replace events can be used used for dynamic MPD
+        if (manifestInfo.type === DashConstants.DYNAMIC && event?.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
+            return
+        }
+
         const alternativeEvent = _parseAlternativeMPDEvent(event)
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
@@ -200,10 +205,10 @@ function AlternativeMpdController() {
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
-            } 
+            }
 
-            if (currentEvent.type == DashConstants.DYNAMIC) { 
-                return; 
+            if (currentEvent.type == DashConstants.DYNAMIC) {
+                return;
             }
 
             if (currentEvent.type == 'dynamic') {
@@ -215,10 +220,10 @@ function AlternativeMpdController() {
                 return
             }
 
-            const shouldSwitchBack = 
-            (Math.round(altPlayer.duration() - currentTime) === 0) ||
-            (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
-            (maxDuration && maxDuration <= e.time);
+            const shouldSwitchBack =
+                (Math.round(altPlayer.duration() - currentTime) === 0) ||
+                (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
+                (maxDuration && maxDuration <= e.time);
 
             if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
