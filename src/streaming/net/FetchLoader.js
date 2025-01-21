@@ -118,8 +118,10 @@ function FetchLoader() {
          */
         function _handleRequestComplete() {
             if (receivedData) {
-                const calculatedDownloadTime = _calculateDownloadValues();
+                const calculatedDownloadTime = _calculateDownloadTime();
 
+                // In this case we push an entry to the traces.
+                // This is the only entry we push as the other calls to onprogress use noTrace = true
                 commonMediaRequest.customData.onprogress({
                     loaded: totalBytesReceived,
                     total: totalBytesReceived,
@@ -132,24 +134,22 @@ function FetchLoader() {
             commonMediaRequest.customData.onloadend();
         }
 
-        function _calculateDownloadValues() {
+        function _calculateDownloadTime() {
             // If there is pending data, call progress so network metrics
             // are correctly generated
             // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-            let downloadValues = null;
+            let downloadTime = null;
             if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
-                downloadValues = _getDownloadValuesMoofParsing();
+                downloadTime = _getDownloadTimeForMoofParsing();
             } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
-                downloadValues = _getDownloadTimeForDownloadedData()
+                downloadTime = _getDownloadTimeForDownloadedData()
             }
 
-            return downloadValues;
+            return downloadTime;
         }
 
-        function _getDownloadValuesMoofParsing() {
+        function _getDownloadTimeForMoofParsing() {
             const calculatedThroughput = _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData);
-
-            console.log(`---dsi: ${calculatedThroughput}`);
 
             if (calculatedThroughput) {
                 return totalBytesReceived * 8 / calculatedThroughput;

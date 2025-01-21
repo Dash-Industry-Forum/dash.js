@@ -267,7 +267,7 @@ import Events from './events/Events.js';
  *                     useResourceTimingApi: true,
  *                     useNetworkInformationApi: {
  *                         xhr: false,
- *                         fetch: true
+ *                         fetch: false
  *                     },
  *                     useDeadTimeLatency: true,
  *                     bandwidthSafetyFactor: 0.9,
@@ -840,7 +840,7 @@ import Events from './events/Events.js';
  * @property {boolean} [useResourceTimingApi=true]
  * If set to true the ResourceTimingApi is used to derive the download time and the number of downloaded bytes.
  * This option has no effect for low latency streaming as the download time equals the segment duration in most of the cases and therefor does not provide reliable values
- * @property {object} [useNetworkInformationApi = { xhr=false, fetch=true}]
+ * @property {object} [useNetworkInformationApi = { xhr=false, fetch=false}]
  * If set to true the NetworkInformationApi is used to derive the current throughput. Browser support is limited, only available in Chrome and Edge.
  * Applies to standard (XHR requests) and/or low latency streaming (Fetch API requests).
  * @property {boolean} [useDeadTimeLatency=true]
@@ -1305,7 +1305,7 @@ function Settings() {
                     useResourceTimingApi: true,
                     useNetworkInformationApi: {
                         xhr: false,
-                        fetch: true
+                        fetch: false
                     },
                     useDeadTimeLatency: true,
                     bandwidthSafetyFactor: 0.9,
