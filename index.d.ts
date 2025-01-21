@@ -1024,6 +1024,14 @@ declare namespace dashjs {
         value: string;
     }
 
+    export interface ThroughputDictValue {
+        downloadTimeInMs: number,
+        downloadedBytes: number,
+        latencyInMs: number
+        serviceLocation: string,
+        value: number,
+    }
+
     /**
      * Dash
      **/
@@ -2052,6 +2060,8 @@ declare namespace dashjs {
 
         getAvailableLocations(): MpdLocation[];
 
+        getAverageLatency(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
+
         getAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
         getBufferLength(type: MediaType): number;
@@ -2088,7 +2098,11 @@ declare namespace dashjs {
 
         getProtectionController(): ProtectionController;
 
+        getRawThroughputData(type: MediaType): ThroughputDictValue[];
+
         getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
+
+        getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
         getSettings(): MediaPlayerSettingClass;
 
