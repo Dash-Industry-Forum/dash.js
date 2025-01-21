@@ -5,7 +5,7 @@ nav_order: 1
 parent: Quickstart
 ---
 
-# Installation
+# Installation & Build  
 
 There are multiple ways to obtain the bundled `dist` files of dash.js for usage in your application.
 
