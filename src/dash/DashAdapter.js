@@ -1005,7 +1005,8 @@ function DashAdapter() {
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
-        mediaInfo.type = adaptation.type;
+        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
+        mediaInfo.type = Constants.ENHANCEMENT_CODECS.some(cdc => mediaInfo.codec?.includes(cdc)) ? Constants.ENHANCEMENT : adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
@@ -1026,7 +1027,6 @@ function DashAdapter() {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
         }
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
-        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionByAdaptation(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
