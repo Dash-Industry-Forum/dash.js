@@ -1630,7 +1630,6 @@ declare namespace dashjs {
             applyServiceDescription?: boolean,
             applyProducerReferenceTime?: boolean,
             applyContentSteering?: boolean,
-            eventControllerRefreshDelay?: number,
             enableManifestDurationMismatchFix?: boolean,
             parseInbandPrft?: boolean,
             enableManifestTimescaleMismatchFix?: boolean,
@@ -1643,6 +1642,10 @@ declare namespace dashjs {
                 filterHDRMetadataFormatEssentialProperties?: boolean,
                 filterVideoColometryEssentialProperties?: boolean
             },
+            events?: {
+                eventControllerRefreshDelay?: number,
+                deleteEventMessageDataAfterEventStarted?: boolean
+            }
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
                 fallbackToSegmentTimeline?: boolean
