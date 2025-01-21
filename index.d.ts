@@ -5502,11 +5502,21 @@ declare namespace dashjs {
     }
 
     export class IsoBoxSearchInfo {
-        constructor(lastCompletedOffset: number, found: boolean, size: number);
+        constructor(found: boolean,
+                    sizeOfLastCompletedBox: number,
+                    sizeOfLastFoundTargetBox: number,
+                    startOffsetOfLastCompletedBox: number,
+                    startOffsetOfLastFoundTargetBox: number,
+                    typeOfLastCompletedBox: string,
+                    typeOfLastTargetBox: string);
 
         found: boolean;
-        lastCompletedOffset: number;
-        size: number;
+        sizeOfLastCompletedBox: number;
+        sizeOfLastFoundTargetBox: number;
+        startOffsetOfLastCompletedBox: number;
+        startOffsetOfLastFoundTargetBox: number;
+        typeOfLastCompletedBox: string | null;
+        typeOfLastTargetBox: string | null;
     }
 
     export class MetricsList {
