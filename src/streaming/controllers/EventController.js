@@ -118,7 +118,7 @@ function EventController() {
         try {
             checkConfig();
             logger.debug('Start Event Controller');
-            const refreshDelay = settings.get().streaming.eventControllerRefreshDelay;
+            const refreshDelay = settings.get().streaming.events.eventControllerRefreshDelay;
             if (!isStarted && !isNaN(refreshDelay)) {
                 isStarted = true;
                 eventInterval = setInterval(_onEventTimer, refreshDelay);
@@ -474,7 +474,7 @@ function EventController() {
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
                 event.triggeredReceivedEvent = true;
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                eventBus.trigger(event.eventStream.schemeIdUri, { event: JSON.parse(JSON.stringify(event)) }, { mode });
                 return;
             }
 
@@ -490,7 +490,11 @@ function EventController() {
                     _sendCallbackRequest(event.messageData);
                 } else {
                     logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
-                    eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                    eventBus.trigger(event.eventStream.schemeIdUri, { event: JSON.parse(JSON.stringify(event)) }, { mode });
+                    if (settings.get().streaming.events.deleteEventMessageDataAfterEventStarted) {
+                        delete event.messageData;
+                        delete event.parsedMessageData;
+                    }
                 }
                 event.triggeredStartEvent = true;
             }

@@ -32,6 +32,9 @@ class TextControllerMock {
     initializeForStream() {
 
     }
+
+    clearDataForStream() {
+    }
 }
 
 export default TextControllerMock;
