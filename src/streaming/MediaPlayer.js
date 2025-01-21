@@ -1233,7 +1233,7 @@ function MediaPlayer() {
     }
 
     /**
-     * Returns the average latency computed in the ThroughputController in millisecond
+     * Returns the average latency computed in the ThroughputController in milliseconds
      *
      * @param {MediaType} type
      * @param {string} calculationMode
