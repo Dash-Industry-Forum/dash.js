@@ -1,10 +1,20 @@
 const path = require('path');
+const CopyPlugin = require("copy-webpack-plugin");
+const { write } = require('fs');
 
 module.exports = {
+  mode: 'production',
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: "../lib/bootstrap/bootstrap.min.css", to: "lib" },
+        { from: "../lib/main.css", to: "lib" },
+        { from: "../highlighter.js", to: "lib" },
+        { from: "../lib/img/dashjs-logo.png", to: "img" },
+      ]
+    }),
+  ],
   entry: './src/App.ts',
-  externals: {
-    dashjs: 'dashjs'
-  },
   module: {
     rules: [
       {
@@ -28,10 +38,5 @@ module.exports = {
     filename: 'app.js',
     path: path.resolve(__dirname, 'dist'),
   },
-  devtool: 'eval-source-map',
-  devServer: {
-    static: path.join(__dirname, "dist"),
-    compress: true,
-    port: 4000,
-  },
+  devtool: 'source-map',
 };

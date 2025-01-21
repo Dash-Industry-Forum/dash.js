@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <title>Custom capabilities filter example</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -26,7 +26,7 @@
                 url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
 
             var filterCapabilities = async function (representation) {
-                /* 
+                /*
                  * This example only illustrates how calls to async functions such as
                  * MediaCapabilitiesAPI can be used with dash.js' CustomCapabilitiesFilter.
                  * Note that dash.js already performs basic capability checks internally.

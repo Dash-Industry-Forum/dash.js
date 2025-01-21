@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Fast bitrate switch</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -54,9 +54,9 @@
                     <h3>Fast bitrate switch</h3>
                     <p>Example showing how to aggressively replace existing segments in the buffer when switching up in quality.
                         When <b>fastswitch</b> is enabled and an up-switch in quality is performed, the next fragment is <b>not</b> appended at the end of the current buffer range <b>but</b> closer to the current time.
-     
+
                     <p>Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the higher quality media for as long as possible.</p>
-                    
+
                     </p>
                 </div>
             </div>
