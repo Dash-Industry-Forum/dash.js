@@ -285,7 +285,7 @@ function AlternativeMpdController() {
     }
 
     function _parseAlternativeMPDEvent(event) {
-        if (event.alternativeMpd && !(event.mode === 'insert' && !manifestInfo.type === 'dynamic')) {
+        if (event.alternativeMpd) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
