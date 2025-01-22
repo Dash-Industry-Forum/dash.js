@@ -1,0 +1,19 @@
+{
+  "name": "dashjs-typescript-sample",
+  "version": "1.0.0",
+  "description": "Test using dash.js in a Typescript based project",
+  "dependencies": {
+    "dashjs": "file:../../.."
+  },
+  "scripts": {
+    "build": "webpack --config webpack.config.js"
+  },
+  "author": "Daniel Silhavy",
+  "license": "BSD-3-Clause",
+  "devDependencies": {
+    "html-webpack-plugin": "^5.6.0",
+    "ts-loader": "^9.5.1",
+    "typescript": "^4.0.0",
+    "webpack": "^5.95.0"
+  }
+}
