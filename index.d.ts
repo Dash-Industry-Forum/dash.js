@@ -2154,7 +2154,7 @@ declare namespace dashjs {
 
         refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
 
-        registerCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
         registerLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -2222,7 +2222,7 @@ declare namespace dashjs {
 
         triggerSteeringRequest(): Promise<any>;
 
-        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilter): void;
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
         unregisterLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -3744,7 +3744,7 @@ declare namespace dashjs {
 
         getAbrCustomRules(): Array<object>;
 
-        getCustomCapabilitiesFilters(): Array<Function>;
+        getCustomCapabilitiesFilters(): Array<CapabilitiesFilterFunction>;
 
         getCustomInitialTrackSelectionFunction(): Function;
 
@@ -3760,7 +3760,7 @@ declare namespace dashjs {
 
         getXHRWithCredentialsForType(type: string): any;
 
-        registerCustomCapabilitiesFilter(filter: Function): void;
+        registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
         registerLicenseRequestFilter(filter: Function): void;
 
@@ -3787,7 +3787,7 @@ declare namespace dashjs {
 
         setXHRWithCredentialsForType(type: string, value: string): void;
 
-        unregisterCustomCapabilitiesFilter(filter: Function): void;
+        unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
         unregisterLicenseRequestFilter(filter: Function): void;
 
@@ -5115,6 +5115,8 @@ declare namespace dashjs {
 
         supportsMediaSource(): boolean;
     }
+
+    export type CapabilitiesFilterFunction = (representation: Representation) => boolean;
 
     export interface CapabilitiesFilter {
         filterUnsupportedFeatures(manifest: object): Promise<any>;
