@@ -351,7 +351,7 @@ declare namespace dashjs {
 
         getRepresentationForQuality(quality: number): object | null;
 
-        prepareQualityChange(newQuality: number): void;
+        prepareQualityChange(newRep: Representation): void;
 
         reset(): void;
     }
@@ -2701,20 +2701,21 @@ declare namespace dashjs {
 
     export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
         mediaType: MediaType;
-        newQuality: number;
-        oldQuality: number;
+        newRepresentation: Representation;
+        oldRepresentation: Representation;
         type: MediaPlayerEvents['QUALITY_CHANGE_RENDERED'];
     }
 
     export interface QualityChangeRequestedEvent extends MediaPlayerEvent {
         mediaType: MediaType;
-        newQuality: number;
-        oldQuality: number;
+        newRepresentation: Representation;
+        oldRepresentation: Representation;
         reason: {
             name?: string;
             droppedFrames?: number;
         } | null;
         streamInfo: StreamInfo | null;
+        isAdaptationSetSwitch: boolean;
         type: MediaPlayerEvents['QUALITY_CHANGE_REQUESTED'];
     }
 
