@@ -17,7 +17,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
         let playerAdapter;
 
-        before(() => {
+        before(function () {
             if (!item.testdata || !item.testdata.annexI || !item.testdata.annexI.mediaTypes || item.testdata.annexI.mediaTypes.length === 0 || !item.testdata.annexI.expectedQueryString) {
                 this.skip();
             }
@@ -25,7 +25,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Checking playing state`, async () => {
