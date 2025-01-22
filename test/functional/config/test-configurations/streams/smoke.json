@@ -168,6 +168,20 @@
       }
     },
     {
+      "name": "livesim2 Annex I",
+      "type": "live",
+      "url": "https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks",
+      "includedTestfiles": [
+        "feature-support/annex-i"
+      ],
+      "testdata": {
+        "annexI": {
+          "mediaTypes": ["video"],
+          "expectedQueryString": "?dashjs=rocks"
+        }
+      }
+    },
+    {
       "name": "DASH-IF Live Sim - Segment Template without manifest updates",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",

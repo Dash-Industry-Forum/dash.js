@@ -572,7 +572,7 @@ class DashJsAdapter {
         })
     }
 
-    async waitForMediaSegmentDownload(timeoutValue) {
+    async waitForMediaSegmentDownload(timeoutValue, mediaType = 'all') {
         return new Promise((resolve) => {
             let timeout = null;
 
@@ -586,7 +586,7 @@ class DashJsAdapter {
                 _onComplete({});
             }
             const _onEvent = (e) => {
-                if (e.request.type === 'MediaSegment') {
+                if (e.request.type === 'MediaSegment' && (e.request.mediaType === mediaType || mediaType === 'all')) {
                     _onComplete(e);
                 }
             }
