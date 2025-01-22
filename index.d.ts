@@ -2703,6 +2703,7 @@ declare namespace dashjs {
         mediaType: MediaType;
         newRepresentation: Representation;
         oldRepresentation: Representation;
+        streamId: string;
         type: MediaPlayerEvents['QUALITY_CHANGE_RENDERED'];
     }
 
