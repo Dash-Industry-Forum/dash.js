@@ -427,13 +427,9 @@ function AlternativeMpdController() {
     }
 
     function _getAnchor(url) {
-        const urlSplit = url.split('.mpd#');
-        let t = 0
-        if (urlSplit.length > 1) {
-            const params = new URLSearchParams(urlSplit[1]);
-            t = Number(params.get('t'));
-        }
-        return t
+        const regexT = /#.*?t=(\d+)(?:&|$)/;
+        const t = url.match(regexT);
+        return t ? Number(t[1]) : 0;
     }
 
     function _switchBackToMainContent(event) {
