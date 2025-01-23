@@ -229,7 +229,7 @@ function ScheduleController(config) {
         const bufferTarget = getBufferTarget();
 
         // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
-        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled()) {
+        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled() || (type === Constants.AUDIO && hasVideoTrack)) {
             segmentDurationToAddToBufferLevel = 0;
         }
 
