@@ -211,6 +211,9 @@ function Stream(config) {
             _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
                 .then((bufferSinks) => {
                     isActive = true;
+                    if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
+                        startScheduleControllers();
+                    }
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
                         streamInfo
                     });
@@ -1064,8 +1067,18 @@ function Stream(config) {
         return sp.getMediaInfo();
     }
 
+    function checkAndHandleCompletedBuffering() {
+        if (hasFinishedBuffering) {
+            return;
+        }
+        streamProcessors.forEach((streamProcessor) => {
+            streamProcessor.checkAndHandleCompletedBuffering();
+        })
+    }
+
     instance = {
         activate,
+        checkAndHandleCompletedBuffering,
         deactivate,
         getAdapter,
         getCurrentMediaInfoForType,
