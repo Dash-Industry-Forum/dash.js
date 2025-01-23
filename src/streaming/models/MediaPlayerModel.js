@@ -224,10 +224,18 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getBufferTimeDefault() {
-        let bufferTimeDefault = settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const bufferTimeDefault = getBufferTimeDefaultUnadjusted();
         const liveDelay = playbackController.getLiveDelay();
 
         return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(bufferTimeDefault, liveDelay) : bufferTimeDefault;
+    }
+
+    /**
+     * Returns the stable buffer
+     * @return {number}
+     */
+    function getBufferTimeDefaultUnadjusted() {
+        return settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     /**
@@ -271,6 +279,7 @@ function MediaPlayerModel() {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
         getBufferTimeDefault,
+        getBufferTimeDefaultUnadjusted,
         getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,
