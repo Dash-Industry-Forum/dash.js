@@ -73,6 +73,8 @@ are as follows. Replace `vx.x.x` with the release version, for instance `v5.0.0`
     - Debug
       Build: [http://cdn.dashjs.org/vx.x.x/modern/esm/dash.all.debug.js](http://cdn.dashjs.org/v5.0.0/modern/esm/dash.all.debug.js)
 
+Multiple examples how to use dash.js in your Typescript or Webpack based JavaScript project can be found in `samples/modules`.
+
 ## NPM package
 
 We publish dash.js to [npm](https://www.npmjs.com/package/dashjs). Examples of how to use dash.js in different module
