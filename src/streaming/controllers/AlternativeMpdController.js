@@ -235,7 +235,7 @@ function AlternativeMpdController() {
                 const hasDuration = !isNaN(event.duration);
                 const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
                 const isBeforeStart = currentTime < event.presentationTime;
-            
+
                 event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
@@ -275,7 +275,6 @@ function AlternativeMpdController() {
         // Initialize alternative player
         if (event != bufferedEvent) {
             _initializeAlternativePlayer(event);
-            _startAltnerativePlaybackTimeMonitoring();
         }
     }
 
@@ -403,13 +402,25 @@ function AlternativeMpdController() {
         altVideoElement.style.display = 'block';
 
         if (time) {
-            altPlayer.seek(time);
+            const seekTime = time + _getAnchor(event.alternativeMPD.url)
+            altPlayer.seek(seekTime);
         }
 
         altPlayer.play();
+        _startAltnerativePlaybackTimeMonitoring();
 
         isSwitching = false;
         bufferedEvent = null;
+    }
+
+    function _getAnchor(url) {
+        const urlSplit = url.split(".mpd#");
+        let t = 0
+        if (urlSplit.length > 1) {
+            const params = new URLSearchParams(urlSplit[1]);
+            t = Number(params.get("t"));
+        }
+        return t
     }
 
     function _switchBackToMainContent(event) {

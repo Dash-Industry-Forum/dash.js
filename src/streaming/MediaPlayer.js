@@ -1479,7 +1479,6 @@ function MediaPlayer() {
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
         }
-        console.log(providedStartTime);
 
         _initializePlayback(providedStartTime);
     }
