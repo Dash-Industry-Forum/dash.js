@@ -650,8 +650,6 @@ function StreamController() {
         // If the track was changed in the active stream we need to stop preloading and remove the already prebuffered stuff. Since we do not support preloading specific handling of specific AdaptationSets yet.
         _deactivateAllPreloadingStreams();
 
-        console.log('_onCurrentTrackChanged');
-
         if (settings.get().streaming.buffer.resetSourceBuffersForTrackSwitch && e.oldMediaInfo && e.oldMediaInfo.codec !== e.newMediaInfo.codec) {
             const seekTime = playbackController.getTime();
             activeStream.deactivate(false);
@@ -1311,8 +1309,6 @@ function StreamController() {
 
 
     function switchToVideoElement(seekTime) {
-        console.log('switchToVideoElement');
-        
         if (activeStream) {
             playbackController.initialize(getActiveStreamInfo());
             _openMediaSource({ seekTime, keepBuffers: false, streamActivated: true });

@@ -207,6 +207,7 @@ function AlternativeMpdController() {
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
                     timeToSwitch = event.startAtPlayhead ? actualEventPresentationTime - event.presentationTime : 0
+                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url)
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
@@ -240,7 +241,7 @@ function AlternativeMpdController() {
                 const hasDuration = !isNaN(event.duration);
                 const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
                 const isBeforeStart = currentTime < event.presentationTime;
-            
+
                 event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
@@ -280,7 +281,6 @@ function AlternativeMpdController() {
         // Initialize alternative player
         if (event != bufferedEvent) {
             _initializeAlternativePlayer(event);
-            _startAltnerativePlaybackTimeMonitoring();
         }
     }
 
@@ -420,9 +420,16 @@ function AlternativeMpdController() {
 
         altPlayer.play();
         logger.info('Alternative content playback started');
+        _startAltnerativePlaybackTimeMonitoring();
 
         isSwitching = false;
         bufferedEvent = null;
+    }
+
+    function _getAnchor(url) {
+        const regexT = /#.*?t=(\d+)(?:&|$)/;
+        const t = url.match(regexT);
+        return t ? Number(t[1]) : 0;
     }
 
     function _switchBackToMainContent(event) {
