@@ -510,7 +510,20 @@ function StreamProcessor(config) {
         }
 
         // Check if the media is finished. If so, no need to schedule another request
+        const hasHandledBufferingComplete = checkAndHandleCompletedBuffering();
+        if (hasHandledBufferingComplete) {
+            return
+        }
+
+        if (rescheduleIfNoRequest) {
+            _noValidRequest();
+        }
+    }
+
+    function checkAndHandleCompletedBuffering() {
+        const representation = representationController.getCurrentRepresentation();
         const isLastSegmentRequested = dashHandler.isLastSegmentRequested(representation, bufferingTime);
+
         if (isLastSegmentRequested) {
             const segmentIndex = dashHandler.getCurrentIndex();
             logger.debug(`Segment requesting for stream ${streamInfo.id} has finished`);
@@ -520,12 +533,9 @@ function StreamProcessor(config) {
             });
             bufferController.segmentRequestingCompleted(segmentIndex);
             clearScheduleTimer();
-            return;
         }
 
-        if (rescheduleIfNoRequest) {
-            _noValidRequest();
-        }
+        return isLastSegmentRequested
     }
 
     /**
@@ -1500,6 +1510,7 @@ function StreamProcessor(config) {
     }
 
     instance = {
+        checkAndHandleCompletedBuffering,
         clearScheduleTimer,
         createBufferSinks,
         dischargePreBuffer,

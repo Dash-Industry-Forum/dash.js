@@ -5721,6 +5721,8 @@ declare namespace dashjs {
     export interface Stream {
         activate(mediaSource: MediaSource, previousBufferSinks: any[]): void;
 
+        checkAndHandleCompletedBuffering(): void;
+
         deactivate(keepBuffers: boolean): void;
 
         getAdapter(): DashAdapter
@@ -5776,6 +5778,8 @@ declare namespace dashjs {
 
     export interface StreamProcessor {
         addMediaInfo(newMediaInfo: MediaInfo): void;
+
+        checkAndHandleCompletedBuffering(): void;
 
         clearMediaInfoArray(): void;
 

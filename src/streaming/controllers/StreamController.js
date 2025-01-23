@@ -880,10 +880,18 @@ function StreamController() {
      * @private
      */
     function _checkIfPrebufferingCanStart() {
-        // In multiperiod situations, we can start buffering the next stream
-        if (!activeStream || !activeStream.getHasFinishedBuffering()) {
+
+        if (!activeStream) {
             return;
         }
+
+        // Check if we are finished buffering. In case this is the case the prebuffering will be triggered automatically
+        if (!activeStream.getHasFinishedBuffering()) {
+            activeStream.checkAndHandleCompletedBuffering();
+            return;
+        }
+
+        // In case we have finished buffering already we can preload
         const upcomingStreams = _getNextStreams(activeStream);
         let i = 0;
 
