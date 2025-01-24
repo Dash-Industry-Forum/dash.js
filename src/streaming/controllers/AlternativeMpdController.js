@@ -451,8 +451,9 @@ function AlternativeMpdController() {
                 seekTime = event.presentationTime + event.returnOffset;
                 logger.debug(`Using return offset - seeking to: ${seekTime}`);
             } else {
-                const alternativeDuration = (event.maxDuration || event.maxDuration === 0) ? event.maxDuration : altPlayer.duration()
-                seekTime = event.presentationTime + alternativeDuration;
+                const alternativeDuration = altPlayer.duration()
+                const alternativeEffectiveDuration = !isNaN(event.maxDuration) ? Math.min(event.maxDuration, alternativeDuration) : alternativeDuration
+                seekTime = event.presentationTime + alternativeEffectiveDuration;
                 logger.debug(`Using alternative duration - seeking to: ${seekTime}`);
             }
         } else if (event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
