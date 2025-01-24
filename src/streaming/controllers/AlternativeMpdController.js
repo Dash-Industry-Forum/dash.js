@@ -195,12 +195,12 @@ function AlternativeMpdController() {
     function _onDashPlaybackTimeUpdated(e) {
         try {
             const currentTime = e.time;
-            const nextEvent = _getEventToPrebuff(currentTime)
-            if (nextEvent) {
-                _prebufferNextAlternative(nextEvent);
-            }
-
             if (!currentEvent) {
+                const nextEvent = _getEventToPrebuff(currentTime)
+                if (nextEvent) {
+                    _prebufferNextAlternative(nextEvent);
+                }
+                
                 actualEventPresentationTime = e.time;
                 const event = _getCurrentEvent(currentTime);
 
