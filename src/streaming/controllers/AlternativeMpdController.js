@@ -33,6 +33,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MediaPlayer from '../MediaPlayer.js';
 import EventBus from './../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../constants/Constants.js';
 
 /*
 TODOS:
@@ -62,8 +63,11 @@ function AlternativeMpdController() {
         altVideoElement,
         alternativeContext,
         isMainDynamic = false,
-        lastTimestamp = 0,
-        manifestInfo = {};
+        actualEventPresentationTime = 0,
+        timeToSwitch = 0,
+        manifestInfo = {},
+        DashConstants,
+        logger;
 
     function setConfig(config) {
         if (!config) {
@@ -72,6 +76,14 @@ function AlternativeMpdController() {
 
         if (!videoModel) {
             videoModel = config.videoModel;
+        }
+
+        if (config.DashConstants) {
+            DashConstants = config.DashConstants
+        }
+
+        if (config.logger) {
+            logger = config.logger;
         }
 
         if (!!config.playbackController && !playbackController) {
@@ -83,16 +95,12 @@ function AlternativeMpdController() {
         }
 
         if (!!config.useDashEventsForScheduling && !useDashEventsForScheduling) {
-            console.log(`Event strategy: ${'Timestamps based' ? config.useDashEventsForScheduling : 'Interval based'}`)
+            logger.info(`Event strategy: ${'Timestamps based' ? config.useDashEventsForScheduling : 'Interval based'}`)
             useDashEventsForScheduling = config.useDashEventsForScheduling;
         }
 
         if (!!config.alternativeContext && !alternativeContext) {
             alternativeContext = config.alternativeContext
-        }
-
-        if (!!config.lastTimestamp) {
-            lastTimestamp = config.lastTimestamp || 0;
         }
 
         if (!!config.currentEvent && !currentEvent) {
@@ -111,16 +119,12 @@ function AlternativeMpdController() {
 
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement === videoModel.getElement()) {
-                console.log('Ay ay');
-                // document.exitFullscreen();
-                // fullscreenDiv.requestFullscreen();
+                // TODO: Implement fullscreen
             } else {
-                console.log('Esto no se va a triggerear nunca');
-                // document.exitFullscreen();
+                // TODO: Handle error
             }
         });
 
-        // Borrar por el amor de dios
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
@@ -134,92 +138,130 @@ function AlternativeMpdController() {
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
 
+        logger.debug(`Manifest loaded - Type: ${manifestInfo.type}, URL: ${manifestInfo.originalUrl}`);
+
         scheduledEvents.forEach((scheduledEvent) => {
             if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) {
                 scheduledEvent.type = manifestInfo.type;
+                logger.debug(`Updated scheduled event type to ${manifestInfo.type} for URL: ${scheduledEvent.alternativeMPD.url}`);
             }
         });
     }
 
     function _onAlternativeEventeReceived(event) {
+        // Only Alternative MPD replace events can be used used for dynamic MPD
+        if (manifestInfo.type === DashConstants.DYNAMIC && event?.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
+            logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
+            return
+        }
+
         const alternativeEvent = _parseAlternativeMPDEvent(event)
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
+            logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
         } else {
             scheduledEvents = [alternativeEvent]
+            logger.info('First alternative event scheduled');
         }
 
         switch (manifestInfo.type) {
-            case 'dynamic':
+            case DashConstants.DYNAMIC:
                 if (!currentEvent && !altPlayer) {
                     isMainDynamic = true;
+                    logger.info('Starting alternative MPD event scheduling for dynamic manifest');
                     _scheduleAlternativeMPDEvents();
                 }
                 break;
-            case 'static':
+            case DashConstants.STATIC:
                 if (!isMainDynamic) {
-                    _prebufferNextAlternative();
-                    _startDashEventPlaybackTimeMonitoring();
+                    logger.info('Starting playback time monitoring for static manifest');
+                    _startPlaybackTimeMonitoring();
                 }
                 break;
             default:
-                console.log('Unknown manifest type')
+                logger.warn(`Unknown manifest type: ${manifestInfo.type}`);
                 break;
         }
     }
 
-    function _startDashEventPlaybackTimeMonitoring() {
+    function _startPlaybackTimeMonitoring() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
-        if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
-        }
+    }
+
+    function _startAltnerativePlaybackTimeMonitoring() {
+        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
     }
 
     function _onDashPlaybackTimeUpdated(e) {
         try {
             const currentTime = e.time;
             if (!currentEvent) {
-                lastTimestamp = e.time;
+                const nextEvent = _getEventToPrebuff(currentTime)
+                if (nextEvent) {
+                    _prebufferNextAlternative(nextEvent);
+                }
+                
+                actualEventPresentationTime = e.time;
                 const event = _getCurrentEvent(currentTime);
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    const timeToSwitch = event.startAtPlayhead ? lastTimestamp - event.presentationTime : 0
+                    timeToSwitch = event.startAtPlayhead ? actualEventPresentationTime - event.presentationTime : 0
+                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url)
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
                 return;
             }
 
-            if (currentEvent.type == 'dynamic') {
+            if (currentEvent.type == DashConstants.DYNAMIC) {
                 return;
             }
 
             const { presentationTime, maxDuration, clip } = currentEvent;
-            if (Math.round(e.time - lastTimestamp) === 0) {
+            if (Math.round(e.time - actualEventPresentationTime) === 0) {
                 return
             }
 
-            const shouldSwitchBack = 
-            (Math.round(altPlayer.duration() - currentTime) === 0) ||
-            (clip && lastTimestamp + e.time >= presentationTime + maxDuration) ||
-            (maxDuration && maxDuration <= e.time);
+            const shouldSwitchBack =
+                (Math.round(altPlayer.duration() - currentTime) === 0) ||
+                (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
+                (maxDuration && maxDuration <= e.time);
 
             if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            console.error('Error in onDashPlaybackTimeUpdated:', err);
+            logger.error(`Error at ${actualEventPresentationTime} in onDashPlaybackTimeUpdated:`, err);
         }
     }
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
             if (event.completed) {
-                event.completed = !(currentTime > event.presentationTime + event.duration)
+                const hasDuration = !isNaN(event.duration);
+                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+                const isBeforeStart = currentTime < event.presentationTime;
+
+                event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
-            return currentTime >= event.presentationTime &&
-                currentTime < event.presentationTime + event.duration;
+            return currentTime >= event.presentationTime && (isNaN(event.duration) ||
+                currentTime < event.presentationTime + event.duration);
+        });
+    }
+
+    function _getEventToPrebuff(currentTime) {
+        return scheduledEvents.find(event => {
+            if (event.triggered) {
+                const hasDuration = !isNaN(event.duration);
+                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+                const isBeforeStart = currentTime < event.presentationTime - event.earliestResolutionTimeOffset;
+
+                event.triggered = !(isPastEnd || isBeforeStart);
+                return false;
+            }
+            return currentTime >= event.presentationTime - event.alternativeMPD.earliestResolutionTimeOffset &&
+                currentTime < event.presentationTime;
         });
     }
 
@@ -227,7 +269,7 @@ function AlternativeMpdController() {
         if (!altVideoElement) {
             // Create a new video element for the alternative content
             altVideoElement = document.createElement('video');
-            altVideoElement.style.display = 'none'; // Hide the alternative video element initially
+            altVideoElement.style.display = 'none';
             altVideoElement.autoplay = false;
             altVideoElement.controls = !hideAlternativePlayerControls;
             fullscreenDiv.appendChild(altVideoElement);
@@ -249,7 +291,7 @@ function AlternativeMpdController() {
         altPlayer.setAutoPlay(false);
 
         altPlayer.on(Events.ERROR, (e) => {
-            console.error('Alternative player error:', e);
+            logger.error('Alternative player error:', e);
         }, this);
     }
 
@@ -257,22 +299,22 @@ function AlternativeMpdController() {
         if (event.alternativeMpd) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
-            const mode = alternativeMpdNode.mode || 'insert';
+            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
-                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10) / 1000,
+                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10),
                 },
                 mode: mode,
-                returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000,
                 triggered: false,
                 completed: false,
-                type: 'static',
+                type: DashConstants.STATIC,
+                ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(!alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
+                ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
             };
         }
     }
@@ -329,16 +371,9 @@ function AlternativeMpdController() {
         }
     }
 
-    function _prebufferNextAlternative() {
-        const nextEvent = scheduledEvents.find(event => {
-            if (event.completed) {
-                return false;
-            }
-            return !event.triggered;
-        });
-
+    function _prebufferNextAlternative(nextEvent) {
         if (nextEvent && !bufferedEvent) {
-            console.log(`Preloading event starting at ${nextEvent.presentationTime}`)
+            logger.info(`Preloading event starting at ${nextEvent.presentationTime}`)
             _prebufferAlternativeContent(nextEvent);
         }
     }
@@ -351,40 +386,59 @@ function AlternativeMpdController() {
         bufferedEvent = event;
 
         altPlayer.on(Events.STREAM_INITIALIZED, () => {
-            console.log('I\'m buffering')
-            // altPlayer.seek(event.earliestResolutionTimeOffset);
-            // Do not play yet, just buffer
+            logger.info('Buffering alternative content')
         }, this);
     }
 
     function _switchToAlternativeContent(event, time = 0) {
-        if (isSwitching) { return };
+        if (isSwitching) { 
+            logger.debug('Switch already in progress - ignoring request');
+            return 
+        };
+        
+        logger.info(`Switching to alternative content at time ${time}`);
         isSwitching = true;
         event.triggered = true;
 
         _initializeAlternativePlayerElement(event);
 
-        if (event.type == 'dynamic') {
+        if (event.type == DashConstants.DYNAMIC) {
+            logger.debug('Descheduling events for dynamic manifest');
             _descheduleAlternativeMPDEvents(currentEvent);
         }
 
         videoModel.pause();
+        logger.debug('Main video paused');
 
         videoModel.getElement().style.display = 'none';
         altVideoElement.style.display = 'block';
 
         if (time) {
+            logger.debug(`Seeking alternative content to time: ${time}`);
             altPlayer.seek(time);
         }
 
         altPlayer.play();
+        logger.info('Alternative content playback started');
+        _startAltnerativePlaybackTimeMonitoring();
 
         isSwitching = false;
         bufferedEvent = null;
     }
 
+    function _getAnchor(url) {
+        const regexT = /#.*?t=(\d+)(?:&|$)/;
+        const t = url.match(regexT);
+        return t ? Number(t[1]) : 0;
+    }
+
     function _switchBackToMainContent(event) {
-        if (isSwitching) { return };
+        if (isSwitching) { 
+            logger.debug('Switch already in progress - ignoring request');
+            return 
+        };
+        
+        logger.info('Switching back to main content');
         isSwitching = true;
 
         altPlayer.pause();
@@ -392,14 +446,19 @@ function AlternativeMpdController() {
         videoModel.getElement().style.display = 'block';
 
         let seekTime;
-        if (event.mode === 'replace') {
+        if (event.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
             if (event.returnOffset || event.returnOffset === 0) {
                 seekTime = event.presentationTime + event.returnOffset;
+                logger.debug(`Using return offset - seeking to: ${seekTime}`);
             } else {
-                seekTime = event.presentationTime + (event.maxDuration || event.maxDuration === 0 ? event.maxDuration : altPlayer.duration());
+                const alternativeDuration = altPlayer.duration()
+                const alternativeEffectiveDuration = !isNaN(event.maxDuration) ? Math.min(event.maxDuration, alternativeDuration) : alternativeDuration
+                seekTime = event.presentationTime + alternativeEffectiveDuration;
+                logger.debug(`Using alternative duration - seeking to: ${seekTime}`);
             }
-        } else if (event.mode === 'insert') {
+        } else if (event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
             seekTime = event.presentationTime;
+            logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
         }
 
         if (!event.completed) {
@@ -407,13 +466,17 @@ function AlternativeMpdController() {
         }
 
         if (playbackController.getIsDynamic()) {
+            logger.debug('Seeking to original live point for dynamic manifest');
             playbackController.seekToOriginalLive(true, false, false);
         } else {
+            logger.debug(`Seeking main content to time: ${seekTime}`);
             playbackController.seek(seekTime, false, false);
         }
 
         videoModel.play();
+        logger.info('Main content playback resumed');
 
+        // Cleanup
         altPlayer.reset();
         altPlayer = null;
 
@@ -423,6 +486,7 @@ function AlternativeMpdController() {
         isSwitching = false;
         currentEvent = null;
 
+        logger.debug('Alternative player resources cleaned up');
         _prebufferNextAlternative();
     }
 
