@@ -635,6 +635,10 @@ function Stream(config) {
             textController.clearDataForStream(streamInfo.id);
         }
 
+        if (mediaController && streamInfo) {
+            mediaController.clearDataForStream(streamInfo.id);
+        }
+
         resetInitialSettings(keepBuffers);
 
         streamInfo = null;

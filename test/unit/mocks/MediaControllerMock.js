@@ -120,6 +120,9 @@ class MediaControllerMock {
         this.setup();
     }
 
+    clearDataForStream() {
+    }
+
 }
 
 export default MediaControllerMock;
