@@ -3221,6 +3221,8 @@ declare namespace dashjs {
 
         areTracksEqual(t1: MediaInfo, t2: MediaInfo): boolean;
 
+        clearDataForStream(streamId: string): void;
+
         getCurrentTrackFor(type: string, streamId: string): MediaInfo;
 
         getInitialSettings(type: string): object | null;
