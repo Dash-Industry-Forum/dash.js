@@ -44,7 +44,9 @@ describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
     })
 
     after(() => {
-        playerAdapter.destroy();
+        if (playerAdapter) {
+            playerAdapter.destroy();
+        }
     })
 
     it(`Checking playing state`, async () => {
