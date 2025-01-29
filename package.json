@@ -12,6 +12,14 @@
       "browser": "./dist/modern/umd/dash.all.min.js",
       "script": "./dist/modern/umd/dash.all.min.js",
       "require": "./dist/modern/umd/dash.all.min.js"
+    },
+    "./mss": {
+      "types": "./index.d.ts",
+      "import": "./dist/modern/esm/dash.mss.min.js",
+      "default": "./dist/modern/esm/dash.mss.min.js",
+      "browser": "./dist/modern/umd/dash.mss.min.js",
+      "script": "./dist/modern/umd/dash.mss.min.js",
+      "require": "./dist/modern/umd/dash.mss.min.js"
     }
   },
   "type": "module",
