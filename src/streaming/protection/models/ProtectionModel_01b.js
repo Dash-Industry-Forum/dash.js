@@ -222,7 +222,7 @@ function ProtectionModel_01b(config) {
             const newSession = { // Implements SessionToken
                 sessionId: null,
                 keyId: ksInfo.keyId,
-                normalizedKeyId: ksInfo.keyId.replace(/-/g, '').toLowerCase(),
+                normalizedKeyId: ksInfo && ksInfo.keyId && typeof ksInfo.keyId === 'string' ? ksInfo.keyId.replace(/-/g, '').toLowerCase() : '',
                 initData: ksInfo.initData,
                 hasTriggeredKeyStatusMapUpdate: false,
 

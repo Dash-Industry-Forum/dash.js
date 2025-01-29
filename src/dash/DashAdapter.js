@@ -1065,7 +1065,7 @@ function DashAdapter() {
     function _getNormalizedKeyIds(contentProtection) {
         const normalizedKeyIds = new Set();
         contentProtection.forEach((contentProtectionElement) => {
-            if (contentProtectionElement.cencDefaultKid) {
+            if (contentProtectionElement.cencDefaultKid && typeof contentProtectionElement.cencDefaultKid === 'string') {
                 normalizedKeyIds.add(contentProtectionElement.cencDefaultKid.replace(/-/g, '').toLowerCase());
             }
         })

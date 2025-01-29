@@ -18,7 +18,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Expect buffer level to be within the initial target or the live delay once progressing`, async () => {
