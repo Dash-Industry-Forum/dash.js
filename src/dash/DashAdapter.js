@@ -388,32 +388,6 @@ function DashAdapter() {
     }
 
     /**
-     * Return all EssentialProperties of an AdaptationSet
-     * @param {object} adaptationSet
-     * @return {array}
-     */
-    function getEssentialPropertiesForAdaptationSet(adaptationSet) {
-        try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(adaptationSet);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    /**
-     * Return all EssentialProperties of a Representation
-     * @param {object} representation
-     * @return {array}
-     */
-    function getEssentialPropertiesForRepresentation(representation) {
-        try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    /**
      * Return supplementalCodecs of a Representation
      * @param {object} representation
      * @returns {array}
@@ -1221,8 +1195,6 @@ function DashAdapter() {
         getCodec,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
-        getEssentialPropertiesForRepresentation,
         getEvent,
         getEventsFor,
         getIndexForRepresentation,
