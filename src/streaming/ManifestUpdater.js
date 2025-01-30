@@ -131,10 +131,6 @@ function ManifestUpdater() {
         }
     }
 
-    function patchManifest(manifestPatch) {
-        logger.debug(`Not supported yet ${manifestPatch}`);
-    }
-
     function startManifestRefreshTimer(delay) {
         stopManifestRefreshTimer();
 
@@ -189,14 +185,6 @@ function ManifestUpdater() {
         }
 
         manifestLoader.load(url, serviceLocation, queryParams);
-    }
-
-    function updateManifest (manifest) {
-        // TODO: Parse manifest if needed
-        const event = {
-            manifest
-        }
-        onManifestLoaded(event)   
     }
 
     function _getAvailableMpdLocations(manifest) {
@@ -318,12 +306,10 @@ function ManifestUpdater() {
     instance = {
         getIsUpdating,
         initialize,
-        patchManifest,
         setConfig,
         setManifest,
         refreshManifest,
         reset,
-        updateManifest,
     };
 
     setup();

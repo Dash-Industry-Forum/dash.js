@@ -31,6 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import Events from '../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
@@ -265,7 +266,7 @@ function EventController() {
 
                     if (result === EVENT_HANDLED_STATES.ADDED) {
                         if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
-                            _handleManifestReloadEvent(event);
+                            _handleManifestReload(event);
                         }
                         logger.debug(`Added inband event with id ${event.id} from period ${periodId}`);
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
@@ -327,7 +328,7 @@ function EventController() {
      * @param {object} event
      * @private
      */
-    function _handleManifestExiration(event, currentVideoTime) {
+    function _handleManifestValidityExpirationEvent(event, currentVideoTime) {
         switch (event.eventStream.value) {
             case MPD_RELOAD_VALUE:
                 logger.debug(`Starting manifest refresh event ${event.id} at ${currentVideoTime}`);
@@ -348,7 +349,7 @@ function EventController() {
      * @param {object} event
      * @private
      */
-    function _handleManifestReloadEvent(event) {
+    function _handleManifestReload(event) {
         try {
             const validUntil = event.calculatedPresentationTime;
             let newDuration;
@@ -503,7 +504,7 @@ function EventController() {
                 if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
                     //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
-                        _handleManifestExiration(event, currentVideoTime)
+                        _handleManifestValidityExpirationEvent(event, currentVideoTime)
                     }
                 } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
@@ -564,7 +565,11 @@ function EventController() {
     function _patchManifest(manifestPatch) {
         try {
             checkConfig();
-            manifestUpdater.patchManifest(manifestPatch);
+            const event = {
+                manifest: manifestPatch // Parse manifest before assigne
+            }
+            logger.debug(`Patch manifest not supported yet ${event}`);
+            // eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { event });
         } catch (e) {
             logger.error(e);
         }
@@ -577,7 +582,10 @@ function EventController() {
     function _updateManifest(manifest) {
         try {
             checkConfig();
-            manifestUpdater.updateManifest(manifest);
+            const event = {
+                manifest // Parse manifest before assigne
+            }
+            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { event });
         } catch (e) {
             logger.error(e);
         }
