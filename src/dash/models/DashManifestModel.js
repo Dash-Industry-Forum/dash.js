@@ -590,7 +590,7 @@ function DashManifestModel() {
     }
 
     // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
-    function _getCommonProperties(propertyType, repr) {
+    function _getCommonPropertiesFromRepresentations(propertyType, repr) {
         if (!repr || !repr.length) {
             return [];
         }
@@ -615,18 +615,16 @@ function DashManifestModel() {
         })
     }
 
-
-
-    function getAllEssentialPropertiesForAdaptationSet(adaptation) {
+    function getCommonEssentialPropertiesForAdaptationSet(adaptation) {
         if (!adaptation) {
             return [];
         }
 
-        let allProperties = _getCommonProperties(DashConstants.ESSENTIAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
+        let allProperties = _getCommonPropertiesFromRepresentations(DashConstants.ESSENTIAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
         if (adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) && adaptation[DashConstants.ESSENTIAL_PROPERTY].length) {
             allProperties.push(...adaptation[DashConstants.ESSENTIAL_PROPERTY])
         }
-        // we assume there are no duplicates on AdaptationSets and Representations
+        // we don't check whether there are duplicates on AdaptationSets and Representations
 
         return allProperties.map(essentialProperty => {
             const s = new DescriptorType();
@@ -1487,16 +1485,16 @@ function DashManifestModel() {
         });
     }
 
-    function getAllSupplementalPropertiesForAdaptation(adaptation) {
+    function getCommonSupplementalPropertiesForAdaptation(adaptation) {
         if (!adaptation) {
             return [];
         }
 
-        let allProperties = _getCommonProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
+        let allProperties = _getCommonPropertiesFromRepresentations(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
         if (adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) && adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
             allProperties.push(...adaptation[DashConstants.SUPPLEMENTAL_PROPERTY])
         }
-        // we assume there are no duplicates on AdaptationSets and Representations
+        // we don't check whether there are duplicates on AdaptationSets and Representations
 
         return allProperties.map(essentialProperty => {
             const s = new DescriptorType();
@@ -1549,7 +1547,7 @@ function DashManifestModel() {
         getContentSteering,
         getDuration,
         getEssentialPropertiesForAdaptationSet,
-        getAllEssentialPropertiesForAdaptationSet,
+        getCommonEssentialPropertiesForAdaptationSet,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
@@ -1583,7 +1581,7 @@ function DashManifestModel() {
         getSubSegmentAlignment,
         getSuggestedPresentationDelay,
         getSupplementalPropertiesForAdaptation,
-        getAllSupplementalPropertiesForAdaptation,
+        getCommonSupplementalPropertiesForAdaptation,
         getSupplementalPropertiesForRepresentation,
         getUTCTimingSources,
         getViewpointForAdaptation,
