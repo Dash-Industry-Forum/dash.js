@@ -379,11 +379,14 @@ function DashAdapter() {
                 delete newPeriod.EventStream;
             }
 
-            const baseUrls = importedManifest.BaseURL.concat(importedPeriod.BaseURL)
-                .filter(function( element ) {
-                    return element !== undefined;
-                });
-            newPeriod.BaseURL = baseUrls;
+            newPeriod.baseURL = importedManifest.baseUri;
+            if (importedManifest.BaseURL) {
+                const baseUrls = importedManifest.BaseURL.concat(importedPeriod.BaseURL)
+                    .filter(function( element ) {
+                        return element !== undefined;
+                    });
+                newPeriod.BaseURL = baseUrls;
+            }
 
             newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
         } else {
