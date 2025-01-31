@@ -1474,7 +1474,7 @@ function DashManifestModel() {
         return serviceDescriptions;
     }
 
-    function getSupplementalPropertiesForAdaptation(adaptation) {
+    function getSupplementalPropertiesForAdaptationSet(adaptation) {
         if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
             return [];
         }
@@ -1485,7 +1485,7 @@ function DashManifestModel() {
         });
     }
 
-    function getCommonSupplementalPropertiesForAdaptation(adaptation) {
+    function getCommonSupplementalPropertiesForAdaptationSet(adaptation) {
         if (!adaptation) {
             return [];
         }
@@ -1580,8 +1580,8 @@ function DashManifestModel() {
         getServiceDescriptions,
         getSubSegmentAlignment,
         getSuggestedPresentationDelay,
-        getSupplementalPropertiesForAdaptation,
-        getCommonSupplementalPropertiesForAdaptation,
+        getSupplementalPropertiesForAdaptationSet,
+        getCommonSupplementalPropertiesForAdaptationSet,
         getSupplementalPropertiesForRepresentation,
         getUTCTimingSources,
         getViewpointForAdaptation,

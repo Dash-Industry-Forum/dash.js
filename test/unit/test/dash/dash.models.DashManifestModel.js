@@ -186,22 +186,22 @@ describe('DashManifestModel', function () {
             expect(essPropArray[0].value).equals('testVal');
         });
 
-        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
 
             expect(suppPropArray).to.be.instanceOf(Object);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptation is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation({
+        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptationSet is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet({
                 SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
                     schemeIdUri: 'test.scheme',
                     value: 'test2Val'
