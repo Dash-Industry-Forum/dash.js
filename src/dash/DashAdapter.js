@@ -1040,9 +1040,9 @@ function DashAdapter() {
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
         // mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptationSet(realAdaptation);
-        mediaInfo.essentialProperties = dashManifestModel.getAllEssentialPropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.essentialProperties = dashManifestModel.getCommonEssentialPropertiesForAdaptationSet(realAdaptation);
         // mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getAllSupplementalPropertiesForAdaptation(realAdaptation);
+        mediaInfo.supplementalProperties = dashManifestModel.getCommonSupplementalPropertiesForAdaptation(realAdaptation);
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
