@@ -606,13 +606,23 @@ function DashManifestModel() {
             return propertiesOfFirstRepresentation;
         }
         
-        const propSet = new Set(repr.slice(1).flatMap(currRep =>
-            currRep[propertyType]?.map(e => `${e.schemeIdUri}-${e.value}`) || []
-        ));
+        // now, only return properties present on all Representations
+        // repr.legth is always >= 2
+        return propertiesOfFirstRepresentation.filter( prop => {
+            return repr.slice(1).every( repr_n => {
+                return repr_n.hasOwnProperty(propertyType) && repr_n[propertyType].some( e => {
+                    return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
+                });
+            });
+        })
+        
+        // const propSet = new Set(repr.slice(1).flatMap(currRep =>
+        //     currRep[propertyType]?.map(e => `${e.schemeIdUri}-${e.value}`) || []
+        // ));
 
-        return propertiesOfFirstRepresentation.filter(prop =>
-            propSet.has(`${prop.schemeIdUri}-${prop.value}`)
-        );
+        // return propertiesOfFirstRepresentation.filter(prop =>
+        //     propSet.has(`${prop.schemeIdUri}-${prop.value}`)
+        // );
     }
 
     function _getCombinedPropertiesForAdaptationSet(propertyType, adaptation) {
