@@ -594,25 +594,24 @@ function DashManifestModel() {
         if (!repr || !repr.length) {
             return [];
         }
-        let propFirstRepr = [];
         
-        if (repr[0].hasOwnProperty(propertyType)) {
-            propFirstRepr = repr[0][propertyType];
-        }
-        
-        if (repr.length === 1 ) {
-            return propFirstRepr;
+        let propertiesOfFirstRepresentation = repr[0][propertyType] || [];
+
+        if (propertiesOfFirstRepresentation.length === 0) {
+            return [];
         }
 
-        // now, only return properties present on all Representations
-        // repr.length is always >= 2
-        return propFirstRepr.filter( prop => {
-            return repr.slice(1).every( repr_n => {
-                return repr_n.hasOwnProperty(propertyType) && repr_n[propertyType].some( e => {
-                    return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
-                });
-            });
-        })
+        if (repr.length === 1) {
+            return propertiesOfFirstRepresentation;
+        }
+        
+        const propSet = new Set(repr.slice(1).flatMap(currRep =>
+            currRep[propertyType]?.map(e => `${e.schemeIdUri}-${e.value}`) || []
+        ));
+
+        return propertiesOfFirstRepresentation.filter(prop =>
+            propSet.has(`${prop.schemeIdUri}-${prop.value}`)
+        );
     }
 
     function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
