@@ -591,7 +591,7 @@ function DashManifestModel() {
         });
     }
 
-    function _getCommonPropertiesFromRepresentations(propertyType, repr) {
+    function _getPropertiesCommonToAllRepresentations(propertyType, repr) {
         if (!repr || !repr.length) {
             return [];
         }
@@ -620,7 +620,7 @@ function DashManifestModel() {
             return [];
         }
 
-        let allProperties = _getCommonPropertiesFromRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
+        let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
         if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
             allProperties.push(...adaptation[propertyType])
         }
