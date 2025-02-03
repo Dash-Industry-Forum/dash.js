@@ -578,18 +578,19 @@ function DashManifestModel() {
         }
     }
 
-    function getEssentialPropertiesForAdaptationSet(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !adaptation[DashConstants.ESSENTIAL_PROPERTY].length) {
+    // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
+    function _getProperties(propertyType, element) {
+        if (!element || !element.hasOwnProperty(propertyType) || !element[propertyType].length) {
             return [];
         }
-        return adaptation[DashConstants.ESSENTIAL_PROPERTY].map(essentialProperty => {
+
+        return element[propertyType].map((essentialProperty) => {
             const s = new DescriptorType();
             s.init(essentialProperty);
             return s
         });
     }
 
-    // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
     function _getCommonPropertiesFromRepresentations(propertyType, repr) {
         if (!repr || !repr.length) {
             return [];
@@ -614,14 +615,14 @@ function DashManifestModel() {
         );
     }
 
-    function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
+    function _getCombinedPropertiesForAdaptationSet(propertyType, adaptation) {
         if (!adaptation) {
             return [];
         }
 
-        let allProperties = _getCommonPropertiesFromRepresentations(DashConstants.ESSENTIAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
-        if (adaptation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) && adaptation[DashConstants.ESSENTIAL_PROPERTY].length) {
-            allProperties.push(...adaptation[DashConstants.ESSENTIAL_PROPERTY])
+        let allProperties = _getCommonPropertiesFromRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
+        if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
+            allProperties.push(...adaptation[propertyType])
         }
         // we don't check whether there are duplicates on AdaptationSets and Representations
 
@@ -632,16 +633,16 @@ function DashManifestModel() {
         });
     }
 
-    function getEssentialPropertiesForRepresentation(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY) || !realRepresentation[DashConstants.ESSENTIAL_PROPERTY].length) {
-            return [];
-        }
+    function getEssentialPropertiesForAdaptationSet(adaptation) {
+        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, adaptation);
+    }
+    
+    function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
+        return _getCombinedPropertiesForAdaptationSet(DashConstants.ESSENTIAL_PROPERTY, adaptation);
+    }
 
-        return realRepresentation[DashConstants.ESSENTIAL_PROPERTY].map((essentialProperty) => {
-            const s = new DescriptorType();
-            s.init(essentialProperty);
-            return s
-        });
+    function getEssentialPropertiesForRepresentation(realRepresentation) {
+        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, realRepresentation);
     }
 
     function getRepresentationFor(index, adaptation) {
@@ -1474,43 +1475,15 @@ function DashManifestModel() {
     }
 
     function getSupplementalPropertiesForAdaptationSet(adaptation) {
-        if (!adaptation || !adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
-            return [];
-        }
-        return adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
-            const s = new DescriptorType();
-            s.init(supp);
-            return s
-        });
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
     }
 
     function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
-        if (!adaptation) {
-            return [];
-        }
-
-        let allProperties = _getCommonPropertiesFromRepresentations(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation[DashConstants.REPRESENTATION]);
-        if (adaptation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) && adaptation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
-            allProperties.push(...adaptation[DashConstants.SUPPLEMENTAL_PROPERTY])
-        }
-        // we don't check whether there are duplicates on AdaptationSets and Representations
-
-        return allProperties.map(essentialProperty => {
-            const s = new DescriptorType();
-            s.init(essentialProperty);
-            return s
-        });
+        return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
     }
 
     function getSupplementalPropertiesForRepresentation(representation) {
-        if (!representation || !representation.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY) || !representation[DashConstants.SUPPLEMENTAL_PROPERTY].length) {
-            return [];
-        }
-        return representation[DashConstants.SUPPLEMENTAL_PROPERTY].map(supp => {
-            const s = new DescriptorType();
-            s.init(supp);
-            return s
-        });
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, representation);
     }
 
     function setConfig(config) {
