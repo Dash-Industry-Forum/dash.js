@@ -600,12 +600,12 @@ function DashManifestModel() {
             propFirstRepr = repr[0][propertyType];
         }
         
-        if (repr.length == 1 ) {
+        if (repr.length === 1 ) {
             return propFirstRepr;
         }
 
         // now, only return properties present on all Representations
-        // repr.legth is always >= 2
+        // repr.length is always >= 2
         return propFirstRepr.filter( prop => {
             return repr.slice(1).every( repr_n => {
                 return repr_n.hasOwnProperty(propertyType) && repr_n[propertyType].some( e => {
@@ -615,7 +615,7 @@ function DashManifestModel() {
         })
     }
 
-    function getCommonEssentialPropertiesForAdaptationSet(adaptation) {
+    function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
         if (!adaptation) {
             return [];
         }
@@ -1485,7 +1485,7 @@ function DashManifestModel() {
         });
     }
 
-    function getCommonSupplementalPropertiesForAdaptationSet(adaptation) {
+    function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
         if (!adaptation) {
             return [];
         }
@@ -1541,13 +1541,14 @@ function DashManifestModel() {
         getBaseURLsFromElement,
         getBitrateListForAdaptation,
         getCodec,
+        getCombinedEssentialPropertiesForAdaptationSet,
+        getCombinedSupplementalPropertiesForAdaptationSet,
         getContentProtectionByAdaptation,
         getContentProtectionByManifest,
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
         getEssentialPropertiesForAdaptationSet,
-        getCommonEssentialPropertiesForAdaptationSet,
         getEssentialPropertiesForRepresentation,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
@@ -1581,7 +1582,6 @@ function DashManifestModel() {
         getSubSegmentAlignment,
         getSuggestedPresentationDelay,
         getSupplementalPropertiesForAdaptationSet,
-        getCommonSupplementalPropertiesForAdaptationSet,
         getSupplementalPropertiesForRepresentation,
         getUTCTimingSources,
         getViewpointForAdaptation,
