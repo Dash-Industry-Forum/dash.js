@@ -203,7 +203,7 @@ export default {
 
 
     /**
-     *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+     *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
      *  @memberof Constants#
      *  @static
      */
