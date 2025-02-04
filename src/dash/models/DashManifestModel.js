@@ -584,9 +584,9 @@ function DashManifestModel() {
             return [];
         }
 
-        return element[propertyType].map((essentialProperty) => {
+        return element[propertyType].map((property) => {
             const s = new DescriptorType();
-            s.init(essentialProperty);
+            s.init(property);
             return s
         });
     }
@@ -609,20 +609,12 @@ function DashManifestModel() {
         // now, only return properties present on all Representations
         // repr.legth is always >= 2
         return propertiesOfFirstRepresentation.filter( prop => {
-            return repr.slice(1).every( repr_n => {
-                return repr_n.hasOwnProperty(propertyType) && repr_n[propertyType].some( e => {
+            return repr.slice(1).every( currRep => {
+                return currRep[propertyType].some( e => {
                     return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
                 });
             });
         })
-        
-        // const propSet = new Set(repr.slice(1).flatMap(currRep =>
-        //     currRep[propertyType]?.map(e => `${e.schemeIdUri}-${e.value}`) || []
-        // ));
-
-        // return propertiesOfFirstRepresentation.filter(prop =>
-        //     propSet.has(`${prop.schemeIdUri}-${prop.value}`)
-        // );
     }
 
     function _getCombinedPropertiesForAdaptationSet(propertyType, adaptation) {
@@ -653,6 +645,18 @@ function DashManifestModel() {
 
     function getEssentialPropertiesForRepresentation(realRepresentation) {
         return _getProperties(DashConstants.ESSENTIAL_PROPERTY, realRepresentation);
+    }
+
+    function getSupplementalPropertiesForAdaptationSet(adaptation) {
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
+    }
+
+    function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
+        return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
+    }
+
+    function getSupplementalPropertiesForRepresentation(representation) {
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, representation);
     }
 
     function getRepresentationFor(index, adaptation) {
@@ -1482,18 +1486,6 @@ function DashManifestModel() {
         }
 
         return serviceDescriptions;
-    }
-
-    function getSupplementalPropertiesForAdaptationSet(adaptation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
-    }
-
-    function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
-        return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
-    }
-
-    function getSupplementalPropertiesForRepresentation(representation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, representation);
     }
 
     function setConfig(config) {
