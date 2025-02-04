@@ -201,6 +201,14 @@ export default {
      */
     TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
 
+
+    /**
+     *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_QUERY_KEY: 'CMCD',
+
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
      *  @memberof Constants#
