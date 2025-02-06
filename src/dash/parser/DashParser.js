@@ -37,7 +37,7 @@ import NumericMatcher from './matchers/NumericMatcher.js';
 import LangMatcher from './matchers/LangMatcher.js';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
 import SegmentValuesMap from './maps/SegmentValuesMap.js';
-import * as tXml from '../../../externals/tXml.js';
+import { parseXml as cmlParseXml } from '@svta/common-media-library/utils/parseXml.js';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
@@ -135,14 +135,79 @@ function DashParser(config) {
         return manifest;
     }
 
+    function processXml(data) {
+        const root = cmlParseXml(data).children.find(child => child.tagName === 'MPD');
+
+        function processNode(node) {
+            // Convert tag name
+            let p = node.tagName.indexOf(':');
+            if (p !== -1) {
+                node.__prefix = node.tagName.substr(0, p);
+                node.tagName = node.tagName.substr(p + 1);
+            }
+
+            const { children, attributes, tagName } = node;
+
+            // Convert attributes
+            for (let k in attributes) {
+                let value = attributes[k];
+
+                if (tagName === 'S') {
+                    value = parseInt(value);
+                }
+                else {
+                    for (let i = 0, len = matchers.length; i < len; i++) {
+                        const matcher = matchers[i];
+                        if (matcher.test(tagName, k, value)) {
+                            value = matcher.converter(value);
+                            break;
+                        }
+                    }
+                }
+
+                node[k] = value;
+            }
+
+            // Convert children
+            const len = children?.length;
+
+            for (let i = 0; i < len; i++) {
+                const child = children[i];
+
+                if (typeof child === 'string') {
+                    node.__text = child;
+                    continue;
+                }
+
+                processNode(child);
+
+                const { tagName } = child;
+
+                if (Array.isArray(node[tagName])) {
+                    node[tagName].push(child);
+                }
+                else if (arrayNodes.indexOf(tagName) !== -1) {
+                    if (!node[tagName]) {
+                        node[tagName] = [];
+                    }
+                    node[tagName].push(child);
+                } else {
+                    node[tagName] = child;
+                }
+            }
+
+            node.__children = children;
+        }
+
+        processNode(root);
+
+        return root;
+    }
 
     function parseXml(data) {
         try {
-            let root = tXml.parse(data, {
-                parseNode: true,
-                attrMatchers: matchers,
-                nodesAsArray: arrayNodes
-            });
+            const root = processXml(data);
+
             let ret = {};
             // If root element is xml node, then get first child node as root
             if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
