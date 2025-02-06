@@ -152,6 +152,28 @@ const manifest_with_supplemental_properties_on_repr = {
         }]
     }]
 };
+const manifest_with_supplemental_properties_on_not_all_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period: [{
+        AdaptationSet: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value1' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value3' }
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000
+                }
+            ]
+        }]
+    }]
+};
 const manifest_with_essential_properties_on_only_one_repr = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
@@ -738,6 +760,22 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].supplementalProperties[1].schemeIdUri).equals('test:scheme');
                     expect(mediaInfoArray[0].supplementalProperties[1].value).equals('value2');
+                });
+
+                it('supplemental properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_not_all_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].representationCount).equals(2);
+                    expect(mediaInfoArray[0].codec).not.to.be.null;
+
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(0);
                 });
 
                 it('supplemental properties should not be filled if not set on all representations', function () {
