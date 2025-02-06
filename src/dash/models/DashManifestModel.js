@@ -610,7 +610,7 @@ function DashManifestModel() {
         // repr.legth is always >= 2
         return propertiesOfFirstRepresentation.filter( prop => {
             return repr.slice(1).every( currRep => {
-                return currRep[propertyType].some( e => {
+                return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some( e => {
                     return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
                 });
             });
