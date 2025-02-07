@@ -674,6 +674,19 @@
             </div>
         </div>
         <div class="options-item">
+            <div class="options-item-title">Buffer</div>
+            <div class="options-item-body">
+                <div class="sub-options-item-body">
+                    <label class="options-label">Stall Threshold:</label>
+                    <input type="text" class="form-control" placeholder="value in seconds" ng-model="stallThreshold"
+                        ng-change="updateStallThreshold()">
+                    <label class="options-label">Low Latency Stall Threshold:</label>
+                    <input type="text" class="form-control" placeholder="value in seconds" ng-model="lowLatencyStallThreshold"
+                        ng-change="updateLowLatencyStallThreshold()">
+                </div>
+            </div>
+        </div>
+        <div class="options-item">
             <div class="options-item-title">Initial Settings</div>
             <div class="options-item-body">
                 <div class="sub-options-item">
