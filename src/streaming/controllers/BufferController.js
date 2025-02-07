@@ -894,14 +894,25 @@ function BufferController(config) {
             return;
         }
 
-        // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
-        // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
-        // buffer reach 0 seconds
-        if (((!playbackController.getLowLatencyModeEnabled() && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
-            _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-        } else {
-            if (isBufferingCompleted || bufferLevel >= settings.get().streaming.buffer.stallThreshold || (playbackController.getLowLatencyModeEnabled() && bufferLevel > 0)) {
-                _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
+        //If the player is in low latency mode, use the lowLatencyStallThreshold
+        if (playbackController.getLowLatencyModeEnabled()) {
+            if ((bufferLevel <= settings.get().streaming.buffer.lowLatencyStallThreshold) && !isBufferingCompleted) {
+                _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
+            } else {
+                if (isBufferingCompleted || bufferLevel > settings.get().streaming.buffer.lowLatencyStallThreshold) {
+                    _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
+                }
+            }
+
+        }
+        //If the player is not im low latency mode, use the stallThreshold
+        else {
+            if ((bufferLevel <= settings.get().streaming.buffer.stallThreshold) && !isBufferingCompleted) {
+                _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
+            } else {
+                if (isBufferingCompleted || bufferLevel > settings.get().streaming.buffer.stallThreshold) {
+                    _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
+                }
             }
         }
     }
