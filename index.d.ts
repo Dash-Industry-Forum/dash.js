@@ -1161,6 +1161,10 @@ declare namespace dashjs {
                     video?: boolean;
                 },
                 fetchThroughputCalculationMode?: string;
+                defaultBitrate?: {
+                    audio?: number;
+                    video?: number;
+                }
             },
             cmcd?: {
                 enabled?: boolean,

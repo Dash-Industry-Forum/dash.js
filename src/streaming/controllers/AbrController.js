@@ -47,8 +47,6 @@ import {HTTPRequest} from '../vo/metrics/HTTPRequest';
 import {checkInteger} from '../utils/SupervisorTools';
 import MediaPlayerEvents from '../MediaPlayerEvents';
 
-const DEFAULT_VIDEO_BITRATE = 1000;
-const DEFAULT_AUDIO_BITRATE = 100;
 const QUALITY_DEFAULT = 0;
 
 function AbrController() {
@@ -372,7 +370,7 @@ function AbrController() {
             idx = _checkMaxBitrate(type, streamId);
             idx = _checkMaxRepresentationRatio(idx, type, streamId);
             idx = _checkPortalSize(idx, type, streamId);
-            // Apply maximum suggested bitrate from CMSD headers if enabled 
+            // Apply maximum suggested bitrate from CMSD headers if enabled
             if (settings.get().streaming.cmsd.enabled && settings.get().streaming.cmsd.abr.applyMb) {
                 idx = _checkCmsdMaxBitrate(idx, type, streamId);
             }
@@ -585,6 +583,7 @@ function AbrController() {
         const savedBitrate = domStorage.getSavedBitrateSettings(type);
         let configBitrate = mediaPlayerModel.getAbrBitrateParameter('initialBitrate', type);
         let configRatio = settings.get().streaming.abr.initialRepresentationRatio[type];
+        const defaultBitrate = settings.get().streaming.abr.defaultBitrate[type];
 
         if (configBitrate === -1) {
             if (configRatio > -1) {
@@ -599,7 +598,7 @@ function AbrController() {
             } else if (!isNaN(savedBitrate)) {
                 configBitrate = savedBitrate;
             } else {
-                configBitrate = (type === Constants.VIDEO) ? DEFAULT_VIDEO_BITRATE : DEFAULT_AUDIO_BITRATE;
+                configBitrate = defaultBitrate;
             }
         }
 
