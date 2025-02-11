@@ -894,26 +894,13 @@ function BufferController(config) {
             return;
         }
 
-        //If the player is in low latency mode, use the lowLatencyStallThreshold
-        if (playbackController.getLowLatencyModeEnabled()) {
-            if ((bufferLevel <= settings.get().streaming.buffer.lowLatencyStallThreshold) && !isBufferingCompleted) {
-                _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-            } else {
-                if (isBufferingCompleted || bufferLevel > settings.get().streaming.buffer.lowLatencyStallThreshold) {
-                    _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
-                }
-            }
+        //Set stall threshold based on player mode
+        const stallThreshold = playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.buffer.lowLatencyStallThreshold : settings.get().streaming.buffer.stallThreshold;
 
-        }
-        //If the player is not im low latency mode, use the stallThreshold
-        else {
-            if ((bufferLevel <= settings.get().streaming.buffer.stallThreshold) && !isBufferingCompleted) {
-                _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-            } else {
-                if (isBufferingCompleted || bufferLevel > settings.get().streaming.buffer.stallThreshold) {
-                    _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
-                }
-            }
+        if ((bufferLevel <= stallThreshold) && !isBufferingCompleted) {
+            _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
+        } else if (isBufferingCompleted || bufferLevel > stallThreshold) {
+            _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
         }
     }
 
