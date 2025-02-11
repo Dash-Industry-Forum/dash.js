@@ -226,7 +226,8 @@ import Events from './events/Events';
  *                initialBitrate: { audio: -1, video: -1 },
  *                initialRepresentationRatio: { audio: -1, video: -1 },
  *                autoSwitchBitrate: { audio: true, video: true },
- *                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA
+ *                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA,
+ *                defaultBitrate: { audio: 100, video: 1000 },
  *            },
  *            cmcd: {
  *                enabled: false,
@@ -1084,7 +1085,11 @@ function Settings() {
                     audio: true,
                     video: true
                 },
-                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING
+                fetchThroughputCalculationMode: Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING,
+                defaultBitrate: {
+                    audio: 100,
+                    video: 1000
+                }
             },
             cmcd: {
                 enabled: false,
