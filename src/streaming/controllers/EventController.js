@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
-import Events from '../core/events/Events.js';
+import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
@@ -42,6 +42,8 @@ function EventController() {
     const MPD_RELOAD_VALUE = 1;
     const MPD_PATCH_VALUE = 2;
     const MPD_UPDATE_VALUE = 3;
+    const MPD_VALIDITY_EXPIRATION_VALUES = [MPD_RELOAD_VALUE, MPD_PATCH_VALUE, MPD_UPDATE_VALUE];
+
 
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
@@ -329,18 +331,18 @@ function EventController() {
      * @private
      */
     function _handleManifestValidityExpirationEvent(event, currentVideoTime) {
-        switch (event.eventStream.value) {
+        switch (+event.eventStream.value) {
             case MPD_RELOAD_VALUE:
                 logger.debug(`Starting manifest refresh event ${event.id} at ${currentVideoTime}`);
                 _refreshManifest();
                 break;
             case MPD_PATCH_VALUE:
                 logger.debug(`Starting manifest patch event ${event.id} at ${currentVideoTime}`);
-                _patchManifest(event.messageData);
+                _patchManifest(event.parsedMessageData);
                 break;
             case MPD_UPDATE_VALUE:
-                logger.debug(`Starting manifest patch update ${event.id} at ${currentVideoTime}`);
-                _updateManifest(event.messageData);
+                logger.debug(`Starting manifest update ${event.id} at ${currentVideoTime}`);
+                _updateManifest(event.parsedMessageData);
                 break;
         }
     }
@@ -351,22 +353,24 @@ function EventController() {
      */
     function _handleManifestReload(event) {
         try {
-            const validUntil = event.calculatedPresentationTime;
-            let newDuration;
-            if (event.calculatedPresentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
-                newDuration = NaN;
-            } else {
-                newDuration = event.calculatedPresentationTime + event.duration;
+            if (MPD_VALIDITY_EXPIRATION_VALUES.includes(event.eventStream.value)) {
+                const validUntil = event.calculatedPresentationTime;
+                let newDuration;
+                if (validUntil == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
+                    newDuration = NaN;
+                } else {
+                    newDuration = validUntil + event.duration;
+                }
+                logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, {
+                    id: event.id,
+                    validUntil: validUntil,
+                    newDuration: newDuration,
+                    newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                }, {
+                    mode: MediaPlayerEvents.EVENT_MODE_ON_START
+                });
             }
-            logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
-            eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, {
-                id: event.id,
-                validUntil: validUntil,
-                newDuration: newDuration,
-                newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
-            }, {
-                mode: MediaPlayerEvents.EVENT_MODE_ON_START
-            });
         } catch (e) {
             logger.error(e);
         }
@@ -562,14 +566,13 @@ function EventController() {
      * Patch the manifest
      * @private
      */
-    function _patchManifest(manifestPatch) {
+    function _patchManifest(parsedMessageData) {
         try {
             checkConfig();
-            const event = {
-                manifest: manifestPatch // Parse manifest before assigne
-            }
-            logger.debug(`Patch manifest not supported yet ${event}`);
-            // eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { event });
+            const match = parsedMessageData.match(/^([\d-T:Z]+)(<.*)/);
+            const publishTime = match[1];
+            const patchXMLString = match[2]
+            logger.info(`Patch manifest not supported yet: Publish time: ${publishTime}, MPD patch: ${patchXMLString}..`);
         } catch (e) {
             logger.error(e);
         }
@@ -579,13 +582,14 @@ function EventController() {
      * Update the manifest
      * @private
      */
-    function _updateManifest(manifest) {
+    function _updateManifest(parsedMessageData) {
         try {
             checkConfig();
-            const event = {
-                manifest // Parse manifest before assigne
-            }
-            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { event });
+            const match = parsedMessageData.match(/^([\d-T:Z]+)(<.*)/);
+            const publishTime = match[1];
+            const xmlString = match[2]
+            logger.info(`Updating current manifest. Publish time: ${publishTime}, MPD: ${xmlString}.`);
+            eventBus.trigger(Events.MPD_EXPIRE_UPDATE, { xmlString });
         } catch (e) {
             logger.error(e);
         }
