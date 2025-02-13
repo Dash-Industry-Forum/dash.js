@@ -104,13 +104,6 @@ function VideoModel() {
                     return;
                 }
 
-                // We don't set the same currentTime because it can cause firing unexpected Pause event in IE11
-                // providing playbackRate property equals to zero.
-                if (element.currentTime === _currentTime) {
-                    _currentTime = NaN;
-                    return;
-                }
-
                 // TODO Despite the fact that MediaSource 'open' event has been fired IE11 cannot set videoElement.currentTime
                 // immediately (it throws InvalidStateError). It seems that this is related to videoElement.readyState property
                 // Initially it is 0, but soon after 'open' event it goes to 1 and setting currentTime is allowed. Chrome allows to
