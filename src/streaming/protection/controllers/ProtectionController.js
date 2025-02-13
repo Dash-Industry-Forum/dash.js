@@ -1202,7 +1202,7 @@ function ProtectionController(config) {
             const hasNotTriggeredKeyStatusMapUpdate = targetSessionTokens.some((sessionToken) => {
                 return !sessionToken.hasTriggeredKeyStatusMapUpdate;
             })
-            if (hasNotTriggeredKeyStatusMapUpdate) {
+            if (hasNotTriggeredKeyStatusMapUpdate || targetSessionTokens.length === 0) {
                 return false;
             }
         }
