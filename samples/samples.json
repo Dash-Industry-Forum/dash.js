@@ -799,40 +799,12 @@
         ]
       },
       {
-        "title": "Synchronization with a TimingObject",
-        "description": "An example which shows how to connect a TimingObject to a dash.js player to synchronize playback across devices.",
-        "href": "advanced/timing-object.html",
-        "image": "lib/img/bbb-2.jpg",
-        "labels": [
-          "VoD",
-          "Video",
-          "Audio"
-        ]
-      },
-      {
         "title": "Preload content",
         "description": "This example shows how to use preload feature of dash.js, which allows to initialize streaming and start downloading the content before the player is attached to an HTML5 video element. This feature can be used to optimize content-insertion on platforms which provide only a single decoder.",
         "href": "advanced/preload.html",
         "image": "lib/img/livesim-1.jpg",
         "labels": [
           "VoD",
-          "Video",
-          "Audio"
-        ]
-      }
-    ]
-  },
-  {
-    "section": "Offline ",
-    "samples": [
-      {
-        "title": "Offline mode",
-        "description": "Example showing how store and read back streams without network connection to Dash",
-        "href": "offline/index.html",
-        "labels": [
-          "VoD",
-          "Live",
-          "Offline",
           "Video",
           "Audio"
         ]
