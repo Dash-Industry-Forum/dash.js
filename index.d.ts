@@ -3029,39 +3029,41 @@ declare namespace dashjs {
      **/
 
     export interface AbrController {
-        initialize(): void;
+        checkPlaybackQuality(type: string, streamId: string | number): boolean;
 
-        registerStreamType(type: object, streamProcessor: object): void;
+        clearDataForStream(streamId: string): void;
 
-        unRegisterStreamType(streamId: string, type: string): void;
+        getAbandonmentStateFor(streamId: string, type: string): any | null;
 
-        reset(): void;
-
-        setConfig(config: object): void;
+        getInitialBitrateFor(type: string): number;
 
         getOptimalRepresentationForBitrate(mediaInfo: MediaInfo, bitrateInKbit: number, includeCompatibleMediaInfos: boolean): Representation | null;
-
-        getRepresentationByAbsoluteIndex(absoluteIndex: number, mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation | null;
 
         getPossibleVoRepresentations(mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation[] | null;
 
         getPossibleVoRepresentationsFilteredBySettings(mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation[] | null;
 
-        getInitialBitrateFor(type: string): number;
+        getRepresentationByAbsoluteIndex(absoluteIndex: number, mediaInfo: MediaInfo, includeCompatibleMediaInfos: boolean): Representation | null;
 
-        checkPlaybackQuality(type: string, streamId: string | number): boolean;
+        handleNewMediaInfo(mediaInfo: MediaInfo): void;
 
-        setPlaybackQuality(type: string, streamInfo: StreamInfo, representation: Representation, reason: object): void;
-
-        getAbandonmentStateFor(streamId: string, type: string): any | null;
+        initialize(): void;
 
         isPlayingAtLowestQuality(representation: Representation): boolean;
 
         isPlayingAtTopQuality(representation: Representation): boolean;
 
+        registerStreamType(type: object, streamProcessor: object): void;
+
+        reset(): void;
+
+        setConfig(config: object): void;
+
+        setPlaybackQuality(type: string, streamInfo: StreamInfo, representation: Representation, reason: object): void;
+
         setWindowResizeEventCalled(value: any): void;
 
-        clearDataForStream(streamId: string): void;
+        unRegisterStreamType(streamId: string, type: string): void;
     }
 
     export interface BaseURLController {
@@ -5812,6 +5814,8 @@ declare namespace dashjs {
         getType(): string;
 
         getVoRepresentation(quality: number): Representation;
+
+        handleNewMediaInfo(mediaInfo: MediaInfo): void;
 
         initialize(mediaSource: MediaSource, hasVideoTrack: boolean, isFragmented: boolean): void;
 
