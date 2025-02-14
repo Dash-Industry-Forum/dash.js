@@ -795,7 +795,7 @@ describe('MediaPlayer', function () {
 
         it('should configure cacheLoadThresholds', function () {
             let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
-            expect(cacheLoadThresholdForVideo).to.equal(50);
+            expect(cacheLoadThresholdForVideo).to.equal(10);
 
             player.updateSettings({ 'streaming': { 'cacheLoadThresholds': { 'video': 10 } } });
 

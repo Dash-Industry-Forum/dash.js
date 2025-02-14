@@ -182,7 +182,7 @@ import Events from './events/Events.js';
  *            lastBitrateCachingInfo: { enabled: true, ttl: 360000 },
  *            lastMediaSettingsCachingInfo: { enabled: true, ttl: 360000 },
  *            saveLastMediaSettingsForCurrentStreamingSession: true,
- *            cacheLoadThresholds: { video: 50, audio: 5 },
+ *            cacheLoadThresholds: { video: 10, audio: 5 },
  *            trackSwitchMode: {
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
@@ -982,7 +982,7 @@ import Events from './events/Events.js';
  * The default expiration is one hour, defined in milliseconds.
  * @property {boolean} [saveLastMediaSettingsForCurrentStreamingSession=true]
  * Set to true if dash.js should save media settings from last selected track for incoming track selection during current streaming session.
- * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 50, audio: 5}]
+ * @property {module:Settings~AudioVideoSettings} [cacheLoadThresholds={video: 10, audio: 5}]
  * For a given media type, the threshold which defines if the response to a fragment request is coming from browser cache or not.
  * @property {module:Settings~AudioVideoSettings} [trackSwitchMode={video: "neverReplace", audio: "alwaysReplace"}]
  * For a given media type defines if existing segments in the buffer should be overwritten once the track is switched. For instance if the user switches the audio language the existing segments in the audio buffer will be replaced when setting this value to "alwaysReplace".
@@ -1219,7 +1219,7 @@ function Settings() {
             },
             saveLastMediaSettingsForCurrentStreamingSession: true,
             cacheLoadThresholds: {
-                video: 50,
+                video: 10,
                 audio: 5
             },
             trackSwitchMode: {
