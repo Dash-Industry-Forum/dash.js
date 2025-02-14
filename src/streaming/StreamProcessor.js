@@ -713,6 +713,7 @@ function StreamProcessor(config) {
             });
         }
         currentMediaInfo = value;
+        abrController.handleNewMediaInfo(currentMediaInfo);
         eventBus.trigger(Events.MEDIAINFO_UPDATED, {
             mediaType: type,
             streamId: streamInfo.id,
