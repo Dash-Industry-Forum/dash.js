@@ -20,13 +20,13 @@ on:
 jobs:
     deploy:
         runs-on: ubuntu-latest
-        
+
         steps:
-            -   uses: actions/checkout@v2
+            -   uses: actions/checkout@v4
             -   name: Use Node.js
-                uses: actions/setup-node@v2
+                uses: actions/setup-node@v4
                 with:
-                    node-version: "14.x"
+                    node-version: "20.x"
             -   name: Install dependencies
                 run: npm install
             -   name: Run build
@@ -39,15 +39,24 @@ jobs:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player/index.html"
+            -   name: Build all samples
+                run: |
+                    for sample in "network-interceptor"; do
+                      echo "Building sample: $sample"
+                      cd samples/$sample
+                      npm install
+                      npm run build
+                      rm -rf node_modules
+                    done
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir ${{inputs.envname}}
-                    cp -R contrib dist samples test/functional/config test/functional/tests ${{inputs.envname}} 
+                    cp -R contrib dist samples ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
                 with:
                     key: ${{ secrets.private_key }}
                     known_hosts: unnecessary
-
-            -   name: Deploy with rsync
-                run: rsync -av -c -e "ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss" ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
+            -   name: Deploy with scp
+                run: |
+                    scp -r -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}

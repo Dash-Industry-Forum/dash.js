@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
+import Constants from '../constants/Constants.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 import {renderHTML} from 'imsc';
 
 const CUE_PROPS_TO_COMPARE = [
@@ -65,8 +65,8 @@ function TextTracks(config) {
     let instance,
         logger,
         Cue,
-        textTrackQueue,
-        nativeTrackElementArr,
+        textTrackInfos,
+        nativeTexttracks,
         currentTrackIdx,
         actualVideoLeft,
         actualVideoTop,
@@ -93,8 +93,8 @@ function TextTracks(config) {
         }
 
         Cue = window.VTTCue || window.TextTrackCue;
-        textTrackQueue = [];
-        nativeTrackElementArr = [];
+        textTrackInfos = [];
+        nativeTexttracks = [];
         currentTrackIdx = -1;
         actualVideoLeft = 0;
         actualVideoTop = 0;
@@ -123,43 +123,24 @@ function TextTracks(config) {
         return streamInfo.id;
     }
 
-    function _createTrackForUserAgent(element) {
-        const kind = element.kind;
-        const label = element.id !== undefined ? element.id : element.lang;
-        const lang = element.lang;
-        const isTTML = element.isTTML;
-        const isEmbedded = element.isEmbedded;
-        const track = videoModel.addTextTrack(kind, label, lang, isTTML, isEmbedded);
-
-        return track;
-    }
-
-    function addTextTrack(textTrackInfoVO) {
-        textTrackQueue.push(textTrackInfoVO);
-    }
-
     function createTracks() {
-        const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
-
         //Sort in same order as in manifest
-        textTrackQueue.sort(function (a, b) {
+        textTrackInfos.sort(function (a, b) {
             return a.index - b.index;
         });
 
         captionContainer = videoModel.getTTMLRenderingDiv();
         vttCaptionContainer = videoModel.getVttRenderingDiv();
         let defaultIndex = -1;
-        for (let i = 0; i < textTrackQueue.length; i++) {
-            const track = _createTrackForUserAgent(textTrackQueue[i]);
+        for (let i = 0; i < textTrackInfos.length; i++) {
+            const nativeTexttrack = _createNativeTextrackElement(textTrackInfos[i]);
 
             //used to remove tracks from video element when added manually
-            nativeTrackElementArr.push(track);
+            nativeTexttracks.push(nativeTexttrack);
 
-            if (textTrackQueue[i].defaultTrack) {
+            if (textTrackInfos[i].defaultTrack) {
                 // track.default is an object property identifier that is a reserved word
-                // The following jshint directive is used to suppressed the warning "Expected an identifier and instead saw 'default' (a reserved word)"
-                /*jshint -W024 */
-                track.default = true;
+                nativeTexttrack.default = true;
                 defaultIndex = i;
             }
 
@@ -168,14 +149,14 @@ function TextTracks(config) {
                 //each time a track is created, its mode should be showing by default
                 //sometime, it's not on Chrome
                 textTrack.mode = Constants.TEXT_SHOWING;
-                if (captionContainer && (textTrackQueue[i].isTTML || textTrackQueue[i].isEmbedded)) {
+                if (captionContainer && (textTrackInfos[i].isTTML || textTrackInfos[i].isEmbedded)) {
                     textTrack.renderingType = 'html';
                 } else {
                     textTrack.renderingType = 'default';
                 }
             }
 
-            addCaptions(i, 0, textTrackQueue[i].captionData);
+            addCaptions(i, 0, textTrackInfos[i].captionData);
             eventBus.trigger(MediaPlayerEvents.TEXT_TRACK_ADDED);
         }
 
@@ -194,9 +175,10 @@ function TextTracks(config) {
 
             eventBus.on(MediaPlayerEvents.PLAYBACK_METADATA_LOADED, onMetadataLoaded, this);
 
-            for (let idx = 0; idx < textTrackQueue.length; idx++) {
+            for (let idx = 0; idx < textTrackInfos.length; idx++) {
                 const videoTextTrack = getTrackByIdx(idx);
                 if (videoTextTrack) {
+                    const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
                     videoTextTrack.mode = (idx === defaultIndex && !dispatchForManualRendering) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                     videoTextTrack.manualMode = (idx === defaultIndex) ? Constants.TEXT_SHOWING : Constants.TEXT_HIDDEN;
                 }
@@ -205,9 +187,24 @@ function TextTracks(config) {
 
         eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, {
             index: currentTrackIdx,
-            tracks: textTrackQueue,
+            tracks: textTrackInfos,
             streamId: streamInfo.id
         });
+    }
+
+    function _createNativeTextrackElement(element) {
+        const kind = element.kind;
+        const label = element.id !== undefined ? element.id : element.lang;
+        const lang = element.lang;
+        const isTTML = element.isTTML;
+        const isEmbedded = element.isEmbedded;
+        const track = videoModel.addTextTrack(kind, label, lang, isTTML, isEmbedded);
+
+        return track;
+    }
+
+    function addTextTrackInfo(textTrackInfoVO) {
+        textTrackInfos.push(textTrackInfoVO);
     }
 
     function getVideoVisibleVideoSize(viewWidth, viewHeight, videoWidth, videoHeight, aspectRatio, use80Percent) {
@@ -421,11 +418,15 @@ function TextTracks(config) {
             previousISDState = renderHTML(
                 cue.isd,
                 finalCue,
-                function (src) { return _resolveImageSrc(cue, src) },
+                function (src) {
+                    return _resolveImageSrc(cue, src)
+                },
                 captionContainer.clientHeight,
                 captionContainer.clientWidth,
                 settings.get().streaming.text.imsc.displayForcedOnlyMode,
-                function (err) { logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/ },
+                function (err) {
+                    logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/
+                },
                 previousISDState,
                 settings.get().streaming.text.imsc.enableRollUp
             );
@@ -534,7 +535,8 @@ function TextTracks(config) {
                                      * Only do this for imsc subs (where isd is present).
                                      */
                                     if (prevCue.isd) {
-                                        prevCue.onexit = function () { };
+                                        prevCue.onexit = function () {
+                                        };
                                     }
                                     // If cues are added when the track is disabled they can still persist in memory
                                     if (track.mode !== Constants.TEXT_DISABLED) {
@@ -807,8 +809,8 @@ function TextTracks(config) {
     }
 
     function getTrackByIdx(idx) {
-        return idx >= 0 && textTrackQueue[idx] ?
-            videoModel.getTextTrack(textTrackQueue[idx].kind, textTrackQueue[idx].id, textTrackQueue[idx].lang, textTrackQueue[idx].isTTML, textTrackQueue[idx].isEmbedded) : null;
+        return idx >= 0 && textTrackInfos[idx] ?
+            videoModel.getTextTrack(textTrackInfos[idx].kind, textTrackInfos[idx].id, textTrackInfos[idx].lang, textTrackInfos[idx].isTTML, textTrackInfos[idx].isEmbedded) : null;
     }
 
     function getCurrentTrackIdx() {
@@ -817,8 +819,8 @@ function TextTracks(config) {
 
     function getTrackIdxForId(trackId) {
         let idx = -1;
-        for (let i = 0; i < textTrackQueue.length; i++) {
-            if (textTrackQueue[i].id === trackId) {
+        for (let i = 0; i < textTrackInfos.length; i++) {
+            if (textTrackInfos[i].id === trackId) {
                 idx = i;
                 break;
             }
@@ -867,7 +869,9 @@ function TextTracks(config) {
     }
 
     function cueInTrack(track, cue) {
-        if (!track.cues) return false;
+        if (!track.cues) {
+            return false;
+        }
         for (let i = 0; i < track.cues.length; i++) {
             if ((track.cues[i].startTime === cue.startTime) &&
                 (track.cues[i].endTime === cue.endTime)) {
@@ -941,7 +945,7 @@ function TextTracks(config) {
     function _isCueActive(cue) {
         const currentTime = videoModel.getTime();
 
-        return cue.startTime >= currentTime && cue.endTime <= currentTime
+        return currentTime >= cue.startTime && currentTime <= cue.endTime
     }
 
     function deleteCuesFromTrackIdx(trackIdx, start, end) {
@@ -952,15 +956,15 @@ function TextTracks(config) {
     }
 
     function deleteAllTextTracks() {
-        const ln = nativeTrackElementArr ? nativeTrackElementArr.length : 0;
+        const ln = nativeTexttracks ? nativeTexttracks.length : 0;
         for (let i = 0; i < ln; i++) {
             const track = getTrackByIdx(i);
             if (track) {
                 _deleteTrackCues.call(this, track, streamInfo.start, streamInfo.start + streamInfo.duration, false);
             }
         }
-        nativeTrackElementArr = [];
-        textTrackQueue = [];
+        nativeTexttracks = [];
+        textTrackInfos = [];
         if (videoSizeCheckInterval) {
             clearInterval(videoSizeCheckInterval);
             videoSizeCheckInterval = null;
@@ -1026,25 +1030,30 @@ function TextTracks(config) {
         }
     }
 
-    function getCurrentTrackInfo() {
-        return textTrackQueue[currentTrackIdx];
+    function getCurrentTextTrackInfo() {
+        return textTrackInfos[currentTrackIdx];
+    }
+
+    function getTextTrackInfos() {
+        return textTrackInfos
     }
 
     instance = {
-        initialize,
-        getStreamId,
-        addTextTrack,
         addCaptions,
+        addTextTrackInfo,
         createTracks,
-        getCurrentTrackIdx,
-        setCurrentTrackIdx,
-        getTrackIdxForId,
-        getCurrentTrackInfo,
-        setModeForTrackIdx,
-        deleteCuesFromTrackIdx,
         deleteAllTextTracks,
+        deleteCuesFromTrackIdx,
+        disableManualTracks,
+        getCurrentTrackIdx,
+        getCurrentTextTrackInfo,
+        getStreamId,
+        getTextTrackInfos,
+        getTrackIdxForId,
+        initialize,
         manualCueProcessing,
-        disableManualTracks
+        setCurrentTrackIdx,
+        setModeForTrackIdx,
     };
 
     setup();

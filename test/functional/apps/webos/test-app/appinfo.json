@@ -1,0 +1,10 @@
+{
+  "id": "com.dashjs.app",
+  "version": "1.0.0",
+  "vendor": "My Company",
+  "type": "web",
+  "main": "index.html",
+  "title": "dashjs LG",
+  "icon": "icon.png",
+  "largeIcon": "largeIcon.png"
+}

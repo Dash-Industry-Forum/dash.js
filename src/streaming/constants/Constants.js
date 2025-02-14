@@ -31,285 +31,331 @@
 
 /**
  * Constants declaration
- * @class
- * @ignore
- * @hideconstructor
  */
-class Constants {
+export default {
+    /**
+     *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
+     *  @memberof Constants#
+     *  @static
+     */
+    STREAM: 'stream',
 
-    init() {
-        /**
-         *  @constant {string} STREAM Stream media type. Mainly used to report metrics relative to the full stream
-         *  @memberof Constants#
-         *  @static
-         */
-        this.STREAM = 'stream';
+    /**
+     *  @constant {string} VIDEO Video media type
+     *  @memberof Constants#
+     *  @static
+     */
+    VIDEO: 'video',
 
-        /**
-         *  @constant {string} VIDEO Video media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.VIDEO = 'video';
+    /**
+     *  @constant {string} AUDIO Audio media type
+     *  @memberof Constants#
+     *  @static
+     */
+    AUDIO: 'audio',
 
-        /**
-         *  @constant {string} AUDIO Audio media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.AUDIO = 'audio';
+    /**
+     *  @constant {string} TEXT Text media type
+     *  @memberof Constants#
+     *  @static
+     */
+    TEXT: 'text',
 
-        /**
-         *  @constant {string} TEXT Text media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TEXT = 'text';
+    /**
+     *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
+     *  @memberof Constants#
+     *  @static
+     */
+    MUXED: 'muxed',
 
-        /**
-         *  @constant {string} MUXED Muxed (video/audio in the same chunk) media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MUXED = 'muxed';
+    /**
+     *  @constant {string} IMAGE Image media type
+     *  @memberof Constants#
+     *  @static
+     */
+    IMAGE: 'image',
 
-        /**
-         *  @constant {string} IMAGE Image media type
-         *  @memberof Constants#
-         *  @static
-         */
-        this.IMAGE = 'image';
+    /**
+     *  @constant {string} STPP STTP Subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    STPP: 'stpp',
 
-        /**
-         *  @constant {string} STPP STTP Subtitles format
-         *  @memberof Constants#
-         *  @static
-         */
-        this.STPP = 'stpp';
+    /**
+     *  @constant {string} TTML STTP Subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    TTML: 'ttml',
 
-        /**
-         *  @constant {string} TTML STTP Subtitles format
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TTML = 'ttml';
+    /**
+     *  @constant {string} VTT STTP Subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    VTT: 'vtt',
 
-        /**
-         *  @constant {string} VTT STTP Subtitles format
-         *  @memberof Constants#
-         *  @static
-         */
-        this.VTT = 'vtt';
+    /**
+     *  @constant {string} WVTT STTP Subtitles format
+     *  @memberof Constants#
+     *  @static
+     */
+    WVTT: 'wvtt',
 
-        /**
-         *  @constant {string} WVTT STTP Subtitles format
-         *  @memberof Constants#
-         *  @static
-         */
-        this.WVTT = 'wvtt';
+    /**
+     *  @constant {string} Content Steering
+     *  @memberof Constants#
+     *  @static
+     */
+    CONTENT_STEERING: 'contentSteering',
 
-        /**
-         *  @constant {string} Content Steering
-         *  @memberof Constants#
-         *  @static
-         */
-        this.CONTENT_STEERING = 'contentSteering';
+    /**
+     *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
+     *  @memberof Constants#
+     *  @static
+     */
+    LIVE_CATCHUP_MODE_DEFAULT: 'liveCatchupModeDefault',
 
-        /**
-         *  @constant {string} ABR_STRATEGY_DYNAMIC Dynamic Adaptive bitrate algorithm
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_STRATEGY_DYNAMIC = 'abrDynamic';
+    /**
+     *  @constant {string} LIVE_CATCHUP_MODE_LOLP Throughput calculation based on moof parsing
+     *  @memberof Constants#
+     *  @static
+     */
+    LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP',
 
-        /**
-         *  @constant {string} ABR_STRATEGY_BOLA Adaptive bitrate algorithm based on Bola (buffer level)
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_STRATEGY_BOLA = 'abrBola';
+    /**
+     *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
+     *  @memberof Constants#
+     *  @static
+     */
+    MOVING_AVERAGE_SLIDING_WINDOW: 'slidingWindow',
 
-        /**
-         *  @constant {string} ABR_STRATEGY_L2A Adaptive bitrate algorithm based on L2A (online learning)
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_STRATEGY_L2A = 'abrL2A';
+    /**
+     *  @constant {string} EWMA Exponential moving average
+     *  @memberof Constants#
+     *  @static
+     */
+    MOVING_AVERAGE_EWMA: 'ewma',
 
-        /**
-         *  @constant {string} ABR_STRATEGY_LoLP Adaptive bitrate algorithm based on LoL+
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_STRATEGY_LoLP = 'abrLoLP';
+    /**
+     *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
+     *  @memberof Constants#
+     *  @static
+     */
+    BAD_ARGUMENT_ERROR: 'Invalid Arguments',
 
-        /**
-         *  @constant {string} ABR_STRATEGY_THROUGHPUT Adaptive bitrate algorithm based on throughput
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_STRATEGY_THROUGHPUT = 'abrThroughput';
+    /**
+     *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
+     *  @memberof Constants#
+     *  @static
+     */
+    MISSING_CONFIG_ERROR: 'Missing config parameter(s)',
 
-        /**
-         *  @constant {string} ABR_FETCH_THROUGHPUT_CALUCUALTION_DOWNLOADED_DATA Throughput calculation based on downloaded data array
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA = 'abrFetchThroughputCalculationDownloadedData';
+    /**
+     *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SWITCH_MODE_ALWAYS_REPLACE: 'alwaysReplace',
 
-        /**
-         *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING Throughput calculation based on moof parsing
-         *  @memberof Constants#
-         *  @static
-         */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING = 'abrFetchThroughputCalculationMoofParsing';
+    /**
+     *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SWITCH_MODE_NEVER_REPLACE: 'neverReplace',
 
-        /**
-        *  @constant {string} ABR_FETCH_THROUGHPUT_CALCULATION_AAST Throughput calculation based on adjusted availability start time in low latency mode
-        *  @memberof Constants#
-        *  @static
-        */
-        this.ABR_FETCH_THROUGHPUT_CALCULATION_AAST = 'abrFetchThroughputCalculationAAST';
+    /**
+     *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_FIRST_TRACK: 'firstTrack',
 
-        /**
-         *  @constant {string} LIVE_CATCHUP_MODE_DEFAULT Throughput calculation based on moof parsing
-         *  @memberof Constants#
-         *  @static
-         */
-        this.LIVE_CATCHUP_MODE_DEFAULT = 'liveCatchupModeDefault';
+    /**
+     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate',
 
-        /**
-         *  @constant {string} LIVE_CATCHUP_MODE_LOLP Throughput calculation based on moof parsing
-         *  @memberof Constants#
-         *  @static
-         */
-        this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
+    /**
+     *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
 
-        /**
-         *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MOVING_AVERAGE_SLIDING_WINDOW = 'slidingWindow';
+    /**
+     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
 
-        /**
-         *  @constant {string} EWMA Exponential moving average
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MOVING_AVERAGE_EWMA = 'ewma';
+    /**
+     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
 
-        /**
-         *  @constant {string} BAD_ARGUMENT_ERROR Invalid Arguments type of error
-         *  @memberof Constants#
-         *  @static
-         */
-        this.BAD_ARGUMENT_ERROR = 'Invalid Arguments';
 
-        /**
-         *  @constant {string} MISSING_CONFIG_ERROR Missing configuration parameters type of error
-         *  @memberof Constants#
-         *  @static
-         */
-        this.MISSING_CONFIG_ERROR = 'Missing config parameter(s)';
+    /**
+     *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_QUERY_KEY: 'CMCD',
 
-        /**
-         *  @constant {string} TRACK_SWITCH_MODE_ALWAYS_REPLACE used to clear the buffered data (prior to current playback position) after track switch. Default for audio
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SWITCH_MODE_ALWAYS_REPLACE = 'alwaysReplace';
+    /**
+     *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_MODE_QUERY: 'query',
 
-        /**
-         *  @constant {string} TRACK_SWITCH_MODE_NEVER_REPLACE used to forbid clearing the buffered data (prior to current playback position) after track switch. Defers to fastSwitchEnabled for placement of new data. Default for video
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SWITCH_MODE_NEVER_REPLACE = 'neverReplace';
+    /**
+     *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_MODE_HEADER: 'header',
 
-        /**
-         *  @constant {string} TRACK_SELECTION_MODE_FIRST_TRACK makes the player select the first track found in the manifest.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SELECTION_MODE_FIRST_TRACK = 'firstTrack';
+    /**
+     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+    /**
+     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
 
-        /**
-         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_BITRATE makes the player select the track with a highest bitrate. This mode is a default mode.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SELECTION_MODE_HIGHEST_BITRATE = 'highestBitrate';
+    /**
+     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
 
-        /**
-         *  @constant {string} TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY makes the player select the track with the lowest bitrate per pixel average.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY = 'highestEfficiency';
 
-        /**
-         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SELECTION_MODE_WIDEST_RANGE = 'widestRange';
-
-        /**
-         *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
-         *  @memberof Constants#
-         *  @static
-         */
-        this.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY = 'highestSelectionPriority';
-
-        /**
-         *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.CMCD_MODE_QUERY = 'query';
-
-        /**
-         *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
-         *  @memberof Constants#
-         *  @static
-         */
-        this.CMCD_MODE_HEADER = 'header';
-        this.INITIALIZE = 'initialize';
-        this.TEXT_SHOWING = 'showing';
-        this.TEXT_HIDDEN = 'hidden';
-        this.TEXT_DISABLED = 'disabled';
-        this.CC1 = 'CC1';
-        this.CC3 = 'CC3';
-        this.UTF8 = 'utf-8';
-        this.SCHEME_ID_URI = 'schemeIdUri';
-        this.START_TIME = 'starttime';
-        this.SERVICE_DESCRIPTION_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:scope:2019';
-        this.SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME = 'urn:dvb:dash:lowlatency:critical:2019';
-        this.FONT_DOWNLOAD_DVB_SCHEME = 'urn:dvb:dash:fontdownload:2014';
-        this.XML = 'XML';
-        this.ARRAY_BUFFER = 'ArrayBuffer';
-        this.DVB_REPORTING_URL = 'dvb:reportingUrl';
-        this.DVB_PROBABILITY = 'dvb:probability';
-        this.OFF_MIMETYPE = 'application/font-sfnt';
-        this.WOFF_MIMETYPE = 'application/font-woff';
-        this.VIDEO_ELEMENT_READY_STATES = {
-            HAVE_NOTHING: 0,
-            HAVE_METADATA: 1,
-            HAVE_CURRENT_DATA: 2,
-            HAVE_FUTURE_DATA: 3,
-            HAVE_ENOUGH_DATA: 4
-        };
-        this.FILE_LOADER_TYPES = {
-            FETCH: 'fetch_loader',
-            XHR: 'xhr_loader'
+    INITIALIZE: 'initialize',
+    TEXT_SHOWING: 'showing',
+    TEXT_HIDDEN: 'hidden',
+    TEXT_DISABLED: 'disabled',
+    ACCESSIBILITY_CEA608_SCHEME: 'urn:scte:dash:cc:cea-608:2015',
+    CC1: 'CC1',
+    CC3: 'CC3',
+    UTF8: 'utf-8',
+    SCHEME_ID_URI: 'schemeIdUri',
+    START_TIME: 'starttime',
+    SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
+    SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
+    CTA_5004_2023_SCHEME: 'urn:mpeg:dash:cta-5004:2023',
+    THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
+    FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
+    COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
+    URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
+    EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
+    MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
+    TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+    HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',
+    HDR_METADATA_FORMAT_VALUES: {
+        ST2094_10: 'ST2094-10',
+        SL_HDR2: 'SL-HDR2',
+        ST2094_40: 'ST2094-40'
+    },
+    MEDIA_CAPABILITIES_API: {
+        COLORGAMUT: {
+            SRGB: 'srgb',
+            P3: 'p3',
+            REC2020: 'rec2020'
+        },
+        TRANSFERFUNCTION: {
+            SRGB: 'srgb',
+            PQ: 'pq',
+            HLG: 'hlg'
+        },
+        HDR_METADATATYPE: {
+            SMPTE_ST_2094_10: 'smpteSt2094-10',
+            SLHDR2: 'slhdr2',
+            SMPTE_ST_2094_40: 'smpteSt2094-40'
         }
-    }
+    },
+    XML: 'XML',
+    ARRAY_BUFFER: 'ArrayBuffer',
+    DVB_REPORTING_URL: 'dvb:reportingUrl',
+    DVB_PROBABILITY: 'dvb:probability',
+    OFF_MIMETYPE: 'application/font-sfnt',
+    WOFF_MIMETYPE: 'application/font-woff',
+    VIDEO_ELEMENT_READY_STATES: {
+        HAVE_NOTHING: 0,
+        HAVE_METADATA: 1,
+        HAVE_CURRENT_DATA: 2,
+        HAVE_FUTURE_DATA: 3,
+        HAVE_ENOUGH_DATA: 4
+    },
+    FILE_LOADER_TYPES: {
+        FETCH: 'fetch_loader',
+        XHR: 'xhr_loader'
+    },
+    THROUGHPUT_TYPES: {
+        LATENCY: 'throughput_type_latency',
+        BANDWIDTH: 'throughput_type_bandwidth'
+    },
+    THROUGHPUT_CALCULATION_MODES: {
+        EWMA: 'throughputCalculationModeEwma',
+        ZLEMA: 'throughputCalculationModeZlema',
+        ARITHMETIC_MEAN: 'throughputCalculationModeArithmeticMean',
+        BYTE_SIZE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeByteSizeWeightedArithmeticMean',
+        DATE_WEIGHTED_ARITHMETIC_MEAN: 'throughputCalculationModeDateWeightedArithmeticMean',
+        HARMONIC_MEAN: 'throughputCalculationModeHarmonicMean',
+        BYTE_SIZE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeByteSizeWeightedHarmonicMean',
+        DATE_WEIGHTED_HARMONIC_MEAN: 'throughputCalculationModeDateWeightedHarmonicMean',
+    },
+    LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE: {
+        MOOF_PARSING: 'lowLatencyDownloadTimeCalculationModeMoofParsing',
+        DOWNLOADED_DATA: 'lowLatencyDownloadTimeCalculationModeDownloadedData',
+        AAST: 'lowLatencyDownloadTimeCalculationModeAast',
+    },
+    RULES_TYPES: {
+        QUALITY_SWITCH_RULES: 'qualitySwitchRules',
+        ABANDON_FRAGMENT_RULES: 'abandonFragmentRules'
+    },
+    QUALITY_SWITCH_RULES: {
+        BOLA_RULE: 'BolaRule',
+        THROUGHPUT_RULE: 'ThroughputRule',
+        INSUFFICIENT_BUFFER_RULE: 'InsufficientBufferRule',
+        SWITCH_HISTORY_RULE: 'SwitchHistoryRule',
+        DROPPED_FRAMES_RULE: 'DroppedFramesRule',
+        LEARN_TO_ADAPT_RULE: 'L2ARule',
+        LOL_PLUS_RULE: 'LoLPRule'
+    },
+    ABANDON_FRAGMENT_RULES: {
+        ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
+    },
 
-    constructor() {
-        this.init();
+    /**
+     *  @constant {string} ID3_SCHEME_ID_URI specifies scheme ID URI for ID3 timed metadata
+     *  @memberof Constants#
+     *  @static
+     */
+    ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
+    COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
+    DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
+    CODEC_FAMILIES: {
+        MP3: 'mp3',
+        AAC: 'aac',
+        AC3: 'ac3',
+        EC3: 'ec3',
+        DTSX: 'dtsx',
+        DTSC: 'dtsc',
+        AVC: 'avc',
+        HEVC: 'hevc'
     }
 }
-
-const constants = new Constants();
-export default constants;

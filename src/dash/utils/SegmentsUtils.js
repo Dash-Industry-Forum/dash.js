@@ -29,8 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Segment from './../vo/Segment';
-
+import Segment from './../vo/Segment.js';
 
 function zeroPadToLength(numStr, minStrLength) {
     while (numStr.length < minStrLength) {
@@ -148,9 +147,9 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
     const voPeriod = representation.adaptation.period;
 
-    // Avoid requesting segments that overlap the period boundary
+    // Avoid requesting segments for which the start time overlaps the period boundary
     if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
-        return false;
+        return false
     }
 
     if (isDynamic) {

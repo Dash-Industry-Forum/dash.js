@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+
 /**
  * @ignore
  */
@@ -67,4 +69,4 @@ function GenericMetricHandler() {
 }
 
 GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
-export default dashjs.FactoryMaker.getClassFactory(GenericMetricHandler); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(GenericMetricHandler); 

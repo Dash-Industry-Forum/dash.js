@@ -43,8 +43,9 @@ class ClearKeyKeySet {
      * @ignore
      */
     constructor(keyPairs, type) {
-        if (type && type !== 'persistent' && type !== 'temporary')
+        if (type && type !== 'persistent' && type !== 'temporary') {
             throw new Error('Invalid ClearKey key set type!  Must be one of \'persistent\' or \'temporary\'');
+        }
         this.keyPairs = keyPairs;
         this.type = type;
     }
@@ -57,7 +58,7 @@ class ClearKeyKeySet {
     toJWK() {
         let i;
         let numKeys = this.keyPairs.length;
-        let jwk = {keys: []};
+        let jwk = { keys: [] };
 
         for (i = 0; i < numKeys; i++) {
             let key = {
@@ -77,8 +78,9 @@ class ClearKeyKeySet {
         // Convert JSON string to ArrayBuffer
         let buf = new ArrayBuffer(len);
         let bView = new Uint8Array(buf);
-        for (i = 0; i < len; i++)
+        for (i = 0; i < len; i++) {
             bView[i] = jwkString.charCodeAt(i);
+        }
         return buf;
     }
 }

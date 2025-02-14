@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import SchemeLoaderFactory from '../../streaming/net/SchemeLoaderFactory.js';
 
 /**
  * @class URLLoader
  * @description  Call Offline Loader or Online Loader depending on URL
  * @param {Object} cfg - dependencies
  * @ignore
-*/
+ */
 function URLLoader(cfg) {
 
     cfg = cfg || {};
@@ -54,7 +54,6 @@ function URLLoader(cfg) {
             loader = loaderFactory(context).create({
                 errHandler: cfg.errHandler,
                 mediaPlayerModel: cfg.mediaPlayerModel,
-                requestModifier: cfg.requestModifier,
                 dashMetrics: cfg.dashMetrics,
                 boxParser: cfg.boxParser ? cfg.boxParser : null,
                 constants: cfg.constants ? cfg.constants : null,
@@ -72,14 +71,35 @@ function URLLoader(cfg) {
             loader.abort();
         }
     }
+
+    function resetInitialSettings() {
+        if (loader && typeof loader.resetInitialSettings === 'function') {
+            loader.resetInitialSettings();
+        }
+    }
+
+    function reset() {
+        if (schemeLoaderFactory) {
+            schemeLoaderFactory.reset();
+            schemeLoaderFactory = null;
+        }
+        if (loader && typeof loader.reset === 'function') {
+            loader.reset();
+        }
+        loader = null;
+    }
+
     instance = {
-        load: load,
-        abort: abort
+        abort,
+        load,
+        reset,
+        resetInitialSettings
     };
 
     return instance;
 
 }
+
 URLLoader.__dashjs_factory_name = 'URLLoader';
 
 const factory = FactoryMaker.getClassFactory(URLLoader);

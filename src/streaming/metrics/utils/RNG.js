@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
 /**
  * @ignore
  */
@@ -96,4 +98,4 @@ function RNG() {
 }
 
 RNG.__dashjs_factory_name = 'RNG';
-export default dashjs.FactoryMaker.getSingletonFactory(RNG); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(RNG); 

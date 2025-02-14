@@ -28,15 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import DashConstants from '../constants/DashConstants';
-import DashManifestModel from '../models/DashManifestModel';
-import Settings from '../../core/Settings';
-import Constants from '../../streaming/constants/Constants';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import ConformanceViolationConstants from '../../streaming/constants/ConformanceViolationConstants';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashConstants from '../constants/DashConstants.js';
+import DashManifestModel from '../models/DashManifestModel.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../../streaming/constants/Constants.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import ConformanceViolationConstants from '../../streaming/constants/ConformanceViolationConstants.js';
 
 function TimelineConverter() {
 
@@ -200,7 +200,7 @@ function TimelineConverter() {
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
         const timeShiftBufferDepth = voPeriod.mpd.timeShiftBufferDepth;
         const start = !isNaN(timeShiftBufferDepth) ? now - timeShiftBufferDepth : 0;
-        // check if we find a suitable period for that starttime. Otherwise we use the time closest to that
+        // check if we find a suitable period for that starttime. Otherwise, we use the time closest to that
         range.start = _adjustTimeBasedOnPeriodRanges(streams, start);
         range.end = !isNaN(range.start) && now < range.start ? now : _adjustTimeBasedOnPeriodRanges(streams, now, true);
 
@@ -229,16 +229,25 @@ function TimelineConverter() {
         const range = { start: NaN, end: NaN };
         const voPeriod = streams[0].getAdapter().getRegularPeriods()[0];
         const now = calcPresentationTimeFromWallTime(new Date(), voPeriod);
-        
+
         if (!streams || streams.length === 0) {
             return { range, now };
         }
 
         streams.forEach((stream) => {
-            const adapter = stream.getAdapter();
-            const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
-            const voRepresentations = adapter.getVoRepresentations(mediaInfo);
-            const voRepresentation = voRepresentations[0];
+            let voRepresentation = stream.getCurrentRepresentationForType(Constants.VIDEO);
+            if (!voRepresentation) {
+                voRepresentation = stream.getCurrentRepresentationForType(Constants.AUDIO)
+            }
+
+            // If we still got not voRepresentation we are in the startup phase and nothing was selected yet. Use the default Representation
+            if (!voRepresentation) {
+                const adapter = stream.getAdapter();
+                const mediaInfo = adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.VIDEO) || adapter.getMediaInfoForType(stream.getStreamInfo(), Constants.AUDIO);
+                const voRepresentations = adapter.getVoRepresentations(mediaInfo);
+                voRepresentation = voRepresentations[0];
+            }
+
             let periodRange = { start: NaN, end: NaN };
 
             if (voRepresentation) {
@@ -311,12 +320,12 @@ function TimelineConverter() {
     }
 
     function _calcRangeForTimeline(voRepresentation) {
-        const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
+        const adaptation = voRepresentation.adaptation.period.mpd.manifest.Period[voRepresentation.adaptation.period.index].AdaptationSet[voRepresentation.adaptation.index];
         const representation = dashManifestModel.getRepresentationFor(voRepresentation.index, adaptation);
         const base = representation.SegmentTemplate || representation.SegmentList;
         const timeline = base.SegmentTimeline;
         const timescale = base.timescale;
-        const segments = timeline.S_asArray;
+        const segments = timeline.S;
         const range = { start: 0, end: 0 };
         const segmentTime = segments[0].t;
         const hasValidSegmentTime = !isNaN(segmentTime);
@@ -326,11 +335,11 @@ function TimelineConverter() {
             repeat,
             i,
             len;
-        
-        if(hasValidSegmentTime) {
+
+        if (hasValidSegmentTime) {
             range.start = calcPresentationTimeFromMediaTime(enhancedSegmentTime / timescale, voRepresentation);
         }
-        
+
         for (i = 0, len = segments.length; i < len; i++) {
             segment = segments[i];
             repeat = 0;

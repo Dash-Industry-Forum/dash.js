@@ -1,6 +1,7 @@
-import Metrics from '../vo/Metrics';
-import Range from '../vo/Range';
-import Reporting from '../vo/Reporting';
+import Metrics from '../vo/Metrics.js';
+import Range from '../vo/Range.js';
+import Reporting from '../vo/Reporting.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function ManifestParsing (config) {
     config = config || {};
@@ -45,8 +46,8 @@ function ManifestParsing (config) {
     function getMetrics(manifest) {
         let metrics = [];
 
-        if (manifest && manifest.Metrics_asArray) {
-            manifest.Metrics_asArray.forEach(metric => {
+        if (manifest && manifest.Metrics) {
+            manifest.Metrics.forEach(metric => {
                 var metricEntry = new Metrics();
                 var isDynamic = adapter.getIsDynamic(manifest);
 
@@ -56,8 +57,8 @@ function ManifestParsing (config) {
                     return;
                 }
 
-                if (metric.Range_asArray) {
-                    metric.Range_asArray.forEach(range => {
+                if (metric.Range) {
+                    metric.Range.forEach(range => {
                         var rangeEntry = new Range();
 
                         rangeEntry.starttime =
@@ -77,8 +78,8 @@ function ManifestParsing (config) {
                     });
                 }
 
-                if (metric.Reporting_asArray) {
-                    metric.Reporting_asArray.forEach(reporting => {
+                if (metric.Reporting) {
+                    metric.Reporting.forEach(reporting => {
                         var reportingEntry = new Reporting();
 
                         if (reporting.hasOwnProperty(constants.SCHEME_ID_URI)) {
@@ -122,4 +123,4 @@ function ManifestParsing (config) {
 }
 
 ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
-export default dashjs.FactoryMaker.getSingletonFactory(ManifestParsing); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(ManifestParsing); 

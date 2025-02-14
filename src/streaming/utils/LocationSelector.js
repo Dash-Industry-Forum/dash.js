@@ -30,11 +30,11 @@
  */
 
 
-import Events from '../../core/events/Events';
-import BlacklistController from '../controllers/BlacklistController';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import ContentSteeringController from '../../dash/controllers/ContentSteeringController';
+import Events from '../../core/events/Events.js';
+import BlacklistController from '../controllers/BlacklistController.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import ContentSteeringController from '../../dash/controllers/ContentSteeringController.js';
 
 function LocationSelector() {
 

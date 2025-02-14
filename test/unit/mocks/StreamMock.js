@@ -1,5 +1,5 @@
-import AdapterMock from './AdapterMock';
-import StreamProcessorMock from './StreamProcessorMock';
+import AdapterMock from './AdapterMock.js';
+import StreamProcessorMock from './StreamProcessorMock.js';
 
 const TYPE_AUDIO = 'audio';
 const TYPE_VIDEO = 'video';
@@ -48,8 +48,12 @@ StreamMock.prototype.setRepresentation = function (representation) {
     this.dashAdapter.setRepresentation(representation);
 };
 
-StreamMock.prototype.getProcessors = function () {
+StreamMock.prototype.getStreamProcessors = function () {
     return this.streamProcessors;
 };
+
+StreamMock.prototype.getCurrentRepresentationForType = function () {
+    return null;
+}
 
 export default StreamMock;

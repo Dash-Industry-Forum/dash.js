@@ -28,19 +28,20 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import FactoryMaker from '../../core/FactoryMaker';
-import TextSourceBuffer from './TextSourceBuffer';
-import TextTracks from './TextTracks';
-import VTTParser from '../utils/VTTParser';
-import VttCustomRenderingParser from '../utils/VttCustomRenderingParser';
-import TTMLParser from '../utils/TTMLParser';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import {checkParameterType} from '../utils/SupervisorTools';
-import DVBFonts from './DVBFonts';
+import Constants from '../constants/Constants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import TextSourceBuffer from './TextSourceBuffer.js';
+import TextTracks from './TextTracks.js';
+import VTTParser from '../utils/VTTParser.js';
+import VttCustomRenderingParser from '../utils/VttCustomRenderingParser.js';
+import TTMLParser from '../utils/TTMLParser.js';
+import EventBus from '../../core/EventBus.js';
+import Debug from '../../core/Debug.js';
+import Events from '../../core/events/Events.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import {checkParameterType} from '../utils/SupervisorTools.js';
+import DVBFonts from './DVBFonts.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function TextController(config) {
 
@@ -91,6 +92,7 @@ function TextController(config) {
         eventBus.on(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
         eventBus.on(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
+        eventBus.on(Events.MEDIAINFO_UPDATED, _onMediaInfoUpdated, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -290,6 +292,32 @@ function TextController(config) {
         }
     }
 
+    function _onMediaInfoUpdated(e) {
+        try {
+            if (!e || !e.mediaType || e.mediaType !== Constants.AUDIO || !e.currentMediaInfo) {
+                return
+            }
+
+            const currentTextTrackInfo = textTracks[e.streamId].getCurrentTextTrackInfo();
+            let suitableForcedSubtitleIndex = NaN;
+            if (allTracksAreDisabled) {
+                suitableForcedSubtitleIndex = _getSuitableForceSubtitleTrackIndex(e.streamId);
+            } else if (_isForcedSubtitleTrack(currentTextTrackInfo) && e.currentMediaInfo.lang && e.currentMediaInfo.lang !== currentTextTrackInfo.lang) {
+                suitableForcedSubtitleIndex = _getSuitableForceSubtitleTrackIndex(e.streamId);
+                if (isNaN(suitableForcedSubtitleIndex)) {
+                    suitableForcedSubtitleIndex = -1;
+                }
+            }
+
+            if (!isNaN(suitableForcedSubtitleIndex)) {
+                setTextTrack(e.streamId, suitableForcedSubtitleIndex);
+            }
+
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
     function enableText(streamId, enable) {
         checkParameterType(enable, 'boolean');
         if (isTextEnabled() !== enable) {
@@ -346,7 +374,7 @@ function TextController(config) {
 
         textTracks[streamId].disableManualTracks();
 
-        let currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        let currentTrackInfo = textTracks[streamId].getCurrentTextTrackInfo();
         let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
 
         // Don't change disabled tracks - dvb font download for essential property failed or not complete
@@ -356,7 +384,7 @@ function TextController(config) {
 
         textTracks[streamId].setCurrentTrackIdx(idx);
 
-        currentTrackInfo = textTracks[streamId].getCurrentTrackInfo();
+        currentTrackInfo = textTracks[streamId].getCurrentTextTrackInfo();
 
         const dispatchForManualRendering = settings.get().streaming.text.dispatchForManualRendering;
 
@@ -368,6 +396,12 @@ function TextController(config) {
             _setFragmentedTextTrack(streamId, currentTrackInfo, oldTrackIdx);
         } else if (currentTrackInfo && !currentTrackInfo.isFragmented) {
             _setNonFragmentedTextTrack(streamId, currentTrackInfo);
+        } else if (!currentTrackInfo && allTracksAreDisabled) {
+            const forcedSubtitleTrackIndex = _getSuitableForceSubtitleTrackIndex(streamId)
+            if (!isNaN(forcedSubtitleTrackIndex)) {
+                setTextTrack(streamId, forcedSubtitleTrackIndex);
+            }
+            return
         }
 
         mediaController.setTrack(currentTrackInfo);
@@ -412,6 +446,49 @@ function TextController(config) {
         });
     }
 
+    function _getSuitableForceSubtitleTrackIndex(streamId) {
+        const forcedSubtitleTracks = _getForcedSubtitleTracks(streamId);
+
+        if (!forcedSubtitleTracks || forcedSubtitleTracks.length <= 0) {
+            return NaN
+        }
+
+        const currentAudioTrack = mediaController.getCurrentTrackFor(Constants.AUDIO, streamId);
+        if (!currentAudioTrack) {
+            return NaN
+        }
+
+        const suitableTrack = forcedSubtitleTracks.find((track) => {
+            return currentAudioTrack.lang === track.lang
+        })
+
+        if (suitableTrack) {
+            return suitableTrack._indexToSelect
+        }
+
+        return NaN
+    }
+
+    function _getForcedSubtitleTracks(streamId) {
+        const textTrackInfos = textTracks[streamId].getTextTrackInfos();
+        return textTrackInfos.filter((textTrackInfo, index) => {
+            textTrackInfo._indexToSelect = index;
+            if (textTrackInfo && textTrackInfo.roles && textTrackInfo.roles.length > 0) {
+                return _isForcedSubtitleTrack(textTrackInfo);
+            }
+            return false
+        });
+    }
+
+    function _isForcedSubtitleTrack(textTrackInfo) {
+        if (!textTrackInfo || !textTrackInfo.roles || textTrackInfo.roles.length === 0) {
+            return false
+        }
+        return textTrackInfo.roles.some((role) => {
+            return role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === DashConstants.FORCED_SUBTITLE
+        })
+    }
+
     function getCurrentTrackIdx(streamId) {
         return textTracks[streamId].getCurrentTrackIdx();
     }
@@ -431,6 +508,23 @@ function TextController(config) {
         }
     }
 
+    function clearDataForStream(streamId) {
+        if (textSourceBuffers[streamId]) {
+            textSourceBuffers[streamId].resetEmbedded();
+            textSourceBuffers[streamId].reset();
+            delete textSourceBuffers[streamId];
+        }
+
+        if (textTracks[streamId]) {
+            textTracks[streamId].deleteAllTextTracks();
+            delete textTracks[streamId];
+        }
+
+        if (streamData[streamId]) {
+            delete streamData[streamId];
+        }
+    }
+
     function resetInitialSettings() {
         textSourceBuffers = {};
         textTracks = {};
@@ -441,37 +535,39 @@ function TextController(config) {
     }
 
     function reset() {
+        Object.keys(textSourceBuffers).forEach((key) => {
+            textSourceBuffers[key].resetEmbedded();
+            textSourceBuffers[key].reset();
+        });
+
         dvbFonts.reset();
         resetInitialSettings();
         eventBus.off(Events.TEXT_TRACKS_QUEUE_INITIALIZED, _onTextTracksAdded, instance);
         eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
         eventBus.off(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
+        eventBus.off(Events.MEDIAINFO_UPDATED, _onMediaInfoUpdated, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
             eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
         }
-
-        Object.keys(textSourceBuffers).forEach((key) => {
-            textSourceBuffers[key].resetEmbedded();
-            textSourceBuffers[key].reset();
-        });
     }
 
     instance = {
+        addEmbeddedTrack,
+        addMediaInfosToBuffer,
+        createTracks,
         deactivateStream,
+        enableForcedTextStreaming,
+        enableText,
+        getAllTracksAreDisabled,
+        getCurrentTrackIdx,
+        getTextSourceBuffer,
         initialize,
         initializeForStream,
-        createTracks,
-        getTextSourceBuffer,
-        getAllTracksAreDisabled,
-        addEmbeddedTrack,
-        enableText,
         isTextEnabled,
+        reset,
         setTextTrack,
-        getCurrentTrackIdx,
-        enableForcedTextStreaming,
-        addMediaInfosToBuffer,
-        reset
+        clearDataForStream,
     };
     setup();
     return instance;

@@ -28,8 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import IndexDBStore from '../storage/IndexDBStore';
-import OfflineErrors from '../errors/OfflineErrors';
+import IndexDBStore from '../storage/IndexDBStore.js';
+import OfflineErrors from '../errors/OfflineErrors.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
  * @class OfflineStoreController
@@ -169,4 +170,4 @@ function OfflineStoreController(config) {
 }
 
 OfflineStoreController.__dashjs_factory_name = 'OfflineStoreController';
-export default dashjs.FactoryMaker.getClassFactory(OfflineStoreController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(OfflineStoreController); 

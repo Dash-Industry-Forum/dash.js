@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 import deepEqual from 'fast-deep-equal';
 
 /**
@@ -54,7 +54,7 @@ function ObjectUtils() {
     }
 
     instance = {
-        areEqual: areEqual
+        areEqual
     };
 
     return instance;

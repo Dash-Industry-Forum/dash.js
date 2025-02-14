@@ -34,29 +34,28 @@
  */
 class Segment {
     constructor() {
-        this.indexRange = null;
-        // The index of the segment in the list of segments. We start at 0
-        this.index = null;
-        this.mediaRange = null;
-        this.media = null;
-        this.duration = NaN;
-        // this is the time that should be inserted into the media url
-        this.replacementTime = null;
-        // this is the number that should be inserted into the media url
-        this.replacementNumber = NaN;
-        // This is supposed to match the time encoded in the media Segment
-        this.mediaStartTime = NaN;
-        // When the source buffer timeOffset is set to MSETimeOffset this is the
-        // time that will match the seekTarget and video.currentTime
-        this.presentationStartTime = NaN;
-        // Do not schedule this segment until
-        this.availabilityStartTime = NaN;
         // Ignore and  discard this segment after
         this.availabilityEndTime = NaN;
-        // For dynamic mpd's, this is the wall clock time that the video
-        // element currentTime should be presentationStartTime
-        this.wallStartTime = NaN;
+        // Do not schedule this segment until
+        this.availabilityStartTime = NaN;
+        this.duration = NaN;
+        // The index of the segment in the list of segments. We start at 0
+        this.index = null;
+        this.indexRange = null;
+        this.media = null;
+        this.mediaRange = null;
+        // This is supposed to match the time encoded in the media Segment
+        this.mediaStartTime = NaN;
+        // When the source buffer timeOffset is set to mseTimeOffset this is the
+        // time that will match the seekTarget and video.currentTime
+        this.presentationStartTime = NaN;
+        // this is the number that should be inserted into the media url
+        this.replacementNumber = NaN;
+        // this is the time that should be inserted into the media url
+        this.replacementTime = null;
         this.representation = null;
+        // For dynamic mpd's, this is the wall clock time that the video
+        this.wallStartTime = NaN;
     }
 }
 

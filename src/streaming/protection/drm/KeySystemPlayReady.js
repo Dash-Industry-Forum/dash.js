@@ -35,10 +35,11 @@
  * @class
  * @implements KeySystem
  */
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = '9a04f079-9840-4286-ab92-e65be0885f95';
+const uuid = ProtectionConstants.PLAYREADY_UUID;
 const systemString = ProtectionConstants.PLAYREADY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 const PRCDMData = '<PlayReadyCDMData type="LicenseAcquisition"><LicenseAcquisition version="1.0" Proactive="false"><CustomData encoding="base64encoded">%CUSTOMDATA%</CustomData></LicenseAcquisition></PlayReadyCDMData>';
@@ -52,7 +53,7 @@ function KeySystemPlayReady(config) {
     const settings = config.settings;
 
     function checkConfig() {
-        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray') ) {
+        if (!BASE64 || !BASE64.hasOwnProperty('decodeArray') || !BASE64.hasOwnProperty('decodeArray')) {
             throw new Error('Missing config parameter(s)');
         }
     }
@@ -197,17 +198,15 @@ function KeySystemPlayReady(config) {
             return null;
         }
         // Handle common encryption PSSH
-        if ('pssh' in cpData) {
+        if ('pssh' in cpData && cpData.pssh) {
             return CommonEncryption.parseInitDataFromContentProtection(cpData, BASE64);
         }
         // Handle native MS PlayReady ContentProtection elements
-        if ('pro' in cpData) {
+        if ('pro' in cpData && cpData.pro) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.pro.__text);
-        }
-        else if ('prheader' in cpData) {
+        } else if ('prheader' in cpData && cpData.prheader) {
             uint8arraydecodedPROHeader = BASE64.decodeArray(cpData.prheader.__text);
-        }
-        else {
+        } else {
             return null;
         }
 
@@ -262,7 +261,9 @@ function KeySystemPlayReady(config) {
             i;
 
         checkConfig();
-        if (!_cdmData) return null;
+        if (!_cdmData) {
+            return null;
+        }
 
         // Convert custom data into multibyte string
         customData = [];
@@ -305,4 +306,4 @@ function KeySystemPlayReady(config) {
 }
 
 KeySystemPlayReady.__dashjs_factory_name = 'KeySystemPlayReady';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemPlayReady); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemPlayReady);

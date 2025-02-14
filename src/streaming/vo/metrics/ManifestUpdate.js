@@ -94,7 +94,7 @@ class ManifestUpdate {
          */
         this.streamInfo = [];
         /**
-         * Array holding list of RepresentationInfo VO Objects
+         * Array holding list of ManifestUpdateRepresentationInfo Objects
          * @public
          */
         this.representationInfo = [];
@@ -159,11 +159,6 @@ class ManifestUpdateRepresentationInfo {
          */
         this.mediaType = null;
         /**
-         * Which representation
-         * @public
-         */
-        this.streamIndex = null;
-        /**
          * Holds reference to @presentationTimeOffset
          * @public
          */
@@ -173,11 +168,6 @@ class ManifestUpdateRepresentationInfo {
          * @public
          */
         this.startNumber = null;
-        /**
-         * list|template|timeline
-         * @public
-         */
-        this.fragmentInfoType = null;
     }
 }
 

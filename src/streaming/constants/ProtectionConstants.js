@@ -22,8 +22,8 @@
  *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
  *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
  *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES, LOSS OF USE, DATA, OR
+ *  PROFITS, OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
  *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
@@ -31,25 +31,46 @@
 
 /**
  * Protection Constants declaration
- * @class
  * @ignore
  */
-class ProtectionConstants {
-
-    init () {
-        this.CLEARKEY_KEYSTEM_STRING = 'org.w3.clearkey';
-        this.WIDEVINE_KEYSTEM_STRING = 'com.widevine.alpha';
-        this.PLAYREADY_KEYSTEM_STRING = 'com.microsoft.playready';
-        this.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING = 'com.microsoft.playready.recommendation';
-        this.INITIALIZATION_DATA_TYPE_CENC = 'cenc';
-        this.INITIALIZATION_DATA_TYPE_KEYIDS = 'keyids'
-        this.INITIALIZATION_DATA_TYPE_WEBM = 'webm'
-    }
-
-    constructor () {
-        this.init();
+export default {
+    CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
+    WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
+    PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
+    PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+    WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
+    PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
+    CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
+    W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
+    INITIALIZATION_DATA_TYPE_CENC: 'cenc',
+    INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
+    INITIALIZATION_DATA_TYPE_WEBM: 'webm',
+    ENCRYPTION_SCHEME_CENC: 'cenc',
+    ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    MEDIA_KEY_MESSAGE_TYPES: {
+        LICENSE_REQUEST: 'license-request',
+        LICENSE_RENEWAL: 'license-renewal',
+        LICENSE_RELEASE: 'license-release',
+        INDIVIDUALIZATION_REQUEST: 'individualization-request',
+    },
+    ROBUSTNESS_STRINGS: {
+        WIDEVINE: {
+            SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
+            SW_SECURE_DECODE: 'SW_SECURE_DECODE',
+            HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
+            HW_SECURE_DECODE: 'HW_SECURE_DECODE',
+            HW_SECURE_ALL: 'HW_SECURE_ALL'
+        }
+    },
+    MEDIA_KEY_STATUSES: {
+        USABLE: 'usable',
+        EXPIRED: 'expired',
+        RELEASED: 'released',
+        OUTPUT_RESTRICTED: 'output-restricted',
+        OUTPUT_DOWNSCALED: 'output-downscaled',
+        STATUS_PENDING: 'status-pending',
+        INTERNAL_ERROR: 'internal-error',
     }
 }
 
-let constants = new ProtectionConstants();
-export default constants;
+

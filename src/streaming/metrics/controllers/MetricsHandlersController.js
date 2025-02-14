@@ -29,7 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory';
+import MetricsHandlerFactory from '../metrics/MetricsHandlerFactory.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function MetricsHandlersController(config) {
 
@@ -125,4 +126,4 @@ function MetricsHandlersController(config) {
 }
 
 MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
-export default dashjs.FactoryMaker.getClassFactory(MetricsHandlersController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MetricsHandlersController); 

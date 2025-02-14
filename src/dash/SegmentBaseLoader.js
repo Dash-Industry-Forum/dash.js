@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Segment from './vo/Segment';
-import DashJSError from '../streaming/vo/DashJSError';
-import FactoryMaker from '../core/FactoryMaker';
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import URLLoader from '../streaming/net/URLLoader';
+import Segment from './vo/Segment.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import URLLoader from '../streaming/net/URLLoader.js';
 
 function SegmentBaseLoader() {
 
@@ -42,7 +42,6 @@ function SegmentBaseLoader() {
         logger,
         errHandler,
         boxParser,
-        requestModifier,
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
@@ -60,7 +59,6 @@ function SegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
             boxParser: boxParser,
             errors: errors,
             urlUtils: urlUtils,
@@ -92,10 +90,6 @@ function SegmentBaseLoader() {
 
         if (config.debug) {
             logger = config.debug.getLogger(instance);
-        }
-
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
         }
 
         if (config.errors) {
@@ -134,7 +128,8 @@ function SegmentBaseLoader() {
             searching: false,
             bytesLoaded: 0,
             bytesToLoad: 1500,
-            mediaType: mediaType
+            mediaType: mediaType,
+            representation
         };
 
         logger.debug('Start searching for initialization.');
@@ -189,7 +184,8 @@ function SegmentBaseLoader() {
             searching: !hasRange,
             bytesLoaded: loadingInfo ? loadingInfo.bytesLoaded : 0,
             bytesToLoad: 1500,
-            mediaType: mediaType
+            mediaType: mediaType,
+            representation
         };
 
         const request = getFragmentRequest(info);

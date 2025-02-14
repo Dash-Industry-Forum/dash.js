@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from './EventBus';
-import Events from './events/Events';
-import FactoryMaker from './FactoryMaker';
+import EventBus from './EventBus.js';
+import Events from './events/Events.js';
+import FactoryMaker from './FactoryMaker.js';
 
 const LOG_LEVEL_NONE = 0;
 const LOG_LEVEL_FATAL = 1;

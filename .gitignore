@@ -1,5 +1,7 @@
 /simple.html
 samples/mpds
+samples/network-interceptor/node_modules
+samples/network-interceptor/dist
 #################
 ## Node.js
 #################
@@ -189,6 +191,17 @@ build/typings/
 # Vim
 .vimrc
 
-#Karma Functional tests
-test/functional-karma/coverage
-test/functional-karma/results
+# Karma Unit Tets
+test/unit/results
+# Karma Functional tests
+test/functional/results
+test/functional/config/selenium/jars
+samples/custom
+samples/mpds/
+samples/modules/webpack/package-lock.json
+samples/modules/webpack/dist
+samples/modules/webpack/node_modules
+samples/modules/typescript/package-lock.json
+samples/modules/typescript/dist
+samples/modules/typescript/node_modules
+test/functional/apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk

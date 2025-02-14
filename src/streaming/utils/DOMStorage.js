@@ -28,9 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../constants/Constants.js';
 
 const legacyKeysAndReplacements = [
     { oldKey: 'dashjs_vbitrate', newKey: 'dashjs_video_bitrate' },
@@ -64,7 +64,9 @@ function DOMStorage(config) {
 
     //type can be local, session
     function isSupported(type) {
-        if (supported !== undefined) return supported;
+        if (supported !== undefined) {
+            return supported;
+        }
 
         supported = false;
 

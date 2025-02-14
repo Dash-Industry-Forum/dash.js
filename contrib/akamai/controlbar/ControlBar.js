@@ -115,6 +115,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.on(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.on(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
+        self.player.on(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
+        self.player.on(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
     var removePlayerEventsListeners = function () {
@@ -126,6 +128,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         self.player.off(dashjs.MediaPlayer.events.STREAM_TEARDOWN_COMPLETE, _onStreamTeardownComplete, this);
         self.player.off(dashjs.MediaPlayer.events.TEXT_TRACKS_ADDED, _onTracksAdded, this);
         self.player.off(dashjs.MediaPlayer.events.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, this);
+        self.player.off(dashjs.MediaPlayer.events.NEW_TRACK_SELECTED, _onNewTrackSelected, this);
+        self.player.off(dashjs.Protection.events.KEY_STATUSES_MAP_UPDATED, _onKeyStatusChanged, this);
     };
 
     var getControlId = function (id) {
@@ -178,7 +182,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var _onPlayStart = function (/*e*/) {
-        setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.time());
+        setTime(displayUTCTimeCodes ? self.player.timeAsUTC() : self.player.timeInDvrWindow());
         updateDuration();
         togglePlayPauseBtnState();
         if (seekbarBufferInterval) {
@@ -189,13 +193,13 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var _onPlayTimeUpdate = function (/*e*/) {
         updateDuration();
         if (!seeking) {
-            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.time());
+            setTime(displayUTCTimeCodes ? player.timeAsUTC() : player.timeInDvrWindow());
             if (seekbarPlay) {
-                seekbarPlay.style.width = (player.time() / player.duration() * 100) + '%';
+                seekbarPlay.style.width = Math.max((player.timeInDvrWindow() / player.duration() * 100), 0) + '%';
             }
 
             if (seekbar.getAttribute('type') === 'range') {
-                seekbar.value = player.time();
+                seekbar.value = player.timeInDvrWindow();
             }
 
         }
@@ -384,7 +388,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             return;
         }
         if (self.player.isDynamic() && self.player.duration()) {
-            var liveDelay = self.player.duration() - value;
+            var liveDelay = Math.max(self.player.duration() - value, 0);
             var targetLiveDelay = self.player.getTargetLiveDelay();
 
             if (liveDelay < targetLiveDelay + liveThresholdSecs) {
@@ -401,7 +405,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     var updateDuration = function () {
         var duration = self.player.duration();
         if (duration !== parseFloat(seekbar.max)) { //check if duration changes for live streams..
-            setDuration(displayUTCTimeCodes ? self.player.durationAsUTC() : duration);
+            setDuration(displayUTCTimeCodes ? self.player.getDvrWindow().endAsUtc : duration);
             seekbar.max = duration;
         }
     };
@@ -529,14 +533,15 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
             destroyMenu(bitrateListMenu, bitrateListBtn, menuHandlersList.bitrate);
             bitrateListMenu = null;
             var availableBitrates = { menuType: 'bitrate' };
-            availableBitrates.audio = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('audio') || [];
-            availableBitrates.video = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('video') || [];
-            availableBitrates.images = self.player.getBitrateInfoListFor && self.player.getBitrateInfoListFor('image') || [];
+            availableBitrates.audio = self.player.getRepresentationsByType && self.player.getRepresentationsByType('audio') || [];
+            availableBitrates.video = self.player.getRepresentationsByType && self.player.getRepresentationsByType('video') || [];
+            availableBitrates.images = self.player.getRepresentationsByType && self.player.getRepresentationsByType('image') || [];
 
             if (availableBitrates.audio.length >= 1 || availableBitrates.video.length >= 1 || availableBitrates.images.length >= 1) {
                 contentFunc = function (element, index) {
-                    var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrate / 1000) + ' kbps';
+                    var result = isNaN(index) ? ' Auto Switch' : Math.floor(element.bitrateInKbit) + ' kbps';
                     result += element && element.width && element.height ? ' (' + element.width + 'x' + element.height + ')' : '';
+                    result += element && element.codecs ? ' (' + element.codecs + ')' : '';
                     return result;
                 };
 
@@ -576,11 +581,15 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     }
 
                     if (element.roles[0]) {
-                        info += '- Role: ' + element.roles[0] + ' ';
+                        info += '- Role: ' + element.roles[0].value + ' ';
                     }
 
                     if (element.codec) {
                         info += '- Codec: ' + element.codec + ' ';
+                    }
+
+                    if (element.id) {
+                        info += '- Id: ' + element.id + ' ';
                     }
 
                     return label || info
@@ -597,7 +606,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
-    var _matchTrackWithNativeTrack = function(track, nativeTrack) {
+    var _matchTrackWithNativeTrack = function (track, nativeTrack) {
         let label = track.id !== undefined ? track.id.toString() : track.lang;
 
         return !!(
@@ -619,7 +628,8 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 trackMode = nativeTrack.mode;
                 break;
             }
-        };
+        }
+        ;
 
         return (trackMode === undefined) ? 'showing' : trackMode;
     };
@@ -687,9 +697,18 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
         createCaptionSwitchMenu(e.streamId);
     };
 
+    var _onNewTrackSelected = function () {
+        createTrackSwitchMenu();
+        createBitrateSwitchMenu();
+    }
+
+    var _onKeyStatusChanged = function () {
+        createBitrateSwitchMenu();
+    }
+
     var _onBufferLevelUpdated = function () {
         if (seekbarBuffer) {
-            seekbarBuffer.style.width = ((player.time() + getBufferLevel()) / player.duration() * 100) + '%';
+            seekbarBuffer.style.width = ((player.timeInDvrWindow() + getBufferLevel()) / player.duration() * 100) + '%';
         }
     };
 
@@ -838,7 +857,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                 // Other tracks will just have their text
                 item.textContent = arr[i];
             }
-            
+
             item.onmouseover = function (/*e*/) {
                 if (this.selected !== true) {
                     this.classList.add('menu-item-over');
@@ -912,14 +931,14 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                             if (item.index > 0) {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = false;
                                 self.player.updateSettings(cfg);
-                                self.player.setQualityFor(item.mediaType, item.index - 1, forceQuality);
+                                self.player.setRepresentationForTypeByIndex(item.mediaType, item.index - 1, forceQuality);
                             } else {
                                 cfg.streaming.abr.autoSwitchBitrate[item.mediaType] = true;
                                 self.player.updateSettings(cfg);
                             }
                             break;
                         case 'image-bitrate-list':
-                            player.setQualityFor(item.mediaType, item.index);
+                            player.setRepresentationForTypeByIndex(item.mediaType, item.index);
                             break;
                         case 'caption-list':
                             self.player.setTextTrack(item.index - 1);

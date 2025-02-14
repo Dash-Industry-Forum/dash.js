@@ -32,8 +32,9 @@
 /**
  * @ignore
  */
-const localforage = require('localforage');
-const entities = require('html-entities').XmlEntities;
+import localforage from 'localforage';
+import {decode} from 'html-entities';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function IndexDBStore() {
 
@@ -194,7 +195,7 @@ function IndexDBStore() {
                     }
                 }
                 if (item !== null) {
-                    item.manifest = entities.decode(item.manifest);
+                    item.manifest = decode(item.manifest);
                     return Promise.resolve(item);
                 } else {
                     return Promise.reject('Cannot found manifest with this manifestId : ' + id);
@@ -441,4 +442,4 @@ function IndexDBStore() {
 }
 
 IndexDBStore.__dashjs_factory_name = 'IndexDBStore';
-export default dashjs.FactoryMaker.getSingletonFactory(IndexDBStore); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(IndexDBStore); 

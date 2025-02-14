@@ -1,0 +1,31 @@
+name: verify_branch
+
+on:
+    push:
+        branches:
+            - '**'  # Triggers on push to any branch
+
+jobs:
+    build_and_unit_test:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/checkout@v4
+            -   uses: actions/setup-node@v4
+                with:
+                    node-version: '20'
+                    cache: 'npm'
+            -   name: Cache node modules
+                id: cache-npm
+                uses: actions/cache@v3
+                with:
+                    path: node_modules
+                    key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+                    restore-keys: |
+                        ${{ runner.os }}-build-
+                        ${{ runner.os }}-
+            -   if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+                name: List the state of node modules
+                continue-on-error: true
+                run: npm list
+            -   run: npm install
+            -   run: npm run build

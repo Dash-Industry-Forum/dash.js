@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CMCD Reporting from manifest</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #start, #receive {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+
+        .input-group {
+            align-items: center;
+            gap: 1.5rem;
+
+            .checkbox-and-text {
+                display: flex;
+                gap: 4px;
+            }
+        }
+
+        figure.cdn-selection {
+            margin: 0 0 0 30px;
+            display: inline-block;
+        }
+
+        img.cdn-selection {
+            width: 70px;
+        }
+
+        .border {
+            border: 2px solid #dee2e6 !important;
+        }
+
+        #cdn-selection-container, #location-selection-container {
+            margin: 30px 0 0 0;
+        }
+
+        #trace {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+    </style>
+
+    <script class="code">
+        var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
+        /* possible modes of attach cmcd data */
+        var CMCD_MODE_QUERY = 'query'; /* as query parameters */
+        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        let player;
+        let mpd = "";
+        let currentSelectedServiceLocation = {}
+        let cdnSelectionImgDomElements = {};
+        let locationSelectionImgDomElements = {};
+
+        function init() {
+            player = dashjs.MediaPlayer().create();
+            document.getElementById('load-button').addEventListener('click', function () {
+                _load();
+            })
+            player.initialize(document.querySelector("video"), null, true);
+
+            player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, null);
+            player.on(dashjs.MediaPlayer.events.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, null);
+            player.on(dashjs.MediaPlayer.events.BASE_URLS_UPDATED, _onBaseUrlsUpdated, null);
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, _onManifestLoaded, null);
+            player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
+        }
+
+
+        function handleCmcdDataGeneratedEvent(event) {
+            log('type: ' + event.mediaType);
+            log('file: ' + event.url.split('/').pop())
+            let mode = !!event.headers ? CMCD_MODE_HEADER : CMCD_MODE_QUERY;
+            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            var keys = Object.keys(data);
+            keys = keys.sort();
+            for (var key of keys) {
+                log(key.padEnd(4) + ': ' + event.cmcdData[key]);
+            }
+            log('');
+        }
+
+        function getKeysForQueryMode(event) {
+            console.log(event);
+            var cmcdData = {};
+            var cmcdString = event.cmcdString;
+
+            extractKeyValuePairs(cmcdString, cmcdData);
+            return cmcdData;
+        }
+
+        function getKeysForHeaderMode(event) {
+            var cmcdData = {};
+            var keys = Object.keys(event.headers);
+
+            for (var key of keys) {
+                extractKeyValuePairs(event.headers[key], cmcdData)
+            }
+            return cmcdData
+        }
+
+        function extractKeyValuePairs(cmcdString, cmcdData) {
+            if (cmcdString === '') {
+                return;
+            }
+            var keyValuePairs = cmcdString.split(',');
+
+            keyValuePairs.forEach(function (keyValuePair) {
+                var data = keyValuePair.split('=');
+                var key = data[0];
+                var value = data[1];
+
+                cmcdData[key] = value;
+            })
+
+        }
+
+        function log(msg) {
+            msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+            var tracePanel = document.getElementById('trace');
+            tracePanel.innerHTML += msg + '\n';
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+        function _load() {
+            const applyParametersFromMpd = document.getElementById('applyParametersFromMpd').checked;
+            const cmcdJS = document.getElementById('cmcdJS').checked;
+            const url = './mpds/basic-cmcd-config.mpd';
+            player.updateSettings({
+                streaming: {
+                    cmcd: {
+                        applyParametersFromMpd,
+                        enabled: cmcdJS, /* enable reporting of cmcd parameters */
+                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
+                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
+                        mode: CMCD_MODE_QUERY,
+                        includeInRequests: ['mpd', 'segment' , 'steering'],
+                        enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                    }
+                }
+            });
+            player.attachSource(url);
+            player.updateSettings({})
+        }
+
+        function _onFragmentLoadingStarted(e) {
+            try {
+                if (e && e.mediaType && (e.mediaType === 'video' || e.mediaType === 'audio') && e.request) {
+                    if (e.request.serviceLocation) {
+                        const element = document.getElementById(`${e.mediaType}-service-location`);
+                        element.innerText = e.request.serviceLocation;
+                        if (!currentSelectedServiceLocation[e.mediaType] || currentSelectedServiceLocation[e.mediaType] !== e.request.serviceLocation) {
+                            currentSelectedServiceLocation[e.mediaType] = e.request.serviceLocation;
+                            _serviceLocationChanged(currentSelectedServiceLocation, cdnSelectionImgDomElements);
+                        }
+                    }
+                    if (e.request.url) {
+                        const element = document.getElementById(`${e.mediaType}-request-url`);
+                        element.innerText = e.request.url;
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function _serviceLocationChanged(selectedServiceLocation, domElements) {
+            const activeServiceLocations = Object.keys(selectedServiceLocation).reduce((acc, key) => {
+                acc[selectedServiceLocation[key]] = true;
+                return acc;
+            }, {})
+
+            Object.keys(domElements).forEach((key) => {
+                const elem = domElements[key];
+
+                if (activeServiceLocations[key]) {
+                    elem.setAttribute('src', 'img/server-active.svg')
+                } else {
+                    elem.setAttribute('src', 'img/server.svg');
+                }
+
+            })
+        }
+
+        function _onBaseUrlsUpdated(e) {
+            if (!e || !e.baseUrls || e.baseUrls.length === 0) {
+                return;
+            }
+            const divContainer = document.getElementById('cdn-selection-container');
+            /* Only create the once we dont have yet */
+            e.baseUrls.forEach((baseUrl) => {
+                if (baseUrl.serviceLocation) {
+                    const existingElement = document.getElementById(`cdn-selection-${baseUrl.serviceLocation}`);
+                    if (!existingElement) {
+                        const spanContainer = document.createElement('span');
+                        spanContainer.setAttribute('id', `cdn-selection-${baseUrl.serviceLocation}`);
+                        const figure = document.createElement('figure');
+                        figure.setAttribute('class', 'cdn-selection');
+                        const img = document.createElement('img');
+                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('class', 'figure-img img-fluid cdn-selection');
+                        const figCaption = document.createElement('figcaption');
+                        figCaption.setAttribute('class', 'figure-caption');
+                        const label = document.createTextNode(`${baseUrl.serviceLocation}`);
+                        figCaption.appendChild(label);
+                        figure.appendChild(img)
+                        figure.appendChild(figCaption);
+                        spanContainer.appendChild(figure);
+                        divContainer.appendChild(spanContainer);
+                        cdnSelectionImgDomElements[baseUrl.serviceLocation] = img;
+                    }
+                }
+            })
+        }
+
+        function _onManifestLoaded() {
+            const locations = player.getAvailableLocations();
+            if (!locations || locations.length === 0) {
+                return;
+            }
+            const divContainer = document.getElementById('location-selection-container');
+            /* Only create the once we dont have yet */
+            locations.forEach((location) => {
+                if (location.serviceLocation) {
+                    const existingElement = document.getElementById(`cdn-selection-${location.serviceLocation}`);
+                    if (!existingElement) {
+                        const spanContainer = document.createElement('span');
+                        spanContainer.setAttribute('id', `cdn-selection-${location.serviceLocation}`);
+                        const figure = document.createElement('figure');
+                        figure.setAttribute('class', 'cdn-selection');
+                        const img = document.createElement('img');
+                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('class', 'figure-img img-fluid cdn-selection');
+                        const figCaption = document.createElement('figcaption');
+                        figCaption.setAttribute('class', 'figure-caption');
+                        const label = document.createTextNode(`${location.serviceLocation}`);
+                        figCaption.appendChild(label);
+                        figure.appendChild(img)
+                        figure.appendChild(figCaption);
+                        spanContainer.appendChild(figure);
+                        divContainer.appendChild(spanContainer);
+                        locationSelectionImgDomElements[location.serviceLocation] = img;
+                    }
+                }
+            })
+        }
+
+        function _onManifestLoadingStarted(e) {
+            try {
+                if (e.request.serviceLocation) {
+
+                }
+                if (e.request.url) {
+                    const element = document.getElementById(`manifest-request-url`);
+                    element.innerText = e.request.url;
+                }
+                const slElement = document.getElementById(`manifest-service-location`);
+                if (e.request.serviceLocation) {
+                    slElement.innerText = e.request.serviceLocation;
+                    _serviceLocationChanged({ manifest: e.request.serviceLocation }, locationSelectionImgDomElements)
+                } else {
+                    slElement.innerText = '';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function _onContentSteeringRequestCompleted(e) {
+            try {
+                if (e) {
+                    document.getElementById(`steering-request-timestamp`).innerText = new Date().toISOString();
+                    if (e.url) {
+                        document.getElementById(`steering-request-url`).innerText = decodeURIComponent(e.url);
+                    }
+                    if (e.currentSteeringResponseData) {
+                        document.getElementById(`steering-version`).innerText = e.currentSteeringResponseData.version;
+                        document.getElementById(`steering-ttl`).innerText = e.currentSteeringResponseData.ttl;
+                        document.getElementById(`steering-reload-uri`).innerText = e.currentSteeringResponseData.reloadUri;
+                        document.getElementById(`steering-pathway-priority`).innerText = e.currentSteeringResponseData.pathwayPriority.toString();
+                        document.getElementById(`steering-pathway-cloning`).innerText = JSON.stringify(e.currentSteeringResponseData.pathwayClones, null, '\t');
+                    }
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function  _loadMPDContent() {
+            var mpdOutput = document.getElementById('mpd-output');
+            let mpdContent;
+            mpdOutput.innerHTML = '';
+            try {
+                const parser = new DOMParser();
+                const url = './mpds/basic-cmcd-config.mpd';
+                mpdContent = await fetch(url);
+                mpdContent = await mpdContent.text();
+                const preElement = document.createElement('pre');
+                const codeElement = document.createElement('code');
+                codeElement.textContent = mpdContent;
+                preElement.appendChild(codeElement);
+                mpdOutput.appendChild(preElement);
+                if (typeof hljs !== 'undefined'){
+                    hljs.highlightBlock(codeElement);
+                }
+            } catch (error) {
+                console.error('Error loading .mpd file', error);
+                return null;
+            }
+        }
+
+        function initialize() {
+            document.getElementById('load-button').addEventListener('click', function () {
+                _loadMPDContent();
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            initialize();
+        });
+
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <h1>CMCD Reporting from manifest</h1>
+            <div class="col-md-12">
+                <div class="h-100 p-5 border rounded-3">
+                    <h4>Description</h4>
+                    <p>
+                        This sample shows how to configure Common Media Client Data (CMCD - CTA 5004) reporting from manifest file.
+                        Also it shows how to enable or disable the configuration for CMCD from manifest, being able to configure it
+                        from player settings and ignore whatever the manifest configures for CMCD.<br />
+
+                        Now, the CMCD could be sent for these type of requests: segment, mpd, xlink, steering and other.
+                    </p>
+                    <p>
+                        If <b>applyParametersFromMpd</b> is true, the player will use the CMCD settings from the MPD if specified, ignoring whatever the player's own settings for CMCD.<br />
+                        If <b>applyParametersFromMpd</b> is false, the player won't use the CMCD settings from the MPD ignoring whatever the MPD has set for CMCD.
+                    </p>
+
+                    <p>
+                        In this sample, the source mpd has configurations for sending CMCD (see the <b>MPD Source</b> section after loading the MPD).
+                        Also, the player settings has CMCD configurations that will be load if "applyParametersFromMpd" checkbox is false and "CMCD from settings" is true.<br />
+
+                        If both checkbox are not selected, CMCD won't be sent eventhough it's configured in the settings or manifest file.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="input-group mb-3">
+                    <div class="checkbox-and-text">
+                        <input type="checkbox" id="applyParametersFromMpd" checked>applyParametersFromMpd</input>
+                    </div>
+                    <div class="checkbox-and-text">
+                        <input type="checkbox" id="cmcdJS">CMCD from player settings</input>
+                    </div>
+                    <button type="button" id="load-button" class="btn btn-success">
+                        Load MPD
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <video controls="true" muted></video>
+            </div>
+            <div class="col-md-6">
+                <div class="h-100 p-5 border rounded-3">
+                    <h5>CDN Selection</h5>
+                    <div id="cdn-selection-container"></div>
+                    <h5 style="margin-top: 20px">Location Selection</h5>
+                    <div id="location-selection-container">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                            id="trace"></textarea>
+                    <label for="trace">CMCD Data</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <p style=" font-weight: bold; font-size: 1.1em">MPD Source</p>
+                <div id="mpd-output" class="border"></div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <div class="h-100 p-5 border rounded-3">
+                    <h5> Fragment Requests</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th scope="col">Type</th>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Audio</td>
+                                <td id="audio-service-location"></td>
+                                <td id="audio-request-url"></td>
+                            </tr>
+                            <tr>
+                                <td>Video</td>
+                                <td id="video-service-location"></td>
+                                <td id="video-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="h-100 p-5 border rounded-3">
+                    <h5> Manifest Requests</h5>
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                            <tr>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td id="manifest-service-location"></td>
+                                <td id="manifest-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-12 mt-2">
+                <div class="h-100 p-5 border rounded-3">
+                    <h5> Steering Data</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Attribute</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                            <tr>
+                                <td>Timestamp</td>
+                                <td id="steering-request-timestamp"></td>
+                            </tr>
+                            <tr>
+                                <td>Request URL</td>
+                                <td>
+                                    <span id="steering-request-url"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Response - Version</td>
+                                <td><span id="steering-version"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Reload URI</td>
+                                <td><span id="steering-reload-uri"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Priority</td>
+                                <td><span id="steering-pathway-priority"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Clones</td>
+                                <td>
+                                    <pre><span id="steering-pathway-cloning"></span></pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Response - TTL</td>
+                                <td><span id="steering-ttl"></span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

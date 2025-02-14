@@ -33,12 +33,17 @@ App.prototype._setDomElements = function () {
     this.domElements.settings.maxCatchupPlaybackRate = document.getElementById('max-catchup-playback-rate');
     this.domElements.settings.minCatchupPlaybackRate = document.getElementById('min-catchup-playback-rate');
     this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
-    this.domElements.settings.abrAdditionalInsufficientBufferRule = document.getElementById('abr-additional-insufficient')
-    this.domElements.settings.abrAdditionalDroppedFramesRule = document.getElementById('abr-additional-dropped');
-    this.domElements.settings.abrAdditionalAbandonRequestRule = document.getElementById('abr-additional-abandon');
-    this.domElements.settings.abrAdditionalSwitchHistoryRule = document.getElementById('abr-additional-switch');
+    this.domElements.settings.abrThroughputRule = document.getElementById('abr-throughput')
+    this.domElements.settings.abrBolaRule = document.getElementById('abr-bola')
+    this.domElements.settings.abrInsufficientBufferRule = document.getElementById('abr-insufficient')
+    this.domElements.settings.abrDroppedFramesRule = document.getElementById('abr-dropped');
+    this.domElements.settings.abrAbandonRequestRule = document.getElementById('abr-abandon');
+    this.domElements.settings.abrSwitchHistoryRule = document.getElementById('abr-switch');
+    this.domElements.settings.abrLoLPRule = document.getElementById('abr-lolp');
+    this.domElements.settings.abrL2ARule = document.getElementById('abr-l2a');
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.exportSettingsUrl = document.getElementById('export-settings-url');
+    this.domElements.settings.additionalApisNetworkInformation = document.getElementById('network-api');
 
     this.domElements.chart.metricChart = document.getElementById('metric-chart');
     this.domElements.chart.enabled = document.getElementById('chart-enabled');
@@ -99,14 +104,40 @@ App.prototype._applyParameters = function () {
                 mode: settings.catchupMechanism
             },
             abr: {
-                ABRStrategy: settings.abrGeneral,
-                additionalAbrRules: {
-                    insufficientBufferRule: settings.abrAdditionalInsufficientBufferRule,
-                    switchHistoryRule: settings.abrAdditionalSwitchHistoryRule,
-                    droppedFramesRule: settings.abrAdditionalDroppedFramesRule,
-                    abandonRequestsRule: settings.abrAdditionalAbandonRequestRule
+                rules: {
+                    throughputRule: {
+                        active: settings.abrThroughputRule
+                    },
+                    bolaRule: {
+                        active: settings.abrBolaRule
+                    },
+                    insufficientBufferRule: {
+                        active: settings.abrInsufficientBufferRule
+                    },
+                    switchHistoryRule: {
+                        active: settings.abrSwitchHistoryRule
+                    },
+                    droppedFramesRule: {
+                        active: settings.abrDroppedFramesRule
+                    },
+                    abandonRequestsRule: {
+                        active: settings.abrAbandonRequestRule
+                    },
+                    l2ARule: {
+                        active: settings.abrL2ARule
+                    },
+                    loLPRule: {
+                        active: settings.abrLoLPRule
+                    },
                 },
-                fetchThroughputCalculationMode: settings.throughputCalculation
+                throughput: {
+                    averageCalculationMode: settings.throughputEstimation,
+                    lowLatencyDownloadTimeCalculationMode: settings.downloadTimeEstimation,
+                    useNetworkInformationApi: {
+                        fetch: settings.additionalApisNetworkInformation
+                    }
+                }
+
             }
         }
     });
@@ -156,29 +187,44 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxCatchupPlaybackRate !== undefined) {
             this.domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.maxCatchupPlaybackRate).toFixed(2);
         }
-        if (params.abrAdditionalInsufficientBufferRule !== undefined) {
-            this.domElements.settings.abrAdditionalInsufficientBufferRule.checked = params.abrAdditionalInsufficientBufferRule === 'true';
+        if (params.abrThroughputRule !== undefined) {
+            this.domElements.settings.abrThroughputRule.checked = params.abrThroughputRule === 'true';
         }
-        if (params.abrAdditionalAbandonRequestRule !== undefined) {
-            this.domElements.settings.abrAdditionalAbandonRequestRule.checked = params.abrAdditionalAbandonRequestRule === 'true';
+        if (params.abrBolaRule !== undefined) {
+            this.domElements.settings.abrBolaRule.checked = params.abrBolaRule === 'true';
         }
-        if (params.abrAdditionalSwitchHistoryRule !== undefined) {
-            this.domElements.settings.abrAdditionalSwitchHistoryRule.checked = params.abrAdditionalSwitchHistoryRule === 'true';
+        if (params.abrInsufficientBufferRule !== undefined) {
+            this.domElements.settings.abrInsufficientBufferRule.checked = params.abrInsufficientBufferRule === 'true';
         }
-        if (params.abrAdditionalDroppedFramesRule !== undefined) {
-            this.domElements.settings.abrAdditionalDroppedFramesRule.checked = params.abrAdditionalDroppedFramesRule === 'true';
+        if (params.abrAbandonRequestRule !== undefined) {
+            this.domElements.settings.abrAbandonRequestRule.checked = params.abrAbandonRequestRule === 'true';
+        }
+        if (params.abrSwitchHistoryRule !== undefined) {
+            this.domElements.settings.abrSwitchHistoryRule.checked = params.abrSwitchHistoryRule === 'true';
+        }
+        if (params.abrDroppedFramesRule !== undefined) {
+            this.domElements.settings.abrDroppedFramesRule.checked = params.abrDroppedFramesRule === 'true';
+        }
+        if (params.abrL2ARule !== undefined) {
+            this.domElements.settings.abrL2ARule.checked = params.abrL2ARule === 'true';
+        }
+        if (params.abrLoLPRule !== undefined) {
+            this.domElements.settings.abrLoLPRule.checked = params.abrLoLPRule === 'true';
         }
         if (params.catchupEnabled !== undefined) {
             this.domElements.settings.catchupEnabled.checked = params.catchupEnabled === 'true';
         }
-        if (params.abrGeneral !== undefined) {
-            document.getElementById(params.abrGeneral).checked = true;
-        }
         if (params.catchupMechanism !== undefined) {
             document.getElementById(params.catchupMechanism).checked = true;
         }
-        if (params.throughputCalculation !== undefined) {
-            document.getElementById(params.throughputCalculation).checked = true;
+        if (params.throughputEstimation !== undefined) {
+            document.getElementById(params.throughputEstimation).checked = true;
+        }
+        if (params.downloadEstimation !== undefined) {
+            document.getElementById(params.downloadEstimation).checked = true;
+        }
+        if (params.additionalApisNetworkInformation !== undefined) {
+            document.getElementById(params.additionalApisNetworkInformation).checked = true;
         }
     }
 
@@ -189,28 +235,38 @@ App.prototype._getCurrentSettings = function () {
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
     var minCatchupPlaybackRate = parseFloat(this.domElements.settings.minCatchupPlaybackRate.value, 10);
     var maxCatchupPlaybackRate = parseFloat(this.domElements.settings.maxCatchupPlaybackRate.value, 10);
-    var abrAdditionalInsufficientBufferRule = this.domElements.settings.abrAdditionalInsufficientBufferRule.checked;
-    var abrAdditionalDroppedFramesRule = this.domElements.settings.abrAdditionalDroppedFramesRule.checked;
-    var abrAdditionalAbandonRequestRule = this.domElements.settings.abrAdditionalAbandonRequestRule.checked;
-    var abrAdditionalSwitchHistoryRule = this.domElements.settings.abrAdditionalSwitchHistoryRule.checked;
+    var abrThroughputRule = this.domElements.settings.abrThroughputRule.checked;
+    var abrBolaRule = this.domElements.settings.abrBolaRule.checked;
+    var abrInsufficientBufferRule = this.domElements.settings.abrInsufficientBufferRule.checked;
+    var abrDroppedFramesRule = this.domElements.settings.abrDroppedFramesRule.checked;
+    var abrAbandonRequestRule = this.domElements.settings.abrAbandonRequestRule.checked;
+    var abrSwitchHistoryRule = this.domElements.settings.abrSwitchHistoryRule.checked;
+    var abrLoLPRule = this.domElements.settings.abrLoLPRule.checked;
+    var abrL2ARule = this.domElements.settings.abrL2ARule.checked;
     var catchupEnabled = this.domElements.settings.catchupEnabled.checked;
-    var abrGeneral = document.querySelector('input[name="abr-general"]:checked').value;
+    var additionalApisNetworkInformation = this.domElements.settings.additionalApisNetworkInformation.checked;
     var catchupMechanism = document.querySelector('input[name="catchup"]:checked').value;
-    var throughputCalculation = document.querySelector('input[name="throughput-calc"]:checked').value;
+    var downloadTimeEstimation = document.querySelector('input[name="download-estimation"]:checked').value;
+    var throughputEstimation = document.querySelector('input[name="throughput-estimation"]:checked').value;
 
     return {
         targetLatency,
         maxDrift,
         minCatchupPlaybackRate,
         maxCatchupPlaybackRate,
-        abrGeneral,
-        abrAdditionalInsufficientBufferRule,
-        abrAdditionalDroppedFramesRule,
-        abrAdditionalAbandonRequestRule,
-        abrAdditionalSwitchHistoryRule,
+        abrThroughputRule,
+        abrBolaRule,
+        abrInsufficientBufferRule,
+        abrDroppedFramesRule,
+        abrAbandonRequestRule,
+        abrSwitchHistoryRule,
+        abrLoLPRule,
+        abrL2ARule,
         catchupMechanism,
         catchupEnabled,
-        throughputCalculation
+        downloadTimeEstimation,
+        throughputEstimation,
+        additionalApisNetworkInformation
     }
 }
 
@@ -424,7 +480,8 @@ App.prototype._unregisterDashEventHandler = function () {
 App.prototype._onRepresentationSwitch = function (e) {
     try {
         if (e.mediaType === 'video') {
-            this.domElements.metrics.videoMaxIndex.innerHTML = e.numberOfRepresentations
+            var numberOfRepresentations = this.player.getRepresentationsByType('video').length;
+            this.domElements.metrics.videoMaxIndex.innerHTML = numberOfRepresentations
             this.domElements.metrics.videoIndex.innerHTML = e.currentRepresentation.index + 1;
             var bitrate = Math.round(e.currentRepresentation.bandwidth / 1000);
             this.domElements.metrics.videoBitrate.innerHTML = bitrate;

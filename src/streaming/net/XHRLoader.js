@@ -28,91 +28,90 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import { modifyRequest } from '../utils/RequestModifier';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Utils from '../../core/Utils.js';
 
 /**
  * @module XHRLoader
  * @ignore
  * @description Manages download of resources via HTTP.
- * @param {Object} cfg - dependencies from parent
  */
-function XHRLoader(cfg) {
-
-    cfg = cfg || {};
-    const requestModifier = cfg.requestModifier;
+function XHRLoader() {
 
     let instance;
+    let xhr;
 
-    function load(httpRequest) {
-        if (requestModifier && requestModifier.modifyRequest) {
-            modifyRequest(httpRequest, requestModifier)
-                .then(() => request(httpRequest));
-        }
-        else {
-            request(httpRequest);
-        }
-    }
+    /**
+     * Load request
+     * @param {CommonMediaRequest} commonMediaRequest
+     * @param {CommonMediaResponse} commonMediaResponse
+     */
+    function load(commonMediaRequest, commonMediaResponse) {
+        xhr = null;
+        xhr = new XMLHttpRequest();
+        xhr.open(commonMediaRequest.method, commonMediaRequest.url, true);
 
-    function request(httpRequest) {
-        // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpRequest.request;
-
-        let xhr = new XMLHttpRequest();
-        xhr.open(httpRequest.method, httpRequest.url, true);
-
-        if (request.responseType) {
-            xhr.responseType = request.responseType;
+        if (commonMediaRequest.responseType) {
+            xhr.responseType = commonMediaRequest.responseType;
         }
 
-        if (request.range) {
-            xhr.setRequestHeader('Range', 'bytes=' + request.range);
-        }
-
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
-        }
-
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            xhr = requestModifier.modifyRequestHeader(xhr, {
-                url: httpRequest.url
-            });
-        }
-
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
+        if (commonMediaRequest.headers) {
+            for (let header in commonMediaRequest.headers) {
+                let value = commonMediaRequest.headers[header];
                 if (value) {
                     xhr.setRequestHeader(header, value);
                 }
             }
         }
 
-        xhr.withCredentials = httpRequest.withCredentials;
+        xhr.withCredentials = commonMediaRequest.credentials === 'include';
+        xhr.timeout = commonMediaRequest.timeout;
 
-        xhr.onload = httpRequest.onload;
-        xhr.onloadend = httpRequest.onend;
-        xhr.onerror = httpRequest.onerror;
-        xhr.onprogress = httpRequest.progress;
-        xhr.onabort = httpRequest.onabort;
-        xhr.ontimeout = httpRequest.ontimeout;
-        xhr.timeout = httpRequest.timeout;
+        xhr.onload = function () {
+            commonMediaResponse.url = this.responseURL;
+            commonMediaResponse.status = this.status;
+            commonMediaResponse.statusText = this.statusText;
+            commonMediaResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
+            commonMediaResponse.data = this.response;
+        }
+        xhr.onloadend = commonMediaRequest.customData.onloadend;
+        xhr.onprogress = commonMediaRequest.customData.onprogress;
+        xhr.onabort = commonMediaRequest.customData.onabort;
+        xhr.ontimeout = commonMediaRequest.customData.ontimeout;
 
         xhr.send();
 
-        httpRequest.response = xhr;
+        commonMediaRequest.customData.abort = abort.bind(this);
+        return true;
     }
 
-    function abort(request) {
-        const x = request.response;
-        x.onloadend = x.onerror = x.onprogress = undefined; //Ignore events from aborted requests.
-        x.abort();
+    function abort() {
+        if (xhr) {
+            xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null; // Remove event listeners
+            xhr.abort();
+            xhr = null;
+        }
+    }
+
+    function getXhr() {
+        return xhr
+    }
+
+    function resetInitialSettings() {
+        abort();
+    }
+
+    function reset() {
+        abort();
+        instance = null;
     }
 
     instance = {
-        load: load,
-        abort: abort
+        load,
+        abort,
+        getXhr,
+        reset,
+        resetInitialSettings
     };
 
     return instance;

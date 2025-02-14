@@ -28,11 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashConstants from '../constants/DashConstants';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import SimpleXPath from '../vo/SimpleXPath';
-import PatchOperation from '../vo/PatchOperation';
+import DashConstants from '../constants/DashConstants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import SimpleXPath from '../vo/SimpleXPath.js';
+import PatchOperation from '../vo/PatchOperation.js';
 
 function PatchManifestModel() {
     let instance,
@@ -66,8 +66,8 @@ function PatchManifestModel() {
         }
 
         // Go through the patch operations in order and parse their actions out for usage
-        return (patch.__children || []).map((nodeContainer) => {
-            let action = Object.keys(nodeContainer)[0];
+        return (patch.__children || []).map((node) => {
+            const action = node.tagName;
 
             // we only look add add/remove/replace actions
             if (action !== 'add' && action !== 'remove' && action !== 'replace') {
@@ -75,7 +75,6 @@ function PatchManifestModel() {
                 return null;
             }
 
-            let node = nodeContainer[action];
             let selector = node.sel;
 
             // add action can have special targeting via the 'type' attribute
@@ -101,16 +100,11 @@ function PatchManifestModel() {
                 value = node.__text || '';
             } else if (action !== 'remove') {
                 value = node.__children.reduce((groups, child) => {
-                    // note that this is informed by xml2js parse structure for the __children array
-                    // which will be something like this for each child:
-                    // {
-                    //     "<node-name>": { <xml2js-node-object> }
-                    // }
-                    let key = Object.keys(child)[0];
+                    let key = child.tagName;
                     // we also ignore
                     if (key !== '#text') {
                         groups[key] = groups[key] || [];
-                        groups[key].push(child[key]);
+                        groups[key].push(child);
                     }
                     return groups;
                 }, {});
@@ -127,11 +121,11 @@ function PatchManifestModel() {
     }
 
     instance = {
-        getIsPatch: getIsPatch,
-        getPublishTime: getPublishTime,
-        getOriginalPublishTime: getOriginalPublishTime,
-        getMpdId: getMpdId,
-        getPatchOperations: getPatchOperations
+        getIsPatch,
+        getMpdId,
+        getOriginalPublishTime,
+        getPatchOperations,
+        getPublishTime
     };
 
     setup();

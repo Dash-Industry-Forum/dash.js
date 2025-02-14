@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import FactoryMaker from '../../core/FactoryMaker';
-import InitCache from '../utils/InitCache';
-import SourceBufferSink from '../SourceBufferSink';
-import DashJSError from '../../streaming/vo/DashJSError';
-import Errors from '../../core/errors/Errors';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import InitCache from '../utils/InitCache.js';
+import SourceBufferSink from '../SourceBufferSink.js';
+import DashJSError from '../../streaming/vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
 
 const BUFFER_CONTROLLER_TYPE = 'NotFragmentedTextBufferController';
 
@@ -78,7 +78,7 @@ function NotFragmentedTextBufferController(config) {
         return new Promise((resolve, reject) => {
             try {
                 sourceBufferSink = SourceBufferSink(context).create({ mediaSource, textController, eventBus });
-                sourceBufferSink.initializeForFirstUse(streamInfo, mediaInfo);
+                sourceBufferSink.initializeForFirstUse(mediaInfo);
                 if (!initialized) {
                     if (sourceBufferSink.getBuffer() && typeof sourceBufferSink.getBuffer().initialize === 'function') {
                         sourceBufferSink.getBuffer().initialize();
@@ -157,7 +157,9 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function _onInitFragmentLoaded(e) {
-        if (!e.chunk.bytes || isBufferingCompleted) return;
+        if (!e.chunk.bytes || isBufferingCompleted) {
+            return;
+        }
 
         initCache.save(e.chunk);
 

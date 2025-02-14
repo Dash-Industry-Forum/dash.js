@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import FragmentRequest from '../vo/FragmentRequest';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import FragmentRequest from '../vo/FragmentRequest.js';
 
 const FRAGMENT_MODEL_LOADING = 'loading';
 const FRAGMENT_MODEL_EXECUTED = 'executed';
@@ -79,7 +79,7 @@ function FragmentModel(config) {
         };
 
         const isEqualInit = function (req1, req2) {
-            return isNaN(req1.index) && isNaN(req2.index) && (req1.quality === req2.quality);
+            return req1.representation.id === req2.representation.id;
         };
 
         const check = function (requests) {
@@ -242,8 +242,12 @@ function FragmentModel(config) {
 
         return arr.filter(request => {
             for (const prop in filter) {
-                if (prop === 'state') continue;
-                if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) return false;
+                if (prop === 'state') {
+                    continue;
+                }
+                if (filter.hasOwnProperty(prop) && request[prop] != filter[prop]) {
+                    return false;
+                }
             }
 
             return true;
@@ -271,7 +275,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingCompleted(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         loadingRequests.splice(loadingRequests.indexOf(e.request), 1);
 
@@ -293,7 +299,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingInProgress(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         eventBus.trigger(events.FRAGMENT_LOADING_PROGRESS,
             {
@@ -307,7 +315,9 @@ function FragmentModel(config) {
     }
 
     function onLoadingAborted(e) {
-        if (e.sender !== fragmentLoader) return;
+        if (e.sender !== fragmentLoader) {
+            return;
+        }
 
         eventBus.trigger(events.FRAGMENT_LOADING_ABANDONED,
             { request: e.request },
@@ -318,6 +328,9 @@ function FragmentModel(config) {
     function resetInitialSettings() {
         executedRequests = [];
         loadingRequests = [];
+        if (fragmentLoader) {
+            fragmentLoader.resetInitialSettings();
+        }
     }
 
     function reset() {
@@ -331,24 +344,19 @@ function FragmentModel(config) {
         resetInitialSettings();
     }
 
-    function addExecutedRequest(request) {
-        executedRequests.push(request);
-    }
-
     instance = {
-        getStreamId,
-        getType,
-        getRequests,
-        isFragmentLoaded,
-        isFragmentLoadedOrPending,
-        removeExecutedRequestsBeforeTime,
-        removeExecutedRequestsAfterTime,
-        syncExecutedRequestsWithBufferedRange,
         abortRequests,
         executeRequest,
+        getRequests,
+        getStreamId,
+        getType,
+        isFragmentLoaded,
+        isFragmentLoadedOrPending,
+        removeExecutedRequestsAfterTime,
+        removeExecutedRequestsBeforeTime,
         reset,
         resetInitialSettings,
-        addExecutedRequest
+        syncExecutedRequestsWithBufferedRange,
     };
 
     setup();

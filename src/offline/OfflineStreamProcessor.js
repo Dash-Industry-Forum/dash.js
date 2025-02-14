@@ -28,13 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashHandler from '../dash/DashHandler';
-import RepresentationController from '../dash/controllers/RepresentationController';
-import FragmentModel from '../streaming/models/FragmentModel';
-import FragmentLoader from '../streaming/FragmentLoader';
-import URLUtils from '../streaming/utils/URLUtils';
-import RequestModifier from '../streaming/utils/RequestModifier';
-import SegmentsController from '../dash/controllers/SegmentsController';
+import DashHandler from '../dash/DashHandler.js';
+import RepresentationController from '../dash/controllers/RepresentationController.js';
+import FragmentModel from '../streaming/models/FragmentModel.js';
+import FragmentLoader from '../streaming/FragmentLoader.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import SegmentsController from '../dash/controllers/SegmentsController.js';
 
 function OfflineStreamProcessor(config) {
 
@@ -102,7 +101,6 @@ function OfflineStreamProcessor(config) {
             eventBus: eventBus,
             events: events,
             debug: debug,
-            requestModifier: RequestModifier(context).getInstance(),
             dashConstants: dashConstants,
             constants: constants,
             segmentsController: segmentsController,
@@ -131,7 +129,6 @@ function OfflineStreamProcessor(config) {
                 dashMetrics: dashMetrics,
                 mediaPlayerModel: mediaPlayerModel,
                 errHandler: errHandler,
-                requestModifier: RequestModifier(context).getInstance(),
                 settings: settings,
                 eventBus: eventBus,
                 events: events,
@@ -310,7 +307,7 @@ function OfflineStreamProcessor(config) {
         let voRepresentations = adapter.getVoRepresentations(mediaInfo);
 
         // get representation VO according to id.
-        let quality = voRepresentations.findIndex((representation) => {
+        let quality = voRepresentations.find((representation) => {
             return representation.id === bitrate.id;
         });
 
@@ -319,7 +316,7 @@ function OfflineStreamProcessor(config) {
             return;
         }
 
-        representationController.updateData(null, voRepresentations, type, mediaInfo.isFragmented, quality);
+        representationController.updateData(voRepresentations, mediaInfo.isFragmented, quality.id);
     }
 
     function isUpdating() {
@@ -382,5 +379,5 @@ function OfflineStreamProcessor(config) {
 }
 
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
-const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); 
 export default factory;

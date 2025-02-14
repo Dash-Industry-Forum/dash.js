@@ -1,3 +1,5 @@
+import DashConstants from '../../../src/dash/constants/DashConstants.js';
+
 function AdapterMock() {
     this.metricsList = {
         BUFFER_STATE: 'BUFFER_STATE'
@@ -79,23 +81,6 @@ function AdapterMock() {
                 {
                     width: 900
                 }
-            ],
-            Representation_asArray: [
-                {
-                    width: 500
-                },
-                {
-                    width: 750
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                },
-                {
-                    width: 900
-                }
             ]
         };
     };
@@ -153,10 +138,6 @@ function AdapterMock() {
     this.applyPatchToManifest = function () {
     };
 
-    this.convertRepresentationToRepresentationInfo = function () {
-        return null;
-    };
-
     this.getIsTypeOf = function () {
         return true;
     };
@@ -164,8 +145,8 @@ function AdapterMock() {
     this.getCodec = function (adaptation, representationId, addResolutionInfo) {
         let codec = null;
 
-        if (adaptation && adaptation.Representation_asArray && adaptation.Representation_asArray.length > 0) {
-            const representation = adaptation.Representation_asArray[representationId];
+        if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
+            const representation = adaptation.Representation[representationId];
             if (representation) {
                 codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
                 if (addResolutionInfo && representation.width !== undefined && representation.height !== undefined) {
@@ -182,10 +163,33 @@ function AdapterMock() {
         return codec;
     };
 
-    this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty_asArray || !realRepresentation.EssentialProperty_asArray.length) return null;
+    this.getSupplementalCodecs = function (representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS];
+        if (!supplementalCodecs) {
+            return [];
+        }
+        return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
+    }
 
-        return realRepresentation.EssentialProperty_asArray.map((prop) => {
+    this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
+        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
+            return null;
+        }
+
+        return realRepresentation.EssentialProperty.map((prop) => {
+            return {
+                schemeIdUri: prop.schemeIdUri,
+                value: prop.value
+            };
+        });
+    };
+
+    this.getEssentialPropertiesForAdaptationSet = function (adaptationSet) {
+        if (!adaptationSet || !adaptationSet.EssentialProperty || !adaptationSet.EssentialProperty.length) {
+            return null;
+        }
+
+        return adaptationSet.EssentialProperty.map((prop) => {
             return {
                 schemeIdUri: prop.schemeIdUri,
                 value: prop.value

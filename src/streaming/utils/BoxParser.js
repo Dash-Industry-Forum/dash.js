@@ -29,12 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Debug from '../../core/Debug';
-import IsoFile from './IsoFile';
-import FactoryMaker from '../../core/FactoryMaker';
+import Debug from '../../core/Debug.js';
+import IsoFile from './IsoFile.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 import ISOBoxer from 'codem-isoboxer';
 
-import IsoBoxSearchInfo from '../vo/IsoBoxSearchInfo';
+import IsoBoxSearchInfo from '../vo/IsoBoxSearchInfo.js';
 
 function BoxParser(/*config*/) {
 
@@ -52,7 +52,9 @@ function BoxParser(/*config*/) {
      * @memberof BoxParser#
      */
     function parse(data) {
-        if (!data) return null;
+        if (!data) {
+            return null;
+        }
 
         if (data.fileStart === undefined) {
             data.fileStart = 0;
@@ -69,25 +71,27 @@ function BoxParser(/*config*/) {
     /**
      * From the list of type boxes to look for, returns the latest one that is fully completed (header + payload). This
      * method only looks into the list of top boxes and doesn't analyze nested boxes.
-     * @param {string[]} types
+     * @param {string[]} boxTypesToSearchFor
      * @param {ArrayBuffer|uint8Array} buffer
      * @param {number} offset
      * @returns {IsoBoxSearchInfo}
      * @memberof BoxParser#
      */
-    function findLastTopIsoBoxCompleted(types, buffer, offset) {
+    function findLastTopIsoBoxCompleted(boxTypesToSearchFor, buffer, offset) {
         if (offset === undefined) {
             offset = 0;
         }
 
         // 8 = size (uint32) + type (4 characters)
         if (!buffer || offset + 8 >= buffer.byteLength) {
-            return new IsoBoxSearchInfo(0, false);
+            return new IsoBoxSearchInfo({ found: false });
         }
 
         const data = (buffer instanceof ArrayBuffer) ? new Uint8Array(buffer) : buffer;
         let boxInfo;
-        let lastCompletedOffset = 0;
+        let startOffsetOfLastCompletedBox = 0;
+        let sizeOfLastCompletedBox = 0;
+        let typeOfLastCompletedBox = null;
         while (offset < data.byteLength) {
             const boxSize = parseUint32(data, offset);
             const boxType = parseIsoBoxType(data, offset + 4);
@@ -97,10 +101,17 @@ function BoxParser(/*config*/) {
             }
 
             if (offset + boxSize <= data.byteLength) {
-                if (types.indexOf(boxType) >= 0) {
-                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize);
+                if (boxTypesToSearchFor.indexOf(boxType) >= 0) {
+                    boxInfo = new IsoBoxSearchInfo({
+                        found: true,
+                        startOffsetOfLastFoundTargetBox: offset,
+                        sizeOfLastFoundTargetBox: boxSize,
+                        typeOfLastTargetBox: boxType
+                    });
                 } else {
-                    lastCompletedOffset = offset + boxSize;
+                    startOffsetOfLastCompletedBox = offset;
+                    sizeOfLastCompletedBox = boxSize;
+                    typeOfLastCompletedBox = boxType;
                 }
             }
 
@@ -108,7 +119,12 @@ function BoxParser(/*config*/) {
         }
 
         if (!boxInfo) {
-            return new IsoBoxSearchInfo(lastCompletedOffset, false);
+            return new IsoBoxSearchInfo({
+                found: false,
+                startOffsetOfLastCompletedBox,
+                sizeOfLastCompletedBox,
+                typeOfLastCompletedBox
+            });
         }
 
         return boxInfo;
@@ -116,7 +132,7 @@ function BoxParser(/*config*/) {
 
     function getSamplesInfo(ab) {
         if (!ab || ab.byteLength === 0) {
-            return {sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN};
+            return { sampleList: [], lastSequenceNumber: NaN, totalDuration: NaN, numSequences: NaN };
         }
         let isoFile = parse(ab);
         // zero or more moofs
@@ -201,7 +217,12 @@ function BoxParser(/*config*/) {
                 totalDuration = sampleDts - tfdtBox.baseMediaDecodeTime;
             }
         }
-        return {sampleList: sampleList, lastSequenceNumber: lastSequenceNumber, totalDuration: totalDuration, numSequences: numSequences};
+        return {
+            sampleList: sampleList,
+            lastSequenceNumber: lastSequenceNumber,
+            totalDuration: totalDuration,
+            numSequences: numSequences
+        };
     }
 
     function getMediaTimescaleFromMoov(ab) {
@@ -252,63 +273,18 @@ function BoxParser(/*config*/) {
         return initRange;
     }
 
-    /**
-     * Real-time parsing (whenever data is loaded in the buffer payload) of the payload to capture the moof of a chunk
-     * @param {array} types
-     * @param {ArrayBuffer} buffer
-     * @param {number} offset
-     * @return {IsoBoxSearchInfo}
-     */
-    function parsePayload(types, buffer, offset) {
-        if (offset === undefined) {
-            offset = 0;
-        }
-
-        if (!buffer || offset + 8 >= buffer.byteLength) {
-            return new IsoBoxSearchInfo(0, false);
-        }
-
-        const data = (buffer instanceof ArrayBuffer) ? new Uint8Array(buffer) : buffer;
-        let boxInfo;
-        let lastCompletedOffset = 0;
-        while (offset < data.byteLength) {
-            const boxSize = parseUint32(data, offset);
-            const boxType = parseIsoBoxType(data, offset + 4);
-
-            if (boxSize === 0) {
-                break;
-            }
-
-            if (offset + boxSize <= data.byteLength) {
-                if (types.indexOf(boxType) >= 0) {
-                    boxInfo = new IsoBoxSearchInfo(offset, true, boxSize, boxType);
-                } else {
-                    lastCompletedOffset = offset + boxSize;
-                }
-            }
-
-            offset += boxSize;
-        }
-
-        if (!boxInfo) {
-            return new IsoBoxSearchInfo(lastCompletedOffset, false);
-        }
-
-        return boxInfo;
-    }
-
     instance = {
-        parse,
+        findInitRange,
         findLastTopIsoBoxCompleted,
         getMediaTimescaleFromMoov,
         getSamplesInfo,
-        findInitRange,
-        parsePayload
+        parse,
     };
 
     setup();
 
     return instance;
 }
+
 BoxParser.__dashjs_factory_name = 'BoxParser';
 export default FactoryMaker.getSingletonFactory(BoxParser);

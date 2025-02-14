@@ -29,12 +29,13 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import KeyPair from '../vo/KeyPair';
-import ClearKeyKeySet from '../vo/ClearKeyKeySet';
-import CommonEncryption from '../CommonEncryption';
-import ProtectionConstants from '../../constants/ProtectionConstants';
+import KeyPair from '../vo/KeyPair.js';
+import ClearKeyKeySet from '../vo/ClearKeyKeySet.js';
+import CommonEncryption from '../CommonEncryption.js';
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
-const uuid = 'e2719d58-a985-b3c9-781a-b030af78d30e';
+const uuid = ProtectionConstants.CLEARKEY_UUID;
 const systemString = ProtectionConstants.CLEARKEY_KEYSTEM_STRING;
 const schemeIdURI = 'urn:uuid:' + uuid;
 
@@ -80,7 +81,7 @@ function KeySystemClearKey(config) {
             let initData = CommonEncryption.parseInitDataFromContentProtection(cp, BASE64);
 
             if (!initData && cencContentProtection) {
-                const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection['cenc:default_KID']);
+                const cencDefaultKid = cencDefaultKidToBase64Representation(cencContentProtection.cencDefaultKid);
                 const data = { kids: [cencDefaultKid] };
                 initData = new TextEncoder().encode(JSON.stringify(data));
             }
@@ -140,4 +141,4 @@ function KeySystemClearKey(config) {
 }
 
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
-export default dashjs.FactoryMaker.getSingletonFactory(KeySystemClearKey); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(KeySystemClearKey);

@@ -28,14 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import Constants from '../constants/Constants';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import Events from '../../core/events/Events';
-import MetricsConstants from '../constants/MetricsConstants';
-import Utils from '../../core/Utils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import Constants from '../constants/Constants.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import Events from '../../core/events/Events.js';
+import MetricsConstants from '../constants/MetricsConstants.js';
+import Utils from '../../core/Utils.js';
 
 function CatchupController() {
     const context = this.context;
@@ -234,7 +234,7 @@ function CatchupController() {
                 const minPlaybackRateChange = isSafari ? 0.25 : 0.02 / (0.5 / liveCatchupPlaybackRates.max);
 
                 // Obtain newRate and apply to video model.  Don't change playbackrate for small variations (don't overload element with playbackrate changes)
-                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange) { // non-null
+                if (newRate && Math.abs(currentPlaybackRate - newRate) >= minPlaybackRateChange || newRate == 1.0) { // non-null
                     logger.debug(`[CatchupController]: Setting playback rate to ${newRate}`);
                     videoModel.setPlaybackRate(newRate);
                 }

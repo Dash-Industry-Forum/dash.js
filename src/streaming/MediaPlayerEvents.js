@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../core/events/EventsBase';
+import EventsBase from '../core/events/EventsBase.js';
 
 /**
  * @class
@@ -206,6 +206,12 @@ class MediaPlayerEvents extends EventsBase {
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
         /**
+         * Triggered when the new track is being selected
+         * @event MediaPlayerEvents#NEW_TRACK_SELECTED
+         */
+        this.NEW_TRACK_SELECTED = 'newTrackSelected';
+
+        /**
          * Triggered when the new track is being rendered.
          * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
          */
@@ -327,6 +333,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_ERROR
          */
         this.PLAYBACK_ERROR = 'playbackError';
+
+        /**
+         * This event is fired once the playback has been initialized by MediaPlayer.js.
+         * After that event methods such as setTextTrack() can be used.
+         * @event MediaPlayerEvents#PLAYBACK_INITIALIZED
+         */
+        this.PLAYBACK_INITIALIZED = 'playbackInitialized';
 
         /**
          * Sent when playback is not allowed (for example if user gesture is needed).

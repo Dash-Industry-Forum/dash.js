@@ -29,16 +29,18 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DashConstants from './constants/DashConstants';
-import RepresentationInfo from './vo/RepresentationInfo';
-import MediaInfo from './vo/MediaInfo';
-import StreamInfo from './vo/StreamInfo';
-import ManifestInfo from './vo/ManifestInfo';
-import Event from './vo/Event';
-import FactoryMaker from '../core/FactoryMaker';
-import DashManifestModel from './models/DashManifestModel';
-import PatchManifestModel from './models/PatchManifestModel';
-import bcp47Normalize from 'bcp-47-normalize';
+import DashConstants from './constants/DashConstants.js';
+import MediaInfo from './vo/MediaInfo.js';
+import StreamInfo from './vo/StreamInfo.js';
+import ManifestInfo from './vo/ManifestInfo.js';
+import Event from './vo/Event.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import DashManifestModel from './models/DashManifestModel.js';
+import PatchManifestModel from './models/PatchManifestModel.js';
+import Representation from './vo/Representation.js';
+import {bcp47Normalize} from 'bcp-47-normalize';
+import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
+import Constants from '../streaming/constants/Constants.js';
 
 /**
  * @module DashAdapter
@@ -50,7 +52,6 @@ function DashAdapter() {
         dashManifestModel,
         patchManifestModel,
         voPeriods,
-        currentMediaInfo,
         constants,
         cea608parser;
 
@@ -67,7 +68,9 @@ function DashAdapter() {
     // #region PUBLIC FUNCTIONS
     // --------------------------------------------------
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.constants) {
             constants = config.constants;
@@ -76,40 +79,12 @@ function DashAdapter() {
         if (config.cea608parser) {
             cea608parser = config.cea608parser;
         }
-
         if (config.errHandler) {
             dashManifestModel.setConfig({ errHandler: config.errHandler });
         }
 
         if (config.BASE64) {
             dashManifestModel.setConfig({ BASE64: config.BASE64 });
-        }
-    }
-
-    /**
-     * Creates an instance of RepresentationInfo based on a representation value object
-     * @param {object} voRepresentation
-     * @returns {RepresentationInfo|null} representationInfo
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function convertRepresentationToRepresentationInfo(voRepresentation) {
-        if (voRepresentation) {
-            let representationInfo = new RepresentationInfo();
-            const realAdaptation = voRepresentation.adaptation.period.mpd.manifest.Period_asArray[voRepresentation.adaptation.period.index].AdaptationSet_asArray[voRepresentation.adaptation.index];
-            const realRepresentation = dashManifestModel.getRepresentationFor(voRepresentation.index, realAdaptation);
-
-            representationInfo.id = voRepresentation.id;
-            representationInfo.quality = voRepresentation.index;
-            representationInfo.bandwidth = dashManifestModel.getBandwidth(realRepresentation);
-            representationInfo.fragmentDuration = voRepresentation.segmentDuration || (voRepresentation.segments && voRepresentation.segments.length > 0 ? voRepresentation.segments[0].duration : NaN);
-            representationInfo.MSETimeOffset = voRepresentation.MSETimeOffset;
-            representationInfo.mediaInfo = convertAdaptationToMediaInfo(voRepresentation.adaptation);
-
-            return representationInfo;
-        } else {
-            return null;
         }
     }
 
@@ -127,12 +102,16 @@ function DashAdapter() {
         }
 
         let selectedVoPeriod = getPeriodForStreamInfo(streamInfo, voPeriods);
-        if (!selectedVoPeriod) return null;
+        if (!selectedVoPeriod) {
+            return null;
+        }
 
         const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-        let realAdaptation = getAdaptationForType(streamInfo.index, type, streamInfo);
-        if (!realAdaptation) return null;
+        let realAdaptation = getMainAdaptationForType(type, streamInfo);
+        if (!realAdaptation) {
+            return null;
+        }
         let idx = dashManifestModel.getIndexForAdaptation(realAdaptation, voPeriods[0].mpd.manifest, streamInfo.index);
 
         return convertAdaptationToMediaInfo(voAdaptations[idx]);
@@ -160,22 +139,15 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getAdaptationForType(periodIndex, type, streamInfo) {
-        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[0].mpd.manifest, periodIndex, type);
+    function getMainAdaptationForType(type, streamInfo) {
+        const index = streamInfo ? streamInfo.index : 0;
+        const adaptations = dashManifestModel.getAdaptationsForType(voPeriods[index].mpd.manifest, index, type);
 
-        if (!adaptations || adaptations.length === 0) return null;
+        if (!adaptations || adaptations.length === 0) {
+            return null;
+        }
 
         if (adaptations.length > 1 && streamInfo) {
-            const allMediaInfoForType = getAllMediaInfoForType(streamInfo, type);
-
-            if (currentMediaInfo[streamInfo.id] && currentMediaInfo[streamInfo.id][type]) {
-                for (let i = 0, ln = adaptations.length; i < ln; i++) {
-                    if (areMediaInfosEqual(currentMediaInfo[streamInfo.id][type], allMediaInfoForType[i])) {
-                        return adaptations[i];
-                    }
-                }
-            }
-
             for (let i = 0, ln = adaptations.length; i < ln; i++) {
                 if (getIsMain(adaptations[i])) {
                     return adaptations[i];
@@ -201,17 +173,13 @@ function DashAdapter() {
 
         const sameId = mInfoOne.id === mInfoTwo.id;
         const sameCodec = mInfoOne.codec === mInfoTwo.codec;
-        const sameViewpoint = mInfoOne.viewpoint === mInfoTwo.viewpoint;
-        const sameViewpointWithSchemeIdUri = JSON.stringify(mInfoOne.viewpointsWithSchemeIdUri) === JSON.stringify(mInfoTwo.viewpointsWithSchemeIdUri);
+        const sameViewpoint = JSON.stringify(mInfoOne.viewpoint) === JSON.stringify(mInfoTwo.viewpoint);
         const sameLang = mInfoOne.lang === mInfoTwo.lang;
-        const sameRoles = mInfoOne.roles.toString() === mInfoTwo.roles.toString();
-        const sameRolesWithSchemeIdUri = JSON.stringify(mInfoOne.rolesWithSchemeIdUri) === JSON.stringify(mInfoTwo.rolesWithSchemeIdUri);
-        const sameAccessibility = mInfoOne.accessibility.toString() === mInfoTwo.accessibility.toString();
-        const sameAccessibilityWithSchemeIdUri = JSON.stringify(mInfoOne.accessibilitiesWithSchemeIdUri) === JSON.stringify(mInfoTwo.accessibilitiesWithSchemeIdUri);
-        const sameAudioChannelConfiguration = mInfoOne.audioChannelConfiguration.toString() === mInfoTwo.audioChannelConfiguration.toString();
-        const sameAudioChannelConfigurationWithSchemeIdUri = JSON.stringify(mInfoOne.audioChannelConfigurationsWithSchemeIdUri) === JSON.stringify(mInfoTwo.audioChannelConfigurationsWithSchemeIdUri);
+        const sameRoles = JSON.stringify(mInfoOne.roles) === JSON.stringify(mInfoTwo.roles);
+        const sameAccessibility = JSON.stringify(mInfoOne.accessibility) === JSON.stringify(mInfoTwo.accessibility);
+        const sameAudioChannelConfiguration = JSON.stringify(mInfoOne.audioChannelConfiguration) === JSON.stringify(mInfoTwo.audioChannelConfiguration);
 
-        return (sameId && sameCodec && sameViewpoint && sameViewpointWithSchemeIdUri && sameLang && sameRoles && sameRolesWithSchemeIdUri && sameAccessibility && sameAccessibilityWithSchemeIdUri && sameAudioChannelConfiguration && sameAudioChannelConfigurationWithSchemeIdUri);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
     }
 
     function _getAllMediaInfo(manifest, period, streamInfo, adaptations, type, embeddedText) {
@@ -241,32 +209,34 @@ function DashAdapter() {
                         continue;
                     }
                     let accessibility = media.accessibility[j];
-                    if (accessibility.indexOf('cea-608:') === 0) {
-                        let value = accessibility.substring(8);
-                        let parts = value.split(';');
-                        if (parts[0].substring(0, 2) === 'CC') {
-                            for (j = 0; j < parts.length; j++) {
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
-                                }
-                                convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
-                                mediaArr.push(media);
-                                media = null;
-                            }
+                    if (accessibility.schemeIdUri === constants.ACCESSIBILITY_CEA608_SCHEME) {
+                        if (!accessibility.value || accessibility.value === '') {
+                            convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
+                            mediaArr.push(media);
+                            media = null;
                         } else {
-                            for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
-                                if (!media) {
-                                    media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                            let value = accessibility.value;
+                            let parts = value.split(';');
+                            if (parts[0].substring(0, 2) === 'CC') {
+                                for (j = 0; j < parts.length; j++) {
+                                    if (!media) {
+                                        media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                                    }
+                                    convertVideoInfoToEmbeddedTextInfo(media, parts[j].substring(0, 3), parts[j].substring(4));
+                                    mediaArr.push(media);
+                                    media = null;
                                 }
-                                convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
-                                mediaArr.push(media);
-                                media = null;
+                            } else {
+                                for (j = 0; j < parts.length; j++) { // Only languages for CC1, CC2, ...
+                                    if (!media) {
+                                        media = convertAdaptationToMediaInfo.call(this, voAdaptations[idx]);
+                                    }
+                                    convertVideoInfoToEmbeddedTextInfo(media, 'CC' + (j + 1), parts[j]);
+                                    mediaArr.push(media);
+                                    media = null;
+                                }
                             }
                         }
-                    } else if (accessibility.indexOf('cea-608') === 0) { // Nothing known. We interpret it as CC1=eng
-                        convertVideoInfoToEmbeddedTextInfo(media, constants.CC1, 'eng');
-                        mediaArr.push(media);
-                        media = null;
                     }
                 }
             } else if (type === constants.IMAGE) {
@@ -330,7 +300,9 @@ function DashAdapter() {
      * @ignore
      */
     function updatePeriods(newManifest) {
-        if (!newManifest) return null;
+        if (!newManifest) {
+            return null;
+        }
 
         checkConfig();
 
@@ -409,8 +381,23 @@ function DashAdapter() {
             realAdaptation = id ? dashManifestModel.getAdaptationForId(id, voPeriods[0].mpd.manifest, selectedVoPeriod.index) : dashManifestModel.getAdaptationForIndex(mediaInfo ? mediaInfo.index : null, voPeriods[0].mpd.manifest, selectedVoPeriod.index);
         }
 
-        if (!realAdaptation) return [];
+        if (!realAdaptation) {
+            return [];
+        }
         return dashManifestModel.getProducerReferenceTimesForAdaptation(realAdaptation);
+    }
+
+    /**
+     * Return all EssentialProperties of an AdaptationSet
+     * @param {object} adaptationSet
+     * @return {array}
+     */
+    function getEssentialPropertiesForAdaptationSet(adaptationSet) {
+        try {
+            return dashManifestModel.getEssentialPropertiesForRepresentation(adaptationSet);
+        } catch (e) {
+            return [];
+        }
     }
 
     /**
@@ -424,6 +411,19 @@ function DashAdapter() {
         } catch (e) {
             return [];
         }
+    }
+
+    /**
+     * Return supplementalCodecs of a Representation
+     * @param {object} representation
+     * @returns {array}
+     */
+    function getSupplementalCodecs(representation) {
+        const supplementalCodecs = representation[DashConstants.SUPPLEMENTAL_CODECS];
+        if (!supplementalCodecs) {
+            return [];
+        }
+        return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
     }
 
     /**
@@ -448,7 +448,7 @@ function DashAdapter() {
         let voReps;
 
         const voAdaptation = getAdaptationForMediaInfo(mediaInfo);
-        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
+        voReps = dashManifestModel.getRepresentationsForAdaptation(voAdaptation, mediaInfo);
 
         return voReps;
     }
@@ -505,6 +505,7 @@ function DashAdapter() {
             event.calculatedPresentationTime = calculatedPresentationTime;
             event.messageData = messageData;
             event.presentationTimeDelta = presentationTimeDelta;
+            event.parsedMessageData = (schemeIdUri === Constants.ID3_SCHEME_ID_URI) ? getId3Frames(messageData) : null;
 
             return event;
         } catch (e) {
@@ -513,7 +514,7 @@ function DashAdapter() {
     }
 
     /**
-     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or RepresentationInfo
+     * Returns the events for the given info object. info can either be an instance of StreamInfo, MediaInfo or Representation
      * @param {object} info
      * @param {object} voRepresentation
      * @returns {Array}
@@ -533,7 +534,7 @@ function DashAdapter() {
             } else if (info instanceof MediaInfo) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForAdaptationSet(manifest, getAdaptationForMediaInfo(info), period);
-            } else if (info instanceof RepresentationInfo) {
+            } else if (info instanceof Representation) {
                 const period = getPeriodForStreamInfo(streamInfo, voPeriods)
                 events = dashManifestModel.getEventStreamForRepresentation(manifest, voRepresentation, period);
             }
@@ -542,20 +543,6 @@ function DashAdapter() {
         return events;
     }
 
-    /**
-     * Sets the current active mediaInfo for a given streamId and a given mediaType
-     * @param {number} streamId
-     * @param {MediaType} type
-     * @param {object} mediaInfo
-     * @memberOf module:DashAdapter
-     * @instance
-     * @ignore
-     */
-    function setCurrentMediaInfo(streamId, type, mediaInfo) {
-        currentMediaInfo[streamId] = currentMediaInfo[streamId] || {};
-        currentMediaInfo[streamId][type] = currentMediaInfo[streamId][type] || {};
-        currentMediaInfo[streamId][type] = mediaInfo;
-    }
 
     /**
      * Check if the given type is a text track
@@ -773,8 +760,8 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getCodec(adaptation, representationId, addResolutionInfo) {
-        return dashManifestModel.getCodec(adaptation, representationId, addResolutionInfo);
+    function getCodec(adaptation, representationIndex, addResolutionInfo) {
+        return dashManifestModel.getCodec(adaptation, representationIndex, addResolutionInfo);
     }
 
     /**
@@ -806,20 +793,6 @@ function DashAdapter() {
         let period = getPeriod(periodIdx);
 
         return findRepresentationIndex(period, representationId);
-    }
-
-    /**
-     * This method returns the current max index based on what is defined in the MPD.
-     * @param {string} bufferType - String 'audio' or 'video',
-     * @param {number} periodIdx - Make sure this is the period index not id
-     * @return {number}
-     * @memberOf module:DashAdapter
-     * @instance
-     */
-    function getMaxIndexForBufferType(bufferType, periodIdx) {
-        let period = getPeriod(periodIdx);
-
-        return findMaxBufferIndex(period, bufferType);
     }
 
     /**
@@ -858,7 +831,6 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
-        currentMediaInfo = {};
     }
 
     /**
@@ -923,7 +895,7 @@ function DashAdapter() {
                 }
 
                 // determine the relative insert position prior to possible removal
-                let relativePosition = (target[name + '_asArray'] || []).indexOf(leaf);
+                let relativePosition = (target[name] || []).indexOf(leaf);
                 let insertBefore = (operation.position === 'prepend' || operation.position === 'before');
 
                 // perform removal operation first, we have already capture the appropriate relative position
@@ -931,20 +903,17 @@ function DashAdapter() {
                     // note that we ignore the 'ws' attribute of patch operations as it does not effect parsed mpd operations
 
                     // purge the directly named entity
-                    delete target[name];
-
-                    // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
-                    if (relativePosition != -1) {
-                        let targetArray = target[name + '_asArray'];
+                    if (!Array.isArray(target[name])) {
+                        delete target[name];
+                    } else if (relativePosition != -1) {
+                        // if we did have a positional reference we need to purge from array set and restore X2JS proper semantics
+                        let targetArray = target[name];
                         targetArray.splice(relativePosition, 1);
-                        if (targetArray.length > 1) {
+                        if (targetArray.length > 0) {
                             target[name] = targetArray;
-                        } else if (targetArray.length == 1) {
-                            // xml parsing semantics, singular asArray must be non-array in the unsuffixed key
-                            target[name] = targetArray[0];
                         } else {
                             // all nodes of this type deleted, remove entry
-                            delete target[name + '_asArray'];
+                            delete target[name];
                         }
                     }
                 }
@@ -958,7 +927,7 @@ function DashAdapter() {
                     Object.keys(operation.value).forEach((insert) => {
                         let insertNodes = operation.value[insert];
 
-                        let updatedNodes = target[insert + '_asArray'] || [];
+                        let updatedNodes = target[insert] || [];
                         if (updatedNodes.length === 0 && target[insert]) {
                             updatedNodes.push(target[insert]);
                         }
@@ -973,7 +942,7 @@ function DashAdapter() {
                                 // if the inserted element matches the operation target (not leaf) and there is a relative position we
                                 // want the inserted position to be set such that our insertion is relative to original position
                                 // since replace has modified the array length we reduce the insert point by 1
-                                position = relativePosition + (insertBefore ? 0 : 1) + (operation.action == 'replace' ? -1 : 0);
+                                position = relativePosition + (insertBefore ? 0 : 1) + (operation.action === 'replace' ? -1 : 0);
                             } else {
                                 // otherwise we are in an add append/prepend case or replace case that removed the target name completely
                                 position = insertBefore ? 0 : updatedNodes.length;
@@ -984,8 +953,7 @@ function DashAdapter() {
                         }
 
                         // now we properly reset the element keys on the target to match parsing semantics
-                        target[insert + '_asArray'] = updatedNodes;
-                        target[insert] = updatedNodes.length == 1 ? updatedNodes[0] : updatedNodes;
+                        target[insert] = updatedNodes;
                     });
                 }
             });
@@ -1004,7 +972,9 @@ function DashAdapter() {
             const selectedVoPeriod = getPeriodForStreamInfo(mediaInfo.streamInfo, voPeriods);
             const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
 
-            if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) return null;
+            if (!mediaInfo || !mediaInfo.streamInfo || mediaInfo.streamInfo.id === undefined || !voAdaptations) {
+                return null;
+            }
             return voAdaptations[mediaInfo.index];
         } catch (e) {
             return null;
@@ -1017,7 +987,9 @@ function DashAdapter() {
         for (let i = 0; i < ln; i++) {
             let voPeriod = voPeriodsArray[i];
 
-            if (streamInfo && streamInfo.id === voPeriod.id) return voPeriod;
+            if (streamInfo && streamInfo.id === voPeriod.id) {
+                return voPeriod;
+            }
         }
 
         return null;
@@ -1029,8 +1001,7 @@ function DashAdapter() {
         }
 
         let mediaInfo = new MediaInfo();
-        const realAdaptation = adaptation.period.mpd.manifest.Period_asArray[adaptation.period.index].AdaptationSet_asArray[adaptation.index];
-        let viewpoint, acc, acc_rep, roles, accessibility;
+        const realAdaptation = adaptation.period.mpd.manifest.Period[adaptation.period.index].AdaptationSet[adaptation.index];
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
@@ -1041,93 +1012,110 @@ function DashAdapter() {
         mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realAdaptation);
         mediaInfo.segmentAlignment = dashManifestModel.getSegmentAlignment(realAdaptation);
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
-
-        viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
-        mediaInfo.viewpoint = viewpoint.length ? viewpoint[0].value : undefined;
-        mediaInfo.viewpointsWithSchemeIdUri = viewpoint;
-
-        accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
-        mediaInfo.accessibility = accessibility.map(function (accessibility) {
-            let accessibilityValue = accessibility.value;
-            let accessibilityData = accessibilityValue;
+        mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
+        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
+        if (mediaInfo.accessibility.filter(function (accessibility) {
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
-                if (accessibilityValue) {
-                    accessibilityData = 'cea-608:' + accessibilityValue;
-                } else {
-                    accessibilityData = 'cea-608';
-                }
-                mediaInfo.embeddedCaptions = true;
+                return true;
             }
-            return accessibilityData;
-        });
-        mediaInfo.accessibilitiesWithSchemeIdUri = accessibility;
-
-        acc = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
-        mediaInfo.audioChannelConfiguration = acc.map(function (audioChannelConfiguration) {
-            return audioChannelConfiguration.value;
-        });
-        mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc;
-
-        if (mediaInfo.audioChannelConfiguration.length === 0 && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            acc_rep = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation_asArray[0]);
-            mediaInfo.audioChannelConfiguration = acc_rep.map(function (audioChannelConfiguration) {
-                return audioChannelConfiguration.value;
-            });
-            mediaInfo.audioChannelConfigurationsWithSchemeIdUri = acc_rep;
+        })[0]) {
+            mediaInfo.embeddedCaptions = true;
         }
-
-        roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
-        mediaInfo.roles = roles.map(function (role) {
-            return role.value;
-        });
-        mediaInfo.rolesWithSchemeIdUri = roles;
-
+        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realAdaptation);
+        if (mediaInfo.audioChannelConfiguration.length === 0 && realAdaptation.Representation && realAdaptation.Representation.length > 0) {
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
+        }
+        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
-        mediaInfo.contentProtection = dashManifestModel.getContentProtectionData(realAdaptation);
+        mediaInfo.contentProtection = dashManifestModel.getContentProtectionByAdaptation(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
         mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realAdaptation);
 
-        if (mediaInfo.contentProtection) {
-            // Get the default key ID and apply it to all key systems
-            const keyIds = mediaInfo.contentProtection.map(cp => dashManifestModel.getKID(cp)).filter(kid => kid !== null);
-            if (keyIds.length) {
-                const keyId = keyIds[0];
-                mediaInfo.contentProtection.forEach(cp => {
-                    cp.keyId = keyId;
-                });
-            }
+        if (mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
+            mediaInfo.contentProtection = _applyContentProtectionReferencing(mediaInfo.contentProtection, adaptation.period.mpd.manifest);
+            mediaInfo.contentProtection = _applyDefaultKeyId(mediaInfo.contentProtection);
+            mediaInfo.normalizedKeyIds = _getNormalizedKeyIds(mediaInfo.contentProtection);
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
-        if ( (!mediaInfo.supplementalProperties || Object.keys(mediaInfo.supplementalProperties).length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            let arr = realAdaptation.Representation_asArray.map( repr => {
-                return dashManifestModel.getSupplementalPropertiesForRepresentation(repr);
-            });
-            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
-                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
-                mediaInfo.supplementalProperties = arr[0];
-            }
-        }
-        mediaInfo.supplementalPropertiesAsArray = dashManifestModel.getSupplementalPropertiesAsArrayForAdaptation(realAdaptation);
-        if ( (!mediaInfo.supplementalPropertiesAsArray || mediaInfo.supplementalPropertiesAsArray.length === 0) && Array.isArray(realAdaptation.Representation_asArray) && realAdaptation.Representation_asArray.length > 0) {
-            let arr = realAdaptation.Representation_asArray.map( repr => {
-                return dashManifestModel.getSupplementalPropertiesAsArrayForRepresentation(repr);
-            });
-            if ( arr.every( v => JSON.stringify(v) === JSON.stringify(arr[0]) ) ) {
-                // only output Representation.supplementalProperties to mediaInfo, if they are present on all Representations
-                mediaInfo.supplementalPropertiesAsArray = arr[0];
-            }
-        }
-
-        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptation(realAdaptation);        
-        mediaInfo.essentialPropertiesAsArray = dashManifestModel.getEssentialPropertiesAsArrayForAdaptation(realAdaptation);
-        
+        mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realAdaptation);
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
+        mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
 
         return mediaInfo;
+    }
+
+    function _applyDefaultKeyId(contentProtection) {
+        const keyIds = contentProtection.map(cp => cp.cencDefaultKid).filter(kid => kid !== null);
+        if (keyIds.length) {
+            const keyId = keyIds[0];
+            contentProtection.forEach(cp => {
+                cp.keyId = keyId;
+            });
+        }
+
+        return contentProtection
+    }
+
+    function _applyContentProtectionReferencing(contentProtection, manifest) {
+        if (!contentProtection || !contentProtection.length || !manifest) {
+            return contentProtection
+        }
+
+        const allContentProtectionElements = dashManifestModel.getContentProtectionByManifest(manifest)
+        if (!allContentProtectionElements || !allContentProtectionElements.length) {
+            return contentProtection
+        }
+
+        const contentProtectionElementsByRefId = allContentProtectionElements.reduce((acc, curr) => {
+            if (curr.refId) {
+                acc.set(curr.refId, curr);
+            }
+            return acc
+        }, new Map())
+
+        return contentProtection.map((contentProtectionElement) => {
+            if (contentProtectionElement.ref) {
+                const contentProtectionElementSource = contentProtectionElementsByRefId.get(contentProtectionElement.ref);
+                if (contentProtectionElementSource) {
+                    contentProtectionElement.mergeAttributesFromReference(contentProtectionElementSource)
+                }
+            }
+            return contentProtectionElement
+        })
+    }
+
+    function _getNormalizedKeyIds(contentProtection) {
+        const normalizedKeyIds = new Set();
+        contentProtection.forEach((contentProtectionElement) => {
+            if (contentProtectionElement.cencDefaultKid && typeof contentProtectionElement.cencDefaultKid === 'string') {
+                normalizedKeyIds.add(contentProtectionElement.cencDefaultKid.replace(/-/g, '').toLowerCase());
+            }
+        })
+
+        return normalizedKeyIds
+    }
+
+    function _getAdaptationSetSwitchingCompatibleIds(mediaInfo) {
+        if (!mediaInfo || !mediaInfo.supplementalProperties) {
+            return []
+        }
+
+        let adaptationSetSwitchingCompatibleIds = []
+        const adaptationSetSwitching = mediaInfo.supplementalProperties.filter((sp) => {
+            return sp.schemeIdUri === DashConstants.ADAPTATION_SET_SWITCHING_SCHEME_ID_URI
+        });
+        if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
+            const ids = adaptationSetSwitching[0].value.toString().split(',')
+            adaptationSetSwitchingCompatibleIds = ids.map((id) => {
+                return id
+            })
+        }
+
+        return adaptationSetSwitchingCompatibleIds
     }
 
     function convertVideoInfoToEmbeddedTextInfo(mediaInfo, channel, lang) {
@@ -1137,10 +1125,8 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        let normLang = bcp47Normalize(lang);
-        mediaInfo.lang = (normLang) ? normLang : lang;
-        mediaInfo.roles = ['caption'];
-        mediaInfo.rolesWithSchemeIdUri = [{schemeIdUri:'urn:mpeg:dash:role:2011', value:'caption'}];
+        mediaInfo.lang = bcp47Normalize(lang);
+        mediaInfo.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }];
     }
 
     function convertVideoInfoToThumbnailInfo(mediaInfo) {
@@ -1156,7 +1142,8 @@ function DashAdapter() {
         streamInfo.start = period.start;
         streamInfo.duration = period.duration;
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
-        streamInfo.isLast = period.mpd.manifest.Period_asArray.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
+        streamInfo.isEncrypted = period.isEncrypted;
 
         return streamInfo;
     }
@@ -1184,7 +1171,7 @@ function DashAdapter() {
     }
 
     function getPeriod(periodIdx) {
-        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period_asArray[periodIdx] : null;
+        return voPeriods.length > 0 ? voPeriods[0].mpd.manifest.Period[periodIdx] : null;
     }
 
     function findRepresentationIndex(period, representationId) {
@@ -1202,10 +1189,10 @@ function DashAdapter() {
             representationArrayIndex;
 
         if (period) {
-            adaptationSetArray = period.AdaptationSet_asArray;
+            adaptationSetArray = period.AdaptationSet;
             for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
                 adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-                representationArray = adaptationSet.Representation_asArray;
+                representationArray = adaptationSet.Representation;
                 for (representationArrayIndex = 0; representationArrayIndex < representationArray.length; representationArrayIndex = representationArrayIndex + 1) {
                     representation = representationArray[representationArrayIndex];
                     if (representationId === representation.id) {
@@ -1222,71 +1209,50 @@ function DashAdapter() {
         return null;
     }
 
-    function findMaxBufferIndex(period, bufferType) {
-        let adaptationSet,
-            adaptationSetArray,
-            representationArray,
-            adaptationSetArrayIndex;
-
-        if (!period || !bufferType) return -1;
-
-        adaptationSetArray = period.AdaptationSet_asArray;
-        for (adaptationSetArrayIndex = 0; adaptationSetArrayIndex < adaptationSetArray.length; adaptationSetArrayIndex = adaptationSetArrayIndex + 1) {
-            adaptationSet = adaptationSetArray[adaptationSetArrayIndex];
-            representationArray = adaptationSet.Representation_asArray;
-            if (dashManifestModel.getIsTypeOf(adaptationSet, bufferType)) {
-                return representationArray.length;
-            }
-        }
-
-        return -1;
-    }
-
     // #endregion PRIVATE FUNCTIONS
 
     instance = {
-        getBandwidthForRepresentation,
-        getIndexForRepresentation,
-        getMaxIndexForBufferType,
-        convertRepresentationToRepresentationInfo,
-        getStreamsInfo,
-        getMediaInfoForType,
-        getAllMediaInfoForType,
-        getAdaptationForType,
-        getRealAdaptation,
-        getProducerReferenceTimes,
-        getRealPeriodByIndex,
-        getEssentialPropertiesForRepresentation,
-        getVoRepresentations,
-        getEventsFor,
-        getEvent,
-        getMpd,
-        setConfig,
-        updatePeriods,
-        getIsTextTrack,
-        getUTCTimingSources,
-        getSuggestedPresentationDelay,
-        getAvailabilityStartTime,
-        getIsTypeOf,
-        getIsDynamic,
-        getDuration,
-        getRegularPeriods,
-        getContentSteering,
-        getLocation,
-        getPatchLocation,
-        getManifestUpdatePeriod,
-        getPublishTime,
-        getIsDVB,
-        getIsPatch,
-        getBaseURLsFromElement,
-        getRepresentationSortFunction,
-        getCodec,
-        getPeriodById,
-        setCurrentMediaInfo,
-        isPatchValid,
         applyPatchToManifest,
         areMediaInfosEqual,
-        reset
+        getAllMediaInfoForType,
+        getAvailabilityStartTime,
+        getBandwidthForRepresentation,
+        getBaseURLsFromElement,
+        getCodec,
+        getContentSteering,
+        getDuration,
+        getEssentialPropertiesForAdaptationSet,
+        getEssentialPropertiesForRepresentation,
+        getEvent,
+        getEventsFor,
+        getIndexForRepresentation,
+        getIsDVB,
+        getIsDynamic,
+        getIsPatch,
+        getIsTextTrack,
+        getIsTypeOf,
+        getLocation,
+        getMainAdaptationForType,
+        getManifestUpdatePeriod,
+        getMediaInfoForType,
+        getMpd,
+        getPatchLocation,
+        getPeriodById,
+        getProducerReferenceTimes,
+        getPublishTime,
+        getRealAdaptation,
+        getRealPeriodByIndex,
+        getRegularPeriods,
+        getRepresentationSortFunction,
+        getStreamsInfo,
+        getSuggestedPresentationDelay,
+        getSupplementalCodecs,
+        getUTCTimingSources,
+        getVoRepresentations,
+        isPatchValid,
+        reset,
+        setConfig,
+        updatePeriods,
     };
 
     setup();

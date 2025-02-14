@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-import SegmentBaseLoader from '../SegmentBaseLoader';
-import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader';
+import SegmentBaseLoader from '../SegmentBaseLoader.js';
+import WebmSegmentBaseLoader from '../WebmSegmentBaseLoader.js';
 
 function SegmentBaseController(config) {
     config = config || {};
@@ -45,7 +45,6 @@ function SegmentBaseController(config) {
     const baseURLController = config.baseURLController;
     const debug = config.debug;
     const boxParser = config.boxParser;
-    const requestModifier = config.requestModifier;
     const errors = config.errors;
 
     let instance,
@@ -65,8 +64,7 @@ function SegmentBaseController(config) {
             events: events,
             errors: errors,
             debug: debug,
-            boxParser: boxParser,
-            requestModifier: requestModifier
+            boxParser: boxParser
         });
 
         webmSegmentBaseLoader.setConfig({
@@ -77,8 +75,7 @@ function SegmentBaseController(config) {
             eventBus: eventBus,
             events: events,
             errors: errors,
-            debug: debug,
-            requestModifier: requestModifier
+            debug: debug
         });
     }
 

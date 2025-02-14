@@ -29,17 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Errors from '../../core/errors/Errors';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import BlacklistController from '../controllers/BlacklistController';
-import DVBSelector from './baseUrlResolution/DVBSelector';
-import BasicSelector from './baseUrlResolution/BasicSelector';
-import FactoryMaker from '../../core/FactoryMaker';
-import DashJSError from '../vo/DashJSError';
-import {checkParameterType} from '../utils/SupervisorTools';
-import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector';
-import Settings from '../../core/Settings';
+import Errors from '../../core/errors/Errors.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import BlacklistController from '../controllers/BlacklistController.js';
+import DVBSelector from './baseUrlResolution/DVBSelector.js';
+import BasicSelector from './baseUrlResolution/BasicSelector.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashJSError from '../vo/DashJSError.js';
+import {checkParameterType} from './SupervisorTools.js';
+import ContentSteeringSelector from './baseUrlResolution/ContentSteeringSelector.js';
+import Settings from '../../core/Settings.js';
 
 function BaseURLSelector() {
 
@@ -70,7 +70,8 @@ function BaseURLSelector() {
 
         contentSteeringSelector = ContentSteeringSelector(context).create();
         contentSteeringSelector.setConfig({
-            blacklistController: serviceLocationBlacklistController
+            blacklistController: serviceLocationBlacklistController,
+            addBlacklistEventName: Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD
         })
 
         selector = basicSelector;
@@ -96,7 +97,7 @@ function BaseURLSelector() {
         }
 
         // Check if we got any instructions from the content steering element in the MPD or from the content steering server
-        if(settings.get().streaming.applyContentSteering) {
+        if (settings.get().streaming.applyContentSteering) {
             const steeringIndex = contentSteeringSelector.selectBaseUrlIndex(data);
             if (!isNaN(steeringIndex) && steeringIndex !== -1) {
                 data.selectedIdx = steeringIndex;
@@ -131,6 +132,7 @@ function BaseURLSelector() {
     }
 
     function reset() {
+        contentSteeringSelector.reset();
         serviceLocationBlacklistController.reset();
     }
 

@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from './EventsBase';
+import EventsBase from './EventsBase.js';
 
 /**
  * These are internal events that should not be needed at the player level.
@@ -62,6 +62,7 @@ class CoreEvents extends EventsBase {
         this.MANIFEST_UPDATED = 'manifestUpdated';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
+        this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
         this.QUOTA_EXCEEDED = 'quotaExceeded';
         this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
         this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
@@ -89,6 +90,9 @@ class CoreEvents extends EventsBase {
         this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
         this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
         this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+        this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+        this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+        this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
     }
 }
 

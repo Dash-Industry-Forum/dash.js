@@ -1,4 +1,4 @@
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function DroppedFramesHistory() {
 
@@ -6,16 +6,14 @@ function DroppedFramesHistory() {
     let lastDroppedFrames = {};
     let lastTotalFrames = {};
 
-    function push(streamId, index, playbackQuality) {
+    function push(streamId, representationId, playbackQuality) {
 
-        if (!index) {
+        if (!representationId) {
             return;
         }
 
         if (!values[streamId]) {
-            values[streamId] = [];
-            lastDroppedFrames[streamId] = 0;
-            lastTotalFrames[streamId] = 0;
+            _initializeForStream(streamId);
         }
 
         let droppedVideoFrames = playbackQuality && playbackQuality.droppedVideoFrames ? playbackQuality.droppedVideoFrames : 0;
@@ -28,14 +26,22 @@ function DroppedFramesHistory() {
         lastTotalFrames[streamId] = totalVideoFrames;
 
         const current = values[streamId];
-        if (!isNaN(index)) {
-            if (!current[index]) {
-                current[index] = { droppedVideoFrames: intervalDroppedFrames, totalVideoFrames: intervalTotalFrames };
-            } else {
-                current[index].droppedVideoFrames += intervalDroppedFrames;
-                current[index].totalVideoFrames += intervalTotalFrames;
-            }
+        if (!current[representationId]) {
+            current[representationId] = {
+                droppedVideoFrames: intervalDroppedFrames,
+                totalVideoFrames: intervalTotalFrames
+            };
+        } else {
+            current[representationId].droppedVideoFrames += intervalDroppedFrames;
+            current[representationId].totalVideoFrames += intervalTotalFrames;
         }
+
+    }
+
+    function _initializeForStream(streamId) {
+        values[streamId] = [];
+        lastDroppedFrames[streamId] = 0;
+        lastTotalFrames[streamId] = 0;
     }
 
     function getFrameHistory(streamId) {
@@ -43,13 +49,9 @@ function DroppedFramesHistory() {
     }
 
     function clearForStream(streamId) {
-        try {
-            delete values[streamId];
-            delete lastDroppedFrames[streamId];
-            delete lastTotalFrames[streamId];
-        } catch (e) {
-
-        }
+        delete values[streamId];
+        delete lastDroppedFrames[streamId];
+        delete lastTotalFrames[streamId];
     }
 
     function reset() {
@@ -59,9 +61,9 @@ function DroppedFramesHistory() {
     }
 
     return {
-        push,
-        getFrameHistory,
         clearForStream,
+        getFrameHistory,
+        push,
         reset
     };
 }

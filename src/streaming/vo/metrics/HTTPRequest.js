@@ -137,6 +137,10 @@ class HTTPRequest {
          * The type of the loader that was used. Distinguish between fetch loader and xhr loader
          */
         this._fileLoaderType = null;
+        /**
+         * The values derived from the ResourceTimingAPI.
+         */
+        this._resourceTimingValues = null;
     }
 }
 

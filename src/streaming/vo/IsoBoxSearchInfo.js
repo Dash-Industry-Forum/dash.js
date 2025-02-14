@@ -33,10 +33,22 @@
  * @ignore
  */
 class IsoBoxSearchInfo {
-    constructor(lastCompletedOffset, found, size) {
-        this.lastCompletedOffset = lastCompletedOffset;
-        this.found = found;
-        this.size = size;
+    constructor({
+        found,
+        sizeOfLastCompletedBox,
+        sizeOfLastFoundTargetBox,
+        startOffsetOfLastCompletedBox,
+        startOffsetOfLastFoundTargetBox,
+        typeOfLastCompletedBox,
+        typeOfLastTargetBox,
+    }) {
+        this.found = found !== undefined ? found : false;
+        this.sizeOfLastCompletedBox = sizeOfLastCompletedBox !== undefined ? sizeOfLastCompletedBox : 0;
+        this.sizeOfLastFoundTargetBox = sizeOfLastFoundTargetBox !== undefined ? sizeOfLastFoundTargetBox : 0;
+        this.startOffsetOfLastCompletedBox = startOffsetOfLastCompletedBox !== undefined ? startOffsetOfLastCompletedBox : 0;
+        this.startOffsetOfLastFoundTargetBox = startOffsetOfLastFoundTargetBox !== undefined ? startOffsetOfLastFoundTargetBox : 0;
+        this.typeOfLastCompletedBox = typeOfLastCompletedBox !== undefined ? typeOfLastCompletedBox : null;
+        this.typeOfLastTargetBox = typeOfLastTargetBox !== undefined ? typeOfLastTargetBox : null;
     }
 }
 

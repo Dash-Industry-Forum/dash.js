@@ -29,21 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
-const NO_CHANGE = -1;
+const NO_CHANGE = null;
 const PRIORITY = {
     DEFAULT: 0.5,
     STRONG: 1,
     WEAK: 0
 };
 
-function SwitchRequest(q, r, p) {
-    //TODO refactor all the calls to this to use config to be like everything else.
+function SwitchRequest(rep, reas, prio, r) {
+
     let instance,
-        quality,
+        representation,
         priority,
-        reason;
+        reason,
+        rule;
 
     // check priority value
     function getPriority(p) {
@@ -57,14 +58,16 @@ function SwitchRequest(q, r, p) {
     }
 
     // init attributes
-    quality = (q === undefined) ? NO_CHANGE : q;
-    priority = getPriority(p);
-    reason = (r === undefined) ? null : r;
+    representation = (rep === undefined) ? NO_CHANGE : rep;
+    priority = getPriority(prio);
+    reason = (reas === undefined) ? null : reas;
+    rule = r === undefined ? null : r;
 
     instance = {
-        quality: quality,
-        reason: reason,
-        priority: priority
+        representation,
+        reason,
+        rule,
+        priority
     };
 
     return instance;

@@ -31,7 +31,7 @@
 /**
  * @classdesc matches and converts xs:datetime to Date
  */
-import BaseMatcher from './BaseMatcher';
+import BaseMatcher from './BaseMatcher.js';
 
 const SECONDS_IN_MIN = 60;
 const MINUTES_IN_HOUR = 60;
@@ -42,7 +42,7 @@ const datetimeRegex = /^([0-9]{4})-([0-9]{2})-([0-9]{2})T([0-9]{2}):([0-9]{2})(?
 class DateTimeMatcher extends BaseMatcher {
     constructor() {
         super(
-            attr => datetimeRegex.test(attr.value),
+            (tagName, attrName, value) => datetimeRegex.test(value),
             str => {
                 const match = datetimeRegex.exec(str);
                 let utcDate;

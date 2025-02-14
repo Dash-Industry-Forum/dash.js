@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 const WEBVTT = 'WEBVTT';
 
@@ -60,11 +60,11 @@ function VTTParser() {
             return captionArray;
         }
 
-        data = data.split( regExNewLine );
+        data = data.split(regExNewLine);
         len = data.length;
         lastStartTime = -1;
 
-        for (let i = 0 ; i < len; i++) {
+        for (let i = 0; i < len; i++) {
             let item = data[i];
 
             if (item.length > 0 && item !== WEBVTT) {
@@ -86,12 +86,10 @@ function VTTParser() {
                                 data: text,
                                 styles: styles
                             });
-                        }
-                        else {
+                        } else {
                             logger.error('Skipping cue due to empty/malformed cue text');
                         }
-                    }
-                    else {
+                    } else {
                         logger.error('Skipping cue due to incorrect cue timing');
                     }
                 }
@@ -105,10 +103,10 @@ function VTTParser() {
         const timeArray = time.split(':');
         const len = timeArray.length - 1;
 
-        time = parseInt( timeArray[len - 1], 10 ) * 60 + parseFloat( timeArray[len]);
+        time = parseInt(timeArray[len - 1], 10) * 60 + parseFloat(timeArray[len]);
 
-        if ( len === 2 ) {
-            time += parseInt( timeArray[0], 10 ) * 3600;
+        if (len === 2) {
+            time += parseInt(timeArray[0], 10) * 3600;
         }
 
         return time;
@@ -120,7 +118,7 @@ function VTTParser() {
         arr.shift(); //remove first array index it is empty...
         vttCuePoints[1] = arr[0];
         arr.shift();
-        return {cuePoints: vttCuePoints, styles: getCaptionStyles(arr)};
+        return { cuePoints: vttCuePoints, styles: getCaptionStyles(arr) };
     }
 
     function getCaptionStyles(arr) {
@@ -136,13 +134,13 @@ function VTTParser() {
                 if (element.match(/align/) || element.match(/A/)) {
                     styleObject.align = val;
                 }
-                if (element.match(/line/) || element.match(/L/) ) {
+                if (element.match(/line/) || element.match(/L/)) {
                     styleObject.line = val === 'auto' ? val : parseInt(val, 10);
                     if (isPercentage) {
                         styleObject.snapToLines = false;
                     }
                 }
-                if (element.match(/position/) || element.match(/P/) ) {
+                if (element.match(/position/) || element.match(/P/)) {
                     styleObject.position = val;
                 }
                 if (element.match(/size/) || element.match(/S/)) {
@@ -177,8 +175,7 @@ function VTTParser() {
                     if (j !== lineCount - 1) {
                         subline += '\n';
                     }
-                }
-                else {
+                } else {
                     // caption text should not have '-->' in it
                     subline = '';
                     break;
@@ -186,8 +183,9 @@ function VTTParser() {
             }
         } else {
             lineData = data[idx];
-            if (!lineData.match(regExToken))
+            if (!lineData.match(regExToken)) {
                 subline = lineData;
+            }
         }
         return subline;
     }
@@ -200,5 +198,6 @@ function VTTParser() {
     setup();
     return instance;
 }
+
 VTTParser.__dashjs_factory_name = 'VTTParser';
 export default FactoryMaker.getSingletonFactory(VTTParser);

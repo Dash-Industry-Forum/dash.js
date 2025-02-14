@@ -29,8 +29,9 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import DVBErrors from '../vo/DVBErrors';
-import MetricsReportingEvents from '../MetricsReportingEvents';
+import DVBErrors from '../vo/DVBErrors.js';
+import MetricsReportingEvents from '../MetricsReportingEvents.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function DVBErrorsTranslator(config) {
 
@@ -176,4 +177,4 @@ function DVBErrorsTranslator(config) {
 }
 
 DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
-export default dashjs.FactoryMaker.getSingletonFactory(DVBErrorsTranslator); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(DVBErrorsTranslator); 

@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <title>Flexible Insertion of URL Parameters Sample</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #trace {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+            overflow-y: auto;
+        }
+
+        #manifestContent {
+            margin-top: 20px;
+            font-size: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+    </style>
+
+    <script class="code">
+        var player;
+
+        function init() {
+            var video = document.querySelector('video');
+            var manifestSelect = document.getElementById('manifestSelect');
+            var queryParamsInput = document.getElementById('queryParamsInput');
+            var loadButton = document.getElementById('loadButton');
+
+            player = dashjs.MediaPlayer().create();
+            player.initialize(video, null, false);
+
+            player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (event) {
+                var manifestUrl = getManifestUrlWithQueryParams(manifestSelect.value, queryParamsInput.value);
+                fetchManifest(manifestUrl);
+            });
+
+            player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, function (event) {
+                var url = event.request.url;
+                var formattedUrl = highlightQueryParams(url);
+                log(formattedUrl);
+            });
+
+            loadButton.addEventListener('click', function () {
+                updateManifestSource();
+            });
+        }
+
+        function updateManifestSource() {
+            var manifestSelect = document.getElementById('manifestSelect');
+            var queryParamsInput = document.getElementById('queryParamsInput');
+            var url = getManifestUrlWithQueryParams(manifestSelect.value, queryParamsInput.value);
+            player.attachSource(url);
+            clearLog();
+            clearManifestContent();
+        }
+
+        function getManifestUrlWithQueryParams(url, queryParams) {
+            if (queryParams) {
+                var separator = url.includes('?') ? '&' : '?';
+                return url + separator + encodeURI(queryParams);
+            }
+            return url;
+        }
+
+        function highlightQueryParams(url) {
+            var parts = url.split('?');
+            if (parts.length > 1) {
+                var baseUrl = parts[0];
+                var queryParams = parts[1];
+                return baseUrl + '?<strong>' + queryParams + '</strong>';
+            } else {
+                return url;
+            }
+        }
+
+        function fetchManifest(url) {
+            fetch(url)
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok ' + response.statusText);
+                    }
+                    return response.text();
+                })
+                .then(function (data) {
+                    displayManifestContent(data);
+                })
+                .catch(function (error) {
+                    console.error('There has been a problem with your fetch operation:', error);
+                });
+        }
+
+        function displayManifestContent(content) {
+            var manifestPanel = document.getElementById('manifestContent');
+            manifestPanel.textContent = content;
+        }
+
+        function log(msg) {
+            var tracePanel = document.getElementById('trace');
+            var logEntry = document.createElement('div');
+            logEntry.innerHTML = msg;
+            tracePanel.appendChild(logEntry);
+            tracePanel.scrollTop = tracePanel.scrollHeight;
+            console.log(msg);
+        }
+
+        function clearLog() {
+            var tracePanel = document.getElementById('trace');
+            tracePanel.innerHTML = '';
+        }
+
+        function clearManifestContent() {
+            var manifestPanel = document.getElementById('manifestContent');
+            manifestPanel.textContent = '';
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            init();
+        });
+    </script>
+</head>
+
+<body>
+
+    <main>
+        <div class="container py-4">
+            <header class="pb-3 mb-4 border-bottom">
+                <img src="../lib/img/dashjs-logo.png" width="200">
+            </header>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="h-100 p-5 bg-light border rounded-3">
+                        <h3>Flexible Insertion of URL Parameters Sample</h3>
+                        <p>This sample demonstrates the <strong>Flexible Insertion of URL Parameters</strong> in
+                            dash.js.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-6">
+                    <label for="manifestSelect">Manifest:</label>
+                    <input id="manifestSelect" value="https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks" type="text" class="form-control">
+                    <label for="queryParamsInput" class="mt-2">Add Query Parameters to Manifest Request:</label>
+                    <input id="queryParamsInput" type="text" class="form-control" value="token=1234">
+                    <button id="loadButton" class="btn btn-primary mt-2">Load</button>
+                    <video controls="true" class="mt-3"></video>
+                </div>
+                <div class="col-md-6">
+                    <div class="form-floating">
+                        <div class="form-control" id="trace"></div>
+                        <label for="trace">Requests Made by Player</label>
+                    </div>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <h5>Manifest Content:</h5>
+                    <pre id="manifestContent" class="border p-3"></pre>
+                </div>
+            </div>
+            <div class="row mt-2">
+                <div class="col-md-12">
+                    <div id="code-output"></div>
+                </div>
+            </div>
+            <footer class="pt-3 mt-4 text-muted border-top">
+                &copy; DASH-IF
+            </footer>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            init();
+        });
+    </script>
+    <script src="../highlighter.js"></script>
+</body>
+
+</html>

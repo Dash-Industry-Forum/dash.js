@@ -1,0 +1,321 @@
+{
+  "testfiles": {
+    "included": [
+      "all"
+    ],
+    "excluded": [
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "MSS",
+      "type": "vod",
+      "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/Dash/protected_dash_1080p_h264_singlekey/manifest.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICI0MDYwYTg2NS04ODc4LTQyNjctOWNiZi05MWFlNWJhZTFlNzIiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAid3QzRW51dVI1UkFybjZBRGYxNkNCQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.l8PnZznspJ6lnNmfAE9UQV532Ypzt1JXQkvrk8gFSRw"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axprod.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICI0MDYwYTg2NS04ODc4LTQyNjctOWNiZi05MWFlNWJhZTFlNzIiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAid3QzRW51dVI1UkFybjZBRGYxNkNCQT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ.l8PnZznspJ6lnNmfAE9UQV532Ypzt1JXQkvrk8gFSRw"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "audio/initial-audio",
+        "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-MultiKey-MultiPeriod/Manifest_1080p.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiMDg3Mjc4NmUtZjllNy00NjVmLWEzYTItNGU1YjBlZjhmYTQ1IiwiZW5jcnlwdGVkX2tleSI6IlB3NitlRVlOY3ZqWWJmc2gzWDNmbWc9PSJ9LHsiaWQiOiJjMTRmMDcwOS1mMmI5LTQ0MjctOTE2Yi02MWI1MjU4NjUwNmEiLCJlbmNyeXB0ZWRfa2V5IjoiLzErZk5paDM4bXFSdjR5Y1l6bnQvdz09In0seyJpZCI6IjhiMDI5ZTUxLWQ1NmEtNDRiZC05MTBmLWQ0YjVmZDkwZmJhMiIsImVuY3J5cHRlZF9rZXkiOiJrcTBKdVpFanBGTjhzYVRtdDU2ME9nPT0ifSx7ImlkIjoiMmQ2ZTkzODctNjBjYS00MTQ1LWFlYzItYzQwODM3YjRiMDI2IiwiZW5jcnlwdGVkX2tleSI6IlRjUlFlQld4RW9IT0tIcmFkNFNlVlE9PSJ9LHsiaWQiOiJkZTAyZjA3Zi1hMDk4LTRlZTAtYjU1Ni05MDdjMGQxN2ZiYmMiLCJlbmNyeXB0ZWRfa2V5IjoicG9lbmNTN0dnbWVHRmVvSjZQRUFUUT09In0seyJpZCI6IjkxNGU2OWY0LTBhYjMtNDUzNC05ZTlmLTk4NTM2MTVlMjZmNiIsImVuY3J5cHRlZF9rZXkiOiJlaUkvTXNsbHJRNHdDbFJUL0xObUNBPT0ifSx7ImlkIjoiZGE0NDQ1YzItZGI1ZS00OGVmLWIwOTYtM2VmMzQ3YjE2YzdmIiwiZW5jcnlwdGVkX2tleSI6IjJ3K3pkdnFycERWM3hSMGJKeTR1Z3c9PSJ9LHsiaWQiOiIyOWYwNWU4Zi1hMWFlLTQ2ZTQtODBlOS0yMmRjZDQ0Y2Q3YTEiLCJlbmNyeXB0ZWRfa2V5IjoiL3hsU0hweHdxdTNnby9nbHBtU2dhUT09In0seyJpZCI6IjY5ZmU3MDc3LWRhZGQtNGI1NS05NmNkLWMzZWRiMzk5MTg1MyIsImVuY3J5cHRlZF9rZXkiOiJ6dTZpdXpOMnBzaTBaU3hRaUFUa1JRPT0ifV19fQ.BXr93Et1krYMVs-CUnf7F3ywJWFRtxYdkR7Qn4w3-to"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "moreInfo": "https://github.com/Axinom/dash-test-vectors",
+      "provider": "axinom",
+      "includedTestfiles": [
+        "playback/*",
+        "audio/initial-audio",
+        "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      },
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "1080p with PlayReady and Widevine DRM, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://drm-widevine-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        },
+        "com.microsoft.playready": {
+          "serverURL": "https://drm-playready-licensing.axtest.net/AcquireLicense",
+          "httpRequestHeaders": {
+            "X-AxDRM-Message": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.4lWwW46k-oWcah8oN18LPj5OLS5ZU-_AQv7fe0JhNjA"
+          },
+          "httpTimeout": 5000
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "audio/initial-audio",
+        "text/*",
+        "drm/keep-media-key-sessions"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-2-keys-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "drm/keep-media-key-sessions"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "LiveSim2 - DRM EZDRM-1-key-cbcs",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/*",
+        "drm/keep-media-key-sessions"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "1080p with W3C Clear Key, single key",
+      "type": "vod",
+      "url": "https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd",
+      "drm": {
+        "org.w3.clearkey": {
+          "clearkeys": {
+            "nrQFDeRLSAKTLifXUIPiZg": "FmY0xnWCPCNaSpRG-tUuTQ"
+          }
+        }
+      },
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    },
+    {
+      "name": "livesim2 SCTE35",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/emsg-triggered"
+      ],
+      "testdata": {
+        "emsg": {
+          "minimumNumberOfEvents": 2,
+          "runtime": 65000,
+          "schemeIdUri": "urn:scte:scte35:2013:bin"
+        }
+      }
+    },
+    {
+      "name": "livesim2 Annex I",
+      "type": "live",
+      "url": "https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks",
+      "includedTestfiles": [
+        "feature-support/annex-i"
+      ],
+      "testdata": {
+        "annexI": {
+          "mediaTypes": ["video"],
+          "expectedQueryString": "?dashjs=rocks"
+        }
+      }
+    },
+    {
+      "name": "DASH-IF Live Sim - Segment Template without manifest updates",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time",
+        "feature-support/cmcd",
+        "playback-advanced/preload"
+      ]
+    },
+    {
+      "name": "Segment Timeline with $time$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
+      "name": "Segment Timeline with $number$",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
+      "name": "Audio only live",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time"
+      ]
+    },
+    {
+      "name": "DASH-IF Multiperiod Segment Template",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 70000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 2
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
+      "name": "TTML Segmented Subtitles Live (livesim2)",
+      "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
+      "provider": "dashif",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/play",
+        "playback/pause",
+        "playback/seek",
+        "playback/seek-to-presentation-time",
+        "text/*"
+      ]
+    },
+    {
+      "name": "Segment Base",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
+      "name": "MPD Patching with $time",
+      "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
+      "type": "live",
+      "testdata": {
+        "mpdPatching": true
+      },
+      "includedTestfiles": [
+        "feature-support/mpd-patching"
+      ]
+    },
+    {
+      "name": "Arte forced-subtitles",
+      "type": "vod",
+      "url": "https://arteamd1.akamaized.net/GPU/034000/034700/034755-230-A/221125154117/034755-230-A_8_DA_v20221125.mpd",
+      "includedTestfiles": [
+        "text/forced-subtitles"
+      ],
+      "testdata": {
+        "forcedSubtitles": {}
+      }
+    }
+  ]
+}

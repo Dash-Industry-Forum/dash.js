@@ -28,19 +28,16 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import DashConstants from '../../dash/constants/DashConstants';
-import FactoryMaker from '../../core/FactoryMaker';
-import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo';
-import URLUtils from '../../streaming/utils/URLUtils';
-import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils';
-import BoxParser from '../../streaming/utils/BoxParser';
-import XHRLoader from '../../streaming/net/XHRLoader';
-import DashHandler from '../../dash/DashHandler';
-import SegmentsController from '../../dash/controllers/SegmentsController';
-
-export const THUMBNAILS_SCHEME_ID_URIS = ['http://dashif.org/thumbnail_tile',
-    'http://dashif.org/guidelines/thumbnail_tile'];
+import Constants from '../constants/Constants.js';
+import DashConstants from '../../dash/constants/DashConstants.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils.js';
+import BoxParser from '../../streaming/utils/BoxParser.js';
+import XHRLoader from '../../streaming/net/XHRLoader.js';
+import DashHandler from '../../dash/DashHandler.js';
+import SegmentsController from '../../dash/controllers/SegmentsController.js';
 
 function ThumbnailTracks(config) {
     const context = this.context;
@@ -57,6 +54,7 @@ function ThumbnailTracks(config) {
 
     let instance,
         tracks,
+        representations,
         dashHandler,
         currentTrackIndex,
         mediaInfo,
@@ -119,6 +117,8 @@ function ThumbnailTracks(config) {
                 if (rep.segmentInfoType === DashConstants.SEGMENT_BASE) {
                     _createTrack(rep, true);
                 }
+
+                representations.push(rep);
             });
         }
 
@@ -139,7 +139,7 @@ function ThumbnailTracks(config) {
 
         if (representation.essentialProperties) {
             representation.essentialProperties.forEach((p) => {
-                if (THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
+                if (Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(p.schemeIdUri) >= 0 && p.value) {
                     const vars = p.value.split('x');
                     if (vars.length === 2 && !isNaN(vars[0]) && !isNaN(vars[1])) {
                         track.tilesHor = parseInt(vars[0], 10);
@@ -174,6 +174,7 @@ function ThumbnailTracks(config) {
         let cache = [];
         const segments = _normalizeSegments(data, representation);
         representation.segments = segments;
+        representation.fragmentDuration = representation.segmentDuration || (representation.segments && representation.segments.length > 0 ? representation.segments[0].duration : NaN);
         track.segmentDuration = representation.segments[0].duration; //assume all segments have the same duration
 
         track.readThumbnail = function (time, callback) {
@@ -207,8 +208,9 @@ function ThumbnailTracks(config) {
                                     end: ss.mediaStartTime + ss.duration,
                                     url: imageUrl
                                 });
-                                if (callback)
+                                if (callback) {
                                     callback(imageUrl);
+                                }
                             }
                         });
                         return true;
@@ -287,6 +289,20 @@ function ThumbnailTracks(config) {
         currentTrackIndex = index;
     }
 
+    function setTrackById(id) {
+        if (!tracks || tracks.length === 0) {
+            return;
+        }
+
+        const index = tracks.findIndex((elem) => {
+            return elem.id === id
+        })
+
+        if (index !== -1) {
+            currentTrackIndex = index;
+        }
+    }
+
     function getThumbnailRequestForTime(time) {
         let currentVoRep;
         const voReps = adapter.getVoRepresentations(mediaInfo);
@@ -300,20 +316,31 @@ function ThumbnailTracks(config) {
         return dashHandler.getSegmentRequestForTime(mediaInfo, currentVoRep, time);
     }
 
+    function getRepresentations() {
+        return representations
+    }
+
     function reset() {
         tracks = [];
+        representations = [];
         currentTrackIndex = -1;
         mediaInfo = null;
+        if (dashHandler) {
+            dashHandler.reset();
+            dashHandler = null;
+        }
     }
 
     instance = {
-        getTracks,
         addTracks,
-        reset,
-        setTrackByIndex,
         getCurrentTrack,
         getCurrentTrackIndex,
-        getThumbnailRequestForTime
+        getRepresentations,
+        getThumbnailRequestForTime,
+        getTracks,
+        reset,
+        setTrackById,
+        setTrackByIndex,
     };
 
     setup();

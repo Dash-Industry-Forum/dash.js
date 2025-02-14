@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
 /**
  * @ignore
  */
@@ -97,4 +99,4 @@ function MetricSerialiser() {
 }
 
 MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
-export default dashjs.FactoryMaker.getSingletonFactory(MetricSerialiser); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(MetricSerialiser); 

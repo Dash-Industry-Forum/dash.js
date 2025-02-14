@@ -36,14 +36,14 @@
  * May Lim | National University of Singapore | maylim@comp.nus.edu.sg
  */
 
-import Debug from '../../../../core/Debug';
-import FactoryMaker from '../../../../core/FactoryMaker';
-import LearningAbrController from './LearningAbrController';
-import LoLpQoeEvaluator from './LoLpQoEEvaluator';
-import SwitchRequest from '../../SwitchRequest';
-import MetricsConstants from '../../../constants/MetricsConstants';
-import LoLpWeightSelector from './LoLpWeightSelector';
-import Constants from '../../../constants/Constants';
+import Debug from '../../../../core/Debug.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
+import LearningAbrController from './LearningAbrController.js';
+import LoLpQoeEvaluator from './LoLpQoEEvaluator.js';
+import SwitchRequest from '../../SwitchRequest.js';
+import MetricsConstants from '../../../constants/MetricsConstants.js';
+import LoLpWeightSelector from './LoLpWeightSelector.js';
+import Constants from '../../../constants/Constants.js';
 
 const DWS_TARGET_LATENCY = 1.5;
 const DWS_BUFFER_MIN = 0.3;
@@ -66,22 +66,22 @@ function LoLPRule(config) {
         qoeEvaluator = LoLpQoeEvaluator(context).create();
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         try {
             let switchRequest = SwitchRequest(context).create();
+            switchRequest.rule = this.getClassName();
             let mediaType = rulesContext.getMediaInfo().type;
             let abrController = rulesContext.getAbrController();
             const streamInfo = rulesContext.getStreamInfo();
-            let currentQuality = abrController.getQualityFor(mediaType, streamInfo.id);
+            let currentRepresentation = rulesContext.getRepresentation();
             const mediaInfo = rulesContext.getMediaInfo();
             const bufferStateVO = dashMetrics.getCurrentBufferState(mediaType);
             const scheduleController = rulesContext.getScheduleController();
             const currentBufferLevel = dashMetrics.getCurrentBufferLevel(mediaType, true);
-            const isDynamic = streamInfo && streamInfo.manifestInfo ? streamInfo.manifestInfo.isDynamic : null;
             const playbackController = scheduleController.getPlaybackController();
             let latency = playbackController.getCurrentLiveLatency();
 
-            if (!rulesContext.useLoLPABR() || (mediaType === Constants.AUDIO)) {
+            if ((mediaType === Constants.AUDIO)) {
                 return switchRequest;
             }
 
@@ -90,8 +90,8 @@ function LoLPRule(config) {
             }
 
             const playbackRate = playbackController.getPlaybackRate();
-            const throughputHistory = abrController.getThroughputHistory();
-            const throughput = throughputHistory.getSafeAverageThroughput(mediaType, isDynamic);
+            const throughputController = rulesContext.getThroughputController();
+            const throughput = throughputController.getSafeAverageThroughput(mediaType);
             logger.debug(`Throughput ${Math.round(throughput)} kbps`);
 
             if (isNaN(throughput) || !bufferStateVO) {
@@ -103,21 +103,14 @@ function LoLPRule(config) {
             }
 
             // QoE parameters
-            let bitrateList = mediaInfo.bitrateList; // [{bandwidth: 200000, width: 640, height: 360}, ...]
-            let segmentDuration = rulesContext.getRepresentationInfo().fragmentDuration;
-            let minBitrateKbps = bitrateList[0].bandwidth / 1000.0; // min bitrate level
-            let maxBitrateKbps = bitrateList[bitrateList.length - 1].bandwidth / 1000.0; // max bitrate level
-            for (let i = 0; i < bitrateList.length; i++) { // in case bitrateList is not sorted as expected
-                let b = bitrateList[i].bandwidth / 1000.0;
-                if (b > maxBitrateKbps)
-                    maxBitrateKbps = b;
-                else if (b < minBitrateKbps) {
-                    minBitrateKbps = b;
-                }
-            }
+            const possibleRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+            let bandwidths = possibleRepresentations.map(r => r.bandwidth);
+            let segmentDuration = rulesContext.getRepresentation().fragmentDuration;
+            let minBitrateKbps = Math.min(...bandwidths) / 1000.0; // min bitrate level
+            let maxBitrateKbps = Math.max(...bandwidths) / 1000.0; // max bitrate level
 
             // Learning rule pre-calculations
-            let currentBitrate = bitrateList[currentQuality].bandwidth;
+            let currentBitrate = currentRepresentation.bandwidth;
             let currentBitrateKbps = currentBitrate / 1000.0;
             let httpRequest = dashMetrics.getCurrentHttpRequest(mediaType, true);
             let lastFragmentDownloadTime = (httpRequest.tresponse.getTime() - httpRequest.trequest.getTime()) / 1000;
@@ -138,15 +131,20 @@ function LoLPRule(config) {
             /*
              * Select next quality
              */
-            switchRequest.quality = learningController.getNextQuality(mediaInfo, throughput * 1000, latency, currentBufferLevel, playbackRate, currentQuality, dynamicWeightsSelector);
+            switchRequest.representation = learningController.getNextQuality(
+                abrController,
+                mediaInfo,
+                throughput * 1000,
+                latency,
+                currentBufferLevel,
+                playbackRate,
+                currentRepresentation,
+                dynamicWeightsSelector
+            );
             switchRequest.reason = { throughput: throughput, latency: latency };
             switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
 
             scheduleController.setTimeToLoadDelay(0);
-
-            if (switchRequest.quality !== currentQuality) {
-                logger.debug('[TgcLearningRule][' + mediaType + '] requesting switch to index: ', switchRequest.quality, 'Average throughput', Math.round(throughput), 'kbps');
-            }
 
             return switchRequest;
         } catch (e) {
@@ -171,7 +169,7 @@ function LoLPRule(config) {
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

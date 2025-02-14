@@ -28,10 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import DashJSError from '../streaming/vo/DashJSError';
-import MssErrors from './errors/MssErrors';
+import DashJSError from '../streaming/vo/DashJSError.js';
+import MssErrors from './errors/MssErrors.js';
 
-import Events from '../streaming/MediaPlayerEvents';
+import Events from '../streaming/MediaPlayerEvents.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * @module MssFragmentMoofProcessor
@@ -61,7 +62,7 @@ function MssFragmentMoofProcessor(config) {
         const representation = representationController.getCurrentRepresentation();
 
         const manifest = representation.adaptation.period.mpd.manifest;
-        const adaptation = manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index];
+        const adaptation = manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index];
         const timescale = adaptation.SegmentTemplate.timescale;
 
         type = streamProcessor.getType();
@@ -188,7 +189,9 @@ function MssFragmentMoofProcessor(config) {
     }
 
     function updateDVR(type, range, manifestInfo) {
-        if (type !== 'video' && type !== 'audio') return;
+        if (type !== 'video' && type !== 'audio') {
+            return;
+        }
         const dvrInfos = dashMetrics.getCurrentDVRInfo(type);
         if (!dvrInfos || (range.end > dvrInfos.range.end)) {
             logger.debug('Update DVR range: [' + range.start + ' - ' + range.end + ']');
@@ -219,7 +222,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
@@ -317,7 +320,7 @@ function MssFragmentMoofProcessor(config) {
         const isoFile = ISOBoxer.parseBuffer(e.response);
         // Update track_Id in tfhd box
         const tfhd = isoFile.fetch('tfhd');
-        tfhd.track_ID = e.request.mediaInfo.index + 1;
+        tfhd.track_ID = e.request.representation.mediaInfo.index + 1;
 
         // Add tfdt box
         let tfdt = isoFile.fetch('tfdt');
@@ -342,9 +345,9 @@ function MssFragmentMoofProcessor(config) {
     }
 
     instance = {
-        convertFragment: convertFragment,
-        updateSegmentList: updateSegmentList,
-        getType: getType
+        convertFragment,
+        updateSegmentList,
+        getType
     };
 
     setup();
@@ -352,4 +355,4 @@ function MssFragmentMoofProcessor(config) {
 }
 
 MssFragmentMoofProcessor.__dashjs_factory_name = 'MssFragmentMoofProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoofProcessor); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentMoofProcessor);

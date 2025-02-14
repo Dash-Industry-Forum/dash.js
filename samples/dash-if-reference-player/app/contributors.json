@@ -63,6 +63,11 @@
             "name": "Unified Streaming",
             "logo": "app/img/US-logo-petrol-rgb.jpg",
             "link": "https://www.unified-streaming.com/"
+        },
+        {
+            "name": "Broadpeak",
+            "logo": "app/img/broadpeak.png",
+            "link": "https://broadpeak.tv/"
         }
     ]
 }

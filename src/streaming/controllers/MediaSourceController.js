@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import MediaPlayerEvents from '../MediaPlayerEvents';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function MediaSourceController() {
 
@@ -55,7 +55,6 @@ function MediaSourceController() {
         let hasManagedMediaSource = ('ManagedMediaSource' in window);
 
         if (hasManagedMediaSource) {
-            // eslint-disable-next-line no-undef
             mediaSource = new ManagedMediaSource();
             mediaSourceType = 'managedMediaSource';
             logger.info(`Created ManagedMediaSource`)
@@ -95,9 +94,15 @@ function MediaSourceController() {
     }
 
     function setDuration(value) {
-        if (!mediaSource || mediaSource.readyState !== 'open') return;
-        if (value === null && isNaN(value)) return;
-        if (mediaSource.duration === value) return;
+        if (!mediaSource || mediaSource.readyState !== 'open') {
+            return;
+        }
+        if (value === null && isNaN(value)) {
+            return;
+        }
+        if (mediaSource.duration === value) {
+            return;
+        }
 
         if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
             value = Math.pow(2, 32);

@@ -47,7 +47,7 @@ function CustomThroughputRuleClass() {
         logger = Debug(context).getInstance().getLogger(instance);
     }
 
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
@@ -60,7 +60,7 @@ function CustomThroughputRuleClass() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

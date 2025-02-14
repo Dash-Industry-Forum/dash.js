@@ -1,12 +1,14 @@
-import FragmentRequest from '../../../src/streaming/vo/FragmentRequest';
+import FragmentRequest from '../../../src/streaming/vo/FragmentRequest.js';
 
-function switchRequestHistoryMock() {
+function SwitchRequestHistoryMock() {
     this.getSwitchRequests = function () {
-        return [{
-            drops: 7,
-            noDrops: 0,
-            dropSize: 4
-        }];
+        return {
+            1: {
+                drops: 10,
+                noDrops: 0,
+                dropSize: 4
+            }
+        };
     };
 }
 
@@ -24,18 +26,19 @@ function RulesContextMock() {
 
         return fragRequest;
     };
-    this.getRepresentationInfo = function () {
+    this.getVoRepresentation = function () {
     };
     this.getAbrController = function () {
         return {
-            getThroughputHistory: function () {
+            getPossibleVoRepresentationsFilteredBySettings: function () {
+                return [{ id: 1 }]
             }
         };
     };
-    this.getSwitchHistory = function () {
-        return new switchRequestHistoryMock();
+    this.getSwitchRequestHistory = function () {
+        return new SwitchRequestHistoryMock();
     };
-    this.getRepresentationInfo = function () {
+    this.getVoRepresentation = function () {
         return {
             fragmentDuration: NaN
         };
@@ -46,10 +49,6 @@ function RulesContextMock() {
             start: function () {
             }
         };
-    };
-
-    this.useBufferOccupancyABR = function () {
-
     };
 
     this.getDroppedFramesHistory = function () {
