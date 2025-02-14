@@ -1242,7 +1242,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageLatency(type, calculationMode = null, sampleSize = NaN) {
+    function getAverageLatency(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
     }
 
@@ -1256,7 +1256,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+    function getAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
     }
 
@@ -1270,7 +1270,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getSafeAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+    function getSafeAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
     }
 
@@ -1282,7 +1282,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getRawThroughputData(type) {
+    function getRawThroughputData(type = Constants.VIDEO) {
         return throughputController ? throughputController.getRawThroughputData(type) : [];
     }
 
