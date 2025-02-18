@@ -54,6 +54,8 @@ instance `v3.1.0`.
 
 ### Version 5.x and newer
 
+#### Version builds
+
 With version 5.0.0 we introduced new bundle formats. The URLs for the CDN hosted files for these new bundle formats
 are as follows. Replace `vx.x.x` with the release version, for instance `v5.0.0`.
 
@@ -74,6 +76,28 @@ are as follows. Replace `vx.x.x` with the release version, for instance `v5.0.0`
       Build: [http://cdn.dashjs.org/vx.x.x/modern/esm/dash.all.debug.js](http://cdn.dashjs.org/v5.0.0/modern/esm/dash.all.debug.js)
 
 Multiple examples how to use dash.js in your Typescript or Webpack based JavaScript project can be found in `samples/modules`.
+
+#### Latest build
+
+The bundles of the latest release can be found here:
+
+- `UMD legacy`
+    - Minified
+      Build: [http://cdn.dashjs.org/latest/legacy/umd/dash.all.min.js](http://cdn.dashjs.org/latest/legacy/umd/dash.all.min.js)
+    - Debug
+      Build: [http://cdn.dashjs.org/latest/legacy/umd/dash.all.debug.js](http://cdn.dashjs.org/latest/legacy/umd/dash.all.debug.js)
+- `UMD modern`
+    - Minified
+      Build: [http://cdn.dashjs.org/latest/modern/umd/dash.all.min.js](http://cdn.dashjs.org/latest/modern/umd/dash.all.min.js)
+    - Debug
+      Build: [http://cdn.dashjs.org/latestmodern/umd/dash.all.debug.js](http://cdn.dashjs.org/latest/modern/umd/dash.all.debug.js)
+- `ESM modern`
+    - Minified
+      Build: [http://cdn.dashjs.org/latest/modern/esm/dash.all.min.js](http://cdn.dashjs.org/latest/modern/esm/dash.all.min.js)
+    - Debug
+      Build: [http://cdn.dashjs.org/latest/modern/esm/dash.all.debug.js](http://cdn.dashjs.org/latest/modern/esm/dash.all.debug.js)
+
+Note: For backwards compatibility we also host the `UMD modern` bundle under [https://cdn.dashjs.org/latest/dash.all.min.js](https://cdn.dashjs.org/latest/dash.all.min.js).
 
 ## NPM package
 
