@@ -37,7 +37,7 @@ A very basic example on how to use dash.js in your application can be found belo
 <div>
     <video id="videoPlayer" controls></video>
 </div>
-<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="https://cdn.dashjs.org/latest/modern/umd/dash.all.min.js"></script>
 <script>
     (function () {
         var url = "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd";
