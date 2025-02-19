@@ -1648,7 +1648,7 @@ declare namespace dashjs {
                 ],
                 useMediaCapabilitiesApi?: boolean,
                 filterHDRMetadataFormatEssentialProperties?: boolean,
-                filterVideoColometryEssentialProperties?: boolean
+                filterVideoColorimetryEssentialProperties?: boolean
             },
             events?: {
                 eventControllerRefreshDelay?: number,
