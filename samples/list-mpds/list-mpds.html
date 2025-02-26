@@ -113,7 +113,7 @@
                     behavior.innerText = "The player must respect the shortest duration between the Linked Period in the main manifest and the Imported MPD. Playback should seamlessly stop at the shorter duration, ensuring no content extends beyond the specified boundaries.";
                   } else if (target.text === "Case 7: First List MPD Period with start time =/ 0") {
                     behavior.innerText = "The player should throw an error indicating that the start time of the first period in a list type MPD manifest is invalid.";
-                  } else if (target.text === "Case 8: Imported MPD fails after 3 retry attempts") {
+                  } else if (target.text === "Case 8: Retry") {
                     behavior.innerText = "The player should attempt to download the manifest four times before failing.";
                   }
                 }
