@@ -110,12 +110,12 @@ function ListMpdController() {
     }
 
     function loadLinkedPeriod(manifest, period) {
-        let baseUri = period.ImportedMPD.uri; 
-        if (manifest.baseURL) {
-            baseUri = manifest.BaseURL[0].__text + period.ImportedMPD.uri;
-        }
+        const relativePath = period.ImportedMPD.uri; 
+        const baseUrl = period.BaseURL ?? manifest.BaseURL;
+        const resolvedUri = baseUrl ? baseUrl[0].__text + relativePath : relativePath;
+
         const updatedManifest = new Promise(resolve => {
-            manifestLoader.load(baseUri, null, null, true)
+            manifestLoader.load(resolvedUri, null, null, true)
                 .then((importedManifest) => {
                     dashAdapter.mergeManifests(manifest, importedManifest, period.id, mpdHasDuration);
                 }, () => {
