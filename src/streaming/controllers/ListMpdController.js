@@ -36,6 +36,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import ManifestLoader from '../ManifestLoader.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
+const DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET = 60;
 
 function ListMpdController() {
 
@@ -143,7 +144,7 @@ function ListMpdController() {
         }
 
         const { minEarliestResolutionTimeOffset } = settings.get().streaming.listMpd;
-        const { earliestResolutionTimeOffset } = linkedPeriod.ImportedMPD;
+        const earliestResolutionTimeOffset = linkedPeriod.ImportedMPD.earliestResolutionTimeOffset ?? DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET;
         const resolutionTime = Math.max(earliestResolutionTimeOffset, minEarliestResolutionTimeOffset);
         
         return time >= linkedPeriod.start - resolutionTime;
