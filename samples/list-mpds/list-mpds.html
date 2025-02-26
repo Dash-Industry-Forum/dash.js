@@ -20,15 +20,15 @@
                   <h3>List MPDs</h3>
                   <p>This sample shows the following use cases of the List MPDs implementation in DASH</p>
                   <ul>
-                    <li><p><strong>Case 0 : Single Linked Period - </strong>  A MPD with a single Period that links to an Imported MPD.</p></li>
-                    <li><p><strong>Case 1 : Multiple Linked Period -</strong> A MPD with multiple linked Periods, each pointing to a different Imported MPD.</p></li>
-                    <li><p><strong>Case 2 : Linked Period + Regular Period -</strong> A MPD with one linked Period followed by a regular Period.</p></li>
-                    <li><p><strong>Case 3 : Regular Period + Linked Period -</strong>  A MPD with one regular Period followed by a linked Period.</p></li>
-                    <li><p><strong>Case 4 : earliestResolutionTime > minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period exceeds the min buffer time.</p></li>
-                    <li><p><strong>Case 5 : erliestResolutionTime < minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period is less than the buffer time.</p></li>
-                    <li><p><strong>Case 6 : Different Linked Period and Imported Period durations -</strong> An MPD where a Linked Period references an Imported MPD with a duration that does not match the Linked Period's duration in the main manifest</p></li>
-                    <li><p><strong>Case 7 : First List MPD Period with start time =/ 0 -</strong> The MPD is of type list, and the first Period in the manifest has a start time that is not equal to PT0S (0 seconds).</p></li>
-                    <li><p><strong>Case 8 : Retry -</strong> The MPD is of type list, and the ImportedMPD should not be downloadable</p></li>
+                    <li><p><strong>Case 0: Single Linked Period - </strong>  A MPD with a single Period that links to an Imported MPD.</p></li>
+                    <li><p><strong>Case 1: Multiple Linked Period -</strong> A MPD with multiple linked Periods, each pointing to a different Imported MPD.</p></li>
+                    <li><p><strong>Case 2: Linked Period + Regular Period -</strong> A MPD with one linked Period followed by a regular Period.</p></li>
+                    <li><p><strong>Case 3: Regular Period + Linked Period -</strong>  A MPD with one regular Period followed by a linked Period.</p></li>
+                    <li><p><strong>Case 4: earliestResolutionTime > minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period exceeds the min buffer time.</p></li>
+                    <li><p><strong>Case 5: erliestResolutionTime < minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period is less than the buffer time.</p></li>
+                    <li><p><strong>Case 6: Different Linked Period and Imported Period durations -</strong> An MPD where a Linked Period references an Imported MPD with a duration that does not match the Linked Period's duration in the main manifest</p></li>
+                    <li><p><strong>Case 7: First List MPD Period with start time =/ 0 -</strong> The MPD is of type list, and the first Period in the manifest has a start time that is not equal to PT0S (0 seconds).</p></li>
+                    <li><p><strong>Case 8: Retry -</strong> The MPD is of type list, and the ImportedMPD should not be downloadable</p></li>
                   </ul>
                 </div>
             </div>
@@ -46,11 +46,11 @@
                           <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list1.mpd">Case 1: Multiple Linked Period</a>
                           <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list2.mpd">Case 2: Linked Period + Regular Period</a>
                           <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list3.mpd">Case 3: Regular Period + Linked Period</a>
-                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list4.mpd">Case 4: EarliestResolutionTime &gt; buffer time</a>
-                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list5.mpd">Case 5: EarliestResolutionTime &lt; buffer time</a>
+                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list4.mpd">Case 4: EarliestResolutionTime &gt; minBufferTime</a>
+                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list5.mpd">Case 5: EarliestResolutionTime &lt; minBufferTime</a>
                           <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list6.mpd">Case 6: Different Linked Period and Imported Period durations</a>
                           <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list7.mpd">Case 7: First List MPD Period with start time =/ 0</a>
-                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list8.mpd">Case 8: Imported MPD fails after 3 retry attempts</a>
+                          <a class="dropdown-item" href="#" data-url="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/bbb/list8.mpd">Case 8: Retry</a>
                       </div>
                   </div>
                 </div>
@@ -105,9 +105,9 @@
                     behavior.innerText = "The player should download the first Imported MPD, reproduce its first Period, and, upon completion, play the next regular Period.";
                   } else if (target.text === "Case 3: Regular Period + Linked Period") {
                     behavior.innerText = "The player should start by playing the first regular Period as usual and, upon its completion, download the linked Imported MPD and reproduce its first Period.";
-                  } else if (target.text === "Case 4: EarliestResolutionTime > buffer time") {
+                  } else if (target.text === "Case 4: EarliestResolutionTime > minBufferTime") {
                     behavior.innerText = "The player should start by playing the first regular Period as usual and, upon its completion, download the linked Imported MPD at startTime - erliestResolutionTime and reproduce its first Period";
-                  } else if (target.text === "Case 5: EarliestResolutionTime < buffer time") {
+                  } else if (target.text === "Case 5: EarliestResolutionTime < minBufferTime") {
                     behavior.innerText = "The player should start by playing the first regular Period as usual and, upon its completion, download the linked Imported MPD at with earliestResolutionTime = 0 and reproduce its first Period.";
                   } else if (target.text === "Case 6: Different Linked Period and Imported Period durations") {
                     behavior.innerText = "The player must respect the shortest duration between the Linked Period in the main manifest and the Imported MPD. Playback should seamlessly stop at the shorter duration, ensuring no content extends beyond the specified boundaries.";
