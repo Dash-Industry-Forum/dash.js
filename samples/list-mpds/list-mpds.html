@@ -24,7 +24,7 @@
                     <li><p><strong>Case 1 : Multiple Linked Period -</strong> A MPD with multiple linked Periods, each pointing to a different Imported MPD.</p></li>
                     <li><p><strong>Case 2 : Linked Period + Regular Period -</strong> A MPD with one linked Period followed by a regular Period.</p></li>
                     <li><p><strong>Case 3 : Regular Period + Linked Period -</strong>  A MPD with one regular Period followed by a linked Period.</p></li>
-                    <li><p><strong>Case 4 : erliestResolutionTime > minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period exceeds the buffer time.</p></li>
+                    <li><p><strong>Case 4 : earliestResolutionTime > minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period exceeds the min buffer time.</p></li>
                     <li><p><strong>Case 5 : erliestResolutionTime < minBufferTime -</strong> A MPD where the earliestResolutionTime of the linked Period is less than the buffer time.</p></li>
                     <li><p><strong>Case 6 : Different Linked Period and Imported Period durations -</strong> An MPD where a Linked Period references an Imported MPD with a duration that does not match the Linked Period's duration in the main manifest</p></li>
                     <li><p><strong>Case 7 : First List MPD Period with start time =/ 0 -</strong> The MPD is of type list, and the first Period in the manifest has a start time that is not equal to PT0S (0 seconds).</p></li>
