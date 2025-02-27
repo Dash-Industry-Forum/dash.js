@@ -865,7 +865,7 @@ function DashManifestModel() {
             // If the attribute @start is present in the Period, then the
             // Period is a regular Period and the PeriodStart is equal
             // to the value of this attribute.
-            if (realPeriod.hasOwnProperty(DashConstants.START)) {
+            if (realPeriod.hasOwnProperty(DashConstants.START) && !isNaN(realPeriod.start)) {
                 voPeriod = new Period();
                 voPeriod.start = realPeriod.start;
             }

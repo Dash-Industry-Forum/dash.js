@@ -146,8 +146,9 @@ function ListMpdController() {
         const { minEarliestResolutionTimeOffset } = settings.get().streaming.listMpd;
         const earliestResolutionTimeOffset = linkedPeriod.ImportedMPD.earliestResolutionTimeOffset ?? DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET;
         const resolutionTime = Math.max(earliestResolutionTimeOffset, minEarliestResolutionTimeOffset);
+        const { start } = dashAdapter.getPeriodById(linkedPeriod.id);
         
-        return time >= linkedPeriod.start - resolutionTime;
+        return time >= start - resolutionTime;
     }
 
     function reset() {
