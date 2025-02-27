@@ -308,25 +308,26 @@ function DashAdapter() {
         voPeriods = getRegularPeriods(newManifest);
     }
 
-    function mergeManifests(newManifest, importedManifest, periodId, mpdHasDuration) {
-        const periodIndex = newManifest.Period.findIndex(period => period.id === periodId);
-        // The imported manifest should be a single period manifest
+    function mergeManifests(manifest, importedManifest, periodId, mpdHasDuration) {
+        const voPeriods = getRegularPeriods(manifest);
+        const periodIndex = voPeriods.findIndex(period => period.id === periodId);
+        
+        if (periodIndex === -1) {
+            // Period not found
+            return; 
+        }
+    
         let newPeriod = {};
-        const linkedPeriod = newManifest.Period[periodIndex];
+        const linkedPeriod = voPeriods[periodIndex];
+    
         if (importedManifest) {
-            const importedPeriod = importedManifest.Period[0]
+            const importedPeriod = importedManifest.Period[0];
 
             if (importedManifest.hasOwnProperty(DashConstants.PROFILES)) {
                 importedPeriod.profiles = importedManifest.profiles;
             }
-            if (importedManifest.hasOwnProperty(DashConstants.SUPPLEMENTAL_PROPERTY)) {
-                importedPeriod.SupplementalProperty.concat(importedManifest.SupplementalProperty);
-            }
-            if (importedManifest.hasOwnProperty(DashConstants.ESSENTIAL_PROPERTY)) {
-                importedPeriod.EssentialProperty.concat(importedManifest.EssentialProperty);
-            }
             if (importedManifest.hasOwnProperty(DashConstants.PROGRAM_INFORMATION)) {
-                newManifest.ProgramInformation = importedManifest.ProgramInformation;
+                manifest.ProgramInformation = importedManifest.ProgramInformation;
             }
 
             newPeriod = {
@@ -340,66 +341,77 @@ function DashAdapter() {
                 EssentialProperty: linkedPeriod.EssentialProperty || [],
                 EventStream: linkedPeriod.EventStream || [],
             };
+    
+            // Update duration
             if (!mpdHasDuration && importedPeriod.duration && importedPeriod.duration < linkedPeriod.duration) {
                 newPeriod.duration = importedPeriod.duration;
-                newManifest.mediaPresentationDuration += newPeriod.duration;
+                manifest.mediaPresentationDuration += newPeriod.duration;
                 if (linkedPeriod.duration) {
-                    newManifest.mediaPresentationDuration -= linkedPeriod.duration;
+                    manifest.mediaPresentationDuration -= linkedPeriod.duration;
                 }
             }
-            const propertiesFromOtherNamespaces = Object.keys(linkedPeriod).filter(function (name) {return name.includes(':')});
-            Object.assign(newPeriod, newPeriod, propertiesFromOtherNamespaces);
+    
+            // Merge custom namespace properties
+            Object.keys(linkedPeriod)
+                .filter(name => name.includes(':'))
+                .forEach(name => newPeriod[name] = linkedPeriod[name]);
 
-            for (let item in importedPeriod.ServiceDescription) {
-                const index = newPeriod.ServiceDescription.findIndex(sd => sd.id === item.id);
-                index != -1 ? newPeriod.ServiceDescription[index] = item : newPeriod.ServiceDescription.push(item);
-            }
-            if (newPeriod.ServiceDescription.length === 0) {
-                delete newPeriod.ServiceDescription;
-            }
-            for (let item in importedPeriod.SupplementalProperty) {
-                const index = newPeriod.SupplementalProperty.findIndex(sp => sp.schemeIdUri === item.schemeIdUri && sp.value === item.value);
-                index != -1 ? newPeriod.SupplementalProperty[index] = item : newPeriod.SupplementalProperty.push(item);
-            }
-            if (newPeriod.SupplementalProperty.length === 0) {
-                delete newPeriod.SupplementalProperty;
-            }
-            for (let item in importedPeriod.EssentialProperty) {
-                const index = newPeriod.EssentialProperty.findIndex(ep => ep.schemeIdUri === item.schemeIdUri && ep.value === item.value);
-                index != -1 ? newPeriod.EssentialProperty[index] = item : newPeriod.EssentialProperty.push(item);
-            }
-            if (newPeriod.EssentialProperty.length === 0) {
-                delete newPeriod.EssentialProperty;
-            }
-            for (let item in importedPeriod.EventStream) {
-                const index = newPeriod.EventStream.findIndex(es => es.schemeIdUri === item.schemeIdUri && es.value === item.value);
-                index != -1 ? newPeriod.EventStream[index] = item : newPeriod.EventStream.push(item);
-            }
-            if (newPeriod.EventStream.length === 0) {
-                delete newPeriod.EventStream;
-            }
+            _mergeUniqueProperties(newPeriod.ServiceDescription, importedPeriod.ServiceDescription, DashConstants.ID);
+            _mergeUniqueProperties(newPeriod.SupplementalProperty, importedPeriod.SupplementalProperty, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+            _mergeUniqueProperties(newPeriod.EssentialProperty, importedPeriod.EssentialProperty, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+            _mergeUniqueProperties(newPeriod.EventStream, importedPeriod.EventStream, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+    
+            removeEmptyProperties(newPeriod, [
+                DashConstants.SERVICE_DESCRIPTION,
+                DashConstants.SUPPLEMENTAL_PROPERTY, 
+                DashConstants.ESSENTIAL_PROPERTY, 
+                DashConstants.EVENT_STREAM
+            ]);
 
             newPeriod.baseURL = importedManifest.baseUri;
-            if (importedManifest.BaseURL) {
-                const baseUrls = importedManifest.BaseURL.concat(importedPeriod.BaseURL)
-                    .filter(function( element ) {
-                        return element !== undefined;
-                    });
-                newPeriod.BaseURL = baseUrls;
+            if (importedManifest.BaseURL || importedPeriod.BaseURL) {
+                newPeriod.BaseURL = [...(importedManifest.BaseURL || []), ...(importedPeriod.BaseURL || [])].filter(Boolean);
             }
 
             newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
         } else {
-            newPeriod = linkedPeriod;
+            newPeriod = { ...linkedPeriod };
             delete newPeriod.ImportedMPD;
             delete newPeriod.earliestResolutionTimeOffset;
         }
+    
         if (newPeriod.minBufferTime && (newPeriod.AdaptationSet || newPeriod.duration === 0)) {
-            newManifest.Period[periodIndex] = newPeriod;
+            manifest.Period[periodIndex] = newPeriod;
         } else {
-            newManifest.Period.splice(periodIndex, 1);
+            manifest.Period.splice(periodIndex, 1);
         }
     }
+
+    function _mergeUniqueProperties(targetArray, sourceArray, keyProp, valueProp) {
+        if (!sourceArray || !targetArray) {
+            return;
+        }
+        
+        for (const item of sourceArray) {
+            const index = targetArray.findIndex(existingItem => existingItem[keyProp] === item[keyProp] && (!valueProp || existingItem[valueProp] === item[valueProp]));
+            if (index !== -1) {
+                // Replace existing entry
+                targetArray[index] = item;
+            } else {
+                targetArray.push(item);
+            }
+        }
+    }
+    
+    // Helper function to remove empty properties
+    function removeEmptyProperties(obj, propertyNames) {
+        for (const prop of propertyNames) {
+            if (Array.isArray(obj[prop]) && obj[prop].length === 0) {
+                delete obj[prop];
+            }
+        }
+    }
+    
 
     /**
      * Returns an array of streamInfo objects
