@@ -322,14 +322,14 @@ function DashAdapter() {
     
         if (importedManifest) {
             const importedPeriod = importedManifest.Period[0];
-    
+
             if (importedManifest.hasOwnProperty(DashConstants.PROFILES)) {
                 importedPeriod.profiles = importedManifest.profiles;
             }
             if (importedManifest.hasOwnProperty(DashConstants.PROGRAM_INFORMATION)) {
                 manifest.ProgramInformation = importedManifest.ProgramInformation;
             }
-    
+
             newPeriod = {
                 baseUri: importedManifest.baseUri,
                 minBufferTime: importedManifest.minBufferTime,
