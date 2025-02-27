@@ -886,5 +886,22 @@
                 ]
             }
         ]
+    },
+    {
+        "section": "List MPDs",
+        "samples": [
+            {
+                "title": "List MPDs implementation",
+                "description": "A sample showing List MPDs implementation",
+                "href": "list-mpds/list-mpds.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "List MPDs"
+                ]
+            }
+        ]
     }
 ]
