@@ -188,7 +188,7 @@ import Events from './events/Events.js';
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
- *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -998,13 +998,10 @@ import Events from './events/Events.js';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
- * @property {string} [selectionModeForInitialTrack="highestSelectionPriority"]
+ * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
- *
- * - Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY
- * This mode makes the player select the track with the highest selectionPriority as defined in the manifest. If not selectionPriority is given we fallback to TRACK_SELECTION_MODE_HIGHEST_BITRATE. This mode is a default mode.
  *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
  * This mode makes the player select the track with a highest bitrate.
@@ -1230,7 +1227,7 @@ function Settings() {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
-            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,

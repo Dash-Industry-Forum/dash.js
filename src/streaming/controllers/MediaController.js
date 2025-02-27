@@ -570,21 +570,27 @@ function MediaController() {
         let result = [];
         let tmp;
 
-        trackArr.forEach(function (track) {
-            const sum = track.bitrateList.reduce(function (acc, obj) {
-                const resolution = Math.max(1, obj.width * obj.height);
-                const efficiency = obj.bandwidth / resolution;
-                return acc + efficiency;
-            }, 0);
-            tmp = sum / track.bitrateList.length;
+        if (trackArr[0] && trackArr[0].type === Constants.VIDEO) {
+            // efficiency is only defined for video tracks
+            trackArr.forEach(function (track) {
+                const sum = track.bitrateList.reduce(function (acc, obj) {
+                    const resolution = Math.max(1, obj.width * obj.height);
+                    const efficiency = obj.bandwidth / resolution;
+                    return acc + efficiency;
+                }, 0);
+                tmp = sum / track.bitrateList.length;
 
-            if (tmp < min) {
-                min = tmp;
-                result = [track];
-            } else if (tmp === min) {
-                result.push(track);
-            }
-        });
+                if (tmp < min) {
+                    min = tmp;
+                    result = [track];
+                } else if (tmp === min) {
+                    result.push(track);
+                }
+            });
+        } else {
+            return trackArr;
+        }
+
 
         return result;
     }
@@ -630,27 +636,27 @@ function MediaController() {
 
         // Use the track selection function that is defined in the settings
         else {
-            let mode = settings.get().streaming.selectionModeForInitialTrack;
-            switch (mode) {
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
-                    tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                    tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                    tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                    tmpArr = _trackSelectionModeWidestRange(tmpArr);
-                    break;
-                default:
-                    logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
+            tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
+            if (tmpArr.length > 1) {
+                let mode = settings.get().streaming.selectionModeForInitialTrack;
+                switch (mode) {
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
+                        tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                        tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                        tmpArr = _trackSelectionModeWidestRange(tmpArr);
+                        break;
+                    default:
+                        logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                }
             }
         }
 
