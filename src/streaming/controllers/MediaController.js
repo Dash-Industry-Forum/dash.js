@@ -594,7 +594,7 @@ function MediaController() {
             // we ignore potential AudioChannelConfiguration descriptors assigned to different bitrates=Representations
             // since this should not happen per IOP
             trackArr.forEach(function (track) {
-                let tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
+                const tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
                     const nChan = getNChanFromAudioChannelConfig(audioChanCfg);
                     return acc + nChan;
                 }, 0);
