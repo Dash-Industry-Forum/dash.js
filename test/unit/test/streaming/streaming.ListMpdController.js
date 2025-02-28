@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import ListMpdController from '../../../../src/streaming/controllers/ListMpdController.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
-import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import Settings from '../../../../src/core/Settings.js';
@@ -12,7 +11,6 @@ describe('ListMpdController', function () {
 
     beforeEach(() => {
         eventBus = EventBus().getInstance();
-        manifestLoader = new ManifestLoaderMock();
         listMpdController = ListMpdController().getInstance();
         const dashAdapter = new AdapterMock();
         let settings = Settings().getInstance();
