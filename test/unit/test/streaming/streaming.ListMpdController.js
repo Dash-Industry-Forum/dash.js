@@ -36,7 +36,7 @@ describe('ListMpdController', function () {
     //     expect(consoleErrorSpy.firstCall.args[0].message).to.equal("The first period in a list MPD must have start time equal to 0");
     // });
 
-    it("should trigger a manifest update event if the first period is a regular period", () => {
+    it('should trigger a manifest update event if the first period is a regular period', () => {
         let voHelper = new VoHelper();
         let manifest = voHelper.getDummyMpd();
         //let manifest = voHelper.getDummyListMpd();
