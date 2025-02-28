@@ -45,6 +45,8 @@ TODOS:
 
 function AlternativeMpdController() {
 
+    const DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET = 60;
+
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -155,7 +157,7 @@ function AlternativeMpdController() {
             return
         }
 
-        const alternativeEvent = _parseAlternativeMPDEvent(event)
+        const alternativeEvent = _parseAlternativeMPDEvent(event);
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
             logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
@@ -306,7 +308,7 @@ function AlternativeMpdController() {
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
-                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || '0', 10),
+                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
                 },
                 mode: mode,
                 triggered: false,
