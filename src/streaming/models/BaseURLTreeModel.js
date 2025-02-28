@@ -125,7 +125,18 @@ function BaseURLTreeModel() {
         const synthesizedBaseUrls = contentSteeringController.getSynthesizedBaseUrlElements(targetBaseUrls);
 
         if (synthesizedBaseUrls && synthesizedBaseUrls.length > 0) {
-            targetBaseUrls = targetBaseUrls.concat(synthesizedBaseUrls)
+            synthesizedBaseUrls.forEach((synthesizedBaseUrl) => {
+                // If we already have a BaseURL with the same serviceLocation, we overwrite it with the synthesized one
+                const foundIndex = targetBaseUrls.findIndex((elem) => {
+                    return elem.serviceLocation === synthesizedBaseUrl.serviceLocation
+                })
+
+                if (foundIndex !== -1) {
+                    targetBaseUrls[foundIndex] = synthesizedBaseUrl;
+                } else {
+                    targetBaseUrls.push(synthesizedBaseUrl)
+                }
+            })
         }
 
         return targetBaseUrls;
