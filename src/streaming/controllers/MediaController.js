@@ -599,6 +599,20 @@ function MediaController() {
                     return acc + nChan;
                 }, 0);
                 let avgChan = tmp / track.audioChannelConfiguration.length;
+
+                if (track.hasOwnProperty('supplementalProperties')) {
+                    if (track.supplementalProperties.some(
+                        prop => {
+                            return (prop.schemeIdUri === 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018' && prop.value === 'JOC');
+                        })) {
+                        avgChan = 16;
+                    }
+                }
+                
+                // avgChan may be undefined, e.g. when audioChannelConfiguration is absent
+                if (!avgChan) {
+                    avgChan = 1;
+                }
                 
                 let sumEff = track.bitrateList.reduce(function (acc, t) {
                     const trackEff = t.bandwidth / avgChan;

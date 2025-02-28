@@ -89,7 +89,7 @@ function _getNChanDolby2015(value) {
 
     if ( value === '800000' ) {
         // object audio
-        return 16;
+        return 24;
     }
 
     // see ETSI TS 103190-2, table A.27

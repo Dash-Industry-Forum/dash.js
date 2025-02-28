@@ -728,8 +728,9 @@ describe('MediaController', function () {
                     type: type,
                     bitrateList: track.bitrateList,
                     representationCount: track.bitrateList.length,
-                    audioChannelConfiguration: track.audioChannelConfiguration,
-                    selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1
+                    audioChannelConfiguration: track.audioChannelConfiguration ? track.audioChannelConfiguration : [],
+                    selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1,
+                    supplementalProperties: track.supplementalProperties ? track.supplementalProperties : []
                 };
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
@@ -864,6 +865,14 @@ describe('MediaController', function () {
                 );
             });
 
+            it('should not prioritize audio tracks where audioChannelConfig is absent', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
+                    { bitrateList: [{ bandwidth: 96 }] }
+                );
+            });
+
             it('should select audio track with lowest bitrate per full channels (equal channel config)', function () {
                 testSelectInitialTrack(
                     'audio',
@@ -877,6 +886,18 @@ describe('MediaController', function () {
                     'audio',
                     { bitrateList: [{ bandwidth: 2000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}] },
                     { bitrateList: [{ bandwidth: 1000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                );
+            });
+
+            it('should select audio track with lowest bitrate per full channels (JOC extension)', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    { 
+                        bitrateList: [{ bandwidth: 768 }],
+                        audioChannelConfiguration: [{schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F8016'}],
+                        supplementalProperties: [{schemeIdUri: 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018', value: 'JOC'}]
+                    },
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
                 );
             });
 

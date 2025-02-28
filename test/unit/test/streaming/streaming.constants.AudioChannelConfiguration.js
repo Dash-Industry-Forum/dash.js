@@ -54,14 +54,6 @@ describe('AudioChannelConfiguration', function () {
         ).to.equal(5);
     });
 
-    // it('shall return correct value for Dolby:2011 - JOC', () => {
-    //     expect(
-    //         getNChanFromAudioChannelConfig(
-    //             { schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F802' }
-    //         )
-    //     ).to.equal(9);
-    // });
-
     it('shall return correct value for Dolby:2015 - mono', () => {
         expect(
             getNChanFromAudioChannelConfig(
@@ -107,7 +99,7 @@ describe('AudioChannelConfiguration', function () {
             getNChanFromAudioChannelConfig(
                 {schemeIdUri:'tag:dolby.com,2015:dash:audio_channel_configuration:2015', value:'800000'}
             )
-        ).to.equal(16);
+        ).to.equal(24);
     });
 
     it('shall return correct value for DTS', () => {
