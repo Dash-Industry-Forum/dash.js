@@ -37,6 +37,7 @@ import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
+import getNChanFromAudioChannelConfig from '../constants/AudioChannelConfiguration.js';
 
 function MediaController() {
 
@@ -570,8 +571,7 @@ function MediaController() {
         let result = [];
         let tmp;
 
-        if (trackArr[0] && trackArr[0].type === Constants.VIDEO) {
-            // efficiency is only defined for video tracks
+        if ( trackArr[0] && (trackArr[0].type === Constants.VIDEO) ) {
             trackArr.forEach(function (track) {
                 const sum = track.bitrateList.reduce(function (acc, obj) {
                     const resolution = Math.max(1, obj.width * obj.height);
@@ -587,12 +587,36 @@ function MediaController() {
                     result.push(track);
                 }
             });
-        } else {
-            return trackArr;
+            return result;
+        } 
+        else if ( trackArr[0] && (trackArr[0].type === Constants.AUDIO) ) {
+            // Note:
+            // we ignore potential AudioChannelConfiguration descriptors assigned to different bitrates=Representations
+            // since this should not happen per IOP
+            trackArr.forEach(function (track) {
+                let tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
+                    const nChan = getNChanFromAudioChannelConfig(audioChanCfg);
+                    return acc + nChan;
+                }, 0);
+                let avgChan = tmp / track.audioChannelConfiguration.length;
+                
+                let sumEff = track.bitrateList.reduce(function (acc, t) {
+                    const trackEff = t.bandwidth / avgChan;
+                    return acc + trackEff;
+                }, 0);
+                let eff = sumEff / track.bitrateList.length;
+                
+                if (eff < min) {
+                    min = eff;
+                    result = [track];
+                } else if (eff === min) {
+                    result.push(track);
+                }
+            });
+            return result;
         }
 
-
-        return result;
+        return trackArr;
     }
 
     function getTracksWithWidestRange(trackArr) {
@@ -799,18 +823,6 @@ function MediaController() {
 
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestEfficiency(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestBitrate(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithWidestRange(tmpArr);
-        }
 
         return tmpArr;
     }

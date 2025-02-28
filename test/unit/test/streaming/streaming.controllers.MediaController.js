@@ -725,8 +725,10 @@ describe('MediaController', function () {
         function testSelectInitialTrack(type, expectedTrack, otherTrack) {
             const tracks = [expectedTrack, otherTrack].map(function (track) {
                 return {
+                    type: type,
                     bitrateList: track.bitrateList,
                     representationCount: track.bitrateList.length,
+                    audioChannelConfiguration: track.audioChannelConfiguration,
                     selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1
                 };
             });
@@ -838,6 +840,14 @@ describe('MediaController', function () {
                 settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
             });
 
+            it('should select track with highest priority', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }], selectionPriority: 1 }
+                );
+            });
+
             it('should select video track with lowest bitrate among equal resolutions', function () {
                 testSelectInitialTrack(
                     'video',
@@ -854,11 +864,19 @@ describe('MediaController', function () {
                 );
             });
 
-            it('should select audio track with lowest avg bitrate', function () {
+            it('should select audio track with lowest bitrate per full channels (equal channel config)', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { bitrateList: [{ bandwidth: 1000, width: 0, height: 0 }] },
-                    { bitrateList: [{ bandwidth: 2000, width: 0, height: 0 }] }
+                    { bitrateList: [{ bandwidth: 96 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                );
+            });
+
+            it('should select audio track with lowest bitrate per full channels (different channel config)', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    { bitrateList: [{ bandwidth: 2000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}] },
+                    { bitrateList: [{ bandwidth: 1000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
                 );
             });
 
