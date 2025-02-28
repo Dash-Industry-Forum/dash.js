@@ -37,6 +37,7 @@ import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
+import getNChanFromAudioChannelConfig from '../constants/AudioChannelConfiguration.js';
 
 function MediaController() {
 
@@ -570,23 +571,66 @@ function MediaController() {
         let result = [];
         let tmp;
 
-        trackArr.forEach(function (track) {
-            const sum = track.bitrateList.reduce(function (acc, obj) {
-                const resolution = Math.max(1, obj.width * obj.height);
-                const efficiency = obj.bandwidth / resolution;
-                return acc + efficiency;
-            }, 0);
-            tmp = sum / track.bitrateList.length;
+        if ( trackArr[0] && (trackArr[0].type === Constants.VIDEO) ) {
+            trackArr.forEach(function (track) {
+                const sum = track.bitrateList.reduce(function (acc, obj) {
+                    const resolution = Math.max(1, obj.width * obj.height);
+                    const efficiency = obj.bandwidth / resolution;
+                    return acc + efficiency;
+                }, 0);
+                tmp = sum / track.bitrateList.length;
 
-            if (tmp < min) {
-                min = tmp;
-                result = [track];
-            } else if (tmp === min) {
-                result.push(track);
-            }
-        });
+                if (tmp < min) {
+                    min = tmp;
+                    result = [track];
+                } else if (tmp === min) {
+                    result.push(track);
+                }
+            });
+            return result;
+        } 
+        else if ( trackArr[0] && (trackArr[0].type === Constants.AUDIO) ) {
+            // Note:
+            // we ignore potential AudioChannelConfiguration descriptors assigned to different bitrates=Representations
+            // since this should not happen per IOP
+            trackArr.forEach(function (track) {
+                const tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
+                    const nChan = getNChanFromAudioChannelConfig(audioChanCfg);
+                    return acc + nChan;
+                }, 0);
+                let avgChan = tmp / track.audioChannelConfiguration.length;
 
-        return result;
+                if (track.hasOwnProperty('supplementalProperties')) {
+                    if (track.supplementalProperties.some(
+                        prop => {
+                            return (prop.schemeIdUri === 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018' && prop.value === 'JOC');
+                        })) {
+                        avgChan = 16;
+                    }
+                }
+                
+                // avgChan may be undefined, e.g. when audioChannelConfiguration is absent
+                if (!avgChan) {
+                    avgChan = 1;
+                }
+                
+                let sumEff = track.bitrateList.reduce(function (acc, t) {
+                    const trackEff = t.bandwidth / avgChan;
+                    return acc + trackEff;
+                }, 0);
+                let eff = sumEff / track.bitrateList.length;
+                
+                if (eff < min) {
+                    min = eff;
+                    result = [track];
+                } else if (eff === min) {
+                    result.push(track);
+                }
+            });
+            return result;
+        }
+
+        return trackArr;
     }
 
     function getTracksWithWidestRange(trackArr) {
@@ -630,27 +674,27 @@ function MediaController() {
 
         // Use the track selection function that is defined in the settings
         else {
-            let mode = settings.get().streaming.selectionModeForInitialTrack;
-            switch (mode) {
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
-                    tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                    tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                    tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                    tmpArr = _trackSelectionModeWidestRange(tmpArr);
-                    break;
-                default:
-                    logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
+            tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
+            if (tmpArr.length > 1) {
+                let mode = settings.get().streaming.selectionModeForInitialTrack;
+                switch (mode) {
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
+                        tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                        tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                        tmpArr = _trackSelectionModeWidestRange(tmpArr);
+                        break;
+                    default:
+                        logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                }
             }
         }
 
@@ -793,18 +837,6 @@ function MediaController() {
 
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestEfficiency(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestBitrate(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithWidestRange(tmpArr);
-        }
 
         return tmpArr;
     }
