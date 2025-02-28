@@ -109,4 +109,20 @@ describe('AudioChannelConfiguration', function () {
             )
         ).to.equal(16);
     });
+
+    it('shall return correct value for DTS', () => {
+        expect(
+            getNChanFromAudioChannelConfig(
+                {schemeIdUri:'tag:dts.com,2014:dash:audio_channel_configuration:2012', value:'6'}
+            )
+        ).to.equal(6);
+    });
+
+    it('shall return correct value for DTS-UHD 5.1.4', () => {
+        expect(
+            getNChanFromAudioChannelConfig(
+                {schemeIdUri:'tag:dts.com,2018:uhd:audio_channel_configuration', value:'180A03F'}
+            )
+        ).to.equal(9);
+    });
 });

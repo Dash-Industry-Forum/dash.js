@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2025, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -95,8 +95,17 @@ function _getNChanDolby2015(value) {
     // see ETSI TS 103190-2, table A.27
     // 0b001101111000000010: single channel flags
     // 0b110010000110111101: channel pair flags
-
     return _getNChanFromBitMask(value, [0b001101111000000010, 0b110010000110111101]);
+}
+
+function _getNChanDTSUHD(value) {
+    if ( value.length > 8 ) {
+        return undefined;
+    }
+
+    // see ETSI TS 103491, table B-5
+    // LFE to exclude: 0x00010000 + 0x00000020
+    return _getNChanFromBitMask(value, [0xFFFEFFDF, 0x00000000]);
 }
 
 function getNChanFromAudioChannelConfig(audioChannelConfiguration) {
@@ -117,9 +126,9 @@ function getNChanFromAudioChannelConfig(audioChannelConfiguration) {
     } else if (scheme === 'tag:dolby.com,2015:dash:audio_channel_configuration:2015') {
         nChan = _getNChanDolby2015(value);
     } else if (scheme === 'tag:dts.com,2014:dash:audio_channel_configuration:2012') {
-        nChan = undefined;
+        nChan = parseInt(value); // per ETSI TS 102 114,table G.2, this includes LFE
     } else if (scheme === 'tag:dts.com,2018:uhd:audio_channel_configuration') {
-        nChan = undefined;
+        nChan = _getNChanDTSUHD(value);
     }
     return nChan;
 }
