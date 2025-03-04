@@ -53,11 +53,16 @@ describe('ListMpdController', function () {
             eventBus.on(Events.MANIFEST_UPDATED, resolve);
         });
 
+        // Create a timeout promise that rejects after 4 seconds
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
+        );
+
         eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
-       
-        // console.log("Are they the same?", eventBus === ListMpdController(context).getInstance().eventBus);
+
         // Wait for the specific event to occur
-        await manifestUpdatedPromise;
+        await Promise.race([manifestUpdatedPromise, timeoutPromise]);
+
         sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
     });
 
