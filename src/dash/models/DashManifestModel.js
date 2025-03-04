@@ -542,6 +542,9 @@ function DashManifestModel() {
             return null
         }
         const frameRate = realRepresentation[DashConstants.FRAMERATE];
+        if (!frameRate) {
+            return null
+        }
 
         if (typeof frameRate === 'string' && frameRate.includes('/')) {
             const [numerator, denominator] = frameRate.split('/').map(value => parseInt(value, 10));

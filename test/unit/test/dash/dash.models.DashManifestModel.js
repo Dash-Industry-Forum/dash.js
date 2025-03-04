@@ -1665,8 +1665,13 @@ describe('DashManifestModel', function () {
 
         describe('getFramerate()', () => {
 
-            it('Should be undefined when no Representation is provided', () => {
+            it('Should be null when no Representation is provided', () => {
                 const framerate = dashManifestModel.getFramerate();
+                expect(framerate).to.be.null;
+            })
+
+            it('Should be null when not defined', () => {
+                const framerate = dashManifestModel.getFramerate({});
                 expect(framerate).to.be.null;
             })
 
