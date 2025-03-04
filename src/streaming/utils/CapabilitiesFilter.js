@@ -221,7 +221,7 @@ function CapabilitiesFilter() {
             codec: codec,
             width: rep.width || null,
             height: rep.height || null,
-            framerate: rep.frameRate || null,
+            framerate: adapter.getFramerate(rep) || null,
             bitrate: rep.bandwidth || null,
             isSupported: true
         }

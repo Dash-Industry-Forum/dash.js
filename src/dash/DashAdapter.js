@@ -765,6 +765,15 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the framerate of a Representation as number
+     * @param representation
+     * @returns {number}
+     */
+    function getFramerate(representation) {
+        return dashManifestModel.getFramerate(representation);
+    }
+
+    /**
      * Returns the bandwidth for a given representation id and the corresponding period index
      * @param {number} representationId
      * @param {number} periodIdx
@@ -1225,6 +1234,7 @@ function DashAdapter() {
         getEssentialPropertiesForRepresentation,
         getEvent,
         getEventsFor,
+        getFramerate,
         getIndexForRepresentation,
         getIsDVB,
         getIsDynamic,
