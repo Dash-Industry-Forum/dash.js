@@ -538,20 +538,20 @@ function DashManifestModel() {
     }
 
     function getFramerate(realRepresentation) {
-        const frameRate = realRepresentation[DashConstants.FRAMERATE];
-        if (isNaN(frameRate) && frameRate.includes('/')) {
-            const parts = frameRate.split('/');
-            if (parts.length === 2) {
-                const numerator = parseFloat(parts[0]);
-                const denominator = parseFloat(parts[1]);
-
-                if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
-                    return numerator / denominator;
-                }
-            }
-        } else {
-            return frameRate
+        if (!realRepresentation) {
+            return null
         }
+        const frameRate = realRepresentation[DashConstants.FRAMERATE];
+
+        if (typeof frameRate === 'string' && frameRate.includes('/')) {
+            const [numerator, denominator] = frameRate.split('/').map(value => parseInt(value, 10));
+
+            if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                return numerator / denominator;
+            }
+        }
+
+        return parseInt(frameRate);
     }
 
     function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
