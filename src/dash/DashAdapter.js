@@ -767,7 +767,7 @@ function DashAdapter() {
     /**
      * Returns the framerate of a Representation as number
      * @param representation
-     * @returns {*}
+     * @returns {number}
      */
     function getFramerate(representation) {
         return dashManifestModel.getFramerate(representation);
