@@ -437,6 +437,8 @@ declare namespace dashjs {
 
         getEventsForPeriod(period: Period): any[];
 
+        getFramerate(representation: object): number;
+
         getId(manifest: object): string;
 
         getIndexForAdaptation(realAdaptation: object, manifest: object, periodIndex: number): number;
@@ -1064,6 +1066,8 @@ declare namespace dashjs {
         getEvent(eventBox: object, eventStreams: object, mediaStartTime: number, voRepresentation: object): null | Event;
 
         getEventsFor(info: object, voRepresentation: object): Array<Event>;
+
+        getFramerate(representation: object): number;
 
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
 
