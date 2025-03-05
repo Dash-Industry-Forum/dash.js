@@ -33,7 +33,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
 import DashConstants from './constants/DashConstants.js';
-import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
+import {processUriTemplate} from './utils/SegmentsUtils.js';
 
 
 const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;

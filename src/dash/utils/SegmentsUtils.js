@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
+import {processUriTemplate as cmlProcessUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
 import Segment from './../vo/Segment.js';
 
 function getNumberForSegment(segment, segmentIndex) {
@@ -76,6 +76,14 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     }
 
     return true;
+}
+
+export function processUriTemplate(url, representationId, number, subNumber, bandwidth, time) {
+    if (!url) {
+        return url;
+    }
+
+    return cmlProcessUriTemplate(url, representationId, number, subNumber, bandwidth, time);
 }
 
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {

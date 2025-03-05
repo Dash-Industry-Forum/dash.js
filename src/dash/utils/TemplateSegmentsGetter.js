@@ -28,11 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {getIndexBasedSegment} from './SegmentsUtils.js';
+import {getIndexBasedSegment, processUriTemplate} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
