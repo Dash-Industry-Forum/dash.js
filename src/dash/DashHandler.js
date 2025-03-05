@@ -32,12 +32,8 @@ import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
-import {
-    replaceIDForTemplate,
-    replaceTokenForTemplate,
-    unescapeDollarsInTemplate
-} from './utils/SegmentsUtils.js';
 import DashConstants from './constants/DashConstants.js';
+import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
 
 
 const DEFAULT_ADJUST_SEEK_TIME_THRESHOLD = 0.5;
@@ -145,7 +141,7 @@ function DashHandler(config) {
         request.representation = representation;
 
         if (_setRequestUrl(request, representation.initialization, representation)) {
-            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
+            request.url = processUriTemplate(request.url, undefined, undefined, undefined, representation.bandwidth);
             return request;
         }
     }
@@ -158,13 +154,14 @@ function DashHandler(config) {
         const request = new FragmentRequest();
         const representation = segment.representation;
         const bandwidth = representation.bandwidth;
-        let url = segment.media;
-
-        url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
-        url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
-        url = replaceTokenForTemplate(url, 'Bandwidth', bandwidth);
-        url = replaceIDForTemplate(url, representation.id);
-        url = unescapeDollarsInTemplate(url);
+        const url = processUriTemplate(
+            segment.media,
+            representation.id,
+            segment.replacementNumber,
+            undefined,
+            bandwidth,
+            segment.replacementTime
+        );
 
         request.mediaType = getType();
         request.bandwidth = representation.bandwidth;
