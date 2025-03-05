@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Thumbnail from '../vo/Thumbnail.js';
 import ThumbnailTracks from './ThumbnailTracks.js';
-import {processUriTemplate} from '../utils/SegmentsUtils.js';
+import {processUriTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailController(config) {
 
