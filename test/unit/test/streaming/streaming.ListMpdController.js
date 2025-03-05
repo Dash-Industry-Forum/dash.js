@@ -1,3 +1,4 @@
+import {expect} from 'chai';
 import sinon from 'sinon';
 import ListMpdController from '../../../../src/streaming/controllers/ListMpdController.js';
 import EventBus from '../../../../src/core/EventBus.js';
@@ -30,6 +31,7 @@ describe('ListMpdController', function () {
 
         mpdHelper = new MpdHelper();
         let responseMpdMock = mpdHelper.getMpd('static', undefined);
+        responseMpdMock.minBufferTime = 4;
         manifestLoaderMock = new ManifestLoaderMock(responseMpdMock);
         let config = {
             settings: settings,
@@ -65,8 +67,6 @@ describe('ListMpdController', function () {
         const manifestUpdatedPromise = new Promise((resolve) => {
             eventBus.on(Events.MANIFEST_UPDATED, (manifest) => {
                 updatedManifest = manifest;
-                console.log('updated manifest:')
-                console.log(updatedManifest);
                 resolve();
             });
         });
@@ -81,6 +81,8 @@ describe('ListMpdController', function () {
         // Wait for the specific event to occur
         await Promise.race([manifestUpdatedPromise, timeoutPromise]);
         sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
+        expect(updatedManifest.manifest.Period[0]).to.have.property('AdaptationSet')
+
     });
 
 });
