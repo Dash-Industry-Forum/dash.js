@@ -737,6 +737,29 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true;
         }
 
+        describe('selectionPriority flag', function () {
+            beforeEach(function () {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+            });
+
+            it('should select track with highest priority per default', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track with highest bitrate if selectionPriority is to be ignored', function () {
+                settings.update({ streaming: { ignoreSelectionPriority: true } });
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 },
+                    { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 }
+                );
+            });
+        })
+
         describe('"highestSelectionPriority" mode', function () {
             beforeEach(function () {
                 settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY } });

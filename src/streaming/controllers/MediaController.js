@@ -674,7 +674,9 @@ function MediaController() {
 
         // Use the track selection function that is defined in the settings
         else {
-            tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
+            if (!settings.get().streaming.ignoreSelectionPriority) {
+                tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
+            }
             if (tmpArr.length > 1) {
                 let mode = settings.get().streaming.selectionModeForInitialTrack;
                 switch (mode) {
