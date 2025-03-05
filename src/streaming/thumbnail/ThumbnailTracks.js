@@ -38,7 +38,7 @@ import BoxParser from '../../streaming/utils/BoxParser.js';
 import XHRLoader from '../../streaming/net/XHRLoader.js';
 import DashHandler from '../../dash/DashHandler.js';
 import SegmentsController from '../../dash/controllers/SegmentsController.js';
-import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
+import {processUriTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailTracks(config) {
     const context = this.context;
