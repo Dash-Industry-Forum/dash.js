@@ -1764,8 +1764,9 @@ declare namespace dashjs {
             trackSwitchMode?: {
                 video?: TrackSwitchMode;
                 audio?: TrackSwitchMode;
-            }
-            selectionModeForInitialTrack?: TrackSelectionMode
+            };
+            ignoreSelectionPriority?: boolean;
+            selectionModeForInitialTrack?: TrackSelectionMode;
             fragmentRequestTimeout?: number;
             fragmentRequestProgressTimeout?: number;
             manifestRequestTimeout?: number;
