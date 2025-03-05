@@ -136,17 +136,19 @@ function DashParser(config) {
     }
 
     function processXml(data) {
-        const root = cmlParseXml(data).children.find(child => child.nodeName === 'MPD');
+        const xml = cmlParseXml(data)
+        const root = xml.childNodes.find(child => child.nodeName === 'MPD');
 
         function processNode(node) {
             // Convert tag name
             let p = node.nodeName.indexOf(':');
             if (p !== -1) {
-                node.__prefix = node.nodeName.substr(0, p);
-                node.nodeName = node.nodeName.substr(p + 1);
+                node.__prefix = node.prefix;
+                node.nodeName = node.localName;
             }
 
-            const { children, attributes, nodeName } = node;
+            const { childNodes, attributes, nodeName } = node;
+            node.tagName = nodeName;
 
             // Convert attributes
             for (let k in attributes) {
@@ -169,10 +171,10 @@ function DashParser(config) {
             }
 
             // Convert children
-            const len = children?.length;
+            const len = childNodes?.length;
 
             for (let i = 0; i < len; i++) {
-                const child = children[i];
+                const child = childNodes[i];
 
                 if (child.nodeName === '#text') {
                     node.__text = child.nodeValue;
@@ -196,7 +198,7 @@ function DashParser(config) {
                 }
             }
 
-            node.__children = children;
+            node.__children = childNodes;
         }
 
         processNode(root);
