@@ -63,12 +63,18 @@ function ListMpdController() {
         if (config.dashAdapter) {
             dashAdapter = config.dashAdapter;
         }
+
+        if (config.manifestLoader) {
+            manifestLoader = config.manifestLoader;
+        }
     }
 
     function initialize() {
         eventBus.on(Events.IMPORTED_MPDS_LOADED, _onLinkedPeriodsLoaded, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerLoadImportMpd, instance);
-        manifestLoader = ManifestLoader(context).getInstance();
+        if (!manifestLoader) {
+            manifestLoader = ManifestLoader(context).getInstance();
+        }
     }
 
     function loadListMpdManifest(time) {
