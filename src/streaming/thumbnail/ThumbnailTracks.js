@@ -33,11 +33,12 @@ import DashConstants from '../../dash/constants/DashConstants.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import ThumbnailTrackInfo from '../vo/ThumbnailTrackInfo.js';
 import URLUtils from '../../streaming/utils/URLUtils.js';
-import {replaceIDForTemplate, getTimeBasedSegment} from '../../dash/utils/SegmentsUtils.js';
+import { getTimeBasedSegment } from '../../dash/utils/SegmentsUtils.js';
 import BoxParser from '../../streaming/utils/BoxParser.js';
 import XHRLoader from '../../streaming/net/XHRLoader.js';
 import DashHandler from '../../dash/DashHandler.js';
 import SegmentsController from '../../dash/controllers/SegmentsController.js';
+import { processUriTemplate } from '@svta/common-media-library/dash/processUriTemplate.js';
 import CommonMediaRequest from '../vo/CommonMediaRequest.js';
 import CommonMediaResponse from '../vo/CommonMediaResponse.js';
 
@@ -266,7 +267,7 @@ function ThumbnailTracks(config) {
             return '';
         }
 
-        return replaceIDForTemplate(templateUrl, representation.id);
+        return processUriTemplate(templateUrl, representation.id);
     }
 
     function getTracks() {

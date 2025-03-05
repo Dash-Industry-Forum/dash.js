@@ -29,9 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import {processUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {replaceTokenForTemplate, getIndexBasedSegment} from './SegmentsUtils.js';
+import {getIndexBasedSegment} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -82,11 +83,14 @@ function TemplateSegmentsGetter(config, isDynamic) {
             }
 
             seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
-
-            let url = template.media;
-            url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
-            url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
-            seg.media = url;
+            seg.media = processUriTemplate(
+                template.media,
+                undefined,
+                seg.replacementNumber,
+                undefined,
+                undefined,
+                seg.replacementTime,
+            );
         }
 
         return seg;
