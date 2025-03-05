@@ -37,7 +37,7 @@ import NumericMatcher from './matchers/NumericMatcher.js';
 import LangMatcher from './matchers/LangMatcher.js';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
 import SegmentValuesMap from './maps/SegmentValuesMap.js';
-import { parseXml as cmlParseXml } from '@svta/common-media-library/utils/parseXml.js';
+import { parseXml as cmlParseXml } from '@svta/common-media-library/xml/parseXml.js';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
@@ -136,29 +136,29 @@ function DashParser(config) {
     }
 
     function processXml(data) {
-        const root = cmlParseXml(data).children.find(child => child.tagName === 'MPD');
+        const root = cmlParseXml(data).children.find(child => child.nodeName === 'MPD');
 
         function processNode(node) {
             // Convert tag name
-            let p = node.tagName.indexOf(':');
+            let p = node.nodeName.indexOf(':');
             if (p !== -1) {
-                node.__prefix = node.tagName.substr(0, p);
-                node.tagName = node.tagName.substr(p + 1);
+                node.__prefix = node.nodeName.substr(0, p);
+                node.nodeName = node.nodeName.substr(p + 1);
             }
 
-            const { children, attributes, tagName } = node;
+            const { children, attributes, nodeName } = node;
 
             // Convert attributes
             for (let k in attributes) {
                 let value = attributes[k];
 
-                if (tagName === 'S') {
+                if (nodeName === 'S') {
                     value = parseInt(value);
                 }
                 else {
                     for (let i = 0, len = matchers.length; i < len; i++) {
                         const matcher = matchers[i];
-                        if (matcher.test(tagName, k, value)) {
+                        if (matcher.test(nodeName, k, value)) {
                             value = matcher.converter(value);
                             break;
                         }
@@ -174,25 +174,25 @@ function DashParser(config) {
             for (let i = 0; i < len; i++) {
                 const child = children[i];
 
-                if (typeof child === 'string') {
-                    node.__text = child;
+                if (child.nodeName === '#text') {
+                    node.__text = child.nodeValue;
                     continue;
                 }
 
                 processNode(child);
 
-                const { tagName } = child;
+                const { nodeName } = child;
 
-                if (Array.isArray(node[tagName])) {
-                    node[tagName].push(child);
+                if (Array.isArray(node[nodeName])) {
+                    node[nodeName].push(child);
                 }
-                else if (arrayNodes.indexOf(tagName) !== -1) {
-                    if (!node[tagName]) {
-                        node[tagName] = [];
+                else if (arrayNodes.indexOf(nodeName) !== -1) {
+                    if (!node[nodeName]) {
+                        node[nodeName] = [];
                     }
-                    node[tagName].push(child);
+                    node[nodeName].push(child);
                 } else {
-                    node[tagName] = child;
+                    node[nodeName] = child;
                 }
             }
 
@@ -210,7 +210,7 @@ function DashParser(config) {
 
             let ret = {};
             // If root element is xml node, then get first child node as root
-            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
+            if (root.nodeName.toLowerCase().indexOf('xml') !== -1) {
                 for (let key in root) {
                     if (Array.isArray(root[key])) {
                         ret[key] = root[key][0];
@@ -221,8 +221,8 @@ function DashParser(config) {
                     }
                 }
             } else {
-                ret[root.tagName] = root;
-                delete root.tagName;
+                ret[root.nodeName] = root;
+                delete root.nodeName;
             }
             return ret;
         } catch (e) {
