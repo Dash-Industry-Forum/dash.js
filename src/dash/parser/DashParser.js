@@ -212,7 +212,7 @@ function DashParser(config) {
 
             let ret = {};
             // If root element is xml node, then get first child node as root
-            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
+            if (root.nodeName.toLowerCase().indexOf('xml') !== -1) {
                 for (let key in root) {
                     if (Array.isArray(root[key])) {
                         ret[key] = root[key][0];
@@ -223,8 +223,8 @@ function DashParser(config) {
                     }
                 }
             } else {
-                ret[root.tagName] = root;
-                delete root.tagName;
+                ret[root.nodeName] = root;
+                delete root.nodeName;
             }
             return ret;
         } catch (e) {
