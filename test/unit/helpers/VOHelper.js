@@ -32,36 +32,6 @@ class VoHelper {
         return mpd;
     }
 
-    createListMpd(baseUri=null) {
-        const mpd = {
-            profiles: "urn:mpeg:dash:profile:list:2024",
-            type: "list",
-            Period: [],
-        };
-        if (baseUri != null){
-            mpd.BaseURL = [{__text: baseUri}];
-        };
-        return mpd ;
-    }
-
-    createLinkedPeriod(uri, id, start=null, duration=null){
-        const linkedPeriod = {
-            tagName: "Period",
-            id:id,
-            ImportedMPD: {
-                uri:uri,
-                tagName: "ImportedMPD"
-            }
-        }
-        if(start!=null){
-            linkedPeriod.start = start
-        }
-        if(duration!=null){
-            linkedPeriod.duration = duration
-        }
-        return linkedPeriod;
-    }
-
     createPeriod(segInfoType) {
         var period = {};
 
@@ -179,14 +149,6 @@ class VoHelper {
 
     getDummyMpd(type) {
         return this.createMpd(type);
-    }
-
-    getDummyListMpd(uriList, baseURL) {
-        return this.createListMpd(uriList, baseURL);
-    }
-
-    getDummyLinkedPeriod(uri, id, start, duration){
-        return this.createLinkedPeriod(uri, id, start, duration);
     }
 
     getDummyPeriod() {
