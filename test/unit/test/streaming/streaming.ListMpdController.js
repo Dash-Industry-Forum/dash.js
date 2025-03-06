@@ -45,17 +45,12 @@ describe('ListMpdController', function () {
     afterEach(() => {
     });
 
-    it('should trigger a manifest update event if first period is a linked period', async () => {
+    it('should trigger a manifest update if first period is a linked period', async () => {
 
         const spy = sinon.spy(eventBus, 'trigger');
 
-        const baseURL = 'someurl.com';
-        const uriList = [
-            'bbb_30fps.mpd',
-        ];
-         
-        let manifest = mpdHelper.getListMpd(baseURL);
-        let linkedPeriod = mpdHelper.composeLinkedPeriod(uriList[0], '0', 0);
+        let manifest = mpdHelper.getListMpd();
+        let linkedPeriod = mpdHelper.composeLinkedPeriod('0', 0);
         manifest.Period[0] = linkedPeriod;
         let regularPeriod = mpdHelper.composePeriod(undefined);
         manifest.Period[1] = regularPeriod;
@@ -81,8 +76,35 @@ describe('ListMpdController', function () {
         // Wait for the specific event to occur
         await Promise.race([manifestUpdatedPromise, timeoutPromise]);
         sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
-        expect(updatedManifest.manifest.Period[0]).to.have.property('AdaptationSet')
-
+        expect(updatedManifest.manifest.Period[0]).to.have.property('AdaptationSet');
     });
+
+    it('should trigger a manifest update event if the first period is a regular period', async () => {
+        const spy = sinon.spy(eventBus, 'trigger');
+        
+        let manifest = mpdHelper.getListMpd();
+        let regularPeriod = mpdHelper.composePeriod(undefined);
+        manifest.Period[0] = regularPeriod;
+        let linkedPeriod = mpdHelper.composeLinkedPeriod('0', 0);
+        manifest.Period[1] = linkedPeriod;
+        listMpdController.initialize();
+        let linkedPeriods = [linkedPeriod];
+
+        // Create a promise that resolves when MANIFEST_UPDATED is triggered
+        const manifestUpdatedPromise = new Promise((resolve) => {
+            eventBus.on(Events.MANIFEST_UPDATED, (resolve));
+        });
+
+        // Create a timeout promise that rejects after 4 seconds
+        const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
+        );
+
+        eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+
+        // Wait for the specific event to occur
+        await Promise.race([manifestUpdatedPromise, timeoutPromise]);
+        sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
+    })
 
 });

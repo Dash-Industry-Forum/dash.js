@@ -20,24 +20,22 @@ class MpdHelper {
         return mpd;
     }
 
-    getListMpd(baseUri = null) {
+    getListMpd() {
         const mpd = {
             profiles: 'urn:mpeg:dash:profile:list:2024',
             type: 'list',
             Period: [],
         };
-        if (baseUri != null){
-            mpd.BaseURL = [{__text: baseUri}];
-        };
+        mpd.BaseURL = [{__text: this.baseUrl}];
         return mpd ;
     }
 
-    composeLinkedPeriod(uri, id, start = null, duration = null){
+    composeLinkedPeriod(id, start = null, duration = null){
         const linkedPeriod = {
             tagName: 'Period',
             id:id,
             ImportedMPD: {
-                uri:uri,
+                uri:'bbb_30fps.mpd',
                 tagName: 'ImportedMPD'
             }
         }
@@ -242,7 +240,7 @@ class MpdHelper {
             d: 180000,
             r: 29
         }];
-        objSegmentTemplate.SegmentTimeline= {S};
+        objSegmentTemplate.SegmentTimeline = {S};
         objSegmentTemplate.SegmentTimeline = {S};
 
         adaptation.SegmentTemplate = objSegmentTemplate;
