@@ -1,4 +1,4 @@
-import {expect} from 'chai';
+import {expect, assert} from 'chai';
 import sinon from 'sinon';
 import ListMpdController from '../../../../src/streaming/controllers/ListMpdController.js';
 import EventBus from '../../../../src/core/EventBus.js';
@@ -8,6 +8,7 @@ import MpdHelper from '../../helpers/MPDHelper.js';
 import Settings from '../../../../src/core/Settings.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
+import Constants from '../../../../src/streaming/constants/Constants.js';
 
 
 describe('ListMpdController', function () {
@@ -17,17 +18,18 @@ describe('ListMpdController', function () {
         mpdHelper,
         manifestLoaderMock,
         settings,
-        dashAdapterMock
+        dashAdapter
 
     beforeEach(() => {
         context = {};
         eventBus = EventBus(context).getInstance();
         listMpdController = ListMpdController(context).getInstance();
 
-        dashAdapterMock = DashAdapter(context).getInstance();
+        dashAdapter = DashAdapter(context).getInstance();
         const errorHandlerMock = new ErrorHandlerMock();
-        dashAdapterMock.setConfig({
+        dashAdapter.setConfig({
             errHandler: errorHandlerMock,
+            constants: Constants,
         });
 
         settings = Settings(context).getInstance();
@@ -42,7 +44,7 @@ describe('ListMpdController', function () {
             manifestLoaderMock = new ManifestLoaderMock(responseMpdMock);
             const config = {
                 settings: settings,
-                dashAdapter: dashAdapterMock,
+                dashAdapter: dashAdapter,
                 manifestLoader: manifestLoaderMock
             };
 
@@ -68,14 +70,12 @@ describe('ListMpdController', function () {
                 });
             });
 
-            // Create a timeout promise that rejects after 4 seconds
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
             eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
 
-            // Wait for the specific event to occur
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
             expect(updatedManifest.manifest.Period[0]).to.have.property('AdaptationSet');
@@ -96,18 +96,76 @@ describe('ListMpdController', function () {
                 eventBus.on(Events.MANIFEST_UPDATED, (resolve));
             });
 
-            // Create a timeout promise that rejects after 4 seconds
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
             eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
 
-            // Wait for the specific event to occur
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
         })
+
+        it('should throw an error if the first period does not start at 0', function () {
+            let manifest = mpdHelper.getListMpd();
+            let linkedPeriod = mpdHelper.composeLinkedPeriod('0', 1);
+            manifest.Period = [linkedPeriod];
+            listMpdController.initialize();
+            let linkedPeriods = [linkedPeriod];
+    
+            assert.throws(() => {
+                eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods });
+            }, /The first period in a list MPD must have start time equal to 0/);
+        });
     })
+
+    describe('loadListMpdManifest', function (){
+        beforeEach(() => {
+            const config = {
+                settings: settings,
+                dashAdapter: dashAdapter,
+            };
+            listMpdController.setConfig(config);
+        });
+
+        afterEach(() => {
+            listMpdController.reset();
+        });
+
+        it('should not import mpd if time < start - resolutionTime', async function () {
+            let manifest = mpdHelper.getListMpd();
+            let regularPeriod = mpdHelper.composePeriod(undefined);
+            let linkedPeriod = mpdHelper.composeLinkedPeriod('2', 5);
+            linkedPeriod.ImportedMPD.earliestResolutionTimeOffset = 3
+            linkedPeriod.duration = 10;
+            manifest.Period = [regularPeriod, linkedPeriod]
+            listMpdController.initialize();
+            dashAdapter.updatePeriods(manifest);
+            let linkedPeriods = [linkedPeriod];
+            let nonUpdatedManifest;
+            
+            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+            listMpdController.loadListMpdManifest(1)
+            
+            // Create a promise that resolves when MANIFEST_UPDATED is triggered
+            const manifestUpdatedPromise = new Promise((resolve) => {
+                eventBus.on(Events.MANIFEST_UPDATED, (manifest) => {
+                    nonUpdatedManifest = manifest;
+                    resolve();
+                });
+            });
+    
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
+            );
+    
+            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+    
+            await Promise.race([manifestUpdatedPromise, timeoutPromise]);
+            expect(manifest).to.deep.equal(nonUpdatedManifest.manifest);
+        })
+
+    });
 
     describe('loadLinkedPeriod', function () {
         afterEach(() => {
@@ -120,7 +178,7 @@ describe('ListMpdController', function () {
             manifestLoaderMock = new ManifestLoaderMock(responseMpdMock);
             const config = {
                 settings: settings,
-                dashAdapter: dashAdapterMock,
+                dashAdapter: dashAdapter,
                 manifestLoader: manifestLoaderMock
             };
 
@@ -141,24 +199,23 @@ describe('ListMpdController', function () {
                     resolve();
                 });
             });
-            // Create a timeout promise that rejects after 4 seconds
+
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
             listMpdController.loadLinkedPeriod(manifest, linkedPeriod);
 
-            // Wait for the specific event to occur
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
             expect(updatedManifest.manifest.Period[1]).to.have.property('AdaptationSet');
         });
 
-        it('should not merge a the imported manifest if the load success', async () => {
+        it('should not merge a the imported manifest if the load fails', async () => {
             manifestLoaderMock = new ManifestLoaderMock('fail');
             const config = {
                 settings: settings,
-                dashAdapter: dashAdapterMock,
+                dashAdapter: dashAdapter,
                 manifestLoader: manifestLoaderMock
             };
 
@@ -179,18 +236,15 @@ describe('ListMpdController', function () {
                 });
             });
 
-            // Create a timeout promise that rejects after 4 seconds
             const timeoutPromise = new Promise((_, reject) =>
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
             listMpdController.loadLinkedPeriod(manifest, linkedPeriod);
 
-            // Wait for the specific event to occur
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
             expect(updatedManifest.manifest.Period[1]).to.be.undefined;
-
         });
     });
 });
