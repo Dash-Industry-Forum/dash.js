@@ -343,11 +343,10 @@ function DashAdapter() {
             };
     
             // Update duration
-            if (!mpdHasDuration && importedPeriod.duration && importedPeriod.duration < linkedPeriod.duration) {
+            if (importedPeriod.duration && importedPeriod.duration < linkedPeriod.duration) {
                 newPeriod.duration = importedPeriod.duration;
-                manifest.mediaPresentationDuration += newPeriod.duration;
-                if (linkedPeriod.duration) {
-                    manifest.mediaPresentationDuration -= linkedPeriod.duration;
+                if (!mpdHasDuration) {
+                    manifest.mediaPresentationDuration += importedPeriod.duration - linkedPeriod.duration;
                 }
             }
     
