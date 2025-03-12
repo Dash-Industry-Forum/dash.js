@@ -20,6 +20,34 @@ class MpdHelper {
         return mpd;
     }
 
+    getListMpd() {
+        const mpd = {
+            profiles: 'urn:mpeg:dash:profile:list:2024',
+            type: 'list',
+            Period: [],
+        };
+        mpd.BaseURL = [{__text: this.baseUrl}];
+        return mpd ;
+    }
+
+    composeLinkedPeriod(id, start = null, duration = null){
+        const linkedPeriod = {
+            tagName: 'Period',
+            id:id,
+            ImportedMPD: {
+                uri:'bbb_30fps.mpd',
+                tagName: 'ImportedMPD'
+            }
+        }
+        if (start != null){
+            linkedPeriod.start = start
+        }
+        if (duration != null){
+            linkedPeriod.duration = duration
+        }
+        return linkedPeriod;
+    }
+
     getMimeForType(type) {
         var mime = null;
 
@@ -212,7 +240,7 @@ class MpdHelper {
             d: 180000,
             r: 29
         }];
-        objSegmentTemplate.SegmentTimeline= {S};
+        objSegmentTemplate.SegmentTimeline = {S};
         objSegmentTemplate.SegmentTimeline = {S};
 
         adaptation.SegmentTemplate = objSegmentTemplate;
