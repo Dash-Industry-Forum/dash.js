@@ -123,9 +123,9 @@ function ListMpdController() {
         const updatedManifest = new Promise(resolve => {
             manifestLoader.load(resolvedUri, null, null, true)
                 .then((importedManifest) => {
-                    dashAdapter.mergeManifests(manifest, importedManifest, period.id, mpdHasDuration);
+                    dashAdapter.mergeManifests(manifest, importedManifest, period, mpdHasDuration);
                 }, () => {
-                    dashAdapter.mergeManifests(manifest, null, period.id, mpdHasDuration);
+                    dashAdapter.mergeManifests(manifest, null, period, mpdHasDuration);
                 })
                 .then(() => {
                     eventBus.trigger(Events.MANIFEST_UPDATED, { manifest });
