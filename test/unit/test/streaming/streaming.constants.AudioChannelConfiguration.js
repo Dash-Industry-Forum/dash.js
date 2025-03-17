@@ -1,4 +1,4 @@
-import getNChanFromAudioChannelConfig from '../../../../src/streaming/constants/AudioChannelConfiguration.js';
+import getNChanFromAudioChannelConfig from '../../../../src/streaming/utils/AudioChannelConfiguration.js';
 import {expect} from 'chai';
 
 describe('AudioChannelConfiguration', function () {
