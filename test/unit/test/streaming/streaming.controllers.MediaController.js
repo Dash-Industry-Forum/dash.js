@@ -762,7 +762,7 @@ describe('MediaController', function () {
 
         describe('"highestSelectionPriority" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY } });
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
             });
 
             it('should select track with highest priority', function () {
@@ -915,7 +915,7 @@ describe('MediaController', function () {
             it('should select audio track with lowest bitrate per full channels (JOC extension)', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { 
+                    {
                         bitrateList: [{ bandwidth: 768 }],
                         audioChannelConfiguration: [{schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F8016'}],
                         supplementalProperties: [{schemeIdUri: 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018', value: 'JOC'}]

@@ -2846,7 +2846,6 @@ declare namespace dashjs {
         TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate',
         TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
         TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
-        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
         CMCD_MODE_QUERY: 'query',
         CMCD_MODE_HEADER: 'header',
         CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],

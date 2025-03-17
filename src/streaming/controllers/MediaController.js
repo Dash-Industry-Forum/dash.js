@@ -33,11 +33,11 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
-import { bcp47Normalize } from 'bcp-47-normalize';
-import { extendedFilter } from 'bcp-47-match';
+import {bcp47Normalize} from 'bcp-47-normalize';
+import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
-import getNChanFromAudioChannelConfig from '../constants/AudioChannelConfiguration.js';
+import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
 
 function MediaController() {
 
@@ -417,7 +417,7 @@ function MediaController() {
     function matchSettingsLang(settings, track) {
         try {
             return !settings.lang ||
-                (settings.lang instanceof RegExp) ?
+            (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
                     (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
         } catch (e) {
@@ -598,7 +598,7 @@ function MediaController() {
         // since this should not happen per IOP
         trackArr.forEach(function (track) {
             const tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
-                const nChan = getNChanFromAudioChannelConfig(audioChanCfg);
+                let nChan = getNChanFromAudioChannelConfig(audioChanCfg) || 0;
                 return acc + nChan;
             }, 0);
             let avgChan = tmp / track.audioChannelConfiguration.length;
@@ -636,8 +636,7 @@ function MediaController() {
     function getTracksWithHighestEfficiency(trackArr) {
         if (trackArr[0] && (trackArr[0].type === Constants.VIDEO)) {
             return _getVideoTracksWithHighestEfficiency(trackArr);
-        }
-        else if (trackArr[0] && (trackArr[0].type === Constants.AUDIO)) {
+        } else if (trackArr[0] && (trackArr[0].type === Constants.AUDIO)) {
             return _getAudioTracksWithHighestEfficiency(trackArr);
         }
 
