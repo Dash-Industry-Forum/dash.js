@@ -74,10 +74,12 @@ function XHRLoader() {
             commonMediaResponse.headers = Utils.parseHttpHeaders(this.getAllResponseHeaders());
             commonMediaResponse.data = this.response;
         }
-        xhr.onloadend = commonMediaRequest.customData.onloadend;
-        xhr.onprogress = commonMediaRequest.customData.onprogress;
-        xhr.onabort = commonMediaRequest.customData.onabort;
-        xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+        if (commonMediaRequest.customData) {
+            xhr.onloadend = commonMediaRequest.customData.onloadend;
+            xhr.onprogress = commonMediaRequest.customData.onprogress;
+            xhr.onabort = commonMediaRequest.customData.onabort;
+            xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+        }
 
         xhr.send();
 
