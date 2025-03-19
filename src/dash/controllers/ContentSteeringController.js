@@ -282,7 +282,6 @@ function ContentSteeringController() {
 
         const additionalQueryParameter = [];
 
-
         const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
         if (serviceLocations.length > 0) {
 
@@ -295,26 +294,18 @@ function ContentSteeringController() {
                 }
             })
 
-            // Sort in descending order to put all elements without throughput (-1) in the end
-            data.sort((a, b) => {
-                return b.throughput - a.throughput
-            })
-
             let pathwayString = '';
             let throughputString = '';
 
             data.forEach((entry, index) => {
                 if (index !== 0) {
-                    pathwayString = `${pathwayString},`;
-                    if (entry.throughput > -1) {
-                        throughputString = `${throughputString},`;
-                    }
+                    pathwayString += ',';
+                    throughputString += ',';
                 }
-                pathwayString = `${pathwayString}${entry.serviceLocation}`;
-                if (entry.throughput > -1) {
-                    throughputString = `${throughputString}${entry.throughput}`;
-                }
-            })
+
+                pathwayString += entry.serviceLocation;
+                throughputString += entry.throughput > -1 ? entry.throughput : '';
+            });
 
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.PATHWAY,
@@ -322,7 +313,7 @@ function ContentSteeringController() {
             });
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.THROUGHPUT,
-                value: throughputString
+                value: `"${throughputString}"`
             });
         }
 
