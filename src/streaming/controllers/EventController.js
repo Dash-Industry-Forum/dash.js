@@ -34,6 +34,8 @@ import Debug from '../../core/Debug.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
+import CommonMediaRequest from '../vo/CommonMediaRequest.js';
+import CommonMediaResponse from '../vo/CommonMediaResponse.js';
 
 function EventController() {
 
@@ -549,13 +551,16 @@ function EventController() {
     function _sendCallbackRequest(url) {
         try {
             let loader = XHRLoader(context).create({});
-            loader.load({
-                method: 'get',
-                url: url,
-                request: {
-                    responseType: 'arraybuffer'
+            const commonMediaRequest = new CommonMediaRequest(
+                {
+                    method: 'get',
+                    url: url,
+                    responseType: 'arraybuffer',
+                    customData: {}
                 }
-            });
+            );
+            const commonMediaResponse = new CommonMediaResponse({ request: commonMediaRequest });
+            loader.load(commonMediaRequest, commonMediaResponse);
         } catch (e) {
             logger.error(e);
         }
