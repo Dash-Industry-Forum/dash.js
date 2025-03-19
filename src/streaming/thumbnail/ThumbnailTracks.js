@@ -218,8 +218,7 @@ function ThumbnailTracks(config) {
                             },
                         })
                         const commonMediaResponse = new CommonMediaResponse({ request: commonMediaRequest });
-                        loader.load(commonMediaRequest, commonMediaResponse)
-                        ;
+                        loader.load(commonMediaRequest, commonMediaResponse);
                         return true;
                     }
                 });
