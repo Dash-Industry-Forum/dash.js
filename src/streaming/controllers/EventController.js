@@ -34,6 +34,7 @@ import Debug from '../../core/Debug.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
+import Utils from '../../core/Utils.js';
 import CommonMediaRequest from '../vo/CommonMediaRequest.js';
 import CommonMediaResponse from '../vo/CommonMediaResponse.js';
 
@@ -489,7 +490,8 @@ function EventController() {
                     }
                 } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
-                    _sendCallbackRequest(event.messageData);
+                    const url = event.messageData instanceof Uint8Array ? Utils.uint8ArrayToString(event.messageData) : event.messageData;
+                    _sendCallbackRequest(url);
                 } else {
                     logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
                     eventBus.trigger(event.eventStream.schemeIdUri, { event: JSON.parse(JSON.stringify(event)) }, { mode });

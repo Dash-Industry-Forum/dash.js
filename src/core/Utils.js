@@ -250,6 +250,11 @@ class Utils {
         return Utils.toDataView(bufferSource, Uint8Array)
     }
 
+    static uint8ArrayToString(uint8Array) {
+        const decoder = new TextDecoder('utf-8');
+        return decoder.decode(uint8Array);
+    }
+
     static bufferSourceToHex(data) {
         const arr = Utils.bufferSourceToInt8(data)
         let hex = '';
