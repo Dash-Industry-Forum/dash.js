@@ -313,7 +313,7 @@ function ContentSteeringController() {
             });
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.THROUGHPUT,
-                value: `"${throughputString}"`
+                value: throughputString
             });
         }
 
