@@ -33,7 +33,6 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import ManifestLoader from '../ManifestLoader.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
 const DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET = 60;
@@ -72,9 +71,6 @@ function ListMpdController() {
     function initialize() {
         eventBus.on(Events.IMPORTED_MPDS_LOADED, _onLinkedPeriodsLoaded, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerLoadImportMpd, instance);
-        if (!manifestLoader) {
-            manifestLoader = ManifestLoader(context).getInstance();
-        }
     }
 
     function loadListMpdManifest(time) {

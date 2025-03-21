@@ -42,30 +42,25 @@ import Errors from '../core/errors/Errors.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import DashParser from '../dash/parser/DashParser.js';
 
-function ManifestLoader() {
+function ManifestLoader(config) {
+
+    config = config || {};
+    const context = this.context;
+    const debug = config.debug;
+    const settings = config.settings;
+    const eventBus = EventBus(context).getInstance();
+    const urlUtils = URLUtils(context).getInstance();
+
     let instance,
         logger,
-        settings,
-        urlUtils,
         urlLoader,
-        mssHandler,
-        errHandler,
         xlinkController,
-        eventBus,
-        debug,
         parser;
 
-    const context = this.context;
+    let mssHandler = config.mssHandler;
+    let errHandler = config.errHandler;
 
-    function setConfig(config) {
-        config = config || {};
-        debug = config.debug;
-        settings = config.settings;
-        eventBus = EventBus(context).getInstance();
-        urlUtils = URLUtils(context).getInstance();
-        mssHandler = config.mssHandler;
-        errHandler = config.errHandler;
-
+    function setup() {
         logger = debug.getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
 
@@ -86,9 +81,7 @@ function ManifestLoader() {
             mediaPlayerModel: config.mediaPlayerModel,
             settings: config.settings
         });
-    }
 
-    function setup() {
         parser = null;
     }
 
@@ -295,7 +288,6 @@ function ManifestLoader() {
     instance = {
         load: load,
         reset: reset,
-        setConfig
     };
 
     setup();
@@ -305,5 +297,5 @@ function ManifestLoader() {
 
 ManifestLoader.__dashjs_factory_name = 'ManifestLoader';
 
-const factory = FactoryMaker.getSingletonFactory(ManifestLoader);
+const factory = FactoryMaker.getClassFactory(ManifestLoader);
 export default factory;
