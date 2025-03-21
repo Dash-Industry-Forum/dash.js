@@ -646,7 +646,7 @@ function StreamController() {
                 _switchStream(seekToStream, activeStream, seekTime);
             })
             .catch(error => {
-                console.error(error);
+                errHandler.error(error);
             });
     }
 

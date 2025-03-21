@@ -89,11 +89,10 @@ function ListMpdController() {
         currentManifest = manifest;
         linkedPeriodList = linkedPeriods;
 
-        if (manifest.Period[0].start) {
+        manifest.Period[0].start = manifest.Period[0].start ?? 0;
+        if (manifest.Period[0].start !== 0) {
             throw new Error('The first period in a list MPD must have start time equal to 0');
         } 
-        
-        manifest.Period[0].start = 0;
 
         mpdHasDuration = manifest.hasOwnProperty(DashConstants.MEDIA_PRESENTATION_DURATION);
         if (!mpdHasDuration) {
