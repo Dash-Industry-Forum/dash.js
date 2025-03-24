@@ -60,6 +60,7 @@ class CoreEvents extends EventsBase {
         this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
         this.LOADING_ABANDONED = 'loadingAborted';
         this.MANIFEST_UPDATED = 'manifestUpdated';
+        this.MPD_EXPIRE_UPDATE = 'mpdExpireUpdate';
         this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
         this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
         this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';

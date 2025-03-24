@@ -58,7 +58,8 @@ function ManifestUpdater() {
         adapter,
         errHandler,
         contentSteeringController,
-        settings;
+        settings,
+        refreshDisabled;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -100,6 +101,7 @@ function ManifestUpdater() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, onPlaybackStarted, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, onPlaybackPaused, this);
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this)
     }
 
     function setManifest(manifest) {
@@ -142,7 +144,7 @@ function ManifestUpdater() {
             delay = refreshDelay * 1000;
         }
 
-        if (!isNaN(delay)) {
+        if (!isNaN(delay) && !refreshDisabled) {
             logger.debug('Refresh manifest in ' + delay + ' milliseconds.');
             refreshTimer = setTimeout(onRefreshTimer, delay);
         }
@@ -281,6 +283,14 @@ function ManifestUpdater() {
         }
     }
 
+    function onManifestValidityChanged(e) {
+        const { minimumUpdatePeriod } = manifestModel.getValue();
+        if (minimumUpdatePeriod === 0 && e.inbandEvent) {
+            stopManifestRefreshTimer();
+            refreshDisabled = true;
+        }
+    }
+
     function onPlaybackStarted(/*e*/) {
         isPaused = false;
         startManifestRefreshTimer();
@@ -304,12 +314,12 @@ function ManifestUpdater() {
     }
 
     instance = {
+        getIsUpdating,
         initialize,
+        setConfig,
         setManifest,
         refreshManifest,
-        getIsUpdating,
-        setConfig,
-        reset
+        reset,
     };
 
     setup();

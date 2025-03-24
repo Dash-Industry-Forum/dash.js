@@ -31,14 +31,19 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
 
 function EventController() {
 
-    const MPD_RELOAD_SCHEME = 'urn:mpeg:dash:event:2012';
+    const MPD_VALIDITY_EXPIRATION_SCHEME = 'urn:mpeg:dash:event:2012';
     const MPD_RELOAD_VALUE = 1;
+    const MPD_PATCH_VALUE = 2;
+    const MPD_UPDATE_VALUE = 3;
+    const MPD_VALIDITY_EXPIRATION_VALUES = [MPD_RELOAD_VALUE, MPD_PATCH_VALUE, MPD_UPDATE_VALUE];
+
 
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
@@ -262,8 +267,8 @@ function EventController() {
                     let result = _addOrUpdateEvent(event, inbandEvents[periodId], false);
 
                     if (result === EVENT_HANDLED_STATES.ADDED) {
-                        if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME) {
-                            _handleManifestReloadEvent(event);
+                        if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
+                            _handleManifestReload(event);
                         }
                         logger.debug(`Added inband event with id ${event.id} from period ${periodId}`);
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_RECEIVE);
@@ -321,27 +326,58 @@ function EventController() {
     }
 
     /**
-     * Triggers an MPD reload
+     * Refreshes, patches, or updates the manifest based on the InbandEventStream value attribute.
      * @param {object} event
      * @private
      */
-    function _handleManifestReloadEvent(event) {
+    function _handleManifestValidityExpirationEvent(event, currentVideoTime) {
+        switch (parseInt(event.eventStream.value)) {
+            case MPD_RELOAD_VALUE:
+                logger.debug(`Starting manifest refresh event ${event.id} at ${currentVideoTime}`);
+                _refreshManifest();
+                break;
+            case MPD_PATCH_VALUE:
+                logger.debug(`Starting manifest patch event ${event.id} at ${currentVideoTime}`);
+                _patchManifest(event.parsedMessageData);
+                break;
+            case MPD_UPDATE_VALUE:
+                logger.debug(`Starting manifest update ${event.id} at ${currentVideoTime}`);
+                _updateManifest(event.parsedMessageData);
+                break;
+        }
+    }
+    /**
+     * Triggers an MPD reload.
+     * @param {object} event
+     * @private
+     */
+    function _handleManifestReload(event) {
         try {
-            if (event.eventStream.value == MPD_RELOAD_VALUE) {
-                const validUntil = event.calculatedPresentationTime;
-                let newDuration;
-                if (event.calculatedPresentationTime == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
-                    newDuration = NaN;
-                } else {
-                    newDuration = event.calculatedPresentationTime + event.duration;
-                }
-                //logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
-                eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, {
+            const eventValue = parseInt(event.eventStream.value);
+            if (MPD_VALIDITY_EXPIRATION_VALUES.includes(eventValue)) {
+                let validityData = {
                     id: event.id,
-                    validUntil: validUntil,
-                    newDuration: newDuration,
-                    newManifestValidAfter: NaN //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
-                }, {
+                    newManifestValidAfter: NaN, //event.message_data - this is an arraybuffer with a timestring in it, but not used yet
+                    inbandEvent: true,
+                }
+
+                if (eventValue === MPD_RELOAD_VALUE) {
+                    const validUntil = event.calculatedPresentationTime;
+                    let newDuration;
+                    if (validUntil == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
+                        newDuration = NaN;
+                    } else {
+                        newDuration = validUntil + event.duration;
+                    }
+                    validityData = {
+                        ...validityData,
+                        validUntil: validUntil,
+                        newDuration: newDuration,
+                    }
+                    logger.info('Manifest validity changed: Valid until: ' + validUntil + '; remaining duration: ' + newDuration);
+                }
+
+                eventBus.trigger(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, validityData, {
                     mode: MediaPlayerEvents.EVENT_MODE_ON_START
                 });
             }
@@ -479,11 +515,10 @@ function EventController() {
             }
 
             if (!event.triggeredStartEvent) {
-                if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
+                if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
                     //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
-                        logger.debug(`Starting manifest refresh event ${eventId} at ${currentVideoTime}`);
-                        _refreshManifest();
+                        _handleManifestValidityExpirationEvent(event, currentVideoTime)
                     }
                 } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
@@ -532,6 +567,46 @@ function EventController() {
         try {
             checkConfig();
             manifestUpdater.refreshManifest();
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Patch the manifest
+     * @private
+     */
+    function _patchManifest(parsedMessageData) {
+        try {
+            checkConfig();
+            const match = parsedMessageData.match(/^([\d-T:Z]+)(<.*)/);
+            const publishTime = match[1];
+            const patchXMLString = match[2]
+            logger.info(`Patch manifest not supported yet: Publish time: ${publishTime}, MPD patch: ${patchXMLString}..`);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Update the manifest
+     * @private
+     */
+    function _updateManifest(parsedMessageData) {
+        try {
+            checkConfig();
+            const regex = /^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z)(<\?xml[\s\S]*<\/MPD>)/;
+            const match = parsedMessageData.match(regex);
+            let publishTime
+            let xmlString
+            if (match) {
+                publishTime = match[1];
+                xmlString = match[2];
+            } else {
+                throw new Error('No MPD found in the message data.')
+            }
+            logger.info(`Updating current manifest. Publish time: ${publishTime}, MPD: ${xmlString}.`);
+            eventBus.trigger(Events.MPD_EXPIRE_UPDATE, { xmlString });
         } catch (e) {
             logger.error(e);
         }
