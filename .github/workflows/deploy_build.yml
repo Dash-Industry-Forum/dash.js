@@ -37,7 +37,7 @@ jobs:
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir -p ${{inputs.envname}}
-                    cp -R docs/jsdoc ${{inputs.envname}}/jsdoc && cp -R dist/modern/umd ${{inputs.envname}} && cp -R dist/* index.d.ts ${{inputs.envname}}
+                    cp -R docs/jsdoc ${{inputs.envname}}/jsdoc && cp -R dist/modern/umd/* ${{inputs.envname}} && cp -R dist/* index.d.ts ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
                 with:
