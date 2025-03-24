@@ -28,7 +28,7 @@ jobs:
         needs: get_version_number
         uses: ./.github/workflows/deploy.yml
         with:
-            envname: ${{ needs.get_version_number.outputs.version }}-test-dsi
+            envname: v${{ needs.get_version_number.outputs.version }}
             deploy_path: '/377335/dash.js'
         secrets:
             host: ${{ secrets.HOST }}
