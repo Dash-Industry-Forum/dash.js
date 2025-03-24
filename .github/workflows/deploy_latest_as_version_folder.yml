@@ -1,0 +1,28 @@
+name: deploy_latest_as_version_folder
+
+on:
+    push:
+        branches:
+            - 'feature/ciDeployment'
+
+jobs:
+    deploy_latest:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Check out repository
+              uses: actions/checkout@v4
+
+            - name: Read version from package.json
+              id: set_version
+              run: echo "::set-output name=version::$(jq -r .version package.json)"
+              shell: bash
+
+            - name: Deploy
+              uses: ./.github/workflows/deploy.yml
+              with:
+                  envname: ${{ steps.set_version.outputs.version }}-test-dsi
+                  deploy_path: '/377335/dash.js'
+              secrets:
+                  host: ${{ secrets.HOST }}
+                  user: ${{ secrets.USER }}
+                  private_key: ${{ secrets.PRIVATE_KEY }}
