@@ -3,11 +3,11 @@ name: deploy_build_latest_as_version_folder
 on:
     push:
         branches:
-            - 'feature/ciDeployment'
+            - 'master'
 
 jobs:
     get_version_number:
-        #if: github.repository == 'Dash-Industry-Forum/dash.js'
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
         runs-on: ubuntu-latest
         outputs:
             version: ${{ steps.set_version.outputs.version }}
@@ -26,7 +26,7 @@ jobs:
                     echo "Version: ${{ steps.set_version.outputs.version }}"
 
     deploy:
-        #if: github.repository == 'Dash-Industry-Forum/dash.js'
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
         needs: get_version_number
         uses: ./.github/workflows/deploy_build.yml
         with:
