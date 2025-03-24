@@ -8,24 +8,27 @@ on:
 jobs:
     get_version_number:
         runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.set_version.outputs.version }}
         steps:
-            -   name: Check out repository
-                uses: actions/checkout@v4
+            - name: Check out repository
+              uses: actions/checkout@v4
 
-            -   name: Read version from package.json
-                id: set_version
-                run: |
-                    echo "::set-output name=version::$(jq -r .version package.json)"
-                shell: bash
+            - name: Read version from package.json
+              id: set_version
+              run: |
+                  echo "::set-output name=version::$(jq -r .version package.json)"
+              shell: bash
 
-            -   name: Print version
-                run: |
-                    echo "Version: ${{ steps.set_version.outputs.version }}"
+            - name: Print version
+              run: |
+                  echo "Version: ${{ steps.set_version.outputs.version }}"
 
     deploy:
+        needs: get_version_number
         uses: ./.github/workflows/deploy.yml
         with:
-            envname: ${{ steps.set_version.outputs.version }}-test-dsi
+            envname: ${{ needs.get_version_number.outputs.version }}-test-dsi
             deploy_path: '/377335/dash.js'
         secrets:
             host: ${{ secrets.HOST }}
