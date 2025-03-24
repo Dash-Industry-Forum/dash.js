@@ -135,6 +135,8 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.on(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+
 
         if (Events.KEY_SESSION_UPDATED) {
             eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
@@ -161,6 +163,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.off(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
 
         if (Events.KEY_SESSION_UPDATED) {
             eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
@@ -892,10 +895,18 @@ function StreamController() {
      * @private
      */
     function _checkIfPrebufferingCanStart() {
-        // In multiperiod situations, we can start buffering the next stream
-        if (!activeStream || !activeStream.getHasFinishedBuffering()) {
+
+        if (!activeStream) {
             return;
         }
+
+        // Check if we are finished buffering. In case this is the case the prebuffering will be triggered automatically
+        if (!activeStream.getHasFinishedBuffering()) {
+            activeStream.checkAndHandleCompletedBuffering();
+            return;
+        }
+
+        // In case we have finished buffering already we can preload
         const upcomingStreams = _getNextStreams(activeStream);
         let i = 0;
 
@@ -1274,6 +1285,16 @@ function StreamController() {
     }
 
     /**
+     * Callback handler after the steering manifest was updated
+     * @param {object} e
+     * @private
+     */
+    function _onSteeringManifestUpdated() {
+        const manifest = manifestModel.getValue();
+        baseURLController.initialize(manifest);
+    }
+
+    /**
      * Callback handler after the manifest has been updated. Trigger an update in the adapter and filter unsupported stuff.
      * Finally, attempt UTC sync
      * @param {object} e
@@ -1406,7 +1427,8 @@ function StreamController() {
         })
 
         if (!supportedMediaInfos || supportedMediaInfos.length === 0) {
-            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, Errors.NO_SUPPORTED_KEY_IDS_MESSAGE));
+            const type = streamProcessor.getType();
+            errHandler.error(new DashJSError(Errors.NO_SUPPORTED_KEY_IDS, `Type: ${type}: ${Errors.NO_SUPPORTED_KEY_IDS_MESSAGE}`));
             return
         }
 

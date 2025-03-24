@@ -323,4 +323,33 @@ describe('MediaPlayerModel', function () {
         expect(value).to.equal(bufferTimeDefault);
     });
 
+    it('should return the value provided via the settings for fastSwitchEnabled', function () {
+        const s = { streaming: { buffer: { fastSwitchEnabled: true } } };
+        playbackController.getLowLatencyModeEnabled = () => {
+            return true;
+        }
+        settings.update(s);
+
+        let value = mediaPlayerModel.getFastSwitchEnabled();
+        expect(value).to.equal(true);
+    });
+
+    it('should return true for fastSwitchEnabled in case the player is not operating in low latency mode', function () {
+        playbackController.getLowLatencyModeEnabled = () => {
+            return false;
+        }
+
+        let value = mediaPlayerModel.getFastSwitchEnabled();
+        expect(value).to.equal(true);
+    });
+
+    it('should return false for fastSwitchEnabled in case the player is operating in low latency mode', function () {
+        playbackController.getLowLatencyModeEnabled = () => {
+            return true;
+        }
+
+        let value = mediaPlayerModel.getFastSwitchEnabled();
+        expect(value).to.equal(false);
+    });
+
 });

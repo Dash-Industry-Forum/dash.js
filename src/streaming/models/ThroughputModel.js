@@ -40,6 +40,7 @@ import EventBus from '../../core/EventBus.js';
  * Throughput generally stored in kbit/s
  * Latency generally stored in ms
  * @param {object} config
+ * @ignore
  * @constructor
  */
 function ThroughputModel(config) {

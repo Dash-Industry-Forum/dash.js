@@ -52,8 +52,8 @@ function ManifestModel() {
     }
 
     instance = {
-        getValue: getValue,
-        setValue: setValue
+        getValue,
+        setValue
     };
 
     return instance;

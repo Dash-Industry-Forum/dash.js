@@ -25,7 +25,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Play for some time and expect buffer level to stay within tolerance`, async () => {

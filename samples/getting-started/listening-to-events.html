@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Listening to events example</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -15,11 +15,11 @@
             width: 640px;
             height: 360px;
         }
-        
+
         .btn {
-          margin-top: 3px;  
+          margin-top: 3px;
         }
-        
+
         #trace {
             height:500px;
             margin-top: 20px;
@@ -60,7 +60,7 @@
 
 
         function log(msg) {
-            msg = msg.length > 90 ? msg.substring(0, 90) + "..." : msg; 
+            msg = msg.length > 90 ? msg.substring(0, 90) + "..." : msg;
             var tracePanel = document.getElementById("trace");
             tracePanel.innerHTML += msg + "\n";
             tracePanel.scrollTop = tracePanel.scrollHeight;

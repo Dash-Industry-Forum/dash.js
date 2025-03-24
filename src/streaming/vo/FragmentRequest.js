@@ -50,7 +50,6 @@ class FragmentRequest {
         this.index = NaN;
         this.mediaStartTime = NaN;
         this.mediaType = null;
-        this.quality = NaN;
         this.range = null;
         this.representation = null;
         this.responseType = 'arraybuffer';

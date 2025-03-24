@@ -78,6 +78,9 @@ function BlackListController(config) {
     }
 
     function reset() {
+        if (addBlacklistEventName) {
+            eventBus.off(addBlacklistEventName, onAddBlackList, instance);
+        }
         blacklist = [];
     }
 

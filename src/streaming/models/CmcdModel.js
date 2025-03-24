@@ -44,8 +44,8 @@ import {CmcdStreamType} from '@svta/common-media-library/cmcd/CmcdStreamType';
 import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreamingFormat';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
-
-const CMCD_VERSION = 1;
+import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
+const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
 
@@ -64,7 +64,9 @@ function CmcdModel() {
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
-        _initialMediaRequestsDone;
+        _initialMediaRequestsDone,
+        _playbackStartedTime,
+        _msdSent;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -77,12 +79,19 @@ function CmcdModel() {
         _resetInitialSettings();
     }
 
-    function initialize() {
+    function initialize(autoPlay) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+        if (autoPlay) {
+            eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+        }
+        else {
+            eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        }
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
     }
 
     function setConfig(config) {
@@ -124,11 +133,27 @@ function CmcdModel() {
         _isStartup = {};
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
+        _playbackStartedTime = undefined;
+        _msdSent = false;
         _updateStreamProcessors();
     }
 
     function _onPeriodSwitchComplete() {
         _updateStreamProcessors();
+    }
+
+    function _onPlaybackStarted() {
+        if (!_playbackStartedTime) {
+            _playbackStartedTime = Date.now();
+        }
+    }
+
+    function _onPlaybackPlaying() {
+        if (!_playbackStartedTime || internalData.msd) {
+            return;
+        }
+
+        internalData.msd = Date.now() - _playbackStartedTime;
     }
 
     function _updateStreamProcessors() {
@@ -195,7 +220,8 @@ function CmcdModel() {
             if (isCmcdEnabled()) {
                 const cmcdData = getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
-                const headers = toCmcdHeaders(filteredCmcdData)
+                const options = _createCmcdV2HeadersCustomMap();
+                const headers = toCmcdHeaders(filteredCmcdData, options);
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
@@ -219,8 +245,8 @@ function CmcdModel() {
 
     function _canBeEnabled(cmcdParametersFromManifest) {
         if (Object.keys(cmcdParametersFromManifest).length) {
-            if (!cmcdParametersFromManifest.version) {
-                logger.error(`version parameter must be defined.`);
+            if (parseInt(cmcdParametersFromManifest.version) !== 1) {
+                logger.error(`version parameter must be defined in 1.`);
                 return false;
             }
             if (!cmcdParametersFromManifest.keys) {
@@ -257,15 +283,17 @@ function CmcdModel() {
 
     function _checkAvailableKeys(cmcdParametersFromManifest) {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
+        const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k));
+        const cmcdVersion = settings.get().streaming.cmcd.version;
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
 
         if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented.`);
+            logger.error(`None of the keys are implemented for CMCD version ${cmcdVersion}.`);
             return false;
         }
         invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented.`);
+            logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
         });
 
         return true;
@@ -497,7 +525,7 @@ function CmcdModel() {
         let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
         cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
 
-        data.v = CMCD_VERSION;
+        data.v = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
 
         data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
@@ -520,7 +548,31 @@ function CmcdModel() {
             data.sf = internalData.sf;
         }
 
+        if (data.v === 2) {
+            let ltc = playbackController.getCurrentLiveLatency() * 1000;
+            if (!isNaN(ltc)) {
+                data.ltc = ltc;
+            }
+            const msd = internalData.msd;
+            if (!_msdSent && !isNaN(msd)) {
+                data.msd = msd;
+                _msdSent = true;
+            }
+        }
+
+        
+
         return data;
+    }
+
+    function _createCmcdV2HeadersCustomMap() {
+        const cmcdVersion = settings.get().streaming.cmcd.version;
+        return cmcdVersion === 1 ? {} : { 
+            customHeaderMap: { 
+                [CmcdHeaderField.REQUEST]: ['ltc'],
+                [CmcdHeaderField.SESSION]: ['msd']
+            }
+        };
     }
 
     function _getBitrateByRequest(request) {
@@ -658,7 +710,7 @@ function CmcdModel() {
                 playbackRate = 1;
             }
             let { bandwidth, mediaType, representation, duration } = request;
-            const mediaInfo = representation.mediaInfo
+            const mediaInfo = representation.mediaInfo;
 
             if (!mediaInfo) {
                 return NaN;
@@ -688,6 +740,8 @@ function CmcdModel() {
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
 
         _resetInitialSettings();
     }

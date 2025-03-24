@@ -39,10 +39,7 @@ jobs:
                 continue-on-error: true
                 run: npm list
             -   run: npm install
-            -   run: tsc
-            -   run: npm run lint
-            -   run: npm run test
-            -   run: npm run webpack-build
+            -   run: npm run build
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false
@@ -78,7 +75,7 @@ jobs:
                 continue-on-error: true
                 run: npm list
             -   run: npm install
-            -   run: npm run webpack-build
+            -   run: npm run webpack-build-modern
             -   name: Start Tunnel
                 uses: LambdaTest/LambdaTest-tunnel-action@v2
                 id: tunnel

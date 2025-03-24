@@ -186,8 +186,8 @@ describe('MediaPlayer', function () {
                 expect(player.duration).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
-            it('Method timeAsUtc should throw an exception', function () {
-                expect(player.timeAsUtc).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
+            it('Method timeAsUTC should throw an exception', function () {
+                expect(player.timeAsUTC).to.throw(PLAYBACK_NOT_INITIALIZED_ERROR);
             });
 
             it('Method getDvrWindow should throw an exception', function () {
@@ -457,8 +457,8 @@ describe('MediaPlayer', function () {
                 expect(dvrWindow.size).to.be.equal(30);
             });
 
-            it('timeAsUtc should return time() VoD content', function () {
-                let time = player.timeAsUtc();
+            it('timeAsUTC should return time() VoD content', function () {
+                let time = player.timeAsUTC();
                 expect(time).to.be.NaN
             });
 
@@ -588,7 +588,7 @@ describe('MediaPlayer', function () {
         });
 
         describe('When it is not initialized', function () {
-            it('Method getQualityFor should throw an exception', function () {
+            it('Method getCurrentRepresentationForType should throw an exception', function () {
                 expect(player.getCurrentRepresentationForType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
             });
 
@@ -658,6 +658,10 @@ describe('MediaPlayer', function () {
 
         it('should configure fastSwitchEnabled', function () {
             let fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
+            expect(fastSwitchEnabled).to.be.null;
+
+            player.updateSettings({ 'streaming': { 'buffer': { 'fastSwitchEnabled': true } } });
+            fastSwitchEnabled = player.getSettings().streaming.buffer.fastSwitchEnabled;
             expect(fastSwitchEnabled).to.be.true;
 
             player.updateSettings({ 'streaming': { 'buffer': { 'fastSwitchEnabled': false } } });
@@ -791,7 +795,7 @@ describe('MediaPlayer', function () {
 
         it('should configure cacheLoadThresholds', function () {
             let cacheLoadThresholdForVideo = player.getSettings().streaming.cacheLoadThresholds[Constants.VIDEO];
-            expect(cacheLoadThresholdForVideo).to.equal(50);
+            expect(cacheLoadThresholdForVideo).to.equal(10);
 
             player.updateSettings({ 'streaming': { 'cacheLoadThresholds': { 'video': 10 } } });
 
@@ -981,7 +985,7 @@ describe('MediaPlayer', function () {
 
     describe('Stream and Track Management Functions', function () {
         describe('When it is not initialized', function () {
-            it('Method getBitrateInfoListFor should throw an exception', function () {
+            it('Method getCurrentRepresentationForType should throw an exception', function () {
                 expect(player.getCurrentRepresentationForType).to.throw('You must first call initialize() and set a source before calling this method');
             });
 

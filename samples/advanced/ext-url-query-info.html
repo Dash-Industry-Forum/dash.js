@@ -5,7 +5,7 @@
     <meta charset="utf-8">
     <title>Flexible Insertion of URL Parameters Sample</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -153,7 +153,7 @@
             <div class="row mt-2">
                 <div class="col-md-6">
                     <label for="manifestSelect">Manifest:</label>
-                    <input id="manifestSelect" type="text" class="form-control">
+                    <input id="manifestSelect" value="https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks" type="text" class="form-control">
                     <label for="queryParamsInput" class="mt-2">Add Query Parameters to Manifest Request:</label>
                     <input id="queryParamsInput" type="text" class="form-control" value="token=1234">
                     <button id="loadButton" class="btn btn-primary mt-2">Load</button>

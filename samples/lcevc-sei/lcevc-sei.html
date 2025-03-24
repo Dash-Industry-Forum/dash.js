@@ -3,8 +3,8 @@
 <head>
     <meta charset="utf-8">
     <title>MPEG-5 Part 2 LCEVC example</title>
-    
-    <script class="code" src="../../dist/dash.all.debug.js"></script>
+
+    <script class="code" src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- MPEG-5 LCEVC Decoder Library -->
     <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
@@ -71,7 +71,7 @@
                         player.LCEVCdec.setLevelSwitching(event.request.representation.index, ENABLE_AUTO_RENDER_MODE);
                     }
                 });
-                
+
             }
         };
         function init() {
@@ -110,12 +110,12 @@
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>MPEG-5 Part 2 LCEVC Decoding with SEI carriage</h3>
-                    <p>This example illustrates how MPEG-5 LCEVC-enhanced streams can be decoded in dash.js. 
-                        In this implementation, enhancements are carried as Supplemental Enhancement Information 
-                        within the same track as the base video. The base frames are decoded by the HTML5 Video 
-                        Tag, with the LCEVC Decoder libraries processing the enhancement and rendering it to 
-                        an HTML5 Canvas element. This example is a debug test stream, which will show moving 
-                        squares when the LCEVC enhancement is being decoded and displayed successfully.                        
+                    <p>This example illustrates how MPEG-5 LCEVC-enhanced streams can be decoded in dash.js.
+                        In this implementation, enhancements are carried as Supplemental Enhancement Information
+                        within the same track as the base video. The base frames are decoded by the HTML5 Video
+                        Tag, with the LCEVC Decoder libraries processing the enhancement and rendering it to
+                        an HTML5 Canvas element. This example is a debug test stream, which will show moving
+                        squares when the LCEVC enhancement is being decoded and displayed successfully.
                     </p>
                 </div>
             </div>

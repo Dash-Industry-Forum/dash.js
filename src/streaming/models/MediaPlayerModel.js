@@ -32,20 +32,22 @@ import Debug from '../../core/Debug.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 
+const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
+const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
+const DEFAULT_CATCHUP_MAX_DRIFT = 12;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
-const DEFAULT_CATCHUP_MAX_DRIFT = 12;
-const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
-const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
-const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
-const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
+const LOW_LATENCY_REDUCTION_FACTOR = 10;
+
 
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
  * @class
+ * @ignore
  * @constructor
  */
 function MediaPlayerModel() {
@@ -222,10 +224,18 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getBufferTimeDefault() {
-        let bufferTimeDefault = settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const bufferTimeDefault = getBufferTimeDefaultUnadjusted();
         const liveDelay = playbackController.getLiveDelay();
 
         return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(bufferTimeDefault, liveDelay) : bufferTimeDefault;
+    }
+
+    /**
+     * Returns the stable buffer
+     * @return {number}
+     */
+    function getBufferTimeDefaultUnadjusted() {
+        return settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     /**
@@ -250,6 +260,18 @@ function MediaPlayerModel() {
         return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor : settings.get().streaming.retryIntervals[type];
     }
 
+    /**
+     * Returns whether the fast switch mode is defined in the settings options. If not we enable it by default but only for non low-latency playback.
+     * @return {boolean}
+     */
+    function getFastSwitchEnabled() {
+        if (settings.get().streaming.buffer.fastSwitchEnabled !== null) {
+            return settings.get().streaming.buffer.fastSwitchEnabled;
+        }
+
+        return !playbackController.getLowLatencyModeEnabled();
+    }
+
     function reset() {
     }
 
@@ -257,6 +279,8 @@ function MediaPlayerModel() {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
         getBufferTimeDefault,
+        getBufferTimeDefaultUnadjusted,
+        getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,

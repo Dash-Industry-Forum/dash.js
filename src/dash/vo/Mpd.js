@@ -34,15 +34,15 @@
  */
 class Mpd {
     constructor() {
-        this.manifest = null;
-        this.suggestedPresentationDelay = 0;
-        this.availabilityStartTime = null;
         this.availabilityEndTime = Number.POSITIVE_INFINITY;
-        this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
+        this.availabilityStartTime = null;
+        this.manifest = null;
         this.maxSegmentDuration = Number.POSITIVE_INFINITY;
-        this.publishTime = null;
-        this.minimumUpdatePeriod = NaN;
         this.mediaPresentationDuration = NaN;
+        this.minimumUpdatePeriod = NaN;
+        this.publishTime = null;
+        this.suggestedPresentationDelay = 0;
+        this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
     }
 }
 
