@@ -22,7 +22,7 @@ jobs:
               with:
                   envname: ${{ steps.set_version.outputs.version }}-test-dsi
                   deploy_path: '/377335/dash.js'
-              secrets:
+              env:
                   host: ${{ secrets.HOST }}
                   user: ${{ secrets.USER }}
                   private_key: ${{ secrets.PRIVATE_KEY }}
