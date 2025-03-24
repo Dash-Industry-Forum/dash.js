@@ -14,8 +14,13 @@ jobs:
 
             - name: Read version from package.json
               id: set_version
-              run: echo "::set-output name=version::$(jq -r .version package.json)"
+              run: |
+                  echo "::set-output name=version::$(jq -r .version package.json)"
               shell: bash
+
+            - name: Print version
+              run: |
+                  echo "Version: ${{ steps.set_version.outputs.version }}"
 
             - name: Deploy
               uses: ./.github/workflows/deploy.yml
