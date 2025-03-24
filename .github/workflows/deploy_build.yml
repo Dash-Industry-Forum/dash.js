@@ -33,6 +33,7 @@ jobs:
                 run: npm run build
             -   name: Build JSDoc
                 run: npm run doc
+                continue-on-error: true
             -   name: Copy to deploy directory for deployment
                 run: |
                     mkdir -p ${{inputs.envname}}
