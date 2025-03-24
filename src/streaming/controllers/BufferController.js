@@ -305,7 +305,7 @@ function BufferController(config) {
             logger.info('Init fragment finished loading saving to', type + '\'s init cache');
             initCache.save(e.chunk);
         }
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representation.id, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
+        logger.debug(`Appending init fragment for type ${type}, representationId ${e.chunk.representation.id} and bandwidth ${e.chunk.representation.bandwidth}`);
         _appendToBuffer(e.chunk);
     }
 
@@ -324,7 +324,8 @@ function BufferController(config) {
         }
 
         // Append init segment into buffer
-        logger.info('Append Init fragment', type, ' with representationId:', chunk.representation.id, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
+        logger.debug(`Appending init fragment for type ${type}, representationId ${chunk.representation.id} and bandwidth ${chunk.representation.bandwidth}`);
+
         _appendToBuffer(chunk);
 
         return true;
