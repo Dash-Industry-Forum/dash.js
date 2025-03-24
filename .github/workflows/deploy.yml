@@ -50,7 +50,7 @@ jobs:
                     done
             -   name: Copy to deploy directory for deployment
                 run: |
-                    mkdir ${{inputs.envname}}
+                    mkdir -p ${{inputs.envname}}
                     cp -R contrib dist samples ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
