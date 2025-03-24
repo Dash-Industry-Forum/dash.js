@@ -17,7 +17,7 @@ jobs:
             - name: Read version from package.json
               id: set_version
               run: |
-                  echo "name=version::$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+                  echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
               shell: bash
 
             - name: Print version
