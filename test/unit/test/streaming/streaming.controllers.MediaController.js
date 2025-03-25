@@ -725,18 +725,44 @@ describe('MediaController', function () {
         function testSelectInitialTrack(type, expectedTrack, otherTrack) {
             const tracks = [expectedTrack, otherTrack].map(function (track) {
                 return {
+                    type: type,
                     bitrateList: track.bitrateList,
                     representationCount: track.bitrateList.length,
-                    selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1
+                    audioChannelConfiguration: track.audioChannelConfiguration ? track.audioChannelConfiguration : [],
+                    selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1,
+                    supplementalProperties: track.supplementalProperties ? track.supplementalProperties : []
                 };
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
             expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true;
         }
 
+        describe('selectionPriority flag', function () {
+            beforeEach(function () {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } });
+            });
+
+            it('should select track with highest priority per default', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track with highest bitrate if selectionPriority is to be ignored', function () {
+                settings.update({ streaming: { ignoreSelectionPriority: true } });
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 },
+                    { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 }
+                );
+            });
+        })
+
         describe('"highestSelectionPriority" mode', function () {
             beforeEach(function () {
-                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY } });
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
             });
 
             it('should select track with highest priority', function () {
@@ -838,6 +864,14 @@ describe('MediaController', function () {
                 settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY } });
             });
 
+            it('should select track with highest priority', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }], selectionPriority: 1 }
+                );
+            });
+
             it('should select video track with lowest bitrate among equal resolutions', function () {
                 testSelectInitialTrack(
                     'video',
@@ -854,11 +888,39 @@ describe('MediaController', function () {
                 );
             });
 
-            it('should select audio track with lowest avg bitrate', function () {
+            it('should not prioritize audio tracks where audioChannelConfig is absent', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { bitrateList: [{ bandwidth: 1000, width: 0, height: 0 }] },
-                    { bitrateList: [{ bandwidth: 2000, width: 0, height: 0 }] }
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
+                    { bitrateList: [{ bandwidth: 96 }] }
+                );
+            });
+
+            it('should select audio track with lowest bitrate per full channels (equal channel config)', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    { bitrateList: [{ bandwidth: 96 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                );
+            });
+
+            it('should select audio track with lowest bitrate per full channels (different channel config)', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    { bitrateList: [{ bandwidth: 2000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}] },
+                    { bitrateList: [{ bandwidth: 1000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                );
+            });
+
+            it('should select audio track with lowest bitrate per full channels (JOC extension)', function () {
+                testSelectInitialTrack(
+                    'audio',
+                    {
+                        bitrateList: [{ bandwidth: 768 }],
+                        audioChannelConfiguration: [{schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F8016'}],
+                        supplementalProperties: [{schemeIdUri: 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018', value: 'JOC'}]
+                    },
+                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
                 );
             });
 

@@ -38,7 +38,6 @@ class DataChunk {
     constructor() {
         this.streamId = null;
         this.segmentType = null;
-        this.quality = NaN;
         this.index = NaN;
         this.bytes = null;
         this.start = NaN;

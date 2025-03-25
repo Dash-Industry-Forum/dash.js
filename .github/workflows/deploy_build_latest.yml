@@ -8,10 +8,10 @@ on:
 jobs:
     deploy_latest:
         if: github.repository == 'Dash-Industry-Forum/dash.js'
-        uses: ./.github/workflows/deploy.yml
+        uses: ./.github/workflows/deploy_build.yml
         with:
             envname: latest
-            deploy_path: '/377335/dash.js'
+            deploy_path: '/377335'
         secrets:
             host: ${{secrets.HOST}}
             user: ${{secrets.USER}}
