@@ -334,6 +334,12 @@ export default {
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
     DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
+    MPD_VALIDITY_EXPIRATION: {
+        SCHEME: 'urn:mpeg:dash:event:2012',
+        RELOAD_VALUE: 1,
+        PATCH_VALUE: 2,
+        UPDATE_VALUE: 3,
+    },
     CODEC_FAMILIES: {
         MP3: 'mp3',
         AAC: 'aac',

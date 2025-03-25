@@ -35,15 +35,15 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
+import Constants from '../constants/Constants.js';
 
 function EventController() {
 
-    const MPD_VALIDITY_EXPIRATION_SCHEME = 'urn:mpeg:dash:event:2012';
-    const MPD_RELOAD_VALUE = 1;
-    const MPD_PATCH_VALUE = 2;
-    const MPD_UPDATE_VALUE = 3;
-    const MPD_VALIDITY_EXPIRATION_VALUES = [MPD_RELOAD_VALUE, MPD_PATCH_VALUE, MPD_UPDATE_VALUE];
-
+    const MPD_VALIDITY_EXPIRATION_VALUES = [
+        Constants.MPD_VALIDITY_EXPIRATION.RELOAD_VALUE,
+        Constants.MPD_VALIDITY_EXPIRATION.PATCH_VALUE, 
+        Constants.MPD_VALIDITY_EXPIRATION.UPDATE_VALUE
+    ];
 
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
@@ -267,7 +267,7 @@ function EventController() {
                     let result = _addOrUpdateEvent(event, inbandEvents[periodId], false);
 
                     if (result === EVENT_HANDLED_STATES.ADDED) {
-                        if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
+                        if (event.eventStream.schemeIdUri === Constants.MPD_VALIDITY_EXPIRATION.SCHEME) {
                             _handleManifestReload(event);
                         }
                         logger.debug(`Added inband event with id ${event.id} from period ${periodId}`);
@@ -332,15 +332,15 @@ function EventController() {
      */
     function _handleManifestValidityExpirationEvent(event, currentVideoTime) {
         switch (parseInt(event.eventStream.value)) {
-            case MPD_RELOAD_VALUE:
+            case Constants.MPD_VALIDITY_EXPIRATION.RELOAD_VALUE:
                 logger.debug(`Starting manifest refresh event ${event.id} at ${currentVideoTime}`);
                 _refreshManifest();
                 break;
-            case MPD_PATCH_VALUE:
+            case Constants.MPD_VALIDITY_EXPIRATION.PATCH_VALUE:
                 logger.debug(`Starting manifest patch event ${event.id} at ${currentVideoTime}`);
                 _patchManifest(event.parsedMessageData);
                 break;
-            case MPD_UPDATE_VALUE:
+            case Constants.MPD_VALIDITY_EXPIRATION.UPDATE_VALUE:
                 logger.debug(`Starting manifest update ${event.id} at ${currentVideoTime}`);
                 _updateManifest(event.parsedMessageData);
                 break;
@@ -361,7 +361,7 @@ function EventController() {
                     inbandEvent: true,
                 }
 
-                if (eventValue === MPD_RELOAD_VALUE) {
+                if (eventValue === Constants.MPD_VALIDITY_EXPIRATION.RELOAD_VALUE) {
                     const validUntil = event.calculatedPresentationTime;
                     let newDuration;
                     if (validUntil == 0xFFFFFFFF) {//0xFF... means remaining duration unknown
@@ -515,7 +515,7 @@ function EventController() {
             }
 
             if (!event.triggeredStartEvent) {
-                if (event.eventStream.schemeIdUri === MPD_VALIDITY_EXPIRATION_SCHEME) {
+                if (event.eventStream.schemeIdUri === Constants.MPD_VALIDITY_EXPIRATION.SCHEME) {
                     //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
                     if (event.duration !== 0 || event.presentationTimeDelta !== 0) {
                         _handleManifestValidityExpirationEvent(event, currentVideoTime)
