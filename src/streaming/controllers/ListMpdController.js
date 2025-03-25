@@ -33,7 +33,6 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import ManifestLoader from '../ManifestLoader.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
 const DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET = 60;
@@ -72,9 +71,6 @@ function ListMpdController() {
     function initialize() {
         eventBus.on(Events.IMPORTED_MPDS_LOADED, _onLinkedPeriodsLoaded, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerLoadImportMpd, instance);
-        if (!manifestLoader) {
-            manifestLoader = ManifestLoader(context).getInstance();
-        }
     }
 
     function loadListMpdManifest(time) {
@@ -89,11 +85,10 @@ function ListMpdController() {
         currentManifest = manifest;
         linkedPeriodList = linkedPeriods;
 
-        if (manifest.Period[0].start) {
+        manifest.Period[0].start = manifest.Period[0].start ?? 0;
+        if (manifest.Period[0].start !== 0) {
             throw new Error('The first period in a list MPD must have start time equal to 0');
         } 
-        
-        manifest.Period[0].start = 0;
 
         mpdHasDuration = manifest.hasOwnProperty(DashConstants.MEDIA_PRESENTATION_DURATION);
         if (!mpdHasDuration) {

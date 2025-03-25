@@ -1014,7 +1014,7 @@ function DashManifestModel() {
 
         if (linkedPeriods.length > 0) {
             if (mpd.manifest.type !== DashConstants.MPD_LIST) {
-                throw new Error('Linked periods are only allowed in a list MPD');
+                throw new Error(`Linked periods are only allowed in an MPD with profile ${DashConstants.MPD_LIST}`);
             }
         }
 

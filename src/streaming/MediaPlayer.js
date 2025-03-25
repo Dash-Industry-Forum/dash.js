@@ -354,10 +354,6 @@ function MediaPlayer() {
                 capabilitiesFilter = CapabilitiesFilter(context).getInstance();
             }
 
-            if (!listMpdController) {
-                listMpdController = ListMpdController(context).getInstance();
-            }
-
             adapter = DashAdapter(context).getInstance();
 
             manifestModel = ManifestModel(context).getInstance();
@@ -434,13 +430,6 @@ function MediaPlayer() {
                 throughputController,
                 eventBus
             })
-
-            listMpdController.setConfig({
-                settings: settings,
-                dashAdapter: adapter
-            });
-
-            listMpdController.initialize();
 
             restoreDefaultUTCTimingSources();
             setAutoPlay(autoPlay !== undefined ? autoPlay : true);
@@ -2423,6 +2412,10 @@ function MediaPlayer() {
             streamController = StreamController(context).getInstance();
         }
 
+        if (!listMpdController) {
+            listMpdController = ListMpdController(context).getInstance();
+        }
+
         if (!textController) {
             textController = TextController(context).create({
                 errHandler,
@@ -2434,6 +2427,12 @@ function MediaPlayer() {
                 settings
             });
         }
+
+        listMpdController.setConfig({
+            settings: settings,
+            dashAdapter: adapter,
+            manifestLoader: manifestLoader
+        });
 
         capabilitiesFilter.setConfig({
             capabilities,
@@ -2532,6 +2531,7 @@ function MediaPlayer() {
         cmsdModel.setConfig({});
 
         // initializes controller
+        listMpdController.initialize();
         mediaController.initialize();
         throughputController.initialize();
         abrController.initialize();
@@ -2546,8 +2546,7 @@ function MediaPlayer() {
     }
 
     function _createManifestLoader() {
-        const manifestLoader = ManifestLoader(context).getInstance();
-        manifestLoader.setConfig({
+        return ManifestLoader(context).create({
             debug: debug,
             errHandler: errHandler,
             dashMetrics: dashMetrics,
@@ -2555,7 +2554,6 @@ function MediaPlayer() {
             mssHandler: mssHandler,
             settings: settings
         });
-        return manifestLoader
     }
 
     function _detectProtection() {
