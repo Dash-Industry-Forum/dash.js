@@ -53,6 +53,7 @@ class FragmentRequest {
         this.range = null;
         this.representation = null;
         this.responseType = 'arraybuffer';
+        this.retryAttempts = 0;
         this.serviceLocation = null;
         this.startDate = null;
         this.startTime = NaN;
