@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <title>MPD update events</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.4.1/dist/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+  <style>
+    video {
+      width: 640px;
+      height: 360px;
+    }
+
+    #manifestViewer {
+      font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+      background: #1e1e1e;
+      color: #dcdcdc;
+      padding: 1em;
+      white-space: pre;
+      overflow: auto;
+      border: 1px solid #444;
+      font-size: 10px;
+      border-radius: 4px;
+      height: 360px;;
+    }
+
+    #manifestViewer .token\.tag {
+      color: #569CD6;
+    }
+
+    #manifestViewer .token\.attr-name {
+      color: #9CDCFE;
+    }
+
+    #manifestViewer .token\.attr-value {
+      color: #CE9178;
+    }
+
+    #manifestViewer .token\.text {
+      color: #D4D4D4;
+    }
+
+    #manifestViewer .token\.altmpd {
+      color: #06ff06;
+    }
+
+    #manifestViewer .token\.altmpd-bg {
+      background-color: rgb(36, 179, 36);
+    }
+
+    .highlight {
+      background-color: yellow;
+    }
+
+    .mpd-emsg-request {
+      background-color: #90EE90 !important;
+    }
+
+    .table-container {
+      max-height: 300px;
+      overflow-y: auto;
+      border: 1px solid #dee2e6;
+      border-radius: 4px;
+    }
+
+    .table-container table {
+      margin-bottom: 0;
+    }
+
+    .table-container thead th {
+      position: sticky;
+      top: 0;
+      background-color: white;
+      z-index: 1;
+      border-bottom: 2px solid #dee2e6;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <script src="../../dist/dash.all.debug.js"></script>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                        src="../lib/img/dashjs-logo.png"
+                        width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                  <h3>MPD Update Event</h3>
+                  <p>This sample shows how DASH MPD Update Event signals a DASH client to perform a manifest update when an inband event is received with value 3.</p>
+                </div>
+            </div>
+          </div>
+      <!-- MANIFEST URL -->
+      <div class="row my-3">
+        <div class="input-group mb-3 col">
+            <span class="input-group-text">Manifest URL</span>
+            <input type="text" id="manifestUrl" class="form-control" placeholder="MPD URL" value="https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ValidityExipration/testAsset/manifest.mpd">
+            <button id="loadPlayer" class="btn btn-success">Load Player</button>
+        </div>
+      </div>
+
+      <div id="eventStreamsContainer"></div>
+      <div class="row mb-0">
+        <!-- VIDEO -->
+        <div class="col-lg-6">
+          <video controls="true" autoplay muted></video>
+        </div>
+        <!-- MANIFEST -->
+        <div class="col-lg-6">
+          <div id="manifestViewer" class="manifest-container">Manifest will appear here...</div>
+        </div>
+      </div>
+      <div class="col-md-12" id="manifestAlert"></div>
+      <div class="row">
+        <div class="col-md-12">
+                <div id="code-output"></div>
+        </div>
+    </div>
+  </main>
+  <style>
+    .hide-controls::-webkit-media-controls {
+      display: none !important;
+    }
+
+    .hide-controls::-moz-media-controls {
+      display: none !important;
+    }
+
+    .hide-controls::-ms-media-controls {
+      display: none !important;
+    }
+  </style>
+  <script src="./dash.all.debug.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+        var manifestUrlInput = document.getElementById('manifestUrl');
+        var loadPlayerBtn = document.getElementById('loadPlayer');
+        var manifestViewer = document.getElementById('manifestViewer');
+  
+        function formatAndHighlightManifest(rawText) {
+            let xmlString = rawText.trim();
+            let parser = new DOMParser();
+            let xmlDoc = parser.parseFromString(xmlString, "application/xml");
+  
+            let serializer = new XMLSerializer();
+            let serialized = serializer.serializeToString(xmlDoc);
+  
+            let PADDING = '  ';
+            let reg = /(>)(<)(\/*)/g;
+            let xmlFormatted = serialized.replace(reg, '$1\r\n$2$3');
+            let formatted = '';
+            let pad = 0;
+            xmlFormatted.split('\r\n').forEach((node) => {
+                let indent = 0;
+                if (node.match(/.+<\/\w[^>]*>$/)) {
+                    indent = 0;
+                } else if (node.match(/^<\/\w/)) {
+                    if (pad > 0) pad -= 1;
+                } else if (node.match(/^<\w([^>]*[^/])?>.*$/)) {
+                    indent = 1;
+                }
+                formatted += PADDING.repeat(pad) + node + '\n';
+                pad += indent;
+            });
+  
+            formatted = formatted.trim();
+            let escaped = formatted.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  
+            let highlighted = escaped.replace(/(&lt;\/?)(\??)(\w+)(.*?)(\/?&gt;)/g, (match, open, question, tagName, attrs, close) => {
+                let isInband = (tagName === "InbandEventStream");
+                let coloredTag = `<span class="token.tag${isInband ? ' token.altmpd' : ''}">${open}${question}${tagName}</span>`;
+                if (attrs.trim().length > 0) {
+                    attrs = attrs.replace(/(\w+)="(.*?)"/g, `<span class="token.attr-name">$1</span>="<span class="token.attr-value">$2</span>"`);
+                    coloredTag += attrs;
+                }
+                coloredTag += `<span class="token.tag${isInband ? ' token.altmpd' : ''}">${close}</span>`;
+                return coloredTag;
+            });
+  
+            highlighted = highlighted.replace(/(&lt;AlternativeMPD[\s\S]*?&lt;\/AlternativeMPD&gt;)/, '<span class="token.altmpd-bg">$1</span>');
+  
+            manifestViewer.innerHTML = highlighted;
+        }
+  
+        loadPlayerBtn.addEventListener("click", function () {
+            var manifestUrl = manifestUrlInput.value;
+            
+            var oldVideo = document.querySelector("video");
+            var newVideo = document.createElement("video");
+            newVideo.setAttribute("controls", "true");
+            newVideo.setAttribute("autoplay", "");
+            newVideo.setAttribute("muted", "");
+            oldVideo.parentNode.replaceChild(newVideo, oldVideo);
+  
+            createDashPlayer(newVideo, manifestUrl, formatAndHighlightManifest);
+        });
+
+    });
+    
+    function showManifestUpdateAlert() {
+        let existingAlert = document.getElementById("mpd-update-alert");
+        if (existingAlert) {
+            existingAlert.remove();
+        }
+
+        let alertDiv = document.createElement("div");
+        alertDiv.id = "mpd-update-alert";
+        alertDiv.className = "alert alert-primary text-center";
+        alertDiv.role = "alert";
+        alertDiv.textContent = "Manifest Updated";
+
+        let manifestAlert = document.getElementById("manifestAlert");
+        if (manifestAlert) {
+            manifestAlert.parentNode.insertBefore(alertDiv, manifestAlert);
+        }
+
+        setTimeout(() => {
+            alertDiv.remove();
+        }, 7000);
+    }
+  </script>
+  <script class="code">
+    function createDashPlayer(videoElement, manifestUrl, onManifestUpdate) {
+        if (!videoElement) {
+            console.error("Video element not found.");
+            return;
+        }
+  
+        var player = dashjs.MediaPlayer().create();
+        player.initialize();
+        player.attachView(videoElement);
+        
+        function updateDashManifest(manifest) {
+            const currentTime = manifest.loadedTime;
+            manifest.availabilityStartTime = currentTime;
+            manifest.publishTime = currentTime;
+        }
+  
+        player.retrieveManifest(manifestUrl, (manifest) => {
+            updateDashManifest(manifest);
+            player.attachSource(manifest);
+            if (typeof onManifestUpdate === "function") {
+                fetch(manifestUrl)
+                    .then(response => response.text())
+                    .then(onManifestUpdate)
+                    .catch(err => console.error("Error loading manifest:", err));
+            }
+        });
+  
+        player.on("mpdExpireUpdate", (manifest) => {
+            if (typeof onManifestUpdate === "function") {
+                onManifestUpdate(manifest.xmlString);
+            }
+            showManifestUpdateAlert();
+        });
+  
+        return player;
+    }
+  </script>
+  <script src="../highlighter.js"></script>
+</body>
+
+</html>
