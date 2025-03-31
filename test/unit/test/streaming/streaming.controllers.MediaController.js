@@ -384,6 +384,7 @@ describe('MediaController', function () {
             id: 'id'
         };
         const frTrack = {
+            id: 0,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'fr',
@@ -393,6 +394,7 @@ describe('MediaController', function () {
             audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const qtzTrack = {
+            id: 'qtz',
             type: trackType,
             streamInfo: streamInfo,
             lang: 'qtz',
@@ -402,6 +404,7 @@ describe('MediaController', function () {
             audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const enTrack = {
+            id: 2,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'en',
@@ -412,6 +415,7 @@ describe('MediaController', function () {
             selectionPriority: 5
         };
         const enADTrack = {
+            id: 3,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'en',
@@ -422,6 +426,7 @@ describe('MediaController', function () {
             selectionPriority: 3
         };
         const esTrack = {
+            id: 'esTrack',
             type: trackType,
             streamInfo: streamInfo,
             lang: 'es',
@@ -454,6 +459,46 @@ describe('MediaController', function () {
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
 
+        });
+
+        it('should check initial media settings to choose initial track via integer-id', function () {
+            mediaController.addTrack(qtzTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(5);
+
+            mediaController.setInitialSettings(trackType, {
+                id: 2,
+                lang: 'es'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true;
+        });
+
+        it('should check initial media settings to choose initial track via string-id', function () {
+            mediaController.addTrack(qtzTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(5);
+            
+            mediaController.setInitialSettings(trackType, {
+                id: 'esTrack',
+                lang: 'en'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+            
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with 639-2 3-letter code', function () {
