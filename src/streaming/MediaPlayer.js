@@ -2725,6 +2725,9 @@ function MediaPlayer() {
             return null;
         }
 
+        if (value.id) {
+            output.id = value.id;
+        }
         if (value.lang) {
             output.lang = value.lang;
         }
