@@ -886,5 +886,22 @@
                 ]
             }
         ]
+    },
+    {
+        "section": "MPD Update Event (value 3)",
+        "samples": [
+            {
+                "title": "MPD Update Event implementation",
+                "description": "A sample showing MPD Update Event (value 3) implementation",
+                "href": "mpd-event/mpd-update-event.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Video",
+                    "Audio",
+                    "Callback events"
+                ]
+            }
+        ]
     }
 ]
