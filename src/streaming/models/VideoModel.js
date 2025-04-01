@@ -90,7 +90,7 @@ function VideoModel() {
             element.playbackRate = value;
             return;
         }
-        
+
         // If media element hasn't loaded enough data to play yet, wait until it has
         waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, () => {
             element.playbackRate = value;
@@ -252,21 +252,32 @@ function VideoModel() {
         stalledStreams.push(type);
 
         if (
-            settings.get().streaming.buffer.syntheticStallEvents.enabled && 
-            element && 
-            stalledStreams.length === 1 && 
+            settings.get().streaming.buffer.syntheticStallEvents.enabled &&
+            element &&
+            stalledStreams.length === 1 &&
             (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState || getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)
         ) {
-            logger.debug(`emitting synthetic waiting event and halting playback with playback rate 0`);
+            function emitSyntheticWaitingEvent() {
+                logger.debug(`emitting synthetic waiting event and halting playback with playback rate 0`);
 
-            previousPlaybackRate = element.playbackRate;
+                previousPlaybackRate = element.playbackRate;
+                setPlaybackRate(0, true);
 
-            setPlaybackRate(0, true);
+                const event = document.createEvent('Event');
+                event.initEvent('waiting', true, false);
+                element.dispatchEvent(event);
+            }
 
-            // Halt playback until nothing is stalled.
-            const event = document.createEvent('Event');
-            event.initEvent('waiting', true, false);
-            element.dispatchEvent(event);
+            if (!element.paused) {
+                // Halt Playback until nothing is stalled
+                emitSyntheticWaitingEvent();
+            } else {
+                const event = 'playing';
+                element.addEventListener(event, function emitWaitOnPlay () {
+                    if (stalledStreams.length === 1) emitSyntheticWaitingEvent();
+                    element.removeEventListener(event, emitWaitOnPlay);
+                });
+            }
         }
     }
 
@@ -282,7 +293,7 @@ function VideoModel() {
 
 
         if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && !isStalled() && element.playbackRate === 0) {
-            const resume = () => { 
+            const resume = () => {
                 logger.debug(`emitting synthetic playing event (if not paused) and resuming playback with playback rate: ${previousPlaybackRate || 1}`);
 
                 setPlaybackRate(previousPlaybackRate || 1, settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState);
@@ -299,7 +310,7 @@ function VideoModel() {
             } else {
                 if (resumeReadyStateFunction && resumeReadyStateFunction.func && resumeReadyStateFunction.event) {
                     removeEventListener(resumeReadyStateFunction.event, resumeReadyStateFunction.func);
-                }       
+                }
                 resumeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, resume)
             }
         }
