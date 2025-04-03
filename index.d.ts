@@ -4127,7 +4127,7 @@ declare namespace dashjs {
 
         getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[];
 
-        getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
+        getSupportedKeySystemMetadataFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
         initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
 
