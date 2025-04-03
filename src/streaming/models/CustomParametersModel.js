@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';
 import Constants from '../constants/Constants.js';
+import CmcdController from '../controllers/CmcdController.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -47,7 +48,8 @@ function CustomParametersModel() {
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
-        customAbrRules;
+        customAbrRules,
+        cmcdController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
@@ -57,6 +59,8 @@ function CustomParametersModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         _resetInitialSettings();
+        cmcdController = CmcdController(context).getInstance();
+        requestInterceptors.push(cmcdController.getCmcdRequestInterceptors());
     }
 
     function _resetInitialSettings() {

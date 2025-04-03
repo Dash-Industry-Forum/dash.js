@@ -3707,7 +3707,7 @@ declare namespace dashjs {
         update(manifest: object): void;
     }
 
-    export interface CmcdModel {
+    export interface CmcdController {
         getCmcdData(request: HTTPRequest): object;
 
         getCmcdParametersFromManifest(): CMCDParameters;

@@ -124,7 +124,7 @@ function Protection() {
         if (protectionModel) {
             controller = ProtectionController(context).create({
                 BASE64: config.BASE64,
-                cmcdModel: config.cmcdModel,
+                cmcdController: config.cmcdController,
                 constants: config.constants,
                 customParametersModel: config.customParametersModel,
                 debug: config.debug,

@@ -33,9 +33,10 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
-import Constants from '../../streaming/constants/Constants.js';
+import Constants from '../constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import DashManifestModel from '../../dash/models/DashManifestModel.js';
+import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 import Debug from '../../core/Debug.js';
 import Utils from '../../core/Utils.js';
 import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
@@ -49,7 +50,7 @@ const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
 
-function CmcdModel() {
+function CmcdController() {
 
     let dashManifestModel,
         instance,
@@ -61,6 +62,7 @@ function CmcdModel() {
         serviceDescriptionController,
         throughputController,
         streamProcessors,
+        clientDataReportingController,
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
@@ -75,6 +77,7 @@ function CmcdModel() {
 
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
+        clientDataReportingController = ClientDataReportingController(context).getInstance();
         logger = debug.getLogger(instance);
         _resetInitialSettings();
     }
@@ -735,6 +738,60 @@ function CmcdModel() {
         }
     }
 
+    function getCmcdRequestInterceptors() {
+        return _cmcdRequestModeInterceptor;
+    }
+
+    function _cmcdRequestModeInterceptor(request){
+        _updateRequestUrlAndHeadersWithCmcd(request);
+        request.cmcd = getCmcdData(request) 
+    }
+
+    /**
+     * Updates the request url and headers with CMCD data
+     * @param request
+     * @private
+     */
+    function _updateRequestUrlAndHeadersWithCmcd(request) {
+        const currentServiceLocation = request?.serviceLocation;
+        const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
+        const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
+            clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
+
+        if (isIncludedFilters && isCmcdEnabled()) {
+            const cmcdParameters = getCmcdParametersFromManifest();
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
+                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                request.headers = Object.assign(request.headers, getHeaderParameters(request));
+            }
+        }
+    }
+
+    /**
+     * Generates the additional query parameters to be appended to the request url
+     * @param {object} request
+     * @return {array}
+     * @private
+     */
+    function _getAdditionalQueryParameter(request) {
+        try {
+            const additionalQueryParameter = [];
+            const cmcdQueryParameter = getQueryParameter(request);
+
+            if (cmcdQueryParameter) {
+                additionalQueryParameter.push(cmcdQueryParameter);
+            }
+
+            return additionalQueryParameter;
+        } catch (e) {
+            return [];
+        }
+    }
+
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
@@ -751,6 +808,7 @@ function CmcdModel() {
         getQueryParameter,
         getHeaderParameters,
         getCmcdParametersFromManifest,
+        getCmcdRequestInterceptors,
         setConfig,
         reset,
         initialize,
@@ -762,5 +820,5 @@ function CmcdModel() {
     return instance;
 }
 
-CmcdModel.__dashjs_factory_name = 'CmcdModel';
-export default FactoryMaker.getSingletonFactory(CmcdModel);
+CmcdController.__dashjs_factory_name = 'CmcdController';
+export default FactoryMaker.getSingletonFactory(CmcdController);

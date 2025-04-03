@@ -50,7 +50,7 @@ import MediaPlayerModel from './models/MediaPlayerModel.js';
 import AbrController from './controllers/AbrController.js';
 import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
 import VideoModel from './models/VideoModel.js';
-import CmcdModel from './models/CmcdModel.js';
+import CmcdController from './controllers/CmcdController.js';
 import CmsdModel from './models/CmsdModel.js';
 import DOMStorage from './utils/DOMStorage.js';
 import Debug from './../core/Debug.js';
@@ -164,7 +164,7 @@ function MediaPlayer() {
         catchupController,
         dashMetrics,
         manifestModel,
-        cmcdModel,
+        cmcdController,
         cmsdModel,
         videoModel,
         uriFragmentModel,
@@ -356,7 +356,7 @@ function MediaPlayer() {
 
             manifestModel = ManifestModel(context).getInstance();
 
-            cmcdModel = CmcdModel(context).getInstance();
+            cmcdController = CmcdController(context).getInstance();
 
             cmsdModel = CmsdModel(context).getInstance();
 
@@ -2398,7 +2398,7 @@ function MediaPlayer() {
             }
         }
         textController.reset();
-        cmcdModel.reset();
+        cmcdController.reset();
         cmsdModel.reset();
     }
 
@@ -2504,7 +2504,7 @@ function MediaPlayer() {
             settings
         });
 
-        cmcdModel.setConfig({
+        cmcdController.setConfig({
             abrController,
             dashMetrics,
             playbackController,
@@ -2526,7 +2526,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        cmcdModel.initialize(autoPlay);
+        cmcdController.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
@@ -2571,7 +2571,7 @@ function MediaPlayer() {
                 events: Events,
                 BASE64,
                 constants: Constants,
-                cmcdModel,
+                cmcdController,
                 settings
             });
 

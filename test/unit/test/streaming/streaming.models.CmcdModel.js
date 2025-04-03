@@ -1,4 +1,4 @@
-import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
+import CmcdController from '../../../../src/streaming/controllers/CmcdController.js';
 import Settings from '../../../../src/core/Settings.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import EventBus from '../../../../src/core/EventBus.js';
@@ -22,8 +22,8 @@ const STATUS_HEADER_NAME = 'CMCD-Status';
 const OBJECT_HEADER_NAME = 'CMCD-Object';
 const REQUEST_HEADER_NAME = 'CMCD-Request';
 
-describe('CmcdModel', function () {
-    let cmcdModel;
+describe('CmcdController', function () {
+    let cmcdController;
 
     let abrControllerMock;
     let dashMetricsMock = new DashMetricsMock();
@@ -35,21 +35,21 @@ describe('CmcdModel', function () {
 
     beforeEach(function () {
         abrControllerMock = new AbrControllerMock();
-        cmcdModel = CmcdModel(context).getInstance();
-        cmcdModel.initialize();
+        cmcdController = CmcdController(context).getInstance();
+        cmcdController.initialize();
         settings.update({ streaming: { cmcd: { enabled: true, cid: null } } });
     });
 
     afterEach(function () {
-        cmcdModel.reset();
-        cmcdModel = null;
+        cmcdController.reset();
+        cmcdController = null;
         settings.reset();
         serviceDescriptionControllerMock.reset();
     });
 
     describe('if configured', function () {
         beforeEach(function () {
-            cmcdModel.setConfig({
+            cmcdController.setConfig({
                 abrController: abrControllerMock,
                 dashMetrics: dashMetricsMock,
                 playbackController: playbackControllerMock,
@@ -77,7 +77,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
                 expect(headers).to.have.property(OBJECT_HEADER_NAME);
@@ -102,7 +102,7 @@ describe('CmcdModel', function () {
                     mediaType: MEDIA_TYPE
                 };
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
                 expect(headers).to.have.property(OBJECT_HEADER_NAME);
@@ -156,7 +156,7 @@ describe('CmcdModel', function () {
                     url: 'http://test.url/firstRequest'
                 };
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
                 expect(headers).to.have.property(OBJECT_HEADER_NAME);
@@ -196,7 +196,7 @@ describe('CmcdModel', function () {
                 expect(metrics.rtp % 100).to.equal(0);
 
                 request.url = 'http://test.url/next_object';
-                headers = cmcdModel.getHeaderParameters(request);
+                headers = cmcdController.getHeaderParameters(request);
                 metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                 expect(metrics).to.have.property('nrr');
                 expect(metrics.nrr).to.equal(NEXT_OBJECT_RANGE);
@@ -220,7 +220,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
                 expect(headers).to.have.property(OBJECT_HEADER_NAME);
@@ -248,13 +248,13 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 let metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                 expect(metrics).to.not.have.property('pr');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, { playbackRate: CHANGED_PLAYBACK_RATE });
 
-                headers = cmcdModel.getHeaderParameters(request);
+                headers = cmcdController.getHeaderParameters(request);
                 metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                 expect(metrics).to.have.property('pr');
                 expect(metrics.pr).to.equal(CHANGED_PLAYBACK_RATE);
@@ -273,8 +273,8 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
-                let headers = cmcdModel.getHeaderParameters(request);
+                cmcdController.getHeaderParameters(request); // first initial request will set startup to true
+                let headers = cmcdController.getHeaderParameters(request);
                 let metrics = decodeCmcd(headers[STATUS_HEADER_NAME]);
                 expect(metrics).to.not.have.property('bs');
                 metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
@@ -282,7 +282,7 @@ describe('CmcdModel', function () {
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
 
-                headers = cmcdModel.getHeaderParameters(request);
+                headers = cmcdController.getHeaderParameters(request);
                 metrics = decodeCmcd(headers[STATUS_HEADER_NAME]);
                 expect(metrics).to.have.property('bs');
                 expect(metrics.bs).to.equal(true);
@@ -304,8 +304,8 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                cmcdModel.getHeaderParameters(request); // first initial request will set startup to true
-                let headers = cmcdModel.getHeaderParameters(request);
+                cmcdController.getHeaderParameters(request); // first initial request will set startup to true
+                let headers = cmcdController.getHeaderParameters(request);
                 let metrics = decodeCmcd(headers[STATUS_HEADER_NAME]);
                 expect(metrics).to.not.have.property('bs');
                 metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
@@ -316,7 +316,7 @@ describe('CmcdModel', function () {
                     mediaType: request.mediaType
                 });
 
-                headers = cmcdModel.getHeaderParameters(request);
+                headers = cmcdController.getHeaderParameters(request);
                 metrics = decodeCmcd(headers[STATUS_HEADER_NAME]);
                 expect(metrics).to.have.property('bs');
                 expect(metrics.bs).to.equal(true);
@@ -338,7 +338,7 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 let metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                 expect(metrics).to.not.have.property('st');
                 expect(metrics).to.not.have.property('sf');
@@ -348,7 +348,7 @@ describe('CmcdModel', function () {
                     data: { type: DashConstants.DYNAMIC }
                 });
 
-                headers = cmcdModel.getHeaderParameters(request);
+                headers = cmcdController.getHeaderParameters(request);
                 metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                 expect(metrics).to.have.property('st');
                 expect(metrics.st).to.equal('l');
@@ -369,7 +369,7 @@ describe('CmcdModel', function () {
 
                 settings.update({ streaming: { cmcd: { enabled: true, cid: CID, includeInRequests: ['mpd'] } } });
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
 
@@ -390,7 +390,7 @@ describe('CmcdModel', function () {
 
                 settings.update({ streaming: { cmcd: { enabled: true, rtp: 10000 } } });
 
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(STATUS_HEADER_NAME);
                 expect(typeof headers[STATUS_HEADER_NAME]).to.equal('string');
 
@@ -417,7 +417,7 @@ describe('CmcdModel', function () {
                         }
                     }
                 });
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers[OBJECT_HEADER_NAME].split(',').map(e => {
                     return e.split('=')[0]
                 })).to.not.include('d');
@@ -445,7 +445,7 @@ describe('CmcdModel', function () {
                         }
                     }
                 });
-                let headers = cmcdModel.getHeaderParameters(request);
+                let headers = cmcdController.getHeaderParameters(request);
                 expect(headers[OBJECT_HEADER_NAME]).to.be.undefined;
                 expect(headers[REQUEST_HEADER_NAME]).to.be.undefined;
                 expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
@@ -471,7 +471,7 @@ describe('CmcdModel', function () {
                         }
                     });
 
-                    let headers = cmcdModel.getHeaderParameters(request);
+                    let headers = cmcdController.getHeaderParameters(request);
                     expect(headers).to.equals(null);
                 });
 
@@ -484,7 +484,7 @@ describe('CmcdModel', function () {
                         mediaType: MEDIA_TYPE
                     };
 
-                    let headers = cmcdModel.getHeaderParameters(request);
+                    let headers = cmcdController.getHeaderParameters(request);
                     expect(headers).to.have.property(OBJECT_HEADER_NAME);
                     expect(headers).to.have.property(REQUEST_HEADER_NAME);
                     expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -511,7 +511,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -539,7 +539,7 @@ describe('CmcdModel', function () {
                         request = {
                             type: MEDIA_SEMGENT_REQUEST_TYPE,
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -547,7 +547,7 @@ describe('CmcdModel', function () {
                         request = {
                             type: INIT_SEMGENT_REQUEST_TYPE,
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -555,7 +555,7 @@ describe('CmcdModel', function () {
                         request = {
                             type: XLINK_REQUEST_TYPE,
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -563,7 +563,7 @@ describe('CmcdModel', function () {
                         request = {
                             type: MDP_REQUEST_TYPE,
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -571,7 +571,7 @@ describe('CmcdModel', function () {
                         request = {
                             type: STEERING_REQUEST_TYPE,
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -596,7 +596,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         expect(headers[OBJECT_HEADER_NAME]).to.be.undefined;
                         expect(headers[REQUEST_HEADER_NAME]).to.be.undefined;
                         expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
@@ -624,7 +624,7 @@ describe('CmcdModel', function () {
                             type: MEDIA_SEGMENT_REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -633,7 +633,7 @@ describe('CmcdModel', function () {
                             type: INIT_SGMENT_REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
                         };
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -659,7 +659,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
@@ -684,7 +684,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
                     });
@@ -708,7 +708,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
@@ -735,14 +735,14 @@ describe('CmcdModel', function () {
                             }
                         });
         
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.have.property('ltc');
 
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
         
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                         expect(metrics).to.have.property('msd');
                     });
@@ -766,14 +766,14 @@ describe('CmcdModel', function () {
                             }
                         });
         
-                        let headers = cmcdModel.getHeaderParameters(request);
+                        let headers = cmcdController.getHeaderParameters(request);
                         let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.not.have.property('ltc');
                 
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
         
-                        headers = cmcdModel.getHeaderParameters(request);
+                        headers = cmcdController.getHeaderParameters(request);
                         metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.not.have.property('msd');
                     });
@@ -801,7 +801,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -824,7 +824,7 @@ describe('CmcdModel', function () {
                     mediaType: MEDIA_TYPE
                 };
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -872,7 +872,7 @@ describe('CmcdModel', function () {
                     url: 'http://test.url/firstRequest'
                 };
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -902,7 +902,7 @@ describe('CmcdModel', function () {
                 expect(metrics.rtp % 100).to.equal(0);
 
                 request.url = 'http://test.url/next_object';
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('nrr');
                 expect(metrics.nrr).to.equal(NEXT_OBJECT_RANGE);
@@ -926,7 +926,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -963,13 +963,13 @@ describe('CmcdModel', function () {
                     },
                     duration: DURATION
                 };
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('pr');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, { playbackRate: CHANGED_PLAYBACK_RATE });
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('pr');
                 expect(metrics.pr).to.equal(CHANGED_PLAYBACK_RATE);
@@ -995,15 +995,15 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                cmcdModel.getQueryParameter(request); // first initial request will set startup to true
-                let parameters = cmcdModel.getQueryParameter(request);
+                cmcdController.getQueryParameter(request); // first initial request will set startup to true
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('bs');
                 expect(metrics).to.not.have.property('su');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKED);
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('bs');
                 expect(metrics.bs).to.equal(true);
@@ -1031,8 +1031,8 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                cmcdModel.getQueryParameter(request); // first initial request will set startup to true
-                let parameters = cmcdModel.getQueryParameter(request);
+                cmcdController.getQueryParameter(request); // first initial request will set startup to true
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('bs');
                 expect(metrics).to.not.have.property('su');
@@ -1042,7 +1042,7 @@ describe('CmcdModel', function () {
                     mediaType: request.mediaType
                 });
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('bs');
                 expect(metrics.bs).to.equal(true);
@@ -1070,7 +1070,7 @@ describe('CmcdModel', function () {
                     representation: { mediaInfo: { bitrateList: [{ bandwidth: BITRATE }] } },
                     duration: DURATION
                 };
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('st');
                 expect(metrics).to.not.have.property('sf');
@@ -1080,7 +1080,7 @@ describe('CmcdModel', function () {
                     data: { type: DashConstants.DYNAMIC }
                 });
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('st');
                 expect(metrics.st).to.equal('l');
@@ -1101,7 +1101,7 @@ describe('CmcdModel', function () {
 
                 settings.update({ streaming: { cmcd: { enabled: true, cid: CID, includeInRequests: ['mpd'] } } });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -1129,7 +1129,7 @@ describe('CmcdModel', function () {
 
                 settings.update({ streaming: { cmcd: { enabled: true, rtp: 10000 } } });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -1158,7 +1158,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -1189,7 +1189,7 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters).to.have.property('value');
@@ -1218,7 +1218,7 @@ describe('CmcdModel', function () {
                         }
                     });
 
-                    let parameters = cmcdModel.getQueryParameter(request);
+                    let parameters = cmcdController.getQueryParameter(request);
                     expect(parameters).to.equals(null);
                 });
 
@@ -1231,7 +1231,7 @@ describe('CmcdModel', function () {
                         mediaType: MEDIA_TYPE
                     };
 
-                    let parameters = cmcdModel.getQueryParameter(request);
+                    let parameters = cmcdController.getQueryParameter(request);
                     expect(parameters).to.have.property('key');
                     expect(parameters.key).to.equal('CMCD');
                     expect(parameters.value).to.not.equal(null);
@@ -1258,7 +1258,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let parameters = cmcdModel.getQueryParameter(request);
+                        let parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                     });
@@ -1285,35 +1285,35 @@ describe('CmcdModel', function () {
                         request = {
                             type: MEDIA_SEMGENT_REQUEST_TYPE,
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
 
                         request = {
                             type: INIT_SEMGENT_REQUEST_TYPE,
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
 
                         request = {
                             type: XLINK_REQUEST_TYPE,
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
 
                         request = {
                             type: MDP_REQUEST_TYPE,
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
 
                         request = {
                             type: STEERING_REQUEST_TYPE,
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                     });
@@ -1336,7 +1336,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let parameters = cmcdModel.getQueryParameter(request);
+                        let parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.be.empty;
@@ -1364,7 +1364,7 @@ describe('CmcdModel', function () {
                             type: MEDIA_SEGMENT_REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
@@ -1373,7 +1373,7 @@ describe('CmcdModel', function () {
                             type: INIT_SGMENT_REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
                         };
-                        parameters = cmcdModel.getQueryParameter(request);
+                        parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
@@ -1399,7 +1399,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let parameters = cmcdModel.getQueryParameter(request);
+                        let parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
@@ -1425,7 +1425,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let parameters = cmcdModel.getQueryParameter(request);
+                        let parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
@@ -1451,7 +1451,7 @@ describe('CmcdModel', function () {
                         }
                         serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                        let parameters = cmcdModel.getQueryParameter(request);
+                        let parameters = cmcdController.getQueryParameter(request);
                         expect(parameters).to.have.property('key');
                         expect(parameters.key).to.equal('CMCD');
                         expect(parameters.value).to.not.equals(null);
@@ -1478,14 +1478,14 @@ describe('CmcdModel', function () {
                         }
                     }
                 });
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('ltc');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.have.property('msd');
             });
@@ -1509,14 +1509,14 @@ describe('CmcdModel', function () {
                     }
                 });
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 let metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('ltc');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
 
-                parameters = cmcdModel.getQueryParameter(request);
+                parameters = cmcdController.getQueryParameter(request);
                 metrics = decodeCmcd(parameters.value);
                 expect(metrics).to.not.have.property('msd');
             });
@@ -1555,7 +1555,7 @@ describe('CmcdModel', function () {
                 };
                 serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters.value).to.equal('cid="test-cid"');
@@ -1593,7 +1593,7 @@ describe('CmcdModel', function () {
                 };
                 serviceDescriptionControllerMock.applyServiceDescription(serviceDescriptionSettings);
 
-                let parameters = cmcdModel.getQueryParameter(request);
+                let parameters = cmcdController.getQueryParameter(request);
                 expect(parameters).to.have.property('key');
                 expect(parameters.key).to.equal('CMCD');
                 expect(parameters.value).to.equal('sid="sid-123"');
