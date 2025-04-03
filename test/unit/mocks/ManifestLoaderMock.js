@@ -19,7 +19,6 @@ function ManifestLoaderMock(responseMock) {
             resolve(this.responseMock);
         });
     };
-    
 
     this.reset = function () {
     };

@@ -305,6 +305,7 @@ function DashAdapter() {
         }
 
         checkConfig();
+
         voPeriods = getRegularPeriods(newManifest);
     }
 
@@ -441,6 +442,7 @@ function DashAdapter() {
             checkConfig();
             voLocalPeriods = getRegularPeriods(externalManifest);
         }
+
         if (voLocalPeriods.length > 0) {
             if (!maxStreamsInfo || maxStreamsInfo > voLocalPeriods.length) {
                 maxStreamsInfo = voLocalPeriods.length;

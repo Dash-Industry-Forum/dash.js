@@ -10,7 +10,6 @@ import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ManifestLoaderMock from '../../mocks/ManifestLoaderMock.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 
-
 describe('ListMpdController', function () {
     let listMpdController,
         eventBus,
