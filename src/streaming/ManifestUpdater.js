@@ -256,7 +256,7 @@ function ManifestUpdater() {
             refreshDelay = 0x7FFFFFFF / 1000;
         }
 
-        const manifestProfiles = manifest.profiles.split(',');
+        const manifestProfiles = manifest.profiles ? manifest.profiles.split(',') : [];
         if (manifestProfiles.includes(DashConstants.LIST_PROFILE_SCHEME)) {
             const linkedPeriods = adapter.getLinkPeriods(manifest)
             eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
