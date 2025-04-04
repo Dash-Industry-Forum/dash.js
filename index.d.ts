@@ -1656,7 +1656,7 @@ declare namespace dashjs {
             },
             events?: {
                 eventControllerRefreshDelay?: number,
-                deleteEventMessageDataAfterEventStarted?: boolean
+                deleteEventMessageDataTimeout?: number
             }
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
