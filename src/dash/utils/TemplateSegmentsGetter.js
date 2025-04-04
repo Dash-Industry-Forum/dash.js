@@ -75,6 +75,11 @@ function TemplateSegmentsGetter(config, isDynamic) {
         index = Math.max(index, 0);
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+
+        if (representation.endNumber && index > representation.endNumber) {
+            return null;
+        }
+
         if (seg) {
             seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
 

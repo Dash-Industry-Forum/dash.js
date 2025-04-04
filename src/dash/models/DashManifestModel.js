@@ -842,6 +842,9 @@ function DashManifestModel() {
                     } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
                         voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
                     }
+                    if (segmentInfo.hasOwnProperty(DashConstants.END_NUMBER)) {
+                        voRepresentation.endNumber = segmentInfo.endNumber;
+                    }
                 }
 
                 voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);

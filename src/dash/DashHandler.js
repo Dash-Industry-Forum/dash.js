@@ -283,6 +283,10 @@ function DashHandler(config) {
 
         let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
 
+        if (representation.endNumber && indexToRequest >= representation.endNumber) {
+            return null;
+        }
+
         return _getRequest(mediaInfo, representation, indexToRequest);
     }
 
