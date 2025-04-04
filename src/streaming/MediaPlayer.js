@@ -2709,6 +2709,7 @@ function MediaPlayer() {
 
         function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
             let out = {};
+            // For an empty string, let's unset the descriptor, i.e. return null
             if (val) {
                 if (val instanceof Array) {
                     throw ARRAY_NOT_SUPPORTED_ERROR;
@@ -2728,22 +2729,22 @@ function MediaPlayer() {
         if (value.id !== undefined) {
             output.id = value.id;
         }
-        if (value.lang) {
+        if (value.lang !== undefined) {
             output.lang = value.lang;
         }
         if (!isNaN(value.index)) {
             output.index = value.index;
         }
-        if (value.viewpoint) {
+        if (value.viewpoint !== undefined) {
             output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
         }
-        if (value.audioChannelConfiguration) {
+        if (value.audioChannelConfiguration !== undefined) {
             output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
         }
-        if (value.role) {
+        if (value.role !== undefined) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
         }
-        if (value.accessibility) {
+        if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
         }
 
