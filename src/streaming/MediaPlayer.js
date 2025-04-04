@@ -2725,7 +2725,7 @@ function MediaPlayer() {
             return null;
         }
 
-        if (value.id) {
+        if (value.id !== undefined) {
             output.id = value.id;
         }
         if (value.lang) {
