@@ -76,7 +76,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
 
-        if (representation.endNumber && index > representation.endNumber) {
+        if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
             return null;
         }
 

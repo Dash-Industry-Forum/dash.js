@@ -843,7 +843,7 @@ function DashManifestModel() {
                         voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.END_NUMBER)) {
-                        voRepresentation.endNumber = segmentInfo.endNumber;
+                        voRepresentation.endNumber = segmentInfo[DashConstants.END_NUMBER];
                     }
                 }
 
