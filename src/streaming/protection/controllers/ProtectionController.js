@@ -1195,6 +1195,9 @@ function ProtectionController(config) {
     }
 
     function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
+        if (normalizedKeyIds.size <= 0) {
+            return false;
+        }
 
         const allHaveStatus = keyStatusMap.size > 0 && [...normalizedKeyIds].every((normalizedKeyId) => {
             const keyStatus = keyStatusMap.get(normalizedKeyId);
