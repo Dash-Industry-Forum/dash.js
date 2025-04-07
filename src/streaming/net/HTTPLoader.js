@@ -308,6 +308,7 @@ function HTTPLoader(cfg) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
+
                     httpRequest.customData.onloadend = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
@@ -403,6 +404,7 @@ function HTTPLoader(cfg) {
             timeout: requestTimeout,
             customData: { request: requestObject }
         });
+        
         commonMediaResponse = new CommonMediaResponse({
             request: commonMediaRequest,
             resourceTiming: {
