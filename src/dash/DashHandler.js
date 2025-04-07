@@ -282,8 +282,7 @@ function DashHandler(config) {
         }
 
         let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
-
-        if (representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber > representation.endNumber) {
+        if (representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber > representation.endNumber) {
             return null;
         }
 
