@@ -112,7 +112,7 @@ class Utils {
             return url;
         }
 
-        // Remove the CMCD parameter
+        // Remove the queryParameter
         params.delete(queryParameter);
 
         // Manually reconstruct the query string without re-encoding
