@@ -404,7 +404,7 @@ function HTTPLoader(cfg) {
             timeout: requestTimeout,
             customData: { request: requestObject }
         });
-        
+    
         commonMediaResponse = new CommonMediaResponse({
             request: commonMediaRequest,
             resourceTiming: {
