@@ -45,7 +45,8 @@
       },
       "includedTestfiles": [
         "playback/*",
-        "audio/initial-audio",
+        "audio/*",
+        "video/*",
         "text/*"
       ],
       "excludedPlatforms": [
@@ -78,7 +79,8 @@
       "provider": "axinom",
       "includedTestfiles": [
         "playback/*",
-        "audio/initial-audio",
+        "audio/*",
+        "video/*",
         "text/*"
       ],
       "excludedPlatforms": [
