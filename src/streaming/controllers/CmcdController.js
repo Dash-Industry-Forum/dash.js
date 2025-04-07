@@ -33,7 +33,7 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
-import Constants from '../constants/Constants.js';
+import Constants from '../../streaming/constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
@@ -745,6 +745,7 @@ function CmcdController() {
     function _cmcdRequestModeInterceptor(request){
         _updateRequestUrlAndHeadersWithCmcd(request);
         request.cmcd = getCmcdData(request) 
+        return request;
     }
 
     /**
