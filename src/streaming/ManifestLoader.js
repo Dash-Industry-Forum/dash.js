@@ -215,10 +215,10 @@ function ManifestLoader(config) {
                         settings.get().streaming.enableManifestDurationMismatchFix &&
                         manifest.mediaPresentationDuration &&
                         manifest.Period.length > 1) {
-                        const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
-                        if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
+                        const safeDuration = _getSafeDuration(manifest.Period);
+                        if (!isNaN(safeDuration) && manifest.mediaPresentationDuration > safeDuration) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
-                            manifest.mediaPresentationDuration = sumPeriodDurations;
+                            manifest.mediaPresentationDuration = safeDuration;
                         }
                     }
 
@@ -265,6 +265,31 @@ function ManifestLoader(config) {
             urlLoader.abort();
             urlLoader = null;
         }
+    }
+
+    function _getSafeDuration(periods) {
+        const sumPeriodDurations = periods.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+        if (isNaN(sumPeriodDurations)) {
+            return sumPeriodDurations;
+        }
+
+        const lastPeriod = periods[periods.length - 1];
+        let duration = lastPeriod.start;
+        if (lastPeriod.duration) {
+            duration += lastPeriod.duration;
+        } else {
+            const segmentTemplate = lastPeriod.AdaptationSet.filter((set) => set.mimeType === 'video/mp4')[0].Representation[0].SegmentTemplate;
+            const segments = segmentTemplate.SegmentTimeline.S;
+            if (Array.isArray(segments)){
+                for (const s of segments) {
+                    duration += (s.r ? s.d * (s.r + 1) : s.d) / segmentTemplate.timescale;
+                }
+            } else {
+                duration += (segments.r ? segments.d * (segments.r + 1) : segments.d) / segmentTemplate.timescale;
+            }
+        }
+
+        return duration;
     }
 
     instance = {
