@@ -76,11 +76,11 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
 
-        if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
-            return null;
-        }
-
         if (seg) {
+            if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
+                return null;
+            }
+
             seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
 
             let url = template.media;
