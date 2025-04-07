@@ -267,6 +267,10 @@ function ManifestLoader(config) {
         }
     }
 
+    function _getSegmentDuration(s) {
+        return (s.r ? s.d * (s.r + 1) : s.d);
+    }
+
     function _getSafeDuration(periods) {
         const sumPeriodDurations = periods.reduce((totalDuration, period) => totalDuration + period.duration, 0);
         if (isNaN(sumPeriodDurations)) {
@@ -274,22 +278,18 @@ function ManifestLoader(config) {
         }
 
         const lastPeriod = periods[periods.length - 1];
-        let duration = lastPeriod.start;
         if (lastPeriod.duration) {
-            duration += lastPeriod.duration;
-        } else {
-            const segmentTemplate = lastPeriod.AdaptationSet.filter((set) => set.mimeType === 'video/mp4')[0].Representation[0].SegmentTemplate;
-            const segments = segmentTemplate.SegmentTimeline.S;
-            if (Array.isArray(segments)){
-                for (const s of segments) {
-                    duration += (s.r ? s.d * (s.r + 1) : s.d) / segmentTemplate.timescale;
-                }
-            } else {
-                duration += (segments.r ? segments.d * (segments.r + 1) : segments.d) / segmentTemplate.timescale;
-            }
+            return lastPeriod.start + lastPeriod.duration;
         }
 
-        return duration;
+        const segmentTemplate = lastPeriod.AdaptationSet.filter((set) => set.mimeType === 'video/mp4')[0].Representation[0].SegmentTemplate;
+        const segments = segmentTemplate.SegmentTimeline.S;
+        if (Array.isArray(segments)){
+            return lastPeriod.start +
+                segments.reduce((segmentsDuration, s) => segmentsDuration + _getSegmentDuration(s), 0) / segmentTemplate.timescale;
+        } else {
+            return lastPeriod.start + _getSegmentDuration(segments) / segmentTemplate.timescale;
+        }
     }
 
     instance = {
