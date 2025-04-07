@@ -60,7 +60,7 @@ function CustomParametersModel() {
         };
         _resetInitialSettings();
     }
-    
+
     function _resetInitialSettings() {
         requestInterceptors = [];
         responseInterceptors = [];
@@ -70,7 +70,7 @@ function CustomParametersModel() {
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
-        
+
         cmcdController = CmcdController(context).getInstance();
         requestInterceptors = requestInterceptors.concat(cmcdController.getCmcdRequestInterceptors());
     }
