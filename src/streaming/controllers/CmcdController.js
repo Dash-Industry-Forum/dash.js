@@ -739,7 +739,8 @@ function CmcdController() {
     }
 
     function getCmcdRequestInterceptors() {
-        return _cmcdRequestModeInterceptor;
+        // Add here the futures request interceptors
+        return [_cmcdRequestModeInterceptor];
     }
 
     function _cmcdRequestModeInterceptor(request){

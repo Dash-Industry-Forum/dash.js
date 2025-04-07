@@ -59,10 +59,8 @@ function CustomParametersModel() {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
         _resetInitialSettings();
-        cmcdController = CmcdController(context).getInstance();
-        requestInterceptors.push(cmcdController.getCmcdRequestInterceptors());
     }
-
+    
     function _resetInitialSettings() {
         requestInterceptors = [];
         responseInterceptors = [];
@@ -72,6 +70,9 @@ function CustomParametersModel() {
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
+        
+        cmcdController = CmcdController(context).getInstance();
+        requestInterceptors = requestInterceptors.concat(cmcdController.getCmcdRequestInterceptors());
     }
 
 
