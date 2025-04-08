@@ -95,6 +95,50 @@ describe('TemplateSegmentsGetter', () => {
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 1 + 100 / 5);
             expect(seg).to.be.null; // jshint ignore:line
         });
+
+        it('should not return null if segment is equal to endNumber', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
+            representation.segmentDuration = 1;
+            representation.startNumber = 0;
+            representation.endNumber = 3;
+
+            let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
+            expect(seg.index).to.equal(3);
+        })
+
+        it('should not return null if segment is equal to endNumber and startNumber is 2', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
+            representation.segmentDuration = 1;
+            representation.startNumber = 2;
+            representation.endNumber = 5;
+
+            let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
+            expect(seg.index).to.equal(3);
+        })
+
+        it('should return null if segment is after endNumber', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
+            representation.segmentDuration = 1;
+            representation.startNumber = 0;
+            representation.endNumber = 2;
+
+            let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
+            expect(seg).to.be.null; // jshint ignore:line
+        })
+
+        it('should return null if segment is after endNumber and startNumber is 2', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = {start: 0, end: 100};
+            representation.segmentDuration = 1;
+            representation.startNumber = 2;
+            representation.endNumber = 5;
+
+            let seg = templateSegmentsGetter.getSegmentByIndex(representation, 4);
+            expect(seg).to.be.null; // jshint ignore:line
+        })
     });
 
     describe('getSegmentByTime', () => {

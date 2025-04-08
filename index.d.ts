@@ -989,6 +989,7 @@ declare namespace dashjs {
         startNumber: number;
         timescale: number;
         width: number;
+        endNumber: number | null;
     }
 
     export interface Segment {
