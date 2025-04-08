@@ -105,6 +105,7 @@ describe('TemplateSegmentsGetter', () => {
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
             expect(seg.index).to.equal(3);
+            expect(seg.replacementNumber).to.equal(3);
         })
 
         it('should not return null if segment is equal to endNumber and startNumber is 2', () => {
@@ -116,6 +117,7 @@ describe('TemplateSegmentsGetter', () => {
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
             expect(seg.index).to.equal(3);
+            expect(seg.replacementNumber).to.equal(5);
         })
 
         it('should return null if segment is after endNumber', () => {
@@ -126,7 +128,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.endNumber = 2;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 3);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         })
 
         it('should return null if segment is after endNumber and startNumber is 2', () => {
@@ -137,7 +139,7 @@ describe('TemplateSegmentsGetter', () => {
             representation.endNumber = 5;
 
             let seg = templateSegmentsGetter.getSegmentByIndex(representation, 4);
-            expect(seg).to.be.null; // jshint ignore:line
+            expect(seg).to.be.null;
         })
     });
 
