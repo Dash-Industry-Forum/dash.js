@@ -743,10 +743,11 @@ function CmcdController() {
         return [_cmcdRequestModeInterceptor];
     }
 
-    function _cmcdRequestModeInterceptor(request){
+    function _cmcdRequestModeInterceptor(commonMediaRequest){
+        const request = commonMediaRequest.customData.request
         _updateRequestUrlAndHeadersWithCmcd(request);
-        request.cmcd = getCmcdData(request) 
-        return request;
+        commonMediaRequest.cmcd = getCmcdData(request);
+        return commonMediaRequest;
     }
 
     /**
