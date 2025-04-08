@@ -282,7 +282,8 @@ function DashHandler(config) {
         }
 
         let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
-        if (representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber > representation.endNumber) {
+        if (representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber >= representation.endNumber) {
+            mediaHasFinished = true;
             return null;
         }
 
