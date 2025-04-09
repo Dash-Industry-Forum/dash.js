@@ -744,9 +744,18 @@ function CmcdController() {
     }
 
     function _cmcdRequestModeInterceptor(commonMediaRequest){
-        const request = commonMediaRequest.customData.request
+        const request = commonMediaRequest.customData.request;
+
         _updateRequestUrlAndHeadersWithCmcd(request);
-        commonMediaRequest.cmcd = getCmcdData(request);
+
+        commonMediaRequest = {
+            ...commonMediaRequest,
+            url: request.url,
+            headers: request.headers,
+            customData: request,
+            cmcd: getCmcdData(request)
+        }
+
         return commonMediaRequest;
     }
 
