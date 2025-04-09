@@ -62,17 +62,17 @@ function CustomParametersModel() {
     }
 
     function _resetInitialSettings() {
-        requestInterceptors = [];
-        responseInterceptors = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
-
+        
+        // Initialize request interceptors with default CMCD interceptors 
         cmcdController = CmcdController(context).getInstance();
-        requestInterceptors = requestInterceptors.concat(cmcdController.getCmcdRequestInterceptors());
+        requestInterceptors = cmcdController.getCmcdRequestInterceptors();
+        responseInterceptors = [];
     }
 
 
