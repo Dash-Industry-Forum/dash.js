@@ -270,6 +270,10 @@ function CatchupController() {
                 return false;
             }
 
+            const playbackRate = videoModel.getPlaybackRate();
+
+            if(playbackStalled && playbackRate === 0) return false;
+
             const catchupMode = _getCatchupMode();
 
             if (catchupMode === Constants.LIVE_CATCHUP_MODE_LOLP) {
