@@ -26943,6 +26943,9 @@ function CatchupController() {
         return false;
       }
 
+      var playbackRate = videoModel.getPlaybackRate();
+      if (playbackStalled && playbackRate === 0) return false;
+
       var catchupMode = _getCatchupMode();
 
       if (catchupMode === _constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP) {
@@ -27024,6 +27027,7 @@ function CatchupController() {
       var deltaLatency = currentLiveLatency - targetLiveDelay; //If latency is outside of the acceptable window, consider a new speed
 
       if (deltaLatency < stepSettings.start.min * -1 || deltaLatency > stepSettings.start.max) {
+        logger.debug("[_stepNeedToCatchUp] latency offset ".concat(deltaLatency));
         return true;
       } //If we're already catching up, consider a new speed
 
@@ -27175,6 +27179,7 @@ function CatchupController() {
       }
     }
 
+    logger.debug("[_calculateNewPlaybackRateStep] rate being changed to ".concat(newRate));
     return newRate;
   }
 
