@@ -120,7 +120,7 @@ function CmcdController() {
 
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
-        }
+        }     
     }
 
     function _resetInitialSettings() {
@@ -177,10 +177,10 @@ function CmcdController() {
         streamProcessors = activeStream.getStreamProcessors();
     }
 
-    function getQueryParameter(request) {
+    function getQueryParameter(request, cmcdData) {
         try {
             if (isCmcdEnabled()) {
-                const cmcdData = getCmcdData(request);
+                cmcdData = cmcdData || getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const finalPayloadString = encodeCmcd(filteredCmcdData);
 
@@ -218,10 +218,10 @@ function CmcdController() {
         }
     }
 
-    function getHeaderParameters(request) {
+    function getHeaderParameters(request, cmcdData) {
         try {
             if (isCmcdEnabled()) {
-                const cmcdData = getCmcdData(request);
+                cmcdData = cmcdData || getCmcdData(request);
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const options = _createCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
