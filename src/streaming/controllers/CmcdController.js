@@ -46,9 +46,22 @@ import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreaming
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
+import HttpLoaderRequest from '../../streaming/vo/HttpLoaderRequest.js';
+import URLLoader from '../net/URLLoader.js';
+import Errors from '../../core/errors/Errors.js';
+
 const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
+const ALLOWED_TYPES = [
+    HTTPRequest.MPD_TYPE,
+    HTTPRequest.INIT_SEGMENT_TYPE,
+    HTTPRequest.MEDIA_SEGMENT_TYPE,
+    HTTPRequest.OTHER_TYPE,
+    HTTPRequest.XLINK_EXPANSION_TYPE,
+    HTTPRequest.LICENSE,
+    HTTPRequest.CONTENT_STEERING_TYPE
+];
 
 function CmcdController() {
 
@@ -60,6 +73,8 @@ function CmcdController() {
         dashMetrics,
         playbackController,
         serviceDescriptionController,
+        errHandler,
+        mediaPlayerModel,
         throughputController,
         streamProcessors,
         clientDataReportingController,
@@ -68,7 +83,8 @@ function CmcdController() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
-        _msdSent;
+        _msdSent,
+        urlLoader;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -120,7 +136,16 @@ function CmcdController() {
 
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
-        }     
+        }
+
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+
+        if (config.mediaPlayerModel) {
+            errHandler = config.errHandler;
+        }
+        
     }
 
     function _resetInitialSettings() {
@@ -195,7 +220,7 @@ function CmcdController() {
                     value: finalPayloadString
                 };
             }
-
+    
             return null;
         } catch (e) {
             return null;
@@ -225,7 +250,7 @@ function CmcdController() {
                 const filteredCmcdData = _applyWhitelist(cmcdData);
                 const options = _createCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
-
+    
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
@@ -234,7 +259,7 @@ function CmcdController() {
                 });
                 return headers;
             }
-
+    
             return null;
         } catch (e) {
             return null;
@@ -744,6 +769,11 @@ function CmcdController() {
     }
 
     function _cmcdRequestModeInterceptor(commonMediaRequest){
+        const requestType = commonMediaRequest.customData.request.type;
+        if (!ALLOWED_TYPES.includes(requestType)) {
+            return commonMediaRequest;
+        }
+
         const request = commonMediaRequest.customData.request;
 
         _updateRequestUrlAndHeadersWithCmcd(request);
@@ -764,7 +794,7 @@ function CmcdController() {
      * @param request
      * @private
      */
-    function _updateRequestUrlAndHeadersWithCmcd(request) {
+    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
@@ -775,7 +805,7 @@ function CmcdController() {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request);
+                const additionalQueryParameter = _getAdditionalQueryParameter(request,cmcdData);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 request.headers = Object.assign(request.headers, getHeaderParameters(request));
@@ -789,10 +819,10 @@ function CmcdController() {
      * @return {array}
      * @private
      */
-    function _getAdditionalQueryParameter(request) {
+    function _getAdditionalQueryParameter(request,cmcdData) {
         try {
             const additionalQueryParameter = [];
-            const cmcdQueryParameter = getQueryParameter(request);
+            const cmcdQueryParameter = getQueryParameter(request,cmcdData);
 
             if (cmcdQueryParameter) {
                 additionalQueryParameter.push(cmcdQueryParameter);
@@ -802,6 +832,41 @@ function CmcdController() {
         } catch (e) {
             return [];
         }
+    }
+
+    function getCmcdResponseInterceptors(){
+        return [_cmcdResponseModeInterceptor];
+    }
+
+    function _cmcdResponseModeInterceptor(response){
+        const requestType = response.request.customData.type;
+        if (!ALLOWED_TYPES.includes(requestType)) {
+            return response;
+        }
+
+        let cmcdData = response.request.cmcd;
+        let params = {
+            url: 'http://example.com/report',
+            method: 'GET',
+        };
+
+        let httpRequest = new HttpLoaderRequest(params);
+        _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData)
+        
+        _sendCmcdDataReport(httpRequest);
+        
+        return response;
+    }
+
+    function _sendCmcdDataReport(request){
+        urlLoader = URLLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errors: Errors,
+        });
+        
+        urlLoader.load({request})
     }
 
     function reset() {
@@ -821,6 +886,7 @@ function CmcdController() {
         getHeaderParameters,
         getCmcdParametersFromManifest,
         getCmcdRequestInterceptors,
+        getCmcdResponseInterceptors,
         setConfig,
         reset,
         initialize,

@@ -2510,6 +2510,8 @@ function MediaPlayer() {
             playbackController,
             serviceDescriptionController,
             throughputController,
+            mediaPlayerModel,
+            errHandler
         });
 
         clientDataReportingController.setConfig({

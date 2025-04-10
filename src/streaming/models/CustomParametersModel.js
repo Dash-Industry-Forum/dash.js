@@ -72,7 +72,7 @@ function CustomParametersModel() {
         // Initialize request interceptors with default CMCD interceptors 
         cmcdController = CmcdController(context).getInstance();
         requestInterceptors = cmcdController.getCmcdRequestInterceptors();
-        responseInterceptors = [];
+        responseInterceptors = cmcdController.getCmcdResponseInterceptors();
     }
 
 

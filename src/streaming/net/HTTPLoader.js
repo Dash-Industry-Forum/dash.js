@@ -308,7 +308,7 @@ function HTTPLoader(cfg) {
             return new Promise((resolve) => {
                 _applyRequestInterceptors(httpRequest).then((_httpRequest) => {
                     httpRequest = _httpRequest;
-
+                    httpResponse.request = httpRequest;
                     httpRequest.customData.onloadend = _onloadend;
                     httpRequest.customData.onprogress = _onprogress;
                     httpRequest.customData.onabort = _onabort;
