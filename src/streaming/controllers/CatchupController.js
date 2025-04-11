@@ -207,15 +207,22 @@ function CatchupController() {
             const bufferLevel = playbackController.getBufferLevel();
             const deltaLatency = _getLatencyDrift();
 
-            // we reached the maxDrift. Do a seek
+            const liveThreshold = settings.get().streaming.liveCatchup.liveThreshold
             const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+
+            // we reached the maxDrift. Do a seek
             if (!isNaN(maxDrift) && maxDrift > 0 &&
                 deltaLatency > maxDrift) {
                 logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
                 isCatchupSeekInProgress = true;
                 playbackController.seekToCurrentLive(true, false);
             }
-
+            // we're outside the liveThreshold. Give the client what they want
+            else if (!isNaN(liveThreshold) && liveThreshold > 0 &&
+                deltaLatency > liveThreshold && currentPlaybackRate > 1) {
+                logger.debug(`[CatchupController]: Past live threshold, setting playback rate to 1.0`);
+                videoModel.setPlaybackRate(1.0);
+            }
             // try to reach the target latency by adjusting the playback rate
             else {
                 const currentLiveLatency = playbackController.getCurrentLiveLatency();
