@@ -62,6 +62,7 @@ const ALLOWED_TYPES = [
     HTTPRequest.LICENSE,
     HTTPRequest.CONTENT_STEERING_TYPE
 ];
+const RESPONSE_MODE = 'response';
 
 function CmcdController() {
 
@@ -202,11 +203,11 @@ function CmcdController() {
         streamProcessors = activeStream.getStreamProcessors();
     }
 
-    function getQueryParameter(request, cmcdData) {
+    function getQueryParameter(request, cmcdData, enabledCMCDKeys) {
         try {
             if (isCmcdEnabled()) {
                 cmcdData = cmcdData || getCmcdData(request);
-                const filteredCmcdData = _applyWhitelist(cmcdData);
+                const filteredCmcdData = _applyWhitelist(cmcdData, enabledCMCDKeys);
                 const finalPayloadString = encodeCmcd(filteredCmcdData);
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
@@ -227,11 +228,10 @@ function CmcdController() {
         }
     }
 
-    function _applyWhitelist(cmcdData) {
+    function _applyWhitelist(cmcdData, enabledKeys) {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-
+            const enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
@@ -775,8 +775,7 @@ function CmcdController() {
         }
 
         const request = commonMediaRequest.customData.request;
-
-        _updateRequestUrlAndHeadersWithCmcd(request);
+        _updateRequestUrlAndHeadersWithCmcd(request, null, null);
 
         commonMediaRequest = {
             ...commonMediaRequest,
@@ -794,7 +793,7 @@ function CmcdController() {
      * @param request
      * @private
      */
-    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData) {
+    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData, enabledCMCDKeys) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
@@ -805,10 +804,10 @@ function CmcdController() {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request,cmcdData);
+                const additionalQueryParameter = _getAdditionalQueryParameter(request,cmcdData,enabledCMCDKeys);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = Object.assign(request.headers, getHeaderParameters(request));
+                request.headers = Object.assign(request.headers, getHeaderParameters(request,cmcdData,enabledCMCDKeys));
             }
         }
     }
@@ -819,10 +818,10 @@ function CmcdController() {
      * @return {array}
      * @private
      */
-    function _getAdditionalQueryParameter(request,cmcdData) {
+    function _getAdditionalQueryParameter(request,cmcdData, enabledCMCDKeys) {
         try {
             const additionalQueryParameter = [];
-            const cmcdQueryParameter = getQueryParameter(request,cmcdData);
+            const cmcdQueryParameter = getQueryParameter(request,cmcdData, enabledCMCDKeys);
 
             if (cmcdQueryParameter) {
                 additionalQueryParameter.push(cmcdQueryParameter);
@@ -843,18 +842,24 @@ function CmcdController() {
         if (!ALLOWED_TYPES.includes(requestType)) {
             return response;
         }
-
+        
         let cmcdData = response.request.cmcd;
-        let params = {
-            url: 'http://example.com/report',
-            method: 'GET',
-        };
-
-        let httpRequest = new HttpLoaderRequest(params);
-        _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData)
         
-        _sendCmcdDataReport(httpRequest);
+        const targets = settings.get().streaming.cmcd.targets
+        const responseModeTargets = targets.filter((element) => element.mode = RESPONSE_MODE);
+        responseModeTargets.forEach(element => {
+            if (element.enabled){
+                let params = {
+                    url: element.url,
+                    method: 'GET',
+                };
         
+                let httpRequest = new HttpLoaderRequest(params);
+                const enabledCMCDKeys = element.enabledKeys;
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, enabledCMCDKeys)
+                _sendCmcdDataReport(httpRequest);
+            }
+        });
         return response;
     }
 
