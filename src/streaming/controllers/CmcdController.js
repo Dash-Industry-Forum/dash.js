@@ -853,7 +853,7 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.response);
+        const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(element => {
             if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
                 let params = {
