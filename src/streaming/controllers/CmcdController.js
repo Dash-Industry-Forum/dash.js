@@ -53,7 +53,6 @@ import Errors from '../../core/errors/Errors.js';
 const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
-const RESPONSE_MODE = 'response';
 
 function CmcdController() {
 
@@ -815,10 +814,10 @@ function CmcdController() {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request,cmcdData,targetSettings);
+                const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = Object.assign(request.headers, getHeaderParameters(request,cmcdData,targetSettings));
+                request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
             }
         }
     }
@@ -829,7 +828,7 @@ function CmcdController() {
      * @return {array}
      * @private
      */
-    function _getAdditionalQueryParameter(request,cmcdData, targetSettings) {
+    function _getAdditionalQueryParameter(request, cmcdData, targetSettings) {
         try {
             const additionalQueryParameter = [];
             const cmcdQueryParameter = getQueryParameter(request, cmcdData, targetSettings);
@@ -854,7 +853,7 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((element) => element.mode = RESPONSE_MODE);
+        const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.response);
         responseModeTargets.forEach(element => {
             if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
                 let params = {
