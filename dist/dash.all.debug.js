@@ -3181,6 +3181,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                  stop: { min: NaN, max: NaN }
  *                },
  *                playbackBufferMin: 0.5,
+ *                liveThreshold: 30,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -3573,6 +3574,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=30]
+ * How far in seconds the client has to be behind the absolute target for the catchup controller to attempt catching up. Disabled by setting to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -4040,6 +4043,7 @@ function Settings() {
           }
         },
         playbackBufferMin: 0.5,
+        liveThreshold: 30,
         enabled: null,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
       },
@@ -26879,15 +26883,21 @@ function CatchupController() {
       var liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
       var bufferLevel = playbackController.getBufferLevel();
 
-      var deltaLatency = _getLatencyDrift(); // we reached the maxDrift. Do a seek
+      var deltaLatency = _getLatencyDrift();
 
-
-      var maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+      var liveThreshold = settings.get().streaming.liveCatchup.liveThreshold;
+      var maxDrift = mediaPlayerModel.getCatchupMaxDrift(); // we reached the maxDrift. Do a seek
 
       if (!isNaN(maxDrift) && maxDrift > 0 && deltaLatency > maxDrift) {
         logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
         isCatchupSeekInProgress = true;
         playbackController.seekToCurrentLive(true, false);
+      } // we're outside the liveThreshold. Give the client what they want
+      else if (!isNaN(liveThreshold) && liveThreshold > 0 && playbackController.getCurrentLiveLatency() - playbackController.getOriginalLiveDelay() > liveThreshold) {
+        if (currentPlaybackRate > 1) {
+          logger.info("[CatchupController]: Past live threshold, setting playback rate to 1.0");
+          videoModel.setPlaybackRate(1.0);
+        }
       } // try to reach the target latency by adjusting the playback rate
       else {
         var currentLiveLatency = playbackController.getCurrentLiveLatency();
@@ -26943,7 +26953,10 @@ function CatchupController() {
         return false;
       }
 
-      var playbackRate = videoModel.getPlaybackRate();
+      var playbackRate = videoModel.getPlaybackRate(); // Don't catchup during synthetic stalls -
+      // prevents edge case where Catchup Controller and Synthetic Stalls Event
+      // "fight" over the playback rate
+
       if (playbackStalled && playbackRate === 0) return false;
 
       var catchupMode = _getCatchupMode();
@@ -38494,7 +38507,7 @@ function MediaPlayerModel() {
    */
 
   function getCatchupMaxDrift() {
-    if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
+    if (!isNaN(settings.get().streaming.liveCatchup.maxDrift)) {
       return settings.get().streaming.liveCatchup.maxDrift;
     }
 
