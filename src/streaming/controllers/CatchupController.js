@@ -219,9 +219,11 @@ function CatchupController() {
             }
             // we're outside the liveThreshold. Give the client what they want
             else if (!isNaN(liveThreshold) && liveThreshold > 0 &&
-                deltaLatency > liveThreshold && currentPlaybackRate > 1) {
-                logger.debug(`[CatchupController]: Past live threshold, setting playback rate to 1.0`);
-                videoModel.setPlaybackRate(1.0);
+                (playbackController.getCurrentLiveLatency() - playbackController.getOriginalLiveDelay()) > liveThreshold) {
+                if(currentPlaybackRate > 1){
+                    logger.info(`[CatchupController]: Past live threshold, setting playback rate to 1.0`);
+                    videoModel.setPlaybackRate(1.0);
+                }
             }
             // try to reach the target latency by adjusting the playback rate
             else {
