@@ -920,13 +920,13 @@ import Events from './events/Events.js';
  * @typedef {Object} CmcdTarget
  * @property {string} [mode]
  * Mode of the CMCD reporting.
- * @property {boolean} enabled
+ * @property {boolean} [enabled]
  * Whether the CMCD reporting is enabled for this target.
- * @property {string} url
+ * @property {string} [url]
  * The reporting endpoint URL.
- * @property {string[]} enabledKeys
+ * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {string[]} includeOnRequests
+ * @property {Array.<string>} [includeOnRequests]
  * Types of requests CMCD should be included on (e.g., 'mpd', 'segment'). 
 */
 
