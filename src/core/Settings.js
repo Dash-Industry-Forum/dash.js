@@ -555,7 +555,7 @@ import Events from './events/Events';
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  * @property {boolean} [liveThreshold=30]
- * How far in seconds the client has to be behind the target for the catchup controller to attempt catching up
+ * How far in seconds the client has to be behind the absolute target for the catchup controller to attempt catching up. Disabled by setting to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
