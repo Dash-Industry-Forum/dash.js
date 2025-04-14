@@ -912,7 +912,23 @@ import Events from './events/Events.js';
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdTarget>} [targets]
+ * List of CMCD reporting targets.
  */
+
+/**
+ * @typedef {Object} CmcdTarget
+ * @property {string} [mode]
+ * Mode of the CMCD reporting.
+ * @property {boolean} enabled
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} url
+ * The reporting endpoint URL.
+ * @property {string[]} enabledKeys
+ * CMCD keys to include in the report.
+ * @property {string[]} includeOnRequests
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment'). 
+*/
 
 /**
  * @typedef {Object} module:Settings~CmsdSettings
@@ -1362,7 +1378,15 @@ function Settings() {
                 enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
                 includeInRequests: ['segment', 'mpd'],
                 version: 1,
-                targets: []
+                targets: [
+                    {
+                        mode: 'response',
+                        enabled: false,
+                        url: 'http://example.com/report1',
+                        enabledKeys: ['tr', 'd', 's'],
+                        includeOnRequests: ['mpd', 'segment'],
+                    }
+                ]
             },
             cmsd: {
                 enabled: false,
