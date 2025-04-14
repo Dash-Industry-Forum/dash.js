@@ -53,15 +53,6 @@ import Errors from '../../core/errors/Errors.js';
 const DEFAULT_CMCD_VERSION = 1;
 const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
-const ALLOWED_TYPES = [
-    HTTPRequest.MPD_TYPE,
-    HTTPRequest.INIT_SEGMENT_TYPE,
-    HTTPRequest.MEDIA_SEGMENT_TYPE,
-    HTTPRequest.OTHER_TYPE,
-    HTTPRequest.XLINK_EXPANSION_TYPE,
-    HTTPRequest.LICENSE,
-    HTTPRequest.CONTENT_STEERING_TYPE
-];
 const RESPONSE_MODE = 'response';
 
 function CmcdController() {
@@ -342,9 +333,9 @@ function CmcdController() {
         return cmcdParametersFromManifest;
     }
 
-    function _isIncludedInRequestFilter(type) {
+    function _isIncludedInRequestFilter(type, includeInRequests) {
         const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
+        let includeInRequestsArray = includeInRequests || settings.get().streaming.cmcd.includeInRequests;
 
         if (cmcdParametersFromManifest.version) {
             includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [DEFAULT_INCLUDE_IN_REQUESTS];
@@ -764,13 +755,14 @@ function CmcdController() {
     }
 
     function getCmcdRequestInterceptors() {
-        // Add here the futures request interceptors
+        // Add here request interceptors
         return [_cmcdRequestModeInterceptor];
     }
 
     function _cmcdRequestModeInterceptor(commonMediaRequest){
         const requestType = commonMediaRequest.customData.request.type;
-        if (!ALLOWED_TYPES.includes(requestType)) {
+
+        if (!_isIncludedInRequestFilter(requestType)) {
             return commonMediaRequest;
         }
 
@@ -839,16 +831,13 @@ function CmcdController() {
 
     function _cmcdResponseModeInterceptor(response){
         const requestType = response.request.customData.type;
-        if (!ALLOWED_TYPES.includes(requestType)) {
-            return response;
-        }
-        
+
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((element) => element.mode = RESPONSE_MODE);
         responseModeTargets.forEach(element => {
-            if (element.enabled){
+            if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
                 let params = {
                     url: element.url,
                     method: 'GET',
