@@ -1361,7 +1361,16 @@ function Settings() {
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
                 includeInRequests: ['segment', 'mpd'],
-                version: 1
+                version: 1,
+                targets: [
+                    {
+                        mode: 'response',
+                        enabled: false,
+                        url: 'http://example.com/report1',
+                        enabledKeys: ['tr', 'd', 's'],
+                        includeOnRequests: ['mpd', 'segment']
+                    }
+                ]
             },
             cmsd: {
                 enabled: false,
