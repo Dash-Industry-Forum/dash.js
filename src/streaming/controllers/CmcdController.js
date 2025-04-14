@@ -202,7 +202,7 @@ function CmcdController() {
 
                 if (targetSettings){
                     enabledKeys = targetSettings.enabledKeys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys);
+                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
                 }
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
@@ -251,7 +251,7 @@ function CmcdController() {
 
                 if (targetSettings){
                     enabledKeys = targetSettings.enabledKeys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys);
+                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
                 }
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
@@ -881,7 +881,7 @@ function CmcdController() {
         urlLoader.load({request})
     }
 
-    function _getCustomKeysValues(customKeysObj){
+    function _getCustomKeysValues(customKeysObj, currentKeys){
         const result = {};
         if (!customKeysObj || typeof customKeysObj !== 'object') {
             return result;
@@ -889,7 +889,7 @@ function CmcdController() {
 
         for (const key in customKeysObj) {
             if (typeof customKeysObj[key] === 'function') {
-                result[key] = customKeysObj[key]();
+                result[key] = customKeysObj[key](currentKeys);
             }
         }
         return result;
