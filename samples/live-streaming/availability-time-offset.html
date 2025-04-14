@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Live stream with availabilityTimeOffset</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -33,7 +33,7 @@
                     document.querySelector('#sec').innerHTML = (seconds < 10 ? '0' : '') + seconds;
                     var minutes = d.getMinutes();
                     document.querySelector('#min').innerHTML = (minutes < 10 ? '0' : '') + minutes + ':';
-                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUtc()));
+                    document.querySelector('#videoDelay').innerHTML = Math.round((d.getTime() / 1000) - Number(player.timeAsUTC()));
                     document.querySelector('#videoBuffer').innerHTML = player.getBufferLength() + 's';
                 }
             }, 1000);

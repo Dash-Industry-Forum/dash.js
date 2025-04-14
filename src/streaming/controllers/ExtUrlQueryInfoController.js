@@ -154,10 +154,14 @@ function ExtUrlQueryInfoController() {
     function getFinalQueryString(request) {
         try {
             if (!mpdQueryStringInformation) {
-                return
+                return null;
             }
             if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
                 const representation = request.representation;
+
+                if (!representation) {
+                    return null;
+                }
                 const adaptation = representation.adaptation;
                 const period = adaptation.period;
                 const queryInfo = mpdQueryStringInformation

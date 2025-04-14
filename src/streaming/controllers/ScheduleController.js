@@ -229,7 +229,7 @@ function ScheduleController(config) {
         const bufferTarget = getBufferTarget();
 
         // If the buffer target is smaller than the segment duration we do not take it into account. For low latency playback do not delay the buffering.
-        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled()) {
+        if (bufferTarget <= segmentDurationToAddToBufferLevel || playbackController.getLowLatencyModeEnabled() || (type === Constants.AUDIO && hasVideoTrack)) {
             segmentDurationToAddToBufferLevel = 0;
         }
 
@@ -320,10 +320,10 @@ function ScheduleController(config) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
                 return isLongFormContent ? settings.get().streaming.buffer.bufferTimeAtTopQualityLongForm : settings.get().streaming.buffer.bufferTimeAtTopQuality;
             } else {
-                return mediaPlayerModel.getBufferTimeDefault();
+                return mediaPlayerModel.getBufferTimeDefaultUnadjusted();
             }
         } catch (e) {
-            return mediaPlayerModel.getBufferTimeDefault();
+            return mediaPlayerModel.getBufferTimeDefaultUnadjusted();
         }
     }
 

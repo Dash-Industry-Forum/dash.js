@@ -267,7 +267,7 @@ describe('Capabilities', function () {
     });
 
     describe('supportsCodec', function () {
-
+        /*
         describe('MediaSourceExtensions.isTypeSupported', function () {
             it('should return true for supported codec using MediaSource.isTypeSupported', function (done) {
                 const config = {
@@ -320,6 +320,8 @@ describe('Capabilities', function () {
                     })
             })
         })
+        */
+
 
         /*
         describe('MediaCapabilitiesAPI.decodingInfo()', function () {

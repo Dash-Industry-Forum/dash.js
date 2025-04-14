@@ -1,6 +1,7 @@
 import Constants from '../../src/Constants.js';
 import {expect} from 'chai';
 import DashJsAdapter from '../../adapter/DashJsAdapter.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 export async function checkIsPlaying(playerAdapter, expectedState) {
     const isPlaying = await playerAdapter.isInPlayingState(Constants.TEST_TIMEOUT_THRESHOLDS.IS_PLAYING);
@@ -27,6 +28,19 @@ export function checkNoCriticalErrors(playerAdapter) {
 export async function checkForEndedEvent(playerAdapter) {
     const ended = await playerAdapter.waitForEvent(playerAdapter.getDuration() * 1000 + Constants.TEST_TIMEOUT_THRESHOLDS.IS_FINISHED_OFFSET_TO_DURATION, dashjs.MediaPlayer.events.PLAYBACK_ENDED)
     expect(ended).to.be.true;
+}
+
+export async function seekAndEndedEvent(playerAdapter, seekOffset) {
+    let endedEventThrown = false;
+    const _endedCallback = () => {
+        endedEventThrown = true;
+    }
+    playerAdapter.registerEvent(MediaPlayerEvents.PLAYBACK_ENDED, _endedCallback);
+    const targetTime = playerAdapter.getDuration() + seekOffset;
+    playerAdapter.seek(targetTime);
+    await playerAdapter.sleep(Constants.TEST_INPUTS.SEEK_ENDED.EVENT_WAITING_TIME);
+    playerAdapter.unregisterEvent(MediaPlayerEvents.PLAYBACK_ENDED, _endedCallback);
+    expect(endedEventThrown).to.be.true;
 }
 
 export async function reachedTargetForwardBuffer(playerAdapter, targetBuffer, tolerance) {

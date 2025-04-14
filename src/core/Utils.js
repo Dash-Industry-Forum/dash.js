@@ -108,17 +108,21 @@ class Utils {
         // Get the search parameters
         const params = new URLSearchParams(parsedUrl.search);
 
-        if (!params || params.size === 0) {
+        if (!params || params.size === 0 || !params.has(queryParameter)) {
             return url;
         }
 
-        // Remove the CMCD parameter
+        // Remove the queryParameter
         params.delete(queryParameter);
 
-        // Reconstruct the URL without the CMCD parameter
-        parsedUrl.search = params.toString();
+        // Manually reconstruct the query string without re-encoding
+        const queryString = Array.from(params.entries())
+            .map(([key, value]) => `${key}=${value}`)
+            .join('&');
 
-        return parsedUrl.toString();
+        // Reconstruct the URL
+        const baseUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+        return queryString ? `${baseUrl}?${queryString}` : baseUrl;
     }
 
     static parseHttpHeaders(headerStr) {
@@ -248,6 +252,11 @@ class Utils {
 
     static bufferSourceToInt8(bufferSource) {
         return Utils.toDataView(bufferSource, Uint8Array)
+    }
+
+    static uint8ArrayToString(uint8Array) {
+        const decoder = new TextDecoder('utf-8');
+        return decoder.decode(uint8Array);
     }
 
     static bufferSourceToHex(data) {

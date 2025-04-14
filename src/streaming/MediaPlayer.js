@@ -977,6 +977,10 @@ function MediaPlayer() {
         return t
     }
 
+    /**
+     * Returns information about the current DVR window including the start time, the end time, the window size.
+     * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
+     */
     function getDvrWindow() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -1034,7 +1038,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function timeAsUtc() {
+    function timeAsUTC() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
@@ -1229,6 +1233,20 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns the average latency computed in the ThroughputController in milliseconds
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getAverageLatency(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
      * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
@@ -1238,8 +1256,34 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+    function getAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSafeAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
+     *
+     * @param {MediaType} type
+     * @return {Array} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getRawThroughputData(type = Constants.VIDEO) {
+        return throughputController ? throughputController.getRawThroughputData(type) : [];
     }
 
     /**
@@ -1537,7 +1581,7 @@ function MediaPlayer() {
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
+     * @param {number} id , The ID of the Representation
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -1574,7 +1618,7 @@ function MediaPlayer() {
      * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest possible index
+     * @param {number} index - the quality index, 0 corresponding to the lowest possible index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -2040,7 +2084,7 @@ function MediaPlayer() {
     /**
      * Sets the source to a new manifest URL or object without reloading
      * Useful for updating CDN tokens
-     * @param urlOrManifest
+     * @param {string | object} urlOrManifest
      */
     function updateSource(urlOrManifest) {
         source = urlOrManifest
@@ -2665,6 +2709,7 @@ function MediaPlayer() {
 
         function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
             let out = {};
+            // For an empty string, let's unset the descriptor, i.e. return null
             if (val) {
                 if (val instanceof Array) {
                     throw ARRAY_NOT_SUPPORTED_ERROR;
@@ -2681,22 +2726,25 @@ function MediaPlayer() {
             return null;
         }
 
-        if (value.lang) {
+        if (value.id !== undefined) {
+            output.id = value.id;
+        }
+        if (value.lang !== undefined) {
             output.lang = value.lang;
         }
         if (!isNaN(value.index)) {
             output.index = value.index;
         }
-        if (value.viewpoint) {
+        if (value.viewpoint !== undefined) {
             output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
         }
-        if (value.audioChannelConfiguration) {
+        if (value.audioChannelConfiguration !== undefined) {
             output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
         }
-        if (value.role) {
+        if (value.role !== undefined) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
         }
-        if (value.accessibility) {
+        if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
         }
 
@@ -2755,25 +2803,28 @@ function MediaPlayer() {
         getAutoPlay,
         getAvailableBaseUrls,
         getAvailableLocations,
+        getAverageLatency,
         getAverageThroughput,
         getBufferLength,
         getCurrentLiveLatency,
+        getCurrentRepresentationForType,
         getCurrentSteeringResponseData,
         getCurrentTextTrackIndex,
         getCurrentTrackFor,
-        getDvrSeekOffset,
-        getDvrWindow,
         getDashAdapter,
         getDashMetrics,
         getDebug,
+        getDvrSeekOffset,
+        getDvrWindow,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
+        getManifest,
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
-        getCurrentRepresentationForType,
-        getManifest,
+        getRawThroughputData,
         getRepresentationsByType,
+        getSafeAverageThroughput,
         getSettings,
         getSource,
         getStreamsFromManifest,
@@ -2798,6 +2849,7 @@ function MediaPlayer() {
         play,
         preload,
         provideThumbnail,
+        refreshManifest,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -2806,7 +2858,6 @@ function MediaPlayer() {
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
-        refreshManifest,
         reset,
         resetCustomInitialTrackSelectionFunction,
         resetSettings,
@@ -2823,13 +2874,13 @@ function MediaPlayer() {
         setMute,
         setPlaybackRate,
         setProtectionData,
-        setRepresentationForTypeByIndex,
         setRepresentationForTypeById,
+        setRepresentationForTypeByIndex,
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
         time,
-        timeAsUtc,
+        timeAsUTC,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

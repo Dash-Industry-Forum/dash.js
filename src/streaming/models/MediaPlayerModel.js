@@ -47,6 +47,7 @@ const LOW_LATENCY_REDUCTION_FACTOR = 10;
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
  * @class
+ * @ignore
  * @constructor
  */
 function MediaPlayerModel() {
@@ -223,10 +224,18 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getBufferTimeDefault() {
-        let bufferTimeDefault = settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+        const bufferTimeDefault = getBufferTimeDefaultUnadjusted();
         const liveDelay = playbackController.getLiveDelay();
 
         return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(bufferTimeDefault, liveDelay) : bufferTimeDefault;
+    }
+
+    /**
+     * Returns the stable buffer
+     * @return {number}
+     */
+    function getBufferTimeDefaultUnadjusted() {
+        return settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     /**
@@ -270,6 +279,7 @@ function MediaPlayerModel() {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
         getBufferTimeDefault,
+        getBufferTimeDefaultUnadjusted,
         getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,

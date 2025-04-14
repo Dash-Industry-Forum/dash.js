@@ -332,6 +332,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.cmcdMode = 'query';
     $scope.cmcdAllKeys = ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
 
+    $scope.stallThreshold = 0.3;
+    $scope.lowLatencyStallThreshold = 0.3;
+
     // Persistent license
     $scope.persistentSessionId = {};
     $scope.selectedKeySystem = null;
@@ -778,6 +781,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateStallThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    stallThreshold: parseFloat($scope.stallThreshold)
+                }
+            }
+        });
+    }
+
+    $scope.updateLowLatencyStallThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    lowLatencyStallThreshold: parseFloat($scope.lowLatencyStallThreshold)
+                }
+            }
+        });
+    }
+
     $scope.updateInitialRoleVideo = function () {
         $scope.player.setInitialMediaSettingsFor('video', {
             role: $scope.initialSettings.video
@@ -813,7 +836,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope._backconvertRoleScheme = function (setting) {
         var scheme = 'off';
-        
+
         if (setting) {
             scheme = undefined;
             switch (setting.schemeIdUri) {
@@ -1134,6 +1157,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         const maxBitrate = parseInt($scope.maxVideoBitrate);
         if (!isNaN(maxBitrate)) {
             config.streaming.abr.maxBitrate = { 'video': maxBitrate };
+        }
+
+        const stallThreshold = parseFloat($scope.stallThreshold);
+        if (!isNaN(stallThreshold)) {
+            config.streaming.buffer.stallThreshold = stallThreshold;
+        }
+
+        const lowLatencyStallThreshold = parseFloat($scope.lowLatencyStallThreshold);
+        if (!isNaN(lowLatencyStallThreshold)) {
+            config.streaming.buffer.lowLatencyStallThreshold = lowLatencyStallThreshold;
         }
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
@@ -1935,7 +1968,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     if (scheme === 'off') {
                         delete settings.accessibility;
                     } else {
-                        Object.assign(settings, {accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility)} );
+                        Object.assign(settings, { accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility) });
                     }
                     $scope.player.setInitialMediaSettingsFor('audio', settings);
                     break;
@@ -2308,6 +2341,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
     }
 
+    function setStallThresholdOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.stallThreshold = currentConfig.streaming.buffer.stallThreshold;
+        $scope.lowLatencyStallThreshold = currentConfig.streaming.buffer.lowLatencyStallThreshold;
+    }
+
     function setInitialSettings() {
         var currentConfig = $scope.player.getSettings();
         if (currentConfig.streaming.abr.initialBitrate.video !== -1) {
@@ -2468,6 +2507,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setDrmOptions();
             setTextOptions();
             setLiveDelayOptions();
+            setStallThresholdOptions()
             setInitialSettings();
             setTrackSwitchModeSettings();
             setInitialLogLevel();

@@ -73,6 +73,7 @@ class Representation {
         this.startNumber = 1;
         this.timescale = 1;
         this.width = NaN;
+        this.endNumber = null;
     }
 
     hasInitialization() {

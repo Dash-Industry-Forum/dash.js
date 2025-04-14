@@ -39,6 +39,7 @@ import EventBus from '../../core/EventBus.js';
 
 /**
  * @constructor
+ * @ignore
  */
 function ThroughputController() {
 

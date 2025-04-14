@@ -305,7 +305,7 @@ function BufferController(config) {
             logger.info('Init fragment finished loading saving to', type + '\'s init cache');
             initCache.save(e.chunk);
         }
-        logger.debug('Append Init fragment', type, ' with representationId:', e.chunk.representation.id, ' and quality:', e.chunk.quality, ', data size:', e.chunk.bytes.byteLength);
+        logger.debug(`Appending init fragment for type ${type}, representationId ${e.chunk.representation.id} and bandwidth ${e.chunk.representation.bandwidth}`);
         _appendToBuffer(e.chunk);
     }
 
@@ -324,7 +324,8 @@ function BufferController(config) {
         }
 
         // Append init segment into buffer
-        logger.info('Append Init fragment', type, ' with representationId:', chunk.representation.id, ' and quality:', chunk.quality, ', data size:', chunk.bytes.byteLength);
+        logger.debug(`Appending init fragment for type ${type}, representationId ${chunk.representation.id} and bandwidth ${chunk.representation.bandwidth}`);
+
         _appendToBuffer(chunk);
 
         return true;
@@ -901,15 +902,13 @@ function BufferController(config) {
             return;
         }
 
-        // When the player is working in low latency mode, the buffer is often below STALL_THRESHOLD.
-        // So, when in low latency mode, change dash.js behavior so it notifies a stall just when
-        // buffer reach 0 seconds
-        if (((!playbackController.getLowLatencyModeEnabled() && bufferLevel < settings.get().streaming.buffer.stallThreshold) || bufferLevel === 0) && !isBufferingCompleted) {
+        //Set stall threshold based on player mode
+        const stallThreshold = playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.buffer.lowLatencyStallThreshold : settings.get().streaming.buffer.stallThreshold;
+
+        if ((bufferLevel <= stallThreshold) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-        } else {
-            if (isBufferingCompleted || bufferLevel >= settings.get().streaming.buffer.stallThreshold || (playbackController.getLowLatencyModeEnabled() && bufferLevel > 0)) {
-                _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
-            }
+        } else if (isBufferingCompleted || bufferLevel > stallThreshold) {
+            _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
         }
     }
 

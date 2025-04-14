@@ -34,6 +34,8 @@ describe('DashHandler', function () {
     const segmentsController = objectsHelper.getDummySegmentsController();
     const dashMetrics = new DashMetricsMock();
 
+    let dummyRepresentation;
+    let dummyMediaInfo;
 
     const config = {
         eventBus,
@@ -50,6 +52,41 @@ describe('DashHandler', function () {
 
     const dashHandler = DashHandler(context).create(config);
     dashHandler.initialize(streamProcessor);
+
+    beforeEach(() => {
+        dummyRepresentation = {
+            index: 0,
+            adaptation: {
+                index: 0,
+                period: {
+                    mpd: {
+                        manifest: {
+                            Period: [
+                                {
+                                    AdaptationSet: [
+                                        {
+                                            Representation: [
+                                                {
+                                                    bandwidth: 3000
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    start: 0,
+                    duration: 30,
+                    index: 0
+                }
+            },
+            segmentInfoType: 'SegmentTimeline',
+            timescale: 1,
+            segmentDuration: 2
+        };
+        dummyMediaInfo = {};
+    })
 
     it('should generate an init segment for a representation', () => {
         const representation = voHelper.getDummyRepresentation(testType);
@@ -93,9 +130,55 @@ describe('DashHandler', function () {
         expect(mediaSegment).to.be.null; // jshint ignore:line
     });
 
+    describe('getNextSegmentRequest', () => {
+        let segRequestStub;
+
+        beforeEach(() => {
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByIndex').callsFake((representation, index) => {
+                return {
+                    replacementNumber: index,
+                    index,
+                    duration: representation.segmentDuration,
+                    representation,
+                    media: 'http://someurl',
+                    endNumber: 2
+                }
+            });
+        })
+
+        afterEach(() => {
+            segRequestStub.restore();
+        });
+
+        it('it returns a segment request', () => {
+            const mediaSegment = dashHandler.getNextSegmentRequest({}, {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1} });
+            expect(mediaSegment).not.to.be.null; // jshint ignore:line
+        })
+
+        it('returns null if the next segment is after @endNumber', () => {
+            const dashHandler = DashHandler(context).create(config);
+            const representation = {segmentInfoType: DashConstants.SEGMENT_TEMPLATE, adaptation: {index: 1}, endNumber: 2 };
+            dashHandler.initialize(streamProcessor);
+            dashHandler.getNextSegmentRequest({}, representation);
+            dashHandler.getNextSegmentRequest({}, representation);
+            dashHandler.getNextSegmentRequest({}, representation);
+            dashHandler.getNextSegmentRequest({}, representation);
+            const mediaSegment = dashHandler.getNextSegmentRequest({}, representation);
+            expect(mediaSegment).to.be.null; // jshint ignore:line
+        })
+
+        it('returns null if representation is null', () => {
+            const mediaSegment = dashHandler.getNextSegmentRequest({}, null);
+            expect(mediaSegment).to.be.null; // jshint ignore:line
+        })
+
+        it('returns null if representation.segmentInfoType is null', () => {
+            const mediaSegment = dashHandler.getNextSegmentRequest({}, {segmentInfoType: null});
+            expect(mediaSegment).to.be.null; // jshint ignore:line
+        })
+    })
+
     describe('getValidTimeAheadOfTargetTime()', () => {
-        let dummyRepresentation;
-        let dummyMediaInfo;
         let segRequestStub;
 
         beforeEach(() => {
@@ -111,39 +194,6 @@ describe('DashHandler', function () {
                     media: 'http://someurl'
                 }
             });
-
-            dummyRepresentation = {
-                index: 0,
-                adaptation: {
-                    index: 0,
-                    period: {
-                        mpd: {
-                            manifest: {
-                                Period: [
-                                    {
-                                        AdaptationSet: [
-                                            {
-                                                Representation: [
-                                                    {
-                                                        bandwidth: 3000
-                                                    }
-                                                ]
-                                            }
-                                        ]
-                                    }
-                                ]
-                            }
-                        },
-                        start: 0,
-                        duration: 30,
-                        index: 0
-                    }
-                },
-                segmentInfoType: 'SegmentTimeline',
-                timescale: 1,
-                segmentDuration: 2
-            };
-            dummyMediaInfo = {};
         })
 
         afterEach(() => {

@@ -5,12 +5,12 @@
     <meta charset="UTF-8"/>
     <title>Dash.js Network Interceptor sample</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
-    <script src="dist/app.js"></script>
+    <!-- App -->
+    <script src="./dist/app.js"></script>
 
-    <!-- Bootstrap core CSS -->
-    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
+    <!-- CSS -->
+    <link href="./dist/lib/bootstrap.min.css" rel="stylesheet">
+    <link href="./dist/lib/main.css" rel="stylesheet">
 
     <style>
         video {
@@ -20,7 +20,7 @@
     </style>
 
     <script class="code" type="text/typescript">
-        
+
         import { CommonMediaRequest, CommonMediaResponse, RequestInterceptor, ResponseInterceptor } from '@svta/common-media-library/request'
         import { CmcdObjectType } from '@svta/common-media-library/cmcd'
         import * as dashjs from 'dashjs'
@@ -39,7 +39,7 @@
 
             constructor() {
             }
-            
+
             public init(): void {
                 this.player = dashjs.MediaPlayer().create()
                 this.player.initialize(document.querySelector('video') as HTMLMediaElement, this.mpd, true)
@@ -90,7 +90,7 @@
     <div class="container py-4">
         <header class="pb-3 mb-4 border-bottom">
             <img class=""
-                  src="../lib/img/dashjs-logo.png"
+                  src="./dist/img/dashjs-logo.png"
                   width="200">
         </header>
         <div class="row">
@@ -123,7 +123,7 @@
     myApp.init();
   });
 </script>
-<script src="../highlighter.js"></script>
+<script src="./dist/lib/highlighter.js"></script>
 
 </body>
 

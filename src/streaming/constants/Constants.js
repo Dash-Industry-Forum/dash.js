@@ -202,11 +202,11 @@ export default {
     TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+     *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
      *  @memberof Constants#
      *  @static
      */
-    TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
+    CMCD_QUERY_KEY: 'CMCD',
 
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.

@@ -139,16 +139,18 @@ function Stream(config) {
      * Register the streaming events
      */
     function registerEvents() {
-        eventBus.on(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        eventBus.on(Events.INBAND_EVENTS, onInbandEvents, instance);
+        eventBus.on(Events.BUFFERING_COMPLETED, _onBufferingCompleted, instance);
+        eventBus.on(Events.INBAND_EVENTS, _onInbandEvents, instance);
+        eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
     }
 
     /**
      * Unregister the streaming events
      */
     function unRegisterEvents() {
-        eventBus.off(Events.BUFFERING_COMPLETED, onBufferingCompleted, instance);
-        eventBus.off(Events.INBAND_EVENTS, onInbandEvents, instance);
+        eventBus.off(Events.BUFFERING_COMPLETED, _onBufferingCompleted, instance);
+        eventBus.off(Events.INBAND_EVENTS, _onInbandEvents, instance);
+        eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
     }
 
     /**
@@ -212,6 +214,9 @@ function Stream(config) {
             _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
                 .then((bufferSinks) => {
                     isActive = true;
+                    if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
+                        startScheduleControllers();
+                    }
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
                         streamInfo
                     });
@@ -570,6 +575,10 @@ function Stream(config) {
         if (textController) {
             textController.deactivateStream(streamInfo);
         }
+        if (thumbnailController) {
+            thumbnailController.reset();
+            thumbnailController = null;
+        }
         streamProcessors = [];
         isActive = false;
         hasFinishedBuffering = false;
@@ -640,6 +649,14 @@ function Stream(config) {
         if (segmentBlacklistController) {
             segmentBlacklistController.reset();
             segmentBlacklistController = null;
+        }
+
+        if (textController && streamInfo) {
+            textController.clearDataForStream(streamInfo.id);
+        }
+
+        if (mediaController && streamInfo) {
+            mediaController.clearDataForStream(streamInfo.id);
         }
 
         resetInitialSettings(keepBuffers);
@@ -865,7 +882,7 @@ function Stream(config) {
         })
     }
 
-    function onBufferingCompleted() {
+    function _onBufferingCompleted() {
         let processors = getStreamProcessors();
         const ln = processors.length;
 
@@ -888,10 +905,14 @@ function Stream(config) {
         eventBus.trigger(Events.STREAM_BUFFERING_COMPLETED, { streamInfo: streamInfo }, { streamInfo });
     }
 
-    function onInbandEvents(e) {
+    function _onInbandEvents(e) {
         if (eventController) {
             eventController.addInbandEvents(e.events, streamInfo.id);
         }
+    }
+
+    function _onDataUpdateCompleted() {
+        _initializationCompleted();
     }
 
     function getProcessorForMediaInfo(mediaInfo) {
@@ -1074,8 +1095,18 @@ function Stream(config) {
         return sp.getMediaInfo();
     }
 
+    function checkAndHandleCompletedBuffering() {
+        if (hasFinishedBuffering) {
+            return;
+        }
+        streamProcessors.forEach((streamProcessor) => {
+            streamProcessor.checkAndHandleCompletedBuffering();
+        })
+    }
+
     instance = {
         activate,
+        checkAndHandleCompletedBuffering,
         deactivate,
         getAdapter,
         getCurrentMediaInfoForType,
