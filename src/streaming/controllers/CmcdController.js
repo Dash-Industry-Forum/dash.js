@@ -111,7 +111,45 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+        _initializeEventModeListeners();
     }
+
+    function _initializeEventModeListeners() {
+        const eventStateMap = {
+            [MediaPlayerEvents.PLAYBACK_INITIALIZED]: 's',
+            [MediaPlayerEvents.PLAYBACK_STARTED]: 'p',
+            [MediaPlayerEvents.PLAYBACK_PAUSED]: 'a',
+            [MediaPlayerEvents.PLAYBACK_PLAYING]: 'p',
+            [MediaPlayerEvents.PLAYBACK_SEEKING]: 'k',
+            [MediaPlayerEvents.PLAYBACK_STALLED]: 'r',
+            [MediaPlayerEvents.PLAYBACK_ERROR]: 'f',
+            [MediaPlayerEvents.PLAYBACK_ENDED]: 'e'
+        };
+    
+        Object.entries(eventStateMap).forEach(([event, state]) => {
+            eventBus.on(event, () => _onStateChange(state), instance);
+        });
+    
+        // eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
+    }
+
+    function _onStateChange(state) {
+        const targets = settings.get().streaming.cmcd.targets;
+        const requestModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.EVENT);
+        const cmcdData = _getGenericCmcdData();
+        cmcdData.e = state;
+        requestModeTargets.forEach(target => {
+            if (target.enabled) {
+                const httpRequest = new HttpLoaderRequest({
+                    url: target.url,
+                    method: 'GET',
+                });
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, target)
+                _sendCmcdDataReport(httpRequest);
+            }
+        });
+    }
+
 
     function setConfig(config) {
         if (!config) {
