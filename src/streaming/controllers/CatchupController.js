@@ -206,6 +206,7 @@ function CatchupController() {
             const liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
             const bufferLevel = playbackController.getBufferLevel();
             const deltaLatency = _getLatencyDrift();
+            const deltaLatencyAbsolute = _getAbsoluteLatencyDrift();
 
             const liveThreshold = settings.get().streaming.liveCatchup.liveThreshold
             const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
@@ -218,8 +219,7 @@ function CatchupController() {
                 playbackController.seekToCurrentLive(true, false);
             }
             // we're outside the liveThreshold. Give the client what they want
-            else if (!isNaN(liveThreshold) && liveThreshold > 0 &&
-                (playbackController.getCurrentLiveLatency() - playbackController.getOriginalLiveDelay()) > liveThreshold) {
+            else if (!isNaN(liveThreshold) && liveThreshold > 0 && deltaLatencyAbsolute > liveThreshold) {
                 if(currentPlaybackRate > 1){
                     logger.info(`[CatchupController]: Past live threshold, setting playback rate to 1.0`);
                     videoModel.setPlaybackRate(1.0);
@@ -237,7 +237,7 @@ function CatchupController() {
                 }
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_STEP) {
                     // Custom playback control: Based on minimising playback rate changes
-                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
+                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, currentLiveLatency, bufferLevel);
                 }
                 else {
                     // Default playback control: Based on target and current latency
@@ -265,6 +265,18 @@ function CatchupController() {
     function _getLatencyDrift() {
         const currentLiveLatency = playbackController.getCurrentLiveLatency();
         const targetLiveDelay = playbackController.getLiveDelay();
+
+        return currentLiveLatency - targetLiveDelay;
+    }
+
+    /**
+     * Calculates the drift between the current latency and the absolute target latency specified in the service description or settings
+     * @return {number}
+     * @private
+     */
+    function _getAbsoluteLatencyDrift() {
+        const currentLiveLatency = playbackController.getCurrentLiveLatency();
+        const targetLiveDelay = playbackController.getOriginalLiveDelay();
 
         return currentLiveLatency - targetLiveDelay;
     }
@@ -364,7 +376,7 @@ function CatchupController() {
     function _stepNeedToCatchUp() {
         try {
             const currentLiveLatency = playbackController.getCurrentLiveLatency();
-            const targetLiveDelay = playbackController.getLiveDelay();
+            const targetLiveDelay = playbackController.getOriginalLiveDelay();
             const stepSettings = mediaPlayerModel.getCatchupStepSettings();
 
             const deltaLatency = currentLiveLatency - targetLiveDelay;
@@ -486,14 +498,15 @@ function CatchupController() {
     * @return {number}
     * @private
     */
-    function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, currentLiveLatency, liveDelay, bufferLevel) {
+    function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, currentLiveLatency, bufferLevel) {
 
         let newRate = 1.0
         const stepSettings = mediaPlayerModel.getCatchupStepSettings();
+        const targetLiveDelay = playbackController.getOriginalLiveDelay();
 
         // Only adjust playback rates if playback has not stalled
         if (!playbackStalled) {
-            const deltaLatency = currentLiveLatency - liveDelay;
+            const deltaLatency = currentLiveLatency - targetLiveDelay;
 
 
             // Check if we need to need to speed up
