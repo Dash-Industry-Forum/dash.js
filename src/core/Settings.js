@@ -695,7 +695,7 @@ import Events from './events/Events.js';
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
- * @property {boolean} [ignoreKeyStatusest=false]
+ * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
  */
 
