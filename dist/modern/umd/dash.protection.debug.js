@@ -1629,16 +1629,22 @@ class Utils {
 
     // Get the search parameters
     const params = new URLSearchParams(parsedUrl.search);
-    if (!params || params.size === 0) {
+    if (!params || params.size === 0 || !params.has(queryParameter)) {
       return url;
     }
 
-    // Remove the CMCD parameter
+    // Remove the queryParameter
     params.delete(queryParameter);
 
-    // Reconstruct the URL without the CMCD parameter
-    parsedUrl.search = params.toString();
-    return parsedUrl.toString();
+    // Manually reconstruct the query string without re-encoding
+    const queryString = Array.from(params.entries()).map(_ref2 => {
+      let [key, value] = _ref2;
+      return `${key}=${value}`;
+    }).join('&');
+
+    // Reconstruct the URL
+    const baseUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   }
   static parseHttpHeaders(headerStr) {
     let headers = {};
@@ -1761,6 +1767,10 @@ class Utils {
   }
   static bufferSourceToInt8(bufferSource) {
     return Utils.toDataView(bufferSource, Uint8Array);
+  }
+  static uint8ArrayToString(uint8Array) {
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(uint8Array);
   }
   static bufferSourceToHex(data) {
     const arr = Utils.bufferSourceToInt8(data);
@@ -2071,6 +2081,7 @@ __webpack_require__.r(__webpack_exports__);
   DVB_MIMETYPE: 'dvb:mimeType',
   DVB_FONTFAMILY: 'dvb:fontFamily',
   DYNAMIC: 'dynamic',
+  END_NUMBER: 'endNumber',
   ESSENTIAL_PROPERTY: 'EssentialProperty',
   EVENT: 'Event',
   EVENT_STREAM: 'EventStream',
@@ -2365,12 +2376,6 @@ __webpack_require__.r(__webpack_exports__);
    *  @static
    */
   TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
-  /**
-   *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
-   *  @memberof Constants#
-   *  @static
-   */
-  TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
   /**
    *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
    *  @memberof Constants#
@@ -4078,50 +4083,51 @@ function ProtectionController(config) {
    * @private
    */
   function _onNeedKey(event, retry) {
-    if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
-      logger.debug('DRM: onNeedKey');
+    if (settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
+      return;
+    }
+    logger.debug('DRM: onNeedKey');
 
-      // Ignore non-cenc initData
-      if (event.key.initDataType !== _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC) {
-        logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+    // Ignore non-cenc initData
+    if (event.key.initDataType !== _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC) {
+      logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+      return;
+    }
+    if (mediaInfoArr.length === 0) {
+      logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
+      retry = typeof retry === 'undefined' ? 1 : retry + 1;
+      if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
+        needkeyRetries.push(setTimeout(() => {
+          _onNeedKey(event, retry);
+        }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
         return;
       }
-      if (mediaInfoArr.length === 0) {
-        logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
-        retry = typeof retry === 'undefined' ? 1 : retry + 1;
-        if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
-          needkeyRetries.push(setTimeout(() => {
-            _onNeedKey(event, retry);
-          }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
+    }
+
+    // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
+    // Convert to ArrayBuffer
+    let abInitData = event.key.initData;
+    if (ArrayBuffer.isView(abInitData)) {
+      abInitData = abInitData.buffer;
+    }
+
+    // If key system has already been selected and initData already seen, then do nothing
+    if (selectedKeySystem) {
+      const initDataForKS = _CommonEncryption_js__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, abInitData);
+      if (initDataForKS) {
+        // Check for duplicate initData
+        if (_isInitDataDuplicate(initDataForKS)) {
           return;
         }
       }
-
-      // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
-      // Convert to ArrayBuffer
-      let abInitData = event.key.initData;
-      if (ArrayBuffer.isView(abInitData)) {
-        abInitData = abInitData.buffer;
-      }
-
-      // If key system has already been selected and initData already seen, then do nothing
-      if (selectedKeySystem) {
-        const initDataForKS = _CommonEncryption_js__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, abInitData);
-        if (initDataForKS) {
-          // Check for duplicate initData
-          if (_isInitDataDuplicate(initDataForKS)) {
-            return;
-          }
-        }
-      }
-      logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-      const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
-      if (supportedKs.length === 0) {
-        logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
-        return;
-      }
-      _handleKeySystemFromPssh(supportedKs);
     }
+    logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+    const supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+    if (supportedKeySystemsMetadata.length === 0) {
+      logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
+      return;
+    }
+    _handleKeySystemFromPssh(supportedKeySystemsMetadata);
   }
 
   /**
@@ -4178,7 +4184,7 @@ function ProtectionController(config) {
   }
   function areKeyIdsUsable(normalizedKeyIds) {
     try {
-      if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
+      if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
         return true;
       }
       return [...normalizedKeyIds].some(normalizedKeyId => {
@@ -4192,7 +4198,7 @@ function ProtectionController(config) {
   }
   function areKeyIdsExpired(normalizedKeyIds) {
     try {
-      if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
+      if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
         return false;
       }
       return [...normalizedKeyIds].every(normalizedKeyId => {
@@ -4204,7 +4210,17 @@ function ProtectionController(config) {
       return false;
     }
   }
-  function _shouldCheckKeyStatusMap(normalizedKeyIds) {
+  function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
+    if (normalizedKeyIds.size <= 0) {
+      return false;
+    }
+    const allHaveStatus = keyStatusMap.size > 0 && [...normalizedKeyIds].every(normalizedKeyId => {
+      const keyStatus = keyStatusMap.get(normalizedKeyId);
+      return typeof keyStatus !== 'undefined' && keyStatus !== '';
+    });
+    if (allHaveStatus) {
+      return true;
+    }
     const sessionTokens = protectionModel.getSessionTokens();
     if (sessionTokens && sessionTokens.length > 0) {
       const targetSessionTokens = sessionTokens.filter(sessionToken => {
@@ -4526,7 +4542,7 @@ function ProtectionKeyController() {
    * @memberof module:ProtectionKeyController
    * @instance
    */
-  function getSupportedKeySystemsFromSegmentPssh(initData, protDataSet, sessionType) {
+  function getSupportedKeySystemMetadataFromSegmentPssh(initData, protDataSet, sessionType) {
     let supportedKS = [];
     let pssh = _CommonEncryption_js__WEBPACK_IMPORTED_MODULE_0__["default"].parsePSSHList(initData);
     let ks, keySystemString;
@@ -4646,7 +4662,7 @@ function ProtectionKeyController() {
     getKeySystems,
     getLicenseServerModelInstance,
     getSupportedKeySystemMetadataFromContentProtection,
-    getSupportedKeySystemsFromSegmentPssh,
+    getSupportedKeySystemMetadataFromSegmentPssh,
     initDataEquals,
     initialize,
     isClearKey,
@@ -8212,11 +8228,6 @@ class HTTPRequest {
      * @public
      */
     this._mediaduration = null;
-    /**
-     * The media segment quality
-     * @public
-     */
-    this._quality = null;
     /**
      * all the response headers from request.
      * @public

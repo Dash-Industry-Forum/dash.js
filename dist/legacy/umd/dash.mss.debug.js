@@ -15427,7 +15427,6 @@ function DataChunk() {
   (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, DataChunk);
   this.streamId = null;
   this.segmentType = null;
-  this.quality = NaN;
   this.index = NaN;
   this.bytes = null;
   this.start = NaN;
@@ -15505,10 +15504,10 @@ var FragmentRequest = /*#__PURE__*/function () {
     this.index = NaN;
     this.mediaStartTime = NaN;
     this.mediaType = null;
-    this.quality = NaN;
     this.range = null;
     this.representation = null;
     this.responseType = 'arraybuffer';
+    this.retryAttempts = 0;
     this.serviceLocation = null;
     this.startDate = null;
     this.startTime = NaN;
@@ -15675,11 +15674,6 @@ function HTTPRequest() {
    * @public
    */
   this._mediaduration = null;
-  /**
-   * The media segment quality
-   * @public
-   */
-  this._quality = null;
   /**
    * all the response headers from request.
    * @public

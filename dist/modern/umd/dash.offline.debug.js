@@ -26389,7 +26389,7 @@ __webpack_require__.r(__webpack_exports__);
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
- *              deleteEventMessageDataAfterEventStarted: true
+ *              deleteEventMessageDataTimeout: 10000
  *            }
  *            timeShiftBuffer: {
  *                calcFromSegmentTimeline: false,
@@ -26422,6 +26422,7 @@ __webpack_require__.r(__webpack_exports__);
  *                bufferTimeDefault: 18,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.3,
+ *                lowLatencyStallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
@@ -26489,7 +26490,8 @@ __webpack_require__.r(__webpack_exports__);
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
- *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
+ *            ignoreSelectionPriority: false,
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -26652,10 +26654,12 @@ __webpack_require__.r(__webpack_exports__);
  * @typedef {Object} EventSettings
  * @property {number} [eventControllerRefreshDelay=100]
  * Interval timer used by the EventController to check if events need to be triggered or removed.
- * @property {boolean} [deleteEventMessageDataAfterEventStarted=true]
- * If this flag is enabled the EventController will delete the message data of events after they have been started. This is to save memory in case events have a long duration and need to be persisted in the EventController.
- * Note: Applications will receive a copy of the original event data when they subscribe to an event. This copy contains the original message data and is not affected by this setting.
- * Only if an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included in the dispatched event.
+ * @property {number} [deleteEventMessageDataTimeout=10000]
+ * If this value is larger than -1 the EventController will delete the message data attributes of events after they have been started and dispatched to the application.
+ * This is to save memory in case events have a long duration and need to be persisted in the EventController.
+ * This parameter defines the time in milliseconds between the start of an event and when the message data is deleted.
+ * If an event is dispatched for the second time (e.g. when the user seeks back) the message data will not be included in the dispatched event if it has been deleted already.
+ * Set this value to -1 to not delete any message data.
  */
 
 /**
@@ -26731,6 +26735,8 @@ __webpack_require__.r(__webpack_exports__);
  * Initial buffer level before playback starts
  * @property {number} [stallThreshold=0.3]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * @property {number} [lowLatencyStallThreshold=0.3]
+ * Low Latency stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
@@ -27296,13 +27302,13 @@ __webpack_require__.r(__webpack_exports__);
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
- * @property {string} [selectionModeForInitialTrack="highestSelectionPriority"]
+ * @property {} [ignoreSelectionPriority: false]
+ * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
+ *
+ * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
- *
- * - Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY
- * This mode makes the player select the track with the highest selectionPriority as defined in the manifest. If not selectionPriority is given we fallback to TRACK_SELECTION_MODE_HIGHEST_BITRATE. This mode is a default mode.
  *
  * - Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
  * This mode makes the player select the track with a highest bitrate.
@@ -27423,7 +27429,7 @@ function Settings() {
       },
       events: {
         eventControllerRefreshDelay: 100,
-        deleteEventMessageDataAfterEventStarted: true
+        deleteEventMessageDataTimeout: 10000
       },
       timeShiftBuffer: {
         calcFromSegmentTimeline: false,
@@ -27456,6 +27462,7 @@ function Settings() {
         bufferTimeDefault: 18,
         longFormContentDurationThreshold: 600,
         stallThreshold: 0.3,
+        lowLatencyStallThreshold: 0.3,
         useAppendWindow: true,
         setStallState: true,
         avoidCurrentTimeRangePruning: false,
@@ -27535,7 +27542,8 @@ function Settings() {
         audio: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_ALWAYS_REPLACE,
         video: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
-      selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY,
+      ignoreSelectionPriority: false,
+      selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
       fragmentRequestTimeout: 20000,
       fragmentRequestProgressTimeout: -1,
       manifestRequestTimeout: 10000,
@@ -27876,16 +27884,22 @@ class Utils {
 
     // Get the search parameters
     const params = new URLSearchParams(parsedUrl.search);
-    if (!params || params.size === 0) {
+    if (!params || params.size === 0 || !params.has(queryParameter)) {
       return url;
     }
 
-    // Remove the CMCD parameter
+    // Remove the queryParameter
     params.delete(queryParameter);
 
-    // Reconstruct the URL without the CMCD parameter
-    parsedUrl.search = params.toString();
-    return parsedUrl.toString();
+    // Manually reconstruct the query string without re-encoding
+    const queryString = Array.from(params.entries()).map(_ref2 => {
+      let [key, value] = _ref2;
+      return `${key}=${value}`;
+    }).join('&');
+
+    // Reconstruct the URL
+    const baseUrl = `${parsedUrl.origin}${parsedUrl.pathname}`;
+    return queryString ? `${baseUrl}?${queryString}` : baseUrl;
   }
   static parseHttpHeaders(headerStr) {
     let headers = {};
@@ -28008,6 +28022,10 @@ class Utils {
   }
   static bufferSourceToInt8(bufferSource) {
     return Utils.toDataView(bufferSource, Uint8Array);
+  }
+  static uint8ArrayToString(uint8Array) {
+    const decoder = new TextDecoder('utf-8');
+    return decoder.decode(uint8Array);
   }
   static bufferSourceToHex(data) {
     const arr = Utils.bufferSourceToInt8(data);
@@ -28827,6 +28845,10 @@ function DashHandler(config) {
       return null;
     }
     let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
+    if (representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber >= representation.endNumber) {
+      mediaHasFinished = true;
+      return null;
+    }
     return _getRequest(mediaInfo, representation, indexToRequest);
   }
   function repeatSegmentRequest(mediaInfo, representation) {
@@ -29042,6 +29064,7 @@ __webpack_require__.r(__webpack_exports__);
   DVB_MIMETYPE: 'dvb:mimeType',
   DVB_FONTFAMILY: 'dvb:fontFamily',
   DYNAMIC: 'dynamic',
+  END_NUMBER: 'endNumber',
   ESSENTIAL_PROPERTY: 'EssentialProperty',
   EVENT: 'Event',
   EVENT_STREAM: 'EventStream',
@@ -30021,6 +30044,22 @@ function DashManifestModel() {
   function getBandwidth(representation) {
     return representation && representation.bandwidth ? representation.bandwidth : NaN;
   }
+  function getFramerate(realRepresentation) {
+    if (!realRepresentation) {
+      return null;
+    }
+    const frameRate = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FRAMERATE];
+    if (!frameRate) {
+      return null;
+    }
+    if (typeof frameRate === 'string' && frameRate.includes('/')) {
+      const [numerator, denominator] = frameRate.split('/').map(value => parseInt(value, 10));
+      if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+        return numerator / denominator;
+      }
+    }
+    return parseInt(frameRate);
+  }
   function getManifestUpdatePeriod(manifest) {
     let latencyOfLastUpdate = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
     let delay = NaN;
@@ -30183,19 +30222,7 @@ function DashManifestModel() {
           voRepresentation.scanType = realRepresentation.scanType;
         }
         if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FRAMERATE)) {
-          const frameRate = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FRAMERATE];
-          if (isNaN(frameRate) && frameRate.includes('/')) {
-            const parts = frameRate.split('/');
-            if (parts.length === 2) {
-              const numerator = parseFloat(parts[0]);
-              const denominator = parseFloat(parts[1]);
-              if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
-                voRepresentation.frameRate = numerator / denominator;
-              }
-            }
-          } else {
-            voRepresentation.frameRate = frameRate;
-          }
+          voRepresentation.frameRate = getFramerate(realRepresentation);
         }
         if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUALITY_RANKING)) {
           voRepresentation.qualityRanking = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUALITY_RANKING];
@@ -30278,6 +30305,9 @@ function DashManifestModel() {
             voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
           } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
             voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
+          }
+          if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].END_NUMBER)) {
+            voRepresentation.endNumber = segmentInfo[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].END_NUMBER];
           }
         }
         voRepresentation.mseTimeOffset = calcMseTimeOffset(voRepresentation);
@@ -30859,6 +30889,7 @@ function DashManifestModel() {
     getEventStreamForAdaptationSet,
     getEventStreamForRepresentation,
     getEventsForPeriod,
+    getFramerate,
     getId,
     getIndexForAdaptation,
     getIsDynamic,
@@ -32282,6 +32313,9 @@ function TemplateSegmentsGetter(config, isDynamic) {
     index = Math.max(index, 0);
     const seg = (0,_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_2__.getIndexBasedSegment)(timelineConverter, isDynamic, representation, index);
     if (seg) {
+      if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
+        return null;
+      }
       seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
       let url = template.media;
       url = (0,_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_2__.replaceTokenForTemplate)(url, 'Number', seg.replacementNumber);
@@ -33501,6 +33535,7 @@ class Representation {
     this.startNumber = 1;
     this.timescale = 1;
     this.width = NaN;
+    this.endNumber = null;
   }
   hasInitialization() {
     return this.initialization !== null || this.range !== null;
@@ -37666,12 +37701,6 @@ __webpack_require__.r(__webpack_exports__);
    */
   TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
   /**
-   *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
-   *  @memberof Constants#
-   *  @static
-   */
-  TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
-  /**
    *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
    *  @memberof Constants#
    *  @static
@@ -39673,8 +39702,7 @@ function FragmentModel(config) {
    * @param {Object} filter The object with properties by which the method filters the requests to be returned.
    *  the only mandatory property is state, which must be a value from
    *  other properties should match the properties of {@link FragmentRequest}. E.g.:
-   *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0}) - returns
-   *  all the requests from executedRequests array where requests.quality = filter.quality
+   *  getRequests({state: FragmentModel.FRAGMENT_MODEL_EXECUTED, quality: 0})
    *
    * @returns {Array}
    * @memberof FragmentModel#
@@ -40665,6 +40693,9 @@ function HTTPLoader(cfg) {
     const _retriggerRequest = function () {
       if (remainingAttempts > 0) {
         remainingAttempts--;
+        if (config && config.request) {
+          config.request.retryAttempts += 1;
+        }
         let retryRequest = {
           config: config
         };
@@ -40897,7 +40928,9 @@ function HTTPLoader(cfg) {
    */
   function _updateRequestUrlAndHeaders(request) {
     _updateRequestUrlAndHeadersWithCmcd(request);
-    _addExtUrlQueryParameters(request);
+    if (request.retryAttempts === 0) {
+      _addExtUrlQueryParameters(request);
+    }
     _addPathwayCloningParameters(request);
     _addCommonAccessToken(request);
   }
@@ -41317,10 +41350,12 @@ function XHRLoader() {
       commonMediaResponse.headers = _core_Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].parseHttpHeaders(this.getAllResponseHeaders());
       commonMediaResponse.data = this.response;
     };
-    xhr.onloadend = commonMediaRequest.customData.onloadend;
-    xhr.onprogress = commonMediaRequest.customData.onprogress;
-    xhr.onabort = commonMediaRequest.customData.onabort;
-    xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+    if (commonMediaRequest.customData) {
+      xhr.onloadend = commonMediaRequest.customData.onloadend;
+      xhr.onprogress = commonMediaRequest.customData.onprogress;
+      xhr.onabort = commonMediaRequest.customData.onabort;
+      xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+    }
     xhr.send();
     commonMediaRequest.customData.abort = abort.bind(this);
     return true;
@@ -42184,10 +42219,10 @@ class FragmentRequest {
     this.index = NaN;
     this.mediaStartTime = NaN;
     this.mediaType = null;
-    this.quality = NaN;
     this.range = null;
     this.representation = null;
     this.responseType = 'arraybuffer';
+    this.retryAttempts = 0;
     this.serviceLocation = null;
     this.startDate = null;
     this.startTime = NaN;
@@ -42399,11 +42434,6 @@ class HTTPRequest {
      * @public
      */
     this._mediaduration = null;
-    /**
-     * The media segment quality
-     * @public
-     */
-    this._quality = null;
     /**
      * all the response headers from request.
      * @public
