@@ -235,6 +235,16 @@ export default {
      */
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
 
+    /**
+     *  @constant {string} CMCD_MODE specifies all the available modes for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_MODE: {
+        REQUEST: 'request',
+        RESPONSE: 'response',
+        EVENT: 'event'
+    },
 
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
