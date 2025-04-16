@@ -27166,10 +27166,10 @@ function CatchupController() {
     if (!playbackStalled) {
       var deltaLatency = currentLiveLatency - liveDelay; // Check if we need to need to speed up
 
-      if (deltaLatency > stepSettings.stop.max && deltaLatency > 0) {
+      if (deltaLatency > stepSettings.start.max && deltaLatency > 0) {
         newRate = 1 + liveCatchUpPlaybackRates.max;
       } // or slow down
-      else if (deltaLatency < stepSettings.stop.min * -1 && deltaLatency < 0) {
+      else if (deltaLatency < stepSettings.start.min * -1 && deltaLatency < 0) {
         newRate = 1 + liveCatchUpPlaybackRates.min;
       } // Check if we need to return to 1.0
 
