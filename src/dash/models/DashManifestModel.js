@@ -537,6 +537,26 @@ function DashManifestModel() {
         return representation && representation.bandwidth ? representation.bandwidth : NaN;
     }
 
+    function getFramerate(realRepresentation) {
+        if (!realRepresentation) {
+            return null
+        }
+        const frameRate = realRepresentation[DashConstants.FRAMERATE];
+        if (!frameRate) {
+            return null
+        }
+
+        if (typeof frameRate === 'string' && frameRate.includes('/')) {
+            const [numerator, denominator] = frameRate.split('/').map(value => parseInt(value, 10));
+
+            if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+                return numerator / denominator;
+            }
+        }
+
+        return parseInt(frameRate);
+    }
+
     function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
         let delay = NaN;
         if (manifest && manifest.hasOwnProperty(DashConstants.MINIMUM_UPDATE_PERIOD)) {
@@ -595,7 +615,7 @@ function DashManifestModel() {
         if (!repr || !repr.length) {
             return [];
         }
-        
+
         let propertiesOfFirstRepresentation = repr[0][propertyType] || [];
 
         if (propertiesOfFirstRepresentation.length === 0) {
@@ -605,12 +625,12 @@ function DashManifestModel() {
         if (repr.length === 1) {
             return propertiesOfFirstRepresentation;
         }
-        
+
         // now, only return properties present on all Representations
         // repr.legth is always >= 2
-        return propertiesOfFirstRepresentation.filter( prop => {
-            return repr.slice(1).every( currRep => {
-                return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some( e => {
+        return propertiesOfFirstRepresentation.filter(prop => {
+            return repr.slice(1).every(currRep => {
+                return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some(e => {
                     return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
                 });
             });
@@ -638,7 +658,7 @@ function DashManifestModel() {
     function getEssentialPropertiesForAdaptationSet(adaptation) {
         return _getProperties(DashConstants.ESSENTIAL_PROPERTY, adaptation);
     }
-    
+
     function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.ESSENTIAL_PROPERTY, adaptation);
     }
@@ -724,20 +744,7 @@ function DashManifestModel() {
                     voRepresentation.scanType = realRepresentation.scanType;
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.FRAMERATE)) {
-                    const frameRate = realRepresentation[DashConstants.FRAMERATE];
-                    if (isNaN(frameRate) && frameRate.includes('/')) {
-                        const parts = frameRate.split('/');
-                        if (parts.length === 2) {
-                            const numerator = parseFloat(parts[0]);
-                            const denominator = parseFloat(parts[1]);
-
-                            if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
-                                voRepresentation.frameRate = numerator / denominator;
-                            }
-                        }
-                    } else {
-                        voRepresentation.frameRate = frameRate
-                    }
+                    voRepresentation.frameRate = getFramerate(realRepresentation);
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.QUALITY_RANKING)) {
                     voRepresentation.qualityRanking = realRepresentation[DashConstants.QUALITY_RANKING];
@@ -834,6 +841,9 @@ function DashManifestModel() {
                         voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
                     } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
                         voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.END_NUMBER)) {
+                        voRepresentation.endNumber = segmentInfo[DashConstants.END_NUMBER];
                     }
                 }
 
@@ -1527,6 +1537,7 @@ function DashManifestModel() {
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
         getEventsForPeriod,
+        getFramerate,
         getId,
         getIndexForAdaptation,
         getIsDynamic,

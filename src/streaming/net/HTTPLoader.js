@@ -334,6 +334,9 @@ function HTTPLoader(cfg) {
         const _retriggerRequest = function () {
             if (remainingAttempts > 0) {
                 remainingAttempts--;
+                if (config && config.request) {
+                    config.request.retryAttempts += 1;
+                }
                 let retryRequest = { config: config };
                 retryRequests.push(retryRequest);
                 retryRequest.timeout = setTimeout(function () {
@@ -582,7 +585,9 @@ function HTTPLoader(cfg) {
      */
     function _updateRequestUrlAndHeaders(request) {
         _updateRequestUrlAndHeadersWithCmcd(request);
-        _addExtUrlQueryParameters(request);
+        if (request.retryAttempts === 0) {
+            _addExtUrlQueryParameters(request);
+        }
         _addPathwayCloningParameters(request);
         _addCommonAccessToken(request);
     }

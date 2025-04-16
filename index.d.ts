@@ -437,6 +437,8 @@ declare namespace dashjs {
 
         getEventsForPeriod(period: Period): any[];
 
+        getFramerate(representation: object): number;
+
         getId(manifest: object): string;
 
         getIndexForAdaptation(realAdaptation: object, manifest: object, periodIndex: number): number;
@@ -987,6 +989,7 @@ declare namespace dashjs {
         startNumber: number;
         timescale: number;
         width: number;
+        endNumber: number | null;
     }
 
     export interface Segment {
@@ -1064,6 +1067,8 @@ declare namespace dashjs {
         getEvent(eventBox: object, eventStreams: object, mediaStartTime: number, voRepresentation: object): null | Event;
 
         getEventsFor(info: object, voRepresentation: object): Array<Event>;
+
+        getFramerate(representation: object): number;
 
         getIndexForRepresentation(representationId: string, periodIdx: number): number;
 
@@ -1648,11 +1653,11 @@ declare namespace dashjs {
                 ],
                 useMediaCapabilitiesApi?: boolean,
                 filterHDRMetadataFormatEssentialProperties?: boolean,
-                filterVideoColometryEssentialProperties?: boolean
+                filterVideoColorimetryEssentialProperties?: boolean
             },
             events?: {
                 eventControllerRefreshDelay?: number,
-                deleteEventMessageDataAfterEventStarted?: boolean
+                deleteEventMessageDataTimeout?: number
             }
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
@@ -1685,6 +1690,7 @@ declare namespace dashjs {
                 bufferTimeDefault?: number,
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
+                lowLatencyStallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
@@ -1763,8 +1769,9 @@ declare namespace dashjs {
             trackSwitchMode?: {
                 video?: TrackSwitchMode;
                 audio?: TrackSwitchMode;
-            }
-            selectionModeForInitialTrack?: TrackSelectionMode
+            };
+            ignoreSelectionPriority?: boolean;
+            selectionModeForInitialTrack?: TrackSelectionMode;
             fragmentRequestTimeout?: number;
             fragmentRequestProgressTimeout?: number;
             manifestRequestTimeout?: number;
@@ -2840,7 +2847,6 @@ declare namespace dashjs {
         TRACK_SELECTION_MODE_HIGHEST_BITRATE: 'highestBitrate',
         TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
         TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
-        TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
         CMCD_MODE_QUERY: 'query',
         CMCD_MODE_HEADER: 'header',
         CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
@@ -4122,7 +4128,7 @@ declare namespace dashjs {
 
         getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[];
 
-        getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
+        getSupportedKeySystemMetadataFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
         initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
 

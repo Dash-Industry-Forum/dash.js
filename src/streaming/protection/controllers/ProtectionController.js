@@ -1053,54 +1053,56 @@ function ProtectionController(config) {
      * @private
      */
     function _onNeedKey(event, retry) {
-        if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
-            logger.debug('DRM: onNeedKey');
+        if (settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
+            return
+        }
 
-            // Ignore non-cenc initData
-            if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
-                logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+        logger.debug('DRM: onNeedKey');
+
+        // Ignore non-cenc initData
+        if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
+            logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+            return;
+        }
+
+        if (mediaInfoArr.length === 0) {
+            logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
+            retry = typeof retry === 'undefined' ? 1 : retry + 1;
+            if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
+                needkeyRetries.push(setTimeout(() => {
+                    _onNeedKey(event, retry);
+                }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
                 return;
             }
+        }
 
-            if (mediaInfoArr.length === 0) {
-                logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
-                retry = typeof retry === 'undefined' ? 1 : retry + 1;
-                if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
-                    needkeyRetries.push(setTimeout(() => {
-                        _onNeedKey(event, retry);
-                    }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
+        // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
+        // Convert to ArrayBuffer
+        let abInitData = event.key.initData;
+        if (ArrayBuffer.isView(abInitData)) {
+            abInitData = abInitData.buffer;
+        }
+
+        // If key system has already been selected and initData already seen, then do nothing
+        if (selectedKeySystem) {
+            const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+            if (initDataForKS) {
+                // Check for duplicate initData
+                if (_isInitDataDuplicate(initDataForKS)) {
                     return;
                 }
             }
-
-            // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
-            // Convert to ArrayBuffer
-            let abInitData = event.key.initData;
-            if (ArrayBuffer.isView(abInitData)) {
-                abInitData = abInitData.buffer;
-            }
-
-            // If key system has already been selected and initData already seen, then do nothing
-            if (selectedKeySystem) {
-                const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
-                if (initDataForKS) {
-                    // Check for duplicate initData
-                    if (_isInitDataDuplicate(initDataForKS)) {
-                        return;
-                    }
-                }
-            }
-
-            logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-
-            const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
-            if (supportedKs.length === 0) {
-                logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
-                return;
-            }
-
-            _handleKeySystemFromPssh(supportedKs);
         }
+
+        logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+
+        const supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+        if (supportedKeySystemsMetadata.length === 0) {
+            logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
+            return;
+        }
+
+        _handleKeySystemFromPssh(supportedKeySystemsMetadata);
     }
 
     /**
@@ -1162,7 +1164,7 @@ function ProtectionController(config) {
 
     function areKeyIdsUsable(normalizedKeyIds) {
         try {
-            if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
                 return true;
             }
 
@@ -1178,7 +1180,7 @@ function ProtectionController(config) {
 
     function areKeyIdsExpired(normalizedKeyIds) {
         try {
-            if (!_shouldCheckKeyStatusMap(normalizedKeyIds)) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
                 return false;
             }
 
@@ -1192,7 +1194,20 @@ function ProtectionController(config) {
         }
     }
 
-    function _shouldCheckKeyStatusMap(normalizedKeyIds) {
+    function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
+        if (normalizedKeyIds.size <= 0) {
+            return false;
+        }
+
+        const allHaveStatus = keyStatusMap.size > 0 && [...normalizedKeyIds].every((normalizedKeyId) => {
+            const keyStatus = keyStatusMap.get(normalizedKeyId);
+            return typeof keyStatus !== 'undefined' && keyStatus !== '';
+        });
+
+        if (allHaveStatus) {
+            return true
+        }
+
         const sessionTokens = protectionModel.getSessionTokens();
 
         if (sessionTokens && sessionTokens.length > 0) {

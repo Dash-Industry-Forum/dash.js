@@ -133,6 +133,8 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.on(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+
 
         if (Events.KEY_SESSION_UPDATED) {
             eventBus.on(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
@@ -159,6 +161,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, _onManifestValidityChanged, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
+        eventBus.off(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
 
         if (Events.KEY_SESSION_UPDATED) {
             eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
@@ -1262,6 +1265,16 @@ function StreamController() {
         } catch (e) {
             return NaN;
         }
+    }
+
+    /**
+     * Callback handler after the steering manifest was updated
+     * @param {object} e
+     * @private
+     */
+    function _onSteeringManifestUpdated() {
+        const manifest = manifestModel.getValue();
+        baseURLController.initialize(manifest);
     }
 
     /**
