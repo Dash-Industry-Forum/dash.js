@@ -161,7 +161,7 @@ import Events from './events/Events';
  *                  stop: { min: NaN, max: NaN }
  *                },
  *                playbackBufferMin: 0.5,
- *                liveThreshold: 30,
+ *                liveThreshold: -1,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -554,7 +554,7 @@ import Events from './events/Events';
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
- * @property {boolean} [liveThreshold=30]
+ * @property {boolean} [liveThreshold=-1]
  * How far in seconds the client has to be behind the absolute target for the catchup controller to attempt catching up. Disabled by setting to -1
  *
  * @property {boolean} [enabled=null]
@@ -1016,7 +1016,7 @@ function Settings() {
                     stop: { min: NaN, max: NaN }
                 },
                 playbackBufferMin: 0.5,
-                liveThreshold: 30,
+                liveThreshold: -1,
                 enabled: null,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
             },
