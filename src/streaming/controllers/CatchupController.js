@@ -237,7 +237,7 @@ function CatchupController() {
                 }
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_STEP) {
                     // Custom playback control: Based on minimising playback rate changes
-                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, currentLiveLatency, bufferLevel);
+                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, targetLiveDelay, bufferLevel);
                 }
                 else {
                     // Default playback control: Based on target and current latency
@@ -375,11 +375,8 @@ function CatchupController() {
      */
     function _stepNeedToCatchUp() {
         try {
-            const currentLiveLatency = playbackController.getCurrentLiveLatency();
-            const targetLiveDelay = playbackController.getOriginalLiveDelay();
             const stepSettings = mediaPlayerModel.getCatchupStepSettings();
-
-            const deltaLatency = currentLiveLatency - targetLiveDelay;
+            const deltaLatency = _getAbsoluteLatencyDrift();
 
             //If latency is outside of the acceptable window, consider a new speed
             if (deltaLatency < (stepSettings.start.min * -1) || deltaLatency > stepSettings.start.max) {
@@ -498,16 +495,14 @@ function CatchupController() {
     * @return {number}
     * @private
     */
-    function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, currentLiveLatency, bufferLevel) {
+    function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, liveDelay, bufferLevel) {
 
         let newRate = 1.0
         const stepSettings = mediaPlayerModel.getCatchupStepSettings();
-        const targetLiveDelay = playbackController.getOriginalLiveDelay();
 
         // Only adjust playback rates if playback has not stalled
         if (!playbackStalled) {
-            const deltaLatency = currentLiveLatency - targetLiveDelay;
-
+            const deltaLatency = _getAbsoluteLatencyDrift();
 
             // Check if we need to need to speed up
             if (deltaLatency > stepSettings.start.max && deltaLatency > 0) {
