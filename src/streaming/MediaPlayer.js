@@ -859,7 +859,7 @@ function MediaPlayer() {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
 
-        return playbackController.getOriginalLiveDelay();
+        return playbackController.getLiveDelay();
     }
 
     /**

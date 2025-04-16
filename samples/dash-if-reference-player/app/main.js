@@ -35,7 +35,7 @@ angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVe
 
 app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', 'dashifTestVectors', function ($scope, $window, sources, contributors, dashifTestVectors) {
     $scope.selectedItem = {
-        url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
+        url: 'https://rdmedia.api.bbc.co.uk/ll-trial/mpd/bbc_one_london/manifest.mpd'
     };
 
     sources.query(function (data) {

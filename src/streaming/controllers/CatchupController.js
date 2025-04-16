@@ -229,6 +229,7 @@ function CatchupController() {
             else {
                 const currentLiveLatency = playbackController.getCurrentLiveLatency();
                 const targetLiveDelay = playbackController.getLiveDelay();
+                const targetLiveDlelayOriginal = playbackController.getOriginalLiveDelay();
 
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_LOLP) {
                     // Custom playback control: Based on buffer level
@@ -237,7 +238,7 @@ function CatchupController() {
                 }
                 if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_STEP) {
                     // Custom playback control: Based on minimising playback rate changes
-                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
+                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDlelayOriginal, bufferLevel);
                 }
                 else {
                     // Default playback control: Based on target and current latency
