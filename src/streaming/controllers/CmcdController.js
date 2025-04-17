@@ -46,7 +46,7 @@ import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreaming
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
-import HttpLoaderRequest from '../../streaming/vo/HttpLoaderRequest.js';
+import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
 import URLLoader from '../net/URLLoader.js';
 import Errors from '../../core/errors/Errors.js';
 
@@ -791,7 +791,7 @@ function CmcdController() {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
-            customData: request,
+            customData: {request},
             cmcd: getCmcdData(request)
         }
 
@@ -848,22 +848,19 @@ function CmcdController() {
     }
 
     function _cmcdResponseModeInterceptor(response){
-        const requestType = response.request.customData.type;
-
+        const requestType = response.request.customData.request.type;
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(element => {
             if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
-                let params = {
-                    url: element.url,
-                    method: 'GET',
-                };
-        
-                let httpRequest = new HttpLoaderRequest(params);
+                let httpRequest = new CmcdReportRequest();
+                httpRequest.url = element.url;
+                httpRequest.type = HTTPRequest.CMCD_RESPONSE;
+                httpRequest.method = 'GET';
                 const targetSettings = element;
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings);
                 _sendCmcdDataReport(httpRequest);
             }
         });
