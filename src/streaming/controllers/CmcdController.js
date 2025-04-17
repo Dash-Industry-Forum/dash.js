@@ -102,6 +102,7 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+        _initializeEventModeTimeInterval();
         _initializeEventModeListeners();
     }
 
@@ -120,22 +121,32 @@ function CmcdController() {
         Object.entries(eventStateMap).forEach(([event, state]) => {
             eventBus.on(event, () => _onStateChange(state), instance);
         });
-    
-        // eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
     }
-
+    
+    function _initializeEventModeTimeInterval() {
+        const targets = settings.get().streaming.cmcd.targets;
+        const eventModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.EVENT);
+        eventModeTargets.forEach(({ timeInterval }) => {
+            const triggerEventModeInterval = () => {
+                _onStateChange('t');
+                setTimeout(triggerEventModeInterval, timeInterval);
+            }
+            triggerEventModeInterval();
+        });
+    }
+    
     function _onStateChange(state) {
         const targets = settings.get().streaming.cmcd.targets;
-        const requestModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.EVENT);
         const cmcdData = _getGenericCmcdData();
         cmcdData.e = state;
-        requestModeTargets.forEach(target => {
-            if (target.enabled) {
+        eventModeTargets.forEach(targetSettings => {
+            if (targetSettings.enabled) {
                 const httpRequest = new HttpLoaderRequest({
-                    url: target.url,
+                    url: targetSettings.url,
                     method: 'GET',
                 });
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, target)
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
         });
@@ -891,16 +902,13 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.RESPONSE);
-        responseModeTargets.forEach(element => {
-            if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
-                let params = {
-                    url: element.url,
+        const responseModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.RESPONSE);
+        responseModeTargets.forEach(targetSettings => {
+            if (targetSettings.enabled && _isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
+                const httpRequest = new HttpLoaderRequest({
+                    url: targetSettings.url,
                     method: 'GET',
-                };
-        
-                let httpRequest = new HttpLoaderRequest(params);
-                const targetSettings = element;
+                });
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
