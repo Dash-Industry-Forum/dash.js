@@ -138,6 +138,10 @@ function Capabilities() {
             return Promise.resolve();
         }
 
+        if (basicConfiguration.codec.includes('video') && Constants.ENHANCEMENT_CODECS.some(cdc => basicConfiguration.codec.includes(cdc))) {
+            return Promise.resolve(true);
+        }
+
         const configurationsToTest = _getEnhancedConfigurations(basicConfiguration, type);
 
         if (_canUseMediaCapabilitiesApi(basicConfiguration, type)) {

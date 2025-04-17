@@ -449,6 +449,7 @@ function ScheduleController(config) {
         setCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,
+        setup,
         setSwitchTrack,
         setTimeToLoadDelay,
         startScheduleTimer,
