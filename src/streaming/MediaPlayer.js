@@ -81,6 +81,7 @@ import TextController from './text/TextController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
 import ClientDataReportingController from './controllers/ClientDataReportingController.js';
+import ListMpdController from './controllers/ListMpdController.js';
 
 /**
  * The media types
@@ -162,6 +163,7 @@ function MediaPlayer() {
         serviceDescriptionController,
         contentSteeringController,
         catchupController,
+        listMpdController,
         dashMetrics,
         manifestModel,
         cmcdModel,
@@ -2410,6 +2412,10 @@ function MediaPlayer() {
             streamController = StreamController(context).getInstance();
         }
 
+        if (!listMpdController) {
+            listMpdController = ListMpdController(context).getInstance();
+        }
+
         if (!textController) {
             textController = TextController(context).create({
                 errHandler,
@@ -2421,6 +2427,12 @@ function MediaPlayer() {
                 settings
             });
         }
+
+        listMpdController.setConfig({
+            settings: settings,
+            dashAdapter: adapter,
+            manifestLoader: manifestLoader
+        });
 
         capabilitiesFilter.setConfig({
             capabilities,
@@ -2519,6 +2531,7 @@ function MediaPlayer() {
         cmsdModel.setConfig({});
 
         // initializes controller
+        listMpdController.initialize();
         mediaController.initialize();
         throughputController.initialize();
         abrController.initialize();

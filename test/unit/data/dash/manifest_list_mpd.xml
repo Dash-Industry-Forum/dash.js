@@ -1,0 +1,18 @@
+<MPD 
+  minBufferTime="PT2.00S"
+  profiles="urn:mpeg:dash:profile:list:2024" 
+  type="list" 
+  xmlns="urn:mpeg:dash:schema:mpd:2011" 
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+  xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd">
+  <BaseURL>https://comcast-dash-6-assets.s3.us-east-2.amazonaws.com/ListMPDs/</BaseURL>
+  <Period id="0">
+    <ImportedMPD uri="bbb_30fps.mpd" earliestResolutionTimeOffset="0"/>
+  </Period>
+  <Period id="1" start="PT10S" duration="10">
+    <ImportedMPD uri="elephant.mpd" earliestResolutionTimeOffset="2"/>
+  </Period>
+  <Period id="2" start="PT20S" duration="600">
+    <ImportedMPD uri="bbb_30fps.mpd" earliestResolutionTimeOffset="5"/>
+  </Period>
+</MPD>

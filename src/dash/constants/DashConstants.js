@@ -104,6 +104,7 @@ export default {
     LA_URL_LOWER_CASE: 'laurl',
     LABEL: 'Label',
     LANG: 'lang',
+    LIST_PROFILE_SCHEME: 'urn:mpeg:dash:profile:list:2024',
     LOCATION: 'Location',
     MAIN: 'main',
     MAXIMUM_SAP_PERIOD: 'maximumSAPPeriod',
@@ -121,6 +122,7 @@ export default {
     MIN_BUFFER_TIME: 'minBufferTime',
     MP4_PROTECTION_SCHEME: 'urn:mpeg:dash:mp4protection:2011',
     MPD: 'MPD',
+    MPD_LIST: 'list',
     MPD_TYPE: 'mpd',
     MPD_PATCH_TYPE: 'mpdpatch',
     ORIGINAL_MPD_ID: 'mpdId',
@@ -137,6 +139,7 @@ export default {
         APPLICATION: 'application'
     },
     PROFILES: 'profiles',
+    PROGRAM_INFORMATION: 'ProgramInformation',
     PSSH: 'pssh',
     PUBLISH_TIME: 'publishTime',
     QUALITY_RANKING : 'qualityRanking',
