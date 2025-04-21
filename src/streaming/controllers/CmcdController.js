@@ -35,7 +35,6 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import Constants from '../../streaming/constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
-import HttpLoaderRequest from '../../streaming/vo/HttpLoaderRequest.js';
 import DashManifestModel from '../../dash/models/DashManifestModel.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 import Debug from '../../core/Debug.js';
@@ -47,6 +46,7 @@ import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreaming
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
+import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
 
 import URLLoader from '../net/URLLoader.js';
 import Errors from '../../core/errors/Errors.js';
@@ -103,6 +103,7 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+
         _initializeEventModeTimeInterval();
         _initializeEventModeListeners();
     }
@@ -126,11 +127,11 @@ function CmcdController() {
     
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval }) => {
             const triggerEventModeInterval = () => {
                 _onStateChange('t');
-                setTimeout(triggerEventModeInterval, timeInterval);
+                setTimeout(triggerEventModeInterval, (timeInterval * 1000));
             }
             triggerEventModeInterval();
         });
@@ -138,15 +139,18 @@ function CmcdController() {
     
     function _onStateChange(state) {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.EVENT);
         const cmcdData = _getGenericCmcdData();
         cmcdData.e = state;
+
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
-                const httpRequest = new HttpLoaderRequest({
-                    url: targetSettings.url,
-                    method: 'GET',
-                });
+                let httpRequest = new CmcdReportRequest();
+
+                httpRequest.url = targetSettings.url;
+                httpRequest.type = HTTPRequest.CMCD_EVENT;
+                httpRequest.method = HTTPRequest.GET;
+
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
@@ -245,13 +249,14 @@ function CmcdController() {
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
-            if (isCmcdEnabled()) {
+            if ((targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
+
                 cmcdData = cmcdData || getCmcdData(request);
                 let enabledKeys;
                 let customKeys;
 
                 if (targetSettings){
-                    enabledKeys = targetSettings.enabledKeys;
+                    enabledKeys = targetSettings.keys;
                     customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
                 }
 
@@ -858,8 +863,8 @@ function CmcdController() {
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
-
-        if (isIncludedFilters && isCmcdEnabled()) {
+            
+        if (isIncludedFilters && (targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
             const cmcdParameters = getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
@@ -902,17 +907,19 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((target) => target.mode = Constants.CMCD_MODE.RESPONSE);
+        const responseModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled && _isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
-                const httpRequest = new HttpLoaderRequest({
-                    url: targetSettings.url,
-                    method: 'GET',
-                });
+                let httpRequest = new CmcdReportRequest();
+                httpRequest.url = targetSettings.url;
+                httpRequest.type = HTTPRequest.CMCD_RESPONSE;
+                httpRequest.method = HTTPRequest.GET;
+
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
         });
+        
         return response;
     }
 
