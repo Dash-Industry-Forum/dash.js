@@ -989,6 +989,7 @@ declare namespace dashjs {
         startNumber: number;
         timescale: number;
         width: number;
+        endNumber: number | null;
     }
 
     export interface Segment {
@@ -1656,7 +1657,7 @@ declare namespace dashjs {
             },
             events?: {
                 eventControllerRefreshDelay?: number,
-                deleteEventMessageDataAfterEventStarted?: boolean
+                deleteEventMessageDataTimeout?: number
             }
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
@@ -4127,7 +4128,7 @@ declare namespace dashjs {
 
         getSupportedKeySystemMetadataFromContentProtection(cps: object[], protDataSet: ProtectionDataSet, sessionType: string): object[];
 
-        getSupportedKeySystemsFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
+        getSupportedKeySystemMetadataFromSegmentPssh(initData: ArrayBuffer, protDataSet: ProtectionDataSet, sessionType: string): object[];
 
         initDataEquals(initData1: ArrayBuffer, initData2: ArrayBuffer): boolean;
 

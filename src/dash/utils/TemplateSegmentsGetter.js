@@ -74,7 +74,12 @@ function TemplateSegmentsGetter(config, isDynamic) {
         index = Math.max(index, 0);
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+
         if (seg) {
+            if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
+                return null;
+            }
+
             seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
             seg.media = processUriTemplate(
                 template.media,

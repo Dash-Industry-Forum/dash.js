@@ -266,7 +266,7 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromSegmentPssh(initData, protDataSet, sessionType) {
+    function getSupportedKeySystemMetadataFromSegmentPssh(initData, protDataSet, sessionType) {
         let supportedKS = [];
         let pssh = CommonEncryption.parsePSSHList(initData);
         let ks, keySystemString;
@@ -395,7 +395,7 @@ function ProtectionKeyController() {
         getKeySystems,
         getLicenseServerModelInstance,
         getSupportedKeySystemMetadataFromContentProtection,
-        getSupportedKeySystemsFromSegmentPssh,
+        getSupportedKeySystemMetadataFromSegmentPssh,
         initDataEquals,
         initialize,
         isClearKey,
