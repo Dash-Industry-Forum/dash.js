@@ -287,7 +287,7 @@ function CatchupController() {
      */
     function _shouldStartCatchUp() {
         try {
-            if (playbackController.getTime() < 0 || isCatchupSeekInProgress) {
+            if (playbackController.getTime() <= 0 || isCatchupSeekInProgress) {
                 return false;
             }
 
