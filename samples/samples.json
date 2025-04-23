@@ -709,6 +709,17 @@
         ]
       },
       {
+        "title": "CMCD Callbacks with Network Interceptors",
+        "description": "This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode",
+        "href": "advanced/cmcdv2-network-interceptors.html",
+        "image": "lib/img/bbb-1.jpg",
+        "labels": [
+          "VoD",
+          "Video",
+          "Audio"
+        ]
+      },
+      {
         "title": "Flexible Insertion of URL Parameters Sample",
         "description": "This sample demonstrates the Flexible Insertion of URL Parameters in dash.js.",
         "href": "advanced/ext-url-query-info.html",
