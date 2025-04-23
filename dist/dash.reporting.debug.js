@@ -835,11 +835,15 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *                stallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
- *                emitSyntheticStallEvents: true,
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
- *                resetSourceBuffersForTrackSwitch: false
+ *                resetSourceBuffersForTrackSwitch: false,
+ *                syntheticStallEvents: {
+ *                  enabled: false,
+ *                  ignoreReadyState: false
+ *                } 
+ * 
  *            },
  *            gaps: {
  *                jumpGaps: true,
@@ -880,7 +884,12 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  *            liveCatchup: {
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
+ *                step: {
+ *                  start: { min: NaN, max: NaN },
+ *                  stop: { min: NaN, max: NaN }
+ *                },
  *                playbackBufferMin: 0.5,
+ *                liveThreshold: 30,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
  *            },
@@ -1065,7 +1074,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we record stalled streams once the stall threshold is reached
- * @property {boolean} [emitSyntheticStallEvents=true]
+ * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
  * Specified if we fire manual stall events once the stall threshold is reached
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
@@ -1088,6 +1097,17 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Configuration for audio media type of tracks.
  * @property {number|boolean|string} [video]
  * Configuration for video media type of tracks.
+ */
+
+/**
+ * @typedef {Object} module:Settings~SyntheticStallSettings
+ * @property {boolean} [enabled]
+ * Fire manual stall events once the stall threshold is reached
+ * @property {boolean} [ignoreReadyState]
+ * Ignore the media element's ready state when entering and exiting a stall
+ * Enable this when either of these scenarios still occur with synthetic stalls enabled:
+ * - If the buffer is empty, but playback is not stalled.
+ * - If playback resumes, but a playing event isn't reported.
  */
 
 /**
@@ -1247,9 +1267,23 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * These playback rate limits take precedence over any PlaybackRate values in ServiceDescription elements in an MPD. If only one of the min/max properties is given a value, the property without a value will not fall back to a ServiceDescription value. Its default value of NaN will be used.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
+ * This object is used for setting the window parameters for "step" mode.
+ * 
+ * It is only applicable if the Catchup mechanism used is of mode "step".
+ * 
+ * The parameters are all percentages of the target latency. Where 1 is on target.
+ * 
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ * 
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in In the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
+ * 
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=30]
+ * How far in seconds the client has to be behind the absolute target for the catchup controller to attempt catching up. Disabled by setting to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -1257,7 +1291,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP" or "liveCatchupModeStep".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -1486,6 +1520,10 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
  * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
  * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * @property {boolean} [seekWithoutReadyStateCheck=false]
+ * This allows a seek by setting currentTime regardless of the loadedmetadata event being emitted
+ * @property {boolean} [enableDashPlaybackEnded = false]
+ * This enables the synthetic ended behaviour in PlaybackController that seeks and pauses the media element
  * @property {boolean} [parseInbandPrft=false]
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
@@ -1612,6 +1650,8 @@ function Settings() {
       enableManifestDurationMismatchFix: true,
       parseInbandPrft: false,
       enableManifestTimescaleMismatchFix: false,
+      seekWithoutReadyStateCheck: false,
+      enableDashPlaybackEnded: false,
       capabilities: {
         filterUnsupportedEssentialProperties: true,
         useMediaCapabilitiesApi: false
@@ -1649,11 +1689,14 @@ function Settings() {
         stallThreshold: 0.3,
         useAppendWindow: true,
         setStallState: true,
-        emitSyntheticStallEvents: true,
         avoidCurrentTimeRangePruning: false,
         useChangeTypeForTrackSwitch: true,
         mediaSourceDurationInfinity: true,
-        resetSourceBuffersForTrackSwitch: false
+        resetSourceBuffersForTrackSwitch: false,
+        syntheticStallEvents: {
+          enabled: false,
+          ignoreReadyState: false
+        }
       },
       gaps: {
         jumpGaps: true,
@@ -1697,7 +1740,18 @@ function Settings() {
           min: NaN,
           max: NaN
         },
+        step: {
+          start: {
+            min: NaN,
+            max: NaN
+          },
+          stop: {
+            min: NaN,
+            max: NaN
+          }
+        },
         playbackBufferMin: 0.5,
+        liveThreshold: 30,
         enabled: null,
         mode: _streaming_constants_Constants__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
       },
@@ -3193,6 +3247,13 @@ var Constants = /*#__PURE__*/function () {
        */
 
       this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
+      /**
+       *  @constant {string} LIVE_CATCHUP_MODE_STEP Throughput calculation based on moof parsing
+       *  @memberof Constants#
+       *  @static
+       */
+
+      this.LIVE_CATCHUP_MODE_STEP = 'liveCatchupModeStep';
       /**
        *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
        *  @memberof Constants#
