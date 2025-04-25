@@ -700,6 +700,20 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
 
+        it('should check initial media settings to choose initial track based on role', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(enADTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                role: { schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
+        });
+
         it('should not check initial media settings to choose initial track when it has already selected a track', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);
@@ -801,6 +815,78 @@ describe('MediaController', function () {
                     'video',
                     { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 },
                     { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 }
+                );
+            });
+        })
+
+        describe('roleMain flag' ,function () {
+            beforeEach(function () {
+                settings.update({ 
+                    streaming: { 
+                        // selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+                        prioritizeRoleMain: true
+                    }
+                });
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided - 1', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided - 2a', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [] }
+                );
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided - 2b', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    { bitrateList: [{ bandwidth: 2000 }] }
+                );
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided - 3', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' },{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided - 4', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should select track based in selectionPriority and disregard role main', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track based on selectionModeForInitialTrack if roleMain flag is false', function () {
+                settings.update({ streaming: { 
+                    prioritizeRoleMain: false, 
+                    selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } 
+                });
+                
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] }
                 );
             });
         })

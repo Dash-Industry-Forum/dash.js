@@ -189,6 +189,7 @@ import Events from './events/Events.js';
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            ignoreSelectionPriority: false,
+ *            prioritizeRoleMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
@@ -1004,6 +1005,9 @@ import Events from './events/Events.js';
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
+ * @property {} [prioritizeRoleMain: true]
+ * provide the option to disable prioritization of AdaptationSets with their Role set to Main
+ * 
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
@@ -1234,6 +1238,7 @@ function Settings() {
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
             ignoreSelectionPriority: false,
+            prioritizeRoleMain: true,
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,

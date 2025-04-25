@@ -441,6 +441,9 @@ function MediaController() {
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
+        if ( !track.roles) {
+            return false;
+        }
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return _compareDescriptorType(item, settings.role);
         })[0];
@@ -687,6 +690,9 @@ function MediaController() {
             if (!settings.get().streaming.ignoreSelectionPriority) {
                 tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
             }
+            if (settings.get().streaming.prioritizeRoleMain) {
+                tmpArr = _trackSelectionRoleMain(tmpArr);
+            }
             if (tmpArr.length > 1) {
                 let mode = settings.get().streaming.selectionModeForInitialTrack;
                 switch (mode) {
@@ -850,6 +856,12 @@ function MediaController() {
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
 
+        return tmpArr;
+    }
+
+    function _trackSelectionRoleMain(tracks) {
+        const settings = {role: {schemeIdUri:'urn:mpeg:dash:role:2011', value:'main'} };
+        let tmpArr = filterTracksBySettings(tracks, matchSettingsRole, settings);
         return tmpArr;
     }
 
