@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';
 import Constants from '../constants/Constants.js';
+import ExternalSubtitle from '../vo/ExternalSubtitle.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -47,6 +48,7 @@ function CustomParametersModel() {
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
+        externalSubtitles,
         customAbrRules;
 
     const context = this.context;
@@ -68,6 +70,7 @@ function CustomParametersModel() {
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
+        externalSubtitles = new Set();
     }
 
 
@@ -330,6 +333,38 @@ function CustomParametersModel() {
         return responseInterceptors;
     }
 
+    function addExternalSubtitle(externalSubtitleObj) {
+        if (!externalSubtitleObj || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
+            throw new Error('Invalid external subtitle');
+        }
+        const externalSubtitle = new ExternalSubtitle(externalSubtitleObj);
+        if (!_hasExternalSubtitleByUrl(externalSubtitle.url)) {
+            externalSubtitles.add(externalSubtitle);
+        }
+    }
+
+    function removeExternalSubtitleByUrl(url) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.url === url) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function _hasExternalSubtitleByUrl(url) {
+        let found = false;
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.url === url) {
+                found = true;
+            }
+        });
+        return found;
+    }
+
+    function getExternalSubtitles() {
+        return externalSubtitles;
+    }
+
     /**
      * Add a UTC timing source at the top of the list
      * @param {string} schemeIdUri
@@ -399,6 +434,7 @@ function CustomParametersModel() {
 
     instance = {
         addAbrCustomRule,
+        addExternalSubtitle,
         addRequestInterceptor,
         addResponseInterceptor,
         addUTCTimingSource,
@@ -406,6 +442,7 @@ function CustomParametersModel() {
         getAbrCustomRules,
         getCustomCapabilitiesFilters,
         getCustomInitialTrackSelectionFunction,
+        getExternalSubtitles,
         getLicenseRequestFilters,
         getLicenseResponseFilters,
         getRequestInterceptors,
@@ -417,6 +454,7 @@ function CustomParametersModel() {
         registerLicenseResponseFilter,
         removeAbrCustomRule,
         removeAllAbrCustomRule,
+        removeExternalSubtitleByUrl,
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,

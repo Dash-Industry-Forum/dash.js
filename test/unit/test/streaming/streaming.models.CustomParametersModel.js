@@ -3,6 +3,7 @@ import Constants from '../../../../src/streaming/constants/Constants.js';
 
 
 import chai from 'chai';
+
 const expect = chai.expect;
 
 describe('CustomParametersModel', function () {
@@ -238,5 +239,61 @@ describe('CustomParametersModel', function () {
         utcTimingSources = customParametersModel.getUTCTimingSources();
         expect(utcTimingSources.length).to.equal(1);
     });
+
+    describe('external subtitles', () => {
+
+        it('should add an external subtitle', () => {
+            const url = 'http://example.com/subtitle.vtt';
+            const language = 'en';
+            const mimeType = 'text/vtt';
+            const bandwidth = 256;
+            customParametersModel.addExternalSubtitle({ url, language, mimeType, bandwidth });
+
+            const subtitles = customParametersModel.getExternalSubtitles();
+            expect(subtitles.size).to.equal(1);
+            const element = subtitles.values().next().value;
+            expect(element.url).to.equal(url);
+            expect(element.language).to.equal(language);
+            expect(element.mimeType).to.equal(mimeType);
+            expect(element.bandwidth).to.equal(bandwidth);
+        })
+
+        it('should not add an external subtitle with the same URL twice', () => {
+            const url = 'http://example.com/subtitle.vtt';
+            const language = 'en';
+            const mimeType = 'text/vtt';
+            const bandwidth = 256;
+            customParametersModel.addExternalSubtitle({ url, language, mimeType, bandwidth });
+            customParametersModel.addExternalSubtitle({ url, language: 'fra', mimeType: 'text/ttml', bandwidth: 480 });
+
+            const subtitles = customParametersModel.getExternalSubtitles();
+            expect(subtitles.size).to.equal(1);
+            const element = subtitles.values().next().value;
+            expect(element.url).to.equal(url);
+            expect(element.language).to.equal(language);
+            expect(element.mimeType).to.equal(mimeType);
+            expect(element.bandwidth).to.equal(bandwidth);
+        })
+
+        it('should remove an external subtitle', () => {
+            const url = 'http://example.com/subtitle.vtt';
+            const language = 'en';
+            const mimeType = 'text/vtt';
+            const bandwidth = 256;
+            customParametersModel.addExternalSubtitle({ url, language, mimeType, bandwidth });
+
+            let subtitles = customParametersModel.getExternalSubtitles();
+            expect(subtitles.size).to.equal(1);
+            const element = subtitles.values().next().value;
+            expect(element.url).to.equal(url);
+            expect(element.language).to.equal(language);
+            expect(element.mimeType).to.equal(mimeType);
+            expect(element.bandwidth).to.equal(bandwidth);
+
+            customParametersModel.removeExternalSubtitleByUrl(url);
+            subtitles = customParametersModel.getExternalSubtitles();
+            expect(subtitles.size).to.equal(0);
+        })
+    })
 
 });
