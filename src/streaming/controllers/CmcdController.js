@@ -781,6 +781,7 @@ function CmcdController() {
         const requestType = commonMediaRequest.customData.request.type;
 
         if (!_isIncludedInRequestFilter(requestType)) {
+            commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
             return commonMediaRequest;
         }
 
@@ -808,7 +809,6 @@ function CmcdController() {
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
-
         if (isIncludedFilters && isCmcdEnabled()) {
             const cmcdParameters = getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
@@ -852,13 +852,14 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((element) => element.mode = Constants.CMCD_MODE.RESPONSE);
+        const responseModeTargets = targets.filter((element) => element.mode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(element => {
             if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();
                 httpRequest.url = element.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
-                httpRequest.method = 'GET';
+                httpRequest.method = HTTPRequest.GET;
+                httpRequest.cmcd = cmcdData;
                 const targetSettings = element;
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings);
                 _sendCmcdDataReport(httpRequest);
