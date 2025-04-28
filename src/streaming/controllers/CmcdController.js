@@ -872,6 +872,7 @@ function CmcdController() {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                request.headers = request.headers || {};
                 request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
             }
         }
@@ -905,7 +906,6 @@ function CmcdController() {
     function _cmcdResponseModeInterceptor(response){
         const requestType = response.request.customData.request.type;
         let cmcdData = response.request.cmcd;
-        
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
@@ -914,7 +914,7 @@ function CmcdController() {
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
-
+                
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
@@ -930,7 +930,7 @@ function CmcdController() {
             mediaPlayerModel: mediaPlayerModel,
             errors: Errors,
         });
-        
+
         urlLoader.load({request})
     }
 

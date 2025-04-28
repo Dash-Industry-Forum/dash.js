@@ -387,7 +387,6 @@ function HTTPLoader(cfg) {
         const loader = loaderInformation.loader;
         requestObject.fileLoaderType = loaderInformation.fileLoaderType;
 
-        requestObject.headers = {};
         _updateRequestUrlAndHeaders(requestObject);
         if (requestObject.range) {
             requestObject.headers['Range'] = 'bytes=' + requestObject.range;
