@@ -287,7 +287,7 @@ function CmcdController() {
         }
     }
 
-    function includeMandatoryKeys(enabledCMCDKeys) {
+    function includeEventModeMandatoryKeys(enabledCMCDKeys) {
 
         return enabledCMCDKeys.concat(Constants.CMCD_MANDATORY_KEYS);
     }
@@ -298,7 +298,7 @@ function CmcdController() {
             let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
 
             if (cmcdData.e) {
-                enabledCMCDKeys = includeMandatoryKeys(enabledCMCDKeys)
+                enabledCMCDKeys = includeEventModeMandatoryKeys(enabledCMCDKeys)
             }
 
             return Object.keys(cmcdData)
