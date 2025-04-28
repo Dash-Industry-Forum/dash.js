@@ -102,7 +102,71 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+
+        _initializeEventModeTimeInterval();
+        _initializeEventModeListeners();
     }
+
+    function _initializeEventModeListeners() {
+        const eventStateMap = {
+            [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_REPORTING_EVENTS.START,
+            [MediaPlayerEvents.PLAYBACK_STARTED]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
+            [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_REPORTING_EVENTS.PAUSED,
+            [MediaPlayerEvents.PLAYBACK_PLAYING]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
+            [MediaPlayerEvents.PLAYBACK_SEEKING]: Constants.CMCD_REPORTING_EVENTS.SEEKING,
+            [MediaPlayerEvents.PLAYBACK_STALLED]: Constants.CMCD_REPORTING_EVENTS.REBUFFERING,
+            [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_REPORTING_EVENTS.FATAL_ERROR,
+            [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_REPORTING_EVENTS.ENDED
+        };
+    
+        Object.entries(eventStateMap).forEach(([event, state]) => {
+            eventBus.on(event, () => _onStateChange(state), instance);
+        });
+    }
+    
+    function _initializeEventModeTimeInterval() {
+        const targets = settings.get().streaming.cmcd.targets;
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+        eventModeTargets.forEach(({ timeInterval }) => {
+            const triggerEventModeInterval = () => {
+                _onStateChange(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL);
+                setTimeout(triggerEventModeInterval, (timeInterval * 1000));
+            }
+            triggerEventModeInterval();
+        });
+    }
+    
+    function _onStateChange(state) {
+        const targets = settings.get().streaming.cmcd.targets;
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+        
+        if (eventModeTargets.length === 0) {
+            return;
+        }
+        
+        const cmcdData = _getGenericCmcdData();
+        cmcdData.e = state;
+
+        eventModeTargets.forEach(targetSettings => {
+            if (targetSettings.enabled) {
+                let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
+
+                if (!events.includes(state)) {
+                    return;
+                }
+
+                let httpRequest = new CmcdReportRequest();
+
+                httpRequest.url = targetSettings.url;
+                httpRequest.type = HTTPRequest.CMCD_EVENT;
+                httpRequest.method = HTTPRequest.GET;
+
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
+                _sendCmcdDataReport(httpRequest);
+            }
+        });
+    }
+
 
     function setConfig(config) {
         if (!config) {
@@ -195,15 +259,10 @@ function CmcdController() {
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
-            if (isCmcdEnabled()) {
-                cmcdData = cmcdData || getCmcdData(request);
-                let enabledKeys;
-                let customKeys;
+            if (targetSettings ? targetSettings.enabled : isCmcdEnabled()) {
 
-                if (targetSettings){
-                    enabledKeys = targetSettings.enabledKeys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
-                }
+                cmcdData = cmcdData || getCmcdData(request);
+                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
                 filteredCmcdData = {...filteredCmcdData, ...customKeys};              
@@ -212,6 +271,7 @@ function CmcdController() {
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
+                    requestType: request.type,
                     cmcdData,
                     cmcdString: finalPayloadString
                 });
@@ -246,20 +306,15 @@ function CmcdController() {
         try {
             if (isCmcdEnabled()) {
                 cmcdData = cmcdData || getCmcdData(request);
-                let enabledKeys;
-                let customKeys;
 
-                if (targetSettings){
-                    enabledKeys = targetSettings.enabledKeys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
-                }
+                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
                 filteredCmcdData = {...filteredCmcdData, ...customKeys};
 
                 const options = _createCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
-    
+
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
@@ -268,7 +323,7 @@ function CmcdController() {
                 });
                 return headers;
             }
-    
+
             return null;
         } catch (e) {
             return null;
@@ -322,6 +377,7 @@ function CmcdController() {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
         const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
+
         const cmcdVersion = settings.get().streaming.cmcd.version;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
 
@@ -597,8 +653,6 @@ function CmcdController() {
             }
         }
 
-        
-
         return data;
     }
 
@@ -809,7 +863,8 @@ function CmcdController() {
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
-        if (isIncludedFilters && isCmcdEnabled()) {
+
+        if (isIncludedFilters && (targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
             const cmcdParameters = getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
@@ -852,19 +907,19 @@ function CmcdController() {
         let cmcdData = response.request.cmcd;
         
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((element) => element.mode === Constants.CMCD_MODE.RESPONSE);
-        responseModeTargets.forEach(element => {
-            if (element.enabled && _isIncludedInRequestFilter(requestType, element.includeOnRequests)){
+        const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
+        responseModeTargets.forEach(targetSettings => {
+            if (targetSettings.enabled && _isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();
-                httpRequest.url = element.url;
+                httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
-                httpRequest.cmcd = cmcdData;
-                const targetSettings = element;
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings);
+
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
         });
+        
         return response;
     }
 
@@ -891,6 +946,23 @@ function CmcdController() {
             }
         }
         return result;
+    }
+
+    function _getTargetSettingsEnabledKeys(targetSettings, cmcdData) {
+        let enabledKeys;
+        let customKeys
+
+        if (targetSettings) {
+            enabledKeys = targetSettings.enabledKeys;
+        
+            if (enabledKeys == null) {
+                enabledKeys = Constants.CMCD_AVAILABLE_KEYS.concat(Constants.CMCD_V2_AVAILABLE_KEYS);
+            }
+        
+            customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
+        }
+
+        return [enabledKeys, customKeys];
     }
 
     function reset() {
