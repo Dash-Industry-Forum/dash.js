@@ -67,10 +67,12 @@
         "fast-deep-equal": "2.0.1",
         "foodoc": "^0.0.9",
         "html-entities": "^1.2.1",
-        "imsc": "github:bbc/imscJS#v1.0.11-2",
         "localforage": "^1.7.1",
         "path-browserify": "^1.0.1",
         "ua-parser-js": "^1.0.2"
+    },
+    "peerDependencies": {
+        "imsc": "^1.1.4"
     },
     "repository": {
         "type": "git",
