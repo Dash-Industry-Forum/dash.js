@@ -911,6 +911,13 @@ var Constants = /*#__PURE__*/function () {
 
       this.LIVE_CATCHUP_MODE_LOLP = 'liveCatchupModeLoLP';
       /**
+       *  @constant {string} LIVE_CATCHUP_MODE_STEP Throughput calculation based on moof parsing
+       *  @memberof Constants#
+       *  @static
+       */
+
+      this.LIVE_CATCHUP_MODE_STEP = 'liveCatchupModeStep';
+      /**
        *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
        *  @memberof Constants#
        *  @static

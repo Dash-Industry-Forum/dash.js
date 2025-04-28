@@ -42,6 +42,11 @@ const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
 const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
 const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
 
+const CATCHUP_STEP_TUNING_MIN_LIMIT = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MAX = 1;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX = 1;
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
@@ -77,7 +82,7 @@ function MediaPlayerModel() {
      * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected min playback rate
      */
-    function _checkMinPlaybackRate (rate, log) {
+    function _checkMinPlaybackRate(rate, log) {
         if (isNaN(rate)) return 0;
         if (rate > 0) {
             if (log) {
@@ -100,7 +105,7 @@ function MediaPlayerModel() {
      * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected max playback rate
      */
-    function _checkMaxPlaybackRate (rate, log) {
+    function _checkMaxPlaybackRate(rate, log) {
         if (isNaN(rate)) return 0;
         if (rate < 0) {
             if (log) {
@@ -118,11 +123,35 @@ function MediaPlayerModel() {
     };
 
     /**
+     * Checks the supplied min value for the step algorithm is a valid value and within supported limits
+     * @param {number} value - Supplied min value (seconds)
+     * @param {boolean} log - whether to shown warning or not 
+     * @returns {number} corrected min playback rate
+     */
+    function _checkStepSettings(value, log) {
+        if (isNaN(value)) return 0;
+        if (value < 0) {
+            if (log) {
+                logger.warn(`Supplied step algorithm value is a negative value when it should be positive or 0. The supplied value will not be applied and set to 0.`)
+            }
+            return 0;
+        }
+        if (value < CATCHUP_STEP_TUNING_MIN_LIMIT) {
+            if (log) {
+                logger.warn(`Supplied step algorithm value is out of range and will be limited to ${CATCHUP_STEP_TUNING_MIN_LIMIT}`);
+            }
+            return CATCHUP_STEP_TUNING_MIN_LIMIT;
+        }
+        return value;
+    };
+
+
+    /**
      * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
      * @return {number}
      */
     function getCatchupMaxDrift() {
-        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift)) {
             return settings.get().streaming.liveCatchup.maxDrift;
         }
 
@@ -142,7 +171,7 @@ function MediaPlayerModel() {
     function getCatchupPlaybackRates(log) {
         const settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
 
-        if(!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+        if (!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
             return {
                 min: _checkMinPlaybackRate(settingsPlaybackRate.min, log),
                 max: _checkMaxPlaybackRate(settingsPlaybackRate.max, log),
@@ -161,6 +190,40 @@ function MediaPlayerModel() {
         return {
             min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
             max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+        }
+    }
+
+    /**
+     * Returns the tuning parameters to be used when applying the catchup mode "step"
+     * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
+     * @return {number}
+     */
+    function getCatchupStepSettings(log) {
+
+        const settingsStep = settings.get().streaming.liveCatchup.step;
+
+        if (!isNaN(settingsStep.start.min) || !isNaN(settingsStep.start.max) || !isNaN(settingsStep.stop.min) || !isNaN(settingsStep.stop.max)) {
+            return {
+                start: {
+                    min: _checkStepSettings(settingsStep.start.min, log),
+                    max: _checkStepSettings(settingsStep.start.max, log),
+                },
+                stop: {
+                    min: _checkStepSettings(settingsStep.stop.min, log),
+                    max: _checkStepSettings(settingsStep.stop.max, log),
+                }
+            }
+        }
+
+        return {
+            start: {
+                min: DEFAULT_CATCHUP_STEP_TUNING_START_MIN,
+                max: DEFAULT_CATCHUP_STEP_TUNING_START_MAX
+            },
+            stop: {
+                min: DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN,
+                max: DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX
+            }
         }
     }
 
@@ -184,18 +247,18 @@ function MediaPlayerModel() {
     function getAbrBitrateParameter(field, mediaType) {
         try {
             const setting = settings.get().streaming.abr[field][mediaType];
-            if(!isNaN(setting) && setting !== -1) {
+            if (!isNaN(setting) && setting !== -1) {
                 return setting;
             }
 
             const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            if(serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
+            if (serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
                 return serviceDescriptionSettings[field][mediaType];
             }
 
             return -1;
         }
-        catch(e) {
+        catch (e) {
             return -1;
         }
     }
@@ -267,6 +330,7 @@ function MediaPlayerModel() {
         getRetryAttemptsForType,
         getRetryIntervalsForType,
         getCatchupPlaybackRates,
+        getCatchupStepSettings,
         getAbrBitrateParameter,
         setConfig,
         reset

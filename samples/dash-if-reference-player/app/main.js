@@ -529,6 +529,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     };
 
+    $scope.updateMaxDrift = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    maxDrift: parseInt($scope.maxDrift)
+                }
+            }
+        });
+    };
+
+    $scope.updateLiveThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    liveThreshold: parseInt($scope.liveThreshold)
+                }
+            }
+        });
+    };
+    
     $scope.changeABRStrategy = function (strategy) {
         $scope.player.updateSettings({
             streaming: {
