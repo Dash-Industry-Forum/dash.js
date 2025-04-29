@@ -287,10 +287,20 @@ function CmcdController() {
         }
     }
 
+    function includeEventModeMandatoryKeys(enabledCMCDKeys) {
+
+        return enabledCMCDKeys.concat(Constants.CMCD_MANDATORY_KEYS);
+    }
+
     function _applyWhitelist(cmcdData, enabledKeys) {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+            let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+
+            if (cmcdData.e) {
+                enabledCMCDKeys = includeEventModeMandatoryKeys(enabledCMCDKeys)
+            }
+
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
@@ -624,6 +634,8 @@ function CmcdController() {
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
 
         data.sid = `${data.sid}`;
+
+        data.ts = Date.now();
 
         if (cid) {
             data.cid = `${cid}`;
