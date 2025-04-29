@@ -862,6 +862,19 @@ describe('MediaController', function () {
                 );
             });
 
+            it('should not select track with no role if other tracks have role not main, when disabled in Settings', function () {
+                settings.update({ 
+                    streaming: { 
+                        assumeDefaultRoleAsMain: false
+                    }
+                });
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [] }
+                );
+            });
+
             it('should select track based on selectionPriority, if provided, and disregard role main', function () {
                 testSelectInitialTrack(
                     'video',
