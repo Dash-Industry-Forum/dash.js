@@ -1772,6 +1772,7 @@ declare namespace dashjs {
             };
             ignoreSelectionPriority?: boolean;
             prioritizeRoleMain?: boolean;
+            assumeDefaultRoleAsMain?: boolean;
             selectionModeForInitialTrack?: TrackSelectionMode;
             fragmentRequestTimeout?: number;
             fragmentRequestProgressTimeout?: number;

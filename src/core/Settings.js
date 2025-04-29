@@ -190,6 +190,7 @@ import Events from './events/Events.js';
  *            },
  *            ignoreSelectionPriority: false,
  *            prioritizeRoleMain: true,
+ *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
@@ -1007,6 +1008,9 @@ import Events from './events/Events.js';
  *
  * @property {} [prioritizeRoleMain: true]
  * provide the option to disable prioritization of AdaptationSets with their Role set to Main
+ *
+ * @property {} [assumeDefaultRoleAsMain: true]
+ * when no Role descriptor is present, asume main per default
  * 
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
