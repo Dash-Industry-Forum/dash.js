@@ -1239,6 +1239,7 @@ function Settings() {
             },
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
+            assumeDefaultRoleAsMain: true,
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
