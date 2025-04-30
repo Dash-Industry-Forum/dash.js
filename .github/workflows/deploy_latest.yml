@@ -6,7 +6,7 @@ on:
             - 'master'
 
 jobs:
-    deploy_staging:
+    deploy_latest:
         if: github.repository == 'Dash-Industry-Forum/dash.js'
         uses: ./.github/workflows/deploy.yml
         with:

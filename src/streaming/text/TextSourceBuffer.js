@@ -339,8 +339,8 @@ function TextSourceBuffer(config) {
 
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
-                this.remove();
-                logger.error('TTML parser error: ' + e.message);
+                remove();
+                logger.error('TTML parser error: ' + e);
             }
         }
     }

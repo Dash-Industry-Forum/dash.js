@@ -26,7 +26,7 @@ jobs:
             -   name: Use Node.js
                 uses: actions/setup-node@v4
                 with:
-                    node-version: "18.x"
+                    node-version: "20.x"
             -   name: Install dependencies
                 run: npm install
             -   name: Run build
@@ -50,7 +50,7 @@ jobs:
                     done
             -   name: Copy to deploy directory for deployment
                 run: |
-                    mkdir ${{inputs.envname}}
+                    mkdir -p ${{inputs.envname}}
                     cp -R contrib dist samples ${{inputs.envname}}
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
@@ -59,4 +59,5 @@ jobs:
                     known_hosts: unnecessary
             -   name: Deploy with scp
                 run: |
+                    ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{ secrets.USER }}@${{ secrets.HOST }} "mkdir -p ${{ inputs.deploy_path }}/${{inputs.envname}}"
                     scp -r -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}

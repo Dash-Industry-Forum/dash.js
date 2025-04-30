@@ -120,7 +120,6 @@ function FragmentController(config) {
         chunk.end = chunk.start + chunk.duration;
         chunk.bytes = bytes;
         chunk.index = request.index;
-        chunk.quality = request.quality;
         chunk.representation = request.representation;
         chunk.endFragment = endFragment;
 

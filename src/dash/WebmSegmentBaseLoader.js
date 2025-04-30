@@ -344,7 +344,8 @@ function WebmSegmentBaseLoader() {
                 request: request,
                 url: media,
                 init: false,
-                mediaType: mediaType
+                mediaType: mediaType,
+                representation
             };
 
             request = _getFragmentRequest(info);

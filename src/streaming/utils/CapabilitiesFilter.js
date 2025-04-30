@@ -123,19 +123,44 @@ function CapabilitiesFilter() {
         if (!as.Representation || as.Representation.length === 0) {
             return;
         }
-        const configurations = [];
 
         as.Representation = as.Representation.filter((rep, i) => {
             const codec = adapter.getCodec(as, i, false);
-            const config = _createConfiguration(type, rep, codec);
+            const isMainCodecSupported = _isCodecSupported(type, rep, codec);
 
-            configurations.push(config);
-            const supported = capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
-            if (!supported) {
-                logger.debug(`[CapabilitiesFilter] Codec ${configurations[i].codec} not supported. Removing Representation with ID ${rep.id}`);
+            let isSupplementalCodecSupported = _isSupplementalCodecSupported(rep, type);
+            if (isSupplementalCodecSupported) {
+                logger.debug(`[CapabilitiesFilter] Codec supported. Upgrading codecs string of Representation with ID ${rep.id}`);
+                rep.codecs = rep[DashConstants.SUPPLEMENTAL_CODECS]
             }
-            return supported
+
+            if (!isMainCodecSupported && !isSupplementalCodecSupported) {
+                logger.warn(`[CapabilitiesFilter] Codec ${codec} not supported. Removing Representation with ID ${rep.id}`);
+            }
+
+            return isMainCodecSupported || isSupplementalCodecSupported;
         });
+    }
+
+    function _isSupplementalCodecSupported(rep, type) {
+        let isSupplementalCodecSupported = false;
+        const supplementalCodecs = adapter.getSupplementalCodecs(rep);
+
+        if (supplementalCodecs.length > 0) {
+            if (supplementalCodecs.length > 1) {
+                logger.warn(`[CapabilitiesFilter] Multiple supplemental codecs not supported; using the first in list`);
+            }
+            const supplementalCodec = supplementalCodecs[0];
+            isSupplementalCodecSupported = _isCodecSupported(type, rep, supplementalCodec);
+        }
+
+        return isSupplementalCodecSupported
+    }
+
+    function _isCodecSupported(type, rep, codec) {
+        const config = _createConfiguration(type, rep, codec);
+
+        return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
 
     function _getConfigurationsToCheck(manifest, type) {
@@ -151,12 +176,11 @@ function CapabilitiesFilter() {
                 if (adapter.getIsTypeOf(as, type)) {
                     as.Representation.forEach((rep, i) => {
                         const codec = adapter.getCodec(as, i, false);
-                        const config = _createConfiguration(type, rep, codec);
-                        const configString = JSON.stringify(config);
+                        _processCodecToCheck(type, rep, codec, configurationsSet, configurations);
 
-                        if (!configurationsSet.has(configString)) {
-                            configurationsSet.add(configString);
-                            configurations.push(config);
+                        const supplementalCodecs = adapter.getSupplementalCodecs(rep)
+                        if (supplementalCodecs.length > 0) {
+                            _processCodecToCheck(type, rep, supplementalCodecs[0], configurationsSet, configurations);
                         }
                     });
                 }
@@ -166,6 +190,15 @@ function CapabilitiesFilter() {
         return configurations;
     }
 
+    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations) {
+        const config = _createConfiguration(type, rep, codec);
+        const configString = JSON.stringify(config);
+
+        if (!configurationsSet.has(configString)) {
+            configurationsSet.add(configString);
+            configurations.push(config);
+        }
+    }
 
     function _createConfiguration(type, rep, codec) {
         let config = null;
@@ -188,7 +221,7 @@ function CapabilitiesFilter() {
             codec: codec,
             width: rep.width || null,
             height: rep.height || null,
-            framerate: rep.frameRate || null,
+            framerate: adapter.getFramerate(rep) || null,
             bitrate: rep.bandwidth || null,
             isSupported: true
         }
@@ -304,27 +337,38 @@ function CapabilitiesFilter() {
                     return true;
                 }
 
+                const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
+                const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
+
+                if (!doesSupportEssentialProperties) {
+                    return false;
+                }
+
                 as.Representation = as.Representation.filter((rep) => {
                     const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
-
-                    if (essentialProperties && essentialProperties.length > 0) {
-                        let i = 0;
-                        while (i < essentialProperties.length) {
-                            if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
-                                logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
-                                return false;
-                            }
-                            i += 1;
-                        }
-                    }
-
-                    return true;
+                    return _doesSupportEssentialProperties(essentialProperties);
                 });
 
                 return as.Representation && as.Representation.length > 0;
             });
         });
+    }
 
+    function _doesSupportEssentialProperties(essentialProperties) {
+        if (!essentialProperties || essentialProperties.length === 0) {
+            return true
+        }
+
+        let i = 0;
+        while (i < essentialProperties.length) {
+            if (!capabilities.supportsEssentialProperty(essentialProperties[i])) {
+                logger.debug('[Stream] EssentialProperty not supported: ' + essentialProperties[i].schemeIdUri);
+                return false;
+            }
+            i += 1;
+        }
+
+        return true
     }
 
     function _applyCustomFilters(manifest) {
@@ -418,7 +462,7 @@ function CapabilitiesFilter() {
 
     instance = {
         setConfig,
-        filterUnsupportedFeatures
+        filterUnsupportedFeatures,
     };
 
     setup();

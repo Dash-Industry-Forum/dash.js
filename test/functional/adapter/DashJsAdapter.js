@@ -1,7 +1,7 @@
 import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
-import {MediaPlayer, Debug} from '../../../dist/esm/dash.all.min.esm.js';
-import '../../../dist/dash.mss.min.js';
+import {MediaPlayer, Debug} from '../../../dist/modern/esm/dash.all.min.js';
+import '../../../dist/modern/esm/dash.mss.min.js';
 
 class DashJsAdapter {
 
@@ -572,7 +572,7 @@ class DashJsAdapter {
         })
     }
 
-    async waitForMediaSegmentDownload(timeoutValue) {
+    async waitForMediaSegmentDownload(timeoutValue, mediaType = 'all') {
         return new Promise((resolve) => {
             let timeout = null;
 
@@ -586,7 +586,7 @@ class DashJsAdapter {
                 _onComplete({});
             }
             const _onEvent = (e) => {
-                if (e.request.type === 'MediaSegment') {
+                if (e.request.type === 'MediaSegment' && (e.request.mediaType === mediaType || mediaType === 'all')) {
                     _onComplete(e);
                 }
             }
@@ -643,7 +643,7 @@ class DashJsAdapter {
 
             const _checkBuffer = () => {
                 const buffer = this.getBufferLengthByType();
-                if (buffer >= targetBuffer) {
+                if (buffer >= targetBuffer - tolerance) {
                     _onComplete(true);
                 }
             };

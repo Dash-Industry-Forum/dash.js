@@ -91,7 +91,7 @@ function ABRRulesCollection(config) {
             }
 
             if (rule.type === Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES) {
-                abandonFragmentRulesList.push(rule.rule(context).create());
+                abandonFragmentRules.push(rule.rule(context).create());
             }
         });
 
@@ -307,6 +307,11 @@ function ABRRulesCollection(config) {
         _updateRules()
     }
 
+    function handleNewMediaInfo(newMediaInfo) {
+        qualitySwitchRules.forEach(rule => rule.handleNewMediaInfo && rule.handleNewMediaInfo(newMediaInfo));
+        abandonFragmentRules.forEach(rule => rule.handleNewMediaInfo && rule.handleNewMediaInfo(newMediaInfo));
+    }
+
     instance = {
         clearDataForStream,
         getAbandonFragmentRules,
@@ -314,6 +319,7 @@ function ABRRulesCollection(config) {
         getBolaState,
         getMinSwitchRequest,
         getQualitySwitchRules,
+        handleNewMediaInfo,
         initialize,
         reset,
         setBolaState,
