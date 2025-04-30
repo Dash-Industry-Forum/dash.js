@@ -918,6 +918,7 @@ function CmcdController() {
     function _cmcdResponseModeInterceptor(response){
         const requestType = response.request.customData.request.type;
         let cmcdData = response.request.cmcd;
+        cmcdData = _addCmcdResponseModeData(response, cmcdData);
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
@@ -931,7 +932,6 @@ function CmcdController() {
                 _sendCmcdDataReport(httpRequest);
             }
         });
-        
         return response;
     }
 
@@ -944,6 +944,17 @@ function CmcdController() {
         });
 
         urlLoader.load({request})
+    }
+
+    function _addCmcdResponseModeData(response, cmcdData){
+        const responseModeData = {};
+        const requestType = response.request.customData.request.type;
+
+        if (requestType === HTTPRequest.MEDIA_SEGMENT_TYPE){
+            responseModeData.rc = response.status;
+        }
+
+        return {...cmcdData, ...responseModeData}
     }
 
     function _getCustomKeysValues(customKeysObj, currentKeys){
