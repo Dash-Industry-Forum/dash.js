@@ -75,7 +75,8 @@ function CmcdController() {
         _initialMediaRequestsDone,
         _playbackStartedTime,
         _msdSent,
-        urlLoader;
+        urlLoader,
+        _isSeeking;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -113,11 +114,12 @@ function CmcdController() {
             [MediaPlayerEvents.PLAYBACK_STARTED]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
             [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_REPORTING_EVENTS.PAUSED,
             [MediaPlayerEvents.PLAYBACK_PLAYING]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
-            [MediaPlayerEvents.PLAYBACK_SEEKING]: Constants.CMCD_REPORTING_EVENTS.SEEKING,
-            [MediaPlayerEvents.PLAYBACK_STALLED]: Constants.CMCD_REPORTING_EVENTS.REBUFFERING,
             [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_REPORTING_EVENTS.FATAL_ERROR,
             [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_REPORTING_EVENTS.ENDED
         };
+
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
     
         Object.entries(eventStateMap).forEach(([event, state]) => {
             eventBus.on(event, () => _onStateChange(state), instance);
@@ -780,7 +782,15 @@ function CmcdController() {
         }
     }
 
+    function _onPlaybackSeeking() {
+        _isSeeking = true;
+
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.PLAYBACK_SEEKING);
+    }
+
     function _onPlaybackSeeked() {
+        _isSeeking = false;
+
         for (let key in _bufferLevelStarved) {
             if (_bufferLevelStarved.hasOwnProperty(key)) {
                 _bufferLevelStarved[key] = true;
@@ -792,6 +802,14 @@ function CmcdController() {
                 _isStartup[key] = true;
             }
         }
+    }
+
+    function _onPlaybackWaiting() {
+        if (_isSeeking || !_playbackStartedTime) {
+            return;
+        }
+
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.REBUFFERING);
     }
 
     function _probeNextRequest(mediaType) {
@@ -995,6 +1013,9 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
         _resetInitialSettings();
     }
