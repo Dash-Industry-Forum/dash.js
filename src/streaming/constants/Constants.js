@@ -214,7 +214,12 @@ export default {
      *  @static
      */
     CMCD_MODE_HEADER: 'header',
-
+    /**
+     *  @constant {string} CMCD_MANDATORY_KEYS specifies all the mandatory keys for all CMCD modes (Event Mode, Request Mode & Response Mode).
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_MANDATORY_KEYS: ['ts'],
     /**
      *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
      *  @memberof Constants#
@@ -226,7 +231,7 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
+    CMCD_V2_AVAILABLE_KEYS: ['e', 'msd', 'ltc'],
 
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
@@ -244,6 +249,22 @@ export default {
         REQUEST: 'request',
         RESPONSE: 'response',
         EVENT: 'event'
+    },
+
+    /**
+     *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_REPORTING_EVENTS: {
+        START: 's',
+        PLAYING: 'p',
+        PAUSED : 'a',
+        SEEKING: 'k',
+        REBUFFERING: 'r',
+        FATAL_ERROR: 'f',
+        ENDED: 'e',
+        TIME_INTERVAL: 't'
     },
 
     INITIALIZE: 'initialize',

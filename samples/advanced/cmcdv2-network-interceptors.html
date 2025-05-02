@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CMCD Callbacks with Network Interceptors</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #trace {
+            height: 500px;
+            margin-top: 20px;
+            font-size: 10px;
+        }
+    </style>
+    <script>
+        function getKeysForQueryMode(cmcdString) {
+                var cmcdData = {};
+                var cmcdString = cmcdString;
+
+                extractKeyValuePairs(cmcdString, cmcdData);
+
+                return cmcdData;
+            }
+
+            function extractKeyValuePairs(cmcdString, cmcdData) {
+                if (cmcdString === '') {
+                    return;
+                }
+                var keyValuePairs = cmcdString.split(',');
+
+                keyValuePairs.forEach(function (keyValuePair) {
+                    var data = keyValuePair.split('=');
+                    var key = data[0];
+                    var value = data[1];
+
+                    cmcdData[key] = value;
+                })
+            }
+
+            function log(msg) {
+                msg = msg.length > 200 ? msg.substring(0, 200) + '...' : msg; /* to avoid repeated wrapping with large objects */
+                var tracePanel = document.getElementById('trace');
+                tracePanel.innerHTML += msg + '\n';
+                tracePanel.scrollTop = tracePanel.scrollHeight;
+            }
+    </script> 
+    <script class="code">
+        var CMCD_MODE_QUERY = 'query'; /* as query parameters */
+        var player;
+
+        function init() {
+            var video,
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+                version;
+
+            player = dashjs.MediaPlayer().create();
+            video = document.querySelector('video');
+            player.initialize();
+            version = player.getVersion();
+
+            player.updateSettings({
+                streaming: {
+                    cmcd: {
+                        enabled: true, /* enable reporting of cmcd parameters */
+                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
+                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
+                        mode: CMCD_MODE_QUERY,
+                        enabledKeys: ['cid', 'sid'],
+                        includeInRequests: ['segment', 'mpd'],
+                        targets: [
+                            {
+                                cmcdMode: 'response',
+                                enabled: true,
+                                url: 'http://example.com/report1',
+                                enabledKeys: ['ot'],
+                                includeOnRequests: ['mpd'],
+                            }
+                        ]
+                    }
+                }
+            });
+            player.setAutoPlay(false);
+            player.attachView(video);
+            player.attachSource(url);
+
+            /* Callback before report */
+            player.addRequestInterceptor((request) => {
+                if (request.customData.request.type == 'Response' && request.url.includes('http://example.com/report1')) {
+                    let customKey = 'synchronization-leader-sid';
+                    let customKeyValue = '123'
+                    let { cmcd } = request;
+                    if (cmcd) {
+                        /*  Add custom key to cmcd data */
+                        cmcd[customKey] = customKeyValue;
+                        /*  Add custom key to query parameters */
+                        let newParam = encodeURIComponent(`,${customKey}="${customKeyValue}"`);
+                        request.url += newParam;
+                    }
+                }
+                return Promise.resolve(request);
+            });
+
+            /* Callback after server response */
+            player.addResponseInterceptor((response) => {
+                request = response.request.customData.request;
+                if (request.type == 'Response' && request.url.includes('http://example.com/report1')) {
+                    console.log(request.cmcd);
+                }
+                return Promise.resolve(response);
+            });
+
+            const originalOpen = XMLHttpRequest.prototype.open;
+            XMLHttpRequest.prototype.open = function(method, url, ...rest) {
+                if (url.includes('example.com/report1')) {
+                    const queryString = decodeURIComponent(url.split('CMCD=')[1]);
+                    const data = getKeysForQueryMode(queryString);
+                    var keys = Object.keys(data);
+                    keys = keys.sort();
+                    for (var key of keys) {
+                        log(key.padEnd(4) + ': ' + data[key]);
+                    }
+                    log('');
+                }
+                return originalOpen.call(this, method, url, ...rest);
+            };
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>CMCD Reporting</h3>
+                    <p>This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-6">
+                <video controls="true"></video>
+            </div>
+            <div class="col-md-6">
+                <div class="form-floating">
+                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                              id="trace"></textarea>
+                    <label for="trace">CMCD Report Data</label>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

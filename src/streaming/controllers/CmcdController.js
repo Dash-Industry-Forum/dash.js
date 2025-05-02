@@ -76,7 +76,8 @@ function CmcdController() {
         _initialMediaRequestsDone,
         _playbackStartedTime,
         _msdSent,
-        urlLoader;
+        urlLoader,
+        _isSeeking;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -110,15 +111,16 @@ function CmcdController() {
 
     function _initializeEventModeListeners() {
         const eventStateMap = {
-            [MediaPlayerEvents.PLAYBACK_INITIALIZED]: 's',
-            [MediaPlayerEvents.PLAYBACK_STARTED]: 'p',
-            [MediaPlayerEvents.PLAYBACK_PAUSED]: 'a',
-            [MediaPlayerEvents.PLAYBACK_PLAYING]: 'p',
-            [MediaPlayerEvents.PLAYBACK_SEEKING]: 'k',
-            [MediaPlayerEvents.PLAYBACK_STALLED]: 'r',
-            [MediaPlayerEvents.PLAYBACK_ERROR]: 'f',
-            [MediaPlayerEvents.PLAYBACK_ENDED]: 'e'
+            [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_REPORTING_EVENTS.START,
+            [MediaPlayerEvents.PLAYBACK_STARTED]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
+            [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_REPORTING_EVENTS.PAUSED,
+            [MediaPlayerEvents.PLAYBACK_PLAYING]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
+            [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_REPORTING_EVENTS.FATAL_ERROR,
+            [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_REPORTING_EVENTS.ENDED
         };
+
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
     
         Object.entries(eventStateMap).forEach(([event, state]) => {
             eventBus.on(event, () => _onStateChange(state), instance);
@@ -127,10 +129,10 @@ function CmcdController() {
     
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval }) => {
             const triggerEventModeInterval = () => {
-                _onStateChange('t');
+                _onStateChange(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL);
                 setTimeout(triggerEventModeInterval, (timeInterval * 1000));
             }
             triggerEventModeInterval();
@@ -139,12 +141,23 @@ function CmcdController() {
     
     function _onStateChange(state) {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+        
+        if (eventModeTargets.length === 0) {
+            return;
+        }
+        
         const cmcdData = _getGenericCmcdData();
         cmcdData.e = state;
 
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
+                let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
+
+                if (!events.includes(state)) {
+                    return;
+                }
+
                 let httpRequest = new CmcdReportRequest();
 
                 httpRequest.url = targetSettings.url;
@@ -249,16 +262,10 @@ function CmcdController() {
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
-            if ((targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
+            if (targetSettings ? targetSettings.enabled : isCmcdEnabled()) {
 
                 cmcdData = cmcdData || getCmcdData(request);
-                let enabledKeys;
-                let customKeys;
-
-                if (targetSettings){
-                    enabledKeys = targetSettings.keys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
-                }
+                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
                 filteredCmcdData = {...filteredCmcdData, ...customKeys};              
@@ -267,6 +274,7 @@ function CmcdController() {
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
+                    requestType: request.type,
                     cmcdData,
                     cmcdString: finalPayloadString
                 });
@@ -282,10 +290,20 @@ function CmcdController() {
         }
     }
 
+    function includeEventModeMandatoryKeys(enabledCMCDKeys) {
+
+        return enabledCMCDKeys.concat(Constants.CMCD_MANDATORY_KEYS);
+    }
+
     function _applyWhitelist(cmcdData, enabledKeys) {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-            const enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+            let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+
+            if (cmcdData.e) {
+                enabledCMCDKeys = includeEventModeMandatoryKeys(enabledCMCDKeys)
+            }
+
             return Object.keys(cmcdData)
                 .filter(key => enabledCMCDKeys.includes(key))
                 .reduce((obj, key) => {
@@ -301,20 +319,15 @@ function CmcdController() {
         try {
             if (isCmcdEnabled()) {
                 cmcdData = cmcdData || getCmcdData(request);
-                let enabledKeys;
-                let customKeys;
 
-                if (targetSettings){
-                    enabledKeys = targetSettings.enabledKeys;
-                    customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
-                }
+                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
                 filteredCmcdData = {...filteredCmcdData, ...customKeys};
 
                 const options = _createCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
-    
+
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
                     url: request.url,
                     mediaType: request.mediaType,
@@ -323,7 +336,7 @@ function CmcdController() {
                 });
                 return headers;
             }
-    
+
             return null;
         } catch (e) {
             return null;
@@ -377,6 +390,7 @@ function CmcdController() {
         const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
         const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
         const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
+
         const cmcdVersion = settings.get().streaming.cmcd.version;
         const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
 
@@ -624,6 +638,8 @@ function CmcdController() {
 
         data.sid = `${data.sid}`;
 
+        data.ts = Date.now();
+
         if (cid) {
             data.cid = `${cid}`;
         }
@@ -651,8 +667,6 @@ function CmcdController() {
                 _msdSent = true;
             }
         }
-
-        
 
         return data;
     }
@@ -769,7 +783,15 @@ function CmcdController() {
         }
     }
 
+    function _onPlaybackSeeking() {
+        _isSeeking = true;
+
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.PLAYBACK_SEEKING);
+    }
+
     function _onPlaybackSeeked() {
+        _isSeeking = false;
+
         for (let key in _bufferLevelStarved) {
             if (_bufferLevelStarved.hasOwnProperty(key)) {
                 _bufferLevelStarved[key] = true;
@@ -781,6 +803,14 @@ function CmcdController() {
                 _isStartup[key] = true;
             }
         }
+    }
+
+    function _onPlaybackWaiting() {
+        if (_isSeeking || !_playbackStartedTime) {
+            return;
+        }
+
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.REBUFFERING);
     }
 
     function _probeNextRequest(mediaType) {
@@ -836,6 +866,7 @@ function CmcdController() {
         const requestType = commonMediaRequest.customData.request.type;
 
         if (!_isIncludedInRequestFilter(requestType)) {
+            commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
             return commonMediaRequest;
         }
 
@@ -872,6 +903,7 @@ function CmcdController() {
                 const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                request.headers = request.headers || {};
                 request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
             }
         }
@@ -905,16 +937,16 @@ function CmcdController() {
     function _cmcdResponseModeInterceptor(response){
         const requestType = response.request.customData.request.type;
         let cmcdData = response.request.cmcd;
-        
+        cmcdData = _addCmcdResponseModeData(response, cmcdData);
         const targets = settings.get().streaming.cmcd.targets
-        const responseModeTargets = targets.filter((target) => target.mode === Constants.CMCD_MODE.RESPONSE);
+        const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled && _isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
-
+                
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
@@ -930,8 +962,19 @@ function CmcdController() {
             mediaPlayerModel: mediaPlayerModel,
             errors: Errors,
         });
-        
+
         urlLoader.load({request})
+    }
+
+    function _addCmcdResponseModeData(response, cmcdData){
+        const responseModeData = {};
+        const requestType = response.request.customData.request.type;
+
+        if (requestType === HTTPRequest.MEDIA_SEGMENT_TYPE){
+            responseModeData.rc = response.status;
+        }
+
+        return {...cmcdData, ...responseModeData}
     }
 
     function _getCustomKeysValues(customKeysObj, currentKeys){
@@ -948,6 +991,23 @@ function CmcdController() {
         return result;
     }
 
+    function _getTargetSettingsEnabledKeys(targetSettings, cmcdData) {
+        let enabledKeys;
+        let customKeys
+
+        if (targetSettings) {
+            enabledKeys = targetSettings.enabledKeys;
+        
+            if (enabledKeys == null) {
+                enabledKeys = Constants.CMCD_AVAILABLE_KEYS.concat(Constants.CMCD_V2_AVAILABLE_KEYS);
+            }
+        
+            customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
+        }
+
+        return [enabledKeys, customKeys];
+    }
+
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
@@ -955,6 +1015,9 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
         _resetInitialSettings();
     }
