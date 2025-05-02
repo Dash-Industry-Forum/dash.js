@@ -758,9 +758,9 @@ declare namespace dashjs {
         dvbFontFamily?: string;
         dvbMimeType?: string;
         dvbUrl?: string;
-        id: string;
+        id?: string;
         schemeIdUri: string;
-        value: string;
+        value?: string;
     }
 
     export interface Event {
