@@ -2770,11 +2770,11 @@ declare namespace dashjs {
     }
 
     export interface MediaSettings {
-        accessibility?: any;
-        audioChannelConfiguration?: any[];
-        lang?: string;
-        role?: string;
-        viewpoint?: any;
+        accessibility?: DescriptorType | string;
+        audioChannelConfiguration?: DescriptorType  | string;
+        lang?: RegExp | string;
+        role?: DescriptorType | string;
+        viewpoint?: DescriptorType | string;
     }
 
     export class serviceDescriptions {
