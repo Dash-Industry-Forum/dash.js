@@ -133,20 +133,22 @@ function ExtUrlQueryInfoController() {
             };
             _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
 
-            period.AdaptationSet.forEach((adaptationSet) => {
-                const adaptationObject = {
-                    representation: []
-                };
-                _generateQueryParams(adaptationObject, adaptationSet, mpdUrlQuery, periodObject, DashConstants.ADAPTATION_SET);
+            if (!period.ImportedMPD) {
+                period.AdaptationSet.forEach((adaptationSet) => {
+                    const adaptationObject = {
+                        representation: []
+                    };
+                    _generateQueryParams(adaptationObject, adaptationSet, mpdUrlQuery, periodObject, DashConstants.ADAPTATION_SET);
 
-                adaptationSet.Representation.forEach((representation) => {
-                    const representationObject = {};
-                    _generateQueryParams(representationObject, representation, mpdUrlQuery, adaptationObject, DashConstants.REPRESENTATION);
+                    adaptationSet.Representation.forEach((representation) => {
+                        const representationObject = {};
+                        _generateQueryParams(representationObject, representation, mpdUrlQuery, adaptationObject, DashConstants.REPRESENTATION);
 
-                    adaptationObject.representation.push(representationObject);
+                        adaptationObject.representation.push(representationObject);
+                    });
+                    periodObject.adaptation.push(adaptationObject);
                 });
-                periodObject.adaptation.push(adaptationObject);
-            });
+            }
             mpdQueryStringInformation.period.push(periodObject);
         });
     }
