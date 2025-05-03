@@ -84,7 +84,11 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
+<<<<<<< HEAD
     "@svta/common-media-library": "^0.12.4",
+=======
+    "@svta/common-media-library": "^0.11.0",
+>>>>>>> 6b9c4a7f (task/cml-segement-template-util (#4711))
     "bcp-47-match": "^2.0.3",
     "bcp-47-normalize": "^2.3.0",
     "codem-isoboxer": "0.3.10",
