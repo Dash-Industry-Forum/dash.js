@@ -966,13 +966,18 @@ function CmcdController() {
 
     function _addCmcdResponseModeData(response, cmcdData){
         const responseModeData = {};
-        const requestType = response.request.customData.request.type;
+        const request = response.request.customData.request;
+        const requestType = request.type;
 
         if (requestType === HTTPRequest.MEDIA_SEGMENT_TYPE){
             responseModeData.rc = response.status;
         }
 
-        return {...cmcdData, ...responseModeData}
+        if (request.startDate && request.firstByteDate){
+            responseModeData.ttfb = request.firstByteDate - request.startDate;
+        }
+
+        return {...cmcdData, ...responseModeData};
     }
 
     function _getCustomKeysValues(customKeysObj, currentKeys){
