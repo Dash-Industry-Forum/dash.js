@@ -908,7 +908,6 @@ function CmcdController() {
         const data = {};
         const msd = internalData.msd;
 
-        // debugger;
         if (cmcdVersion === 2) {
             if (!_msdSent[mode] && !isNaN(msd)) {
                 data.msd = msd;
