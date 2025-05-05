@@ -720,31 +720,56 @@ describe('CmcdController', function () {
                     it('getHeadersParameters() should return cmcd v2 data if version is 2', function () {
                         const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                         const MEDIA_TYPE = 'video';
-        
-                        let request = {
+                        const TEST_URL = 'http://example.com/segment1.m4s';
+
+                        const request = {
                             type: REQUEST_TYPE,
-                            mediaType: MEDIA_TYPE
+                            mediaType: MEDIA_TYPE,
+                            url: TEST_URL,
+                            headers: {}
                         };
 
                         settings.update({
                             streaming: {
                                 cmcd: {
+                                    enabled: true,
                                     version: 2,
-                                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                                    mode: 'header',
+                                    enabledKeys: ['ltc','msd'],
+                                    includeInRequests: ['segment'],
+                                    targets: []
                                 }
                             }
                         });
-        
-                        let headers = cmcdController.getHeaderParameters(request);
-                        let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
-                        expect(metrics).to.have.property('ltc');
+
+                        const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                        expect(interceptor).to.be.a('function');
+
+                        // First request (before playback started): expect ltc but no msd
+                        const result1 = interceptor({
+                            url: TEST_URL,
+                            headers: {},
+                            customData: { request: { ...request } }
+                        });
+
+                        const reqMetrics1 = decodeCmcd(result1.headers[REQUEST_HEADER_NAME]);
+                        expect(reqMetrics1).to.have.property('ltc');
 
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-        
-                        headers = cmcdController.getHeaderParameters(request);
-                        metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
-                        expect(metrics).to.have.property('msd');
+
+                        // Second request (after playback): expect msd
+                        const result2 = interceptor({
+                            url: TEST_URL,
+                            headers: {},
+                            customData: { request: { ...request } }
+                        });
+
+                        const sessMetrics2 = decodeCmcd(result2.headers[SESSION_HEADER_NAME]);
+                        const reqMetrics2 = decodeCmcd(result2.headers[REQUEST_HEADER_NAME]);
+
+                        expect(sessMetrics2).to.have.property('msd');
+                        expect(reqMetrics2).to.have.property('ltc');
                     });
         
                     it('getHeadersParameters() should not return cmcd v2 data if the cmcd version is 1', function () {
@@ -1462,32 +1487,58 @@ describe('CmcdController', function () {
 
         describe('getQueryParameter() return CMCD v2 data correctly', () => {
             it('getQueryParameter() should return cmcd v2 data if the cmcd version is 2', function () {
-                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
-                const MEDIA_TYPE = 'video';
+                const CMCD_QUERY_KEY = 'CMCD';
+                const CMCD_MODE_QUERY = 'query';
+                const TEST_URL = 'https://example.com/video/segment1.m4s';
 
-                let request = {
-                    type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                const request = {
+                    type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video',
+                    url: TEST_URL,
+                    serviceLocation: 'cdn-B.example.com',
+                    representation: {
+                        mediaInfo: {
+                            id: 'videoAdaptationSet_2',
+                            type: 'video'
+                        }
+                    },
+                    headers: {},
+                    cmcd: {},
+                    customData: {}
                 };
 
                 settings.update({
                     streaming: {
                         cmcd: {
+                            enabled: true,
                             version: 2,
-                            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                            mode: CMCD_MODE_QUERY,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['ltc', 'msd', 'v'],
+                            targets: []
                         }
                     }
                 });
-                let parameters = cmcdController.getQueryParameter(request);
-                let metrics = decodeCmcd(parameters.value);
-                expect(metrics).to.have.property('ltc');
 
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
 
-                parameters = cmcdController.getQueryParameter(request);
-                metrics = decodeCmcd(parameters.value);
-                expect(metrics).to.have.property('msd');
+                const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                const updatedRequest = interceptor({
+                    url: request.url,
+                    headers: { ...request.headers },
+                    customData: { request }
+                });
+
+                const parsedUrl = new URL(updatedRequest.url);
+                const cmcdValue = parsedUrl.searchParams.get(CMCD_QUERY_KEY);
+
+                expect(updatedRequest.url).to.be.a('string').and.not.equal(TEST_URL);
+                expect(parsedUrl.searchParams.has(CMCD_QUERY_KEY)).to.be.true;
+                expect(cmcdValue).to.be.a('string').and.not.empty;
+
+                const decoded = decodeCmcd(cmcdValue);
+                expect(decoded).to.include.all.keys('ltc', 'msd');
             });
 
             it('getQueryParameter() sould not return cmcd v2 data if the cmcd version is 1', function () {
