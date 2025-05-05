@@ -773,34 +773,68 @@ describe('CmcdController', function () {
                     });
         
                     it('getHeadersParameters() should not return cmcd v2 data if the cmcd version is 1', function () {
-                        const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
-                        const MEDIA_TYPE = 'video';
-        
-                        let request = {
-                            type: REQUEST_TYPE,
-                            mediaType: MEDIA_TYPE
+                        const TEST_URL = 'https://example.com/video/segment3.m4s';
+                        const CMCD_HEADERS = ['CMCD-Object', 'CMCD-Request', 'CMCD-Session', 'CMCD-Status'];
+
+                        const request = {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            mediaType: 'video',
+                            url: TEST_URL,
+                            serviceLocation: 'cdn-D.example.com',
+                            representation: {
+                                mediaInfo: {
+                                    id: 'videoAdaptationSet_4',
+                                    type: 'video'
+                                }
+                            },
+                            headers: {},
+                            cmcd: {},
+                            customData: {}
                         };
-                        
+
                         settings.update({
                             streaming: {
                                 cmcd: {
+                                    version: 1,
+                                    mode: 'header',
                                     enabled: true,
-                                    version: 1
-                                },
-                                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                                    includeInRequests: ['segment'],
+                                    enabledKeys: ['sid', 'msd', 'ltc'], // v2 keys included but should be ignored
+                                    targets: []
+                                }
                             }
                         });
-        
-                        let headers = cmcdController.getHeaderParameters(request);
-                        let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
-                        expect(metrics).to.not.have.property('ltc');
-                
+
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-        
-                        headers = cmcdController.getHeaderParameters(request);
-                        metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
-                        expect(metrics).to.not.have.property('msd');
+
+                        const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                        const { headers } = interceptor({
+                            url: request.url,
+                            headers: { ...request.headers },
+                            customData: { request }
+                        });
+
+                        expect(headers).to.be.an('object');
+
+                        const hasCmcdHeader = CMCD_HEADERS.some(header => header in headers);
+                        expect(hasCmcdHeader).to.be.true;
+
+                        const combinedData = CMCD_HEADERS.reduce((acc, header) => {
+                            try {
+                                if (headers[header]) {
+                                    const decoded = decodeCmcd(headers[header]);
+                                    return { ...acc, ...decoded };
+                                }
+                            } catch (err) {
+                                console.warn(`Failed to decode ${header}:`, err);
+                            }
+                            return acc;
+                        }, {});
+
+                        expect(combinedData).to.have.property('sid'); // v1 field should be present
+                        expect(combinedData).to.not.have.property('ltc'); // v2-only key
+                        expect(combinedData).to.not.have.property('msd'); // v2-only key
                     });
                 });
 
@@ -1542,34 +1576,59 @@ describe('CmcdController', function () {
             });
 
             it('getQueryParameter() sould not return cmcd v2 data if the cmcd version is 1', function () {
-                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
-                const MEDIA_TYPE = 'video';
+                const TEST_URL = 'https://example.com/video/segment2.m4s';
+                const CMCD_QUERY_KEY = 'CMCD';
 
-                let request = {
-                    type: REQUEST_TYPE,
-                    mediaType: MEDIA_TYPE
+                const request = {
+                    type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                    mediaType: 'video',
+                    url: TEST_URL,
+                    serviceLocation: 'cdn-C.example.com',
+                    representation: {
+                        mediaInfo: {
+                            id: 'videoAdaptationSet_3',
+                            type: 'video'
+                        }
+                    },
+                    headers: {},
+                    cmcd: {},
+                    customData: {}
                 };
 
                 settings.update({
                     streaming: {
                         cmcd: {
-                            enabled: true,
                             version: 1,
-                            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                            mode: 'query',
+                            enabled: true,
+                            includeInRequests: ['segment'],
+                            enabledKeys: ['sid', 'msd', 'ltc'], // v2 keys included but should be filtered
+                            targets: []
                         }
                     }
                 });
 
-                let parameters = cmcdController.getQueryParameter(request);
-                let metrics = decodeCmcd(parameters.value);
-                expect(metrics).to.not.have.property('ltc');
-
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                 eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
 
-                parameters = cmcdController.getQueryParameter(request);
-                metrics = decodeCmcd(parameters.value);
-                expect(metrics).to.not.have.property('msd');
+                const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
+                const result = interceptor({
+                    url: request.url,
+                    headers: { ...request.headers },
+                    customData: { request }
+                });
+
+                const parsedUrl = new URL(result.url);
+                const cmcdValue = parsedUrl.searchParams.get(CMCD_QUERY_KEY);
+
+                expect(result.url).to.be.a('string').and.not.equal(TEST_URL);
+                expect(parsedUrl.searchParams.has(CMCD_QUERY_KEY)).to.be.true;
+                expect(cmcdValue).to.be.a('string').and.not.empty;
+
+                const decoded = decodeCmcd(cmcdValue);
+                expect(decoded).to.have.property('sid');
+                expect(decoded).to.not.have.property('ltc');
+                expect(decoded).to.not.have.property('msd');
             });
         });
 
