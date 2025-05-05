@@ -456,7 +456,11 @@ function CmcdController() {
         try {
             let cmcdData = null;
 
-            _updateLastMediaTypeRequest(request.type, request.mediaType);
+            
+            cmcdData = {
+                ..._updateLastMediaTypeRequest(request.type, request.mediaType),
+                ..._updateMsdData(Constants.CMCD_MODE.RESPONSE)
+            }
 
             if (_isIncludedInRequestFilter(request.type)) {
                 if (request.type === HTTPRequest.MPD_TYPE) {
@@ -869,7 +873,7 @@ function CmcdController() {
         return [_cmcdRequestModeInterceptor];
     }
 
-    function _cmcdRequestModeInterceptor(commonMediaRequest){
+    function _cmcdRequestModeInterceptor(commonMediaRequest) {
         const requestType = commonMediaRequest.customData.request.type;
 
         if (!_isIncludedInRequestFilter(requestType)) {
@@ -878,18 +882,23 @@ function CmcdController() {
         }
 
         const request = commonMediaRequest.customData.request;
-        _updateRequestUrlAndHeadersWithCmcd(request, null, null);
-
+    
+        const cmcdRequestData = {
+            ...getCmcdData(request),
+            ..._updateMsdData(Constants.CMCD_MODE.REQUEST)
+        };
+    
+        request.cmcd = cmcdRequestData;
+    
+        _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
+    
         commonMediaRequest = {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
-            customData: {request},
-            cmcd: {
-                ...getCmcdData(request),
-                ..._updateMsdData(Constants.CMCD_MODE.REQUEST)
-            }
-        }
+            customData: { request },
+            cmcd: cmcdRequestData
+        };
 
         return commonMediaRequest;
     }
@@ -964,8 +973,7 @@ function CmcdController() {
         const requestType = response.request.customData.request.type;
 
         let cmcdData = {
-            ...response.request.cmcd,
-            ..._updateMsdData(Constants.CMCD_MODE.RESPONSE)
+            ...response.request.cmcd
         };
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
