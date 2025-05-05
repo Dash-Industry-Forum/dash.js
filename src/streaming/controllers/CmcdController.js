@@ -139,16 +139,16 @@ function CmcdController() {
     }
     
     function _onStateChange(state) {
+        internalData.sta = state;
         const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
         
         if (eventModeTargets.length === 0) {
             return;
         }
-        
+
         const cmcdData = _getGenericCmcdData();
         cmcdData.e = state;
-
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
                 let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
@@ -655,6 +655,10 @@ function CmcdController() {
             data.sf = internalData.sf;
         }
 
+        if (internalData.sta) {
+            data.sta = internalData.sta;
+        }
+
         if (data.v === 2) {
             let ltc = playbackController.getCurrentLiveLatency() * 1000;
             if (!isNaN(ltc)) {
@@ -806,6 +810,7 @@ function CmcdController() {
 
     function _onPlaybackWaiting() {
         if (_isSeeking || !_playbackStartedTime) {
+            _onStateChange(Constants.CMCD_REPORTING_EVENTS.WAITING);
             return;
         }
 

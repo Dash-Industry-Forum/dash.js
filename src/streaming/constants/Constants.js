@@ -260,6 +260,7 @@ export default {
         START: 's',
         PLAYING: 'p',
         PAUSED : 'a',
+        WAITING: 'w',
         SEEKING: 'k',
         REBUFFERING: 'r',
         FATAL_ERROR: 'f',
