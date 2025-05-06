@@ -260,12 +260,21 @@ export default {
         START: 's',
         PLAYING: 'p',
         PAUSED : 'a',
-        WAITING: 'w',
         SEEKING: 'k',
         REBUFFERING: 'r',
         FATAL_ERROR: 'f',
         ENDED: 'e',
         TIME_INTERVAL: 't'
+    },
+
+    /**
+     *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key. sta key also matches some of the states on the reporting events.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_PLAYER_STATES: {
+        WAITING: 'w',
+        ENDED: 'e',
     },
 
     INITIALIZE: 'initialize',

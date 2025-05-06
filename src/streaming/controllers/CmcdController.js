@@ -809,8 +809,9 @@ function CmcdController() {
     }
 
     function _onPlaybackWaiting() {
+        _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
+        
         if (_isSeeking || !_playbackStartedTime) {
-            _onStateChange(Constants.CMCD_REPORTING_EVENTS.WAITING);
             return;
         }
 
