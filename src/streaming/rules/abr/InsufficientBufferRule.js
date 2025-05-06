@@ -126,6 +126,7 @@ function InsufficientBufferRule(config) {
         bufferStateDict = {};
         bufferStateDict[Constants.VIDEO] = { ignoreCount: segmentIgnoreCount };
         bufferStateDict[Constants.AUDIO] = { ignoreCount: segmentIgnoreCount };
+        bufferStateDict[Constants.ENHANCEMENT] = { ignoreCount: segmentIgnoreCount };
     }
 
     function _onPlaybackSeeking() {

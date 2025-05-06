@@ -25,6 +25,9 @@ class ObjectsHelper {
             },
             getRepresentation: () => {
                 return null
+            },
+            getAbrRepresentation: () => {
+                return null
             }
         }
     }
