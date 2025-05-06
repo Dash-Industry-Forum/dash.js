@@ -115,11 +115,11 @@ function CmcdController() {
             [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_REPORTING_EVENTS.PAUSED,
             [MediaPlayerEvents.PLAYBACK_PLAYING]: Constants.CMCD_REPORTING_EVENTS.PLAYING,
             [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_REPORTING_EVENTS.FATAL_ERROR,
-            [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_REPORTING_EVENTS.ENDED
         };
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+        eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
     
         Object.entries(eventStateMap).forEach(([event, state]) => {
             eventBus.on(event, () => _onStateChange(state), instance);
@@ -148,6 +148,10 @@ function CmcdController() {
         
         const cmcdData = _getGenericCmcdData();
         cmcdData.e = state;
+        
+        if (state == 'e') {
+            cmcdData.ec = internalData.ec;
+        }
 
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
@@ -239,6 +243,13 @@ function CmcdController() {
         }
 
         internalData.msd = Date.now() - _playbackStartedTime;
+    }
+
+    function _onPlayerError(errorData) {
+        debugger;
+        const errorCode = errorData.error.code ? errorData.error.code : 0
+        internalData.ec = errorCode;
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
     function _updateStreamProcessors() {

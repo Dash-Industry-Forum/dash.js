@@ -263,10 +263,9 @@ export default {
         SEEKING: 'k',
         REBUFFERING: 'r',
         FATAL_ERROR: 'f',
-        ENDED: 'e',
+        ERROR: 'e',
         TIME_INTERVAL: 't'
     },
-
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
