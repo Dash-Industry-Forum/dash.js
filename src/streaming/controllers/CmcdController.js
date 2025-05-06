@@ -77,7 +77,6 @@ function CmcdController() {
         _playbackStartedTime,
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.RESPONSE]: false,
             [Constants.CMCD_MODE.REQUEST]: false
         },
         urlLoader,
@@ -230,7 +229,6 @@ function CmcdController() {
         _playbackStartedTime = undefined;
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.RESPONSE]: false,
             [Constants.CMCD_MODE.REQUEST]: false
         }
         _updateStreamProcessors();
@@ -458,8 +456,7 @@ function CmcdController() {
 
             
             cmcdData = {
-                ..._updateLastMediaTypeRequest(request.type, request.mediaType),
-                ..._updateMsdData(Constants.CMCD_MODE.RESPONSE)
+                ..._updateLastMediaTypeRequest(request.type, request.mediaType)
             }
 
             if (_isIncludedInRequestFilter(request.type)) {
