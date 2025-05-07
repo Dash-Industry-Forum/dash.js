@@ -246,7 +246,6 @@ function CmcdController() {
     }
 
     function _onPlayerError(errorData) {
-        debugger;
         const errorCode = errorData.error.code ? errorData.error.code : 0
         internalData.ec = errorCode;
         _onStateChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
