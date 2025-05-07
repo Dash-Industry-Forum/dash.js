@@ -259,11 +259,11 @@ function CmcdController() {
     }
 
     function _onPlaybackPlaying() {
-        _updateMsdData();
+        _getMsdData();
         _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
     }
 
-    function _updateMsdData() {
+    function _getMsdData() {
         if (!_playbackStartedTime || internalData.msd) {
             return;
         }
