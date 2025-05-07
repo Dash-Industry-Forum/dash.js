@@ -269,7 +269,7 @@ export default {
         SEEKING: 'k',
         REBUFFERING: 'r',
         FATAL_ERROR: 'f',
-        ENDED: 'e',
+        ERROR: 'e',
         TIME_INTERVAL: 't'
     },
 
