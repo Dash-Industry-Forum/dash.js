@@ -269,7 +269,7 @@ export default {
     },
 
     /**
-     *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key. sta key also matches some of the states on the reporting events.
+     *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
      *  @memberof Constants#
      *  @static
      */
