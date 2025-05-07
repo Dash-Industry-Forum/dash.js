@@ -49,7 +49,7 @@
                         enabled: true, /* enable reporting of cmcd parameters */
                         sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
                         cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
-                                mode: CMCD_MODE_QUERY,
+                        mode: CMCD_MODE_QUERY,
                         enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
                     }
                 }
@@ -62,7 +62,7 @@
         function handleCmcdDataGeneratedEvent(event) {
             log('type: ' + event.mediaType);
             log('file: ' + event.url.split('/').pop())
-            var mode = event.mode;
+            var mode = player.getSettings().streaming.cmcd.mode;
             var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
             var keys = Object.keys(data);
             keys = keys.sort();
