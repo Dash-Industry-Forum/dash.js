@@ -276,10 +276,7 @@ function CmcdController() {
                     requestType: request.type,
                     cmcdData,
                     cmcdString: finalPayloadString,
-                }
-
-                if (targetSettings) {
-                    eventBusData.mode = targetSettings.mode
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
                 }
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
@@ -337,11 +334,8 @@ function CmcdController() {
                     url: request.url,
                     mediaType: request.mediaType,
                     cmcdData,
-                    headers
-                }
-
-                if (targetSettings){
-                    eventBusData.mode = targetSettings.mode
+                    headers,
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
                 }
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
@@ -882,8 +876,7 @@ function CmcdController() {
         }
 
         const request = commonMediaRequest.customData.request;
-        const targetSettings = settings.get().streaming.cmcd
-        _updateRequestUrlAndHeadersWithCmcd(request, null, targetSettings);
+        _updateRequestUrlAndHeadersWithCmcd(request, null, null);
 
         commonMediaRequest = {
             ...commonMediaRequest,
