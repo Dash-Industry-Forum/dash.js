@@ -281,13 +281,16 @@ function CmcdController() {
                 filteredCmcdData = {...filteredCmcdData, ...customKeys};              
                 const finalPayloadString = encodeCmcd(filteredCmcdData);
 
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
+                const eventBusData = {
                     url: request.url,
                     mediaType: request.mediaType,
                     requestType: request.type,
                     cmcdData,
-                    cmcdString: finalPayloadString
-                });
+                    cmcdString: finalPayloadString,
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
+                }
+
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
                 return {
                     key: CMCD_PARAM,
                     value: finalPayloadString
@@ -338,12 +341,15 @@ function CmcdController() {
                 const options = _createCmcdV2HeadersCustomMap();
                 const headers = toCmcdHeaders(filteredCmcdData, options);
 
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, {
+                const eventBusData = {
                     url: request.url,
                     mediaType: request.mediaType,
                     cmcdData,
-                    headers
-                });
+                    headers,
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
+                }
+
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
                 return headers;
             }
 
@@ -928,7 +934,8 @@ function CmcdController() {
 
         if (isIncludedFilters && (targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
             const cmcdParameters = getCmcdParametersFromManifest();
-            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
+            const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
                 request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
                 const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
@@ -981,7 +988,7 @@ function CmcdController() {
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
-                
+
                 _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
