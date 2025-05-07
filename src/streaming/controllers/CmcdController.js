@@ -312,8 +312,9 @@ function CmcdController() {
         try {
             const cmcdParametersFromManifest = getCmcdParametersFromManifest();
             let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
-
-            if (cmcdData.e) {
+            
+            const events_key = Constants.CMCD_V2_KEYS_NAME_MAPPING.EVENT
+            if (enabledCMCDKeys.includes(events_key) && cmcdData.e) {
                 enabledCMCDKeys = includeEventModeMandatoryKeys(enabledCMCDKeys)
             }
 
