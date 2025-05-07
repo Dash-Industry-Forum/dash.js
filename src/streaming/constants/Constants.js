@@ -263,14 +263,9 @@ export default {
      *  @static
      */
     CMCD_REPORTING_EVENTS: {
-        START: 's',
-        PLAYING: 'p',
-        PAUSED : 'a',
-        SEEKING: 'k',
-        REBUFFERING: 'r',
-        FATAL_ERROR: 'f',
         ERROR: 'e',
-        TIME_INTERVAL: 't'
+        TIME_INTERVAL: 't',
+        PLAY_STATE: 'ps'
     },
 
     /**
@@ -279,8 +274,14 @@ export default {
      *  @static
      */
     CMCD_PLAYER_STATES: {
+        STARTING: 's',
+        PLAYING: 'p',
+        SEEKING: 'k',
+        REBUFFERING: 'r',
+        PAUSED : 'a',
         WAITING: 'w',
         ENDED: 'e',
+        FATAL_ERROR: 'f',
     },
 
     INITIALIZE: 'initialize',
