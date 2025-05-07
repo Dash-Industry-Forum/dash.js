@@ -147,8 +147,7 @@ function CmcdController() {
     
     function _onStateChange(state) {
         internalData.sta = state;
-        internalData.e = Constants.CMCD_REPORTING_EVENTS.PLAY_STATE;
-        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
+        _onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
     function _onEventChange(state){
