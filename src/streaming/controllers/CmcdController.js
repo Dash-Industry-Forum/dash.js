@@ -107,8 +107,6 @@ function CmcdController() {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
 
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
-
         _initializeEventModeTimeInterval();
         _initializeEvenModeListeners();
         _initializePlaybackStateListeners();
@@ -117,16 +115,14 @@ function CmcdController() {
     function _initializePlaybackStateListeners() {
         const stateMap = {
             [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_PLAYER_STATES.STARTING,
-            [MediaPlayerEvents.PLAYBACK_STARTED]: Constants.CMCD_PLAYER_STATES.PLAYING,
-            [MediaPlayerEvents.PLAYBACK_PLAYING]: Constants.CMCD_PLAYER_STATES.PLAYING,
             [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_PLAYER_STATES.PAUSED,
             [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_PLAYER_STATES.FATAL_ERROR,
             [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_PLAYER_STATES.ENDED,
         };
 
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
-        
 
         Object.entries(stateMap).forEach(([event, state]) => {
             eventBus.on(event, () => _onStateChange(state), instance);
@@ -269,6 +265,7 @@ function CmcdController() {
         }
 
         internalData.msd = Date.now() - _playbackStartedTime;
+        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
     }
 
     function _onPlayerError(errorData) {
