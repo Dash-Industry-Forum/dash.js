@@ -95,7 +95,7 @@
 
             /* Callback before report */
             player.addRequestInterceptor((request) => {
-                if (request.customData.request.type == 'Response' && request.url.includes('http://example.com/report1')) {
+                if (request.customData.request.type == 'CmcdResponse' && request.url.includes('http://example.com/report1')) {
                     let customKey = 'synchronization-leader-sid';
                     let customKeyValue = '123'
                     let { cmcd } = request;
@@ -113,7 +113,7 @@
             /* Callback after server response */
             player.addResponseInterceptor((response) => {
                 request = response.request.customData.request;
-                if (request.type == 'Response' && request.url.includes('http://example.com/report1')) {
+                if (request.type == 'CmcdResponse' && request.url.includes('http://example.com/report1')) {
                     console.log(request.cmcd);
                 }
                 return Promise.resolve(response);
