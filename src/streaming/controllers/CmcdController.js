@@ -47,6 +47,7 @@ import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
+
 import URLLoader from '../net/URLLoader.js';
 import Errors from '../../core/errors/Errors.js';
 
@@ -74,7 +75,10 @@ function CmcdController() {
         _bufferLevelStarved,
         _initialMediaRequestsDone,
         _playbackStartedTime,
-        _msdSent,
+        _msdSent = {
+            [Constants.CMCD_MODE.EVENT]: false,
+            [Constants.CMCD_MODE.REQUEST]: false
+        },
         urlLoader,
         _isSeeking;
 
@@ -102,6 +106,7 @@ function CmcdController() {
         else {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
+
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
 
         _initializeEventModeTimeInterval();
@@ -146,8 +151,11 @@ function CmcdController() {
             return;
         }
         
-        const cmcdData = _getGenericCmcdData();
-        cmcdData.e = state;
+        const cmcdData = {
+            ..._getGenericCmcdData(),
+            ..._updateMsdData(Constants.CMCD_MODE.EVENT),
+            e:state
+        };
 
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
@@ -219,7 +227,10 @@ function CmcdController() {
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
-        _msdSent = false;
+        _msdSent = {
+            [Constants.CMCD_MODE.EVENT]: false,
+            [Constants.CMCD_MODE.REQUEST]: false
+        }
         _updateStreamProcessors();
     }
 
@@ -443,7 +454,10 @@ function CmcdController() {
         try {
             let cmcdData = null;
 
-            _updateLastMediaTypeRequest(request.type, request.mediaType);
+            
+            cmcdData = {
+                ..._updateLastMediaTypeRequest(request.type, request.mediaType)
+            }
 
             if (_isIncludedInRequestFilter(request.type)) {
                 if (request.type === HTTPRequest.MPD_TYPE) {
@@ -660,11 +674,6 @@ function CmcdController() {
             if (!isNaN(ltc)) {
                 data.ltc = ltc;
             }
-            const msd = internalData.msd;
-            if (!_msdSent && !isNaN(msd)) {
-                data.msd = msd;
-                _msdSent = true;
-            }
         }
 
         return data;
@@ -861,7 +870,7 @@ function CmcdController() {
         return [_cmcdRequestModeInterceptor];
     }
 
-    function _cmcdRequestModeInterceptor(commonMediaRequest){
+    function _cmcdRequestModeInterceptor(commonMediaRequest) {
         const requestType = commonMediaRequest.customData.request.type;
 
         if (!_isIncludedInRequestFilter(requestType)) {
@@ -870,17 +879,40 @@ function CmcdController() {
         }
 
         const request = commonMediaRequest.customData.request;
-        _updateRequestUrlAndHeadersWithCmcd(request, null, null);
-
+    
+        const cmcdRequestData = {
+            ...getCmcdData(request),
+            ..._updateMsdData(Constants.CMCD_MODE.REQUEST)
+        };
+    
+        request.cmcd = cmcdRequestData;
+    
+        _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
+    
         commonMediaRequest = {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
-            customData: {request},
-            cmcd: getCmcdData(request)
-        }
+            customData: { request },
+            cmcd: cmcdRequestData
+        };
 
         return commonMediaRequest;
+    }
+
+    function _updateMsdData(mode) {
+        const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
+        const data = {};
+        const msd = internalData.msd;
+
+        if (cmcdVersion === 2) {
+            if (!_msdSent[mode] && !isNaN(msd)) {
+                data.msd = msd;
+                _msdSent[mode] = true;
+            }
+        }
+    
+        return data;
     }
 
     /**
@@ -935,7 +967,11 @@ function CmcdController() {
 
     function _cmcdResponseModeInterceptor(response){
         const requestType = response.request.customData.request.type;
-        let cmcdData = response.request.cmcd;
+
+        let cmcdData = {
+            ...response.request.cmcd
+        };
+
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
@@ -950,6 +986,7 @@ function CmcdController() {
                 _sendCmcdDataReport(httpRequest);
             }
         });
+        
         return response;
     }
 
