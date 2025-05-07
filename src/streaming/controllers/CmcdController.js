@@ -259,12 +259,16 @@ function CmcdController() {
     }
 
     function _onPlaybackPlaying() {
+        _updateMsdData();
+        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
+    }
+
+    function _updateMsdData() {
         if (!_playbackStartedTime || internalData.msd) {
             return;
         }
 
         internalData.msd = Date.now() - _playbackStartedTime;
-        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
     }
 
     function _onPlayerError(errorData) {
