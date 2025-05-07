@@ -785,7 +785,7 @@ function CmcdController() {
     function _onPlaybackSeeking() {
         _isSeeking = true;
 
-        _onStateChange(Constants.CMCD_REPORTING_EVENTS.PLAYBACK_SEEKING);
+        _onStateChange(Constants.CMCD_REPORTING_EVENTS.SEEKING);
     }
 
     function _onPlaybackSeeked() {
