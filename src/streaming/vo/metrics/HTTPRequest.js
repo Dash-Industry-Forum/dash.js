@@ -179,8 +179,8 @@ HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.LICENSE = 'license';
 HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
-HTTPRequest.CMCD_RESPONSE = 'Response';
-HTTPRequest.CMCD_EVENT = 'Event';
+HTTPRequest.CMCD_RESPONSE = 'CmcdResponse';
+HTTPRequest.CMCD_EVENT = 'CmcdEvent';
 HTTPRequest.OTHER_TYPE = 'other';
 
 export {HTTPRequest, HTTPRequestTrace};
