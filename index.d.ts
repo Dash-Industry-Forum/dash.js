@@ -5,7 +5,7 @@ import {
     ResponseInterceptor
 } from '@svta/common-media-library/request'
 
-export = dashjs;
+export default dashjs;
 export as namespace dashjs;
 
 declare namespace dashjs {
