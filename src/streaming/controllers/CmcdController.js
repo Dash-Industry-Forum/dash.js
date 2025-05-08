@@ -77,7 +77,8 @@ function CmcdController() {
         _playbackStartedTime,
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false
+            [Constants.CMCD_MODE.REQUEST]: false,
+            [Constants.CMCD_MODE.RESPONSE]: false,
         },
         urlLoader,
         _isSeeking;
@@ -926,7 +927,7 @@ function CmcdController() {
             ...getCmcdData(request),
             ..._updateMsdData(Constants.CMCD_MODE.REQUEST)
         };
-    
+
         request.cmcd = cmcdRequestData;
     
         _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
@@ -946,7 +947,7 @@ function CmcdController() {
         const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
         const data = {};
         const msd = internalData.msd;
-
+        
         if (cmcdVersion === 2) {
             if (!_msdSent[mode] && !isNaN(msd)) {
                 data.msd = msd;
@@ -1012,7 +1013,8 @@ function CmcdController() {
         const requestType = response.request.customData.request.type;
 
         let cmcdData = {
-            ...response.request.cmcd
+            ...response.request.cmcd,
+            ..._updateMsdData(Constants.CMCD_MODE.RESPONSE)
         };
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
