@@ -946,7 +946,7 @@ function CmcdController() {
         const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
         const data = {};
         const msd = internalData.msd;
-        
+
         if (cmcdVersion === 2) {
             if (!_msdSent[mode] && !isNaN(msd)) {
                 data.msd = msd;
