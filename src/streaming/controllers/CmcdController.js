@@ -166,6 +166,7 @@ function CmcdController() {
         const cmcdData = {
             ..._getGenericCmcdData(),
             ..._updateMsdData(Constants.CMCD_MODE.EVENT),
+            e: event
         };
 
         if (event == 'e') {
