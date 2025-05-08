@@ -77,8 +77,7 @@ function CmcdController() {
         _playbackStartedTime,
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false,
-            [Constants.CMCD_MODE.RESPONSE]: false,
+            [Constants.CMCD_MODE.REQUEST]: false
         },
         urlLoader,
         _isSeeking;
@@ -1014,7 +1013,6 @@ function CmcdController() {
 
         let cmcdData = {
             ...response.request.cmcd,
-            ..._updateMsdData(Constants.CMCD_MODE.RESPONSE)
         };
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
