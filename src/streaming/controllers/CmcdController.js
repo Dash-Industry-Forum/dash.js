@@ -298,7 +298,7 @@ function CmcdController() {
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
-            if (targetSettings ? targetSettings.enabled : isCmcdEnabled()) {
+            if (isCmcdEnabled(targetSettings)) {
 
                 cmcdData = cmcdData || getCmcdData(request);
                 let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
@@ -357,7 +357,7 @@ function CmcdController() {
 
     function getHeaderParameters(request, cmcdData, targetSettings) {
         try {
-            if (isCmcdEnabled()) {
+            if (isCmcdEnabled(targetSettings)) {
                 cmcdData = cmcdData || getCmcdData(request);
 
                 let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
@@ -386,9 +386,14 @@ function CmcdController() {
         }
     }
 
-    function isCmcdEnabled() {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
+    function isCmcdEnabled(targetSettings) {
+        if (targetSettings) {
+            return _targetCanBeEnabled(targetSettings) && _checkTargetIncludeInRequests(targetSettings) && _checkTargetAvailableKeys(targetSettings);
+        }
+        else {
+            const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+            return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
+        }
     }
 
     function _canBeEnabled(cmcdParametersFromManifest) {
@@ -443,6 +448,54 @@ function CmcdController() {
         }
         invalidKeys.map((k) => {
             logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
+        });
+
+        return true;
+    }
+
+    function _targetCanBeEnabled(targetSettings) {
+        return targetSettings?.enabled;
+    }
+
+    function _checkTargetIncludeInRequests(targetSettings) {
+
+        let enabledRequests = targetSettings?.includeInRequests;
+
+        if (!enabledRequests) {
+            return true;
+        }
+
+        if (targetSettings.version) {
+            enabledRequests = targetSettings.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
+        }
+
+        const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
+        const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+
+        if (invalidRequests.length === enabledRequests.length) {
+            logger.error(`None of the request types are supported.`);
+            return false;
+        }
+
+        invalidRequests.map((k) => {
+            logger.warn(`request type ${k} is not supported.`);
+        });
+
+        return true;
+    }
+
+    function _checkTargetAvailableKeys(targetSettings) {
+        const defaultV2AvailableKeys = Constants.CMCD_V2_AVAILABLE_KEYS;
+        const enabledCMCDKeys = targetSettings.enabledKeys;
+
+        const invalidKeys = enabledCMCDKeys.filter(k => !defaultV2AvailableKeys.includes(k));
+
+        if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
+            logger.error(`None of the keys are implemented for CMCD version 2.`);
+            return false;
+        }
+        invalidKeys.map((k) => {
+            logger.warn(`key parameter ${k} is not implemented for CMCD version 2.`);
         });
 
         return true;
@@ -969,7 +1022,7 @@ function CmcdController() {
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
 
-        if (isIncludedFilters && (targetSettings ? targetSettings.enabled : isCmcdEnabled())) {
+        if (isIncludedFilters && (isCmcdEnabled(targetSettings))) {
             const cmcdParameters = getCmcdParametersFromManifest();
             const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
