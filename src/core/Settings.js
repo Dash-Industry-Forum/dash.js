@@ -959,9 +959,9 @@ import Events from './events/Events.js';
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
- * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
- * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [parseInbandPrft=false]
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
