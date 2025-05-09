@@ -1007,10 +1007,10 @@ import Events from './events/Events.js';
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
  * @property {} [prioritizeRoleMain: true]
- * provide the option to disable prioritization of AdaptationSets with their Role set to Main
+ * provides the option to disable prioritization of AdaptationSets with their Role set to Main
  *
  * @property {} [assumeDefaultRoleAsMain: true]
- * when no Role descriptor is present, asume main per default
+ * when no Role descriptor is present, assume main per default
  * 
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:

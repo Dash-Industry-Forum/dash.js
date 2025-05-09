@@ -410,8 +410,8 @@ function MediaController() {
             return tracksAfterMatcher;
         }
 
-        if (filterFn == matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} )) {
-            logger.info('no track with Role set to main - asuming main as default and searching again');
+        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} )) {
+            logger.info('no track with Role set to main - assuming main as default and searching again');
             tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
             if (tracksAfterMatcher.length !== 0) {
                 return tracksAfterMatcher;
@@ -703,7 +703,7 @@ function MediaController() {
                 logger.info('Trying to find track with highest selectionPriority');
                 tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
             }
-            if (settings.get().streaming.prioritizeRoleMain) {
+            if (tmpArr.length > 1 && settings.get().streaming.prioritizeRoleMain) {
                 logger.info('Trying to find a main track');
                 tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {role: {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} });
             }
