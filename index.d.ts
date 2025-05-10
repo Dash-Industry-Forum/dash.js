@@ -1771,6 +1771,8 @@ declare namespace dashjs {
                 audio?: TrackSwitchMode;
             };
             ignoreSelectionPriority?: boolean;
+            prioritizeRoleMain?: boolean;
+            assumeDefaultRoleAsMain?: boolean;
             selectionModeForInitialTrack?: TrackSelectionMode;
             fragmentRequestTimeout?: number;
             fragmentRequestProgressTimeout?: number;
