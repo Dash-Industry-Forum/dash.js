@@ -1011,7 +1011,7 @@ function Settings() {
                 imsc: {
                     displayForcedOnlyMode: false,
                     enableRollUp: true,
-                    options: null,
+                    options: {},
                 },
                 webvtt: {
                     customRenderingEnabled: false
