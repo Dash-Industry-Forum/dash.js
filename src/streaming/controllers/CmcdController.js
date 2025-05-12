@@ -465,10 +465,6 @@ function CmcdController() {
             return true;
         }
 
-        if (targetSettings.version) {
-            enabledRequests = targetSettings.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
-        }
-
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
 
