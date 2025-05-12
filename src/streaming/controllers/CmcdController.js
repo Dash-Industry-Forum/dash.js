@@ -454,7 +454,8 @@ function CmcdController() {
     }
 
     function _targetCanBeEnabled(targetSettings) {
-        return targetSettings?.enabled;
+        const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
+        return (cmcdVersion === 2 && targetSettings?.enabled);
     }
 
     function _checkTargetIncludeInRequests(targetSettings) {
