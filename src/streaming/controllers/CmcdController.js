@@ -332,8 +332,14 @@ function CmcdController() {
     }
 
     function includeEventModeMandatoryKeys(enabledCMCDKeys) {
+        Constants.CMCD_MANDATORY_KEYS.forEach(key => {
+            if (!enabledCMCDKeys.includes(key)) {
+                enabledCMCDKeys.push(key);
+                logger.warn(`Including mandatory key ${key} that was not present.`);
+            }
+        });
 
-        return enabledCMCDKeys.concat(Constants.CMCD_MANDATORY_KEYS);
+        return enabledCMCDKeys;
     }
 
     function _applyWhitelist(cmcdData, enabledKeys) {
