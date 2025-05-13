@@ -1146,6 +1146,10 @@ function CmcdController() {
             responseModeData.ttlb = request.endDate - request.startDate
         }
 
+        if (request.url) {
+            responseModeData.url = request.url
+        }
+
         return {...cmcdData, ...responseModeData};
     }
 
