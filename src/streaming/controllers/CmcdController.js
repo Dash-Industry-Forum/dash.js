@@ -87,6 +87,8 @@ function CmcdController() {
     let settings = Settings(context).getInstance();
     let debug = Debug(context).getInstance();
 
+    const _loggedCmcdModeErrors = new Set();
+
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
         clientDataReportingController = ClientDataReportingController(context).getInstance();
@@ -489,11 +491,18 @@ function CmcdController() {
         const invalidKeys = enabledCMCDKeys.filter(k => !cmcdAvailableKeysForMode.includes(k));
 
         if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
+            const mode = targetSettings.cmcdMode;
+            if (!_loggedCmcdModeErrors.has(mode)) {
+                logger.error(`None of the keys are implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
+                _loggedCmcdModeErrors.add(mode);
+            }
             return false;
         }
         invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
+            if (!_loggedCmcdModeErrors.has(k)) {
+                logger.warn(`key parameter ${k} is not implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
+                _loggedCmcdModeErrors.add(k);
+            }
         });
 
         return true;
