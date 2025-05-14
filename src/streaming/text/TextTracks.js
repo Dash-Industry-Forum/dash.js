@@ -411,12 +411,22 @@ function TextTracks(config) {
         if (captionContainer) {
             const finalCue = document.createElement('div');
             captionContainer.appendChild(finalCue);
-            previousISDState = renderHTML(cue.isd, finalCue, function (src) {
-                return _resolveImageSrc(cue, src);
-            }, captionContainer.clientHeight, captionContainer.clientWidth, false/*displayForcedOnlyMode*/, function (err) {
-                logger.info('renderCaption :', err);
-                //TODO add ErrorHandler management
-            }, previousISDState, true /*enableRollUp*/);
+            previousISDState = renderHTML(
+                cue.isd,
+                finalCue,
+                function (src) {
+                    return _resolveImageSrc(cue, src)
+                },
+                captionContainer.clientHeight,
+                captionContainer.clientWidth,
+                settings.get().streaming.text.imsc.displayForcedOnlyMode,
+                function (err) {
+                    logger.info('renderCaption :', err) /*TODO: add ErrorHandler management*/
+                },
+                previousISDState,
+                settings.get().streaming.text.imsc.enableRollUp,
+                settings.get().streaming.text.imsc.options
+            );
             finalCue.id = cue.cueID;
             eventBus.trigger(MediaPlayerEvents.CAPTION_RENDERED, { captionDiv: finalCue, currentTrackIdx });
         }

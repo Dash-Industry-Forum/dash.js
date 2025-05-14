@@ -502,6 +502,18 @@
                 ]
             },
             {
+                "title": "TTML EBU caption styling",
+                "description": "Example showing content with TTML captions and the ability to adjust their style.",
+                "href": "captioning/ttml-ebutt-styling.html",
+                "image": "lib/img/elephant-1.jpg",
+                "labels": [
+                    "VoD",
+                    "Fragmented text",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "WebVTT Custom Rendering",
                 "description": "This example shows how content with VTT captions can be played back by the dash.js player using the external vtt.js library. This enables VTT support on devices that do not provide native VTT support.",
                 "href": "captioning/vttjs.html",
