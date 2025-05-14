@@ -78,6 +78,10 @@ function CustomParametersModel() {
         _resetInitialSettings();
     }
 
+    function resetPlaybackSessionSpecificSettings() {
+        externalSubtitles = new Set();
+    }
+
     function setConfig() {
 
     }
@@ -334,11 +338,11 @@ function CustomParametersModel() {
     }
 
     function addExternalSubtitle(externalSubtitleObj) {
-        if (!externalSubtitleObj || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
-            throw new Error('Invalid external subtitle');
+        if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
+            return
         }
         const externalSubtitle = new ExternalSubtitle(externalSubtitleObj);
-        if (!_hasExternalSubtitleByUrl(externalSubtitle.url)) {
+        if (!_hasExternalSubtitleByKeyValue('url', externalSubtitle.url) && !_hasExternalSubtitleByKeyValue('id', externalSubtitle.id)) {
             externalSubtitles.add(externalSubtitle);
         }
     }
@@ -351,10 +355,18 @@ function CustomParametersModel() {
         })
     }
 
-    function _hasExternalSubtitleByUrl(url) {
+    function removeExternalSubtitleById(id) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.id === id) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function _hasExternalSubtitleByKeyValue(key, value) {
         let found = false;
         externalSubtitles.forEach((externalSubtitle) => {
-            if (externalSubtitle.url === url) {
+            if (externalSubtitle[key] === value) {
                 found = true;
             }
         });
@@ -454,12 +466,14 @@ function CustomParametersModel() {
         registerLicenseResponseFilter,
         removeAbrCustomRule,
         removeAllAbrCustomRule,
+        removeExternalSubtitleById,
         removeExternalSubtitleByUrl,
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
         reset,
         resetCustomInitialTrackSelectionFunction,
+        resetPlaybackSessionSpecificSettings,
         restoreDefaultUTCTimingSources,
         setConfig,
         setCustomInitialTrackSelectionFunction,
