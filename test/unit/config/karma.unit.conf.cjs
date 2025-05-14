@@ -10,7 +10,7 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai', 'webpack'],
 
         plugins: [
-            'karma-*',  // default plugins
+            'karma-*', // default plugins
             '@*/karma-*', // default scoped plugins
         ],
 
@@ -73,16 +73,16 @@ module.exports = function (config) {
                         test: /\.js$/,
                         use: [
                             {
-                                loader: "babel-loader",
+                                loader: 'babel-loader',
                                 options: {
-                                    plugins: ["istanbul"]
+                                    plugins: ['istanbul']
                                 }
                             }
                         ]
                     }
                 ]
             },
-            mode: "development",
+            mode: 'development',
             cache: false,
             resolve: {
                 fallback: {
