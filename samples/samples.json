@@ -502,8 +502,8 @@
                 ]
             },
             {
-                "title": "TTML EBU caption styling",
-                "description": "Example showing content with TTML captions and the ability to adjust their style.",
+                "title": "EBU-TT-D TTML Caption Styling",
+                "description": "Example showing content with EBU-TT-D TTML captions and the ability to adjust their style.",
                 "href": "captioning/ttml-ebutt-styling.html",
                 "image": "lib/img/elephant-1.jpg",
                 "labels": [
