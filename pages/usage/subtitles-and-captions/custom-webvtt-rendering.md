@@ -3,7 +3,6 @@ layout: default
 title: Custom WebVTT Rendering
 parent: Subtitles & Captions
 grand_parent: Usage
-nav_order: 0
 ---
 
 # Description
