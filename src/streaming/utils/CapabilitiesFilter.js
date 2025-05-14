@@ -172,19 +172,21 @@ function CapabilitiesFilter() {
         const configurations = [];
 
         manifest.Period.forEach((period) => {
-            period.AdaptationSet.forEach((as) => {
-                if (adapter.getIsTypeOf(as, type)) {
-                    as.Representation.forEach((rep, i) => {
-                        const codec = adapter.getCodec(as, i, false);
-                        _processCodecToCheck(type, rep, codec, configurationsSet, configurations);
+            if (!period.ImportedMPD) {
+                period.AdaptationSet.forEach((as) => {
+                    if (adapter.getIsTypeOf(as, type)) {
+                        as.Representation.forEach((rep, i) => {
+                            const codec = adapter.getCodec(as, i, false);
+                            _processCodecToCheck(type, rep, codec, configurationsSet, configurations);
 
-                        const supplementalCodecs = adapter.getSupplementalCodecs(rep)
-                        if (supplementalCodecs.length > 0) {
-                            _processCodecToCheck(type, rep, supplementalCodecs[0], configurationsSet, configurations);
-                        }
-                    });
-                }
-            });
+                            const supplementalCodecs = adapter.getSupplementalCodecs(rep)
+                            if (supplementalCodecs.length > 0) {
+                                _processCodecToCheck(type, rep, supplementalCodecs[0], configurationsSet, configurations);
+                            }
+                        });
+                    }
+                });
+            }
         });
 
         return configurations;
@@ -331,26 +333,28 @@ function CapabilitiesFilter() {
         }
 
         manifest.Period.forEach((period) => {
-            period.AdaptationSet = period.AdaptationSet.filter((as) => {
+            if (!period.ImportedMPD) {
+                period.AdaptationSet = period.AdaptationSet.filter((as) => {
 
-                if (!as.Representation || as.Representation.length === 0) {
-                    return true;
-                }
+                    if (!as.Representation || as.Representation.length === 0) {
+                        return true;
+                    }
 
-                const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
-                const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
+                    const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
+                    const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
 
-                if (!doesSupportEssentialProperties) {
-                    return false;
-                }
+                    if (!doesSupportEssentialProperties) {
+                        return false;
+                    }
 
-                as.Representation = as.Representation.filter((rep) => {
-                    const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
-                    return _doesSupportEssentialProperties(essentialProperties);
+                    as.Representation = as.Representation.filter((rep) => {
+                        const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
+                        return _doesSupportEssentialProperties(essentialProperties);
+                    });
+
+                    return as.Representation && as.Representation.length > 0;
                 });
-
-                return as.Representation && as.Representation.length > 0;
-            });
+            }
         });
     }
 
