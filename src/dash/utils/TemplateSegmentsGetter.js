@@ -28,10 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {replaceTokenForTemplate, getIndexBasedSegment} from './SegmentsUtils.js';
+import {getIndexBasedSegment, processUriTemplate} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -82,11 +81,14 @@ function TemplateSegmentsGetter(config, isDynamic) {
             }
 
             seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
-
-            let url = template.media;
-            url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
-            url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
-            seg.media = url;
+            seg.media = processUriTemplate(
+                template.media,
+                undefined,
+                seg.replacementNumber,
+                undefined,
+                undefined,
+                seg.replacementTime,
+            );
         }
 
         return seg;

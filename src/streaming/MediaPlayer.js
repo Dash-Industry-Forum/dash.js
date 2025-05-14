@@ -2743,6 +2743,11 @@ function MediaPlayer() {
         }
         if (value.role !== undefined) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+            
+            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+            if (output.role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
+                output.role.value = DashConstants.MAIN;
+            }
         }
         if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
