@@ -2104,6 +2104,8 @@ __webpack_require__.r(__webpack_exports__);
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            ignoreSelectionPriority: false,
+ *            prioritizeRoleMain: true,
+ *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
@@ -2609,7 +2611,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
- * @property {boolean} [ignoreKeyStatusest=false]
+ * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
  */
 
@@ -2873,9 +2875,9 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
- * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
- * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [parseInbandPrft=false]
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
@@ -2918,6 +2920,12 @@ __webpack_require__.r(__webpack_exports__);
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
+ * @property {} [prioritizeRoleMain: true]
+ * provides the option to disable prioritization of AdaptationSets with their Role set to Main
+ *
+ * @property {} [assumeDefaultRoleAsMain: true]
+ * when no Role descriptor is present, assume main per default
+ * 
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
@@ -3156,6 +3164,8 @@ function Settings() {
         video: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       ignoreSelectionPriority: false,
+      prioritizeRoleMain: true,
+      assumeDefaultRoleAsMain: true,
       selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
       fragmentRequestTimeout: 20000,
       fragmentRequestProgressTimeout: -1,

@@ -818,6 +818,92 @@ function symbolToStr(symbol) {
 
 /***/ }),
 
+/***/ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js":
+/*!*********************************************************************************!*\
+  !*** ./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js ***!
+  \*********************************************************************************/
+/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
+/* harmony export */ });
+const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
+/**
+ * Process a URI template used in `SegmentTemplate` nodes.
+ *
+ * @param uriTemplate - URI template to process.
+ * @param representationId - Representation ID.
+ * @param number - Number.
+ * @param subNumber - Sub-number.
+ * @param bandwidth - Bandwidth.
+ * @param time - Time.
+ *
+ * @returns Processed URI template.
+ *
+ * @group DASH
+ * @beta
+ *
+ * @example
+ * {@includeCode ../../test/dash/processUriTemplate.test.ts#example}
+ */
+function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
+  const uri = uriTemplate.replace(TOKENS, (match, name, widthStr, format) => {
+    let value;
+    switch (name) {
+      case undefined:
+        // $$ case
+        return '$';
+      case 'RepresentationID':
+        value = representationId;
+        break;
+      case 'Number':
+        value = number;
+        break;
+      case 'SubNumber':
+        value = subNumber;
+        break;
+      case 'Bandwidth':
+        value = bandwidth;
+        break;
+      case 'Time':
+        value = time ? Math.round(time) : time;
+        break;
+      default:
+        value = null;
+    }
+    if (value == null) {
+      return match;
+    }
+    let valueString;
+    switch (format) {
+      case undefined: // Happens if there is no format specifier.
+      case 'd':
+      case 'i':
+      case 'u':
+        valueString = value.toString();
+        break;
+      case 'o':
+        valueString = value.toString(8);
+        break;
+      case 'x':
+        valueString = value.toString(16);
+        break;
+      case 'X':
+        valueString = value.toString(16).toUpperCase();
+        break;
+      default:
+        valueString = value.toString();
+        break;
+    }
+    const width = parseInt(widthStr, 10) || 1;
+    return valueString.padStart(width, '0');
+  });
+  return uri;
+}
+
+/***/ }),
+
 /***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js":
 /*!********************************************************************************!*\
   !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js ***!
@@ -2875,7 +2961,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   STRING_REGEX: function() { return /* binding */ STRING_REGEX; }
 /* harmony export */ });
-const STRING_REGEX = /[\x00-\x1f\x7f]+/; // eslint-disable-line no-control-regex
+const STRING_REGEX = /[\x00-\x1f\x7f]+/;
 
 /***/ }),
 
@@ -26376,6 +26462,8 @@ __webpack_require__.r(__webpack_exports__);
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
  *            ignoreSelectionPriority: false,
+ *            prioritizeRoleMain: true,
+ *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
@@ -26881,7 +26969,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [detectPlayreadyMessageFormat=true]
  * If set to true the player will use the raw unwrapped message from the Playready CDM
  *
- * @property {boolean} [ignoreKeyStatusest=false]
+ * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
  */
 
@@ -27145,9 +27233,9 @@ __webpack_require__.r(__webpack_exports__);
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
- * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
+ * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
- * Defines the delay in milliseconds between two consecutive checks for events to be fired.
+ * Overwrite the manifest segments base information timescale attributes with the timescale set in initialization segments
  * @property {boolean} [parseInbandPrft=false]
  * Set to true if dash.js should parse inband prft boxes (ProducerReferenceTime) and trigger events.
  * @property {module:Settings~Metrics} metrics Metric settings
@@ -27190,6 +27278,12 @@ __webpack_require__.r(__webpack_exports__);
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
+ * @property {} [prioritizeRoleMain: true]
+ * provides the option to disable prioritization of AdaptationSets with their Role set to Main
+ *
+ * @property {} [assumeDefaultRoleAsMain: true]
+ * when no Role descriptor is present, assume main per default
+ * 
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
@@ -27428,6 +27522,8 @@ function Settings() {
         video: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SWITCH_MODE_NEVER_REPLACE
       },
       ignoreSelectionPriority: false,
+      prioritizeRoleMain: true,
+      assumeDefaultRoleAsMain: true,
       selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
       fragmentRequestTimeout: 20000,
       fragmentRequestProgressTimeout: -1,
@@ -28486,8 +28582,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
-/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/SegmentsUtils.js */ "./src/dash/utils/SegmentsUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -28603,7 +28699,7 @@ function DashHandler(config) {
     request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
     request.representation = representation;
     if (_setRequestUrl(request, representation.initialization, representation)) {
-      request.url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.replaceTokenForTemplate)(request.url, 'Bandwidth', representation.bandwidth);
+      request.url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__.processUriTemplate)(request.url, undefined, undefined, undefined, representation.bandwidth);
       return request;
     }
   }
@@ -28614,12 +28710,7 @@ function DashHandler(config) {
     const request = new _streaming_vo_FragmentRequest_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
     const representation = segment.representation;
     const bandwidth = representation.bandwidth;
-    let url = segment.media;
-    url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.replaceTokenForTemplate)(url, 'Number', segment.replacementNumber);
-    url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.replaceTokenForTemplate)(url, 'Time', segment.replacementTime);
-    url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.replaceTokenForTemplate)(url, 'Bandwidth', bandwidth);
-    url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.replaceIDForTemplate)(url, representation.id);
-    url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_4__.unescapeDollarsInTemplate)(url);
+    const url = (0,_utils_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_5__.processUriTemplate)(segment.media, representation.id, segment.replacementNumber, undefined, bandwidth, segment.replacementTime);
     request.mediaType = getType();
     request.bandwidth = representation.bandwidth;
     request.type = _streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE;
@@ -28668,18 +28759,18 @@ function DashHandler(config) {
     // For SegmentList the index includes the startnumber which is why the numberOfSegments includes this as well
     if (representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.numberOfSegments) && !isNaN(lastSegment.index) && lastSegment.index >= representation.mediaFinishedInformation.numberOfSegments - 1) {
       // For static manifests and Template addressing we can compare the index against the number of available segments
-      if (!isDynamicManifest || representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TEMPLATE) {
+      if (!isDynamicManifest || representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SEGMENT_TEMPLATE) {
         return true;
       }
       // For SegmentList we need to check if the next period is signaled
-      else if (isDynamicManifest && representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
+      else if (isDynamicManifest && representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SEGMENT_LIST && representation.adaptation.period.nextPeriodId) {
         return true;
       }
     }
 
     // For dynamic SegmentTimeline manifests we need to check if the next period is already signaled and the segment we fetched before is the last one that is signaled.
     // We can not simply use the index, as numberOfSegments might have decreased after an MPD update
-    return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].SEGMENT_TIMELINE && representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05);
+    return !!(isDynamicManifest && representation.adaptation.period.nextPeriodId && representation.segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SEGMENT_TIMELINE && representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment) && lastSegment && !isNaN(lastSegment.mediaStartTime) && !isNaN(lastSegment.duration) && lastSegment.mediaStartTime + lastSegment.duration >= representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment - 0.05);
   }
   function getSegmentRequestForTime(mediaInfo, representation, time) {
     let request = null;
@@ -29692,6 +29783,10 @@ function DashManifestModel() {
       return [];
     }
     return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].map(role => {
+      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+        role.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
+      }
       const r = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
       r.init(role);
       return r;
@@ -31898,11 +31993,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getIndexBasedSegment: function() { return /* binding */ getIndexBasedSegment; },
 /* harmony export */   getTimeBasedSegment: function() { return /* binding */ getTimeBasedSegment; },
-/* harmony export */   replaceIDForTemplate: function() { return /* binding */ replaceIDForTemplate; },
-/* harmony export */   replaceTokenForTemplate: function() { return /* binding */ replaceTokenForTemplate; },
-/* harmony export */   unescapeDollarsInTemplate: function() { return /* binding */ unescapeDollarsInTemplate; }
+/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
 /* harmony export */ });
-/* harmony import */ var _vo_Segment_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./../vo/Segment.js */ "./src/dash/vo/Segment.js");
+/* harmony import */ var _svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/common-media-library/dash/processUriTemplate.js */ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js");
+/* harmony import */ var _vo_Segment_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../vo/Segment.js */ "./src/dash/vo/Segment.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -31935,89 +32029,12 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
-function zeroPadToLength(numStr, minStrLength) {
-  while (numStr.length < minStrLength) {
-    numStr = '0' + numStr;
-  }
-  return numStr;
-}
+
 function getNumberForSegment(segment, segmentIndex) {
   return segment.representation.startNumber + segmentIndex;
 }
-function unescapeDollarsInTemplate(url) {
-  return url ? url.split('$$').join('$') : url;
-}
-function replaceIDForTemplate(url, value) {
-  if (!value || !url || url.indexOf('$RepresentationID$') === -1) {
-    return url;
-  }
-  let v = value.toString();
-  return url.split('$RepresentationID$').join(v);
-}
-function replaceTokenForTemplate(url, token, value) {
-  const formatTag = '%0';
-  let startPos, endPos, formatTagPos, specifier, width, paddedValue;
-  const tokenLen = token.length;
-  const formatTagLen = formatTag.length;
-  if (!url) {
-    return url;
-  }
-
-  // keep looping round until all instances of <token> have been
-  // replaced. once that has happened, startPos below will be -1
-  // and the completed url will be returned.
-  while (true) {
-    // check if there is a valid $<token>...$ identifier
-    // if not, return the url as is.
-    startPos = url.indexOf('$' + token);
-    if (startPos < 0) {
-      return url;
-    }
-
-    // the next '$' must be the end of the identifier
-    // if there isn't one, return the url as is.
-    endPos = url.indexOf('$', startPos + tokenLen);
-    if (endPos < 0) {
-      return url;
-    }
-
-    // now see if there is an additional format tag suffixed to
-    // the identifier within the enclosing '$' characters
-    formatTagPos = url.indexOf(formatTag, startPos + tokenLen);
-    if (formatTagPos > startPos && formatTagPos < endPos) {
-      specifier = url.charAt(endPos - 1);
-      width = parseInt(url.substring(formatTagPos + formatTagLen, endPos - 1), 10);
-
-      // support the minimum specifiers required by IEEE 1003.1
-      // (d, i , o, u, x, and X) for completeness
-      switch (specifier) {
-        // treat all int types as uint,
-        // hence deliberate fallthrough
-        case 'd':
-        case 'i':
-        case 'u':
-          paddedValue = zeroPadToLength(value.toString(), width);
-          break;
-        case 'x':
-          paddedValue = zeroPadToLength(value.toString(16), width);
-          break;
-        case 'X':
-          paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
-          break;
-        case 'o':
-          paddedValue = zeroPadToLength(value.toString(8), width);
-          break;
-        default:
-          return url;
-      }
-    } else {
-      paddedValue = value;
-    }
-    url = url.substring(0, startPos) + paddedValue + url.substring(endPos + 1);
-  }
-}
 function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
-  let seg = new _vo_Segment_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
+  let seg = new _vo_Segment_js__WEBPACK_IMPORTED_MODULE_1__["default"]();
   seg.representation = representation;
   seg.duration = duration;
   seg.presentationStartTime = presentationStartTime;
@@ -32051,6 +32068,12 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
   }
   return true;
 }
+function processUriTemplate(url, representationId, number, subNumber, bandwidth, time) {
+  if (!url) {
+    return url;
+  }
+  return (0,_svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
+}
 function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
   let duration, presentationStartTime, presentationEndTime;
   duration = representation.segmentDuration;
@@ -32083,9 +32106,7 @@ function getTimeBasedSegment(timelineConverter, isDynamic, representation, time,
     return null;
   }
   seg.replacementTime = tManifest ? tManifest : time;
-  url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
-  url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
-  seg.media = url;
+  seg.media = processUriTemplate(url, undefined, seg.replacementNumber, undefined, undefined, seg.replacementTime);
   seg.mediaRange = range;
   return seg;
 }
@@ -32135,7 +32156,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function TemplateSegmentsGetter(config, isDynamic) {
   config = config || {};
   const timelineConverter = config.timelineConverter;
@@ -32176,10 +32196,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return null;
       }
       seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
-      let url = template.media;
-      url = (0,_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_2__.replaceTokenForTemplate)(url, 'Number', seg.replacementNumber);
-      url = (0,_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_2__.replaceTokenForTemplate)(url, 'Time', seg.replacementTime);
-      seg.media = url;
+      seg.media = (0,_SegmentsUtils_js__WEBPACK_IMPORTED_MODULE_2__.processUriTemplate)(template.media, undefined, seg.replacementNumber, undefined, undefined, seg.replacementTime);
     }
     return seg;
   }

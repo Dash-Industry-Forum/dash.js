@@ -11432,9 +11432,6 @@ var bigInt = function (undefined) {
   };
   return Integer;
 }();
-if (typeof module !== 'undefined' && module.hasOwnProperty('exports')) {
-  module.exports = bigInt;
-}
 if (typeof define === 'function' && define.amd) {
   define('big-integer', [], function () {
     return bigInt;
