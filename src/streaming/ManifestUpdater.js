@@ -305,13 +305,13 @@ function ManifestUpdater() {
             if (externalSubtitle.periodId === null && numberOfPeriods > 1) {
                 logger.warn(`External subtitle with id ${externalSubtitle.id} has no periodId and the MPD contains more than one period. Unable to add the external subtitle as it is not clear which period shall be used.`);
             } else if (numberOfPeriods === 1) {
-                manifest.Period[0] = _spliceExternalSubtitleInPeriod(manifest.Period[0], externalSubtitle);
+                _spliceExternalSubtitleInPeriod(manifest.Period[0], externalSubtitle);
             } else {
                 const targetPeriod = manifest.Period.find((period) => {
                     return period.id === externalSubtitle.periodId;
                 });
                 if (targetPeriod) {
-                    manifest.Period = _spliceExternalSubtitleInPeriod(targetPeriod, externalSubtitle);
+                    _spliceExternalSubtitleInPeriod(targetPeriod, externalSubtitle);
                 } else {
                     logger.warn(`External subtitle with id ${externalSubtitle.id} has periodId ${externalSubtitle.periodId} but the MPD does not contain a period with that id. Unable to add the external subtitle.`);
                 }
@@ -324,7 +324,6 @@ function ManifestUpdater() {
             return period
         }
         period.AdaptationSet.push(externalSubtitle.serializeToMpdParserFormat());
-        return period
     }
 
     function _onPlaybackStarted(/*e*/) {
