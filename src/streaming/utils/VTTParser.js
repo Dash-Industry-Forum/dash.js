@@ -124,27 +124,41 @@ function VTTParser() {
     function getCaptionStyles(arr) {
         const styleObject = {};
         arr.forEach(function (element) {
-            if (element.split(/:/).length > 1) {
-                let val = element.split(/:/)[1];
-                let isPercentage = false;
-                if (val && val.search(/%/) != -1) {
-                    isPercentage = true;
-                    val = parseInt(val.replace(/%/, ''), 10);
-                }
-                if (element.match(/^align:/) || element.match(/A/)) {
-                    styleObject.align = val;
-                }
-                if (element.match(/^line:/) || element.match(/L/)) {
-                    styleObject.line = val === 'auto' ? val : parseInt(val, 10);
-                    if (isPercentage) {
-                        styleObject.snapToLines = false;
-                    }
-                }
-                if (element.match(/^position:/) || element.match(/P/)) {
-                    styleObject.position = val;
-                }
-                if (element.match(/^size:/) || element.match(/S/)) {
-                    styleObject.size = val;
+            const parts = element.split(':');
+
+            if (parts.length > 1) {
+                const [settingName, settingValue] = parts;
+
+                switch (settingName) {
+                    case 'align':
+                    case 'A':
+                        styleObject.align = settingValue;
+                        break;
+                    case 'line':
+                    case 'L':
+                        const [line, lineAlign] = settingValue.split(',');
+                        const isPercentage = line.endsWith('%');
+
+                        styleObject.line = line === 'auto' ? line : parseInt(line, 10);
+                        if (isPercentage) {
+                            styleObject.snapToLines = false;
+                        }
+                        if (lineAlign) {
+                            styleObject.lineAlign = lineAlign;
+                        }
+                        break;
+                    case 'position':
+                    case 'P':
+                        const [position, positionAlign] = settingValue.split(',');
+                        styleObject.position = parseInt(position, 10);
+                        if (positionAlign) {
+                            styleObject.positionAlign = positionAlign;
+                        }
+                        break;
+                    case 'size':
+                    case 'S':
+                        styleObject.size = settingValue;
+                        break;
                 }
             }
         });
