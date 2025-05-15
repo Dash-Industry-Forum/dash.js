@@ -262,7 +262,12 @@ export default {
      *  @static
      */
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
-
+    /**
+     *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_TIME_INTERVAL: 30,
     /**
      *  @constant {string} CMCD_MODE specifies all the available modes for CMCD.
      *  @memberof Constants#
