@@ -163,11 +163,11 @@ function CmcdController() {
     function triggerCmcdEventMode(event){
         const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
-        
+
         if (eventModeTargets.length === 0) {
             return;
         }
-        
+
         const cmcdData = {
             ..._getGenericCmcdData(),
             ..._updateMsdData(Constants.CMCD_MODE.EVENT),
@@ -180,6 +180,11 @@ function CmcdController() {
         
         eventModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled) {
+
+                if (targetSettings.events?.length === 0) {
+                    logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
+                }
+
                 let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
 
                 if (!events.includes(event)) {
