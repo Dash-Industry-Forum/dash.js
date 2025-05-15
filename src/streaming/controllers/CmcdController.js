@@ -807,6 +807,10 @@ function CmcdController() {
             if (!isNaN(ltc)) {
                 data.ltc = ltc;
             }
+
+            if (typeof document !== 'undefined' && document.hidden) {
+                data.bg = true;
+            }
         }
 
         return data;
