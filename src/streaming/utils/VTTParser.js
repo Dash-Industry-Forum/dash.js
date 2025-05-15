@@ -131,19 +131,19 @@ function VTTParser() {
                     isPercentage = true;
                     val = parseInt(val.replace(/%/, ''), 10);
                 }
-                if (element.match(/align/) || element.match(/A/)) {
+                if (element.match(/^align:/) || element.match(/A/)) {
                     styleObject.align = val;
                 }
-                if (element.match(/line/) || element.match(/L/)) {
+                if (element.match(/^line:/) || element.match(/L/)) {
                     styleObject.line = val === 'auto' ? val : parseInt(val, 10);
                     if (isPercentage) {
                         styleObject.snapToLines = false;
                     }
                 }
-                if (element.match(/position/) || element.match(/P/)) {
+                if (element.match(/^position:/) || element.match(/P/)) {
                     styleObject.position = val;
                 }
-                if (element.match(/size/) || element.match(/S/)) {
+                if (element.match(/^size:/) || element.match(/S/)) {
                     styleObject.size = val;
                 }
             }
