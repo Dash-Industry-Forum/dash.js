@@ -136,8 +136,8 @@ function DashParser(config) {
     }
 
     function processXml(data) {
-        const xml = cmlParseXml(data)
-        const root = xml.childNodes.find(child => child.nodeName === 'MPD');
+        const xml = cmlParseXml(data);
+        const root = xml.childNodes.find(child => child.nodeName === 'MPD' || child.nodeName === 'Patch') || xml.childNodes[0];
 
         function processNode(node) {
             // Convert tag name
