@@ -215,10 +215,10 @@ function ManifestLoader(config) {
                         settings.get().streaming.enableManifestDurationMismatchFix &&
                         manifest.mediaPresentationDuration &&
                         manifest.Period.length > 1) {
-                        const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
-                        if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
+                        const safeDuration = _getSafeDuration(manifest.Period);
+                        if (!isNaN(safeDuration) && manifest.mediaPresentationDuration > safeDuration) {
                             logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
-                            manifest.mediaPresentationDuration = sumPeriodDurations;
+                            manifest.mediaPresentationDuration = safeDuration;
                         }
                     }
 
@@ -264,6 +264,31 @@ function ManifestLoader(config) {
         if (urlLoader) {
             urlLoader.abort();
             urlLoader = null;
+        }
+    }
+
+    function _getSegmentDuration(s) {
+        return (s.r ? s.d * (s.r + 1) : s.d);
+    }
+
+    function _getSafeDuration(periods) {
+        const sumPeriodDurations = periods.reduce((totalDuration, period) => totalDuration + period.duration, 0);
+        if (isNaN(sumPeriodDurations)) {
+            return sumPeriodDurations;
+        }
+
+        const lastPeriod = periods[periods.length - 1];
+        if (lastPeriod.duration) {
+            return lastPeriod.start + lastPeriod.duration;
+        }
+
+        const segmentTemplate = lastPeriod.AdaptationSet.filter((set) => set.mimeType === 'video/mp4')[0].Representation[0].SegmentTemplate;
+        const segments = segmentTemplate.SegmentTimeline.S;
+        if (Array.isArray(segments)){
+            return lastPeriod.start +
+                segments.reduce((segmentsDuration, s) => segmentsDuration + _getSegmentDuration(s), 0) / segmentTemplate.timescale;
+        } else {
+            return lastPeriod.start + _getSegmentDuration(segments) / segmentTemplate.timescale;
         }
     }
 
