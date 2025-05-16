@@ -1116,6 +1116,19 @@ function StreamController() {
                 // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
                 const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
                 startTime = Math.max(startTime, dvrWindow.start + offset);
+
+                // In hardware playback use optional maxDecoderRate setting to compensate for startup delay
+                const maxDecoderRate = settings.get().streaming.timeShiftBuffer.maxDecoderRate;
+                if(maxDecoderRate && !isNaN(maxDecoderRate)){
+                    const seektime = liveEdge - playbackController.getOriginalLiveDelay();
+                    const segmentDuration = streams[0].getStreamInfo().manifestInfo.maxFragmentDuration;
+                    const seektimeQuantised = segmentDuration * (1 + parseInt(seektime / segmentDuration))
+                    const positionInSegment = seektimeQuantised - seektime
+
+                    logger.info(`Overshoot start seek by ${positionInSegment/maxDecoderRate} to compensate for decoder.`);
+                    startTime += positionInSegment/maxDecoderRate
+                }
+
             }
         } else {
             // For static stream, start by default at period start
