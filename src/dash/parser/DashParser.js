@@ -210,23 +210,9 @@ function DashParser(config) {
         try {
             const root = processXml(data);
 
-            let ret = {};
-            // If root element is xml node, then get first child node as root
-            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
-                for (let key in root) {
-                    if (Array.isArray(root[key])) {
-                        ret[key] = root[key][0];
-                        break;
-                    } else if (typeof root[key] === 'object') {
-                        ret[key] = root[key];
-                        break;
-                    }
-                }
-            } else {
-                ret[root.tagName] = root;
-                delete root.tagName;
-            }
-            return ret;
+            return {
+                [root.tagName]: root
+            };
         } catch (e) {
             return null;
         }
