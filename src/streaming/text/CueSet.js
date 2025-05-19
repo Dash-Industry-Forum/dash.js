@@ -94,7 +94,14 @@ class CueSet {
  * @private
  */
 function areCuesEqual(cue1, cue2) {
-    return cue1.startTime === cue2.startTime && cue1.endTime === cue2.endTime;
+    if (cue1.startTime !== cue2.startTime ||
+        cue1.endTime !== cue2.endTime) {
+        return false;
+    }
+    if (cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
+        return cue1.text === cue2.text;
+    }
+    return false;
 }
 
 export { CueSet };

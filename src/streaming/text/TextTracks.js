@@ -34,6 +34,7 @@ import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import Utils from '../../core/Utils.js';
 import {CueSet} from './CueSet.js';
 import {renderHTML} from 'imsc';
 
@@ -724,7 +725,7 @@ function TextTracks(config) {
 
     function _getCueInformationForNonHtml(currentItem, timeOffset) {
         let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-        cue.cueID = `${cue.startTime}_${cue.endTime}`;
+        cue.cueID = Utils.generateUuid();
         return cue;
     }
 
