@@ -29,76 +29,70 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import EventBus from '../../core/EventBus.js';
-import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import MetricsReportingEvents from '../metrics/MetricsReportingEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Settings from '../../core/Settings.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import Constants from '../../streaming/constants/Constants.js';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
-import DashManifestModel from '../../dash/models/DashManifestModel.js';
-import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
-import Debug from '../../core/Debug.js';
-import Utils from '../../core/Utils.js';
 import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
-import {CmcdObjectType} from '@svta/common-media-library/cmcd/CmcdObjectType';
-import {CmcdStreamType} from '@svta/common-media-library/cmcd/CmcdStreamType';
-import {CmcdStreamingFormat} from '@svta/common-media-library/cmcd/CmcdStreamingFormat';
+import Debug from '../../core/Debug.js';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
 import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
 
 
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
-
+import Utils from '../../core/Utils.js';
 import URLLoader from '../net/URLLoader.js';
+import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
+import CmcdModel from '../models/CmcdModel.js'
 import Errors from '../../core/errors/Errors.js';
-
-// TODO: Re-Add this import once common-media-library pr is merged: https://github.com/qualabs/common-media-library/pull/48
-// import {convertToCmcdV1} from '@svta/common-media-library/cmcd/CmcdV2ToCmcdV1';
-
-const DEFAULT_CMCD_VERSION = 1;
-const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
-const RTP_SAFETY_FACTOR = 5;
+import Settings from '../../core/Settings.js';
 
 function CmcdController() {
-
-    let dashManifestModel,
-        instance,
+    let instance,
         logger,
-        internalData,
-        abrController,
-        dashMetrics,
-        playbackController,
-        serviceDescriptionController,
-        errHandler,
-        mediaPlayerModel,
-        throughputController,
-        streamProcessors,
+        cmcdModel,
         clientDataReportingController,
-        _lastMediaTypeRequest,
-        _isStartup,
-        _bufferLevelStarved,
-        _initialMediaRequestsDone,
-        _playbackStartedTime,
-        _msdSent = {
-            [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false
-        },
         urlLoader,
-        _isSeeking;
+        mediaPlayerModel,
+        dashMetrics,
+        errHandler;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     let settings = Settings(context).getInstance();
     let debug = Debug(context).getInstance();
 
+    cmcdModel = CmcdModel(context).getInstance();
+    
     const _loggedCmcdModeErrors = new Set();
 
     function setup() {
-        dashManifestModel = DashManifestModel(context).getInstance();
-        clientDataReportingController = ClientDataReportingController(context).getInstance();
         logger = debug.getLogger(instance);
-        _resetInitialSettings();
+        clientDataReportingController = ClientDataReportingController(context).getInstance();
+
+        reset();
+    }
+
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+        
+        if (config.dashMetrics) {
+            dashMetrics = config.dashMetrics;
+        }
+        
+        if (config.mediaPlayerModel) {
+            mediaPlayerModel = config.mediaPlayerModel;
+        }
+        
+        if (config.errHandler) {
+            errHandler = config.errHandler;
+        }
+
+        cmcdModel.setConfig(config);
     }
 
     function initialize(autoPlay) {
@@ -107,6 +101,7 @@ function CmcdController() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.on(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+        
         if (autoPlay) {
             eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
         }
@@ -154,168 +149,37 @@ function CmcdController() {
             }
         });
     }
-    
+
     function _onStateChange(state) {
-        internalData.sta = state;
-        _onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
+        cmcdModel.onStateChange(state);
     }
 
     function _onEventChange(state){
-        internalData.e = state;
+        cmcdModel.onEventChange(state);
         triggerCmcdEventMode(state);
     }
 
-    function triggerCmcdEventMode(event){
-        const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
-
-        if (eventModeTargets.length === 0) {
-            return;
-        }
-
-        const cmcdData = {
-            ..._getGenericCmcdData(),
-            ..._updateMsdData(Constants.CMCD_MODE.EVENT),
-            e: event
-        };
-
-        if (event == 'e') {
-            cmcdData.ec = internalData.ec;
-        }
-        
-        eventModeTargets.forEach(targetSettings => {
-            if (targetSettings.enabled) {
-
-                if (targetSettings.events?.length === 0) {
-                    logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
-                }
-
-                let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
-
-                if (!events.includes(event)) {
-                    return;
-                }
-
-                let httpRequest = new CmcdReportRequest();
-
-                httpRequest.url = targetSettings.url;
-                httpRequest.type = HTTPRequest.CMCD_EVENT;
-                httpRequest.method = HTTPRequest.GET;
-
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
-                _sendCmcdDataReport(httpRequest);
-            }
-        });
-    }
-
-    function setConfig(config) {
-        if (!config) {
-            return;
-        }
-
-        if (config.abrController) {
-            abrController = config.abrController;
-        }
-
-        if (config.dashMetrics) {
-            dashMetrics = config.dashMetrics;
-        }
-
-        if (config.throughputController) {
-            throughputController = config.throughputController;
-        }
-
-        if (config.playbackController) {
-            playbackController = config.playbackController;
-        }
-
-        if (config.serviceDescriptionController) {
-            serviceDescriptionController = config.serviceDescriptionController;
-        }
-
-        if (config.mediaPlayerModel) {
-            mediaPlayerModel = config.mediaPlayerModel;
-        }
-
-        if (config.mediaPlayerModel) {
-            errHandler = config.errHandler;
-        }
-        
-    }
-
-    function _resetInitialSettings() {
-        internalData = {
-            pr: 1,
-            nor: null,
-            st: null,
-            sf: null,
-            sid: `${Utils.generateUuid()}`,
-            cid: null
-        };
-        _bufferLevelStarved = {};
-        _isStartup = {};
-        _initialMediaRequestsDone = {};
-        _lastMediaTypeRequest = undefined;
-        _playbackStartedTime = undefined;
-        _msdSent = {
-            [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false
-        }
-        _updateStreamProcessors();
-    }
-
     function _onPeriodSwitchComplete() {
-        _updateStreamProcessors();
+        cmcdModel.onPeriodSwitchComplete();
     }
 
     function _onPlaybackStarted() {
-        if (!_playbackStartedTime) {
-            _playbackStartedTime = Date.now();
-        }
+        cmcdModel.onPlaybackStarted();
     }
 
     function _onPlaybackPlaying() {
-        _getMsdData();
-        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
-    }
-
-    function _getMsdData() {
-        if (!_playbackStartedTime || internalData.msd) {
-            return;
-        }
-
-        internalData.msd = Date.now() - _playbackStartedTime;
+        cmcdModel.onPlaybackPlaying();
     }
 
     function _onPlayerError(errorData) {
-        const errorCode = errorData.error.code ? errorData.error.code : 0
-        internalData.ec = errorCode;
-        _onEventChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
-    }
-
-    function _updateStreamProcessors() {
-        if (!playbackController) {
-            return;
-        }
-        const streamController = playbackController.getStreamController();
-        if (!streamController) {
-            return;
-        }
-        if (typeof streamController.getActiveStream !== 'function') {
-            return;
-        }
-        const activeStream = streamController.getActiveStream();
-        if (!activeStream) {
-            return;
-        }
-        streamProcessors = activeStream.getStreamProcessors();
+        cmcdModel.onPlayerError(errorData);
     }
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
             if (isCmcdEnabled(targetSettings)) {
 
-                cmcdData = cmcdData || getCmcdData(request);
+                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
                 let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
                 let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
@@ -357,7 +221,7 @@ function CmcdController() {
 
     function _applyWhitelist(cmcdData, enabledKeys) {
         try {
-            const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+            const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
             let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
             
             const events_key = Constants.CMCD_V2_KEYS_NAME_MAPPING.EVENT
@@ -376,10 +240,103 @@ function CmcdController() {
         }
     }
 
+    function triggerCmcdEventMode(event){
+        const targets = settings.get().streaming.cmcd.targets;
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+
+        if (eventModeTargets.length === 0) {
+            return;
+        }
+
+        const cmcdData = cmcdModel.triggerCmcdEventMode(event);
+        
+        eventModeTargets.forEach(targetSettings => {
+            if (targetSettings.enabled) {
+
+                if (targetSettings.events?.length === 0) {
+                    logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
+                }
+
+                let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
+
+                if (!events.includes(event)) {
+                    return;
+                }
+
+                let httpRequest = new CmcdReportRequest();
+
+                httpRequest.url = targetSettings.url;
+                httpRequest.type = HTTPRequest.CMCD_EVENT;
+                httpRequest.method = HTTPRequest.GET;
+
+                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
+                _sendCmcdDataReport(httpRequest);
+            }
+        });
+    }
+
+    function _sendCmcdDataReport(request){
+        urlLoader = URLLoader(context).create({
+            errHandler: errHandler,
+            mediaPlayerModel: mediaPlayerModel,
+            errors: Errors,
+            dashMetrics: dashMetrics,
+        });
+
+        urlLoader.load({request})
+    }
+
+    /**
+     * Updates the request url and headers with CMCD data
+     * @param request
+     * @private
+    */
+    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData, targetSettings) {
+        const currentServiceLocation = request?.serviceLocation;
+        const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
+        const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
+            clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
+
+        if (isIncludedFilters && (isCmcdEnabled(targetSettings))) {
+            const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
+            const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
+            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
+            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
+                const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
+                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
+                request.headers = request.headers || {};
+                request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
+            }
+        }
+    }
+
+    /**
+     * Generates the additional query parameters to be appended to the request url
+     * @param {object} request
+     * @return {array}
+     * @private
+    */
+    function _getAdditionalQueryParameter(request, cmcdData, targetSettings) {
+        try {
+            const additionalQueryParameter = [];
+            const cmcdQueryParameter = getQueryParameter(request, cmcdData, targetSettings);
+
+            if (cmcdQueryParameter) {
+                additionalQueryParameter.push(cmcdQueryParameter);
+            }
+
+            return additionalQueryParameter;
+        } catch (e) {
+            return [];
+        }
+    }
+
     function getHeaderParameters(request, cmcdData, targetSettings) {
         try {
             if (isCmcdEnabled(targetSettings)) {
-                cmcdData = cmcdData || getCmcdData(request);
+                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
                 let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
@@ -412,7 +369,7 @@ function CmcdController() {
             return _targetCanBeEnabled(targetSettings) && _checkTargetIncludeInRequests(targetSettings) && _checkTargetAvailableKeys(targetSettings);
         }
         else {
-            const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+            const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
             return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
         }
     }
@@ -437,7 +394,7 @@ function CmcdController() {
         let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
 
         if (cmcdParametersFromManifest.version) {
-            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
+            enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [Constants.CMCD_DEFAULT_INCLUDE_IN_REQUESTS];
         }
 
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
@@ -476,7 +433,7 @@ function CmcdController() {
     }
 
     function _targetCanBeEnabled(targetSettings) {
-        const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
+        const cmcdVersion = settings.get().streaming.cmcd.version ?? Constants.DEFAULT_CMCD_VERSION;
         return (cmcdVersion === 2 && targetSettings?.enabled);
     }
 
@@ -550,282 +507,6 @@ function CmcdController() {
         return cmcdAvailableKeysForMode;
     }
 
-    function getCmcdParametersFromManifest() {
-        let cmcdParametersFromManifest = {};
-        if (serviceDescriptionController) {
-            const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
-            if (
-                settings.get().streaming.cmcd.applyParametersFromMpd &&
-                serviceDescription.clientDataReporting &&
-                serviceDescription.clientDataReporting.cmcdParameters
-            ) {
-                cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
-            }
-        }
-        return cmcdParametersFromManifest;
-    }
-
-    function _isIncludedInRequestFilter(type, includeInRequests) {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        let includeInRequestsArray = includeInRequests || settings.get().streaming.cmcd.includeInRequests;
-
-        if (cmcdParametersFromManifest.version) {
-            includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [DEFAULT_INCLUDE_IN_REQUESTS];
-        }
-
-        const filtersTypes = {
-            [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
-            [HTTPRequest.MPD_TYPE]: 'mpd',
-            [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-            [HTTPRequest.OTHER_TYPE]: 'other',
-        };
-
-        return includeInRequestsArray.some(t => filtersTypes[type] === t);
-    }
-
-    function getCmcdData(request) {
-        try {
-            let cmcdData = null;
-
-            
-            cmcdData = {
-                ..._updateLastMediaTypeRequest(request.type, request.mediaType)
-            }
-
-            if (_isIncludedInRequestFilter(request.type)) {
-                if (request.type === HTTPRequest.MPD_TYPE) {
-                    return _getCmcdDataForMpd(request);
-                } else if (request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
-                    _initForMediaType(request.mediaType);
-                    return _getCmcdDataForMediaSegment(request, request.mediaType);
-                } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
-                    return _getCmcdDataForInitSegment(request);
-                } else if (request.type === HTTPRequest.OTHER_TYPE || request.type === HTTPRequest.XLINK_EXPANSION_TYPE) {
-                    return _getCmcdDataForOther(request);
-                } else if (request.type === HTTPRequest.LICENSE) {
-                    return _getCmcdDataForLicense(request);
-                } else if (request.type === HTTPRequest.CONTENT_STEERING_TYPE) {
-                    return _getCmcdDataForSteering(request);
-                }
-            }
-            return cmcdData;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _updateLastMediaTypeRequest(type, mediatype) {
-        // Video > Audio > None
-        if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
-            if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO) {
-                _lastMediaTypeRequest = mediatype;
-            }
-        }
-    }
-
-    function _getCmcdDataForSteering(request) {
-        const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-
-        data.ot = CmcdObjectType.OTHER;
-
-        return data;
-    }
-
-    function _getCmcdDataForLicense(request) {
-        const data = _getGenericCmcdData(request);
-
-        data.ot = CmcdObjectType.KEY;
-
-        return data;
-    }
-
-    function _getCmcdDataForMpd() {
-        const data = _getGenericCmcdData();
-
-        data.ot = CmcdObjectType.MANIFEST;
-
-        return data;
-    }
-
-    function _getCmcdDataForMediaSegment(request, mediaType) {
-        _initForMediaType(mediaType);
-        const data = _getGenericCmcdData();
-        const encodedBitrate = _getBitrateByRequest(request);
-        const d = _getObjectDurationByRequest(request);
-        const mtp = _getMeasuredThroughputByType(mediaType);
-        const dl = _getDeadlineByType(mediaType);
-        const bl = _getBufferLevelByType(mediaType);
-        const tb = _getTopBitrateByType(request.representation?.mediaInfo);
-        const pr = internalData.pr;
-
-        const nextRequest = _probeNextRequest(mediaType);
-
-        let ot;
-        if (mediaType === Constants.VIDEO) {
-            ot = CmcdObjectType.VIDEO;
-        }
-        if (mediaType === Constants.AUDIO) {
-            ot = CmcdObjectType.AUDIO;
-        }
-        if (mediaType === Constants.TEXT) {
-            if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-                ot = CmcdObjectType.TIMED_TEXT;
-            } else {
-                ot = CmcdObjectType.CAPTION;
-            }
-        }
-
-        let rtp = settings.get().streaming.cmcd.rtp;
-        if (!rtp) {
-            rtp = _calculateRtp(request);
-        }
-        if (!isNaN(rtp)) {
-            data.rtp = rtp;
-        }
-
-        if (nextRequest) {
-            if (request.url !== nextRequest.url) {
-                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
-            } else if (nextRequest.range) {
-                data.nrr = nextRequest.range;
-            }
-        }
-
-        if (encodedBitrate) {
-            data.br = encodedBitrate;
-        }
-
-        if (ot) {
-            data.ot = ot;
-        }
-
-        if (!isNaN(d)) {
-            data.d = d;
-        }
-
-        if (!isNaN(mtp)) {
-            data.mtp = mtp;
-        }
-
-        if (!isNaN(dl)) {
-            data.dl = dl;
-        }
-
-        if (!isNaN(bl)) {
-            data.bl = bl;
-        }
-
-        if (!isNaN(tb)) {
-            data.tb = tb;
-        }
-
-        if (!isNaN(pr) && pr !== 1) {
-            data.pr = pr;
-        }
-
-        if (_bufferLevelStarved[mediaType]) {
-            data.bs = true;
-            _bufferLevelStarved[mediaType] = false;
-        }
-
-        if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
-            data.su = true;
-            _isStartup[mediaType] = false;
-            _initialMediaRequestsDone[mediaType] = true;
-        }
-
-        return data;
-    }
-
-    function _initForMediaType(mediaType) {
-
-        if (!_initialMediaRequestsDone.hasOwnProperty(mediaType)) {
-            _initialMediaRequestsDone[mediaType] = false;
-        }
-
-        if (!_isStartup.hasOwnProperty(mediaType)) {
-            _isStartup[mediaType] = false;
-        }
-
-        if (!_bufferLevelStarved.hasOwnProperty(mediaType)) {
-            _bufferLevelStarved[mediaType] = false;
-        }
-    }
-
-    function _getCmcdDataForInitSegment() {
-        const data = _getGenericCmcdData();
-
-        data.ot = CmcdObjectType.INIT;
-        data.su = true;
-
-        return data;
-    }
-
-    function _getCmcdDataForOther() {
-        const data = _getGenericCmcdData();
-
-        data.ot = CmcdObjectType.OTHER;
-
-        return data;
-    }
-
-
-    function _getGenericCmcdData() {
-        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-        const data = {};
-
-        let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
-        cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
-
-        data.v = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
-
-        data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-        data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
-
-        data.sid = `${data.sid}`;
-
-        data.ts = Date.now();
-
-        if (cid) {
-            data.cid = `${cid}`;
-        }
-
-        if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
-            data.pr = internalData.pr;
-        }
-
-        if (internalData.st) {
-            data.st = internalData.st;
-        }
-
-        if (internalData.sf) {
-            data.sf = internalData.sf;
-        }
-
-        if (internalData.sta) {
-            data.sta = internalData.sta;
-        }
-
-        if (internalData.e) {
-            data.e = internalData.e;
-        }
-
-        if (data.v === 2) {
-            let ltc = playbackController.getCurrentLiveLatency() * 1000;
-            if (!isNaN(ltc)) {
-                data.ltc = ltc;
-            }
-
-            if (typeof document !== 'undefined' && document.hidden) {
-                data.bg = true;
-            }
-        }
-
-        return data;
-    }
-
     function _createCmcdV2HeadersCustomMap() {
         const cmcdVersion = settings.get().streaming.cmcd.version;
         return cmcdVersion === 1 ? {} : { 
@@ -836,182 +517,28 @@ function CmcdController() {
         };
     }
 
-    function _getBitrateByRequest(request) {
-        try {
-            return parseInt(request.bandwidth / 1000);
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _getTopBitrateByType(mediaInfo) {
-        try {
-            const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map((rep) => {
-                return rep.bitrateInKbit
-            });
-            return Math.max(...bitrates)
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _getObjectDurationByRequest(request) {
-        try {
-            return !isNaN(request.duration) ? Math.round(request.duration * 1000) : NaN;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _getMeasuredThroughputByType(mediaType) {
-        try {
-            return parseInt(throughputController.getSafeAverageThroughput(mediaType) / 100) * 100;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _getDeadlineByType(mediaType) {
-        try {
-            const playbackRate = internalData.pr;
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-
-            if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
-                return parseInt((bufferLevel / playbackRate) * 10) * 100;
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
-    function _getBufferLevelByType(mediaType) {
-        try {
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-
-            if (!isNaN(bufferLevel)) {
-                return parseInt(bufferLevel * 10) * 100;
-            }
-
-            return null;
-        } catch (e) {
-            return null;
-        }
-    }
-
     function _onPlaybackRateChanged(data) {
-        try {
-            internalData.pr = data.playbackRate;
-        } catch (e) {
-
-        }
+        cmcdModel.onPlaybackRateChanged(data);
     }
 
     function _onManifestLoaded(data) {
-        try {
-            const isDynamic = dashManifestModel.getIsDynamic(data.data);
-            const st = isDynamic ? CmcdStreamType.LIVE : CmcdStreamType.VOD;
-            const sf = data.protocol && data.protocol === 'MSS' ? CmcdStreamingFormat.SMOOTH : CmcdStreamingFormat.DASH;
-
-            internalData.st = `${st}`;
-            internalData.sf = `${sf}`;
-        } catch (e) {
-        }
+        cmcdModel.onManifestLoaded(data);
     }
 
     function _onBufferLevelStateChanged(data) {
-        try {
-            if (data.state && data.mediaType) {
-                if (data.state === MediaPlayerEvents.BUFFER_EMPTY) {
-
-                    if (!_bufferLevelStarved[data.mediaType]) {
-                        _bufferLevelStarved[data.mediaType] = true;
-                    }
-                    if (!_isStartup[data.mediaType]) {
-                        _isStartup[data.mediaType] = true;
-                    }
-                }
-            }
-        } catch (e) {
-
-        }
+        cmcdModel.onBufferLevelStateChanged(data);
     }
 
     function _onPlaybackSeeking() {
-        _isSeeking = true;
-
-        _onStateChange(Constants.CMCD_PLAYER_STATES.SEEKING);
+        cmcdModel.onPlaybackSeeking();
     }
 
     function _onPlaybackSeeked() {
-        _isSeeking = false;
-
-        for (let key in _bufferLevelStarved) {
-            if (_bufferLevelStarved.hasOwnProperty(key)) {
-                _bufferLevelStarved[key] = true;
-            }
-        }
-
-        for (let key in _isStartup) {
-            if (_isStartup.hasOwnProperty(key)) {
-                _isStartup[key] = true;
-            }
-        }
+        cmcdModel.onPlaybackSeeked();
     }
 
     function _onPlaybackWaiting() {
-        _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
-        
-        if (_isSeeking || !_playbackStartedTime) {
-            return;
-        }
-
-        _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
-    }
-
-    function _probeNextRequest(mediaType) {
-        if (!streamProcessors || streamProcessors.length === 0) {
-            return;
-        }
-        for (let streamProcessor of streamProcessors) {
-            if (streamProcessor.getType() === mediaType) {
-                return streamProcessor.probeNextRequest();
-            }
-        }
-    }
-
-    function _calculateRtp(request) {
-        try {
-            // Get the values we need
-            let playbackRate = playbackController.getPlaybackRate();
-            if (!playbackRate) {
-                playbackRate = 1;
-            }
-            let { bandwidth, mediaType, representation, duration } = request;
-            const mediaInfo = representation.mediaInfo;
-
-            if (!mediaInfo) {
-                return NaN;
-            }
-            let currentBufferLevel = _getBufferLevelByType(mediaType);
-            if (currentBufferLevel === 0) {
-                currentBufferLevel = 500;
-            }
-
-            // Calculate RTP
-            let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
-            let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
-            let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-            let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
-            let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
-
-
-            // Round to the next multiple of 100
-            return (parseInt(maxBandwidth / 100) + 1) * 100;
-        } catch (e) {
-            return NaN;
-        }
+        cmcdModel.onPlaybackWaiting();
     }
 
     function getCmcdRequestInterceptors() {
@@ -1022,19 +549,19 @@ function CmcdController() {
     function _cmcdRequestModeInterceptor(commonMediaRequest) {
         const requestType = commonMediaRequest.customData.request.type;
 
-        if (!_isIncludedInRequestFilter(requestType)) {
+        if (!cmcdModel.isIncludedInRequestFilter(requestType)) {
             commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
             return commonMediaRequest;
         }
 
         const request = commonMediaRequest.customData.request;
-
+    
         let cmcdRequestData = {
-            ...getCmcdData(request),
-            ..._updateMsdData(Constants.CMCD_MODE.REQUEST)
+            ...cmcdModel.getCmcdData(request),
+            ...cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST)
         };
 
-        const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
+        const cmcdVersion = settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION;
         if (cmcdVersion === 1) {
             // TODO: Re-Add this import once common-media-library pr is merged: https://github.com/qualabs/common-media-library/pull/48
             // Also remove the temporaryConvertToCmcdV1 line
@@ -1070,68 +597,6 @@ function CmcdController() {
         return result;
     }
 
-    function _updateMsdData(mode) {
-        const cmcdVersion = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
-        const data = {};
-        const msd = internalData.msd;
-
-        if (cmcdVersion === 2) {
-            if (!_msdSent[mode] && !isNaN(msd)) {
-                data.msd = msd;
-                _msdSent[mode] = true;
-            }
-        }
-    
-        return data;
-    }
-
-    /**
-     * Updates the request url and headers with CMCD data
-     * @param request
-     * @private
-     */
-    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData, targetSettings) {
-        const currentServiceLocation = request?.serviceLocation;
-        const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
-        const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
-            clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
-
-        if (isIncludedFilters && (isCmcdEnabled(targetSettings))) {
-            const cmcdParameters = getCmcdParametersFromManifest();
-            const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
-            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
-                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = request.headers || {};
-                request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
-            }
-        }
-    }
-
-    /**
-     * Generates the additional query parameters to be appended to the request url
-     * @param {object} request
-     * @return {array}
-     * @private
-     */
-    function _getAdditionalQueryParameter(request, cmcdData, targetSettings) {
-        try {
-            const additionalQueryParameter = [];
-            const cmcdQueryParameter = getQueryParameter(request, cmcdData, targetSettings);
-
-            if (cmcdQueryParameter) {
-                additionalQueryParameter.push(cmcdQueryParameter);
-            }
-
-            return additionalQueryParameter;
-        } catch (e) {
-            return [];
-        }
-    }
-
     function getCmcdResponseInterceptors(){
         return [_cmcdResponseModeInterceptor];
     }
@@ -1147,7 +612,7 @@ function CmcdController() {
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
-            if (targetSettings.enabled && _isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
+            if (targetSettings.enabled && cmcdModel._isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
@@ -1160,17 +625,6 @@ function CmcdController() {
         });
         
         return response;
-    }
-
-    function _sendCmcdDataReport(request){
-        urlLoader = URLLoader(context).create({
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            errors: Errors,
-        });
-
-        urlLoader.load({request})
     }
 
     function _addCmcdResponseModeData(response, cmcdData){
@@ -1240,20 +694,18 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
-        _resetInitialSettings();
+        cmcdModel.resetInitialSettings();
     }
 
     instance = {
-        getCmcdData,
         getQueryParameter,
         getHeaderParameters,
-        getCmcdParametersFromManifest,
         getCmcdRequestInterceptors,
         getCmcdResponseInterceptors,
-        setConfig,
-        reset,
         initialize,
         isCmcdEnabled,
+        reset,
+        setConfig
     };
 
     setup();

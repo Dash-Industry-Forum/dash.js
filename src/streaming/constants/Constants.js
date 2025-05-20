@@ -305,6 +305,18 @@ export default {
         ENDED: 'e',
         FATAL_ERROR: 'f',
     },
+    /**
+     *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_VERSION: 1,
+    /**
+     *  @constant {string} CMCD_DEFAULT_INCLUDE_IN_REQUESTS specifies default requests type to include CMCD data.
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
 
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
