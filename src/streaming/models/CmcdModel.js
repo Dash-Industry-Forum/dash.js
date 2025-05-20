@@ -293,8 +293,6 @@ function CmcdModel() {
 
     function onPlaybackSeeking() {
         _isSeeking = true;
-
-        onStateChange(Constants.CMCD_PLAYER_STATES.SEEKING);
     }
 
     function onPlaybackSeeked() {
@@ -313,14 +311,8 @@ function CmcdModel() {
         }
     }
 
-    function onPlaybackWaiting() {
-        onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
-        
-        if (_isSeeking || !_playbackStartedTime) {
-            return;
-        }
-
-        onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
+    function wasPlaying() {
+        return !_isSeeking && _playbackStartedTime;
     }
 
     function _probeNextRequest(mediaType) {
@@ -346,7 +338,6 @@ function CmcdModel() {
 
     function onPlaybackPlaying() {
         _getMsdData();
-        onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
     }
 
     function _getMsdData() {
@@ -433,7 +424,6 @@ function CmcdModel() {
 
     function onStateChange(state) {
         internalData.sta = state;
-        onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
     function onEventChange(state){
@@ -645,7 +635,7 @@ function CmcdModel() {
         onPlaybackSeeking,
         onPlaybackSeeked,
         onPlaybackRateChanged,
-        onPlaybackWaiting,
+        wasPlaying,
         onManifestLoaded,
         onBufferLevelStateChanged,
         updateMsdData,

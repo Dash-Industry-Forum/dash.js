@@ -152,6 +152,7 @@ function CmcdController() {
 
     function _onStateChange(state) {
         cmcdModel.onStateChange(state);
+        _onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
     function _onEventChange(state){
@@ -169,6 +170,7 @@ function CmcdController() {
 
     function _onPlaybackPlaying() {
         cmcdModel.onPlaybackPlaying();
+        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
     }
 
     function _onPlayerError(errorData) {
@@ -531,6 +533,7 @@ function CmcdController() {
 
     function _onPlaybackSeeking() {
         cmcdModel.onPlaybackSeeking();
+        _onStateChange(Constants.CMCD_PLAYER_STATES.SEEKING);
     }
 
     function _onPlaybackSeeked() {
@@ -538,7 +541,12 @@ function CmcdController() {
     }
 
     function _onPlaybackWaiting() {
-        cmcdModel.onPlaybackWaiting();
+        _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
+                
+        if (cmcdModel.wasPlaying()){
+            _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
+        }
+
     }
 
     function getCmcdRequestInterceptors() {
