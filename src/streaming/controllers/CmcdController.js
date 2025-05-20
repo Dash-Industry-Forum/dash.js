@@ -612,7 +612,7 @@ function CmcdController() {
         const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
-            if (targetSettings.enabled && cmcdModel._isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
+            if (targetSettings.enabled && cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
