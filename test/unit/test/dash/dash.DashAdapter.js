@@ -1,12 +1,12 @@
 import DashAdapter from '../../../../src/dash/DashAdapter.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
-import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import { Cta608Parser } from '@svta/common-media-library/cta/608/Cta608Parser';
 import VoHelper from '../../helpers/VOHelper.js';
 import PatchHelper from '../../helpers/PatchHelper.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 const context = {};
 const voHelper = new VoHelper();
@@ -507,6 +507,34 @@ describe('DashAdapter', function () {
 
             expect(voRepresentations).to.be.instanceOf(Array);
             expect(voRepresentations).to.be.empty;
+        });
+
+        it('should return the adaptation with Role Main when getMainAdaptationForType is called', () => {
+            const manifest_with_video = {
+                loadedTime: new Date(),
+                mediaPresentationDuration: 10,
+                Period: [{
+                    AdaptationSet: [
+                        {
+                            id: 1,
+                            mimeType: Constants.VIDEO,
+                            Role: [{ schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'alternate' }]
+                        },
+                        {
+                            id: 2,
+                            mimeType: Constants.VIDEO,
+                            Role: [
+                                { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: DashConstants.MAIN },
+                                { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'dub' }
+                            ]
+                        }
+                    ]
+                }]
+            };
+            dashAdapter.updatePeriods(manifest_with_video);
+            const adaptation = dashAdapter.getMainAdaptationForType(Constants.VIDEO, { index: 0 });
+
+            expect(adaptation.id).to.equal(2);
         });
 
         it('should return the first adaptation when getMainAdaptationForType is called and streamInfo is undefined', () => {

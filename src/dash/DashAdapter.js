@@ -126,7 +126,7 @@ function DashAdapter() {
      */
     function getIsMain(adaptation) {
         return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
+            return role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === DashConstants.MAIN;
         })[0];
     }
 
