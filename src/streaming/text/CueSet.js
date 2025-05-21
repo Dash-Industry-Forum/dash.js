@@ -1,4 +1,4 @@
-/**
+﻿/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
@@ -28,62 +28,80 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * @class
+ * @classdesc Similar to Set<TextTrackCue>, but using the {@link areCuesEqual} function to compare cues, instead of ===.
  * @ignore
  */
+class CueSet {
 
-import DashConstants from '../constants/DashConstants.js';
+    /**
+     * The cues contained in the set, grouped by start time.
+     *
+     * @instance
+     * @type {Map<number, TextTrackCue[]>}
+     * @name CueSet.cues
+     * @memberof CueSet
+     */
 
-class Representation {
-
-    constructor() {
-        this.absoluteIndex = NaN;
-        this.adaptation = null;
-        this.availabilityTimeComplete = true;
-        this.availabilityTimeOffset = 0;
-        this.bandwidth = NaN;
-        this.bitrateInKbit = NaN;
-        this.bitsPerPixel = NaN;
-        this.codecFamily = null;
-        this.codecPrivateData = null;
-        this.codecs = null;
-        this.essentialProperties = [];
-        this.fragmentDuration = null;
-        this.frameRate = null;
-        this.height = NaN;
-        this.id = null;
-        this.indexRange = null;
-        this.initialization = null;
-        this.maxPlayoutRate = NaN;
-        this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-        this.mediaInfo = null;
-        this.mimeType = null;
-        this.mseTimeOffset = NaN;
-        this.pixelsPerSecond = NaN;
-        this.presentationTimeOffset = 0;
-        this.qualityRanking = NaN;
-        this.range = null;
-        this.scanType = null;
-        this.segments = null;
-        this.segmentDuration = NaN;
-        this.segmentInfoType = null;
-        this.supplementalProperties = [];
-        this.startNumber = 1;
-        this.timescale = 1;
-        this.width = NaN;
-        this.endNumber = null;
+    /**
+     * Creates a new CueSet instance.
+     *
+     * @param {ArrayLike<TextTrackCue>} [initialCues] - Optional initial cues to add to the set.
+     */
+    constructor(initialCues) {
+        this.cues = new Map();
+        if (initialCues) {
+            for (const cue of initialCues) {
+                this.addCue(cue);
+            }
+        }
     }
 
-    hasInitialization() {
-        return (this.initialization !== null || this.range !== null);
+    /**
+     * Checks if a cue is already in the set.
+     *
+     * @param {TextTrackCue} cue
+     * @returns {boolean}
+     */
+    hasCue(cue) {
+        const cuesWithSameStartTime = this.cues.get(cue.startTime);
+        return cuesWithSameStartTime && cuesWithSameStartTime.some(c => areCuesEqual(c, cue));
     }
 
-    hasSegments() {
-        return this.segmentInfoType !== DashConstants.BASE_URL &&
-            this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !this.indexRange;
+    /**
+     * Adds a cue to the set, if it is not already present.
+     *
+     * @param {TextTrackCue} cue
+     */
+    addCue(cue) {
+        const cuesWithSameStartTime = this.cues.get(cue.startTime);
+
+        if (!cuesWithSameStartTime) {
+            this.cues.set(cue.startTime, [cue]);
+        } else if (!this.hasCue(cue)) {
+            cuesWithSameStartTime.push(cue);
+        }
     }
 }
 
-export default Representation;
+/**
+ * Compares two cues for equality.
+ *
+ * @param {TextTrackCue} cue1
+ * @param {TextTrackCue} cue2
+ * @returns {boolean}
+ * @private
+ */
+function areCuesEqual(cue1, cue2) {
+    if (cue1.startTime !== cue2.startTime ||
+        cue1.endTime !== cue2.endTime) {
+        return false;
+    }
+    if (cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
+        return cue1.text === cue2.text;
+    }
+    return false;
+}
+
+export { CueSet };

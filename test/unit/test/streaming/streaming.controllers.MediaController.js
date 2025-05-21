@@ -384,6 +384,7 @@ describe('MediaController', function () {
             id: 'id'
         };
         const frTrack = {
+            id: 0,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'fr',
@@ -393,6 +394,7 @@ describe('MediaController', function () {
             audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const qtzTrack = {
+            id: 'qtz',
             type: trackType,
             streamInfo: streamInfo,
             lang: 'qtz',
@@ -402,6 +404,7 @@ describe('MediaController', function () {
             audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2' }]
         };
         const enTrack = {
+            id: 2,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'en',
@@ -412,6 +415,7 @@ describe('MediaController', function () {
             selectionPriority: 5
         };
         const enADTrack = {
+            id: 3,
             type: trackType,
             streamInfo: streamInfo,
             lang: 'en',
@@ -422,6 +426,7 @@ describe('MediaController', function () {
             selectionPriority: 3
         };
         const esTrack = {
+            id: 'esTrack',
             type: trackType,
             streamInfo: streamInfo,
             lang: 'es',
@@ -454,6 +459,46 @@ describe('MediaController', function () {
             currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, qtzTrack)).to.be.true;
 
+        });
+
+        it('should check initial media settings to choose initial track via integer-id', function () {
+            mediaController.addTrack(qtzTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(5);
+
+            mediaController.setInitialSettings(trackType, {
+                id: 2,
+                lang: 'es'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, enTrack)).to.be.true;
+        });
+
+        it('should check initial media settings to choose initial track via string-id', function () {
+            mediaController.addTrack(qtzTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(frTrack);
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(enADTrack);
+            
+            let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
+            expect(trackList).to.have.lengthOf(5);
+            
+            mediaController.setInitialSettings(trackType, {
+                id: 'esTrack',
+                lang: 'en'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+            
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
 
         it('should check initial media settings to choose initial track with 639-2 3-letter code', function () {
@@ -655,6 +700,20 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, frTrack)).to.be.true;
         });
 
+        it('should check initial media settings to choose initial track based on role', function () {
+            mediaController.addTrack(enTrack);
+            mediaController.addTrack(esTrack);
+            mediaController.addTrack(enADTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                role: { schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
+        });
+
         it('should not check initial media settings to choose initial track when it has already selected a track', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(qtzTrack);
@@ -730,7 +789,8 @@ describe('MediaController', function () {
                     representationCount: track.bitrateList.length,
                     audioChannelConfiguration: track.audioChannelConfiguration ? track.audioChannelConfiguration : [],
                     selectionPriority: !isNaN(track.selectionPriority) ? track.selectionPriority : 1,
-                    supplementalProperties: track.supplementalProperties ? track.supplementalProperties : []
+                    supplementalProperties: track.supplementalProperties ? track.supplementalProperties : [],
+                    roles: track.roles ? track.roles : []
                 };
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
@@ -756,6 +816,83 @@ describe('MediaController', function () {
                     'video',
                     { bitrateList: [{ bandwidth: 2000 }], selectionPriority: 1 },
                     { bitrateList: [{ bandwidth: 1000 }], selectionPriority: 2 }
+                );
+            });
+        })
+
+        describe('roleMain flag' ,function () {
+            beforeEach(function () {
+                settings.update({ 
+                    streaming: { 
+                        selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+                        prioritizeRoleMain: true
+                    }
+                });
+            });
+
+            it('should select track with role set to main if no selectionPriority is provided', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should select track with role set to main if other tracks have no role', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [] }
+                );
+            });
+
+            it('should select track with role set to main with multiple role descriptors', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' },{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should select track with no role if other tracks have role not main', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [] },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                );
+            });
+
+            it('should not select track with no role if other tracks have role not main, when disabled in Settings', function () {
+                settings.update({ 
+                    streaming: { 
+                        assumeDefaultRoleAsMain: false
+                    }
+                });
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [] }
+                );
+            });
+
+            it('should select track based on selectionPriority, if provided, and disregard role main', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }], selectionPriority: 2 },
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }], selectionPriority: 1 }
+                );
+            });
+
+            it('should select track based on selectionModeForInitialTrack if roleMain flag is false', function () {
+                settings.update({ streaming: { 
+                    prioritizeRoleMain: false, 
+                    selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } 
+                });
+                
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] }
                 );
             });
         })

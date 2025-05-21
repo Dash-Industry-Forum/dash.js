@@ -477,7 +477,7 @@ function EventController() {
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
                 event.triggeredReceivedEvent = true;
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: JSON.parse(JSON.stringify(event)) }, { mode });
+                eventBus.trigger(event.eventStream.schemeIdUri, { event }, { mode });
                 return;
             }
 
@@ -494,10 +494,12 @@ function EventController() {
                     _sendCallbackRequest(url);
                 } else {
                     logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
-                    eventBus.trigger(event.eventStream.schemeIdUri, { event: JSON.parse(JSON.stringify(event)) }, { mode });
-                    if (settings.get().streaming.events.deleteEventMessageDataAfterEventStarted) {
-                        delete event.messageData;
-                        delete event.parsedMessageData;
+                    eventBus.trigger(event.eventStream.schemeIdUri, { event }, { mode });
+                    if (settings.get().streaming.events.deleteEventMessageDataTimeout > -1) {
+                        setTimeout(() => {
+                            delete event.messageData;
+                            delete event.parsedMessageData;
+                        }, settings.get().streaming.events.deleteEventMessageDataTimeout);
                     }
                 }
                 event.triggeredStartEvent = true;
