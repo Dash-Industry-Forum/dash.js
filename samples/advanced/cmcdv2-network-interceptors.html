@@ -71,6 +71,7 @@
             player.updateSettings({
                 streaming: {
                     cmcd: {
+                        version: 2,
                         enabled: true, /* enable reporting of cmcd parameters */
                         sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
                         cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
@@ -81,10 +82,11 @@
                             {
                                 cmcdMode: 'response',
                                 enabled: true,
-                                url: 'http://example.com/report1',
-                                enabledKeys: ['ot'],
-                                includeOnRequests: ['mpd'],
-                            }
+                                url: 'http://localhost:3003/response-mode',
+                                enabledKeys: ['ot', 'rc', 'msd'],
+                                mode: CMCD_MODE_QUERY,
+                                includeOnRequests: ['mpd', 'segment'],
+                            },
                         ]
                     }
                 }
@@ -95,7 +97,7 @@
 
             /* Callback before report */
             player.addRequestInterceptor((request) => {
-                if (request.customData.request.type == 'CmcdResponse' && request.url.includes('http://example.com/report1')) {
+                if (request.customData.request.type == 'CmcdResponse' && request.url.includes('http://localhost:3003/response-mode')) {
                     let customKey = 'synchronization-leader-sid';
                     let customKeyValue = '123'
                     let { cmcd } = request;
@@ -113,7 +115,7 @@
             /* Callback after server response */
             player.addResponseInterceptor((response) => {
                 request = response.request.customData.request;
-                if (request.type == 'CmcdResponse' && request.url.includes('http://example.com/report1')) {
+                if (request.type == 'CmcdResponse' && request.url.includes('http://localhost:3003/response-mode')) {
                     console.log(request.cmcd);
                 }
                 return Promise.resolve(response);
@@ -121,7 +123,7 @@
 
             const originalOpen = XMLHttpRequest.prototype.open;
             XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-                if (url.includes('example.com/report1')) {
+                if (url.includes('response-mode')) {
                     const queryString = decodeURIComponent(url.split('CMCD=')[1]);
                     const data = getKeysForQueryMode(queryString);
                     var keys = Object.keys(data);
