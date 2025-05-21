@@ -309,6 +309,121 @@ function DashAdapter() {
         voPeriods = getRegularPeriods(newManifest);
     }
 
+    function mergeManifests(manifest, importedManifest, period, mpdHasDuration) {
+        const voPeriods = getRegularPeriods(manifest);
+        const periodIndex = voPeriods.findIndex(voperiod => voperiod.id === period.id);
+        
+        if (periodIndex === -1) {
+            // Period not found
+            return; 
+        }
+    
+        let newPeriod = {};
+        const linkedPeriod = voPeriods[periodIndex];
+    
+        if (importedManifest) {
+            const importedPeriod = importedManifest.Period[0];
+
+            if (importedManifest.hasOwnProperty(DashConstants.PROFILES)) {
+                importedPeriod.profiles = importedManifest.profiles;
+                
+                const existingProfiles = manifest.profiles ? manifest.profiles.split(',') : [];
+                const importedProfiles = importedManifest.profiles ? importedManifest.profiles.split(',') : [];
+                const uniqueProfiles = new Set([...existingProfiles, ...importedProfiles]);
+            
+                manifest.profiles = Array.from(uniqueProfiles).join(',');
+            }
+
+            if (importedManifest.EssentialProperty) {
+                importedPeriod.EssentialProperty = importedPeriod.EssentialProperty ? importedManifest.EssentialProperty.concat(importedPeriod.EssentialProperty) : importedManifest.EssentialProperty;
+            }
+
+            if (importedManifest.SupplementalProperty) {
+                importedPeriod.SupplementalProperty = importedPeriod.SupplementalProperty ? importedManifest.SupplementalProperty.concat(importedPeriod.SupplementalProperty) : importedManifest.SupplementalProperty;
+            }
+
+            newPeriod = {
+                baseUri: importedManifest.baseUri,
+                minBufferTime: importedManifest.minBufferTime,
+                start: linkedPeriod.start ?? importedPeriod.start,
+                id: linkedPeriod.id ?? importedPeriod.id,
+                duration: linkedPeriod.duration,
+                ServiceDescription: period.ServiceDescription || [],
+                SupplementalProperty: period.SupplementalProperty || [],
+                EssentialProperty: period.EssentialProperty || [],
+                EventStream: period.EventStream || [],
+            };
+    
+            // Update duration
+            if (importedPeriod.duration && importedPeriod.duration < linkedPeriod.duration) {
+                newPeriod.duration = importedPeriod.duration;
+                if (!mpdHasDuration) {
+                    manifest.mediaPresentationDuration += importedPeriod.duration - linkedPeriod.duration;
+                }
+            }
+    
+            // Merge custom namespace properties
+            Object.keys(linkedPeriod)
+                .filter(name => name.includes(':'))
+                .forEach(name => newPeriod[name] = linkedPeriod[name]);
+
+            _mergeEquivalentProperties(newPeriod.ServiceDescription, importedPeriod.ServiceDescription, DashConstants.ID);
+            _mergeEquivalentProperties(newPeriod.SupplementalProperty, importedPeriod.SupplementalProperty, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+            _mergeEquivalentProperties(newPeriod.EssentialProperty, importedPeriod.EssentialProperty, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+            _mergeEquivalentProperties(newPeriod.EventStream, importedPeriod.EventStream, Constants.SCHEME_ID_URI, DashConstants.VALUE);
+    
+            removeEmptyProperties(newPeriod, [
+                DashConstants.SERVICE_DESCRIPTION,
+                DashConstants.SUPPLEMENTAL_PROPERTY, 
+                DashConstants.ESSENTIAL_PROPERTY, 
+                DashConstants.EVENT_STREAM
+            ]);
+
+            newPeriod.baseURL = importedManifest.baseUri;
+            if (importedManifest.BaseURL || importedPeriod.BaseURL) {
+                newPeriod.BaseURL = [...(importedManifest.BaseURL || []), ...(importedPeriod.BaseURL || [])].filter(Boolean);
+            }
+
+            newPeriod.AdaptationSet = importedPeriod.AdaptationSet;
+        } else {
+            newPeriod = { ...linkedPeriod };
+            delete newPeriod.ImportedMPD;
+            delete newPeriod.earliestResolutionTimeOffset;
+        }
+    
+        if (newPeriod.minBufferTime && (newPeriod.AdaptationSet || newPeriod.duration === 0)) {
+            manifest.Period[periodIndex] = newPeriod;
+        } else {
+            manifest.Period.splice(periodIndex, 1);
+        }
+    }
+
+    function _mergeEquivalentProperties(targetArray, sourceArray, keyProp, valueProp) {
+        if (!sourceArray || !targetArray) {
+            return;
+        }
+        
+        for (const item of sourceArray) {
+            const index = targetArray.findIndex(existingItem => existingItem[keyProp] === item[keyProp] && (!valueProp || existingItem[valueProp] === item[valueProp]));
+            if (index !== -1) {
+                // Replace existing entry
+                targetArray[index] = item;
+            } else {
+                targetArray.push(item);
+            }
+        }
+    }
+    
+    // Helper function to remove empty properties
+    function removeEmptyProperties(obj, propertyNames) {
+        for (const prop of propertyNames) {
+            if (Array.isArray(obj[prop]) && obj[prop].length === 0) {
+                delete obj[prop];
+            }
+        }
+    }
+    
+
     /**
      * Returns an array of streamInfo objects
      * @param {object} externalManifest
@@ -612,6 +727,18 @@ function DashAdapter() {
     function getDuration(externalManifest) {
         const manifest = getManifest(externalManifest);
         return dashManifestModel.getDuration(manifest);
+    }
+
+    /**
+     * Returns all linked periods of the MPD
+     * @param {object} externalManifest Omit this value if no external manifest should be used
+     * @returns {Array} linked periods
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getLinkPeriods(externalManifest) {
+        const mpd = getMpd(externalManifest);
+        return dashManifestModel.getLinkPeriods(mpd);
     }
 
     /**
@@ -1242,6 +1369,7 @@ function DashAdapter() {
         getIsTextTrack,
         getIsTypeOf,
         getLocation,
+        getLinkPeriods,
         getMainAdaptationForType,
         getManifestUpdatePeriod,
         getMediaInfoForType,
@@ -1260,6 +1388,7 @@ function DashAdapter() {
         getUTCTimingSources,
         getVoRepresentations,
         isPatchValid,
+        mergeManifests,
         reset,
         setConfig,
         updatePeriods,

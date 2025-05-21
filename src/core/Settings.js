@@ -332,6 +332,9 @@ import Events from './events/Events.js';
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
+ *            },
+ *            listMpds: {
+ *                minEarliestResolutionTimeOffset: 2,
  *            }
  *          },
  *          errors: {
@@ -941,6 +944,12 @@ import Events from './events/Events.js';
  */
 
 /**
+ * @typedef {Object} listMpdSettings
+ * @property {boolean} [minEarliestResolutionTimeOffset=2]
+ * Min earliest resolution time offset avalaible.
+ */
+
+/**
  * @typedef {Object} StreamingSettings
  * @property {number} [abandonLoadTimeout=10000]
  * A timeout value in seconds, which during the ABRController will block switch-up events.
@@ -1057,6 +1066,8 @@ import Events from './events/Events.js';
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~listMpdSettings} listMpd
+ * Settings related to List Mpd configuration
  */
 
 
@@ -1387,6 +1398,9 @@ function Settings() {
                 audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
+            },
+            listMpd: {
+                minEarliestResolutionTimeOffset: 2
             }
         },
         errors: {
