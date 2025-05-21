@@ -34,6 +34,8 @@ import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
+import Utils from '../../core/Utils.js';
+import {CueSet} from './CueSet.js';
 import {renderHTML} from 'imsc';
 
 const CUE_PROPS_TO_COMPARE = [
@@ -496,6 +498,8 @@ function TextTracks(config) {
             return;
         }
 
+        const cueSet = new CueSet(track.cues);
+
         for (let item = 0; item < captionData.length; item++) {
             let cue = null;
             const currentItem = captionData[item];
@@ -515,7 +519,8 @@ function TextTracks(config) {
 
             try {
                 if (cue) {
-                    if (!cueInTrack(track, cue)) {
+                    if (!cueSet.hasCue(cue)) {
+                        cueSet.addCue(cue);
                         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
                             if (!track.manualCueList) {
                                 track.manualCueList = [];
@@ -726,7 +731,7 @@ function TextTracks(config) {
 
     function _getCueInformationForNonHtml(currentItem, timeOffset) {
         let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-        cue.cueID = `${cue.startTime}_${cue.endTime}`;
+        cue.cueID = Utils.generateUuid();
         return cue;
     }
 
@@ -872,19 +877,6 @@ function TextTracks(config) {
         } else {
             removeNativeCueStyle.call(this);
         }
-    }
-
-    function cueInTrack(track, cue) {
-        if (!track.cues) {
-            return false;
-        }
-        for (let i = 0; i < track.cues.length; i++) {
-            if ((track.cues[i].startTime === cue.startTime) &&
-                (track.cues[i].endTime === cue.endTime)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     function cueInRange(cue, start, end, strict = true) {
