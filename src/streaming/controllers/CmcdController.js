@@ -139,7 +139,7 @@ function CmcdController() {
         const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval }) => {
-            timeInterval = timeInterval || Constants.CMCD_DEFAULT_TIME_INTERVAL;
+            timeInterval = timeInterval ?? Constants.CMCD_DEFAULT_TIME_INTERVAL;
             if (timeInterval >= 1) {
                 const triggerEventModeInterval = () => {
                     _onEventChange(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL);
