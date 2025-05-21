@@ -465,6 +465,10 @@ function CmcdController() {
     function _checkTargetAvailableKeys(targetSettings) {
         const cmcdAvailableKeysForMode = _getAvailableKeysForTarget(targetSettings);
         const enabledCMCDKeys = targetSettings.enabledKeys;
+        
+        if (!enabledCMCDKeys) {
+            return false;
+        }
 
         const invalidKeys = enabledCMCDKeys.filter(k => !cmcdAvailableKeysForMode.includes(k));
 
