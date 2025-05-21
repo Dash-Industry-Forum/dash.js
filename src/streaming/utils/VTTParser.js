@@ -157,7 +157,7 @@ function VTTParser() {
                         break;
                     case 'size':
                     case 'S':
-                        styleObject.size = settingValue;
+                        styleObject.size = parseInt(settingValue, 10);
                         break;
                 }
             }
