@@ -233,29 +233,29 @@ export default {
      */
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     /**
-    *  @constant {string} CMCD_COMMON_AVAILABLE_KEYS_V2 specifies the common available keys for CMCD version 2 metrics across all modes (event, request, and response).
+    *  @constant {string} CMCD_V2_COMMON_AVAILABLE_KEYS specifies the common available keys for CMCD version 2 metrics across all modes (event, request, and response).
     *  @memberof Constants#
     *  @static
     */
     CMCD_V2_COMMON_AVAILABLE_KEYS: ['br', 'ab', 'bl', 'tbl', 'bs', 'cdn', 'cid', 'ltc', 'mtp', 'pr', 'sf', 'sid', 'bg', 'sta', 'st', 'ts', 'tpb', 'tb', 'lb', 'tab', 'lab', 'pt', 'ec', 'msd', 'v'],
     /**
-    *  @constant {string} CMCD_EVENT_MODE_AVAILABLE_KEYS_V2 specifies the available keys for CMCD version 2 metrics for event mode.
+    *  @constant {string} CMCD_V2_EVENT_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for event mode.
     *  @memberof Constants#
     *  @static
     */
     CMCD_V2_EVENT_MODE_AVAILABLE_KEYS: ['e'],
     /**
-    *  @constant {string} CMCD_RESPONSE_MODE_AVAILABLE_KEYS_V2 specifies the available keys for CMCD version 2 metrics for response mode.
+    *  @constant {string} CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for response mode.
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'su'],
+    CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'rc', 'su', 'ttfb', 'ttfbb', 'ttlb', 'url', 'cmsdd', 'cmsds'],
     /**
-    *  @constant {string} CMCD_REQUEST_MODE_AVAILABLE_KEYS_V2 specifies the available keys for CMCD version 2 metrics for request mode.
+    *  @constant {string} CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for request mode.
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'su', 'rc', 'ttfb', 'ttfbb', 'ttlb', 'url', 'cmsdd', 'cmsds'],
+    CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'su'],
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
