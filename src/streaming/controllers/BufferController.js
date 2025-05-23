@@ -603,7 +603,14 @@ function BufferController(config) {
         }
 
         logger.debug(`Using changeType() to switch from codec ${oldRepresentation.codecs} to ${newRepresentation.codecs}`);
-        return sourceBufferSink.changeType(newRepresentation);
+
+        // SourceBufferSink's changeType will be invoked with the AbrRepresentation, ie.
+        // representation from the manifest. However, MSE SourceBuffer doesn't understand
+        // enhancement codecs. In the case an enhancement representation is selected, resolve
+        // the dependent (base) representation before passing the codecs to MSE's changeType
+        const representation = newRepresentation.dependentRepresentation ?
+            newRepresentation.dependentRepresentation : newRepresentation;
+        return sourceBufferSink.changeType(representation);
     }
 
     function pruneAllSafely() {
