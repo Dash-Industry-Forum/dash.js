@@ -547,6 +547,19 @@
           "Audio",
           "Events"
         ]
+      },
+      {
+        "title": "Adding external WebVTT subtitles",
+        "description": "Example showing how to add external WebVTT subtitles that are not specified in the manifest",
+        "href": "captioning/external-subtitle.html",
+        "image": "lib/img/bbb-1.jpg",
+        "labels": [
+          "VoD",
+          "External caption",
+          "Video",
+          "Audio",
+          "Events"
+        ]
       }
     ]
   },
