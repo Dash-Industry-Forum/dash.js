@@ -1,9 +1,9 @@
-/**
+﻿/**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2023, Dash Industry Forum.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,51 +28,80 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * @class
+ * @classdesc Similar to Set<TextTrackCue>, but using the {@link areCuesEqual} function to compare cues, instead of ===.
  * @ignore
  */
-import DashConstants from '../constants/DashConstants.js'
+class CueSet {
 
-class DescriptorType {
-    constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
-    }
+    /**
+     * The cues contained in the set, grouped by start time.
+     *
+     * @instance
+     * @type {Map<number, TextTrackCue[]>}
+     * @name CueSet.cues
+     * @memberof CueSet
+     */
 
-    init(data) {
-        if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value !== null && data.value !== undefined ? data.value.toString() : null;
-            this.id = data.id ? data.id : null;
-            // Only add the DVB extensions if they exist
-            if (data[DashConstants.DVB_URL]) {
-                this.dvbUrl = data[DashConstants.DVB_URL]
-            }
-            if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
-            }
-            if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
+    /**
+     * Creates a new CueSet instance.
+     *
+     * @param {ArrayLike<TextTrackCue>} [initialCues] - Optional initial cues to add to the set.
+     */
+    constructor(initialCues) {
+        this.cues = new Map();
+        if (initialCues) {
+            for (const cue of initialCues) {
+                this.addCue(cue);
             }
         }
     }
 
-    inArray(arr) {
-        if (arr) {
-            return arr.some((entry) => {
-                return (
-                    this.schemeIdUri === entry.schemeIdUri && (
-                        this.value ?
-                            (this.value.toString().match(entry.value)) : // check if provided value matches RegExp
-                            (''.match(entry.value)) // check if RegExp allows absent value
-                    )
-                );
-            })
+    /**
+     * Checks if a cue is already in the set.
+     *
+     * @param {TextTrackCue} cue
+     * @returns {boolean}
+     */
+    hasCue(cue) {
+        const cuesWithSameStartTime = this.cues.get(cue.startTime);
+        return cuesWithSameStartTime && cuesWithSameStartTime.some(c => areCuesEqual(c, cue));
+    }
+
+    /**
+     * Adds a cue to the set, if it is not already present.
+     *
+     * @param {TextTrackCue} cue
+     */
+    addCue(cue) {
+        const cuesWithSameStartTime = this.cues.get(cue.startTime);
+
+        if (!cuesWithSameStartTime) {
+            this.cues.set(cue.startTime, [cue]);
+        } else if (!this.hasCue(cue)) {
+            cuesWithSameStartTime.push(cue);
         }
-        return false;
     }
 }
 
-export default DescriptorType;
+/**
+ * Compares two cues for equality.
+ *
+ * @param {TextTrackCue} cue1
+ * @param {TextTrackCue} cue2
+ * @returns {boolean}
+ * @private
+ */
+function areCuesEqual(cue1, cue2) {
+    if (cue1.startTime !== cue2.startTime ||
+        cue1.endTime !== cue2.endTime) {
+        return false;
+    }
+    if (cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
+        return cue1.text === cue2.text;
+    }
+    return false;
+}
+
+export { CueSet };

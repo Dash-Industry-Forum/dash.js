@@ -1,6 +1,6 @@
 {
   "name": "dashjs",
-  "version": "5.0.2",
+  "version": "5.0.3",
   "description": "A reference client implementation for the playback of MPEG DASH via Javascript and compliant browsers.",
   "author": "Dash Industry Forum",
   "license": "BSD-3-Clause",
@@ -84,7 +84,7 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
-    "@svta/common-media-library": "^0.11.0",
+    "@svta/common-media-library": "^0.12.4",
     "bcp-47-match": "^2.0.3",
     "bcp-47-normalize": "^2.3.0",
     "codem-isoboxer": "0.3.10",
