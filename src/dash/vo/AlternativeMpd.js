@@ -45,7 +45,7 @@ class AlternativeMpd {
         this.returnOffset = NaN;
         this.returnOffset = NaN;
         this.clip = true;
-        this.startAtPlayhead = false;
+        this.startWithOffset = false;
 
         // Old attributes
         this.disableJumpTimeOffest = NaN;
