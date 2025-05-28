@@ -2827,7 +2827,7 @@ const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]
  * @param number - Number.
  * @param subNumber - Sub-number.
  * @param bandwidth - Bandwidth.
- * @param time - Time.
+ * @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
  *
  * @returns Processed URI template.
  *
@@ -2857,6 +2857,9 @@ function processUriTemplate(uriTemplate, representationId, number, subNumber, ba
         value = bandwidth;
         break;
       case 'Time':
+        if (typeof time === 'string') {
+          return time;
+        }
         value = time ? Math.round(time) : time;
         break;
       default:
@@ -2970,10 +2973,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   decodeId3Frame: function() { return /* binding */ decodeId3Frame; }
 /* harmony export */ });
-/* harmony import */ var _decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./decodeId3PrivFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3PrivFrame.js");
-/* harmony import */ var _decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./decodeId3TextFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3TextFrame.js");
-/* harmony import */ var _decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./decodeId3UrlFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3UrlFrame.js");
-/* harmony import */ var _decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./decodeId3ImageFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3ImageFrame.js");
+/* harmony import */ var _decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./decodeId3ImageFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3ImageFrame.js");
+/* harmony import */ var _decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./decodeId3PrivFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3PrivFrame.js");
+/* harmony import */ var _decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./decodeId3TextFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3TextFrame.js");
+/* harmony import */ var _decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./decodeId3UrlFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3UrlFrame.js");
 
 
 
@@ -2991,13 +2994,13 @@ __webpack_require__.r(__webpack_exports__);
  */
 function decodeId3Frame(frame) {
   if (frame.type === 'PRIV') {
-    return (0,_decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_0__.decodeId3PrivFrame)(frame);
+    return (0,_decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_1__.decodeId3PrivFrame)(frame);
   } else if (frame.type[0] === 'W') {
-    return (0,_decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_2__.decodeId3UrlFrame)(frame);
+    return (0,_decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_3__.decodeId3UrlFrame)(frame);
   } else if (frame.type === 'APIC') {
-    return (0,_decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_3__.decodeId3ImageFrame)(frame);
+    return (0,_decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_0__.decodeId3ImageFrame)(frame);
   }
-  return (0,_decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_1__.decodeId3TextFrame)(frame);
+  return (0,_decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_2__.decodeId3TextFrame)(frame);
 }
 
 /***/ }),
@@ -3013,7 +3016,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   decodeId3ImageFrame: function() { return /* binding */ decodeId3ImageFrame; }
 /* harmony export */ });
-/* harmony import */ var _utils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils.js */ "./node_modules/@svta/common-media-library/dist/utils.js");
+/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
 /* harmony import */ var _toArrayBuffer_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./toArrayBuffer.js */ "./node_modules/@svta/common-media-library/dist/id3/util/toArrayBuffer.js");
 /* harmony import */ var _utf8_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utf8.js */ "./node_modules/@svta/common-media-library/dist/id3/util/utf8.js");
 
@@ -3039,16 +3042,16 @@ function decodeId3ImageFrame(frame) {
   if (mimeTypeEndIndex === -1) {
     return undefined;
   }
-  const mimeType = (0,_utils_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 1, mimeTypeEndIndex));
+  const mimeType = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 1, mimeTypeEndIndex));
   const pictureType = frame.data[2 + mimeTypeEndIndex];
   const descriptionEndIndex = frame.data.subarray(3 + mimeTypeEndIndex).indexOf(0);
   if (descriptionEndIndex === -1) {
     return undefined;
   }
-  const description = (0,_utils_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 3 + mimeTypeEndIndex, descriptionEndIndex));
+  const description = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 3 + mimeTypeEndIndex, descriptionEndIndex));
   let data;
   if (mimeType === '-->') {
-    data = (0,_utils_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 4 + mimeTypeEndIndex + descriptionEndIndex));
+    data = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 4 + mimeTypeEndIndex + descriptionEndIndex));
   } else {
     data = (0,_toArrayBuffer_js__WEBPACK_IMPORTED_MODULE_1__.toArrayBuffer)(frame.data.subarray(4 + mimeTypeEndIndex + descriptionEndIndex));
   }
@@ -5643,51 +5646,6 @@ function throwError(action, src, type, cause) {
 
 /***/ }),
 
-/***/ "./node_modules/@svta/common-media-library/dist/utils.js":
-/*!***************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils.js ***!
-  \***************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   base64decode: function() { return /* reexport safe */ _utils_base64decode_js__WEBPACK_IMPORTED_MODULE_0__.base64decode; },
-/* harmony export */   base64encode: function() { return /* reexport safe */ _utils_base64encode_js__WEBPACK_IMPORTED_MODULE_1__.base64encode; },
-/* harmony export */   convertUint8ToUint16: function() { return /* reexport safe */ _utils_convertUint8ToUint16_js__WEBPACK_IMPORTED_MODULE_2__.convertUint8ToUint16; },
-/* harmony export */   roundToEven: function() { return /* reexport safe */ _utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_3__.roundToEven; },
-/* harmony export */   stringToUint16: function() { return /* reexport safe */ _utils_stringToUint16_js__WEBPACK_IMPORTED_MODULE_4__.stringToUint16; },
-/* harmony export */   unescapeHtml: function() { return /* reexport safe */ _utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_5__.unescapeHtml; },
-/* harmony export */   urlToRelativePath: function() { return /* reexport safe */ _utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_6__.urlToRelativePath; },
-/* harmony export */   utf8ArrayToStr: function() { return /* reexport safe */ _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_7__.utf8ArrayToStr; },
-/* harmony export */   uuid: function() { return /* reexport safe */ _utils_uuid_js__WEBPACK_IMPORTED_MODULE_8__.uuid; }
-/* harmony export */ });
-/* harmony import */ var _utils_base64decode_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/base64decode.js */ "./node_modules/@svta/common-media-library/dist/utils/base64decode.js");
-/* harmony import */ var _utils_base64encode_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/base64encode.js */ "./node_modules/@svta/common-media-library/dist/utils/base64encode.js");
-/* harmony import */ var _utils_convertUint8ToUint16_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/convertUint8ToUint16.js */ "./node_modules/@svta/common-media-library/dist/utils/convertUint8ToUint16.js");
-/* harmony import */ var _utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/roundToEven.js */ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js");
-/* harmony import */ var _utils_stringToUint16_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/stringToUint16.js */ "./node_modules/@svta/common-media-library/dist/utils/stringToUint16.js");
-/* harmony import */ var _utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/unescapeHtml.js */ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js");
-/* harmony import */ var _utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/urlToRelativePath.js */ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js");
-/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
-/* harmony import */ var _utils_uuid_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/uuid.js */ "./node_modules/@svta/common-media-library/dist/utils/uuid.js");
-/**
- * A collection of tools for working with media.
- *
- * @packageDocumentation
- */
-
-
-
-
-
-
-
-
-
-
-/***/ }),
-
 /***/ "./node_modules/@svta/common-media-library/dist/utils/base64decode.js":
 /*!****************************************************************************!*\
   !*** ./node_modules/@svta/common-media-library/dist/utils/base64decode.js ***!
@@ -5742,37 +5700,6 @@ function base64encode(binary) {
 
 /***/ }),
 
-/***/ "./node_modules/@svta/common-media-library/dist/utils/convertUint8ToUint16.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/convertUint8ToUint16.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   convertUint8ToUint16: function() { return /* binding */ convertUint8ToUint16; }
-/* harmony export */ });
-/**
- * Converts a Uint8Array to a Uint16Array by aligning its buffer.
- *
- * @param input - The Uint8Array to convert
- * @returns A properly aligned Uint16Array
- *
- * @group Utils
- * @beta
- */
-function convertUint8ToUint16(input) {
-  if (input.length % 2 !== 0) {
-    const padded = new Uint8Array(input.length + 1);
-    padded.set(input);
-    return new Uint16Array(padded.buffer);
-  }
-  return new Uint16Array(input.buffer);
-}
-
-/***/ }),
-
 /***/ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js":
 /*!***************************************************************************!*\
   !*** ./node_modules/@svta/common-media-library/dist/utils/roundToEven.js ***!
@@ -5810,97 +5737,6 @@ function roundToEven(value, precision) {
     // Otherwise, proceed as normal
     return Math.round(value * decimalShift) / decimalShift;
   }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/stringToUint16.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/stringToUint16.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; }
-/* harmony export */ });
-/**
- * Converts a string to a Uint16Array.
- *
- * @param str - The string to convert
- * @returns A Uint16Array representation of the string
- *
- * @group Utils
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/utils/stringToUint16.test.ts#example}
- */
-function stringToUint16(str) {
-  return new Uint16Array([...str].map(char => char.charCodeAt(0)));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; }
-/* harmony export */ });
-const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
-/**
- * Unescapes HTML entities
- *
- * @param text - The text to unescape
- * @returns The unescaped text
- *
- * @group Utils
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/utils/unescapeHtml.test.ts#example}
- */
-function unescapeHtml(text) {
-  if (text.indexOf('&') === -1) {
-    return text;
-  }
-  return text.replace(escapedHtml, match => {
-    switch (match) {
-      case '&amp;':
-        return '&';
-      case '&lt;':
-        return '<';
-      case '&gt;':
-        return '>';
-      case '&quot;':
-        return '"';
-      case '&apos;':
-        return '\'';
-      case '&nbsp;':
-        return '\u{a0}';
-      case '&lrm;':
-        return '\u{200e}';
-      case '&rlm;':
-        return '\u{200f}';
-      default:
-        {
-          if (match[1] === '#') {
-            const code = match[2] === 'x' || match[2] === 'X' ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
-            return String.fromCodePoint(code);
-          }
-          return match;
-        }
-    }
-  });
 }
 
 /***/ }),
@@ -6036,49 +5872,6 @@ function utf8ArrayToStr(array) {
     }
   }
   return out;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/uuid.js":
-/*!********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/uuid.js ***!
-  \********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   uuid: function() { return /* binding */ uuid; }
-/* harmony export */ });
-/**
- * Generate a random v4 UUID
- *
- * @returns A random v4 UUID
- *
- * @group Utils
- *
- * @beta
- */
-function uuid() {
-  try {
-    return crypto.randomUUID();
-  } catch (error) {
-    try {
-      const url = URL.createObjectURL(new Blob());
-      const uuid = url.toString();
-      URL.revokeObjectURL(url);
-      return uuid.slice(uuid.lastIndexOf('/') + 1);
-    } catch (error) {
-      let dt = new Date().getTime();
-      const uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-        const r = (dt + Math.random() * 16) % 16 | 0;
-        dt = Math.floor(dt / 16);
-        return (c == 'x' ? r : r & 0x3 | 0x8).toString(16);
-      });
-      return uuid;
-    }
-  }
 }
 
 /***/ }),
@@ -36322,7 +36115,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getVersionString: function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-const VERSION = '5.0.2';
+const VERSION = '5.0.3';
 function getVersionString() {
   return VERSION;
 }
@@ -36948,7 +36741,7 @@ function DashAdapter() {
    */
   function getIsMain(adaptation) {
     return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
-      return role.value === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MAIN;
+      return role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].DASH_ROLE_SCHEME_ID && role.value === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MAIN;
     })[0];
   }
 
@@ -45365,7 +45158,7 @@ class DescriptorType {
   init(data) {
     if (data) {
       this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-      this.value = data.value ? data.value.toString() : null;
+      this.value = data.value !== null && data.value !== undefined ? data.value.toString() : null;
       this.id = data.id ? data.id : null;
       // Only add the DVB extensions if they exist
       if (data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL]) {
@@ -45384,7 +45177,7 @@ class DescriptorType {
       return arr.some(entry => {
         return this.schemeIdUri === entry.schemeIdUri && (this.value ? this.value.toString().match(entry.value) :
         // check if provided value matches RegExp
-        ''.match(entry.value) // check if RegExp allows absent value   
+        ''.match(entry.value) // check if RegExp allows absent value
         );
       });
     }
@@ -72495,6 +72288,123 @@ class QoeInfo {
 
 /***/ }),
 
+/***/ "./src/streaming/text/CueSet.js":
+/*!**************************************!*\
+  !*** ./src/streaming/text/CueSet.js ***!
+  \**************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CueSet: function() { return /* binding */ CueSet; }
+/* harmony export */ });
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @classdesc Similar to Set<TextTrackCue>, but using the {@link areCuesEqual} function to compare cues, instead of ===.
+ * @ignore
+ */
+class CueSet {
+  /**
+   * The cues contained in the set, grouped by start time.
+   *
+   * @instance
+   * @type {Map<number, TextTrackCue[]>}
+   * @name CueSet.cues
+   * @memberof CueSet
+   */
+
+  /**
+   * Creates a new CueSet instance.
+   *
+   * @param {ArrayLike<TextTrackCue>} [initialCues] - Optional initial cues to add to the set.
+   */
+  constructor(initialCues) {
+    this.cues = new Map();
+    if (initialCues) {
+      for (const cue of initialCues) {
+        this.addCue(cue);
+      }
+    }
+  }
+
+  /**
+   * Checks if a cue is already in the set.
+   *
+   * @param {TextTrackCue} cue
+   * @returns {boolean}
+   */
+  hasCue(cue) {
+    const cuesWithSameStartTime = this.cues.get(cue.startTime);
+    return cuesWithSameStartTime && cuesWithSameStartTime.some(c => areCuesEqual(c, cue));
+  }
+
+  /**
+   * Adds a cue to the set, if it is not already present.
+   *
+   * @param {TextTrackCue} cue
+   */
+  addCue(cue) {
+    const cuesWithSameStartTime = this.cues.get(cue.startTime);
+    if (!cuesWithSameStartTime) {
+      this.cues.set(cue.startTime, [cue]);
+    } else if (!this.hasCue(cue)) {
+      cuesWithSameStartTime.push(cue);
+    }
+  }
+}
+
+/**
+ * Compares two cues for equality.
+ *
+ * @param {TextTrackCue} cue1
+ * @param {TextTrackCue} cue2
+ * @returns {boolean}
+ * @private
+ */
+function areCuesEqual(cue1, cue2) {
+  if (cue1.startTime !== cue2.startTime || cue1.endTime !== cue2.endTime) {
+    return false;
+  }
+  if (cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
+    return cue1.text === cue2.text;
+  }
+  return false;
+}
+
+
+/***/ }),
+
 /***/ "./src/streaming/text/DVBFonts.js":
 /*!****************************************!*\
   !*** ./src/streaming/text/DVBFonts.js ***!
@@ -74404,7 +74314,9 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var imsc__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! imsc */ "./node_modules/imsc/src/main/js/main.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _CueSet_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./CueSet.js */ "./src/streaming/text/CueSet.js");
+/* harmony import */ var imsc__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! imsc */ "./node_modules/imsc/src/main/js/main.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -74435,6 +74347,8 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 
 
@@ -74737,7 +74651,7 @@ function TextTracks(config) {
       clearCaptionContainer.call(this);
       const finalCue = document.createElement('div');
       captionContainer.appendChild(finalCue);
-      previousISDState = (0,imsc__WEBPACK_IMPORTED_MODULE_6__.renderHTML)(cue.isd, finalCue, function (src) {
+      previousISDState = (0,imsc__WEBPACK_IMPORTED_MODULE_8__.renderHTML)(cue.isd, finalCue, function (src) {
         return _resolveImageSrc(cue, src);
       }, captionContainer.clientHeight, captionContainer.clientWidth, settings.get().streaming.text.imsc.displayForcedOnlyMode, function (err) {
         logger.info('renderCaption :', err); /*TODO: add ErrorHandler management*/
@@ -74804,6 +74718,7 @@ function TextTracks(config) {
     if (!Array.isArray(captionData) || captionData.length === 0) {
       return;
     }
+    const cueSet = new _CueSet_js__WEBPACK_IMPORTED_MODULE_7__.CueSet(track.cues);
     for (let item = 0; item < captionData.length; item++) {
       let cue = null;
       const currentItem = captionData[item];
@@ -74820,7 +74735,8 @@ function TextTracks(config) {
       }
       try {
         if (cue) {
-          if (!cueInTrack(track, cue)) {
+          if (!cueSet.hasCue(cue)) {
+            cueSet.addCue(cue);
             if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
               if (!track.manualCueList) {
                 track.manualCueList = [];
@@ -74951,11 +74867,17 @@ function TextTracks(config) {
         if (currentItem.styles.line !== undefined && 'line' in cue) {
           cue.line = currentItem.styles.line;
         }
+        if (currentItem.styles.lineAlign !== undefined) {
+          cue.lineAlign = currentItem.styles.lineAlign;
+        }
         if (currentItem.styles.snapToLines !== undefined && 'snapToLines' in cue) {
           cue.snapToLines = currentItem.styles.snapToLines;
         }
         if (currentItem.styles.position !== undefined && 'position' in cue) {
           cue.position = currentItem.styles.position;
+        }
+        if (currentItem.styles.positionAlign !== undefined) {
+          cue.positionAlign = currentItem.styles.positionAlign;
         }
         if (currentItem.styles.size !== undefined && 'size' in cue) {
           cue.size = currentItem.styles.size;
@@ -75004,7 +74926,7 @@ function TextTracks(config) {
   }
   function _getCueInformationForNonHtml(currentItem, timeOffset) {
     let cue = new Cue(currentItem.start - timeOffset, currentItem.end - timeOffset, currentItem.data);
-    cue.cueID = `${cue.startTime}_${cue.endTime}`;
+    cue.cueID = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].generateUuid();
     return cue;
   }
   function manualCueProcessing(time) {
@@ -75131,17 +75053,6 @@ function TextTracks(config) {
     } else {
       removeNativeCueStyle.call(this);
     }
-  }
-  function cueInTrack(track, cue) {
-    if (!track.cues) {
-      return false;
-    }
-    for (let i = 0; i < track.cues.length; i++) {
-      if (track.cues[i].startTime === cue.startTime && track.cues[i].endTime === cue.endTime) {
-        return true;
-      }
-    }
-    return false;
   }
   function cueInRange(cue, start, end) {
     let strict = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
@@ -79229,27 +79140,38 @@ function VTTParser() {
   function getCaptionStyles(arr) {
     const styleObject = {};
     arr.forEach(function (element) {
-      if (element.split(/:/).length > 1) {
-        let val = element.split(/:/)[1];
-        let isPercentage = false;
-        if (val && val.search(/%/) != -1) {
-          isPercentage = true;
-          val = parseInt(val.replace(/%/, ''), 10);
-        }
-        if (element.match(/align/) || element.match(/A/)) {
-          styleObject.align = val;
-        }
-        if (element.match(/line/) || element.match(/L/)) {
-          styleObject.line = val === 'auto' ? val : parseInt(val, 10);
-          if (isPercentage) {
-            styleObject.snapToLines = false;
-          }
-        }
-        if (element.match(/position/) || element.match(/P/)) {
-          styleObject.position = val;
-        }
-        if (element.match(/size/) || element.match(/S/)) {
-          styleObject.size = val;
+      const parts = element.split(':');
+      if (parts.length > 1) {
+        const [settingName, settingValue] = parts;
+        switch (settingName) {
+          case 'align':
+          case 'A':
+            styleObject.align = settingValue;
+            break;
+          case 'line':
+          case 'L':
+            const [line, lineAlign] = settingValue.split(',');
+            const isPercentage = line.endsWith('%');
+            styleObject.line = line === 'auto' ? line : parseInt(line, 10);
+            if (isPercentage) {
+              styleObject.snapToLines = false;
+            }
+            if (lineAlign) {
+              styleObject.lineAlign = lineAlign;
+            }
+            break;
+          case 'position':
+          case 'P':
+            const [position, positionAlign] = settingValue.split(',');
+            styleObject.position = parseInt(position, 10);
+            if (positionAlign) {
+              styleObject.positionAlign = positionAlign;
+            }
+            break;
+          case 'size':
+          case 'S':
+            styleObject.size = parseInt(settingValue, 10);
+            break;
         }
       }
     });

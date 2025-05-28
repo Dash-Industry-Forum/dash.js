@@ -967,7 +967,7 @@ var TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)
  * @param number - Number.
  * @param subNumber - Sub-number.
  * @param bandwidth - Bandwidth.
- * @param time - Time.
+ * @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
  *
  * @returns Processed URI template.
  *
@@ -997,6 +997,9 @@ function processUriTemplate(uriTemplate, representationId, number, subNumber, ba
         value = bandwidth;
         break;
       case 'Time':
+        if (typeof time === 'string') {
+          return time;
+        }
         value = time ? Math.round(time) : time;
         break;
       default:
@@ -51088,7 +51091,7 @@ var DescriptorType = /*#__PURE__*/function () {
     value: function init(data) {
       if (data) {
         this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-        this.value = data.value ? data.value.toString() : null;
+        this.value = data.value !== null && data.value !== undefined ? data.value.toString() : null;
         this.id = data.id ? data.id : null;
         // Only add the DVB extensions if they exist
         if (data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].DVB_URL]) {
@@ -51110,7 +51113,7 @@ var DescriptorType = /*#__PURE__*/function () {
         return arr.some(function (entry) {
           return _this.schemeIdUri === entry.schemeIdUri && (_this.value ? _this.value.toString().match(entry.value) :
           // check if provided value matches RegExp
-          ''.match(entry.value) // check if RegExp allows absent value   
+          ''.match(entry.value) // check if RegExp allows absent value
           );
         });
       }
