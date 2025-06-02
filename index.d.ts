@@ -1913,6 +1913,9 @@ declare namespace dashjs {
                 audioChannelConfiguration?: string,
                 role?: string,
                 accessibility?: string
+            },
+            listMpdSettings?: {
+                minEarliestResolutionTimeOffset?: number
             }
         };
         errors?: {

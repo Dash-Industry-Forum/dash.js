@@ -942,7 +942,7 @@ import Events from './events/Events.js';
 /**
  * @typedef {Object} listMpdSettings
  * @property {boolean} [minEarliestResolutionTimeOffset=2]
- * Min earliest resolution time offset avalaible.
+ * Min earliest resolution time offset available.
  */
 
 /**

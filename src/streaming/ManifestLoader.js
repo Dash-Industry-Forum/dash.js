@@ -107,7 +107,7 @@ function ManifestLoader(config) {
         }
     }
 
-    function load(url, serviceLocation = null, queryParams = null, linkPeriod = null) {
+    function load(url, serviceLocation = null, queryParams = null, linkedPeriod = null) {
 
         const requestStartDate = new Date();
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
@@ -168,7 +168,7 @@ function ManifestLoader(config) {
                         parser = createParser(data);
                     }
 
-                    if (parser === null && !linkPeriod) {
+                    if (parser === null && !linkedPeriod) {
                         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
@@ -185,7 +185,7 @@ function ManifestLoader(config) {
                     try {
                         manifest = parser.parse(data);
                     } catch (e) {
-                        if (!linkPeriod) {
+                        if (!linkedPeriod) {
                             eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                                 manifest: null,
                                 error: new DashJSError(
@@ -221,13 +221,13 @@ function ManifestLoader(config) {
 
                         manifest.baseUri = baseUri;
                         manifest.loadedTime = new Date();
-                        if (!linkPeriod) {
+                        if (!linkedPeriod) {
                             xlinkController.resolveManifestOnLoad(manifest);
                             eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
                         } else {
                             resolve(manifest);
                         }
-                    } else if (!linkPeriod) {
+                    } else if (!linkedPeriod) {
                         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
@@ -238,7 +238,7 @@ function ManifestLoader(config) {
                     }
                 },
                 error: function (request, statusText, errorText) {
-                    if (!linkPeriod) {
+                    if (!linkedPeriod) {
                         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                             manifest: null,
                             error: new DashJSError(
@@ -253,7 +253,7 @@ function ManifestLoader(config) {
             }
         }
 
-        if (linkPeriod) {
+        if (linkedPeriod) {
             return new Promise((resolve, reject) => {
                 urlLoader.load(createUrlLoaderObject(resolve, reject));
             });

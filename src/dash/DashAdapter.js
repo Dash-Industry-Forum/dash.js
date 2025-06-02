@@ -736,9 +736,9 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getLinkPeriods(externalManifest) {
+    function getLinkedPeriods(externalManifest) {
         const mpd = getMpd(externalManifest);
-        return dashManifestModel.getLinkPeriods(mpd);
+        return dashManifestModel.getLinkedPeriods(mpd);
     }
 
     /**
@@ -1369,7 +1369,7 @@ function DashAdapter() {
         getIsTextTrack,
         getIsTypeOf,
         getLocation,
-        getLinkPeriods,
+        getLinkedPeriods,
         getMainAdaptationForType,
         getManifestUpdatePeriod,
         getMediaInfoForType,

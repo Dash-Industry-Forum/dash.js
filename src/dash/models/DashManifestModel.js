@@ -994,7 +994,7 @@ function DashManifestModel() {
         return voPeriods;
     }
 
-    function getLinkPeriods(mpd) {
+    function getLinkedPeriods(mpd) {
         const linkedPeriods = []
 
         if (!mpd || !mpd.manifest || !mpd.manifest.Period) {
@@ -1572,7 +1572,7 @@ function DashManifestModel() {
         getIsTypeOf,
         getLabelsForAdaptation,
         getLanguageForAdaptation,
-        getLinkPeriods,
+        getLinkedPeriods,
         getLocation,
         getManifestUpdatePeriod,
         getMimeType,

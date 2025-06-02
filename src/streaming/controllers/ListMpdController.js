@@ -28,7 +28,6 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-// import XlinkLoader from '../XlinkLoader.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
