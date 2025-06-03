@@ -29,6 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import { CMCD_V1_KEYS } from '@svta/common-media-library/cmcd/Cmcd';
+import { CMCD_V2_COMMON_KEYS } from '@svta/common-media-library/cmcd/CmcdV2Object';
+
+import { CMCD_V2_RESPONSE_MODE_KEYS } from '@svta/common-media-library/cmcd/CmcdV2Response';
+import { CMCD_V2_REQUEST_MODE_KEYS } from '@svta/common-media-library/cmcd/CmcdV2Request';
+import { CMCD_V2_EVENT_MODE_KEYS } from '@svta/common-media-library/cmcd/CmcdV2Event';
+
+import { CMCD_PLAYER_STATES } from '@svta/common-media-library/cmcd/CmcdPlayerState';
+import { CMCD_MODE } from '@svta/common-media-library/cmcd/CmcdMode';
+import { CMCD_REPORTING_EVENTS } from '@svta/common-media-library/cmcd/CmcdReportingEvent';
+import { CMCD_V2_TIME_INTERVAL_DEFAULT } from '@svta/common-media-library/cmcd/CmcdV2TimeInterval';
 /**
  * Constants declaration
  */
@@ -231,31 +242,31 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+    CMCD_AVAILABLE_KEYS: CMCD_V1_KEYS,
     /**
     *  @constant {string} CMCD_V2_COMMON_AVAILABLE_KEYS specifies the common available keys for CMCD version 2 metrics across all modes (event, request, and response).
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_COMMON_AVAILABLE_KEYS: ['br', 'ab', 'bl', 'tbl', 'bs', 'cdn', 'cid', 'ltc', 'mtp', 'pr', 'sf', 'sid', 'bg', 'sta', 'st', 'ts', 'tpb', 'tb', 'lb', 'tab', 'lab', 'pt', 'ec', 'msd', 'v'],
+    CMCD_V2_COMMON_AVAILABLE_KEYS: CMCD_V2_COMMON_KEYS,
     /**
     *  @constant {string} CMCD_V2_EVENT_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for event mode.
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_EVENT_MODE_AVAILABLE_KEYS: ['e'],
+    CMCD_V2_EVENT_MODE_AVAILABLE_KEYS: CMCD_V2_EVENT_MODE_KEYS,
     /**
     *  @constant {string} CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for response mode.
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'rc', 'su', 'ttfb', 'ttfbb', 'ttlb', 'url', 'cmsdd', 'cmsds'],
+    CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS: CMCD_V2_RESPONSE_MODE_KEYS,
     /**
     *  @constant {string} CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for request mode.
     *  @memberof Constants#
     *  @static
     */
-    CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS: ['d', 'dl', 'nor', 'ot', 'rtp', 'su'],
+    CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS: CMCD_V2_REQUEST_MODE_KEYS,
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
@@ -267,44 +278,27 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_DEFAULT_TIME_INTERVAL: 30,
+    CMCD_DEFAULT_TIME_INTERVAL: CMCD_V2_TIME_INTERVAL_DEFAULT,
     /**
      *  @constant {string} CMCD_MODE specifies all the available modes for CMCD.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE: {
-        REQUEST: 'request',
-        RESPONSE: 'response',
-        EVENT: 'event'
-    },
+    CMCD_MODE: CMCD_MODE,
 
     /**
      *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_REPORTING_EVENTS: {
-        ERROR: 'e',
-        TIME_INTERVAL: 't',
-        PLAY_STATE: 'ps'
-    },
+    CMCD_REPORTING_EVENTS: CMCD_REPORTING_EVENTS,
 
     /**
      *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_PLAYER_STATES: {
-        STARTING: 's',
-        PLAYING: 'p',
-        SEEKING: 'k',
-        REBUFFERING: 'r',
-        PAUSED : 'a',
-        WAITING: 'w',
-        ENDED: 'e',
-        FATAL_ERROR: 'f',
-    },
+    CMCD_PLAYER_STATES: CMCD_PLAYER_STATES,
     /**
      *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
      *  @memberof Constants#
