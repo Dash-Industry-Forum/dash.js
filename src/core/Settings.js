@@ -334,7 +334,7 @@ import Events from './events/Events.js';
  *                accessibility: 'urn:mpeg:dash:role:2011'
  *            },
  *            listMpds: {
- *                minEarliestResolutionTimeOffset: 2,
+ *                minEarliestResolutionTimeOffset: 0,
  *            }
  *          },
  *          errors: {
@@ -945,8 +945,12 @@ import Events from './events/Events.js';
 
 /**
  * @typedef {Object} listMpdSettings
- * @property {boolean} [minEarliestResolutionTimeOffset=2]
- * Min earliest resolution time offset available.
+ * @property {boolean} [minEarliestResolutionTimeOffset=0]
+ * Min earliest resolution time offset available for imported periods.
+ *
+ * If playback stalled during a period switch, setting this number can help fix a conflict with the GapController.
+ * It avoids a race condition between resolving linked periods and the GapController's gap jump logic.
+ * Set to 0 by default to be specification compliant. Adjust if you encounter issues with gap handling at period boundaries.
  */
 
 /**
@@ -1400,7 +1404,7 @@ function Settings() {
                 accessibility: 'urn:mpeg:dash:role:2011'
             },
             listMpd: {
-                minEarliestResolutionTimeOffset: 2
+                minEarliestResolutionTimeOffset: 0
             }
         },
         errors: {

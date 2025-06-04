@@ -143,6 +143,7 @@ function ListMpdController() {
             return false
         }
 
+        // This setting Resolves a conflict with GapController in low-bandwidth streams by preventing playback stalls during buffering gaps.
         const { minEarliestResolutionTimeOffset } = settings.get().streaming.listMpd;
         const earliestResolutionTimeOffset = linkedPeriod.ImportedMPD.earliestResolutionTimeOffset ?? DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET;
         const resolutionTime = Math.max(earliestResolutionTimeOffset, minEarliestResolutionTimeOffset);
