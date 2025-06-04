@@ -283,19 +283,35 @@ function Capabilities() {
             return [genericConfiguration];
         }
 
-        return inputConfig.keySystemsMetadata.map((keySystemMetadata) => {
-            const curr = { ...genericConfiguration };
-            if (keySystemMetadata.ks) {
+        const configurations = [ ];
+
+        inputConfig.keySystemsMetadata.forEach((keySystemMetadata) => {
+
+            if (!keySystemMetadata.ks) {
+                configurations.push({ ...genericConfiguration });
+                return;
+            }
+                
+            // If a systemStringPriority is defined by the application we use these values. Otherwise, we use the default system string
+            // This is useful for DRM systems such as Playready for which multiple system strings are possible for instance com.microsoft.playready and com.microsoft.playready.recommendation
+            const protDataSystemStringPriority = keySystemMetadata.protData && keySystemMetadata.protData.systemStringPriority ? keySystemMetadata.protData.systemStringPriority : null;
+            let systemString = keySystemMetadata.ks.systemString;
+
+            // Use the default values in case no values are provided by the application
+            const systemStringsToApply = protDataSystemStringPriority ? protDataSystemStringPriority : [systemString];
+
+            systemStringsToApply.forEach((systemString) => {
+                const curr = { ...genericConfiguration };
                 curr.keySystemConfiguration = {};
-                if (keySystemMetadata.ks.systemString) {
-                    curr.keySystemConfiguration.keySystem = keySystemMetadata.ks.systemString;
+                if (systemString) {
+                    curr.keySystemConfiguration.keySystem = systemString;
                 }
 
                 let robustnessLevel = ''
                 if (keySystemMetadata.ks.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
                     robustnessLevel = ProtectionConstants.ROBUSTNESS_STRINGS.WIDEVINE.SW_SECURE_CRYPTO;
                 }
-                const protData = keySystemMetadata.protData
+                const protData = keySystemMetadata.protData;
                 const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
                 const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
 
@@ -304,9 +320,11 @@ function Capabilities() {
                 } else if (type === Constants.VIDEO) {
                     curr.keySystemConfiguration[type] = { robustness: videoRobustness }
                 }
-            }
-            return curr
+                configurations.push(curr);
+            })
         })
+
+        return configurations;
     }
 
     function _checkSingleConfigurationWithMediaCapabilities(configuration) {
