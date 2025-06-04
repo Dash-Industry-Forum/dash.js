@@ -68,19 +68,19 @@ function ListMpdController() {
     }
 
     function initialize() {
-        eventBus.on(Events.IMPORTED_MPDS_LOADED, _onLinkedPeriodsLoaded, instance);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerLoadImportMpd, instance);
+        eventBus.on(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
     }
 
-    function loadListMpdManifest(time) {
+    function _importMpdInLinkedPeriod(time) {
         linkedPeriodList.forEach(linkedPeriod => {
-            if (_shouldLoadLinkedPeriod(linkedPeriod, time)) {
-                loadLinkedPeriod(currentManifest, linkedPeriod);
+            if (_shouldImportMpd(linkedPeriod, time)) {
+                loadImportedMpd(currentManifest, linkedPeriod);
             }
         });
     }
 
-    function _onLinkedPeriodsLoaded({ manifest, linkedPeriods }) {
+    function _onLinkedPeriodFound({ manifest, linkedPeriods }) {
         currentManifest = manifest;
         linkedPeriodList = linkedPeriods;
 
@@ -103,13 +103,13 @@ function ListMpdController() {
 
         const startPeriod = linkedPeriodList.find(period => period.start === 0);
         if (startPeriod) {
-            loadLinkedPeriod(manifest, startPeriod);
+            loadImportedMpd(manifest, startPeriod);
         } else {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
         }
     }
 
-    function loadLinkedPeriod(manifest, period) {
+    function loadImportedMpd(manifest, period) {
         const relativePath = period.ImportedMPD.uri; 
         const baseUrl = period.BaseURL ?? manifest.BaseURL;
         const resolvedUri = baseUrl ? baseUrl[0].__text + relativePath : relativePath;
@@ -130,15 +130,15 @@ function ListMpdController() {
         return updatedManifest;
     }
 
-    function _triggerLoadImportMpd(e) {
-        if (!linkedPeriodList || linkedPeriodList.lenght) {
+    function _triggerImportMpd(e) {
+        if (!linkedPeriodList || !linkedPeriodList.length) {
             return;
         }
 
-        loadListMpdManifest(e.time);
+        _importMpdInLinkedPeriod(e.time);
     }
 
-    function _shouldLoadLinkedPeriod(linkedPeriod, time) {
+    function _shouldImportMpd(linkedPeriod, time) {
         if (!linkedPeriod.ImportedMPD) {
             return false
         }
@@ -158,8 +158,7 @@ function ListMpdController() {
 
     instance = {
         initialize,
-        loadListMpdManifest,
-        loadLinkedPeriod,
+        loadImportedMpd,
         reset,
         setConfig
     };

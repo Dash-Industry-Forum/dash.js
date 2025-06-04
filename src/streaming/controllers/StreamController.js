@@ -639,7 +639,7 @@ function StreamController() {
                 const seekToPeriod = manifestModel.getValue().Period[seekToStream.getId()];
                 if (seekToPeriod.ImportedMPD) {
                     return listMpdController
-                        .loadLinkedPeriod(manifestModel.getValue(), seekToPeriod)
+                        .loadImportedMpd(manifestModel.getValue(), seekToPeriod)
                         .then(updatedManifest => {
                             baseURLController.update(updatedManifest);
                         });

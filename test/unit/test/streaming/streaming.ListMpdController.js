@@ -36,7 +36,7 @@ describe('ListMpdController', function () {
         mpdHelper = new MpdHelper();
     });
 
-    describe('IMPORTED_MPDS_LOADED event', function () {
+    describe('LINKED_PERIOD_FOUND event', function () {
         beforeEach(() => {
             const responseMpdMock = mpdHelper.getMpd('static', undefined);
             responseMpdMock.minBufferTime = 4;
@@ -73,7 +73,7 @@ describe('ListMpdController', function () {
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
-            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods } )
 
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
@@ -99,7 +99,7 @@ describe('ListMpdController', function () {
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
-            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods } )
 
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
@@ -113,7 +113,7 @@ describe('ListMpdController', function () {
             let linkedPeriods = [linkedPeriod];
     
             assert.throws(() => {
-                eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods });
+                eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods });
             }, /The first period in a list MPD must have start time equal to 0/);
         });
     })
@@ -143,8 +143,8 @@ describe('ListMpdController', function () {
             let linkedPeriods = [linkedPeriod];
             let nonUpdatedManifest;
             
-            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
-            listMpdController.loadListMpdManifest(1)
+            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods });
+            eventBus.trigger(Events.PLAYBACK_TIME_UPDATED, { time: '2' });
             
             // Create a promise that resolves when MANIFEST_UPDATED is triggered
             const manifestUpdatedPromise = new Promise((resolve) => {
@@ -158,7 +158,7 @@ describe('ListMpdController', function () {
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
     
-            eventBus.trigger(Events.IMPORTED_MPDS_LOADED, { manifest, linkedPeriods } )
+            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods } )
     
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             expect(manifest).to.deep.equal(nonUpdatedManifest.manifest);
@@ -166,7 +166,7 @@ describe('ListMpdController', function () {
 
     });
 
-    describe('loadLinkedPeriod', function () {
+    describe('loadImportedMpd', function () {
         afterEach(() => {
             listMpdController.reset();
         });
@@ -203,7 +203,7 @@ describe('ListMpdController', function () {
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
-            listMpdController.loadLinkedPeriod(manifest, linkedPeriod);
+            listMpdController.loadImportedMpd(manifest, linkedPeriod);
 
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
@@ -239,7 +239,7 @@ describe('ListMpdController', function () {
                 setTimeout(() => reject(new Error('Timeout: MANIFEST_UPDATED event was not triggered')), 4000)
             );
 
-            listMpdController.loadLinkedPeriod(manifest, linkedPeriod);
+            listMpdController.loadImportedMpd(manifest, linkedPeriod);
 
             await Promise.race([manifestUpdatedPromise, timeoutPromise]);
             sinon.assert.calledWith(spy, Events.MANIFEST_UPDATED, sinon.match.any);
