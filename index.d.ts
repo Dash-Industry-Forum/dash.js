@@ -2032,6 +2032,8 @@ declare namespace dashjs {
 
         addABRCustomRule(type: string, rulename: string, rule: object): void;
 
+        addExternalSubtitle(externalSubtitle: ExternalSubtitle): void;
+
         addRequestInterceptor(interceptor: RequestInterceptor): void;
 
         addResponseInterceptor(interceptor: ResponseInterceptor): void;
@@ -2097,6 +2099,8 @@ declare namespace dashjs {
         getDvrSeekOffset(value: number): number;
 
         getDvrWindow(): DvrWindow;
+
+        getExternalSubtitles(): ExternalSubtitle[];
 
         getInitialMediaSettingsFor(type: MediaType): MediaSettings;
 
@@ -2175,6 +2179,10 @@ declare namespace dashjs {
         removeABRCustomRule(rulename: string): void;
 
         removeAllABRCustomRule(): void;
+
+        removeExternalSubtitleById(id: string): void;
+
+        removeExternalSubtitleByUrl(url:string): void;
 
         removeRequestInterceptor(interceptor: RequestInterceptor): void;
 
@@ -3751,6 +3759,8 @@ declare namespace dashjs {
     export interface CustomParametersModel {
         addAbrCustomRule(type: string, rulename: string, rule: object): void;
 
+        addExternalSubtitle(externalSubtitleObj: object): void;
+
         addRequestInterceptor(interceptor: Function): void;
 
         addResponseInterceptor(interceptor: Function): void;
@@ -3764,6 +3774,8 @@ declare namespace dashjs {
         getCustomCapabilitiesFilters(): Array<CapabilitiesFilterFunction>;
 
         getCustomInitialTrackSelectionFunction(): Function;
+
+        getExternalSubtitles(): Array<ExternalSubtitle>
 
         getLicenseRequestFilters(): Array<Function>;
 
@@ -3786,6 +3798,10 @@ declare namespace dashjs {
         removeAbrCustomRule(ruleName: string): void;
 
         removeAllAbrCustomRule(): void;
+
+        removeExternalSubtitleById(id: string): void;
+
+        removeExternalSubtitleByUrl(url: string): void;
 
         removeRequestInterceptor(interceptor: Function): void;
 
@@ -5477,6 +5493,19 @@ declare namespace dashjs {
         segmentType: string | null;
         start: number;
         streamId: string | null;
+    }
+
+    export class ExternalSubtitle {
+        constructor(externalSubtitleObject: object);
+
+        id: string;
+        url: string;
+        language: string;
+        mimeType: string;
+        bandwidth: number;
+        periodId: string | null;
+
+        serializeToMpdParserFormat(): object;
     }
 
     export class FragmentRequest {
