@@ -1194,7 +1194,7 @@ function DashManifestModel() {
             alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.REPLACE;
             alternativeMpd.returnOffset = event.returnOffset ?? null;
             alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
-            alternativeMpd.startAtPlayhead = event.startAtPlayhead ? event.startAtPlayhead === 'true' : false;
+            alternativeMpd.startWithOffset = event.startWithOffset ? event.startWithOffset === 'true' : false;
             return alternativeMpd;
         }
     }

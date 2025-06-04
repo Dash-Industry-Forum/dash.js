@@ -208,7 +208,7 @@ function AlternativeMpdController() {
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    timeToSwitch = event.startAtPlayhead ? actualEventPresentationTime - event.presentationTime : 0
+                    timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0
                     timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url)
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
@@ -316,7 +316,7 @@ function AlternativeMpdController() {
                 type: DashConstants.STATIC,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
+                ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
             };
         }
     }
