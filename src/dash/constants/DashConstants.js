@@ -84,6 +84,7 @@ export default {
     DVB_MIMETYPE : 'dvb:mimeType',
     DVB_FONTFAMILY : 'dvb:fontFamily',
     DYNAMIC: 'dynamic',
+    END_NUMBER: 'endNumber',
     ESSENTIAL_PROPERTY: 'EssentialProperty',
     EVENT: 'Event',
     EVENT_STREAM: 'EventStream',

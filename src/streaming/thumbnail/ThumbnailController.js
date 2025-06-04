@@ -32,7 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Thumbnail from '../vo/Thumbnail.js';
 import ThumbnailTracks from './ThumbnailTracks.js';
-import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils.js';
+import {processUriTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailController(config) {
 
@@ -119,10 +119,15 @@ function ThumbnailController(config) {
 
     function _buildUrlFromTemplate(track, seq) {
         const seqIdx = seq + track.startNumber;
-        let url = replaceTokenForTemplate(track.templateUrl, 'Number', seqIdx);
-        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration * track.timescale);
-        url = replaceTokenForTemplate(url, 'Bandwidth', track.bandwidth);
-        return unescapeDollarsInTemplate(url);
+        const url = processUriTemplate(
+            track.templateUrl,
+            undefined,
+            seqIdx,
+            undefined,
+            track.bandwidth,
+            (seqIdx - 1) * track.segmentDuration * track.timescale,
+        );
+        return url;
     }
 
     function setTrackByIndex(index) {

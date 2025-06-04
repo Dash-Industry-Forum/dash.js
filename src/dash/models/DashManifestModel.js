@@ -251,6 +251,11 @@ function DashManifestModel() {
             return [];
         }
         return adaptation[DashConstants.ROLE].map(role => {
+            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+            if ( role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+                role.value = DashConstants.MAIN;
+            }
+            
             const r = new DescriptorType();
             r.init(role);
             return r
@@ -842,6 +847,9 @@ function DashManifestModel() {
                         voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
                     } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
                         voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
+                    }
+                    if (segmentInfo.hasOwnProperty(DashConstants.END_NUMBER)) {
+                        voRepresentation.endNumber = segmentInfo[DashConstants.END_NUMBER];
                     }
                 }
 

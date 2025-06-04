@@ -90,5 +90,55 @@ describe('TextTracks', function () {
 
             expect(videoModelMock.getCurrentCue(track).text).to.equal(SUBTITLE_DATA);
         });
+
+        it('should eliminate duplicates', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+
+            textTracks.createTracks();
+            let track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'unique cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'duplicated cue', start: 2, end: 4},
+                {type: 'noHtml', data: 'duplicated cue', start: 2, end: 4},
+            ]);
+
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'duplicated cue', start: 2, end: 4},
+                {type: 'noHtml', data: 'another unique cue', start: 4, end: 6},
+            ]);
+
+            expect(track.cues.length).to.equal(3);
+        });
+
+        it('should support multiple cues with same timing, but different text', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+
+            textTracks.createTracks();
+            let track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            const cues = [
+                {type: 'noHtml', data: 'First cue', start: 0, end: 2},
+                {type: 'noHtml', data: 'Second cue', start: 0, end: 2}
+            ];
+
+            textTracks.addCaptions(0, 0, cues);
+
+            const allCues = track.cues
+            expect(allCues.length).to.equal(2);
+            expect(allCues[0].text).to.equal('First cue');
+            expect(allCues[1].text).to.equal('Second cue');
+            expect(allCues[0].cueID).to.not.equal(allCues[1].cueID);
+        });
     });
 });

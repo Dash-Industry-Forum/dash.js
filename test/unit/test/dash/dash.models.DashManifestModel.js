@@ -130,6 +130,20 @@ describe('DashManifestModel', function () {
             expect(rolesArray).to.be.empty;
         });
 
+        it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
+            const rolesArray = dashManifestModel.getRolesForAdaptation({
+                Role: [
+                    {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:'Main'},
+                    {schemeIdUri:'my.own.scheme', value:'Main'}]
+            });
+
+            expect(rolesArray).to.be.instanceOf(Array);
+            expect(rolesArray.length).to.equal(2);
+            expect(rolesArray[0]).to.be.instanceOf(DescriptorType);
+            expect(rolesArray[0].value).equals(DashConstants.MAIN);
+            expect(rolesArray[1].value).equals('Main');
+        });
+
         it('should return an empty array when getEssentialPropertiesForAdaptationSet', () => {
             const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptationSet();
 
