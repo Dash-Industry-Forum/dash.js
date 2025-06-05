@@ -67,6 +67,10 @@ function ListMpdController() {
         }
     }
 
+    function setup() {
+        resetInitialSettings();
+    }
+
     function initialize() {
         eventBus.on(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
@@ -152,8 +156,14 @@ function ListMpdController() {
         return time >= start - resolutionTime;
     }
 
-    function reset() {
+    function resetInitialSettings() {
         linkedPeriodList = [];
+        currentManifest = null;
+        mpdHasDuration = false;
+    }
+
+    function reset() {
+        resetInitialSettings();
         eventBus.off(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
     }
@@ -164,6 +174,8 @@ function ListMpdController() {
         reset,
         setConfig
     };
+
+    setup();
 
     return instance;
 }
