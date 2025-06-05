@@ -154,6 +154,8 @@ function ListMpdController() {
 
     function reset() {
         linkedPeriodList = [];
+        eventBus.off(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
     }
 
     instance = {

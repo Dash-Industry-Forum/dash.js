@@ -2426,6 +2426,7 @@ function MediaPlayer() {
         throughputController.reset();
         mediaController.reset();
         segmentBaseController.reset();
+        listMpdController.reset();
         if (protectionController) {
             if (settings.get().streaming.protection.keepProtectionMediaKeys) {
                 protectionController.stop();
