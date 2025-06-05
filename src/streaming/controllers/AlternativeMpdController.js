@@ -61,6 +61,8 @@ function AlternativeMpdController() {
         altPlayer,
         fullscreenDiv,
         useDashEventsForScheduling = false,
+        manifestModel,
+        serviceDescriptionController, 
         playbackController,
         altVideoElement,
         alternativeContext,
@@ -107,6 +109,14 @@ function AlternativeMpdController() {
 
         if (!!config.currentEvent && !currentEvent) {
             currentEvent = config.currentEvent;
+        }
+
+        if (config.manifestModel) {
+            manifestModel = config.manifestModel;
+        }
+
+        if (config.serviceDescriptionController) {
+            serviceDescriptionController = config.serviceDescriptionController;
         }
     }
 
@@ -239,6 +249,10 @@ function AlternativeMpdController() {
 
     function _getCurrentEvent(currentTime) {
         return scheduledEvents.find(event => {
+            if (event.executeOnce && event.executionCount > 0) {
+                return false; // Skip if executeOnce and already executed
+            }
+            
             if (event.completed) {
                 const hasDuration = !isNaN(event.duration);
                 const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
@@ -254,6 +268,10 @@ function AlternativeMpdController() {
 
     function _getEventToPrebuff(currentTime) {
         return scheduledEvents.find(event => {
+            if (event.executeOnce && event.executionCount > 0) {
+                return false; // Skip if executeOnce and already executed
+            }
+
             if (event.triggered) {
                 const hasDuration = !isNaN(event.duration);
                 const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
@@ -302,6 +320,16 @@ function AlternativeMpdController() {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
+            let executeOnce = false;
+            const serviceDescriptionId = event.serviceDescriptionId; // Assuming serviceDescriptionId is on the event object
+            if (serviceDescriptionId !== undefined && manifestModel && serviceDescriptionController) {
+                const manifest = manifestModel.getValue();
+                // const serviceDescription = serviceDescriptionController.getServiceDescription(manifest, serviceDescriptionId);
+                const serviceDescription = manifestModel.getServiceDescriptions(manifest)
+                if (serviceDescription && serviceDescription.EventRestrictions && serviceDescription.EventRestrictions.executeOnce === 'true') {
+                    executeOnce = true;
+                }
+            }
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
@@ -314,6 +342,8 @@ function AlternativeMpdController() {
                 triggered: false,
                 completed: false,
                 type: DashConstants.STATIC,
+                executeOnce: executeOnce,
+                executionCount: 0,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
                 ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
@@ -426,6 +456,8 @@ function AlternativeMpdController() {
 
         isSwitching = false;
         bufferedEvent = null;
+
+        event.executionCount++;
     }
 
     function _getAnchor(url) {

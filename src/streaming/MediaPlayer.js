@@ -403,6 +403,7 @@ function MediaPlayer() {
                 videoModel,
                 manifestModel,
                 DashConstants,
+                serviceDescriptionController,
                 mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
                 playbackController,
                 alternativeContext: context,
