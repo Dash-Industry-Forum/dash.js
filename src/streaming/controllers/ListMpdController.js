@@ -84,9 +84,9 @@ function ListMpdController() {
         });
     }
 
-    function _onLinkedPeriodFound({ manifest, linkedPeriods }) {
+    function _onLinkedPeriodFound({ manifest }) {
         currentManifest = manifest;
-        linkedPeriodList = linkedPeriods;
+        linkedPeriodList = dashAdapter.getLinkedPeriods(manifest);
 
         manifest.Period[0].start = manifest.Period[0].start ?? 0;
         if (manifest.Period[0].start !== 0) {

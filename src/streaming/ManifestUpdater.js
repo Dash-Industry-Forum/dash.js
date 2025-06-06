@@ -265,8 +265,7 @@ function ManifestUpdater() {
 
         const manifestProfiles = manifest.profiles ? manifest.profiles.split(',') : [];
         if (manifestProfiles.includes(DashConstants.LIST_PROFILE_SCHEME)) {
-            const linkedPeriods = adapter.getLinkedPeriods(manifest)
-            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest, linkedPeriods } )
+            eventBus.trigger(Events.LINKED_PERIOD_FOUND, { manifest });
         } else {
             eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
             logger.info('Manifest has been refreshed at ' + date + '[' + date.getTime() / 1000 + '] ');
