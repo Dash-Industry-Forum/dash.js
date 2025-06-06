@@ -919,7 +919,9 @@ function StreamController() {
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
-            const isLinkedPeriod = manifestModel.getValue().Period[stream.getId()].ImportedMPD;
+            const periodId = stream.getId()
+            const linkedPeriod = manifestModel.getValue().Period.find((periodInfo => periodInfo.id === periodId));
+            const isLinkedPeriod = linkedPeriod && linkedPeriod.ImportedMPD;
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering() && !isLinkedPeriod) {
                 if (mediaSource) {
                     _onStreamCanLoadNext(stream, previousStream);
@@ -1009,7 +1011,7 @@ function StreamController() {
             if (nextStream) {
                 const streamId = nextStream.getStreamInfo().id;
                 logger.debug(`StreamController onEnded, found next stream with id ${streamId}. Switching from ${activeStream.getStreamInfo().id} to ${nextStream.getStreamInfo().id}`);
-                const nextPeriod = manifestModel.getValue().Period[streamId];
+                const nextPeriod = manifestModel.getValue().Period.find((periodInfo) => periodInfo.id == streamId);
                 if (!nextPeriod.ImportedMPD) {
                     _switchStream(nextStream, activeStream, NaN);
                 }
