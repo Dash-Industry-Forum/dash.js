@@ -72,7 +72,7 @@ function ListMpdController() {
     }
 
     function initialize() {
-        eventBus.on(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
+        eventBus.on(Events.LIST_MPD_FOUND, _onListMpdFound, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
     }
 
@@ -84,7 +84,7 @@ function ListMpdController() {
         });
     }
 
-    function _onLinkedPeriodFound({ manifest }) {
+    function _onListMpdFound({ manifest }) {
         currentManifest = manifest;
         linkedPeriodList = dashAdapter.getLinkedPeriods(manifest);
 
@@ -164,7 +164,7 @@ function ListMpdController() {
 
     function reset() {
         resetInitialSettings();
-        eventBus.off(Events.LINKED_PERIOD_FOUND, _onLinkedPeriodFound, instance);
+        eventBus.off(Events.LIST_MPD_FOUND, _onListMpdFound, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _triggerImportMpd, instance);
     }
 
