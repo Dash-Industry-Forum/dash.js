@@ -636,7 +636,11 @@ function StreamController() {
 
         Promise.all(promises)
             .then(() => {
-                const seekToPeriod = manifestModel.getValue().Period[seekToStream.getId()];
+                const periodId = seekToStream.getId();
+                if (!periodId) {
+                    throw new Error('Stream does not have a valid period id');
+                }
+                const seekToPeriod = manifestModel.getValue().Period.find((periodInfo) => periodInfo.id === periodId);
                 if (seekToPeriod.ImportedMPD) {
                     return listMpdController
                         .loadImportedMpd(manifestModel.getValue(), seekToPeriod)
