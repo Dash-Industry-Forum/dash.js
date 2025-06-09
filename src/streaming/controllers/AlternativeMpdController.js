@@ -321,14 +321,15 @@ function AlternativeMpdController() {
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
             let executeOnce = false;
-            const serviceDescriptionId = event.serviceDescriptionId; // Assuming serviceDescriptionId is on the event object
-            if (serviceDescriptionId !== undefined && manifestModel && serviceDescriptionController) {
-                const manifest = manifestModel.getValue();
-                // const serviceDescription = serviceDescriptionController.getServiceDescription(manifest, serviceDescriptionId);
-                const serviceDescription = manifestModel.getServiceDescriptions(manifest)
-                if (serviceDescription && serviceDescription.EventRestrictions && serviceDescription.EventRestrictions.executeOnce === 'true') {
-                    executeOnce = true;
-                }
+            debugger;
+            const targetServiceDescriptionId = alternativeMpdNode.serviceDescriptionId;
+            if (targetServiceDescriptionId !== undefined && manifestModel && serviceDescriptionController) {
+                // const manifest = manifestModel.getValue();
+                // const serviceDescription = manifest.ServiceDescription;
+                // el service description tiene que ser el del event stream!!!
+                // if (serviceDescription && serviceDescription.EventRestrictions && serviceDescription.EventRestrictions.executeOnce === 'true') {
+                //     executeOnce = true;
+                // }
             }
             return {
                 presentationTime: event.presentationTime / timescale,
