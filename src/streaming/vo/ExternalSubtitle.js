@@ -28,32 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../../dash/constants/DashConstants.js';
 
-import {MediaPlayer} from './index_mediaplayerOnly.js';
-import MetricsReporting from './src/streaming/metrics/MetricsReporting.js';
-import Protection from './src/streaming/protection/Protection.js';
-import MediaPlayerFactory from './src/streaming/MediaPlayerFactory.js';
-import Debug from './src/core/Debug.js';
-import Constants from './src/streaming/constants/Constants.js';
-import {supportsMediaSource} from './src/streaming/utils/Capabilities.js';
-import ExternalSubtitle from './src/streaming/vo/ExternalSubtitle.js';
+/**
+ * @class
+ */
+class ExternalSubtitle {
 
-dashjs.Protection = Protection;
-dashjs.MetricsReporting = MetricsReporting;
-dashjs.MediaPlayerFactory = MediaPlayerFactory;
-dashjs.Debug = Debug;
-dashjs.supportsMediaSource = supportsMediaSource;
-dashjs.Constants = Constants;
-dashjs.ExternalSubtitle = ExternalSubtitle;
+    constructor(externalSubtitleObject) {
+        this.id = externalSubtitleObject.id;
+        this.url = externalSubtitleObject.url;
+        this.language = externalSubtitleObject.language;
+        this.mimeType = externalSubtitleObject.mimeType;
+        this.bandwidth = externalSubtitleObject.bandwidth;
+        this.periodId = externalSubtitleObject.periodId || null;
+    }
 
-export default dashjs;
-export {
-    MediaPlayer,
-    Protection,
-    MetricsReporting,
-    MediaPlayerFactory,
-    Debug,
-    supportsMediaSource,
-    Constants,
-    ExternalSubtitle
-};
+    serializeToMpdParserFormat() {
+        return {
+            'tagName': DashConstants.ADAPTATION_SET,
+            'mimeType': this.mimeType,
+            'lang': this.language,
+            'Representation': [
+                {
+                    'tagName': DashConstants.REPRESENTATION,
+                    'id': this.id,
+                    'bandwidth': this.bandwidth,
+                    'BaseURL': [
+                        {
+                            'tagName': DashConstants.BASE_URL,
+                            '__text': this.url
+                        }
+                    ],
+                    'mimeType': this.mimeType
+                }
+            ]
+        }
+    }
+}
+
+export default ExternalSubtitle;
