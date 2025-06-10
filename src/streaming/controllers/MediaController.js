@@ -119,56 +119,56 @@ function MediaController() {
      * @memberof MediaController#
      */
     function setInitialMediaSettingsForType(type, streamInfo) {
-        let settings = lastSelectedTracks[type] || getInitialSettings(type);
+        let localSettings = lastSelectedTracks[type] || getInitialSettings(type);
         const possibleTracks = getTracksFor(type, streamInfo.id);
         let filteredTracks = [];
 
-        if (!settings || Object.keys(settings).length === 0) {
-            settings = domStorage.getSavedMediaSettings(type);
-            if (settings) {
+        if (!localSettings || Object.keys(localSettings).length === 0) {
+            localSettings = domStorage.getSavedMediaSettings(type);
+            if (localSettings) {
                 // If the settings are defined locally, do not take codec into account or it'll be too strict.
                 // eg: An audio track should not be selected by codec but merely by lang.
-                delete settings.codec;
+                delete localSettings.codec;
             }
-            setInitialSettings(type, settings);
+            setInitialSettings(type, localSettings);
         }
 
         if (!possibleTracks || (possibleTracks.length === 0)) {
             return;
         }
 
-        if (settings) {
+        if (!settings.get().streaming.includePreselectionsForInitialTrackSelection) {
+            // Removing all preselections 
+            filteredTracks = possibleTracks.filter(track => !track.isPreselection);
+            // Since each preselection always refers at least one AdaptationSet,
+            // filteredTracks.length will always be > 0
+        } else {
             filteredTracks = Array.from(possibleTracks);
+        }
+
+        if (localSettings) {
             logger.info('Filtering ' + filteredTracks.length + ' ' + type + ' tracks based on settings');
 
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, settings)
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, settings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, settings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsId, localSettings)
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsLang, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsIndex, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsViewPoint, localSettings);
             if (!(type === Constants.AUDIO && !!lastSelectedTracks[type])) {
-                filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, settings);
+                filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsRole, localSettings);
             }
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, settings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, settings);
-            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, settings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAccessibility, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
+            filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, localSettings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
+        } 
+        
+        // More than one possibility
+        if (filteredTracks.length > 1) {
+            setTrack(selectInitialTrack(type, filteredTracks));
         }
-
-        // We did not apply any filter. We can select from all possible tracks
-        if (filteredTracks.length === 0) {
-            setTrack(selectInitialTrack(type, possibleTracks));
-        }
-
-        // We have some tracks based on the filtering we did.
+        // Only one possibility use this one
         else {
-            // More than one possibility
-            if (filteredTracks.length > 1) {
-                setTrack(selectInitialTrack(type, filteredTracks));
-            }
-            // Only one possibility use this one
-            else {
-                setTrack(filteredTracks[0]);
-            }
+            setTrack(filteredTracks[0]);
         }
     }
 
@@ -358,6 +358,10 @@ function MediaController() {
         }
 
         if (!t1 || !t2) {
+            return false;
+        }
+
+        if (t1.isPreselection !== t2.isPreselection) {
             return false;
         }
 

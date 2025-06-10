@@ -48,6 +48,7 @@ import MpdLocation from '../vo/MpdLocation.js';
 import ObjectUtils from '../../streaming/utils/ObjectUtils.js';
 import PatchLocation from '../vo/PatchLocation.js';
 import Period from '../vo/Period.js';
+import Preselection from '../vo/Preselection.js';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
 import Representation from '../vo/Representation.js';
 import URLUtils from '../../streaming/utils/URLUtils.js';
@@ -128,6 +129,25 @@ function DashManifestModel() {
         return false;
     }
 
+    function getPreselectionIsTypeOf(preselection, adaptations, type) {
+        if (!preselection) {
+            throw new Error('preselection is not defined');
+        }
+
+        if (!adaptations) {
+            throw new Error('adaptations is not defined');
+        }
+
+        if (!type) {
+            throw new Error('type is not defined');
+        }
+
+        const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+
+        let isType = mainAdaptationSet ? getIsTypeOf(mainAdaptationSet, type) : false;
+        return isType;
+    }
+
     function getIsFragmented(adaptation) {
         if (!adaptation) {
             throw new Error('adaptation is not defined');
@@ -160,6 +180,11 @@ function DashManifestModel() {
 
     function getIsText(adaptation) {
         return getIsTypeOf(adaptation, Constants.TEXT);
+    }
+
+    function getIsTextForPreselection(prsl, adaptations) {
+        const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
+        return getIsText(mainAdaptationSet);
     }
 
     function getIsMuxed(adaptation) {
@@ -401,8 +426,43 @@ function DashManifestModel() {
         return codec;
     }
 
+    function getCodecForPreselection(prsl, adaptations, addResolutionInfo) {
+        let codec = null;
+        
+        if (prsl && adaptations ) {
+            const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
+            let mainASCodec = getCodec(mainAdaptationSet,0, addResolutionInfo);
+            // we just take the subparameters from the first Representation of the main AdaptationSet
+
+            if (prsl.hasOwnProperty(DashConstants.CODECS)) {
+                let sCodecs = prsl.codecs;                
+                
+                // Since Preselection elements don't get the @mimeType attribute assigned, this
+                // copies the media type from the main adaptationSet but takes the codec from
+                // the preselection.
+                codec = mainASCodec.replace(/(codecs=")[^"]*(")/, `$1${sCodecs}$2`);
+                logger.info('Preselection has own codecs-attribute: replacing in MainAdaptationSet (was: ' + mainASCodec + '), new Preselection codec is: ' + codec)
+            } else {
+                codec = mainASCodec;
+            }
+        }
+        
+        return codec;
+    }
+
     function getMimeType(adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
+    }
+
+    function getMimeTypeForPreselection(prsl, adaptations) {
+        let mime = null;
+        
+        if (prsl && adaptations ) {
+            const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
+            mime = getMimeType(mainAdaptationSet);
+        }
+        
+        return mime;
     }
 
     function getSegmentAlignment(adaptation) {
@@ -920,6 +980,82 @@ function DashManifestModel() {
         }
 
         return voAdaptations;
+    }
+
+    function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
+        const prslComponentIds = String(preselection.preselectionComponents).split(' ');
+        return prslComponentIds.map(c => adaptations.find(as => as.id === c));
+    }
+
+    function getMainAdaptationSetForPreselection(preselection, adaptations) {
+        const prslComponentIds = String(preselection.preselectionComponents).split(' ');
+        return adaptations.find(as => as.id === prslComponentIds[0]);
+    }
+
+    function getCommonRepresentationForPreselection(preselection, adaptations) {
+        const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
+        return mainAS.Representation[0];
+    }
+
+    function getPreselectionsForPeriod(voPeriod) {
+        const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
+        const voPreselections = [];
+        let voPreselection,
+            realPreselection,
+            i;
+        
+        if (realPeriod && realPeriod.Preselection) {
+            for (i = 0; i < realPeriod.Preselection.length; i++) {
+                realPreselection = realPeriod.Preselection[i];
+                voPreselection = new Preselection();
+                
+                const prslAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
+                let allComponentsAvailable = prslAdaptationSets.every(as => !!as);
+
+                // up to now, we only support single-representation preselections, not multi-representation
+                if (allComponentsAvailable && prslAdaptationSets.length === 1) {
+                    if (realPreselection.hasOwnProperty(DashConstants.ID)) {
+                        voPreselection.id = realPreselection.id;
+                    }
+                    voPreselection.index = i;
+                    voPreselection.period = voPeriod;
+                    
+                    if (realPreselection.hasOwnProperty(DashConstants.TAG)) {
+                        voPreselection.tag = realPreselection.tag;
+                    }
+    
+                    if (realPreselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS)) {
+                        voPreselection.preselectionComponents = prslAdaptationSets;
+                    } else {
+                        logger.warn('Preselection (index: ' + voPreselection.index + ') missing component(s)');
+                    }
+                    
+                    if (realPreselection.hasOwnProperty(DashConstants.ORDER)) {
+                        voPreselection.order = realPreselection.order;
+                    }
+
+                    if (getIsMuxed(prslAdaptationSets[0])) {
+                        voPreselection.type = Constants.MUXED;
+                    } else if (getIsAudio(prslAdaptationSets[0])) {
+                        voPreselection.type = Constants.AUDIO;
+                    } else if (getIsVideo(prslAdaptationSets[0])) {
+                        voPreselection.type = Constants.VIDEO;
+                    } else if (getIsText(prslAdaptationSets[0])) {
+                        voPreselection.type = Constants.TEXT;
+                    } else if (getIsImage(prslAdaptationSets[0])) {
+                        voPreselection.type = Constants.IMAGE;
+                    } else {
+                        logger.warn('Unknown Preselection stream type');
+                    }
+                    
+                    voPreselections.push(voPreselection);
+                } else {
+                    logger.warn('Preselection removed because we don\'t support multi-representation preselections or not all components available.');
+                }
+            }
+        }
+
+        return voPreselections;
     }
 
     function getRegularPeriods(mpd) {
@@ -1530,6 +1666,7 @@ function DashManifestModel() {
         getBaseURLsFromElement,
         getBitrateListForAdaptation,
         getCodec,
+        getCodecForPreselection,
         getCombinedEssentialPropertiesForAdaptationSet,
         getCombinedSupplementalPropertiesForAdaptationSet,
         getContentProtectionByAdaptation,
@@ -1548,14 +1685,20 @@ function DashManifestModel() {
         getIsDynamic,
         getIsFragmented,
         getIsText,
+        getIsTextForPreselection,
         getIsTypeOf,
         getLabelsForAdaptation,
         getLanguageForAdaptation,
         getLocation,
+        getMainAdaptationSetForPreselection,
+        getCommonRepresentationForPreselection,
         getManifestUpdatePeriod,
         getMimeType,
+        getMimeTypeForPreselection,
         getMpd,
         getPatchLocation,
+        getPreselectionIsTypeOf,
+        getPreselectionsForPeriod,
         getProducerReferenceTimesForAdaptation,
         getPublishTime,
         getRealPeriodForIndex,

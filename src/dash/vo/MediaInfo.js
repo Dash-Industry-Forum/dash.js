@@ -45,11 +45,13 @@ class MediaInfo {
         this.index = null;
         this.isEmbedded = null;
         this.isFragmented = null;
+        this.isPreselection = false;
         this.isText = false;
         this.labels = null;
         this.lang = null;
         this.mimeType = null;
         this.normalizedKeyIds = new Set();
+        this.preselectionComponents = [];
         this.representationCount = 0;
         this.roles = null;
         this.segmentAlignment = false;

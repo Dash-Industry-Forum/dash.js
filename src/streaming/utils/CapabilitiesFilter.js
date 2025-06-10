@@ -74,6 +74,9 @@ function CapabilitiesFilter() {
                     if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
+
+                    _removeMultiRepresentationPreselections(manifest);
+                    
                     return _applyCustomFilters(manifest);
                 })
                 .then(() => {
@@ -95,6 +98,7 @@ function CapabilitiesFilter() {
         manifest.Period
             .forEach((period) => {
                 _filterUnsupportedAdaptationSetsOfPeriod(period, type);
+                _filterUnsupportedPreselectionssOfPeriod(period, type);
             })
     }
 
@@ -116,6 +120,32 @@ function CapabilitiesFilter() {
             }
 
             return supported;
+        })
+    }
+
+    function _filterUnsupportedPreselectionssOfPeriod(period, type) {
+        if (!period || !period.Preselection || period.Preselection.length === 0) {
+            return;
+        }
+
+        period.Preselection = period.Preselection.filter((prsl) => {
+            if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
+                const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                let isPrslCodecSupported = true;
+                if (codec) {
+                    let repr = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+
+                    isPrslCodecSupported = _isCodecSupported(type, repr, codec);
+                }
+
+                if (!isPrslCodecSupported) {
+                    logger.warn(`[CapabilitiesFilter] Preselection@codecs ${codec} not supported. Removing Preselection with ID ${prsl.id}`);
+                }
+
+                return isPrslCodecSupported;
+            } else {
+                return true;
+            }
         })
     }
 
@@ -157,8 +187,8 @@ function CapabilitiesFilter() {
         return isSupplementalCodecSupported
     }
 
-    function _isCodecSupported(type, rep, codec) {
-        const config = _createConfiguration(type, rep, codec);
+    function _isCodecSupported(type, rep, codec, prsl_rep) {
+        const config = _createConfiguration(type, rep, codec, prsl_rep);
 
         return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
@@ -185,13 +215,23 @@ function CapabilitiesFilter() {
                     });
                 }
             });
+            if (period.Preselection && period.Preselection.length) {
+                period.Preselection.forEach((prsl) => {
+                    if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
+                        const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                        const prsl_rep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+
+                        _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prsl_rep);
+                    }
+                });
+            }
         });
 
         return configurations;
     }
 
-    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations) {
-        const config = _createConfiguration(type, rep, codec);
+    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prsl_rep) {
+        const config = _createConfiguration(type, rep, codec, prsl_rep);
         const configString = JSON.stringify(config);
 
         if (!configurationsSet.has(configString)) {
@@ -200,14 +240,14 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createConfiguration(type, rep, codec) {
+    function _createConfiguration(type, rep, codec, prsl_rep) {
         let config = null;
         switch (type) {
             case Constants.VIDEO:
-                config = _createVideoConfiguration(rep, codec);
+                config = _createVideoConfiguration(rep, codec, prsl_rep);
                 break;
             case Constants.AUDIO:
-                config = _createAudioConfiguration(rep, codec);
+                config = _createAudioConfiguration(rep, codec, prsl_rep);
                 break;
             default:
                 return config;
@@ -216,15 +256,22 @@ function CapabilitiesFilter() {
         return _addGenericAttributesToConfig(rep, config);
     }
 
-    function _createVideoConfiguration(rep, codec) {
+    function _createVideoConfiguration(rep, codec, prsl_rep) {
         let config = {
             codec: codec,
-            width: rep.width || null,
-            height: rep.height || null,
+            width: rep ? rep.width || null : null,
+            height: rep ? rep.height || null : null,
             framerate: adapter.getFramerate(rep) || null,
-            bitrate: rep.bandwidth || null,
+            bitrate: rep ? rep.bandwidth || null : null,
             isSupported: true
         }
+
+        if (rep.tagName === DashConstants.Preselection && prsl_rep) {
+            config.width = prsl_rep.width || null;
+            config.height = prsl_rep.height || null;
+            config.bitrate = prsl_rep.bandwidth || null;
+        }
+
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             Object.assign(config, _convertHDRColorimetryToConfig(rep));
         }
@@ -305,9 +352,14 @@ function CapabilitiesFilter() {
         return cfg;
     }
 
-    function _createAudioConfiguration(rep, codec) {
-        const samplerate = rep.audioSamplingRate || null;
-        const bitrate = rep.bandwidth || null;
+    function _createAudioConfiguration(rep, codec, prsl_rep) {
+        var samplerate = rep ? rep.audioSamplingRate || null : null;
+        var bitrate = rep ? rep.bandwidth || null : null;
+
+        if (rep.tagName === DashConstants.PRESELECTION && prsl_rep) {
+            samplerate = prsl_rep.audioSamplingRate || null;
+            bitrate = prsl_rep.bandwidth || null;
+        }
 
         return {
             codec,
@@ -351,6 +403,20 @@ function CapabilitiesFilter() {
 
                 return as.Representation && as.Representation.length > 0;
             });
+
+            if (period.Preselection && period.Preselection.length) {
+                period.Preselection = period.Preselection.filter(prsl => {
+                    const preselectionEssentialProperties = adapter.getEssentialPropertiesForPreselection(prsl);
+                    const doesSupportEssentialProperties = _doesSupportEssentialProperties(preselectionEssentialProperties);
+
+                    if (!doesSupportEssentialProperties) {
+                        logger.warn(`[CapabilitiesFilter] removed Preselection (id: ${prsl.id}) with unsupported EssentialProperty`);
+                        return false;
+                    }
+
+                    return true;
+                })
+            }
         });
     }
 
@@ -369,6 +435,24 @@ function CapabilitiesFilter() {
         }
 
         return true
+    }
+
+    function _removeMultiRepresentationPreselections(manifest) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+            return;
+        }
+
+        manifest.Period.forEach((period) => {
+            if (period.Preselection) {
+                period.Preselection = period.Preselection.filter((prsl) => {
+                    const len = String(prsl.preselectionComponents).split(' ').length;
+                    if (len !== 1) {
+                        logger.warn(`Multi-Representation Preselection (id: ${prsl.id}) removed as not supported.`);
+                    }
+                    return len === 1;
+                });
+            }
+        });
     }
 
     function _applyCustomFilters(manifest) {
