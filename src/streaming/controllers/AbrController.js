@@ -108,6 +108,7 @@ function AbrController() {
 
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
+        eventBus.on(Events.LOADING_COMPLETED, _onFragmentLoadCompleted, instance);
         eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
     }
 
@@ -219,6 +220,7 @@ function AbrController() {
         resetInitialSettings();
 
         eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+        eventBus.off(Events.LOADING_COMPLETED, _onFragmentLoadCompleted, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
 
@@ -263,6 +265,15 @@ function AbrController() {
         if (!domStorage || !domStorage.hasOwnProperty('getSavedBitrateSettings')) {
             throw new Error(Constants.MISSING_CONFIG_ERROR);
         }
+    }
+
+    function _onFragmentLoadCompleted(e) {
+        const type = e.request.mediaType;
+        if (!type) {
+            return;
+        }
+        const isDynamic = !!e.request.mediaInfo?.streamInfo?.manifestInfo?.isDynamic;
+        _saveBandwidthEstimate(type, isDynamic)
     }
 
     /**
@@ -746,7 +757,6 @@ function AbrController() {
     function _changeQuality(type, oldQuality, newQuality, maxIdx, reason, streamId) {
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
             logger.info('Stream ID: ' + streamId + ' [' + type + '] switch from ' + oldQuality + ' to ' + newQuality + '/' + maxIdx + ' (buffer: ' + bufferLevel + ') ' + (reason ? JSON.stringify(reason) : '.'));
 
@@ -765,10 +775,13 @@ function AbrController() {
                 },
                 { streamId: streamInfo.id, mediaType: type }
             );
-            const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
-            if (!isNaN(bitrate)) {
-                domStorage.setSavedBitrateSettings(type, bitrate);
-            }
+        }
+    }
+
+    function _saveBandwidthEstimate(type, isDynamic) {
+        const bitrate = throughputHistory.getAverageThroughput(type, isDynamic);
+        if (!isNaN(bitrate)) {
+            domStorage.setSavedBitrateSettings(type, bitrate);
         }
     }
 

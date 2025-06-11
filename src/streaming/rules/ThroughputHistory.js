@@ -76,10 +76,14 @@ function ThroughputHistory(config) {
     }
 
     function isCachedResponse(mediaType, latencyMs, downloadTimeMs) {
+        // Include latency + download time to make sure tiny segments are not misclassified as cached.
+        // This patch can be removed once upgraded to dash.js 5, as it has a better implementation
+        // using ResponseTiming API.
+        const cacheReferenceTime = latencyMs + downloadTimeMs;
         if (mediaType === Constants.VIDEO) {
-            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
+            return cacheReferenceTime < settings.get().streaming.cacheLoadThresholds[Constants.VIDEO];
         } else if (mediaType === Constants.AUDIO) {
-            return downloadTimeMs < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
+            return cacheReferenceTime < settings.get().streaming.cacheLoadThresholds[Constants.AUDIO];
         }
     }
 
