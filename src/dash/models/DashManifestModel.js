@@ -1204,6 +1204,7 @@ function DashManifestModel() {
         alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
         alternativeMpd.serviceDescriptionId = event.serviceDescriptionId;
         alternativeMpd.maxDuration = event.maxDuration;
+        alternativeMpd.noJump = event.noJump;
     }
 
     function getEventStreams(inbandStreams, representation, period) {
