@@ -187,31 +187,43 @@ function AlternativeMpdController() {
     }
 
     function _startPlaybackTimeMonitoring() {
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
     }
 
     function _startAltnerativePlaybackTimeMonitoring() {
-        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
     }
 
-    function _onDashPlaybackTimeUpdated(e) {
+    // Handles main player time updates (no currentEvent)
+    function _onMainPlaybackTimeUpdated(e) {
         try {
             const currentTime = e.time;
+            const streamId = e.streamId || 0;
             if (!currentEvent) {
-                const nextEvent = _getEventToPrebuff(currentTime)
+                const nextEvent = _getEventToPrebuff(currentTime);
                 if (nextEvent) {
                     _prebufferNextAlternative(nextEvent);
                 }
-                
+
                 actualEventPresentationTime = e.time;
-                const event = _getCurrentEvent(currentTime);
+                const event = _getCurrentEvent(currentTime, streamId);
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0
-                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url)
+                    timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0;
+                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url);
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
+            }
+        } catch (err) {
+            logger.error(`Error at ${actualEventPresentationTime} in _onMainPlaybackTimeUpdated:`, err);
+        }
+    }
+
+    // Handles alternative player time updates (with currentEvent)
+    function _onAlternativePlaybackTimeUpdated(e) {
+        try {
+            if (!currentEvent) {
                 return;
             }
 
@@ -221,11 +233,11 @@ function AlternativeMpdController() {
 
             const { presentationTime, maxDuration, clip } = currentEvent;
             if (Math.round(e.time - actualEventPresentationTime) === 0) {
-                return
+                return;
             }
 
             const shouldSwitchBack =
-                (Math.round(altPlayer.duration() - currentTime) === 0) ||
+                (Math.round(altPlayer.duration() - e.time) === 0) ||
                 (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
                 (maxDuration && maxDuration <= e.time);
 
@@ -233,11 +245,11 @@ function AlternativeMpdController() {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            logger.error(`Error at ${actualEventPresentationTime} in onDashPlaybackTimeUpdated:`, err);
+            logger.error(`Error at ${actualEventPresentationTime} in _onAlternativePlaybackTimeUpdated:`, err);
         }
     }
 
-    function _getCurrentEvent(currentTime) {
+    function _getCurrentEvent(currentTime, streamId) {
         return scheduledEvents.find(event => {
             if (event.completed) {
                 const hasDuration = !isNaN(event.duration);
@@ -247,8 +259,17 @@ function AlternativeMpdController() {
                 event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
-            return currentTime >= event.presentationTime && (isNaN(event.duration) ||
-                currentTime < event.presentationTime + event.duration);
+
+            if (event.noJump) {
+                return currentTime > event.presentationTime;
+            }
+
+            if (streamId !== event.periodId) {
+                return false;
+            }
+
+            return currentTime >= event.presentationTime &&
+                (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
         });
     }
 
@@ -305,11 +326,13 @@ function AlternativeMpdController() {
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
+                periodId: event.eventStream.period.id,
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
                 },
+                noJump: parseInt(alternativeMpdNode.noJump || 0, 10),
                 mode: mode,
                 triggered: false,
                 completed: false,
@@ -401,6 +424,7 @@ function AlternativeMpdController() {
         logger.info(`Switching to alternative content at time ${time}`);
         isSwitching = true;
         event.triggered = true;
+        event.noJump = 0;
 
         _initializeAlternativePlayerElement(event);
 
@@ -510,8 +534,12 @@ function AlternativeMpdController() {
             altVideoElement = null;
         }
 
-        if (useDashEventsForScheduling && videoModel) {
-            videoModel.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        if (videoModel) {
+            videoModel.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
+        }
+
+        if (altPlayer) {
+            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
         }
 
         isSwitching = false;
