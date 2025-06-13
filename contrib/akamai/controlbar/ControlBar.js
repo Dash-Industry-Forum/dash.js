@@ -584,12 +584,12 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         info += '- Role: ' + element.roles[0].value + ' ';
                     }
 
-                    if (element.codec) {
-                        info += '- Codec: ' + element.codec + ' ';
-                    }
-
                     if (element.accessibility[0]) {
                         info += '- Accessibility: ' + element.accessibility[0].value + ' ';
+                    }
+
+                    if (element.codec) {
+                        info += '- Codec: ' + element.codec + ' ';
                     }
 
                     if (element.id) {
