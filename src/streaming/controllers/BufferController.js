@@ -719,8 +719,9 @@ function BufferController(config) {
     }
 
     function _onPlaybackProgression() {
+        console.log(`Replacing Buffer: ${replacingBuffer}, Track: ${type}, Enabled: ${textController.isTextEnabled()}`)
         if (!replacingBuffer) {
-            if(type !== Constants.TEXT || (type === Constants.TEXT && textController.isTextEnabled())){
+            if(type !== Constants.TEXT || textController.isTextEnabled()){
                 _updateBufferLevel();
             }
         }
