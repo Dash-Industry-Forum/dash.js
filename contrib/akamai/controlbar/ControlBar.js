@@ -580,11 +580,11 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         info += 'Language - ' + element.lang + ' ';
                     }
 
-                    if (element.roles[0]) {
+                    if (element.roles && element.roles.length > 0) {
                         info += '- Role: ' + element.roles[0].value + ' ';
                     }
 
-                    if (element.accessibility[0]) {
+                    if (element.accessibility && element.accessibility.length > 0) {
                         info += '- Accessibility: ' + element.accessibility[0].value + ' ';
                     }
 
