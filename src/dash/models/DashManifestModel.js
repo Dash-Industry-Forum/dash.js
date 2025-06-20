@@ -687,7 +687,7 @@ function DashManifestModel() {
 
     function getRepresentationFor(index, adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 &&
-            isInteger(index) ? adaptation.Representation[index] : null;
+        isInteger(index) ? adaptation.Representation[index] : null;
     }
 
     function getRealAdaptationFor(voAdaptation) {
