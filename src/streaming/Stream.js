@@ -617,35 +617,6 @@ function Stream(config) {
         trackChangedEvents = [];
     }
 
-    function resetAlt(keepBuffers) {
-
-        if (fragmentController) {
-            fragmentController.reset();
-            fragmentController = null;
-        }
-
-        if (abrController && streamInfo) {
-            abrController.clearDataForStream(streamInfo.id);
-        }
-
-        if (segmentBlacklistController) {
-            segmentBlacklistController.reset();
-            segmentBlacklistController = null;
-        }
-
-        console.log('resetAlt, keepBuffers', keepBuffers);
-        
-
-        resetInitialSettings(keepBuffers);
-
-        streamInfo = null;
-
-        unRegisterEvents();
-
-        unRegisterProtectionEvents();
-
-    }
-
     function reset(keepBuffers) {
 
         if (fragmentController) {
@@ -1143,7 +1114,6 @@ function Stream(config) {
         prepareQualityChange,
         prepareTrackChange,
         reset,
-        resetAlt,
         setIsEndedEventSignaled,
         setMediaSource,
         startPreloading,
