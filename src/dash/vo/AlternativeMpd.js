@@ -40,6 +40,7 @@ class AlternativeMpd {
         this.mode = '';
         this.maxDuration = '';
         this.serviceDescriptionId = NaN;
+        this.executeOnce = false;
 
         // Replace
         this.returnOffset = NaN;

@@ -52,8 +52,6 @@ function AlternativeMpdController() {
         altPlayer,
         fullscreenDiv,
         useDashEventsForScheduling = false,
-        manifestModel,
-        serviceDescriptionController, 
         playbackController,
         altVideoElement,
         alternativeContext,
@@ -99,14 +97,6 @@ function AlternativeMpdController() {
 
         if (!!config.currentEvent && !currentEvent) {
             currentEvent = config.currentEvent;
-        }
-
-        if (config.manifestModel) {
-            manifestModel = config.manifestModel;
-        }
-
-        if (config.serviceDescriptionController) {
-            serviceDescriptionController = config.serviceDescriptionController;
         }
     }
 
@@ -158,6 +148,9 @@ function AlternativeMpdController() {
         }
 
         const alternativeEvent = _parseAlternativeMPDEvent(event);
+        if (!alternativeEvent) {   
+            return
+        }
         if (scheduledEvents && scheduledEvents.length > 0) {
             scheduledEvents.push(alternativeEvent)
             logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
@@ -323,17 +316,6 @@ function AlternativeMpdController() {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
             const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
-            let executeOnce = false;
-            debugger;
-            const targetServiceDescriptionId = alternativeMpdNode.serviceDescriptionId;
-            if (targetServiceDescriptionId !== undefined && manifestModel && serviceDescriptionController) {
-                // const manifest = manifestModel.getValue();
-                // const serviceDescription = manifest.ServiceDescription;
-                // el service description tiene que ser el del event stream!!!
-                // if (serviceDescription && serviceDescription.EventRestrictions && serviceDescription.EventRestrictions.executeOnce === 'true') {
-                //     executeOnce = true;
-                // }
-            }
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
@@ -348,7 +330,7 @@ function AlternativeMpdController() {
                 triggered: false,
                 completed: false,
                 type: DashConstants.STATIC,
-                executeOnce: executeOnce,
+                executeOnce: alternativeMpdNode.executeOnce || false,
                 executionCount: 0,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),

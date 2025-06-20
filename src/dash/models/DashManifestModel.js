@@ -1195,6 +1195,7 @@ function DashManifestModel() {
             alternativeMpd.returnOffset = event.returnOffset ?? null;
             alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
             alternativeMpd.startWithOffset = event.startWithOffset ? event.startWithOffset === 'true' : false;
+            alternativeMpd.executeOnce = event.executeOnce ? event.executeOnce === 'true' : false;
             return alternativeMpd;
         }
     }
@@ -1205,6 +1206,7 @@ function DashManifestModel() {
         alternativeMpd.serviceDescriptionId = event.serviceDescriptionId;
         alternativeMpd.maxDuration = event.maxDuration;
         alternativeMpd.noJump = event.noJump;
+        alternativeMpd.executeOnce = event.executeOnce ? event.executeOnce === 'true' : false;
     }
 
     function getEventStreams(inbandStreams, representation, period) {
