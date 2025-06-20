@@ -1195,7 +1195,6 @@ function DashManifestModel() {
             alternativeMpd.returnOffset = event.returnOffset ?? null;
             alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
             alternativeMpd.startWithOffset = event.startWithOffset ? event.startWithOffset === 'true' : false;
-            alternativeMpd.executeOnce = event.executeOnce ? event.executeOnce === 'true' : false;
             return alternativeMpd;
         }
     }
