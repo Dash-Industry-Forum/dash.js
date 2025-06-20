@@ -28,29 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../../dash/constants/DashConstants.js';
+
 /**
  * @class
- * @ignore
  */
+class ExternalSubtitle {
 
-class AlternativeMpd {
-    constructor() {
-        this.url = '';
-        this.earliestResolutionTimeOffset = NaN;
-        this.mode = '';
-        this.maxDuration = '';
-        this.serviceDescriptionId = NaN;
+    constructor(externalSubtitleObject) {
+        this.id = externalSubtitleObject.id;
+        this.url = externalSubtitleObject.url;
+        this.language = externalSubtitleObject.language;
+        this.mimeType = externalSubtitleObject.mimeType;
+        this.bandwidth = externalSubtitleObject.bandwidth;
+        this.periodId = externalSubtitleObject.periodId || null;
+    }
 
-        // Replace
-        this.returnOffset = NaN;
-        this.returnOffset = NaN;
-        this.clip = true;
-        this.startWithOffset = false;
-
-        // Old attributes
-        this.disableJumpTimeOffest = NaN;
-        this.playTimes = '';
+    serializeToMpdParserFormat() {
+        return {
+            'tagName': DashConstants.ADAPTATION_SET,
+            'mimeType': this.mimeType,
+            'lang': this.language,
+            'Representation': [
+                {
+                    'tagName': DashConstants.REPRESENTATION,
+                    'id': this.id,
+                    'bandwidth': this.bandwidth,
+                    'BaseURL': [
+                        {
+                            'tagName': DashConstants.BASE_URL,
+                            '__text': this.url
+                        }
+                    ],
+                    'mimeType': this.mimeType
+                }
+            ]
+        }
     }
 }
 
-export default AlternativeMpd;
+export default ExternalSubtitle;

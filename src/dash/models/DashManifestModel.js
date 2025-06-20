@@ -687,7 +687,7 @@ function DashManifestModel() {
 
     function getRepresentationFor(index, adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 &&
-            isInteger(index) ? adaptation.Representation[index] : null;
+        isInteger(index) ? adaptation.Representation[index] : null;
     }
 
     function getRealAdaptationFor(voAdaptation) {
@@ -1194,7 +1194,7 @@ function DashManifestModel() {
             alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.REPLACE;
             alternativeMpd.returnOffset = event.returnOffset ?? null;
             alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
-            alternativeMpd.startAtPlayhead = event.startAtPlayhead ? event.startAtPlayhead === 'true' : false;
+            alternativeMpd.startWithOffset = event.startWithOffset ? event.startWithOffset === 'true' : false;
             return alternativeMpd;
         }
     }
@@ -1204,6 +1204,7 @@ function DashManifestModel() {
         alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
         alternativeMpd.serviceDescriptionId = event.serviceDescriptionId;
         alternativeMpd.maxDuration = event.maxDuration;
+        alternativeMpd.noJump = event.noJump;
     }
 
     function getEventStreams(inbandStreams, representation, period) {

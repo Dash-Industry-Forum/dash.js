@@ -222,8 +222,6 @@ function ManifestLoader(config) {
                         }
                     }
 
-                    // This should be done recursively until every alternative is parsed
-
                     manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);

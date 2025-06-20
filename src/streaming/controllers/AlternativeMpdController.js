@@ -35,14 +35,6 @@ import EventBus from './../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 
-/*
-TODOS:
--> Prebuffering could be done in a queue style, where at initialization you preload the first one, when that is done you preload the following, etc
-    -> This is specially good for the timeupdate scheduling approach
--> I should save the last mainPlayer time reference in order to search current event while in alternative and to easily calculate time back
--> When going to the alternative you could seek into the content taking into account the duration of the alternative or go back to the time before the alternative
-*/
-
 function AlternativeMpdController() {
 
     const DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET = 60;
@@ -52,7 +44,6 @@ function AlternativeMpdController() {
 
     let instance,
         scheduledEvents = [],
-        eventTimeouts = [],
         videoModel,
         bufferedEvent = null,
         currentEvent = null,
@@ -66,7 +57,6 @@ function AlternativeMpdController() {
         playbackController,
         altVideoElement,
         alternativeContext,
-        isMainDynamic = false,
         actualEventPresentationTime = 0,
         timeToSwitch = 0,
         manifestInfo = {},
@@ -122,11 +112,11 @@ function AlternativeMpdController() {
 
     function initialize() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
+        eventBus.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
 
         if (altPlayer) {
             altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-            altPlayer.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
+            altPlayer.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
         }
 
         document.addEventListener('fullscreenchange', () => {
@@ -160,7 +150,7 @@ function AlternativeMpdController() {
         });
     }
 
-    function _onAlternativeEventeReceived(event) {
+    function _onAlternativeEventReceived(event) {
         // Only Alternative MPD replace events can be used used for dynamic MPD
         if (manifestInfo.type === DashConstants.DYNAMIC && event?.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
             logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
@@ -176,52 +166,48 @@ function AlternativeMpdController() {
             logger.info('First alternative event scheduled');
         }
 
-        switch (manifestInfo.type) {
-            case DashConstants.DYNAMIC:
-                if (!currentEvent && !altPlayer) {
-                    isMainDynamic = true;
-                    logger.info('Starting alternative MPD event scheduling for dynamic manifest');
-                    _scheduleAlternativeMPDEvents();
-                }
-                break;
-            case DashConstants.STATIC:
-                if (!isMainDynamic) {
-                    logger.info('Starting playback time monitoring for static manifest');
-                    _startPlaybackTimeMonitoring();
-                }
-                break;
-            default:
-                logger.warn(`Unknown manifest type: ${manifestInfo.type}`);
-                break;
-        }
+        logger.info('Starting playback time monitoring for static manifest');
+        _startPlaybackTimeMonitoring();
     }
 
     function _startPlaybackTimeMonitoring() {
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
     }
 
     function _startAltnerativePlaybackTimeMonitoring() {
-        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
     }
 
-    function _onDashPlaybackTimeUpdated(e) {
+    // Handles main player time updates (no currentEvent)
+    function _onMainPlaybackTimeUpdated(e) {
         try {
             const currentTime = e.time;
+            const streamId = e.streamId || 0;
             if (!currentEvent) {
-                const nextEvent = _getEventToPrebuff(currentTime)
+                const nextEvent = _getEventToPrebuff(currentTime);
                 if (nextEvent) {
                     _prebufferNextAlternative(nextEvent);
                 }
-                
+
                 actualEventPresentationTime = e.time;
-                const event = _getCurrentEvent(currentTime);
+                const event = _getCurrentEvent(currentTime, streamId);
 
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
-                    timeToSwitch = event.startAtPlayhead ? actualEventPresentationTime - event.presentationTime : 0
-                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url)
+                    timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0;
+                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url);
                     _switchToAlternativeContent(event, timeToSwitch);
                 }
+            }
+        } catch (err) {
+            logger.error(`Error at ${actualEventPresentationTime} in _onMainPlaybackTimeUpdated:`, err);
+        }
+    }
+
+    // Handles alternative player time updates (with currentEvent)
+    function _onAlternativePlaybackTimeUpdated(e) {
+        try {
+            if (!currentEvent) {
                 return;
             }
 
@@ -231,11 +217,11 @@ function AlternativeMpdController() {
 
             const { presentationTime, maxDuration, clip } = currentEvent;
             if (Math.round(e.time - actualEventPresentationTime) === 0) {
-                return
+                return;
             }
 
             const shouldSwitchBack =
-                (Math.round(altPlayer.duration() - currentTime) === 0) ||
+                (Math.round(altPlayer.duration() - e.time) === 0) ||
                 (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
                 (maxDuration && maxDuration <= e.time);
 
@@ -243,11 +229,11 @@ function AlternativeMpdController() {
                 _switchBackToMainContent(currentEvent);
             }
         } catch (err) {
-            logger.error(`Error at ${actualEventPresentationTime} in onDashPlaybackTimeUpdated:`, err);
+            logger.error(`Error at ${actualEventPresentationTime} in _onAlternativePlaybackTimeUpdated:`, err);
         }
     }
 
-    function _getCurrentEvent(currentTime) {
+    function _getCurrentEvent(currentTime, streamId) {
         return scheduledEvents.find(event => {
             if (event.executeOnce && event.executionCount > 0) {
                 return false; // Skip if executeOnce and already executed
@@ -261,8 +247,17 @@ function AlternativeMpdController() {
                 event.completed = !(isPastEnd || isBeforeStart);
                 return false;
             }
-            return currentTime >= event.presentationTime && (isNaN(event.duration) ||
-                currentTime < event.presentationTime + event.duration);
+
+            if (event.noJump) {
+                return currentTime > event.presentationTime;
+            }
+
+            if (streamId !== event.periodId) {
+                return false;
+            }
+
+            return currentTime >= event.presentationTime &&
+                (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
         });
     }
 
@@ -305,15 +300,23 @@ function AlternativeMpdController() {
     }
 
     function _initializeAlternativePlayer(event) {
+        // Clean up previous error listener if any
+        if (altPlayer) {
+            altPlayer.off(Events.ERROR, _onAlternativePlayerError, this);
+        }
         // Initialize alternative player
         altPlayer = MediaPlayer().create();
         altPlayer.initialize(altVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
         altPlayer.setAutoPlay(false);
-
-        altPlayer.on(Events.ERROR, (e) => {
-            logger.error('Alternative player error:', e);
-        }, this);
+        altPlayer.on(Events.ERROR, _onAlternativePlayerError, this);
     }
+
+    function _onAlternativePlayerError(e) {
+        if (logger) {
+            logger.error('Alternative player error:', e);
+        }
+    }
+
 
     function _parseAlternativeMPDEvent(event) {
         if (event.alternativeMpd) {
@@ -334,11 +337,13 @@ function AlternativeMpdController() {
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
+                periodId: event.eventStream.period.id,
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
                 },
+                noJump: parseInt(alternativeMpdNode.noJump || 0, 10),
                 mode: mode,
                 triggered: false,
                 completed: false,
@@ -347,60 +352,8 @@ function AlternativeMpdController() {
                 executionCount: 0,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(alternativeMpdNode.clip && { startAtPlayhead: alternativeMpdNode.startAtPlayhead }),
+                ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
             };
-        }
-    }
-
-    function _scheduleAlternativeMPDEvents() {
-        scheduledEvents.forEach(event => {
-            if (event.length == 0) {
-                return;
-            }
-            const currentTime = videoModel.getElement().currentTime;
-            const timeToEvent = event.presentationTime - currentTime;
-            const timeToPrebuffer = (event.presentationTime - event.alternativeMPD.earliestResolutionTimeOffset) - currentTime;
-
-            if (timeToPrebuffer >= 0) {
-                const prebufferTimeoutId = setTimeout(() => {
-                    _prebufferAlternativeContent(event);
-                }, timeToPrebuffer * 1000);
-
-                eventTimeouts.push(prebufferTimeoutId);
-            } else {
-                _prebufferAlternativeContent(event);
-            }
-
-            if (timeToEvent >= 0) {
-                const switchToAltTimeoutId = setTimeout(() => {
-                    _switchToAlternativeContent(event);
-                }, timeToEvent * 1000);
-
-                eventTimeouts.push(switchToAltTimeoutId);
-
-                const switchToMainTimeoutId = setTimeout(() => {
-                    _switchBackToMainContent(event);
-                }, (timeToEvent + event.duration) * 1000);
-
-                eventTimeouts.push(switchToMainTimeoutId);
-            } else if (currentTime < event.presentationTime + event.duration) {
-                _switchToAlternativeContent(event);
-
-                const timeLeft = (event.presentationTime + event.duration - currentTime) * 1000;
-                const switchToMainTimeoutId = setTimeout(() => {
-                    _switchBackToMainContent(event);
-                }, timeLeft);
-
-                eventTimeouts.push(switchToMainTimeoutId);
-            }
-        });
-    }
-
-    function _descheduleAlternativeMPDEvents(event) {
-        if (currentEvent) {
-            setTimeout(() => {
-                _switchBackToMainContent(event);
-            }, event.duration * 1000);
         }
     }
 
@@ -432,13 +385,9 @@ function AlternativeMpdController() {
         logger.info(`Switching to alternative content at time ${time}`);
         isSwitching = true;
         event.triggered = true;
+        event.noJump = 0;
 
         _initializeAlternativePlayerElement(event);
-
-        if (event.type == DashConstants.DYNAMIC) {
-            logger.debug('Descheduling events for dynamic manifest');
-            _descheduleAlternativeMPDEvents(currentEvent);
-        }
 
         videoModel.pause();
         logger.debug('Main video paused');
@@ -511,7 +460,6 @@ function AlternativeMpdController() {
         videoModel.play();
         logger.info('Main content playback resumed');
 
-        // Cleanup
         altPlayer.reset();
         altPlayer = null;
 
@@ -528,30 +476,30 @@ function AlternativeMpdController() {
 
     function reset() {
         scheduledEvents = [];
-        eventTimeouts.forEach(timeoutId => clearTimeout(timeoutId));
-        eventTimeouts = [];
 
         if (altPlayer) {
             altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-            altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
+            altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
+            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
+            altPlayer.off(Events.ERROR, _onAlternativePlayerError, this);
             altPlayer.reset();
             altPlayer = null;
         }
 
-        if (altVideoElement) {
+        if (altVideoElement && altVideoElement.parentNode) {
             altVideoElement.parentNode.removeChild(altVideoElement);
             altVideoElement = null;
         }
 
-        if (useDashEventsForScheduling && videoModel) {
-            videoModel.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onDashPlaybackTimeUpdated, this);
+        if (videoModel) {
+            videoModel.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
         }
 
         isSwitching = false;
         currentEvent = null;
 
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventeReceived, this);
+        eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
     }
 
     instance = {
