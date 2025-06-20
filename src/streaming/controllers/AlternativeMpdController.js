@@ -229,7 +229,8 @@ function AlternativeMpdController() {
     function _getCurrentEvent(currentTime, streamId) {
         return scheduledEvents.find(event => {
             if (event.executeOnce && event.executionCount > 0) {
-                return false; // Skip if executeOnce and already executed
+                // Skip if executeOnce and already executed
+                return false;
             }
             
             if (event.completed) {
@@ -257,7 +258,8 @@ function AlternativeMpdController() {
     function _getEventToPrebuff(currentTime) {
         return scheduledEvents.find(event => {
             if (event.executeOnce && event.executionCount > 0) {
-                return false; // Skip if executeOnce and already executed
+                // Skip if executeOnce and already executed
+                return false;
             }
 
             if (event.triggered) {
