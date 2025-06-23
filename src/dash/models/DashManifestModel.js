@@ -144,8 +144,7 @@ function DashManifestModel() {
 
         const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
 
-        let isType = mainAdaptationSet ? getIsTypeOf(mainAdaptationSet, type) : false;
-        return isType;
+        return mainAdaptationSet ? getIsTypeOf(mainAdaptationSet, type) : false;
     }
 
     function getIsFragmented(adaptation) {
@@ -182,8 +181,8 @@ function DashManifestModel() {
         return getIsTypeOf(adaptation, Constants.TEXT);
     }
 
-    function getIsTextForPreselection(prsl, adaptations) {
-        const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
+    function getIsTextForPreselection(preselection, adaptations) {
+        const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
         return getIsText(mainAdaptationSet);
     }
 
@@ -426,24 +425,24 @@ function DashManifestModel() {
         return codec;
     }
 
-    function getCodecForPreselection(prsl, adaptations, addResolutionInfo) {
+    function getCodecForPreselection(preselection, adaptations, addResolutionInfo) {
         let codec = null;
         
-        if (prsl && adaptations ) {
-            const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
-            let mainASCodec = getCodec(mainAdaptationSet,0, addResolutionInfo);
+        if (preselection && adaptations ) {
+            const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+            let mainAsCodec = getCodec(mainAdaptationSet,0, addResolutionInfo);
             // we just take the subparameters from the first Representation of the main AdaptationSet
 
-            if (prsl.hasOwnProperty(DashConstants.CODECS)) {
-                let sCodecs = prsl.codecs;                
+            if (preselection.hasOwnProperty(DashConstants.CODECS)) {
+                let sCodecs = preselection.codecs;                
                 
                 // Since Preselection elements don't get the @mimeType attribute assigned, this
                 // copies the media type from the main adaptationSet but takes the codec from
                 // the preselection.
-                codec = mainASCodec.replace(/(codecs=")[^"]*(")/, `$1${sCodecs}$2`);
-                logger.info('Preselection has own codecs-attribute: replacing in MainAdaptationSet (was: ' + mainASCodec + '), new Preselection codec is: ' + codec)
+                codec = mainAsCodec.replace(/(codecs=")[^"]*(")/, `$1${sCodecs}$2`);
+                logger.info('Preselection has own codecs-attribute: replacing in MainAdaptationSet (was: ' + mainAsCodec + '), new Preselection codec is: ' + codec)
             } else {
-                codec = mainASCodec;
+                codec = mainAsCodec;
             }
         }
         
@@ -454,11 +453,11 @@ function DashManifestModel() {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
     }
 
-    function getMimeTypeForPreselection(prsl, adaptations) {
+    function getMimeTypeForPreselection(preselection, adaptations) {
         let mime = null;
         
-        if (prsl && adaptations ) {
-            const mainAdaptationSet = getMainAdaptationSetForPreselection(prsl, adaptations);
+        if (preselection && adaptations ) {
+            const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
             mime = getMimeType(mainAdaptationSet);
         }
         
@@ -535,8 +534,8 @@ function DashManifestModel() {
         protectionElements = protectionElements.concat(periodProtectionElements);
 
         if (period.hasOwnProperty(DashConstants.ADAPTATION_SET) && period[DashConstants.ADAPTATION_SET].length > 0) {
-            period[DashConstants.ADAPTATION_SET].forEach((as) => {
-                const curr = _getContentProtectionFromElement(as);
+            period[DashConstants.ADAPTATION_SET].forEach((adaptation) => {
+                const curr = _getContentProtectionFromElement(adaptation);
                 protectionElements = protectionElements.concat(curr);
             })
         }
@@ -983,16 +982,28 @@ function DashManifestModel() {
     }
 
     function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
-        const prslComponentIds = String(preselection.preselectionComponents).split(' ');
-        return prslComponentIds.map(c => adaptations.find(as => as.id === c));
+        if (!preselection || !preselection.preselectionComponents || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
+        const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+        return preselectionComponentIds.map(c => adaptations.find(adaptation => adaptation.id === c));
     }
 
     function getMainAdaptationSetForPreselection(preselection, adaptations) {
-        const prslComponentIds = String(preselection.preselectionComponents).split(' ');
-        return adaptations.find(as => as.id === prslComponentIds[0]);
+        if (!preselection || !preselection.preselectionComponents || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
+        const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+        return adaptations.find(adaptation => adaptation.id === preselectionComponentIds[0]);
     }
 
     function getCommonRepresentationForPreselection(preselection, adaptations) {
+        if (!preselection || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
         const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
         return mainAS.Representation[0];
     }
@@ -1009,11 +1020,11 @@ function DashManifestModel() {
                 realPreselection = realPeriod.Preselection[i];
                 voPreselection = new Preselection();
                 
-                const prslAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
-                let allComponentsAvailable = prslAdaptationSets.every(as => !!as);
+                const preselectionAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
+                let allComponentsAvailable = preselectionAdaptationSets.every(adaptation => !!adaptation);
 
                 // up to now, we only support single-representation preselections, not multi-representation
-                if (allComponentsAvailable && prslAdaptationSets.length === 1) {
+                if (allComponentsAvailable && preselectionAdaptationSets.length === 1) {
                     if (realPreselection.hasOwnProperty(DashConstants.ID)) {
                         voPreselection.id = realPreselection.id;
                     }
@@ -1025,7 +1036,7 @@ function DashManifestModel() {
                     }
     
                     if (realPreselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS)) {
-                        voPreselection.preselectionComponents = prslAdaptationSets;
+                        voPreselection.preselectionComponents = preselectionAdaptationSets;
                     } else {
                         logger.warn('Preselection (index: ' + voPreselection.index + ') missing component(s)');
                     }
@@ -1034,15 +1045,15 @@ function DashManifestModel() {
                         voPreselection.order = realPreselection.order;
                     }
 
-                    if (getIsMuxed(prslAdaptationSets[0])) {
+                    if (getIsMuxed(preselectionAdaptationSets[0])) {
                         voPreselection.type = Constants.MUXED;
-                    } else if (getIsAudio(prslAdaptationSets[0])) {
+                    } else if (getIsAudio(preselectionAdaptationSets[0])) {
                         voPreselection.type = Constants.AUDIO;
-                    } else if (getIsVideo(prslAdaptationSets[0])) {
+                    } else if (getIsVideo(preselectionAdaptationSets[0])) {
                         voPreselection.type = Constants.VIDEO;
-                    } else if (getIsText(prslAdaptationSets[0])) {
+                    } else if (getIsText(preselectionAdaptationSets[0])) {
                         voPreselection.type = Constants.TEXT;
-                    } else if (getIsImage(prslAdaptationSets[0])) {
+                    } else if (getIsImage(preselectionAdaptationSets[0])) {
                         voPreselection.type = Constants.IMAGE;
                     } else {
                         logger.warn('Unknown Preselection stream type');

@@ -38,7 +38,7 @@ class Preselection {
         this.index = -1;
         this.type = null;
         this.tag = null;
-        this.order = 'undefined',
+        this.order = 'undefined';
         this.preselectionComponents = [];
     }
 }

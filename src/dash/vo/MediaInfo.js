@@ -51,7 +51,6 @@ class MediaInfo {
         this.lang = null;
         this.mimeType = null;
         this.normalizedKeyIds = new Set();
-        this.preselectionComponents = [];
         this.representationCount = 0;
         this.roles = null;
         this.segmentAlignment = false;

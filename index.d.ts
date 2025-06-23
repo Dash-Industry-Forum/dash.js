@@ -1771,6 +1771,8 @@ declare namespace dashjs {
                 video?: TrackSwitchMode;
                 audio?: TrackSwitchMode;
             };
+            includePreselectionsInMediainfo?: boolean;
+            includePreselectionsForInitialTrackSelection?: boolean;
             ignoreSelectionPriority?: boolean;
             prioritizeRoleMain?: boolean;
             assumeDefaultRoleAsMain?: boolean;

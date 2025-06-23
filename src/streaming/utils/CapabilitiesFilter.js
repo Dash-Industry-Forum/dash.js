@@ -98,7 +98,7 @@ function CapabilitiesFilter() {
         manifest.Period
             .forEach((period) => {
                 _filterUnsupportedAdaptationSetsOfPeriod(period, type);
-                _filterUnsupportedPreselectionssOfPeriod(period, type);
+                _filterUnsupportedPreselectionsOfPeriod(period, type);
             })
     }
 
@@ -123,7 +123,7 @@ function CapabilitiesFilter() {
         })
     }
 
-    function _filterUnsupportedPreselectionssOfPeriod(period, type) {
+    function _filterUnsupportedPreselectionsOfPeriod(period, type) {
         if (!period || !period.Preselection || period.Preselection.length === 0) {
             return;
         }
@@ -219,9 +219,9 @@ function CapabilitiesFilter() {
                 period.Preselection.forEach((prsl) => {
                     if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
                         const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-                        const prsl_rep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+                        const prslRep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
 
-                        _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prsl_rep);
+                        _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prslRep);
                     }
                 });
             }
@@ -240,14 +240,14 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createConfiguration(type, rep, codec, prsl_rep) {
+    function _createConfiguration(type, rep, codec, prslRep) {
         let config = null;
         switch (type) {
             case Constants.VIDEO:
-                config = _createVideoConfiguration(rep, codec, prsl_rep);
+                config = _createVideoConfiguration(rep, codec, prslRep);
                 break;
             case Constants.AUDIO:
-                config = _createAudioConfiguration(rep, codec, prsl_rep);
+                config = _createAudioConfiguration(rep, codec, prslRep);
                 break;
             default:
                 return config;

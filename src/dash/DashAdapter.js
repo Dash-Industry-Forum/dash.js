@@ -110,13 +110,6 @@ function DashAdapter() {
         }
 
         const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
-        
-        // the following line seems not to be needed since this function is only used
-        // - for Thumbnail-tracks
-        // - to determine timelines (based on one example Representation)
-        // For both Preselections are not relevant.
-        // const voPreselections = dashManifestModel.getPreselectionsForPeriod(selectedVoPeriod);
-
         let realAdaptation = getMainAdaptationForType(type, streamInfo);
         if (!realAdaptation) {
             return null;
@@ -260,9 +253,9 @@ function DashAdapter() {
             const voPreselections = dashManifestModel.getPreselectionsForPeriod(period);
             
             for (i = 0, ln = voPreselections.length; i < ln; i++) {
-                const prsl = voPreselections[i];
+                const preselection = voPreselections[i];
     
-                if (prsl.hasOwnProperty('type') && prsl.type === type) {
+                if (preselection.hasOwnProperty('type') && preselection.type === type) {
                     media = convertPreselectionToMediaInfo(voPreselections[i]);
                     if (media) {
                         mediaArr.push(media);
@@ -911,8 +904,8 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getMainAdaptationSetForPreselection(prsl, as) {
-        return dashManifestModel.getMainAdaptationSetForPreselection(prsl, as);
+    function getMainAdaptationSetForPreselection(preselection, adaptation) {
+        return dashManifestModel.getMainAdaptationSetForPreselection(preselection, adaptation);
     }
 
     /**
@@ -923,8 +916,8 @@ function DashAdapter() {
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getCommonRepresentationForPreselection(prsl, as) {
-        return dashManifestModel.getCommonRepresentationForPreselection(prsl, as);
+    function getCommonRepresentationForPreselection(preselection, adaptation) {
+        return dashManifestModel.getCommonRepresentationForPreselection(preselection, adaptation);
     }
 
     /**
@@ -1142,23 +1135,23 @@ function DashAdapter() {
         return mediaInfo;
     }
 
-    function convertPreselectionToMediaInfo(prsl) {
-        if (!prsl) {
+    function convertPreselectionToMediaInfo(preselection) {
+        if (!preselection) {
             return null;
         }
 
         let mediaInfo = new MediaInfo();
-        const realPreselection = prsl.period.mpd.manifest.Period[prsl.period.index].Preselection[prsl.index];
-        const realAdaptation = prsl.period.mpd.manifest.Period[prsl.period.index].AdaptationSet;
+        const realPreselection = preselection.period.mpd.manifest.Period[preselection.period.index].Preselection[preselection.index];
+        const realAdaptation = preselection.period.mpd.manifest.Period[preselection.period.index].AdaptationSet;
 
         // initialize mediaInfo with properties from main adaptation set
-        const as = dashManifestModel.getAdaptationsForPeriod(prsl.period);
-        const mainAdaptation = dashManifestModel.getMainAdaptationSetForPreselection(realPreselection, as);
+        const adaptation = dashManifestModel.getAdaptationsForPeriod(preselection.period);
+        const mainAdaptation = dashManifestModel.getMainAdaptationSetForPreselection(realPreselection, adaptation);
         mediaInfo = convertAdaptationToMediaInfo(mainAdaptation);
 
         mediaInfo.isPreselection = true;
-        mediaInfo.tag = prsl.tag;
-        mediaInfo.id = prsl.id;
+        mediaInfo.tag = preselection.tag;
+        mediaInfo.id = preselection.id;
         mediaInfo.codec = dashManifestModel.getCodecForPreselection(realPreselection, realAdaptation);
         mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realPreselection);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realPreselection);
