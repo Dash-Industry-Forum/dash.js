@@ -398,7 +398,6 @@ function MediaPlayer() {
 
             alternativeMpdController.setConfig({
                 videoModel,
-                manifestModel,
                 DashConstants,
                 mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
                 playbackController,
