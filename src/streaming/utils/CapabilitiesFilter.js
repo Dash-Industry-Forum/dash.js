@@ -187,8 +187,8 @@ function CapabilitiesFilter() {
         return isSupplementalCodecSupported
     }
 
-    function _isCodecSupported(type, rep, codec, prsl_rep) {
-        const config = _createConfiguration(type, rep, codec, prsl_rep);
+    function _isCodecSupported(type, rep, codec, prslRep) {
+        const config = _createConfiguration(type, rep, codec, prslRep);
 
         return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
@@ -230,8 +230,8 @@ function CapabilitiesFilter() {
         return configurations;
     }
 
-    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prsl_rep) {
-        const config = _createConfiguration(type, rep, codec, prsl_rep);
+    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prslRep) {
+        const config = _createConfiguration(type, rep, codec, prslRep);
         const configString = JSON.stringify(config);
 
         if (!configurationsSet.has(configString)) {
@@ -256,7 +256,7 @@ function CapabilitiesFilter() {
         return _addGenericAttributesToConfig(rep, config);
     }
 
-    function _createVideoConfiguration(rep, codec, prsl_rep) {
+    function _createVideoConfiguration(rep, codec, prslRep) {
         let config = {
             codec: codec,
             width: rep ? rep.width || null : null,
@@ -266,10 +266,10 @@ function CapabilitiesFilter() {
             isSupported: true
         }
 
-        if (rep.tagName === DashConstants.Preselection && prsl_rep) {
-            config.width = prsl_rep.width || null;
-            config.height = prsl_rep.height || null;
-            config.bitrate = prsl_rep.bandwidth || null;
+        if (rep.tagName === DashConstants.Preselection && prslRep) {
+            config.width = prslRep.width || null;
+            config.height = prslRep.height || null;
+            config.bitrate = prslRep.bandwidth || null;
         }
 
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
@@ -352,13 +352,13 @@ function CapabilitiesFilter() {
         return cfg;
     }
 
-    function _createAudioConfiguration(rep, codec, prsl_rep) {
+    function _createAudioConfiguration(rep, codec, prslRep) {
         var samplerate = rep ? rep.audioSamplingRate || null : null;
         var bitrate = rep ? rep.bandwidth || null : null;
 
-        if (rep.tagName === DashConstants.PRESELECTION && prsl_rep) {
-            samplerate = prsl_rep.audioSamplingRate || null;
-            bitrate = prsl_rep.bandwidth || null;
+        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+            samplerate = prslRep.audioSamplingRate || null;
+            bitrate = prslRep.bandwidth || null;
         }
 
         return {
