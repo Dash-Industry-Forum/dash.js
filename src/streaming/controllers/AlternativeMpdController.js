@@ -181,7 +181,6 @@ function AlternativeMpdController() {
 
                 actualEventPresentationTime = e.time;
                 const event = _getCurrentEvent(currentTime, streamId);
-
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
                     timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0;
@@ -214,7 +213,6 @@ function AlternativeMpdController() {
                 (Math.round(altPlayer.duration() - e.time) === 0) ||
                 (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
                 (maxDuration && maxDuration <= e.time);
-
             if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
             }
@@ -226,7 +224,6 @@ function AlternativeMpdController() {
     function _getCurrentEvent(currentTime, streamId) {
         const priorityEvent = _findPriorityEvent(currentTime);
         if (priorityEvent) {
-            debugger;
             return priorityEvent;
         }
 
@@ -246,14 +243,24 @@ function AlternativeMpdController() {
     }
 
     function _findPriorityEvent(currentTime) {
-        return scheduledEvents.reduce((maxEvent, event) => {
-            if (event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY && currentTime > event.presentationTime) {
-                if (!maxEvent || event.presentationTime > maxEvent.presentationTime) {
-                    return event;
+        const priorityEvents = scheduledEvents.filter(event =>
+            event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY &&
+            currentTime >= event.presentationTime
+        );
+
+        if (priorityEvents.length === 0) { 
+            return null; 
+        }
+        return priorityEvents.reduce((maxEvent, event) => {
+            if (!maxEvent || event.presentationTime >= maxEvent.presentationTime) {
+                if (maxEvent) {
+                    maxEvent.noJump = 0;
                 }
+                return event;
             }
             return maxEvent;
-        }, null);
+        }
+        , null);
     }
 
     function _handleCompletedEvent(event, currentTime) {
