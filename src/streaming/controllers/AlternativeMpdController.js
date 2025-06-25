@@ -184,7 +184,6 @@ function AlternativeMpdController() {
 
                 actualEventPresentationTime = e.time;
                 const event = _getCurrentEvent(currentTime, streamId);
-
                 if (event && !isSwitching && !currentEvent) {
                     currentEvent = event;
                     timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0;
@@ -217,7 +216,6 @@ function AlternativeMpdController() {
                 (Math.round(altPlayer.duration() - e.time) === 0) ||
                 (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
                 (maxDuration && maxDuration <= e.time);
-
             if (shouldSwitchBack) {
                 _switchBackToMainContent(currentEvent);
             }
@@ -227,6 +225,11 @@ function AlternativeMpdController() {
     }
 
     function _getCurrentEvent(currentTime, streamId) {
+        const priorityEvent = _findPriorityEvent(currentTime);
+        if (priorityEvent) {
+            return priorityEvent;
+        }
+
         return scheduledEvents.find(event => {
             if (event.executeOnce && event.executionCount > 0) {
                 // Skip if executeOnce and already executed
@@ -234,25 +237,59 @@ function AlternativeMpdController() {
             }
             
             if (event.completed) {
-                const hasDuration = !isNaN(event.duration);
-                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
-                const isBeforeStart = currentTime < event.presentationTime;
-
-                event.completed = !(isPastEnd || isBeforeStart);
+                return _handleCompletedEvent(event, currentTime);
+            }
+            if (event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_DEFAULT) {
+                return _handleNoJumpEvent(event, currentTime);
+            }
+            const periodCheck = _handlePeriodIdMismatch(event, streamId);
+            if (periodCheck === false) {
                 return false;
             }
-
-            if (event.noJump) {
-                return currentTime > event.presentationTime;
-            }
-
-            if (streamId !== event.periodId) {
-                return false;
-            }
-
-            return currentTime >= event.presentationTime &&
-                (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
+            return _handleDefaultEvent(event, currentTime);
         });
+    }
+
+    function _findPriorityEvent(currentTime) {
+        const priorityEvents = scheduledEvents.filter(event =>
+            event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY &&
+            currentTime >= event.presentationTime
+        );
+
+        if (priorityEvents.length === 0) { 
+            return null; 
+        }
+        return priorityEvents.reduce((maxEvent, event) => {
+            if (!maxEvent || event.presentationTime >= maxEvent.presentationTime) {
+                if (maxEvent) {
+                    maxEvent.noJump = 0;
+                }
+                return event;
+            }
+            return maxEvent;
+        }
+        , null);
+    }
+
+    function _handleCompletedEvent(event, currentTime) {
+        const hasDuration = !isNaN(event.duration);
+        const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+        const isBeforeStart = currentTime < event.presentationTime;
+        event.completed = !(isPastEnd || isBeforeStart);
+        return false;
+    }
+
+    function _handleNoJumpEvent(event, currentTime) {
+        return currentTime > event.presentationTime;
+    }
+
+    function _handlePeriodIdMismatch(event, streamId) {
+        return streamId !== event.periodId ? false : undefined;
+    }
+
+    function _handleDefaultEvent(event, currentTime) {
+        return currentTime >= event.presentationTime &&
+            (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
     }
 
     function _getEventToPrebuff(currentTime) {
