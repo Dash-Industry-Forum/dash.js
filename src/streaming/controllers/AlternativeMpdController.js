@@ -231,7 +231,7 @@ function AlternativeMpdController() {
             if (event.completed) {
                 return _handleCompletedEvent(event, currentTime);
             }
-            if (event.noJump) {
+            if (event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_DEFAULT) {
                 return _handleNoJumpEvent(event, currentTime);
             }
             const periodCheck = _handlePeriodIdMismatch(event, streamId);
