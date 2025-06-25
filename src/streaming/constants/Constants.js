@@ -339,6 +339,10 @@ export default {
         URIS: {
             REPLACE: 'urn:mpeg:dash:event:alternativeMPD:replace:2025',
             INSERT: 'urn:mpeg:dash:event:alternativeMPD:insert:2025'
+        },
+        ATTRIBUTES: {
+            NO_JUMP_DEFAULT: 2,
+            NO_JUMP_PRIORITY: 1
         }
         
     },

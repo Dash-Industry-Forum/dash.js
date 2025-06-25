@@ -224,27 +224,57 @@ function AlternativeMpdController() {
     }
 
     function _getCurrentEvent(currentTime, streamId) {
+        const priorityEvent = _findPriorityEvent(currentTime);
+        if (priorityEvent) {
+            debugger;
+            return priorityEvent;
+        }
+
         return scheduledEvents.find(event => {
             if (event.completed) {
-                const hasDuration = !isNaN(event.duration);
-                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
-                const isBeforeStart = currentTime < event.presentationTime;
-
-                event.completed = !(isPastEnd || isBeforeStart);
-                return false;
+                return _handleCompletedEvent(event, currentTime);
             }
-
             if (event.noJump) {
-                return currentTime > event.presentationTime;
+                return _handleNoJumpEvent(event, currentTime);
             }
-
-            if (streamId !== event.periodId) {
+            const periodCheck = _handlePeriodIdMismatch(event, streamId);
+            if (periodCheck === false) {
                 return false;
             }
-
-            return currentTime >= event.presentationTime &&
-                (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
+            return _handleDefaultEvent(event, currentTime);
         });
+    }
+
+    function _findPriorityEvent(currentTime) {
+        return scheduledEvents.reduce((maxEvent, event) => {
+            if (event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY && currentTime > event.presentationTime) {
+                if (!maxEvent || event.presentationTime > maxEvent.presentationTime) {
+                    return event;
+                }
+            }
+            return maxEvent;
+        }, null);
+    }
+
+    function _handleCompletedEvent(event, currentTime) {
+        const hasDuration = !isNaN(event.duration);
+        const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
+        const isBeforeStart = currentTime < event.presentationTime;
+        event.completed = !(isPastEnd || isBeforeStart);
+        return false;
+    }
+
+    function _handleNoJumpEvent(event, currentTime) {
+        return currentTime > event.presentationTime;
+    }
+
+    function _handlePeriodIdMismatch(event, streamId) {
+        return streamId !== event.periodId ? false : undefined;
+    }
+
+    function _handleDefaultEvent(event, currentTime) {
+        return currentTime >= event.presentationTime &&
+            (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
     }
 
     function _getEventToPrebuff(currentTime) {
