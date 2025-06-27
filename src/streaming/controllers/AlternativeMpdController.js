@@ -138,6 +138,9 @@ function AlternativeMpdController() {
                 logger.debug(`Updated scheduled event type to ${manifestInfo.type} for URL: ${scheduledEvent.alternativeMPD.url}`);
             }
         });
+
+        logger.info('Starting playback time monitoring for static manifest');
+        _startPlaybackTimeMonitoring();
     }
 
     function _onAlternativeEventReceived(event) {
@@ -148,16 +151,39 @@ function AlternativeMpdController() {
         }
 
         const alternativeEvent = _parseAlternativeMPDEvent(event);
-        if (scheduledEvents && scheduledEvents.length > 0) {
-            scheduledEvents.push(alternativeEvent)
-            logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
+
+        if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
+            _updateEvent(alternativeEvent);
+        } else if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
+            _repeatEvent(alternativeEvent);
         } else {
-            scheduledEvents = [alternativeEvent]
-            logger.info('First alternative event scheduled');
+            scheduledEvents.push(alternativeEvent);
+        }
+    }
+    
+    function _updateEvent(event) {
+        if (!event.id) {
+            return;
+        }
+        
+        const index = scheduledEvents.findIndex(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
+        if (index > -1) {
+            scheduledEvents[index] = event;
+            logger.info('Alternative event updated');
+        }
+    }
+    
+    function _repeatEvent(event) {
+        if (!event.id) {
+            return;
         }
 
-        logger.info('Starting playback time monitoring for static manifest');
-        _startPlaybackTimeMonitoring();
+        const originalEvent = scheduledEvents.find(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
+        if (originalEvent) {
+            scheduledEvents.push(event);
+            logger.info('Alternative event repeated');
+        }
+        
     }
 
     function _startPlaybackTimeMonitoring() {
@@ -345,6 +371,9 @@ function AlternativeMpdController() {
             return {
                 presentationTime: event.presentationTime / timescale,
                 duration: event.duration,
+                id: event.id,
+                schemeIdUri: event.eventStream.schemeIdUri,
+                status: event.status,
                 periodId: event.eventStream.period.id,
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
