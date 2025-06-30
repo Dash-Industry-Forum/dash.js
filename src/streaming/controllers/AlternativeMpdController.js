@@ -160,7 +160,7 @@ function AlternativeMpdController() {
             _updateEvent(alternativeEvent);
         } else if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
             _repeatEvent(alternativeEvent);
-        } else if (scheduledEvents && scheduledEvents.length > 0) {
+        } else if (scheduledEvents) {
             scheduledEvents.push(alternativeEvent)
             logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
         }
@@ -172,7 +172,7 @@ function AlternativeMpdController() {
         }
         
         const index = scheduledEvents.findIndex(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
-        if (index > -1 && scheduledEvents.length > 0) {
+        if (index > -1) {
             scheduledEvents[index] = event;
             logger.info('Alternative event updated');
         }
