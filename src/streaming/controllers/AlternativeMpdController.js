@@ -152,12 +152,17 @@ function AlternativeMpdController() {
 
         const alternativeEvent = _parseAlternativeMPDEvent(event);
 
+        if (!alternativeEvent) {
+            return
+        }
+
         if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
             _updateEvent(alternativeEvent);
         } else if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
             _repeatEvent(alternativeEvent);
-        } else {
-            scheduledEvents.push(alternativeEvent);
+        } else if (scheduledEvents && scheduledEvents.length > 0) {
+            scheduledEvents.push(alternativeEvent)
+            logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
         }
     }
     
@@ -167,7 +172,7 @@ function AlternativeMpdController() {
         }
         
         const index = scheduledEvents.findIndex(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
-        if (index > -1) {
+        if (index > -1 && scheduledEvents.length > 0) {
             scheduledEvents[index] = event;
             logger.info('Alternative event updated');
         }
@@ -254,6 +259,11 @@ function AlternativeMpdController() {
         }
 
         return scheduledEvents.find(event => {
+            if (event.executeOnce && event.executionCount > 0) {
+                // Skip if executeOnce and already executed
+                return false;
+            }
+            
             if (event.completed) {
                 return _handleCompletedEvent(event, currentTime);
             }
@@ -312,6 +322,11 @@ function AlternativeMpdController() {
 
     function _getEventToPrebuff(currentTime) {
         return scheduledEvents.find(event => {
+            if (event.executeOnce && event.executionCount > 0) {
+                // Skip if executeOnce and already executed
+                return false;
+            }
+
             if (event.triggered) {
                 const hasDuration = !isNaN(event.duration);
                 const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
@@ -385,6 +400,8 @@ function AlternativeMpdController() {
                 triggered: false,
                 completed: false,
                 type: DashConstants.STATIC,
+                executeOnce: alternativeMpdNode.executeOnce || false,
+                executionCount: 0,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
                 ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
                 ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
@@ -441,6 +458,8 @@ function AlternativeMpdController() {
 
         isSwitching = false;
         bufferedEvent = null;
+
+        event.executionCount++;
     }
 
     function _getAnchor(url) {
