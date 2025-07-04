@@ -389,7 +389,7 @@ function CapabilitiesFilter() {
                     return true;
                 }
 
-                const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
+                const adaptationSetEssentialProperties = adapter.getEssentialProperties(as);
                 const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
 
                 if (!doesSupportEssentialProperties) {
@@ -397,7 +397,7 @@ function CapabilitiesFilter() {
                 }
 
                 as.Representation = as.Representation.filter((rep) => {
-                    const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
+                    const essentialProperties = adapter.getEssentialProperties(rep);
                     return _doesSupportEssentialProperties(essentialProperties);
                 });
 
@@ -406,7 +406,7 @@ function CapabilitiesFilter() {
 
             if (period.Preselection && period.Preselection.length) {
                 period.Preselection = period.Preselection.filter(prsl => {
-                    const preselectionEssentialProperties = adapter.getEssentialPropertiesForPreselection(prsl);
+                    const preselectionEssentialProperties = adapter.getEssentialProperties(prsl);
                     const doesSupportEssentialProperties = _doesSupportEssentialProperties(preselectionEssentialProperties);
 
                     if (!doesSupportEssentialProperties) {

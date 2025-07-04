@@ -404,39 +404,13 @@ function DashAdapter() {
     }
 
     /**
-     * Return all EssentialProperties of an AdaptationSet
-     * @param {object} adaptationSet
+     * Return all EssentialProperties of an AdaptationSet, Representation or Preselection
+     * @param {object} element
      * @return {array}
      */
-    function getEssentialPropertiesForAdaptationSet(adaptationSet) {
+    function getEssentialProperties(element) {
         try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(adaptationSet);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    /**
-     * Return all EssentialProperties of a Representation
-     * @param {object} representation
-     * @return {array}
-     */
-    function getEssentialPropertiesForRepresentation(representation) {
-        try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
-        } catch (e) {
-            return [];
-        }
-    }    
-
-    /**
-     * Return all EssentialProperties of a Preselection
-     * @param {object} preselection
-     * @return {array}
-     */
-    function getEssentialPropertiesForPreselection(preselection) {
-        try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(preselection);
+            return dashManifestModel.getEssentialProperties(element);
         } catch (e) {
             return [];
         }
@@ -1340,9 +1314,7 @@ function DashAdapter() {
         getCodecForPreselection,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
-        getEssentialPropertiesForPreselection,
-        getEssentialPropertiesForRepresentation,
+        getEssentialProperties,
         getEvent,
         getEventsFor,
         getFramerate,

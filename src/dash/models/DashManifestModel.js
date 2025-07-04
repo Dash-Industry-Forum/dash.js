@@ -85,7 +85,7 @@ function DashManifestModel() {
 
         // Check for thumbnail images
         if (adaptation.Representation && adaptation.Representation.length) {
-            const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
+            const essentialProperties = getEssentialProperties(adaptation.Representation[0]);
             if (essentialProperties && essentialProperties.some(essentialProperty => Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
                 return (type === Constants.IMAGE);
             }
@@ -719,28 +719,20 @@ function DashManifestModel() {
         });
     }
 
-    function getEssentialPropertiesForAdaptationSet(adaptation) {
-        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, adaptation);
+    function getEssentialProperties(element) {
+        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, element);
     }
 
     function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.ESSENTIAL_PROPERTY, adaptation);
     }
 
-    function getEssentialPropertiesForRepresentation(realRepresentation) {
-        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, realRepresentation);
-    }
-
-    function getSupplementalPropertiesForAdaptationSet(adaptation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
+    function getSupplementalProperties(element) {
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, element);
     }
 
     function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
-    }
-
-    function getSupplementalPropertiesForRepresentation(representation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, representation);
     }
 
     function getRepresentationFor(index, adaptation) {
@@ -845,8 +837,8 @@ function DashManifestModel() {
                     voRepresentation.segmentInfoType = DashConstants.BASE_URL;
                 }
 
-                voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
-                voRepresentation.supplementalProperties = getSupplementalPropertiesForRepresentation(realRepresentation);
+                voRepresentation.essentialProperties = getEssentialProperties(realRepresentation);
+                voRepresentation.supplementalProperties = getSupplementalProperties(realRepresentation);
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
@@ -1685,8 +1677,7 @@ function DashManifestModel() {
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
-        getEssentialPropertiesForRepresentation,
+        getEssentialProperties,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
         getEventsForPeriod,
@@ -1725,8 +1716,7 @@ function DashManifestModel() {
         getServiceDescriptions,
         getSubSegmentAlignment,
         getSuggestedPresentationDelay,
-        getSupplementalPropertiesForAdaptationSet,
-        getSupplementalPropertiesForRepresentation,
+        getSupplementalProperties,
         getUTCTimingSources,
         getViewpointForAdaptation,
         hasProfile,
