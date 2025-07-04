@@ -278,6 +278,10 @@ function TextController(config) {
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         allTracksAreDisabled = idx === -1;
 
+        if(allTracksAreDisabled){
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { mediaType: Constants.TEXT, bufferLevel: -1 }, { streamId, mediaType: Constants.TEXT});
+        }
+
         if (allTracksAreDisabled && mediaController) {
             mediaController.saveTextSettingsDisabled();
         }
