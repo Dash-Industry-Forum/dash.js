@@ -36,6 +36,7 @@ class Preselection {
     constructor() {
         this.period = null;
         this.index = -1;
+        this.id = null;
         this.type = null;
         this.tag = null;
         this.order = 'undefined';
