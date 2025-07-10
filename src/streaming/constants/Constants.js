@@ -336,6 +336,10 @@ export default {
             REPLACE: 'replace',
             INSERT: 'insert'
         },
+        STATUS: {
+            UPDATE: 'update',
+            REPEAT: 'repeat'
+        },
         URIS: {
             REPLACE: 'urn:mpeg:dash:event:alternativeMPD:replace:2025',
             INSERT: 'urn:mpeg:dash:event:alternativeMPD:insert:2025'
