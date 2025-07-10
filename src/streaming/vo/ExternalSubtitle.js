@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2023, Dash Industry Forum.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,51 +28,43 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../../dash/constants/DashConstants.js';
+
 /**
  * @class
- * @ignore
  */
-import DashConstants from '../constants/DashConstants.js'
+class ExternalSubtitle {
 
-class DescriptorType {
-    constructor() {
-        this.schemeIdUri = null;
-        this.value = null;
-        this.id = null;
+    constructor(externalSubtitleObject) {
+        this.id = externalSubtitleObject.id;
+        this.url = externalSubtitleObject.url;
+        this.language = externalSubtitleObject.language;
+        this.mimeType = externalSubtitleObject.mimeType;
+        this.bandwidth = externalSubtitleObject.bandwidth;
+        this.periodId = externalSubtitleObject.periodId || null;
     }
 
-    init(data) {
-        if (data) {
-            this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
-            this.value = data.value !== null && data.value !== undefined ? data.value.toString() : null;
-            this.id = data.id ? data.id : null;
-            // Only add the DVB extensions if they exist
-            if (data[DashConstants.DVB_URL]) {
-                this.dvbUrl = data[DashConstants.DVB_URL]
-            }
-            if (data[DashConstants.DVB_MIMETYPE]) {
-                this.dvbMimeType = data[DashConstants.DVB_MIMETYPE]
-            }
-            if (data[DashConstants.DVB_FONTFAMILY]) {
-                this.dvbFontFamily = data[DashConstants.DVB_FONTFAMILY]
-            }
+    serializeToMpdParserFormat() {
+        return {
+            'tagName': DashConstants.ADAPTATION_SET,
+            'mimeType': this.mimeType,
+            'lang': this.language,
+            'Representation': [
+                {
+                    'tagName': DashConstants.REPRESENTATION,
+                    'id': this.id,
+                    'bandwidth': this.bandwidth,
+                    'BaseURL': [
+                        {
+                            'tagName': DashConstants.BASE_URL,
+                            '__text': this.url
+                        }
+                    ],
+                    'mimeType': this.mimeType
+                }
+            ]
         }
-    }
-
-    inArray(arr) {
-        if (arr) {
-            return arr.some((entry) => {
-                return (
-                    this.schemeIdUri === entry.schemeIdUri && (
-                        this.value ?
-                            (this.value.toString().match(entry.value)) : // check if provided value matches RegExp
-                            (''.match(entry.value)) // check if RegExp allows absent value
-                    )
-                );
-            })
-        }
-        return false;
     }
 }
 
-export default DescriptorType;
+export default ExternalSubtitle;
