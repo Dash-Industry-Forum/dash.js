@@ -401,7 +401,7 @@ function CmcdController() {
     function _createCmcdEncodeOptions(targetSettings) {
         const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
         let enabledKeys = targetSettings?.enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
-        console.log('VERSION', settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION)
+
         return {
             reportingMode: targetSettings?.cmcdMode,
             version: settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION,
