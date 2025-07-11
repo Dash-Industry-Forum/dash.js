@@ -1816,4 +1816,243 @@ describe('CmcdController', function () {
         });
     })
 
+    describe('Response Mode', () => {
+        let urlLoaderMock;
+
+        beforeEach(() => {
+            urlLoaderMock = {
+                load: sinon.spy()
+            };
+
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+        });
+
+        it('should send a response report when a media segment response is received', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment'],
+                            enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid']
+                        }]
+                    }
+                }
+            });
+
+            let currentTime = new Date(Date.now());
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s',
+                            startDate: currentTime - 1000,
+                            firstByteDate: currentTime - 500,
+                            endDate: new Date()
+                        }
+                    },
+                    cmcd: { sid: 'session-id' },
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            expect(metrics).to.have.property('rc');
+            expect(metrics).to.have.property('sid', 'session-id');
+            expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
+            expect(metrics).to.have.property('ttfb');
+            expect(metrics).to.have.property('ttlb');
+        });
+
+        it('should not send a report if enabled keys is empty', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            enabledKeys: [],
+                            includeOnRequests: ['mpd']
+                        }]
+                    }
+                }
+            });
+
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: { sid: 'session-id' }
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.called).to.be.false;
+        });
+
+        it('should not send a report if the target is disabled', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: false,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment']
+                        }]
+                    }
+                }
+            });
+
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: { sid: 'session-id' }
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.called).to.be.false;
+        });
+
+        it('should send a report with headers if mode is "header"', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'header',
+                            includeOnRequests: ['segment'],
+                            enabledKeys: ['rc', 'sid']
+                        }]
+                    }
+                }
+            });
+
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: { sid: 'session-id' }
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.not.include('?CMCD=');
+            expect(requestSent.headers).to.have.property('CMCD-Request');
+            expect(requestSent.headers).to.have.property('CMCD-Session');
+
+            const requestMetrics = decodeCmcd(requestSent.headers['CMCD-Request']);
+            const sessionMetrics = decodeCmcd(requestSent.headers['CMCD-Session']);
+
+            expect(requestMetrics).to.have.property('rc', 200);
+            expect(sessionMetrics).to.have.property('sid', 'session-id');
+        });
+
+        it('should send all available keys if enabledKeys is not defined', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment'],
+                        }]
+                    }
+                }
+            });
+
+            let currentTime = new Date(Date.now());
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s',
+                            startDate: currentTime - 1000,
+                            firstByteDate: currentTime - 500,
+                            endDate: new Date()
+                        }
+                    },
+                    cmcd: { sid: 'session-id' },
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            debugger;
+            expect(metrics).to.have.property('rc');
+            expect(metrics).to.have.property('sid', 'session-id');
+            expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
+            expect(metrics).to.have.property('ttfb');
+            expect(metrics).to.have.property('ttlb');
+        });
+
+    });
+
 });
