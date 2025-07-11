@@ -12,6 +12,7 @@ import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionCont
 import {decodeCmcd} from '@svta/common-media-library/cmcd/decodeCmcd';
 
 import {expect} from 'chai';
+import sinon from 'sinon';
 
 const context = {};
 
@@ -1711,5 +1712,108 @@ describe('CmcdController', function () {
         });
 
     });
+
+    describe('Event Mode', () => {
+        let urlLoaderMock;
+
+        beforeEach(() => {
+            urlLoaderMock = {
+                load: sinon.spy()
+            };
+
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+        });
+
+        it('should send a report when a configured event is triggered', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            enabledKeys: ['e', 'sta'],
+                            events: ['ps'],
+                            timeInterval: 0
+                        }]
+                    }
+                }
+            });
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
+            
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            expect(metrics).to.have.property('e', 'ps');
+        });
+    });
+
+
+    describe('Event Mode - time interval', () => {
+        let urlLoaderMock;
+        let clock;
+
+        beforeEach(() => {
+            clock = sinon.useFakeTimers();
+            urlLoaderMock = {
+                load: sinon.spy()
+            };
+
+            cmcdController.reset();
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'header',
+                            enabledKeys: ['e'],
+                            events: ['ps', 't'],
+                            timeInterval: 1
+                        }]
+                    }
+                }
+            });
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+            cmcdController.initialize();
+        });
+
+        afterEach(function() {
+            clock.restore();
+        });
+
+        it('should send reports periodically according to the timeInterval', () => {
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            let requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            let headers = requestSent.headers;
+            let metrics = decodeCmcd(headers['CMCD-Status']);
+            expect(metrics).to.have.property('e', 't');
+            clock.tick(1000);
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+        });
+    })
 
 });

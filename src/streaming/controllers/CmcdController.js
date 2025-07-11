@@ -91,6 +91,9 @@ function CmcdController() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
+        if (config.urlLoader) {
+            urlLoader = config.urlLoader;
+        }
 
         cmcdModel.setConfig(config);
     }
@@ -278,13 +281,14 @@ function CmcdController() {
     }
 
     function _sendCmcdDataReport(request){
-        urlLoader = URLLoader(context).create({
-            errHandler: errHandler,
-            mediaPlayerModel: mediaPlayerModel,
-            errors: Errors,
-            dashMetrics: dashMetrics,
-        });
-
+        if (!urlLoader) {
+            urlLoader = URLLoader(context).create({
+                errHandler: errHandler,
+                mediaPlayerModel: mediaPlayerModel,
+                errors: Errors,
+                dashMetrics: dashMetrics,
+            });
+        }
         urlLoader.load({request})
     }
 
