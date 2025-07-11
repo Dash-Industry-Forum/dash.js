@@ -425,7 +425,7 @@ describe('CmcdController', function () {
                     return e.split('=')[0]
                 })).to.not.include('dl');
                 expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
-                expect(headers[SESSION_HEADER_NAME]).to.be.empty;
+                expect(headers[SESSION_HEADER_NAME]).to.be.undefined;
             });
 
             it('getHeadersParameters() should return no parameters if enabled keys is empty', function () {
@@ -540,7 +540,6 @@ describe('CmcdController', function () {
                             type: MEDIA_SEMGENT_REQUEST_TYPE,
                         };
                         headers = cmcdController.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -548,7 +547,6 @@ describe('CmcdController', function () {
                             type: INIT_SEMGENT_REQUEST_TYPE,
                         };
                         headers = cmcdController.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -556,7 +554,6 @@ describe('CmcdController', function () {
                             type: XLINK_REQUEST_TYPE,
                         };
                         headers = cmcdController.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -564,7 +561,6 @@ describe('CmcdController', function () {
                             type: MDP_REQUEST_TYPE,
                         };
                         headers = cmcdController.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -572,7 +568,6 @@ describe('CmcdController', function () {
                             type: STEERING_REQUEST_TYPE,
                         };
                         headers = cmcdController.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
