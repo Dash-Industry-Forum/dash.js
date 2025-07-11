@@ -2045,7 +2045,6 @@ describe('CmcdController', function () {
             const url = new URL(requestSent.url);
             const cmcdString = url.searchParams.get('CMCD');
             const metrics = decodeCmcd(cmcdString);
-            debugger;
             expect(metrics).to.have.property('rc');
             expect(metrics).to.have.property('sid', 'session-id');
             expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
