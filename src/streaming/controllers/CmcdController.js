@@ -180,7 +180,8 @@ function CmcdController() {
 
                 cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
-                const finalPayloadString = encodeCmcd(cmcdData, _createCmcdEncodeOptions(targetSettings));
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const finalPayloadString = encodeCmcd(cmcdData, encodeOptions);
 
                 const eventBusData = {
                     url: request.url,
@@ -302,7 +303,8 @@ function CmcdController() {
             if (isCmcdEnabled(targetSettings)) {
                 cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
-                const headers = toCmcdHeaders(cmcdData, _createCmcdEncodeOptions(targetSettings));
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const headers = toCmcdHeaders(cmcdData, encodeOptions);
 
                 const eventBusData = {
                     url: request.url,
@@ -400,7 +402,9 @@ function CmcdController() {
 
     function _createCmcdEncodeOptions(targetSettings) {
         const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
-        let enabledKeys = targetSettings?.enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+        const enabledKeys = targetSettings ?
+            targetSettings.enabledKeys :
+            (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
 
         return {
             reportingMode: targetSettings?.cmcdMode,
