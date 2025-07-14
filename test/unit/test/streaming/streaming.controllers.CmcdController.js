@@ -2052,6 +2052,56 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('ttlb');
         });
 
+        // it('should send msd key', () => {
+        //     settings.update({
+        //         streaming: {
+        //             cmcd: {
+        //                 version: 2,
+        //                 targets: [{
+        //                     url: 'https://cmcd.response.collector/api',
+        //                     enabled: true,
+        //                     cmcdMode: 'response',
+        //                     mode: 'query',
+        //                     includeOnRequests: ['segment'],
+        //                     enabledKeys: ['msd']
+        //                 }]
+        //             }
+        //         }
+        //     });
+
+        //     let currentTime = new Date(Date.now());
+        //     const mockResponse = {
+        //         status: 200,
+        //         request: {
+        //             customData: {
+        //                 request: {
+        //                     type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+        //                     url: 'http://test.url/video.m4s',
+        //                     startDate: currentTime - 1000,
+        //                     firstByteDate: currentTime - 500,
+        //                     endDate: new Date()
+        //                 }
+        //             },
+        //             cmcd: { sid: 'session-id' },
+        //         }
+        //     };
+
+        //     eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            
+        //     const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+        //     interceptor(mockResponse);
+
+        //     expect(urlLoaderMock.load.calledOnce).to.be.true;
+        //     const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+        //     expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+
+        //     const url = new URL(requestSent.url);
+        //     const cmcdString = url.searchParams.get('CMCD');
+        //     const metrics = decodeCmcd(cmcdString);
+        //     debugger;
+        //     expect(metrics).to.have.property('msd');
+        // });
+
     });
 
 });
