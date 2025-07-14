@@ -38,7 +38,6 @@ import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
 import Debug from '../../core/Debug.js';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
-import {CmcdHeaderField} from '@svta/common-media-library/cmcd/CmcdHeaderField';
 
 
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
@@ -65,8 +64,6 @@ function CmcdController() {
     let debug = Debug(context).getInstance();
 
     cmcdModel = CmcdModel(context).getInstance();
-    
-    const _loggedCmcdModeErrors = new Set();
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -185,11 +182,9 @@ function CmcdController() {
             if (isCmcdEnabled(targetSettings)) {
 
                 cmcdData = cmcdData || cmcdModel.getCmcdData(request);
-                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
 
-                let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
-                filteredCmcdData = {...filteredCmcdData, ...customKeys};              
-                const finalPayloadString = encodeCmcd(filteredCmcdData);
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const finalPayloadString = encodeCmcd(cmcdData, encodeOptions);
 
                 const eventBusData = {
                     url: request.url,
@@ -210,38 +205,6 @@ function CmcdController() {
             return null;
         } catch (e) {
             return null;
-        }
-    }
-
-    function includeEventModeMandatoryKeys(enabledCMCDKeys) {
-        Constants.CMCD_MANDATORY_KEYS.forEach(key => {
-            if (!enabledCMCDKeys.includes(key)) {
-                enabledCMCDKeys.push(key);
-                logger.warn(`Including mandatory key ${key} that was not present.`);
-            }
-        });
-
-        return enabledCMCDKeys;
-    }
-
-    function _applyWhitelist(cmcdData, enabledKeys) {
-        try {
-            const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
-            let enabledCMCDKeys = enabledKeys || (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
-            
-            const events_key = Constants.CMCD_V2_KEYS_NAME_MAPPING.EVENT
-            if (enabledCMCDKeys.includes(events_key) && cmcdData.e) {
-                enabledCMCDKeys = includeEventModeMandatoryKeys(enabledCMCDKeys)
-            }
-
-            return Object.keys(cmcdData)
-                .filter(key => enabledCMCDKeys.includes(key))
-                .reduce((obj, key) => {
-                    obj[key] = cmcdData[key];
-                    return obj;
-                }, {});
-        } catch (e) {
-            return cmcdData;
         }
     }
 
@@ -344,13 +307,8 @@ function CmcdController() {
             if (isCmcdEnabled(targetSettings)) {
                 cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
-                let [enabledKeys, customKeys] = _getTargetSettingsEnabledKeys(targetSettings, cmcdData);
-
-                let filteredCmcdData = _applyWhitelist(cmcdData, enabledKeys);
-                filteredCmcdData = {...filteredCmcdData, ...customKeys};
-
-                const options = _createCmcdV2HeadersCustomMap();
-                const headers = toCmcdHeaders(filteredCmcdData, options);
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const headers = toCmcdHeaders(cmcdData, encodeOptions);
 
                 const eventBusData = {
                     url: request.url,
@@ -372,11 +330,11 @@ function CmcdController() {
 
     function isCmcdEnabled(targetSettings) {
         if (targetSettings) {
-            return _targetCanBeEnabled(targetSettings) && _checkTargetIncludeInRequests(targetSettings) && _checkTargetAvailableKeys(targetSettings);
+            return _targetCanBeEnabled(targetSettings) && _checkTargetIncludeInRequests(targetSettings);
         }
         else {
             const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
-            return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
+            return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest);
         }
     }
 
@@ -418,26 +376,6 @@ function CmcdController() {
         return true;
     }
 
-    function _checkAvailableKeys(cmcdParametersFromManifest) {
-        const defaultAvailableKeys = Constants.CMCD_AVAILABLE_KEYS;
-        const defaultV2AvailableKeys = Constants.CMCD_V2_COMMON_AVAILABLE_KEYS.concat(Constants.CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS);
-
-        const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-
-        const cmcdVersion = settings.get().streaming.cmcd.version;
-        const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
-
-        if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            logger.error(`None of the keys are implemented for CMCD version ${cmcdVersion}.`);
-            return false;
-        }
-        invalidKeys.map((k) => {
-            logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
-        });
-
-        return true;
-    }
-
     function _targetCanBeEnabled(targetSettings) {
         const cmcdVersion = settings.get().streaming.cmcd.version ?? Constants.DEFAULT_CMCD_VERSION;
         return (cmcdVersion === 2 && targetSettings?.enabled);
@@ -466,69 +404,17 @@ function CmcdController() {
         return true;
     }
 
-    function _checkTargetAvailableKeys(targetSettings) {
-        const cmcdAvailableKeysForMode = _getAvailableKeysForTarget(targetSettings);
-        const enabledCMCDKeys = targetSettings.enabledKeys;
-        
-        if (enabledCMCDKeys == null) {
-            return true;
+    function _createCmcdEncodeOptions(targetSettings) {
+        const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
+        const enabledKeys = targetSettings ?
+            targetSettings.enabledKeys :
+            (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
+
+        return {
+            reportingMode: targetSettings?.cmcdMode,
+            version: settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION,
+            filter: enabledKeys ? (key) => enabledKeys.includes(key) : undefined,
         }
-
-        if (enabledCMCDKeys.length === 0) {
-            return true;
-        }
-
-        const invalidKeys = enabledCMCDKeys.filter(k => !cmcdAvailableKeysForMode.includes(k));
-
-        if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-            const mode = targetSettings.cmcdMode;
-            if (!_loggedCmcdModeErrors.has(mode)) {
-                logger.error(`None of the keys are implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
-                _loggedCmcdModeErrors.add(mode);
-            }
-            return false;
-        }
-        invalidKeys.map((k) => {
-            if (!_loggedCmcdModeErrors.has(k)) {
-                logger.warn(`key parameter ${k} is not implemented for CMCD version 2 for mode ${targetSettings.cmcdMode}.`);
-                _loggedCmcdModeErrors.add(k);
-            }
-        });
-
-        return true;
-    }
-
-    function _getAvailableKeysForTarget(targetSettings) {
-        const CMCD_V2_COMMON_KEYS = Constants.CMCD_V2_COMMON_AVAILABLE_KEYS;
-        const CMCD_V2_EVENT_MODE_KEYS = Constants.CMCD_V2_EVENT_MODE_AVAILABLE_KEYS;
-        const CMCD_V2_REQUEST_MODE_KEYS = Constants.CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS;
-        const CMCD_V2_RESPONSE_MODE_KEYS = Constants.CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS;    
-        
-        var cmcdAvailableKeysForMode = [];
-
-        switch (targetSettings.cmcdMode) {
-            case Constants.CMCD_MODE.RESPONSE:
-                cmcdAvailableKeysForMode = CMCD_V2_COMMON_KEYS.concat(CMCD_V2_RESPONSE_MODE_KEYS);
-                break;
-            case Constants.CMCD_MODE.REQUEST:
-                cmcdAvailableKeysForMode = CMCD_V2_COMMON_KEYS.concat(CMCD_V2_REQUEST_MODE_KEYS);
-                break;
-            case Constants.CMCD_MODE.EVENT:
-                cmcdAvailableKeysForMode = CMCD_V2_COMMON_KEYS.concat(CMCD_V2_EVENT_MODE_KEYS);
-                break;
-        }
-
-        return cmcdAvailableKeysForMode;
-    }
-
-    function _createCmcdV2HeadersCustomMap() {
-        const cmcdVersion = settings.get().streaming.cmcd.version;
-        return cmcdVersion === 1 ? {} : { 
-            customHeaderMap: { 
-                [CmcdHeaderField.REQUEST]: ['ltc'],
-                [CmcdHeaderField.SESSION]: ['msd']
-            }
-        };
     }
 
     function _onPlaybackRateChanged(data) {
@@ -581,14 +467,6 @@ function CmcdController() {
             ...cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST)
         };
 
-        const cmcdVersion = settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION;
-        if (cmcdVersion === 1) {
-            // TODO: Re-Add this import once common-media-library pr is merged: https://github.com/qualabs/common-media-library/pull/48
-            // Also remove the temporaryConvertToCmcdV1 line
-            // cmcdRequestData = convertToCmcdV1(cmcdRequestData);
-            cmcdRequestData = temporaryConvertToCmcdV1(cmcdRequestData);
-        }
-
         request.cmcd = cmcdRequestData;
     
         _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
@@ -602,19 +480,6 @@ function CmcdController() {
         };
 
         return commonMediaRequest;
-    }
-
-    // TODO: delete this once common-media-library pr is merged: https://github.com/qualabs/common-media-library/pull/48
-    function temporaryConvertToCmcdV1(cmcdData) {
-        const result = {};
-        
-        for (const key in cmcdData) {
-            if (Constants.CMCD_AVAILABLE_KEYS.includes(key)) {
-                result[key] = cmcdData[key];
-            }
-        }
-
-        return result;
     }
 
     function getCmcdResponseInterceptors(){
@@ -669,38 +534,6 @@ function CmcdController() {
         }
 
         return {...cmcdData, ...responseModeData};
-    }
-
-    function _getCustomKeysValues(customKeysObj, currentKeys){
-        const result = {};
-        if (!customKeysObj || typeof customKeysObj !== 'object') {
-            return result;
-        }
-
-        for (const key in customKeysObj) {
-            if (typeof customKeysObj[key] === 'function') {
-                result[key] = customKeysObj[key](currentKeys);
-            }
-        }
-        return result;
-    }
-
-    function _getTargetSettingsEnabledKeys(targetSettings, cmcdData) {
-        let enabledKeys;
-        let customKeys
-
-        if (targetSettings) {
-            enabledKeys = targetSettings.enabledKeys;
-        
-            if (enabledKeys == null) {
-                const cmcdKeysForTargetMode = _getAvailableKeysForTarget(targetSettings);
-                enabledKeys = Constants.CMCD_AVAILABLE_KEYS.concat(cmcdKeysForTargetMode);
-            }
-        
-            customKeys = _getCustomKeysValues(targetSettings.customKeys, cmcdData);
-        }
-
-        return [enabledKeys, customKeys];
     }
 
     function reset() {
