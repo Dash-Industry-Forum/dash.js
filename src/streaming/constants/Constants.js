@@ -28,18 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import { CMCD_V1_KEYS } from '@svta/common-media-library/cmcd/CMCD_V1_KEYS';
-import { CMCD_COMMON_KEYS } from '@svta/common-media-library/cmcd/CMCD_COMMON_KEYS';
-
-import { CMCD_RESPONSE_KEYS } from '@svta/common-media-library/cmcd/CMCD_RESPONSE_KEYS';
-import { CMCD_REQUEST_KEYS } from '@svta/common-media-library/cmcd/CMCD_REQUEST_KEYS';
-import { CMCD_EVENT_KEYS } from '@svta/common-media-library/cmcd/CMCD_EVENT_KEYS';
-
 import { CmcdPlayerState } from '@svta/common-media-library/cmcd/CmcdPlayerState';
 import { CmcdReportingMode } from '@svta/common-media-library/cmcd/CmcdReportingMode';
 import { CmcdEventType } from '@svta/common-media-library/cmcd/CmcdEventType';
 import { CMCD_DEFAULT_TIME_INTERVAL } from '@svta/common-media-library/cmcd/CMCD_DEFAULT_TIME_INTERVAL';
+import { CMCD_PARAM } from '@svta/common-media-library/cmcd/CMCD_PARAM';
+import { CMCD_QUERY } from '@svta/common-media-library/cmcd/CMCD_QUERY';
+
 /**
  * Constants declaration
  */
@@ -210,14 +205,14 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_QUERY_KEY: 'CMCD',
+    CMCD_QUERY_KEY: CMCD_PARAM,
 
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_QUERY: 'query',
+    CMCD_MODE_QUERY: CMCD_QUERY,
 
     /**
      *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
@@ -237,36 +232,6 @@ export default {
      *  @static
      */
     CMCD_MANDATORY_KEYS: ['ts'],
-    /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD version 1 metrics.
-     *  @memberof Constants#
-     *  @static
-     */
-    CMCD_AVAILABLE_KEYS: CMCD_V1_KEYS,
-    /**
-    *  @constant {string} CMCD_V2_COMMON_AVAILABLE_KEYS specifies the common available keys for CMCD version 2 metrics across all modes (event, request, and response).
-    *  @memberof Constants#
-    *  @static
-    */
-    CMCD_V2_COMMON_AVAILABLE_KEYS: CMCD_COMMON_KEYS,
-    /**
-    *  @constant {string} CMCD_V2_EVENT_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for event mode.
-    *  @memberof Constants#
-    *  @static
-    */
-    CMCD_V2_EVENT_MODE_AVAILABLE_KEYS: CMCD_EVENT_KEYS,
-    /**
-    *  @constant {string} CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for response mode.
-    *  @memberof Constants#
-    *  @static
-    */
-    CMCD_V2_RESPONSE_MODE_AVAILABLE_KEYS: CMCD_RESPONSE_KEYS,
-    /**
-    *  @constant {string} CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS specifies the available keys for CMCD version 2 metrics for request mode.
-    *  @memberof Constants#
-    *  @static
-    */
-    CMCD_V2_REQUEST_MODE_AVAILABLE_KEYS: CMCD_REQUEST_KEYS,
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
