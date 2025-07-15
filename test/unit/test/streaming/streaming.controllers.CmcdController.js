@@ -1755,6 +1755,38 @@ describe('CmcdController', function () {
             const metrics = decodeCmcd(cmcdString);
             expect(metrics).to.have.property('e', 'ps');
         });
+
+        it('should send all available keys and events if they are undefined', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            timeInterval: 0
+                        }]
+                    }
+                }
+            });
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
+            
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            expect(metrics).to.have.property('e', 'ps');
+            expect(metrics).to.have.property('sta', 'p');
+            expect(metrics).to.have.property('ts');
+            expect(metrics).to.have.property('sid');
+            expect(metrics).to.have.property('v');
+        });
     });
 
 
@@ -2045,58 +2077,8 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
             expect(metrics).to.have.property('ttfb');
             expect(metrics).to.have.property('ttlb');
+            expect(metrics).to.have.property('v');
         });
-
-        // it('should send msd key', () => {
-        //     settings.update({
-        //         streaming: {
-        //             cmcd: {
-        //                 version: 2,
-        //                 targets: [{
-        //                     url: 'https://cmcd.response.collector/api',
-        //                     enabled: true,
-        //                     cmcdMode: 'response',
-        //                     mode: 'query',
-        //                     includeOnRequests: ['segment'],
-        //                     enabledKeys: ['msd']
-        //                 }]
-        //             }
-        //         }
-        //     });
-
-        //     let currentTime = new Date(Date.now());
-        //     const mockResponse = {
-        //         status: 200,
-        //         request: {
-        //             customData: {
-        //                 request: {
-        //                     type: HTTPRequest.MEDIA_SEGMENT_TYPE,
-        //                     url: 'http://test.url/video.m4s',
-        //                     startDate: currentTime - 1000,
-        //                     firstByteDate: currentTime - 500,
-        //                     endDate: new Date()
-        //                 }
-        //             },
-        //             cmcd: { sid: 'session-id' },
-        //         }
-        //     };
-
-        //     eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-            
-        //     const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
-        //     interceptor(mockResponse);
-
-        //     expect(urlLoaderMock.load.calledOnce).to.be.true;
-        //     const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-        //     expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
-
-        //     const url = new URL(requestSent.url);
-        //     const cmcdString = url.searchParams.get('CMCD');
-        //     const metrics = decodeCmcd(cmcdString);
-        //     debugger;
-        //     expect(metrics).to.have.property('msd');
-        // });
-
     });
 
 });
