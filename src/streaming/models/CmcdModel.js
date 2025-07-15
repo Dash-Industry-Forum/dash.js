@@ -380,9 +380,8 @@ function CmcdModel() {
     }
 
     function onPlayerError(errorData) {
-        const errorCode = errorData.error.code ? errorData.error.code : 0
+        const errorCode = errorData && errorData.error && errorData.error.code ? errorData.error.code : 0;
         internalData.ec = errorCode;
-        onEventChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
     function getGenericCmcdData() {

@@ -175,6 +175,7 @@ function CmcdController() {
 
     function _onPlayerError(errorData) {
         cmcdModel.onPlayerError(errorData);
+        _onEventChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
     function getQueryParameter(request, cmcdData, targetSettings) {
@@ -439,12 +440,11 @@ function CmcdController() {
     }
 
     function _onPlaybackWaiting() {
-        _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
-                
         if (cmcdModel.wasPlaying()){
             _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
+        } else {
+            _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
         }
-
     }
 
     function getCmcdRequestInterceptors() {
