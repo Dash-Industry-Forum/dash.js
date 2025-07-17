@@ -45,6 +45,7 @@ import Utils from '../../core/Utils.js';
 import URLLoader from '../net/URLLoader.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 import CmcdModel from '../models/CmcdModel.js'
+import CmcdBatchController from './CmcdBatchController.js';
 import Errors from '../../core/errors/Errors.js';
 import Settings from '../../core/Settings.js';
 
@@ -52,6 +53,7 @@ function CmcdController() {
     let instance,
         logger,
         cmcdModel,
+        cmcdBatchController,
         clientDataReportingController,
         urlLoader,
         mediaPlayerModel,
@@ -64,6 +66,7 @@ function CmcdController() {
     let debug = Debug(context).getInstance();
 
     cmcdModel = CmcdModel(context).getInstance();
+    cmcdBatchController = CmcdBatchController(context).getInstance();
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -90,6 +93,12 @@ function CmcdController() {
         }
 
         cmcdModel.setConfig(config);
+        cmcdBatchController.setConfig({
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            settings: settings
+        });
     }
 
     function initialize(autoPlay) {
@@ -520,7 +529,11 @@ function CmcdController() {
                 httpRequest.cmcd = cmcdData;
                 
                 _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
-                _sendCmcdDataReport(httpRequest);
+                if (targetSettings.batchSize && httpRequest.body){
+                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                } else {
+                    _sendCmcdDataReport(httpRequest);
+                }
             }
         });
         
