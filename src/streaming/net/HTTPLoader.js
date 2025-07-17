@@ -397,12 +397,13 @@ function HTTPLoader(cfg) {
 
         commonMediaRequest = new CommonMediaRequest({
             url: requestObject.url,
-            method: HTTPRequest.GET,
+            method: requestObject.method || HTTPRequest.GET,
             responseType: requestObject.responseType,
             headers: requestObject.headers,
             credentials: withCredentials ? 'include' : 'omit',
             timeout: requestTimeout,
-            customData: { request: requestObject }
+            customData: { request: requestObject },
+            body: requestObject.body
         });
 
         commonMediaResponse = new CommonMediaResponse({

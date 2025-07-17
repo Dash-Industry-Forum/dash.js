@@ -38,7 +38,7 @@ import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
 import Debug from '../../core/Debug.js';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
-
+import {toCmcdUrl} from '@svta/common-media-library/cmcd/toCmcdUrl';
 
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
 import Utils from '../../core/Utils.js';
@@ -234,7 +234,7 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
+                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
         });
@@ -256,7 +256,7 @@ function CmcdController() {
      * @param request
      * @private
     */
-    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData, targetSettings) {
+    function _updateRequestWithCmcd(request, cmcdData, targetSettings) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
@@ -273,6 +273,9 @@ function CmcdController() {
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 request.headers = request.headers || {};
                 request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
+            } else if (cmcdMode === 'json'){
+                request.body = getJsonParameters(request, cmcdData, targetSettings)
+                request.method = 'POST'
             }
         }
     }
@@ -316,6 +319,21 @@ function CmcdController() {
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
                 return headers;
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getJsonParameters(request, cmcdData, targetSettings){
+        try {
+            if (isCmcdEnabled(targetSettings)) {
+                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const body = toCmcdUrl(cmcdData, encodeOptions);
+                return [body];
             }
 
             return null;
@@ -465,14 +483,15 @@ function CmcdController() {
 
         request.cmcd = cmcdRequestData;
     
-        _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
+        _updateRequestWithCmcd(request, cmcdRequestData, null);
     
         commonMediaRequest = {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
             customData: { request },
-            cmcd: cmcdRequestData
+            cmcd: cmcdRequestData,
+            body: request.body
         };
 
         return commonMediaRequest;
@@ -500,7 +519,7 @@ function CmcdController() {
                 httpRequest.method = HTTPRequest.GET;
                 httpRequest.cmcd = cmcdData;
                 
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
+                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
                 _sendCmcdDataReport(httpRequest);
             }
         });
