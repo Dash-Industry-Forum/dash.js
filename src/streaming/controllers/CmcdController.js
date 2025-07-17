@@ -273,7 +273,7 @@ function CmcdController() {
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
                 request.headers = request.headers || {};
                 request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
-            } else if (cmcdMode === Constants.CMCD_MODE_JSON){
+            } else if (cmcdMode === Constants.CMCD_MODE_JSON && (request.type === HTTPRequest.CMCD_RESPONSE || request.type === HTTPRequest.CMCD_EVENT)){
                 request.body = getJsonParameters(request, cmcdData, targetSettings)
                 request.method = HTTPRequest.POST
             }
