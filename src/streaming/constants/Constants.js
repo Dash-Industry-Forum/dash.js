@@ -220,6 +220,14 @@ export default {
      *  @static
      */
     CMCD_MODE_HEADER: 'header',
+
+    /**
+     *  @constant {string} CMCD_MODE_JSON specifies to attach CMCD metrics as JSON.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_MODE_JSON: 'json',
+
     /**
      *  @constant {string} CMCD_V2_KEYS_MAPPING
      *  @memberof Constants#
