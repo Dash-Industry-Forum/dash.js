@@ -860,38 +860,38 @@ function DashAdapter() {
     /**
      * Checks if the given Preselection is from the given media type
      * @param {object} preselection
-     * @param {object} adaptation
+     * @param {array} adaptations
      * @param {string} type
      * @return {boolean}
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getPreselectionIsTypeOf(preselection, adaptation, type) {
-        return dashManifestModel.getPreselectionIsTypeOf(preselection, adaptation, type);
+    function getPreselectionIsTypeOf(preselection, adaptations, type) {
+        return dashManifestModel.getPreselectionIsTypeOf(preselection, adaptations, type);
     }
 
     /**
      * returns the main AdaptationSet of a given Preselection 
      * @param {object} preselection
-     * @param {object} adaptation
+     * @param {array} adaptations
      * @return {object}
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getMainAdaptationSetForPreselection(preselection, adaptation) {
-        return dashManifestModel.getMainAdaptationSetForPreselection(preselection, adaptation);
+    function getMainAdaptationSetForPreselection(preselection, adaptations) {
+        return dashManifestModel.getMainAdaptationSetForPreselection(preselection, adaptations);
     }
 
     /**
      * returns common properties in form of a Representation of a given Preselection 
      * @param {object} preselection
-     * @param {object} adaptation
+     * @param {array} adaptations
      * @return {object}
      * @memberOf module:DashAdapter
      * @instance
      */
-    function getCommonRepresentationForPreselection(preselection, adaptation) {
-        return dashManifestModel.getCommonRepresentationForPreselection(preselection, adaptation);
+    function getCommonRepresentationForPreselection(preselection, adaptations) {
+        return dashManifestModel.getCommonRepresentationForPreselection(preselection, adaptations);
     }
 
     /**
