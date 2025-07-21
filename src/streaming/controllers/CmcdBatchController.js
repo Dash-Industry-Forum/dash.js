@@ -36,6 +36,10 @@ function CmcdBatchController() {
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
+
+        if (config.urlLoader) {
+            urlLoader = config.urlLoader;
+        }
     }
 
     function addReport(target, cmcd) {
@@ -82,13 +86,14 @@ function CmcdBatchController() {
     }
 
     function _sendBatchReport(request){
-        urlLoader = URLLoader(context).create({
-            errHandler: errHandler,
-            mediaPlayerModel: mediaPlayerModel,
-            errors: Errors,
-            dashMetrics: dashMetrics,
-        });
-
+        if (!urlLoader) {
+            urlLoader = URLLoader(context).create({
+                errHandler: errHandler,
+                mediaPlayerModel: mediaPlayerModel,
+                errors: Errors,
+                dashMetrics: dashMetrics,
+            });
+        }
         urlLoader.load({request})
     }
     
