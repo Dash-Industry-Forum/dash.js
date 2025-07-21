@@ -244,7 +244,11 @@ function CmcdController() {
                 httpRequest.method = HTTPRequest.GET;
 
                 _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
-                _sendCmcdDataReport(httpRequest);
+                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                } else {
+                    _sendCmcdDataReport(httpRequest);
+                }
             }
         });
     }
