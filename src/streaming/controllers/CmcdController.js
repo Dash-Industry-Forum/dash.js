@@ -346,6 +346,18 @@ function CmcdController() {
                 cmcdData = cmcdData || cmcdModel.getCmcdData(request);
                 const encodeOptions = _createCmcdEncodeOptions(targetSettings);
                 const body = toCmcdUrl(cmcdData, encodeOptions);
+
+                const eventBusData = {
+                    url: request.url,
+                    mediaType: request.mediaType,
+                    requestType: request.type,
+                    cmcdData,
+                    cmcdString: body,
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
+                }
+
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
+
                 return [body];
             }
 
