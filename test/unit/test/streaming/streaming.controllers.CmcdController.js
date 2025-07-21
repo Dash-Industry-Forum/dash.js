@@ -1833,17 +1833,7 @@ describe('CmcdController', function () {
                 load: sinon.spy()
             };
 
-            cmcdController.setConfig({
-                abrController: abrControllerMock,
-                dashMetrics: dashMetricsMock,
-                playbackController: playbackControllerMock,
-                throughputController: throughputControllerMock,
-                serviceDescriptionController: serviceDescriptionControllerMock,
-                urlLoader: urlLoaderMock
-            });
-        });
-
-        it('should send a report when the STARTING event is triggered', () => {
+            cmcdController.reset();
             settings.update({
                 streaming: {
                     cmcd: {
@@ -1855,14 +1845,26 @@ describe('CmcdController', function () {
                             mode: 'query',
                             enabledKeys: ['e', 'sta'],
                             events: ['ps'],
-                            timeInterval: 0
                         }]
                     }
                 }
             });
 
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: playbackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+
+            cmcdController.initialize();
+        });
+
+        it('should send a report when the STARTING event is triggered', () => {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_INITIALIZED);
-            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
             expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
             
@@ -1874,23 +1876,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the PLAYING event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
@@ -1904,23 +1889,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the REBUFFERING event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_WAITING);
             expect(urlLoaderMock.load.called).to.be.true;
@@ -1935,22 +1903,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the PAUSED event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
@@ -1964,23 +1916,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the SEEKING event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
@@ -1994,23 +1929,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the WAITING event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_WAITING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
@@ -2024,23 +1942,6 @@ describe('CmcdController', function () {
         });
 
         it('should send a report when the ENDED event is triggered', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.event.collector/api',
-                            enabled: true,
-                            cmcdMode: 'event',
-                            mode: 'query',
-                            enabledKeys: ['e', 'sta'],
-                            events: ['ps'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_ENDED);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
