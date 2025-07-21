@@ -1825,7 +1825,7 @@ describe('CmcdController', function () {
         });
     });
 
-    describe.only('Event Mode player state events', () => {
+    describe('Event Mode player state events', () => {
         let urlLoaderMock;
 
         beforeEach(() => {
