@@ -529,7 +529,7 @@ function CmcdController() {
                 httpRequest.cmcd = cmcdData;
                 
                 _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
-                if (targetSettings.batchSize && httpRequest.body){
+                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
                     cmcdBatchController.addReport(targetSettings, httpRequest.body)
                 } else {
                     _sendCmcdDataReport(httpRequest);

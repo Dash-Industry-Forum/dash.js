@@ -9,7 +9,7 @@ function CmcdBatchController() {
     const context = this.context;
     let instance,
         batches,
-        // timers,
+        timers,
         dashMetrics,
         mediaPlayerModel,
         errHandler,
@@ -17,7 +17,7 @@ function CmcdBatchController() {
     
     function setup() {
         batches = {};
-        // timers = {};
+        timers = {};
     }
 
     function setConfig(config) {
@@ -46,9 +46,15 @@ function CmcdBatchController() {
                 target: target
             };
         }
-        batches[targetUrl].cmcdData.push(cmcd);
+        batches[targetUrl].cmcdData.push(cmcd[0]);
 
-        if (batches[targetUrl].cmcdData.length >= target.batchSize) {
+        if (target.batchTimer && !timers[targetUrl]) {
+            timers[targetUrl] = setTimeout(() => {
+                flushBatch(targetUrl);
+            }, target.batchTimer * 1000);
+        }
+
+        if (target.batchSize && batches[targetUrl].cmcdData.length >= target.batchSize) {
             flushBatch(targetUrl);
         }
     }
@@ -68,6 +74,11 @@ function CmcdBatchController() {
             _sendBatchReport(httpRequest);
             batches[targetUrl].cmcdData = [];
         }
+
+        if (timers[targetUrl]) {
+            clearTimeout(timers[targetUrl]);
+            delete timers[targetUrl];
+        }
     }
 
     function _sendBatchReport(request){
@@ -82,7 +93,13 @@ function CmcdBatchController() {
     }
     
     function reset(){
-
+        for (const url in timers) {
+            if (Object.prototype.hasOwnProperty.call(timers, url)) {
+                clearTimeout(timers[url]);
+            }
+        }
+        batches = {};
+        timers = {};
     }
     
     instance = {
