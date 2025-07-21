@@ -395,7 +395,12 @@ function SourceBufferSink(config) {
                 }
 
                 delete nextChunk.data.bytes;
-                nextChunk.promise.reject({ chunk: nextChunk.data, error: new DashJSError(err.code, err.message) });
+                nextChunk.promise.reject({
+                    chunk: nextChunk.data,
+                    error: new DashJSError(err.code, err.message, {
+                        name: err.name
+                    })
+                });
             }
         }
     }

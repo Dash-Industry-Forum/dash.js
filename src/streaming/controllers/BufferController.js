@@ -45,7 +45,7 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
 
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
-const QUOTA_EXCEEDED_ERROR_CODE = 22;
+const QUOTA_EXCEEDED_ERROR_NAME = 'QuotaExceededError';
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
 
@@ -369,11 +369,12 @@ function BufferController(config) {
 
     function _onAppended(e) {
         if (e.error) {
-            // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
-            if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
+            const errorName = e.error.data?.name;
+            // If we receive a QUOTA_EXCEEDED_ERROR_NAME we should adjust the target buffer times to avoid this error in the future.
+            if (errorName === QUOTA_EXCEEDED_ERROR_NAME) {
                 _handleQuotaExceededError();
             }
-            if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+            if (errorName === QUOTA_EXCEEDED_ERROR_NAME || !hasEnoughSpaceToAppend()) {
                 logger.warn('Clearing playback buffer to overcome quota exceed situation');
                 // Notify ScheduleController to stop scheduling until buffer has been pruned
                 _triggerEvent(Events.QUOTA_EXCEEDED, {
