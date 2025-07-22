@@ -56,6 +56,8 @@ class Segment {
         this.representation = null;
         // For dynamic mpd's, this is the wall clock time that the video
         this.wallStartTime = NaN;
+        // this is the subnumber that should be inserted into the media url if S@k is defined
+        this.subNumber = undefined;
     }
 }
 

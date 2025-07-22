@@ -142,7 +142,7 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
         url,
         undefined,
         seg.replacementNumber,
-        undefined,
+        seg.subNumber,
         undefined,
         seg.replacementTime,
     );

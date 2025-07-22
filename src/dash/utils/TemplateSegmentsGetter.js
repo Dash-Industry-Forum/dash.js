@@ -85,7 +85,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
                 template.media,
                 undefined,
                 seg.replacementNumber,
-                undefined,
+                seg.subNumber,
                 undefined,
                 seg.replacementTime,
             );

@@ -55,6 +55,7 @@ function DashHandler(config) {
     let instance,
         logger,
         lastSegment,
+        lastSubNumber,
         isDynamicManifest,
         mediaHasFinished;
 
@@ -158,7 +159,7 @@ function DashHandler(config) {
             segment.media,
             representation.id,
             segment.replacementNumber,
-            undefined,
+            segment.subNumber,
             bandwidth,
             segment.replacementTime
         );
@@ -178,6 +179,7 @@ function DashHandler(config) {
         request.index = segment.index;
         request.adaptationIndex = representation.adaptation.index;
         request.representation = representation;
+        request.subNumber = segment.subNumber;
 
         if (_setRequestUrl(request, url, representation)) {
             return request;
@@ -238,9 +240,25 @@ function DashHandler(config) {
 
         const segment = segmentsController.getSegmentByTime(representation, time);
         if (segment) {
-            lastSegment = segment;
-            logger.debug('Index for time ' + time + ' is ' + segment.index);
-            request = _getRequestForSegment(mediaInfo, segment);
+            if (representation.k > 1) {
+                if (lastSubNumber === undefined) {
+                    lastSubNumber = 0; // Initialize subNumber if not set
+                }
+                segment.subNumber = lastSubNumber;
+                request = _getRequestForSegment(mediaInfo, segment);
+                if (lastSubNumber === representation.k - 1) {
+                    lastSegment = segment;
+                    lastSubNumber = 0; // Reset subNumber for the next segment
+                } else {
+                    lastSubNumber ++;
+                }
+
+            }
+            else {
+                lastSegment = segment;
+                logger.debug('Index for time ' + time + ' is ' + segment.index);
+                request = _getRequestForSegment(mediaInfo, segment);
+            }
         }
 
         return request;
@@ -311,8 +329,23 @@ function DashHandler(config) {
                 mediaHasFinished = true;
             }
         } else {
-            request = _getRequestForSegment(mediaInfo, segment);
-            lastSegment = segment;
+            if (representation.k > 1) {
+                if (lastSubNumber === undefined) {
+                    lastSubNumber = 0; // Initialize subNumber if not set
+                }
+                segment.subNumber = lastSubNumber;
+                request = _getRequestForSegment(mediaInfo, segment);
+                if (lastSubNumber === representation.k - 1) {
+                    lastSegment = segment;
+                    lastSubNumber = 0;
+                } else {
+                    lastSubNumber ++;
+                }
+            }
+            else {
+                request = _getRequestForSegment(mediaInfo, segment);
+                lastSegment = segment;
+            }
         }
 
         return request;

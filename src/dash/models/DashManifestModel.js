@@ -255,7 +255,7 @@ function DashManifestModel() {
             if ( role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
                 role.value = DashConstants.MAIN;
             }
-            
+
             const r = new DescriptorType();
             r.init(role);
             return r
@@ -823,6 +823,9 @@ function DashManifestModel() {
 
                         if (segmentInfo.hasOwnProperty(DashConstants.SEGMENT_TIMELINE)) {
                             voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+                            if (segmentInfo.SegmentTimeline.S[0].hasOwnProperty('k')) {
+                                voRepresentation.k = segmentInfo.SegmentTimeline.S[0].k || 1;
+                            }
                         }
                     }
                     if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
