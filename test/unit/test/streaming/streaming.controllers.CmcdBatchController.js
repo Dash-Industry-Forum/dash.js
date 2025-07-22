@@ -169,4 +169,44 @@ describe('CmcdBatchController', function () {
             clearTimeoutSpy.restore();
         });
     });
+
+    describe('Targets with same URL but different configs', function () {
+        it('should treat targets with the same URL as separate batches', function () {
+            const target1 = {
+                url: 'http://test.com/report',
+                batchSize: 2,
+                cmcdMode: Constants.CMCD_MODE.RESPONSE
+            };
+
+            const target2 = {
+                url: 'http://test.com/report',
+                batchSize: 1,
+                cmcdMode: Constants.CMCD_MODE.EVENT
+            };
+
+            const cmcdData1 = ['ot%3Dm'];
+            const cmcdData2 = ['ot%3Da'];
+
+            cmcdBatchController.addReport(target1, cmcdData1);
+            expect(urlLoaderMock.load.called).to.be.false;
+
+            cmcdBatchController.addReport(target2, cmcdData2);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            const request = urlLoaderMock.load.getCall(0).args[0].request;
+            expect(request.url).to.equal('http://test.com/report');
+            expect(request.method).to.equal(HTTPRequest.POST);
+            expect(request.type).to.equal(HTTPRequest.CMCD_EVENT);
+            expect(request.body).to.deep.equal([cmcdData2[0]]);
+
+            const cmcdData3 = ['ot%3Dx'];
+            cmcdBatchController.addReport(target1, cmcdData3);
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+
+            const secondRequest = urlLoaderMock.load.getCall(1).args[0].request;
+            expect(secondRequest.type).to.equal(HTTPRequest.CMCD_RESPONSE);
+            expect(secondRequest.body).to.deep.equal([cmcdData1[0], cmcdData3[0]]);
+        });
+    });
+
 });

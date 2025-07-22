@@ -14,17 +14,17 @@ function CmcdBatchController() {
         mediaPlayerModel,
         errHandler,
         urlLoader;
-    
+
     function setup() {
-        batches = {};
-        timers = {};
+        batches = new Map(); // Map<key, { cmcdData, target }>
+        timers = new Map(); // Map<key, timeoutRef>
     }
 
     function setConfig(config) {
         if (!config) {
             return;
         }
-        
+
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
@@ -42,50 +42,74 @@ function CmcdBatchController() {
         }
     }
 
+    function _generateTargetKey(target) {
+        return JSON.stringify({
+            url: target.url,
+            cmcdMode: target.cmcdMode,
+            batchSize: target.batchSize,
+            batchTimer: target.batchTimer
+        });
+    }
+
     function addReport(target, cmcd) {
-        const targetUrl = target.url;
-        if (!batches[targetUrl]) {
-            batches[targetUrl] = {
+        const key = _generateTargetKey(target);
+
+        if (!batches.has(key)) {
+            batches.set(key, {
                 cmcdData: [],
-                target: target
-            };
+                target
+            });
         }
-        batches[targetUrl].cmcdData.push(cmcd[0]);
 
-        if (target.batchTimer && !timers[targetUrl]) {
-            timers[targetUrl] = setTimeout(() => {
-                flushBatch(targetUrl);
+        const batch = batches.get(key);
+        batch.cmcdData.push(cmcd[0]);
+
+        if (target.batchTimer && !timers.has(key)) {
+            const timeout = setTimeout(() => {
+                flushByTargetKey(key);
             }, target.batchTimer * 1000);
+            timers.set(key, timeout);
         }
 
-        if (target.batchSize && batches[targetUrl].cmcdData.length >= target.batchSize) {
-            flushBatch(targetUrl);
+        if (target.batchSize && batch.cmcdData.length >= target.batchSize) {
+            flushByTargetKey(key);
         }
     }
-    
-    function flushBatch(targetUrl) {
-        const batchInfo = batches[targetUrl];
-        if (batchInfo && batchInfo.cmcdData && batchInfo.cmcdData.length > 0) {
+
+    function flushByTargetKey(key) {
+        const batch = batches.get(key);
+        if (batch && batch.cmcdData.length > 0) {
+            const { target, cmcdData } = batch;
             let httpRequest = new CmcdReportRequest();
-            httpRequest.url = targetUrl;
-            if (batchInfo.target.cmcdMode === Constants.CMCD_MODE.EVENT) {
+            httpRequest.url = target.url;
+            httpRequest.method = HTTPRequest.POST;
+            httpRequest.body = cmcdData;
+
+            if (target.cmcdMode === Constants.CMCD_MODE.EVENT) {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
-            } else if (batchInfo.target.cmcdMode === Constants.CMCD_MODE.RESPONSE) {
+            } else if (target.cmcdMode === Constants.CMCD_MODE.RESPONSE) {
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
             }
-            httpRequest.method = HTTPRequest.POST;
-            httpRequest.body = batchInfo.cmcdData;
+
             _sendBatchReport(httpRequest);
-            batches[targetUrl].cmcdData = [];
+            batch.cmcdData = [];
         }
 
-        if (timers[targetUrl]) {
-            clearTimeout(timers[targetUrl]);
-            delete timers[targetUrl];
+        if (timers.has(key)) {
+            clearTimeout(timers.get(key));
+            timers.delete(key);
         }
     }
 
-    function _sendBatchReport(request){
+    function flushBatch(url) {
+        for (const [key, batch] of batches.entries()) {
+            if (batch.target.url === url) {
+                flushByTargetKey(key);
+            }
+        }
+    }
+
+    function _sendBatchReport(request) {
         if (!urlLoader) {
             urlLoader = URLLoader(context).create({
                 errHandler: errHandler,
@@ -94,25 +118,24 @@ function CmcdBatchController() {
                 dashMetrics: dashMetrics,
             });
         }
-        urlLoader.load({request})
+        urlLoader.load({ request });
     }
-    
-    function reset(){
-        for (const url in timers) {
-            if (Object.prototype.hasOwnProperty.call(timers, url)) {
-                clearTimeout(timers[url]);
-            }
+
+    function reset() {
+        for (const timeout of timers.values()) {
+            clearTimeout(timeout);
         }
-        batches = {};
-        timers = {};
+        batches.clear();
+        timers.clear();
     }
-    
+
     instance = {
         addReport,
         setConfig,
+        flushBatch,
         reset
     };
-    
+
     setup();
     return instance;
 }

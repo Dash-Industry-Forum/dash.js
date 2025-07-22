@@ -279,16 +279,22 @@ function CmcdController() {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
-                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = request.headers || {};
-                request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
-            } else if (cmcdMode === Constants.CMCD_MODE_JSON && (request.type === HTTPRequest.CMCD_RESPONSE || request.type === HTTPRequest.CMCD_EVENT)){
-                request.body = getJsonParameters(request, cmcdData, targetSettings)
-                request.method = HTTPRequest.POST
+            switch (cmcdMode) {
+                case Constants.CMCD_MODE_QUERY:
+                    request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
+                    const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
+                    request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+                    break;
+                case Constants.CMCD_MODE_HEADER:
+                    request.headers = request.headers || {};
+                    request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
+                    break;
+                case Constants.CMCD_MODE_JSON:
+                    if (request.type === HTTPRequest.CMCD_RESPONSE || request.type === HTTPRequest.CMCD_EVENT) {
+                        request.body = getJsonParameters(request, cmcdData, targetSettings);
+                        request.method = HTTPRequest.POST;
+                    }
+                    break;
             }
         }
     }
