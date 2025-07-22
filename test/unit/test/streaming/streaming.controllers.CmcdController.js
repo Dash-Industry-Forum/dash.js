@@ -1809,7 +1809,12 @@ describe('CmcdController', function () {
             const errorPayload = {
                 error: {
                     code: 123,
-                    message: 'Test Error Message'
+                    message: 'Test Error Message',
+                    data: {
+                        request: {
+                            type: 'someOtherRequestType' // Ensure it's not CMCD_EVENT
+                        }
+                    }
                 }
             };
 
@@ -1822,6 +1827,40 @@ describe('CmcdController', function () {
             const cmcdString = url.searchParams.get('CMCD');
             const metrics = decodeCmcd(cmcdString);
             expect(metrics).to.have.property('e', 'e');
+        });
+
+        it('should not send a report when the ERROR event is triggered by a CMCD_EVENT', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            enabledKeys: ['e'],
+                            events: ['e'],
+                            timeInterval: 0
+                        }]
+                    }
+                }
+            });
+
+            const errorPayload = {
+                error: {
+                    code: 456,
+                    message: 'CMCD Event Error',
+                    data: {
+                        request: {
+                            type: HTTPRequest.CMCD_EVENT // This should prevent the report
+                        }
+                    }
+                }
+            };
+
+            eventBus.trigger(MediaPlayerEvents.ERROR, errorPayload);
+            expect(urlLoaderMock.load.called).to.be.false;
         });
     });
 

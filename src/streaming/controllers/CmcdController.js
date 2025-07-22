@@ -144,15 +144,22 @@ function CmcdController() {
         eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
     }
     
+    let timeOuts = [];
+
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
-        eventModeTargets.forEach(({ timeInterval }) => {
+        eventModeTargets.forEach(({ timeInterval, events }) => {
+            if (!events || !events.includes(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL)) {
+                return;
+            }
+            
             timeInterval = timeInterval ?? Constants.CMCD_DEFAULT_TIME_INTERVAL;
             if (timeInterval >= 1) {
                 const triggerEventModeInterval = () => {
                     _onEventChange(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL);
-                    setTimeout(triggerEventModeInterval, (timeInterval * 1000));
+                    const timeOut = setTimeout(triggerEventModeInterval, (timeInterval * 1000));
+                    timeOuts.push(timeOut);
                 }
                 triggerEventModeInterval();
             }
@@ -183,6 +190,9 @@ function CmcdController() {
     }
 
     function _onPlayerError(errorData) {
+        if (errorData.error && errorData.error.data.request && errorData.error.data.request.type === HTTPRequest.CMCD_EVENT) {
+            return;
+        }
         cmcdModel.onPlayerError(errorData);
         _onEventChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
@@ -600,6 +610,9 @@ function CmcdController() {
 
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+
+        timeOuts.forEach(clearTimeout);
+        timeOuts = [];
 
         cmcdModel.resetInitialSettings();
     }
