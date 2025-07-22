@@ -29,6 +29,7 @@
         /* possible modes of attach cmcd data */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters */
         var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var CMCD_MODE_JSON = 'json'; /* as json */
         var player;
 
         function init() {
@@ -76,13 +77,25 @@
                                 url: 'http://localhost:3003/cmcd/event-mode',
                                 timeInterval: 6,
                                 mode: CMCD_MODE_HEADER,
+                            },
+                            {
+                                enabled: true,
+                                cmcdMode: 'response',
+                                url: 'http://localhost:3004/cmcd/response-json-mode',
+                                mode: CMCD_MODE_JSON,
+                                batchSize: 3,
+                            },
+                            {
+                                enabled: false,
+                                cmcdMode: 'event',
+                                url: 'http://localhost:3005/cmcd/event-json-mode',
+                                mode: CMCD_MODE_JSON,
+                                batchTimer: 3,
                             }
                         ]
                     }
                 },
-                // debug: {
-                // 'logLevel': dashjs.Debug.LOG_LEVEL_DEBUG
-                // }
+
             });
             player.setAutoPlay(false);
             player.attachView(video);
@@ -93,7 +106,19 @@
             log('type: ' + event.mediaType);
             log('file: ' + event.url.split('/').pop())
             var mode = event.mode;
-            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            var data;
+
+            switch (mode) {
+                case CMCD_MODE_HEADER:
+                    data = getKeysForHeaderMode(event);
+                    break;
+                case CMCD_MODE_JSON:
+                    data = getKeysForJsonMode(event);
+                    break;
+                default:
+                    data = getKeysForQueryMode(event);
+            }
+
             var keys = Object.keys(data);
             keys = keys.sort();
             for (var key of keys) {
@@ -120,6 +145,28 @@
             }
 
             return cmcdData
+        }
+
+        function getKeysForJsonMode(event){
+            const decoded = decodeURIComponent(event.cmcdString);
+            const entries = decoded.split(',');
+
+            const cmcdData = {};
+
+            for (let entry of entries) {
+                let [key, value] = entry.split('=');
+
+                if (value?.startsWith('"') && value.endsWith('"')) {
+                value = value.slice(1, -1);
+                }
+
+                if (!isNaN(value) && value.trim() !== '') {
+                value = Number(value);
+                }
+
+                cmcdData[key] = value;
+            }
+            return cmcdData;
         }
 
         function extractKeyValuePairs(cmcdString, cmcdData) {
