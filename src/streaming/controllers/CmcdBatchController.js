@@ -13,11 +13,17 @@ function CmcdBatchController() {
         dashMetrics,
         mediaPlayerModel,
         errHandler,
-        urlLoader;
+        urlLoader,
+        retryQueue,
+        retryTimers,
+        retryDelays;
 
     function setup() {
         batches = new Map(); // Map<key, { cmcdData, target }>
         timers = new Map(); // Map<key, timeoutRef>
+        retryQueue = [];
+        retryTimers = new Map();
+        retryDelays = [100, 500, 1000, 3000, 5000]; // ms
     }
 
     function setConfig(config) {
@@ -109,7 +115,42 @@ function CmcdBatchController() {
         }
     }
 
-    function _sendBatchReport(request) {
+    function _processRetryQueue() {
+        const now = new Date().getTime();
+        const newRetryQueue = [];
+
+        for (let i = 0; i < retryQueue.length; i++) {
+            const report = retryQueue[i];
+            if (report.sendTime <= now) {
+                _sendBatchReport(report.request, (success) => {
+                    if (!success) {
+                        report.retryCount++;
+                        if (report.retryCount < retryDelays.length) {
+                            report.sendTime = new Date().getTime() + retryDelays[report.retryCount];
+                            newRetryQueue.push(report);
+                        } else {
+                            // Stop retrying
+                        }
+                    }
+                });
+            } else {
+                newRetryQueue.push(report);
+            }
+        }
+
+        retryQueue = newRetryQueue;
+
+        if (retryQueue.length > 0) {
+            const nextRetryTime = Math.min(...retryQueue.map(r => r.sendTime));
+            const key = 'retry';
+            if (retryTimers.has(key)) {
+                clearTimeout(retryTimers.get(key));
+            }
+            retryTimers.set(key, setTimeout(_processRetryQueue, nextRetryTime - new Date().getTime()));
+        }
+    }
+
+    function _sendBatchReport(request, callback) {
         if (!urlLoader) {
             urlLoader = URLLoader(context).create({
                 errHandler: errHandler,
@@ -118,15 +159,32 @@ function CmcdBatchController() {
                 dashMetrics: dashMetrics,
             });
         }
-        urlLoader.load({ request });
+        urlLoader.load({ request }).then((response) => {
+            if (response.status === 429) {
+                if (callback) {
+                    callback(false);
+                }
+                retryQueue.push({ request, retryCount: 0, sendTime: new Date().getTime() + retryDelays[0] });
+                if (retryQueue.length === 1) {
+                    retryTimers.set('retry', setTimeout(_processRetryQueue, retryDelays[0]));
+                }
+            } else if (callback) {
+                callback(true);
+            }
+        });
     }
 
     function reset() {
         for (const timeout of timers.values()) {
             clearTimeout(timeout);
         }
+        for (const timeout of retryTimers.values()) {
+            clearTimeout(timeout);
+        }
         batches.clear();
         timers.clear();
+        retryQueue = [];
+        retryTimers.clear();
     }
 
     instance = {
