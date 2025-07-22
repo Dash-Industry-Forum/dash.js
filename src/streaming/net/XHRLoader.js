@@ -80,9 +80,12 @@ function XHRLoader() {
             xhr.onabort = commonMediaRequest.customData.onabort;
             xhr.ontimeout = commonMediaRequest.customData.ontimeout;
         }
-
-        xhr.send();
-
+        let body = commonMediaRequest.body || null;
+        if (body) {
+            body = JSON.stringify(body);
+            xhr.setRequestHeader('Content-Type', 'application/json');
+        }
+        xhr.send(body);
         commonMediaRequest.customData.abort = abort.bind(this);
         return true;
     }

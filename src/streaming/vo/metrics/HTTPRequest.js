@@ -168,6 +168,7 @@ class HTTPRequestTrace {
 }
 
 HTTPRequest.GET = 'GET';
+HTTPRequest.POST = 'POST';
 HTTPRequest.HEAD = 'HEAD';
 HTTPRequest.MPD_TYPE = 'MPD';
 HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';

@@ -38,13 +38,14 @@ import {CMCD_PARAM} from '@svta/common-media-library/cmcd/CMCD_PARAM';
 import Debug from '../../core/Debug.js';
 import {encodeCmcd} from '@svta/common-media-library/cmcd/encodeCmcd';
 import {toCmcdHeaders} from '@svta/common-media-library/cmcd/toCmcdHeaders';
-
+import {toCmcdUrl} from '@svta/common-media-library/cmcd/toCmcdUrl';
 
 import CmcdReportRequest from '../../streaming/vo/CmcdReportRequest.js';
 import Utils from '../../core/Utils.js';
 import URLLoader from '../net/URLLoader.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 import CmcdModel from '../models/CmcdModel.js'
+import CmcdBatchController from './CmcdBatchController.js';
 import Errors from '../../core/errors/Errors.js';
 import Settings from '../../core/Settings.js';
 
@@ -52,6 +53,7 @@ function CmcdController() {
     let instance,
         logger,
         cmcdModel,
+        cmcdBatchController,
         clientDataReportingController,
         urlLoader,
         mediaPlayerModel,
@@ -64,6 +66,7 @@ function CmcdController() {
     let debug = Debug(context).getInstance();
 
     cmcdModel = CmcdModel(context).getInstance();
+    cmcdBatchController = CmcdBatchController(context).getInstance();
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -90,6 +93,12 @@ function CmcdController() {
         }
 
         cmcdModel.setConfig(config);
+        cmcdBatchController.setConfig({
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModel,
+            errHandler: errHandler,
+            settings: settings
+        });
     }
 
     function initialize(autoPlay) {
@@ -234,8 +243,12 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
-                _sendCmcdDataReport(httpRequest);
+                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                } else {
+                    _sendCmcdDataReport(httpRequest);
+                }
             }
         });
     }
@@ -256,7 +269,7 @@ function CmcdController() {
      * @param request
      * @private
     */
-    function _updateRequestUrlAndHeadersWithCmcd(request, cmcdData, targetSettings) {
+    function _updateRequestWithCmcd(request, cmcdData, targetSettings) {
         const currentServiceLocation = request?.serviceLocation;
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
@@ -266,13 +279,22 @@ function CmcdController() {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
-                request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-            } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                request.headers = request.headers || {};
-                request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
+            switch (cmcdMode) {
+                case Constants.CMCD_MODE_QUERY:
+                    request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
+                    const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
+                    request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+                    break;
+                case Constants.CMCD_MODE_HEADER:
+                    request.headers = request.headers || {};
+                    request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
+                    break;
+                case Constants.CMCD_MODE_JSON:
+                    if (request.type === HTTPRequest.CMCD_RESPONSE || request.type === HTTPRequest.CMCD_EVENT) {
+                        request.body = getJsonParameters(request, cmcdData, targetSettings);
+                        request.method = HTTPRequest.POST;
+                    }
+                    break;
             }
         }
     }
@@ -316,6 +338,33 @@ function CmcdController() {
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
                 return headers;
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function getJsonParameters(request, cmcdData, targetSettings){
+        try {
+            if (isCmcdEnabled(targetSettings)) {
+                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
+                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+                const body = toCmcdUrl(cmcdData, encodeOptions);
+
+                const eventBusData = {
+                    url: request.url,
+                    mediaType: request.mediaType,
+                    requestType: request.type,
+                    cmcdData,
+                    cmcdString: body,
+                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
+                }
+
+                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
+
+                return [body];
             }
 
             return null;
@@ -465,14 +514,15 @@ function CmcdController() {
 
         request.cmcd = cmcdRequestData;
     
-        _updateRequestUrlAndHeadersWithCmcd(request, cmcdRequestData, null);
+        _updateRequestWithCmcd(request, cmcdRequestData, null);
     
         commonMediaRequest = {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
             customData: { request },
-            cmcd: cmcdRequestData
+            cmcd: cmcdRequestData,
+            body: request.body
         };
 
         return commonMediaRequest;
@@ -500,8 +550,12 @@ function CmcdController() {
                 httpRequest.method = HTTPRequest.GET;
                 httpRequest.cmcd = cmcdData;
                 
-                _updateRequestUrlAndHeadersWithCmcd(httpRequest, cmcdData, targetSettings)
-                _sendCmcdDataReport(httpRequest);
+                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                } else {
+                    _sendCmcdDataReport(httpRequest);
+                }
             }
         });
         
