@@ -34,6 +34,7 @@ import Settings from '../../core/Settings.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';
 import Constants from '../constants/Constants.js';
 import CmcdController from '../controllers/CmcdController.js';
+import ExternalSubtitle from '../vo/ExternalSubtitle.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -48,6 +49,7 @@ function CustomParametersModel() {
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
+        externalSubtitles,
         customAbrRules,
         cmcdController;
 
@@ -73,11 +75,17 @@ function CustomParametersModel() {
         cmcdController = CmcdController(context).getInstance();
         requestInterceptors = cmcdController.getCmcdRequestInterceptors();
         responseInterceptors = cmcdController.getCmcdResponseInterceptors();
+        
+        externalSubtitles = new Set();
     }
 
 
     function reset() {
         _resetInitialSettings();
+    }
+
+    function resetPlaybackSessionSpecificSettings() {
+        externalSubtitles = new Set();
     }
 
     function setConfig() {
@@ -335,6 +343,46 @@ function CustomParametersModel() {
         return responseInterceptors;
     }
 
+    function addExternalSubtitle(externalSubtitleObj) {
+        if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
+            return
+        }
+        const externalSubtitle = new ExternalSubtitle(externalSubtitleObj);
+        if (!_hasExternalSubtitleByKeyValue('url', externalSubtitle.url) && !_hasExternalSubtitleByKeyValue('id', externalSubtitle.id)) {
+            externalSubtitles.add(externalSubtitle);
+        }
+    }
+
+    function removeExternalSubtitleByUrl(url) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.url === url) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function removeExternalSubtitleById(id) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.id === id) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function _hasExternalSubtitleByKeyValue(key, value) {
+        let found = false;
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle[key] === value) {
+                found = true;
+            }
+        });
+        return found;
+    }
+
+    function getExternalSubtitles() {
+        return externalSubtitles;
+    }
+
     /**
      * Add a UTC timing source at the top of the list
      * @param {string} schemeIdUri
@@ -404,6 +452,7 @@ function CustomParametersModel() {
 
     instance = {
         addAbrCustomRule,
+        addExternalSubtitle,
         addRequestInterceptor,
         addResponseInterceptor,
         addUTCTimingSource,
@@ -411,6 +460,7 @@ function CustomParametersModel() {
         getAbrCustomRules,
         getCustomCapabilitiesFilters,
         getCustomInitialTrackSelectionFunction,
+        getExternalSubtitles,
         getLicenseRequestFilters,
         getLicenseResponseFilters,
         getRequestInterceptors,
@@ -422,11 +472,14 @@ function CustomParametersModel() {
         registerLicenseResponseFilter,
         removeAbrCustomRule,
         removeAllAbrCustomRule,
+        removeExternalSubtitleById,
+        removeExternalSubtitleByUrl,
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
         reset,
         resetCustomInitialTrackSelectionFunction,
+        resetPlaybackSessionSpecificSettings,
         restoreDefaultUTCTimingSources,
         setConfig,
         setCustomInitialTrackSelectionFunction,

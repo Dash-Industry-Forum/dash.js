@@ -28,59 +28,56 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
-import Constants from './constants/Constants.js';
-import DashConstants from '../dash/constants/DashConstants.js';
-import MetricsConstants from './constants/MetricsConstants.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import StreamController from './controllers/StreamController.js';
-import GapController from './controllers/GapController.js';
-import CatchupController from './controllers/CatchupController.js';
-import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
-import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
-import MediaController from './controllers/MediaController.js';
+import AbrController from './controllers/AbrController.js';
+import BASE64 from '../../externals/base64.js';
 import BaseURLController from './controllers/BaseURLController.js';
-import ManifestLoader from './ManifestLoader.js';
-import ErrorHandler from './utils/ErrorHandler.js';
+import BoxParser from './utils/BoxParser.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
-import URIFragmentModel from './models/URIFragmentModel.js';
-import ManifestModel from './models/ManifestModel.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
-import AbrController from './controllers/AbrController.js';
-import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
-import VideoModel from './models/VideoModel.js';
 import CmcdController from './controllers/CmcdController.js';
+import CatchupController from './controllers/CatchupController.js';
+import ClientDataReportingController from './controllers/ClientDataReportingController.js';
 import CmsdModel from './models/CmsdModel.js';
+import Constants from './constants/Constants.js';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
+import CustomParametersModel from './models/CustomParametersModel.js';
 import DOMStorage from './utils/DOMStorage.js';
+import DashAdapter from '../dash/DashAdapter.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import DashJSError from './vo/DashJSError.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import Debug from './../core/Debug.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 import Errors from './../core/errors/Errors.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
-import MediaPlayerEvents from './MediaPlayerEvents.js';
+import ExternalSubtitle from './vo/ExternalSubtitle.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Settings from '../core/Settings.js';
-import {getVersionString} from '../core/Version.js';
-
-//Dash
-import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
-import DashAdapter from '../dash/DashAdapter.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import TimelineConverter from '../dash/utils/TimelineConverter.js';
-import {
-    HTTPRequest
-} from './vo/metrics/HTTPRequest.js';
-import BASE64 from '../../externals/base64.js';
+import GapController from './controllers/GapController.js';
 import ISOBoxer from 'codem-isoboxer';
-import DashJSError from './vo/DashJSError.js';
-import {checkParameterType} from './utils/SupervisorTools.js';
+import ManifestLoader from './ManifestLoader.js';
+import ManifestModel from './models/ManifestModel.js';
 import ManifestUpdater from './ManifestUpdater.js';
-import URLUtils from '../streaming/utils/URLUtils.js';
-import BoxParser from './utils/BoxParser.js';
+import MediaController from './controllers/MediaController.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
+import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
+import Settings from '../core/Settings.js';
+import StreamController from './controllers/StreamController.js';
 import TextController from './text/TextController.js';
-import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
-import ClientDataReportingController from './controllers/ClientDataReportingController.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
+import URIFragmentModel from './models/URIFragmentModel.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import VideoModel from './models/VideoModel.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import {checkParameterType} from './utils/SupervisorTools.js';
+import {getVersionString} from '../core/Version.js';
 
 /**
  * The media types
@@ -1497,6 +1494,7 @@ function MediaPlayer() {
 
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
+            _resetPlaybackSessionSpecificSettings();
         }
 
         _initializePlayback(providedStartTime);
@@ -1858,6 +1856,43 @@ function MediaPlayer() {
     }
 
     /**
+     * Adds an external subtitle file. The provided externalSubtitle must be an instance of the ExternalSubtitle class.
+     * @param {ExternalSubtitle} externalSubtitle
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addExternalSubtitle(externalSubtitle) {
+        if (!(externalSubtitle instanceof ExternalSubtitle)) {
+            logger.error('Invalid external subtitle object. Must be an instance of dashjs.ExternalSubtitle');
+        }
+        customParametersModel.addExternalSubtitle(externalSubtitle);
+    }
+
+    /**
+     * Removes an external subtitle file by its ID.
+     * @param {string} id
+     */
+    function removeExternalSubtitleById(id) {
+        customParametersModel.removeExternalSubtitleById(id);
+    }
+
+    /**
+     * Removes an external subtitle file by its url.
+     * @param {string} url
+     */
+    function removeExternalSubtitleByUrl(url) {
+        customParametersModel.removeExternalSubtitleByUrl(url);
+    }
+
+    /**
+     * Returns all external subtitles
+     */
+    function getExternalSubtitles() {
+        customParametersModel.getExternalSubtitles();
+    }
+
+
+    /**
      * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
      * The interceptors are applied in the order they are added.
@@ -2130,6 +2165,7 @@ function MediaPlayer() {
 
         if (streamingInitialized || playbackInitialized) {
             _resetPlaybackControllers();
+            _resetPlaybackSessionSpecificSettings()
         }
 
         if (isReady()) {
@@ -2400,6 +2436,10 @@ function MediaPlayer() {
         textController.reset();
         cmcdController.reset();
         cmsdModel.reset();
+    }
+
+    function _resetPlaybackSessionSpecificSettings() {
+        customParametersModel.resetPlaybackSessionSpecificSettings()
     }
 
     function _createPlaybackControllers() {
@@ -2745,7 +2785,7 @@ function MediaPlayer() {
         }
         if (value.role !== undefined) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
-            
+
             // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
             if (output.role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
                 output.role.value = DashConstants.MAIN;
@@ -2789,6 +2829,7 @@ function MediaPlayer() {
 
     instance = {
         addABRCustomRule,
+        addExternalSubtitle,
         addRequestInterceptor,
         addResponseInterceptor,
         addUTCTimingSource,
@@ -2823,6 +2864,7 @@ function MediaPlayer() {
         getDebug,
         getDvrSeekOffset,
         getDvrWindow,
+        getExternalSubtitles,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
         getManifest,
@@ -2862,6 +2904,8 @@ function MediaPlayer() {
         registerLicenseResponseFilter,
         removeABRCustomRule,
         removeAllABRCustomRule,
+        removeExternalSubtitleById,
+        removeExternalSubtitleByUrl,
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
