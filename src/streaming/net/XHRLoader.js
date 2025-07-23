@@ -81,10 +81,6 @@ function XHRLoader() {
             xhr.ontimeout = commonMediaRequest.customData.ontimeout;
         }
         let body = commonMediaRequest.body || null;
-        if (body) {
-            body = JSON.stringify(body);
-            xhr.setRequestHeader('Content-Type', 'application/json');
-        }
         xhr.send(body);
         commonMediaRequest.customData.abort = abort.bind(this);
         return true;

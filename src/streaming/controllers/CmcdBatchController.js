@@ -100,6 +100,7 @@ function CmcdBatchController() {
             httpRequest.url = target.url;
             httpRequest.method = HTTPRequest.POST;
             httpRequest.body = cmcdData;
+            httpRequest.headers = Constants.CMCD_CONTENT_TYPE_HEADER
 
             if (target.cmcdMode === Constants.CMCD_MODE.EVENT) {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;

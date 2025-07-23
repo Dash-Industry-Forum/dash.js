@@ -285,6 +285,15 @@ export default {
     */
     CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
 
+    /**
+     *  @constant {string} CMCD_CONTENT_TYPE_HEADER specifies content type for cmcd batching
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_CONTENT_TYPE_HEADER: {
+        'Content-Type': 'application/cmcd+text'
+    },
+
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',
