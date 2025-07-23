@@ -220,19 +220,15 @@ describe('CmcdBatchController', function () {
             };
             const cmcdData = ['ot%3Dm'];
 
-            // Simulate a 429 response on the first call, and a success on the second
             urlLoaderMock.load.onCall(0).returns(Promise.resolve({ status: 429 }));
             urlLoaderMock.load.onCall(1).returns(Promise.resolve({ status: 200 }));
 
             cmcdBatchController.addReport(target, cmcdData);
 
-            // The first call should have been made
             expect(urlLoaderMock.load.calledOnce).to.be.true;
 
-            // Advance the clock by the first retry delay (100ms)
             await clock.tickAsync(100);
 
-            // The second call (the retry) should have been made
             expect(urlLoaderMock.load.calledTwice).to.be.true;
         });
 
