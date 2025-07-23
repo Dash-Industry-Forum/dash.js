@@ -364,7 +364,7 @@ function CmcdController() {
 
                 eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
 
-                return [body];
+                return body;
             }
 
             return null;

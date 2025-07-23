@@ -68,13 +68,17 @@ function CmcdBatchController() {
 
         if (!batches.has(key)) {
             batches.set(key, {
-                cmcdData: [],
+                cmcdData: '',
                 target
             });
         }
 
         const batch = batches.get(key);
-        batch.cmcdData.push(cmcd[0]);
+        if (batch.cmcdData === '') {
+            batch.cmcdData = cmcd;
+        } else {
+            batch.cmcdData += '\n' + cmcd;
+        }
 
         if (target.batchTimer && !timers.has(key)) {
             const timeout = setTimeout(() => {
@@ -83,7 +87,7 @@ function CmcdBatchController() {
             timers.set(key, timeout);
         }
 
-        if (target.batchSize && batch.cmcdData.length >= target.batchSize) {
+        if (target.batchSize && batch.cmcdData.split('\n').length >= target.batchSize) {
             flushByTargetKey(key);
         }
     }
@@ -118,7 +122,7 @@ function CmcdBatchController() {
                         }
                     }
                 });
-            batch.cmcdData = [];
+            batch.cmcdData = '';
         }
 
         if (timers.has(key)) {

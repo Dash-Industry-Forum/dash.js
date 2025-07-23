@@ -50,8 +50,8 @@ describe('CmcdBatchController', function () {
                 batchSize: 2,
                 cmcdMode: Constants.CMCD_MODE.RESPONSE
             };
-            const cmcdData1 = ['ot%3Dm%2Csid%3D%session1'];
-            const cmcdData2 = ['ot%3Da%2Csid%3D%session2'];
+            const cmcdData1 = 'ot%3Dm%2Csid%3D%session1';
+            const cmcdData2 = 'ot%3Da%2Csid%3D%session2';
             cmcdBatchController.addReport(target, cmcdData1);
             expect(urlLoaderMock.load.called).to.be.false;
 
@@ -61,7 +61,7 @@ describe('CmcdBatchController', function () {
             const request = urlLoaderMock.load.getCall(0).args[0].request;
             expect(request.url).to.equal(target.url);
             expect(request.method).to.equal(HTTPRequest.POST);
-            expect(request.body).to.deep.equal([cmcdData1[0], cmcdData2[0]]);
+            expect(request.body).to.equal(cmcdData1 + '\n' + cmcdData2);
             expect(request.type).to.equal(HTTPRequest.CMCD_RESPONSE);
         });
     });
@@ -73,7 +73,7 @@ describe('CmcdBatchController', function () {
                 batchTimer: 5,
                 cmcdMode: Constants.CMCD_MODE.EVENT
             };
-            const cmcdData = ['ot%3Dm%2Csid%3D%session1'];
+            const cmcdData = 'ot%3Dm%2Csid%3D%session1';
 
             cmcdBatchController.addReport(target, cmcdData);
             expect(urlLoaderMock.load.called).to.be.false;
@@ -84,7 +84,7 @@ describe('CmcdBatchController', function () {
             const request = urlLoaderMock.load.getCall(0).args[0].request;
             expect(request.url).to.equal(target.url);
             expect(request.method).to.equal(HTTPRequest.POST);
-            expect(request.body).to.deep.equal([cmcdData[0]]);
+            expect(request.body).to.equal(cmcdData);
             expect(request.type).to.equal(HTTPRequest.CMCD_EVENT);
         });
 
@@ -94,8 +94,8 @@ describe('CmcdBatchController', function () {
                 url: 'http://test.com/report',
                 batchTimer: 5
             };
-            const cmcdData1 = ['ot%3Dm%2Csid%3D%session1'];
-            const cmcdData2 = ['ot%3Da%2Csid%3D%session2'];
+            const cmcdData1 = 'ot%3Dm%2Csid%3D%session1';
+            const cmcdData2 = 'ot%3Da%2Csid%3D%session2';
 
             cmcdBatchController.addReport(target, cmcdData1);
             expect(setTimeoutSpy.callCount).to.equal(1);
@@ -115,8 +115,8 @@ describe('CmcdBatchController', function () {
                 batchSize: 2,
                 batchTimer: 10
             };
-            const cmcdData1 = ['ot%3Dm'];
-            const cmcdData2 = ['ot%3Da'];
+            const cmcdData1 = 'ot%3Dm';
+            const cmcdData2 = 'ot%3Da';
 
             cmcdBatchController.addReport(target, cmcdData1);
             expect(urlLoaderMock.load.called).to.be.false;
@@ -137,8 +137,8 @@ describe('CmcdBatchController', function () {
                 batchSize: 3,
                 batchTimer: 5
             };
-            const cmcdData1 = ['ot%3Dv'];
-            const cmcdData2 = ['ot%3Da'];
+            const cmcdData1 = 'ot%3Dv';
+            const cmcdData2 = 'ot%3Da';
 
             cmcdBatchController.addReport(target, cmcdData1);
             cmcdBatchController.addReport(target, cmcdData2);
@@ -148,9 +148,9 @@ describe('CmcdBatchController', function () {
             expect(urlLoaderMock.load.calledOnce).to.be.true;
 
             const request = urlLoaderMock.load.getCall(0).args[0].request;
-            expect(request.body.length).to.equal(2);
+            expect(request.body.split('\n').length).to.equal(2);
 
-            cmcdBatchController.addReport(target, [{ ot: 'm' }]);
+            cmcdBatchController.addReport(target, 'ot%3Dm');
             expect(urlLoaderMock.load.calledOnce).to.be.true;
         });
     });
@@ -187,8 +187,8 @@ describe('CmcdBatchController', function () {
                 cmcdMode: Constants.CMCD_MODE.EVENT
             };
 
-            const cmcdData1 = ['ot%3Dm'];
-            const cmcdData2 = ['ot%3Da'];
+            const cmcdData1 = 'ot%3Dm';
+            const cmcdData2 = 'ot%3Da';
 
             cmcdBatchController.addReport(target1, cmcdData1);
             expect(urlLoaderMock.load.called).to.be.false;
@@ -200,15 +200,15 @@ describe('CmcdBatchController', function () {
             expect(request.url).to.equal('http://test.com/report');
             expect(request.method).to.equal(HTTPRequest.POST);
             expect(request.type).to.equal(HTTPRequest.CMCD_EVENT);
-            expect(request.body).to.deep.equal([cmcdData2[0]]);
+            expect(request.body).to.equal(cmcdData2);
 
-            const cmcdData3 = ['ot%3Dx'];
+            const cmcdData3 = 'ot%3Dx';
             cmcdBatchController.addReport(target1, cmcdData3);
             expect(urlLoaderMock.load.calledTwice).to.be.true;
 
             const secondRequest = urlLoaderMock.load.getCall(1).args[0].request;
             expect(secondRequest.type).to.equal(HTTPRequest.CMCD_RESPONSE);
-            expect(secondRequest.body).to.deep.equal([cmcdData1[0], cmcdData3[0]]);
+            expect(secondRequest.body).to.equal(cmcdData1 + '\n' + cmcdData3);
         });
     });
 
@@ -218,7 +218,7 @@ describe('CmcdBatchController', function () {
                 url: 'http://test.com/report',
                 batchSize: 1
             };
-            const cmcdData = ['ot%3Dm'];
+            const cmcdData = 'ot%3Dm';
 
             urlLoaderMock.load.onCall(0).returns(Promise.resolve({ status: 429 }));
             urlLoaderMock.load.onCall(1).returns(Promise.resolve({ status: 200 }));
@@ -237,7 +237,7 @@ describe('CmcdBatchController', function () {
                 url: 'http://test.com/report',
                 batchSize: 1
             };
-            const cmcdData = ['ot%3Dm'];
+            const cmcdData = 'ot%3Dm';
 
             urlLoaderMock.load.returns(Promise.resolve({ status: 410 }));
 
