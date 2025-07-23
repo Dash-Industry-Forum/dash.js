@@ -222,11 +222,11 @@ export default {
     CMCD_MODE_HEADER: 'header',
 
     /**
-     *  @constant {string} CMCD_MODE_JSON specifies to attach CMCD metrics as JSON.
+     *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_JSON: 'json',
+    CMCD_MODE_BODY: 'body',
 
     /**
      *  @constant {string} CMCD_V2_KEYS_MAPPING

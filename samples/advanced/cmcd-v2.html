@@ -29,7 +29,7 @@
         /* possible modes of attach cmcd data */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters */
         var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
-        var CMCD_MODE_JSON = 'json'; /* as json */
+        var CMCD_MODE_BODY = 'body'; /* as body of request */
         var player;
 
         function init() {
@@ -81,15 +81,15 @@
                             {
                                 enabled: true,
                                 cmcdMode: 'response',
-                                url: 'http://localhost:3004/cmcd/response-json-mode',
-                                mode: CMCD_MODE_JSON,
+                                url: 'http://localhost:3004/cmcd/response-body-mode',
+                                mode: CMCD_MODE_BODY,
                                 batchSize: 3,
                             },
                             {
-                                enabled: false,
+                                enabled: true,
                                 cmcdMode: 'event',
-                                url: 'http://localhost:3005/cmcd/event-json-mode',
-                                mode: CMCD_MODE_JSON,
+                                url: 'http://localhost:3005/cmcd/event-body-mode',
+                                mode: CMCD_MODE_BODY,
                                 batchTimer: 3,
                             }
                         ]
@@ -112,7 +112,7 @@
                 case CMCD_MODE_HEADER:
                     data = getKeysForHeaderMode(event);
                     break;
-                case CMCD_MODE_JSON:
+                case CMCD_MODE_BODY:
                     data = getKeysForJsonMode(event);
                     break;
                 default:
