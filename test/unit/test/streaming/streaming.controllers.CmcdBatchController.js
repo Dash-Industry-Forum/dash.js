@@ -21,7 +21,10 @@ describe('CmcdBatchController', function () {
 
     beforeEach(function () {
         urlLoaderMock = {
-            load: sinon.stub()
+            // Default mock for urlLoader.load. Returns a resolved promise to simulate a successful request.
+            // This is necessary because the controller's async logic depends on the promise returned by load().
+            // Individual tests can override this for specific scenarios (e.g., simulating a 429 error).
+            load: sinon.stub().returns(Promise.resolve({}))
         };
 
         clock = sinon.useFakeTimers();
@@ -209,4 +212,44 @@ describe('CmcdBatchController', function () {
         });
     });
 
+    describe('Retry logic', function () {
+        it('should retry sending a batch after a 429 response', async function () {
+            const target = {
+                url: 'http://test.com/report',
+                batchSize: 1
+            };
+            const cmcdData = ['ot%3Dm'];
+
+            urlLoaderMock.load.onCall(0).returns(Promise.resolve({ status: 429 }));
+            urlLoaderMock.load.onCall(1).returns(Promise.resolve({ status: 200 }));
+
+            cmcdBatchController.addReport(target, cmcdData);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            await clock.tickAsync(100);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+        });
+
+        it('should not send any more reports to a target that returned a 410 response', async function () {
+            const target = {
+                url: 'http://test.com/report',
+                batchSize: 1
+            };
+            const cmcdData = ['ot%3Dm'];
+
+            urlLoaderMock.load.returns(Promise.resolve({ status: 410 }));
+
+            cmcdBatchController.addReport(target, cmcdData);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            await clock.tickAsync(0);
+
+            cmcdBatchController.addReport(target, cmcdData);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+        });
+    });
 });
