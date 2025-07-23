@@ -235,5 +235,25 @@ describe('CmcdBatchController', function () {
             // The second call (the retry) should have been made
             expect(urlLoaderMock.load.calledTwice).to.be.true;
         });
+
+        it('should not send any more reports to a target that returned a 410 response', async function () {
+            const target = {
+                url: 'http://test.com/report',
+                batchSize: 1
+            };
+            const cmcdData = ['ot%3Dm'];
+
+            urlLoaderMock.load.returns(Promise.resolve({ status: 410 }));
+
+            cmcdBatchController.addReport(target, cmcdData);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            await clock.tickAsync(0);
+
+            cmcdBatchController.addReport(target, cmcdData);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+        });
     });
 });

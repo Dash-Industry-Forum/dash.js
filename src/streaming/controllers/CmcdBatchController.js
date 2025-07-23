@@ -16,7 +16,8 @@ function CmcdBatchController() {
         urlLoader,
         retryQueue,
         retryTimers,
-        retryDelays;
+        retryDelays,
+        goneUrls;
 
     function setup() {
         batches = new Map(); // Map<key, { cmcdData, target }>
@@ -24,6 +25,7 @@ function CmcdBatchController() {
         retryQueue = [];
         retryTimers = new Map();
         retryDelays = [100, 500, 1000, 3000, 5000]; // ms
+        goneUrls = new Set();
     }
 
     function setConfig(config) {
@@ -58,6 +60,10 @@ function CmcdBatchController() {
     }
 
     function addReport(target, cmcd) {
+        if (goneUrls.has(target.url)) {
+            return;
+        }
+
         const key = _generateTargetKey(target);
 
         if (!batches.has(key)) {
@@ -99,7 +105,9 @@ function CmcdBatchController() {
 
             _sendBatchReport(httpRequest)
                 .then((response) => {
-                    if (response && response.status === 429) {
+                    if (response && response.status === 410) {
+                        goneUrls.add(target.url);
+                    } else if (response && response.status === 429) {
                         retryQueue.push({
                             request: httpRequest,
                             retryCount: 0,
@@ -136,7 +144,9 @@ function CmcdBatchController() {
         const processingPromises = reportsToProcess.map(report => {
             return _sendBatchReport(report.request)
                 .then(response => {
-                    if (response && response.status === 429) {
+                    if (response && response.status === 410) {
+                        goneUrls.add(report.request.url);
+                    } else if (response && response.status === 429) {
                         report.retryCount++;
                         if (report.retryCount < retryDelays.length) {
                             report.sendTime = new Date().getTime() + retryDelays[report.retryCount];
@@ -190,6 +200,7 @@ function CmcdBatchController() {
         timers.clear();
         retryQueue = [];
         retryTimers.clear();
+        goneUrls.clear();
     }
 
     instance = {
