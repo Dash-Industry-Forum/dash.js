@@ -185,7 +185,7 @@ function CmcdBatchController() {
                 return response;
             })
             .catch((e) => {
-                return e.response;
+                return e?.response;
             });
     }
 
