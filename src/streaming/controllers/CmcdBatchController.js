@@ -180,7 +180,10 @@ function CmcdBatchController() {
                 dashMetrics: dashMetrics,
             });
         }
-        return urlLoader.load({ request })
+
+        // By wrapping the call in Promise.resolve(), we ensure that _sendBatchReport always returns a promise,
+        // even if urlLoader.load() returns a non-promise value (e.g., undefined) in some edge cases.
+        return Promise.resolve(urlLoader.load({ request }))
             .then((response) => {
                 return response;
             })
