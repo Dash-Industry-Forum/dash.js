@@ -21,6 +21,9 @@ describe('CmcdBatchController', function () {
 
     beforeEach(function () {
         urlLoaderMock = {
+            // Default mock for urlLoader.load. Returns a resolved promise to simulate a successful request.
+            // This is necessary because the controller's async logic depends on the promise returned by load().
+            // Individual tests can override this for specific scenarios (e.g., simulating a 429 error).
             load: sinon.stub().returns(Promise.resolve({}))
         };
 
