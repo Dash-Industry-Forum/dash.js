@@ -455,28 +455,7 @@ describe('CmcdController', function () {
 
             describe('getHeadersParameters() return CMCD data correctly', () => {
 
-                it('getHeadersParameters() sould not return cmcd data if isCmcdEnabled() is false', function () {
-                    const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
-                    const MEDIA_TYPE = 'video';
-
-                    let request = {
-                        type: REQUEST_TYPE,
-                        mediaType: MEDIA_TYPE
-                    };
-
-                    settings.update({
-                        streaming: {
-                            cmcd: {
-                                enabled: false
-                            }
-                        }
-                    });
-
-                    let headers = cmcdController.getHeaderParameters(request);
-                    expect(headers).to.equals(null);
-                });
-
-                it('getHeadersParameters() sould return cmcd data if isCmcdEnabled() is true ', function () {
+                it('getHeadersParameters() sould return cmcd data', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
 
@@ -1256,28 +1235,7 @@ describe('CmcdController', function () {
 
             describe('getQueryParameter() return CMCD data correctly', () => {
 
-                it('getQueryParameter() sould not return cmcd data if isCmcdEnabled() is false', function () {
-                    const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
-                    const MEDIA_TYPE = 'video';
-
-                    let request = {
-                        type: REQUEST_TYPE,
-                        mediaType: MEDIA_TYPE
-                    };
-
-                    settings.update({
-                        streaming: {
-                            cmcd: {
-                                enabled: false
-                            }
-                        }
-                    });
-
-                    let parameters = cmcdController.getQueryParameter(request);
-                    expect(parameters).to.equals(null);
-                });
-
-                it('getQueryParameter() sould return cmcd data if isCmcdEnabled() is true ', function () {
+                it('getQueryParameter() sould return cmcd data', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
 
@@ -1894,6 +1852,26 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.ERROR, errorPayload);
             expect(urlLoaderMock.load.called).to.be.false;
         });
+
+        it('should not send a report when version is 1', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 1,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            timeInterval: 0
+                        }]
+                    }
+                }
+            });
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            expect(urlLoaderMock.load.called).to.be.false;
+        });
     });
 
     describe('Event Mode player state events', () => {
@@ -2191,6 +2169,41 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment']
+                        }]
+                    }
+                }
+            });
+
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: { sid: 'session-id' }
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.called).to.be.false;
+        });
+
+        it('should not send a report if version is 1', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 1,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
                             cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment']
