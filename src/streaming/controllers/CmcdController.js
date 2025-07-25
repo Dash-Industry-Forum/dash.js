@@ -598,6 +598,18 @@ function CmcdController() {
         if (request.url) {
             responseModeData.url = request.url
         }
+    
+        if (response.headers){
+            const cmsdStaticHeader = response.headers['cmsd-static'];
+            if (cmsdStaticHeader) {
+                responseModeData.cmsds = btoa(cmsdStaticHeader);
+            }
+
+            const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
+            if (cmsdDynamicHeader) {
+                responseModeData.cmsdd = btoa(cmsdDynamicHeader);
+            }
+        }
 
         return {...cmcdData, ...responseModeData};
     }
