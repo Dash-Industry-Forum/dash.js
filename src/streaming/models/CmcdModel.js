@@ -435,6 +435,8 @@ function CmcdModel() {
             }
         }
 
+        data.df = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+
         return data;
     }
 
