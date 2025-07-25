@@ -63,7 +63,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings,
+        supportsChangeType, settings, totalVideoFrames,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -806,6 +806,14 @@ function StreamController() {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
+            }
+
+            if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing && !videoModel.isPaused()){
+                if(playbackQuality.totalVideoFrames && playbackQuality.totalVideoFrames > 0 && playbackQuality.totalVideoFrames <= totalVideoFrames ){
+                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
+                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                }
+                totalVideoFrames = playbackQuality.totalVideoFrames
             }
         }
     }
@@ -1561,6 +1569,7 @@ function StreamController() {
         supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
+        totalVideoFrames = 0;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

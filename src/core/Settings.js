@@ -109,6 +109,7 @@ import Events from './events/Events';
  *                lowLatencyStallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
+ *                handleVideoFramesNotAdvancing: false,
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
@@ -354,6 +355,8 @@ import Events from './events/Events';
  * Specifies if we record stalled streams once the stall threshold is reached
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
  * Specified if we fire manual stall events once the stall threshold is reached
+ * @property {boolean} [handleVideoFramesNotAdvancing=false]
+ * Seeeks to the current time whenver the player is playing but stops advancing it's total frame count to handle https://issues.chromium.org/issues/41243192.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
@@ -989,6 +992,7 @@ function Settings() {
                 lowLatencyStallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
+                handleVideoFramesNotAdvancing: false,
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
                 mediaSourceDurationInfinity: true,
