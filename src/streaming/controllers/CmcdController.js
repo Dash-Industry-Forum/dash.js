@@ -600,14 +600,18 @@ function CmcdController() {
         }
     
         if (response.headers){
-            const cmsdStaticHeader = response.headers['cmsd-static'];
-            if (cmsdStaticHeader) {
-                responseModeData.cmsds = btoa(cmsdStaticHeader);
-            }
+            try {
+                const cmsdStaticHeader = response.headers['cmsd-static'];
+                if (cmsdStaticHeader) {
+                    responseModeData.cmsds = btoa(cmsdStaticHeader);
+                }
 
-            const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
-            if (cmsdDynamicHeader) {
-                responseModeData.cmsdd = btoa(cmsdDynamicHeader);
+                const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
+                if (cmsdDynamicHeader) {
+                    responseModeData.cmsdd = btoa(cmsdDynamicHeader);
+                }
+            } catch (e) {
+                logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
             }
         }
 
