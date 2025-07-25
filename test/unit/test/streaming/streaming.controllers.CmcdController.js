@@ -2147,6 +2147,56 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('ttlb');
         });
 
+        it('should send a response report with cmsdd and cmsds keys when CMSD headers are present', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment'],
+                            enabledKeys: ['cmsdd', 'cmsds']
+                        }]
+                    }
+                }
+            });
+
+            const cmsdStaticHeaderValue = 'sf=d,st=v,sid="test-sid"';
+            const cmsdDynamicHeaderValue = 'br=3200,d=4004,ot=v,tb=60000';
+
+            const mockResponse = {
+                status: 200,
+                headers: {
+                    'cmsd-static': cmsdStaticHeaderValue,
+                    'cmsd-dynamic': cmsdDynamicHeaderValue
+                },
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: { sid: 'session-id' }
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+
+            expect(metrics).to.have.property('cmsds', btoa(cmsdStaticHeaderValue));
+            expect(metrics).to.have.property('cmsdd', btoa(cmsdDynamicHeaderValue));
+        });
+
         it('should not send a report if enabled keys is empty', () => {
             settings.update({
                 streaming: {
