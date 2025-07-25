@@ -106,6 +106,7 @@ import Events from './events/Events';
  *                hybridSwitchBufferTime: NaN,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.3,
+ *                lowLatencyStallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
  *                avoidCurrentTimeRangePruning: false,
@@ -345,6 +346,8 @@ import Events from './events/Events';
  * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
  * @property {number} [stallThreshold=0.3]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * @property {number} [lowLatencyStallThreshold=0.3]
+ * Low Latency stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune. 
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
@@ -983,6 +986,7 @@ function Settings() {
                 hybridSwitchBufferTime: NaN,
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
+                lowLatencyStallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
                 avoidCurrentTimeRangePruning: false,
