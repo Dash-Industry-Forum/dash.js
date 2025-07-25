@@ -986,6 +986,7 @@ declare namespace dashjs {
                 hybridSwitchBufferTime?: number,
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
+                lowLatencyStallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
                 avoidCurrentTimeRangePruning?: boolean
