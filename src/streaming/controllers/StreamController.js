@@ -804,27 +804,30 @@ function StreamController() {
     function _onPlaybackTimeUpdated(/*e*/) {
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
-            if (playbackQuality) {
-                dashMetrics.addDroppedFrames(playbackQuality);
+
+            if(playbackQuality &&
+                typeof playbackQuality.totalVideoFrames === 'number' 
+                && !videoModel.isPaused()
+                && !videoModel.isStalled() // Give the player a chnage to recover first, ensures rate is not 0.
+                && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
+                && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
+                && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
+                && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
+            ){
+                if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
+                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
+                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                }
+                else{
+                    logger.warn('Video is frozen, enabling handleVideoFramesNotAdvancing attempts to correct this')
+                }
             }
 
-            if(!videoModel.isPaused()){
-                if(playbackQuality.totalVideoFrames 
-                    && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
-                    && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
-                    && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
-                    && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
-                ){
-                    if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
-                        logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
-                        videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
-                    }
-                    else{
-                        logger.warn('Video is frozen, enabling handleVideoFramesNotAdvancing attempts to correct this')
-                    }
-                }
+            if (playbackQuality) {
+                dashMetrics.addDroppedFrames(playbackQuality);
                 totalVideoFrames = playbackQuality.totalVideoFrames
             }
+
         }
     }
 
