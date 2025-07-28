@@ -1235,7 +1235,7 @@ describe('CmcdController', function () {
 
             describe('getQueryParameter() return CMCD data correctly', () => {
 
-                it('getQueryParameter() sould return cmcd data', function () {
+it('getQueryParameter() should return cmcd data', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
 
