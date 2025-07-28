@@ -455,7 +455,7 @@ describe('CmcdController', function () {
 
             describe('getHeadersParameters() return CMCD data correctly', () => {
 
-                it('getHeadersParameters() sould return cmcd data', function () {
+                it('getHeadersParameters() should return cmcd data', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
 
@@ -1235,7 +1235,7 @@ describe('CmcdController', function () {
 
             describe('getQueryParameter() return CMCD data correctly', () => {
 
-it('getQueryParameter() should return cmcd data', function () {
+                it('getQueryParameter() should return cmcd data', function () {
                     const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                     const MEDIA_TYPE = 'video';
 
