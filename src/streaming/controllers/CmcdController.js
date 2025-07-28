@@ -199,30 +199,25 @@ function CmcdController() {
 
     function getQueryParameter(request, cmcdData, targetSettings) {
         try {
-            if (isCmcdEnabled(targetSettings)) {
+            cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
-                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
+            const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+            const finalPayloadString = encodeCmcd(cmcdData, encodeOptions);
 
-                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
-                const finalPayloadString = encodeCmcd(cmcdData, encodeOptions);
-
-                const eventBusData = {
-                    url: request.url,
-                    mediaType: request.mediaType,
-                    requestType: request.type,
-                    cmcdData,
-                    cmcdString: finalPayloadString,
-                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
-                }
-
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
-                return {
-                    key: CMCD_PARAM,
-                    value: finalPayloadString
-                };
+            const eventBusData = {
+                url: request.url,
+                mediaType: request.mediaType,
+                requestType: request.type,
+                cmcdData,
+                cmcdString: finalPayloadString,
+                mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
             }
-    
-            return null;
+
+            eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
+            return {
+                key: CMCD_PARAM,
+                value: finalPayloadString
+            };
         } catch (e) {
             return null;
         }
@@ -257,11 +252,13 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
-                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
-                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
-                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
-                } else {
-                    _sendCmcdDataReport(httpRequest);
+                if (isCmcdEnabled(targetSettings)) {
+                    _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                    if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                        cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                    } else {
+                        _sendCmcdDataReport(httpRequest);
+                    }
                 }
             }
         });
@@ -290,7 +287,7 @@ function CmcdController() {
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
 
-        if (isIncludedFilters && (isCmcdEnabled(targetSettings))) {
+        if (isIncludedFilters) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
@@ -339,25 +336,21 @@ function CmcdController() {
 
     function getHeaderParameters(request, cmcdData, targetSettings) {
         try {
-            if (isCmcdEnabled(targetSettings)) {
-                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
+            cmcdData = cmcdData || cmcdModel.getCmcdData(request);
 
-                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
-                const headers = toCmcdHeaders(cmcdData, encodeOptions);
+            const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+            const headers = toCmcdHeaders(cmcdData, encodeOptions);
 
-                const eventBusData = {
-                    url: request.url,
-                    mediaType: request.mediaType,
-                    cmcdData,
-                    headers,
-                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
-                }
-
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
-                return headers;
+            const eventBusData = {
+                url: request.url,
+                mediaType: request.mediaType,
+                cmcdData,
+                headers,
+                mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
             }
 
-            return null;
+            eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
+            return headers;
         } catch (e) {
             return null;
         }
@@ -365,26 +358,22 @@ function CmcdController() {
 
     function getJsonParameters(request, cmcdData, targetSettings){
         try {
-            if (isCmcdEnabled(targetSettings)) {
-                cmcdData = cmcdData || cmcdModel.getCmcdData(request);
-                const encodeOptions = _createCmcdEncodeOptions(targetSettings);
-                const body = toCmcdUrl(cmcdData, encodeOptions);
+            cmcdData = cmcdData || cmcdModel.getCmcdData(request);
+            const encodeOptions = _createCmcdEncodeOptions(targetSettings);
+            const body = toCmcdUrl(cmcdData, encodeOptions);
 
-                const eventBusData = {
-                    url: request.url,
-                    mediaType: request.mediaType,
-                    requestType: request.type,
-                    cmcdData,
-                    cmcdString: body,
-                    mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
-                }
-
-                eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
-
-                return body;
+            const eventBusData = {
+                url: request.url,
+                mediaType: request.mediaType,
+                requestType: request.type,
+                cmcdData,
+                cmcdString: body,
+                mode: targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode,
             }
 
-            return null;
+            eventBus.trigger(MetricsReportingEvents.CMCD_DATA_GENERATED, eventBusData);
+
+            return body;
         } catch (e) {
             return null;
         }
@@ -530,7 +519,9 @@ function CmcdController() {
 
         request.cmcd = cmcdRequestData;
     
-        _updateRequestWithCmcd(request, cmcdRequestData, null);
+        if (isCmcdEnabled()) {
+            _updateRequestWithCmcd(request, cmcdRequestData, null);
+        }
     
         commonMediaRequest = {
             ...commonMediaRequest,
@@ -566,11 +557,13 @@ function CmcdController() {
                 httpRequest.method = HTTPRequest.GET;
                 httpRequest.cmcd = cmcdData;
                 
-                _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
-                if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
-                    cmcdBatchController.addReport(targetSettings, httpRequest.body)
-                } else {
-                    _sendCmcdDataReport(httpRequest);
+                if (isCmcdEnabled(targetSettings)) {
+                    _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                    if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                        cmcdBatchController.addReport(targetSettings, httpRequest.body)
+                    } else {
+                        _sendCmcdDataReport(httpRequest);
+                    }
                 }
             }
         });
