@@ -1701,6 +1701,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1729,6 +1730,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1763,6 +1765,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1795,6 +1798,8 @@ describe('CmcdController', function () {
                     }
                 }
             });
+
+            cmcdController.initialize();
 
             const errorPayload = {
                 error: {
@@ -1837,6 +1842,8 @@ describe('CmcdController', function () {
                 }
             });
 
+            cmcdController.initialize();
+
             const errorPayload = {
                 error: {
                     code: 456,
@@ -1869,8 +1876,44 @@ describe('CmcdController', function () {
                 }
             });
 
+            cmcdController.initialize();
+
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.called).to.be.false;
+        });
+
+        it('should increment the sn key for each event report', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            events: ['ps']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const request1 = urlLoaderMock.load.firstCall.args[0].request;
+            const url1 = new URL(request1.url);
+            const cmcdString1 = url1.searchParams.get('CMCD');
+            const metrics1 = decodeCmcd(cmcdString1);
+            expect(metrics1).to.have.property('sn', 1);
+            
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
+            const request2 = urlLoaderMock.load.secondCall.args[0].request;
+            const url2 = new URL(request2.url);
+            const cmcdString2 = url2.searchParams.get('CMCD');
+            const metrics2 = decodeCmcd(cmcdString2);
+            expect(metrics2).to.have.property('sn', 2);
         });
     });
 
@@ -2090,6 +2133,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
@@ -2141,6 +2185,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             const cmsdStaticHeaderValue = 'sf=d,st=v,sid="test-sid"';
             const cmsdDynamicHeaderValue = 'br=3200,d=4004,ot=v,tb=60000';
@@ -2191,6 +2236,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2226,6 +2272,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2261,6 +2308,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2297,6 +2345,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2342,6 +2391,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
@@ -2394,6 +2444,7 @@ describe('CmcdController', function () {
                     }
                 }
             });
+            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
@@ -2425,6 +2476,54 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('rc');
             expect(metrics).to.not.have.property('e');
         });
-    });
 
+        it('should increment the sn key for each response report', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            cmcdMode: 'response',
+                            mode: 'query',
+                            includeOnRequests: ['segment']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            const mockResponse = {
+                status: 200,
+                request: {
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: {}
+                }
+            };
+
+            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            interceptor(mockResponse);
+            interceptor(mockResponse);
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+
+            const request1 = urlLoaderMock.load.firstCall.args[0].request;
+            const url1 = new URL(request1.url);
+            const cmcdString1 = url1.searchParams.get('CMCD');
+            const metrics1 = decodeCmcd(cmcdString1);
+            expect(metrics1).to.have.property('sn', 1);
+
+            const request2 = urlLoaderMock.load.secondCall.args[0].request;
+            const url2 = new URL(request2.url);
+            const cmcdString2 = url2.searchParams.get('CMCD');
+            const metrics2 = decodeCmcd(cmcdString2);
+            expect(metrics2).to.have.property('sn', 2);
+        });
+    });
 });

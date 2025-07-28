@@ -58,7 +58,8 @@ function CmcdController() {
         urlLoader,
         mediaPlayerModel,
         dashMetrics,
-        errHandler;
+        errHandler,
+        targets;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -71,7 +72,6 @@ function CmcdController() {
     function setup() {
         logger = debug.getLogger(instance);
         clientDataReportingController = ClientDataReportingController(context).getInstance();
-
         reset();
     }
 
@@ -105,6 +105,8 @@ function CmcdController() {
     }
 
     function initialize(autoPlay) {
+        targets = settings.get().streaming.cmcd.targets
+
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
@@ -147,7 +149,6 @@ function CmcdController() {
     let timeOuts = [];
 
     function _initializeEventModeTimeInterval() {
-        const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval, events }) => {
             if (!events || !events.includes(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL)) {
@@ -224,7 +225,6 @@ function CmcdController() {
     }
 
     function triggerCmcdEventMode(event){
-        const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
 
         if (eventModeTargets.length === 0) {
@@ -252,8 +252,15 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
+                if (!targetSettings.sn){
+                    targetSettings.sn = 0;
+                }
+                targetSettings.sn += 1;
+                let cmcd = {...cmcdData, sn: targetSettings.sn}
+                httpRequest.cmcd = cmcd;
+
                 if (isCmcdEnabled(targetSettings)) {
-                    _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                    _updateRequestWithCmcd(httpRequest, cmcd, targetSettings)
                     if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
                         cmcdBatchController.addReport(targetSettings, httpRequest.body)
                     } else {
@@ -547,7 +554,6 @@ function CmcdController() {
         };
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
-        const targets = settings.get().streaming.cmcd.targets
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled && cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
@@ -555,10 +561,16 @@ function CmcdController() {
                 httpRequest.url = targetSettings.url;
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
-                httpRequest.cmcd = cmcdData;
+                
+                if (!targetSettings.sn){
+                    targetSettings.sn = 0;
+                }
+                targetSettings.sn += 1;
+                let cmcd = {...cmcdData, sn: targetSettings.sn}
+                httpRequest.cmcd = cmcd;
                 
                 if (isCmcdEnabled(targetSettings)) {
-                    _updateRequestWithCmcd(httpRequest, cmcdData, targetSettings)
+                    _updateRequestWithCmcd(httpRequest, cmcd, targetSettings)
                     if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
                         cmcdBatchController.addReport(targetSettings, httpRequest.body)
                     } else {
@@ -626,6 +638,9 @@ function CmcdController() {
         timeOuts = [];
 
         cmcdModel.resetInitialSettings();
+        cmcdBatchController.reset();
+        
+        targets = []
     }
 
     instance = {
