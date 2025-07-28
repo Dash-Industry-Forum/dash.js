@@ -812,7 +812,7 @@ function StreamController() {
                 if(playbackQuality.totalVideoFrames 
                     && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
                     && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
-                    && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA
+                    && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
                     && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
                 ){
                     if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
