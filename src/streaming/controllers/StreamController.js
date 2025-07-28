@@ -808,10 +808,20 @@ function StreamController() {
                 dashMetrics.addDroppedFrames(playbackQuality);
             }
 
-            if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing && !videoModel.isPaused()){
-                if(playbackQuality.totalVideoFrames && playbackQuality.totalVideoFrames > 0 && playbackQuality.totalVideoFrames <= totalVideoFrames ){
-                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
-                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+            if(!videoModel.isPaused()){
+                if(playbackQuality.totalVideoFrames 
+                    && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
+                    && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
+                    && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA
+                    && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
+                ){
+                    if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
+                        logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
+                        videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                    }
+                    else{
+                        logger.warn('Video is frozen, enabling handleVideoFramesNotAdvancing attempts to correct this')
+                    }
                 }
                 totalVideoFrames = playbackQuality.totalVideoFrames
             }
