@@ -59,7 +59,8 @@ function CmcdController() {
         mediaPlayerModel,
         dashMetrics,
         errHandler,
-        targets;
+        targets,
+        requestModeSequenceNumber;
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
@@ -106,6 +107,7 @@ function CmcdController() {
 
     function initialize(autoPlay) {
         targets = settings.get().streaming.cmcd.targets
+        requestModeSequenceNumber = 0;
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
@@ -519,9 +521,11 @@ function CmcdController() {
 
         const request = commonMediaRequest.customData.request;
     
+        requestModeSequenceNumber += 1;
         let cmcdRequestData = {
             ...cmcdModel.getCmcdData(request),
-            ...cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST)
+            ...cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST),
+            sn: requestModeSequenceNumber
         };
 
         request.cmcd = cmcdRequestData;
@@ -641,6 +645,7 @@ function CmcdController() {
         cmcdBatchController.reset();
         
         targets = []
+        requestModeSequenceNumber = 0;
     }
 
     instance = {
