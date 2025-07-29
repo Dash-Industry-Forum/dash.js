@@ -253,6 +253,8 @@ function CapabilitiesFilter() {
                 return config;
         }
 
+        config = _addGenericAttributesToConfig(prslRep, config);
+
         return _addGenericAttributesToConfig(rep, config);
     }
 
@@ -266,10 +268,19 @@ function CapabilitiesFilter() {
             isSupported: true
         }
 
-        if (rep.tagName === DashConstants.Preselection && prslRep) {
-            config.width = prslRep.width || null;
-            config.height = prslRep.height || null;
-            config.bitrate = prslRep.bandwidth || null;
+        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+            if (!config.width) {
+                config.width = prslRep.width || null;
+            }
+            if (!config.height) {
+                config.height = prslRep.height || null;
+            }
+            if (!config.bitrate) {
+                config.bitrate = prslRep.bandwidth || null;
+            }
+            if (!config.framerate) {
+                config.framerate = adapter.getFramerate(prslRep) || null;
+            }
         }
 
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
@@ -357,8 +368,12 @@ function CapabilitiesFilter() {
         var bitrate = rep ? rep.bandwidth || null : null;
 
         if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
-            samplerate = prslRep.audioSamplingRate || null;
-            bitrate = prslRep.bandwidth || null;
+            if (!samplerate) {
+                samplerate = prslRep.audioSamplingRate || null;
+            }
+            if (!bitrate) {
+                bitrate = prslRep.bandwidth || null;
+            }
         }
 
         return {
