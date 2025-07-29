@@ -808,7 +808,7 @@ function StreamController() {
             if(playbackQuality &&
                 typeof playbackQuality.totalVideoFrames === 'number' 
                 && !videoModel.isPaused()
-                && !videoModel.isStalled() // Give the player a chnage to recover first, ensures rate is not 0.
+                && !videoModel.isStalled() // Give the player a chance to recover first
                 && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
                 && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
                 && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
