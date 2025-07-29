@@ -435,7 +435,7 @@ function CmcdModel() {
             }
         }
 
-        if (_shouldIncludeDroppedFrames(mediaType)) {
+        if (mediaType && _shouldIncludeDroppedFrames(mediaType)) {
             const droppedFrames = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
             if (droppedFrames > 0) {
                 data.df = droppedFrames;
