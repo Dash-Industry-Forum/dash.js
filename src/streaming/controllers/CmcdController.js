@@ -252,11 +252,11 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
-                if (!targetSettings.sn){
-                    targetSettings.sn = 0;
+                if (!targetSettings.sequenceNumber){
+                    targetSettings.sequenceNumber = 0;
                 }
-                targetSettings.sn += 1;
-                let cmcd = {...cmcdData, sn: targetSettings.sn}
+                targetSettings.sequenceNumber += 1;
+                let cmcd = {...cmcdData, sn: targetSettings.sequenceNumber}
                 httpRequest.cmcd = cmcd;
 
                 if (isCmcdEnabled(targetSettings)) {
@@ -562,11 +562,11 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
                 
-                if (!targetSettings.sn){
-                    targetSettings.sn = 0;
+                if (!targetSettings.sequenceNumber){
+                    targetSettings.sequenceNumber = 0;
                 }
-                targetSettings.sn += 1;
-                let cmcd = {...cmcdData, sn: targetSettings.sn}
+                targetSettings.sequenceNumber += 1;
+                let cmcd = {...cmcdData, sn: targetSettings.sequenceNumber}
                 httpRequest.cmcd = cmcd;
                 
                 if (isCmcdEnabled(targetSettings)) {
