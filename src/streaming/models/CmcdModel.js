@@ -99,7 +99,7 @@ function CmcdModel() {
 
     function _getCmcdDataForMediaSegment(request, mediaType) {
         _initForMediaType(mediaType);
-        const data = getGenericCmcdData();
+        const data = getGenericCmcdData(mediaType);
         const encodedBitrate = _getBitrateByRequest(request);
         const d = _getObjectDurationByRequest(request);
         const mtp = _getMeasuredThroughputByType(mediaType);
@@ -384,7 +384,7 @@ function CmcdModel() {
         internalData.ec = errorCode;
     }
 
-    function getGenericCmcdData() {
+    function getGenericCmcdData(mediaType) {
         const cmcdParametersFromManifest = getCmcdParametersFromManifest();
         const data = {};
 
@@ -435,9 +435,17 @@ function CmcdModel() {
             }
         }
 
-        data.df = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+        if (_shouldIncludeDroppedFrames(mediaType)) {
+            data.df = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+        }
 
         return data;
+    }
+
+    function _shouldIncludeDroppedFrames(mediaType) {
+        return mediaType === Constants.VIDEO ||
+               mediaType === Constants.AUDIO ||
+               mediaType === Constants.OTHER;
     }
 
     function triggerCmcdEventMode(event){
