@@ -106,7 +106,10 @@ function CmcdController() {
     }
 
     function initialize(autoPlay) {
-        targets = settings.get().streaming.cmcd.targets
+        const targetsFromSettings = settings.get().streaming.cmcd.targets;
+        if (targetsFromSettings) {
+            targets = JSON.parse(JSON.stringify(targetsFromSettings));
+        }
         requestModeSequenceNumber = 0;
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
