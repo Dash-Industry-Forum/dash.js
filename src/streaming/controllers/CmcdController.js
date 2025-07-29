@@ -59,7 +59,7 @@ function CmcdController() {
         mediaPlayerModel,
         dashMetrics,
         errHandler,
-        targets,
+        targetSequenceNumbers,
         requestModeSequenceNumber;
 
     let context = this.context;
@@ -106,10 +106,7 @@ function CmcdController() {
     }
 
     function initialize(autoPlay) {
-        const targetsFromSettings = settings.get().streaming.cmcd.targets;
-        if (targetsFromSettings) {
-            targets = JSON.parse(JSON.stringify(targetsFromSettings));
-        }
+        targetSequenceNumbers = new Map();
         requestModeSequenceNumber = 0;
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
@@ -154,6 +151,7 @@ function CmcdController() {
     let timeOuts = [];
 
     function _initializeEventModeTimeInterval() {
+        const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval, events }) => {
             if (!events || !events.includes(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL)) {
@@ -230,6 +228,7 @@ function CmcdController() {
     }
 
     function triggerCmcdEventMode(event){
+        const targets = settings.get().streaming.cmcd.targets;
         const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
 
         if (eventModeTargets.length === 0) {
@@ -257,11 +256,8 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
                 httpRequest.method = HTTPRequest.GET;
 
-                if (!targetSettings.sequenceNumber){
-                    targetSettings.sequenceNumber = 0;
-                }
-                targetSettings.sequenceNumber += 1;
-                let cmcd = {...cmcdData, sn: targetSettings.sequenceNumber}
+                const sequenceNumber = _getNextSequenceNumber(targetSettings);
+                let cmcd = {...cmcdData, sn: sequenceNumber}
                 httpRequest.cmcd = cmcd;
 
                 if (isCmcdEnabled(targetSettings)) {
@@ -561,6 +557,7 @@ function CmcdController() {
         };
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
+        const targets = settings.get().streaming.cmcd.targets;
         const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled && cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
@@ -569,11 +566,8 @@ function CmcdController() {
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
                 httpRequest.method = HTTPRequest.GET;
                 
-                if (!targetSettings.sequenceNumber){
-                    targetSettings.sequenceNumber = 0;
-                }
-                targetSettings.sequenceNumber += 1;
-                let cmcd = {...cmcdData, sn: targetSettings.sequenceNumber}
+                const sequenceNumber = _getNextSequenceNumber(targetSettings);
+                let cmcd = {...cmcdData, sn: sequenceNumber}
                 httpRequest.cmcd = cmcd;
                 
                 if (isCmcdEnabled(targetSettings)) {
@@ -630,6 +624,18 @@ function CmcdController() {
         return {...cmcdData, ...responseModeData};
     }
 
+    function _getTargetKey(target) {
+        return `${target.url}_${target.cmcdMode}_${target.enabled}`;
+    }
+
+    function _getNextSequenceNumber(target) {
+        const key = _getTargetKey(target);
+        const current = targetSequenceNumbers.get(key) || 0;
+        const next = current + 1;
+        targetSequenceNumbers.set(key, next);
+        return next;
+    }
+    
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
@@ -647,7 +653,9 @@ function CmcdController() {
         cmcdModel.resetInitialSettings();
         cmcdBatchController.reset();
         
-        targets = []
+        if (targetSequenceNumbers) {
+            targetSequenceNumbers.clear();
+        }
         requestModeSequenceNumber = 0;
     }
 

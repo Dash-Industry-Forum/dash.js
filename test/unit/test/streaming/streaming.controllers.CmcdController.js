@@ -1701,7 +1701,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1730,7 +1729,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1765,7 +1763,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             
@@ -1798,8 +1795,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-
-            cmcdController.initialize();
 
             const errorPayload = {
                 error: {
@@ -1842,8 +1837,6 @@ describe('CmcdController', function () {
                 }
             });
 
-            cmcdController.initialize();
-
             const errorPayload = {
                 error: {
                     code: 456,
@@ -1875,8 +1868,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-
-            cmcdController.initialize();
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.called).to.be.false;
@@ -2133,7 +2124,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
@@ -2185,7 +2175,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             const cmsdStaticHeaderValue = 'sf=d,st=v,sid="test-sid"';
             const cmsdDynamicHeaderValue = 'br=3200,d=4004,ot=v,tb=60000';
@@ -2236,7 +2225,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2272,7 +2260,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2308,7 +2295,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2345,7 +2331,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             const mockResponse = {
                 status: 200,
@@ -2391,7 +2376,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
@@ -2444,7 +2428,6 @@ describe('CmcdController', function () {
                     }
                 }
             });
-            cmcdController.initialize();
 
             let currentTime = new Date(Date.now());
             const mockResponse = {
