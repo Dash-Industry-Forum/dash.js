@@ -253,7 +253,9 @@ function CapabilitiesFilter() {
                 return config;
         }
 
-        config = _addGenericAttributesToConfig(prslRep, config);
+        if (prslRep) {
+            config = _addGenericAttributesToConfig(prslRep, config);
+        }
 
         return _addGenericAttributesToConfig(rep, config);
     }
