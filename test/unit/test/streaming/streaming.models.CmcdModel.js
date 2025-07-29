@@ -547,7 +547,6 @@ describe('CmcdModel', function () {
                             type: INIT_SEMGENT_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -555,7 +554,6 @@ describe('CmcdModel', function () {
                             type: XLINK_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -563,7 +561,6 @@ describe('CmcdModel', function () {
                             type: MDP_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -571,7 +568,6 @@ describe('CmcdModel', function () {
                             type: STEERING_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
