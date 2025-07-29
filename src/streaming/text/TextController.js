@@ -93,10 +93,11 @@ function TextController(config) {
         eventBus.on(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
         eventBus.on(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         eventBus.on(Events.MEDIAINFO_UPDATED, _onMediaInfoUpdated, instance);
+        eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
-            eventBus.on(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
             eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         }
+        eventBus.on(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     function initializeForStream(streamInfo) {
@@ -270,11 +271,17 @@ function TextController(config) {
     function _onPlaybackTimeUpdated(e) {
         try {
             const streamId = e.streamId;
+            const tracks = textTracks[streamId];
 
-            if (!textTracks[streamId] || isNaN(e.time)) {
+            if (!tracks || isNaN(e.time)) {
                 return;
             }
-            textTracks[streamId].manualCueProcessing(e.time);
+
+            tracks.updateTextTrackWindow(e.time);
+
+            if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
+                tracks.manualCueProcessing(e.time);
+            }
         } catch (err) {
         }
     }
@@ -289,6 +296,21 @@ function TextController(config) {
             textTracks[streamId].disableManualTracks();
         } catch (e) {
 
+        }
+    }
+
+    function _onPlaybackSeeked(e) {
+        try {
+            if (!textTracks[e.streamId]) {
+                return;
+            }
+
+            const currentTime = videoModel.getTime() || 0;
+            const tracks = textTracks[e.streamId];
+
+            tracks.updateTextTrackWindow(currentTime, true);
+        } catch (e) {
+            logger.error(e);
         }
     }
 
@@ -373,6 +395,8 @@ function TextController(config) {
         }
 
         textTracks[streamId].disableManualTracks();
+
+        textTracks[streamId].invalidateCueWindow();
 
         let currentTrackInfo = textTracks[streamId].getCurrentTextTrackInfo();
         let currentNativeTrackInfo = (currentTrackInfo) ? videoModel.getTextTrack(currentTrackInfo.kind, currentTrackInfo.id, currentTrackInfo.lang, currentTrackInfo.isTTML, currentTrackInfo.isEmbedded) : null;
@@ -546,10 +570,11 @@ function TextController(config) {
         eventBus.off(Events.DVB_FONT_DOWNLOAD_FAILED, _onFontDownloadFailure, instance);
         eventBus.off(Events.DVB_FONT_DOWNLOAD_COMPLETE, _onFontDownloadSuccess, instance);
         eventBus.off(Events.MEDIAINFO_UPDATED, _onMediaInfoUpdated, instance);
+        eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
         if (settings.get().streaming.text.webvtt.customRenderingEnabled) {
-            eventBus.off(Events.PLAYBACK_TIME_UPDATED, _onPlaybackTimeUpdated, instance);
-            eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance)
+            eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         }
+        eventBus.off(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     instance = {

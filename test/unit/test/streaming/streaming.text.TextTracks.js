@@ -1,13 +1,19 @@
 import TextTracks from '../../../../src/streaming/text/TextTracks.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import VideoModelMock from '../../mocks/VideoModelMock.js';
 import Settings from '../../../../src/core/Settings.js';
+import chai, {expect} from 'chai';
+import spies from 'chai-spies';
+import sinon from 'sinon';
 
-const SUBTITLE_DATA = 'subtitle lign 1';
-import chai from 'chai';
-const expect = chai.expect;
+chai.use(spies);
+Events.extend(MediaPlayerEvents);
+
+const SUBTITLE_DATA = 'subtitle line 1';
+
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
@@ -34,6 +40,16 @@ describe('TextTracks', function () {
             settings
         });
         textTracks.initialize();
+
+        // Explicitly configure buffer settings, for testing virtual scrolling
+        settings.update({
+            streaming: {
+                buffer: {
+                    bufferToKeep: 20,
+                    bufferPruningInterval: 10
+                }
+            }
+        });
     });
 
     afterEach(function () {
@@ -88,6 +104,9 @@ describe('TextTracks', function () {
 
             textTracks.addCaptions(0, 0, [{type: 'noHtml', data: SUBTITLE_DATA, start: 0, end: 2}]);
 
+            // Update the TextTrack window so that the test cue is added to the TextTrack
+            textTracks.updateTextTrackWindow(0);
+
             expect(videoModelMock.getCurrentCue(track).text).to.equal(SUBTITLE_DATA);
         });
 
@@ -113,6 +132,9 @@ describe('TextTracks', function () {
                 {type: 'noHtml', data: 'another unique cue', start: 4, end: 6},
             ]);
 
+            // Update the TextTrack window so that all test cues are added to the TextTrack
+            textTracks.updateTextTrackWindow(0);
+
             expect(track.cues.length).to.equal(3);
         });
 
@@ -134,11 +156,140 @@ describe('TextTracks', function () {
 
             textTracks.addCaptions(0, 0, cues);
 
+            // Update the TextTrack window so that all test cues are added to the TextTrack
+            textTracks.updateTextTrackWindow(0);
+
             const allCues = track.cues
             expect(allCues.length).to.equal(2);
             expect(allCues[0].text).to.equal('First cue');
             expect(allCues[1].text).to.equal('Second cue');
             expect(allCues[0].cueID).to.not.equal(allCues[1].cueID);
+        });
+    });
+
+    describe('Method updateTextTrackWindow', function () {
+        it('should only add to the TextTrack cues within a window around current time', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+
+            const track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Cue at 0s', start: 0, end: 2},
+                {type: 'noHtml', data: 'Cue at 30s', start: 30, end: 32},
+                {type: 'noHtml', data: 'Cue at 40s', start: 40, end: 42},
+                {type: 'noHtml', data: 'Cue at 60s', start: 60, end: 62},
+                {type: 'noHtml', data: 'Cue at 100s', start: 100, end: 102},
+                {type: 'noHtml', data: 'Cue at 120s', start: 120, end: 122}
+            ]);
+
+            // Update window at time 0 - window is [0, 20)
+            textTracks.updateTextTrackWindow(0, true);
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Cue at 0s');
+
+            // Update window at time 30 - window is [10, 50)
+            textTracks.updateTextTrackWindow(30, true);
+            expect(track.cues.length).to.equal(2);
+            expect(track.cues[0].text).to.equal('Cue at 30s');
+            expect(track.cues[1].text).to.equal('Cue at 40s');
+
+            // Update window at time 60 - window is [40, 80)
+            textTracks.updateTextTrackWindow(60, true);
+            expect(track.cues.length).to.equal(2);
+            expect(track.cues[0].text).to.equal('Cue at 40s');
+            expect(track.cues[1].text).to.equal('Cue at 60s');
+
+            // Update window at time 100 - window is [80, 120)
+            textTracks.updateTextTrackWindow(100, true);
+            expect(track.cues.length).to.equal(1);
+            expect(track.cues[0].text).to.equal('Cue at 100s');
+        });
+
+        it('should only update the TextTrack if enough time has passed since the last update', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+
+            textTracks.createTracks();
+            const track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            // Mock Date.now to test different time intervals
+            const nowStub = sinon.stub(Date, 'now');
+            nowStub.returns(0);
+
+            const clearTrack = () => {
+                while (track.cues.length > 0) {
+                    track.removeCue(track.cues[0]);
+                }
+            };
+
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Test cue', start: 0, end: 10}
+            ]);
+
+            // First update should work
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(1);
+
+            clearTrack();
+
+            // Calling updateTextTrackWindow again doesn't affect a TextTrack that has been updated in the last 10 seconds
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(0);
+
+            // At 9999ms - still within the interval, should not do anything
+            nowStub.returns(9999);
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(0);
+
+            // At 10000ms (exactly at the interval) - should update the TextTrack
+            nowStub.returns(10000);
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(1);
+
+            // Restore original Date.now
+            nowStub.restore();
+        });
+
+        it('should always update the TextTrack when force parameter is true', function () {
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+            const track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Test cue', start: 0, end: 10}
+            ]);
+
+            // First update should work
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(1);
+
+            // Clear the track
+            while (track.cues.length > 0) {
+                track.removeCue(track.cues[0]);
+            }
+
+            // Normal update should be ignored, since not enough time has passed
+            textTracks.updateTextTrackWindow(5);
+            expect(track.cues.length).to.equal(0);
+
+            // Force update should always update the TextTrack
+            textTracks.updateTextTrackWindow(5, true);
+            expect(track.cues.length).to.equal(1);
         });
     });
 });
