@@ -63,7 +63,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings, totalVideoFrames,
+        supportsChangeType, settings, totalVideoFrames, framesNotAdvancingErrors,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -814,13 +814,17 @@ function StreamController() {
                 && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
                 && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
             ){
-                if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
-                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
+                framesNotAdvancingErrors++;
+                if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing > 0 && framesNotAdvancingErrors >= settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
+                    logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
                     videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
                 }
                 else{
-                    logger.warn('Video is frozen, enabling handleVideoFramesNotAdvancing attempts to correct this')
+                    logger.warn(`Video is potentially frozen, seen this issue ${framesNotAdvancingErrors} consecutive times`)
                 }
+            }
+            else{
+                framesNotAdvancingErrors = 0;
             }
 
             if (playbackQuality) {
@@ -1583,6 +1587,7 @@ function StreamController() {
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         totalVideoFrames = 0;
+        framesNotAdvancingErrors = 0;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0
