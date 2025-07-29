@@ -625,7 +625,7 @@ function CmcdController() {
     }
 
     function _getTargetKey(target) {
-        return `${target.url}_${target.cmcdMode}_${target.enabled}`;
+        return `${target.url}_${target.cmcdMode}_${target.mode}`;
     }
 
     function _getNextSequenceNumber(target) {
@@ -635,7 +635,7 @@ function CmcdController() {
         targetSequenceNumbers.set(key, next);
         return next;
     }
-    
+
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
