@@ -106,6 +106,7 @@ function CmcdModel() {
         const dl = _getDeadlineByType(mediaType);
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
+        const tpb = _getTopPlayableBitrate(mediaType);
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(mediaType);
@@ -167,6 +168,10 @@ function CmcdModel() {
 
         if (!isNaN(tb)) {
             data.tb = tb;
+        }
+
+        if (tpb != null && !isNaN(tpb)) {
+            data.tpb = tpb;
         }
 
         if (!isNaN(pr) && pr !== 1) {
@@ -234,6 +239,31 @@ function CmcdModel() {
                 return rep.bitrateInKbit
             });
             return Math.max(...bitrates)
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getTopPlayableBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+            
+            for (let streamProcessor of streamProcessors) {
+                if (streamProcessor.getType() === mediaType) {
+                    const mediaInfo = streamProcessor.getMediaInfo();
+                    if (mediaInfo && abrController) {
+                        const filteredRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
+                        if (filteredRepresentations && filteredRepresentations.length > 0) {
+                            const bitrates = filteredRepresentations.map((rep) => rep.bitrateInKbit);
+                            return Math.max(...bitrates);
+                        }
+                    }
+                    break;
+                }
+            }
+            return null;
         } catch (e) {
             return null;
         }
