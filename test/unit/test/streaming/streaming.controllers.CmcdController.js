@@ -156,7 +156,9 @@ describe('CmcdController', function () {
                     duration: DURATION,
                     url: 'http://test.url/firstRequest'
                 };
-
+                
+                // Trigger period switch to initialize stream processors
+                eventBus.trigger(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED);
                 let headers = cmcdController.getHeaderParameters(request);
                 expect(headers).to.have.property(SESSION_HEADER_NAME);
                 expect(typeof headers[SESSION_HEADER_NAME]).to.equal('string');
