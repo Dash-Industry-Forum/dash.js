@@ -1123,19 +1123,21 @@ function DashAdapter() {
         const mainAdaptation = dashManifestModel.getMainAdaptationSetForPreselection(realPreselection, adaptation);
         mediaInfo = convertAdaptationToMediaInfo(mainAdaptation);
 
-        mediaInfo.isPreselection = true;
-        mediaInfo.tag = preselection.tag;
-        mediaInfo.id = preselection.id;
-        mediaInfo.codec = dashManifestModel.getCodecForPreselection(realPreselection, realAdaptation);
-        mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realPreselection);
-        mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realPreselection);
-        mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realPreselection);
-        mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realPreselection);
-        mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realPreselection);
-        mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realPreselection);
-        mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realPreselection);
-        mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realPreselection);
-        mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realPreselection);
+        if (mediaInfo) {
+            mediaInfo.isPreselection = true;
+            mediaInfo.tag = preselection.tag;
+            mediaInfo.id = preselection.id;
+            mediaInfo.codec = dashManifestModel.getCodecForPreselection(realPreselection, realAdaptation);
+            mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realPreselection);
+            mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realPreselection);
+            mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realPreselection);
+            mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realPreselection);
+            mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realPreselection);
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realPreselection);
+            mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realPreselection);
+            mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realPreselection);
+            mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realPreselection);
+        }
 
         return mediaInfo;
     }

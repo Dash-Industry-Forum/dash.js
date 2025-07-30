@@ -974,7 +974,7 @@ function DashManifestModel() {
     }
 
     function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
-        if (!preselection || !preselection.preselectionComponents || !Array.isArray(adaptations)) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
             return undefined;
         }
         
@@ -983,7 +983,7 @@ function DashManifestModel() {
     }
 
     function getMainAdaptationSetForPreselection(preselection, adaptations) {
-        if (!preselection || !preselection.preselectionComponents || !Array.isArray(adaptations)) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
             return undefined;
         }
         
