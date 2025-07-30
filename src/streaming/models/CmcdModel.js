@@ -250,18 +250,13 @@ function CmcdModel() {
                 return null;
             }
             
-            for (let streamProcessor of streamProcessors) {
-                if (streamProcessor.getType() === mediaType) {
-                    const representationController = streamProcessor.getRepresentationController();
-                    if (representationController) {
-                        const currentRepresentation = representationController.getCurrentRepresentation();
-                        if (currentRepresentation && !isNaN(currentRepresentation.bitrateInKbit)) {
-                            return Math.round(currentRepresentation.bitrateInKbit);
-                        }
-                    }
-                    break;
-                }
+            const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+            const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+
+            if (bitrate !== undefined && !isNaN(bitrate)) {
+                return Math.round(bitrate);
             }
+
             return null;
         } catch (e) {
             return null;
