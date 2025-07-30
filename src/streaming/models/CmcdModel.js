@@ -51,6 +51,7 @@ function CmcdModel() {
         internalData,
         abrController,
         throughputController,
+        mediaPlayer,
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
@@ -94,6 +95,10 @@ function CmcdModel() {
 
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
+        }
+
+        if (config.mediaPlayer) {
+            mediaPlayer = config.mediaPlayer;
         }
     }
 
@@ -455,6 +460,7 @@ function CmcdModel() {
         const cmcdData = {
             ...getGenericCmcdData(),
             ...updateMsdData(Constants.CMCD_MODE.EVENT),
+            ..._getAggregatedBitrateData(),
             e: event
         };
 
@@ -661,6 +667,34 @@ function CmcdModel() {
         const data = getGenericCmcdData();
 
         data.ot = CmcdObjectType.MANIFEST;
+
+        return data;
+    }
+
+    function _getAggregatedBitrateData() {
+        // Get current representations
+        const videoRep = mediaPlayer.getCurrentRepresentationForType(Constants.VIDEO);
+        const audioRep = mediaPlayer.getCurrentRepresentationForType(Constants.AUDIO);
+
+        const data = {};
+
+        // Calculate aggregated bitrate (current video + audio)
+        const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
+        const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
+        const aggregatedBitrate = currentVideoBitrate + currentAudioBitrate;
+        if (aggregatedBitrate > 0) {
+            data.ab = Math.round(aggregatedBitrate);
+        }
+
+        // Calculate top aggregated bitrate (max video + max audio)
+        const allVideoReps = mediaPlayer.getRepresentationsByType(Constants.VIDEO) || [];
+        const allAudioReps = mediaPlayer.getRepresentationsByType(Constants.AUDIO) || [];
+        const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const topAggregatedBitrate = topVideoBitrate + topAudioBitrate;
+        if (topAggregatedBitrate > 0) {
+            data.tab = Math.round(topAggregatedBitrate);
+        }
 
         return data;
     }
