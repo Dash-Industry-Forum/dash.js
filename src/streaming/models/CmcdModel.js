@@ -170,7 +170,7 @@ function CmcdModel() {
             data.tb = tb;
         }
 
-        if (!isNaN(pb)) {
+        if (pb !== null && !isNaN(pb)) {
             data.pb = pb;
         }
 
