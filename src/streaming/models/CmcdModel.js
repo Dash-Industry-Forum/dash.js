@@ -249,20 +249,17 @@ function CmcdModel() {
             if (!streamProcessors || streamProcessors.length === 0) {
                 return null;
             }
-            
-            for (let streamProcessor of streamProcessors) {
-                if (streamProcessor.getType() === mediaType) {
-                    const mediaInfo = streamProcessor.getMediaInfo();
-                    if (mediaInfo && abrController) {
-                        const filteredRepresentations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
-                        if (filteredRepresentations && filteredRepresentations.length > 0) {
-                            const bitrates = filteredRepresentations.map((rep) => rep.bitrateInKbit);
-                            return Math.max(...bitrates);
-                        }
-                    }
-                    break;
-                }
+
+            const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+
+            if (streamProcessor) {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                const topBitrate = _getTopBitrateByType(mediaInfo);
+
+                // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+                return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
             }
+
             return null;
         } catch (e) {
             return null;
