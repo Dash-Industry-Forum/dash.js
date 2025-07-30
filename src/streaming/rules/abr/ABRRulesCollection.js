@@ -91,7 +91,7 @@ function ABRRulesCollection(config) {
             }
 
             if (rule.type === Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES) {
-                abandonFragmentRulesList.push(rule.rule(context).create());
+                abandonFragmentRules.push(rule.rule(context).create());
             }
         });
 

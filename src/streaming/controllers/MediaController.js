@@ -400,18 +400,26 @@ function MediaController() {
         return notEmpty ? settings : null;
     }
 
-    function filterTracksBySettings(tracks, filterFn, settings) {
+    function filterTracksBySettings(tracks, filterFn, preferences) {
         let tracksAfterMatcher = [];
         tracks.forEach(function (track) {
-            if (filterFn(settings, track)) {
+            if (filterFn(preferences, track)) {
                 tracksAfterMatcher.push(track);
             }
         });
         if (tracksAfterMatcher.length !== 0) {
             return tracksAfterMatcher;
-        } else {
-            logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         }
+
+        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} )) {
+            logger.info('no track with Role set to main - assuming main as default and searching again');
+            tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
+            if (tracksAfterMatcher.length !== 0) {
+                return tracksAfterMatcher;
+            }
+        } 
+
+        logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         return tracks;
     }
 
@@ -442,10 +450,17 @@ function MediaController() {
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
+        if ( !track.roles) {
+            return false;
+        }
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return _compareDescriptorType(item, settings.role);
         })[0];
         return (matchRole || (track.type === Constants.AUDIO && isTrackActive));
+    }
+
+    function _matchRoleAbsent(_, track) {
+        return (!track.roles) || (track.roles.length === 0);
     }
 
     function matchSettingsAccessibility(settings, track) {
@@ -686,9 +701,15 @@ function MediaController() {
         // Use the track selection function that is defined in the settings
         else {
             if (!settings.get().streaming.ignoreSelectionPriority) {
+                logger.info('Trying to find track with highest selectionPriority');
                 tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
             }
+            if (tmpArr.length > 1 && settings.get().streaming.prioritizeRoleMain) {
+                logger.info('Trying to find a main track');
+                tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {role: {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} });
+            }
             if (tmpArr.length > 1) {
+                logger.info('Selecting track based on selectionModeForInitialTrack');
                 let mode = settings.get().streaming.selectionModeForInitialTrack;
                 switch (mode) {
                     case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
