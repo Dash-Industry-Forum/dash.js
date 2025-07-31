@@ -242,7 +242,12 @@ function DashHandler(config) {
         if (segment) {
             if (representation.k > 1) {
                 if (lastSubNumber === undefined) {
-                    lastSubNumber = 0; // Initialize subNumber if not set
+                    // TODO: calculate lastSubNumber based on segment and current time
+                    // can start downloading the segment with subNumber > 0
+                    // lastSubNumber = representation.k - Math.ceil((time - segment.mediaStartTime) /
+                    //                                         (segment.representation.segmentDuration / representation.k));
+                    // Currently, we just set it to k - 1 because the next segment will be requested afterwards.
+                    lastSubNumber = representation.k - 1;
                 }
                 segment.subNumber = lastSubNumber;
                 request = _getRequestForSegment(mediaInfo, segment);
