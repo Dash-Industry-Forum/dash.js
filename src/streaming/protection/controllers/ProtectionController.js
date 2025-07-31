@@ -384,6 +384,21 @@ function ProtectionController(config) {
             return;
         }
 
+        // Enforce maximum number of open MediaKeySessions, only if keepProtectionMediaKeys is true
+        const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
+        const maxSessions = settings.get().streaming.protection.maximumOpenMediaKeySessions;
+        if (isKeepProtectionMediaKeysEnabled === true && typeof maxSessions === 'number' && maxSessions > 0) {
+            const sessions = protectionModel.getSessionTokens();
+            if (sessions.length >= maxSessions) {
+                // Close the oldest session to make room for a new one
+                const oldestSession = sessions[0];
+                if (oldestSession) {
+                    logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
+                    closeKeySession(oldestSession);
+                }
+            }
+        }
+
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
         if (initDataForKS) {
 
