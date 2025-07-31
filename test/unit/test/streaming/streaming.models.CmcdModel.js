@@ -227,7 +227,7 @@ describe('CmcdModel', function () {
             cmcdModel.onPlaybackPlaying();
             
             const msdData = cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST);
-            expect(msdData).to.exist;
+            expect(msdData).to.have.property('msd').that.is.a('number');
         });
 
         it('should not return MSD data for version 1', function () {
