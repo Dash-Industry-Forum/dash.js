@@ -139,14 +139,14 @@ describe('CmcdModel', function () {
             expect(data.su).to.equal(true); // startup
         });
 
-        it('should return null for unsupported request types', function () {
+        it('should return an empty object for request types not in the filter', function () {
             const request = {
                 type: 'unsupported_type',
                 url: 'http://example.com/file'
             };
 
             const data = cmcdModel.getCmcdData(request);
-            expect(data).to.not.be.null;
+            expect(data).to.deep.equal({});
         });
     });
 
