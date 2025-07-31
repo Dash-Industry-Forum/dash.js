@@ -108,6 +108,8 @@ function CmcdModel() {
         const dl = _getDeadlineByType(mediaType);
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
+        const tpb = _getTopPlayableBitrate(mediaType);
+        const pb = _getPlayheadBitrate(mediaType);
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(mediaType);
@@ -169,6 +171,14 @@ function CmcdModel() {
 
         if (!isNaN(tb)) {
             data.tb = tb;
+        }
+
+        if (tpb !== null && !isNaN(tpb)) {
+            data.tpb = tpb;
+        }
+        
+        if (pb !== null && !isNaN(pb)) {
+            data.pb = pb;
         }
 
         if (!isNaN(pr) && pr !== 1) {
@@ -241,6 +251,47 @@ function CmcdModel() {
                 return rep.bitrateInKbit
             });
             return Math.max(...bitrates)
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getPlayheadBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+            
+            const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+            const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+
+            if (bitrate !== undefined && !isNaN(bitrate)) {
+                return Math.round(bitrate);
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getTopPlayableBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+
+            const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+
+            if (streamProcessor) {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                const topBitrate = _getTopBitrateByType(mediaInfo);
+
+                // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+                return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
+            }
+
+            return null;
         } catch (e) {
             return null;
         }
