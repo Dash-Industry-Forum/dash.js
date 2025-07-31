@@ -105,7 +105,8 @@ import Events from './events/Events.js';
  *                keepProtectionMediaKeys: false,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false
+ *                ignoreKeyStatuses: false,
+ *                maximumOpenMediaKeySessions: null
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -699,6 +700,9 @@ import Events from './events/Events.js';
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
+ * 
+ * @property {number|null} [maximumOpenMediaKeySessions=null]
+ * Maximum number of open MediaKeySessions. If set, dash.js will close the oldest sessions when the limit is exceeded. Null means unlimited.
  */
 
 /**
@@ -1146,7 +1150,8 @@ function Settings() {
                 keepProtectionMediaKeys: false,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
-                ignoreKeyStatuses: false
+                ignoreKeyStatuses: false,
+                maximumOpenMediaKeySessions: null
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
