@@ -499,6 +499,8 @@ function CmcdController() {
 
     function _onPlaybackWaiting() {
         if (cmcdModel.wasPlaying()){
+            const mediaType = cmcdModel.getLastMediaTypeRequest();
+            cmcdModel.onRebufferingStarted(mediaType);
             _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
         } else {
             _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);

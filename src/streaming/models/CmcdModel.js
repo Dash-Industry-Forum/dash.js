@@ -61,7 +61,9 @@ function CmcdModel() {
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
             [Constants.CMCD_MODE.REQUEST]: false
-        };
+        },
+        _rebufferingStartTime = {},
+        _rebufferingDuration = {};
 
     let context = this.context;
     let settings = Settings(context).getInstance();
@@ -176,6 +178,11 @@ function CmcdModel() {
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
+        }
+
+        if (_rebufferingDuration[mediaType]) {
+            data.bsd = _rebufferingDuration[mediaType];
+            delete _rebufferingDuration[mediaType];
         }
 
         if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
@@ -369,6 +376,22 @@ function CmcdModel() {
 
     function onPlaybackPlaying() {
         _getMsdData();
+        onRebufferingCompleted();
+    }
+
+    function onRebufferingStarted(mediaType) {
+        if (!_rebufferingStartTime[mediaType]) {
+            _rebufferingStartTime[mediaType] = new Date().getTime();
+        }
+    }
+
+    function onRebufferingCompleted() {
+        for (const mediaType in _rebufferingStartTime) {
+            if (_rebufferingStartTime[mediaType]) {
+                _rebufferingDuration[mediaType] = new Date().getTime() - _rebufferingStartTime[mediaType];
+                delete _rebufferingStartTime[mediaType];
+            }
+        }
     }
 
     function _getMsdData() {
@@ -488,6 +511,8 @@ function CmcdModel() {
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
+        _rebufferingStartTime = {};
+        _rebufferingDuration = {};
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
             [Constants.CMCD_MODE.REQUEST]: false
@@ -665,6 +690,10 @@ function CmcdModel() {
         return data;
     }
 
+    function getLastMediaTypeRequest() {
+        return _lastMediaTypeRequest;
+    }
+
     instance = {
         setup,
         reset,
@@ -674,6 +703,8 @@ function CmcdModel() {
         onPeriodSwitchComplete,
         onPlaybackStarted,
         onPlaybackPlaying,
+        onRebufferingStarted,
+        onRebufferingCompleted,
         onPlayerError,
         onPlaybackSeeking,
         onPlaybackSeeked,
@@ -687,6 +718,7 @@ function CmcdModel() {
         triggerCmcdEventMode,
         getGenericCmcdData,
         isIncludedInRequestFilter,
+        getLastMediaTypeRequest,
         onEventChange
     };
 
