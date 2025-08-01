@@ -427,21 +427,23 @@ function CmcdModel() {
 
     function onPlaybackPlaying() {
         _getMsdData();
-        onRebufferingCompleted();
+        for (const mediaType in _rebufferingStartTime) {
+            if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
+                onRebufferingCompleted(mediaType);
+            }
+        }
     }
 
     function onRebufferingStarted(mediaType) {
         if (mediaType && !_rebufferingStartTime[mediaType]) {
-            _rebufferingStartTime[mediaType] = new Date().getTime();
+            _rebufferingStartTime[mediaType] = Date.now();
         }
     }
 
-    function onRebufferingCompleted() {
-        for (const mediaType in _rebufferingStartTime) {
-            if (_rebufferingStartTime[mediaType]) {
-                _rebufferingDuration[mediaType] = new Date().getTime() - _rebufferingStartTime[mediaType];
-                delete _rebufferingStartTime[mediaType];
-            }
+    function onRebufferingCompleted(mediaType) {
+        if (_rebufferingStartTime[mediaType] != null) {
+            _rebufferingDuration[mediaType] = Date.now() - _rebufferingStartTime[mediaType];
+            delete _rebufferingStartTime[mediaType];
         }
     }
 
