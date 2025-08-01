@@ -260,7 +260,7 @@ describe('CmcdModel', function () {
     });
 
     describe('bsd key', function () {
-        it.only('should include bsd key when rebuffering has occurred', function () {
+        it('should include bsd key when rebuffering has occurred', function () {
             const clock = sinon.useFakeTimers();
             const mediaType = Constants.VIDEO;
             const request = {
