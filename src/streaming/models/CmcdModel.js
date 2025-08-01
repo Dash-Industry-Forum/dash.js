@@ -438,10 +438,8 @@ function CmcdModel() {
 
     function onRebufferingCompleted() {
         for (const mediaType in _rebufferingStartTime) {
-            if (_rebufferingStartTime[mediaType]) {
-                _rebufferingDuration[mediaType] = new Date().getTime() - _rebufferingStartTime[mediaType];
-                delete _rebufferingStartTime[mediaType];
-            }
+            _rebufferingDuration[mediaType] = new Date().getTime() - _rebufferingStartTime[mediaType];
+            delete _rebufferingStartTime[mediaType];
         }
     }
 
