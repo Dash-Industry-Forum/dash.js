@@ -431,7 +431,7 @@ function CmcdModel() {
     }
 
     function onRebufferingStarted(mediaType) {
-        if (!_rebufferingStartTime[mediaType]) {
+        if (mediaType && !_rebufferingStartTime[mediaType]) {
             _rebufferingStartTime[mediaType] = new Date().getTime();
         }
     }
