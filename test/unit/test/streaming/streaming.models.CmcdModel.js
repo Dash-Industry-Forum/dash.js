@@ -258,4 +258,31 @@ describe('CmcdModel', function () {
             expect(eventData.ec).to.equal(404);
         });
     });
+
+    describe('bsd key', function () {
+        it.only('should include bsd key when rebuffering has occurred', function () {
+            const clock = sinon.useFakeTimers();
+            const mediaType = Constants.VIDEO;
+            const request = {
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: mediaType,
+                representation: {
+                    mediaInfo: {
+                        type: mediaType
+                    }
+                }
+            };
+
+            cmcdModel.onRebufferingStarted(mediaType);
+            clock.tick(500);
+            cmcdModel.onPlaybackPlaying();
+
+            const data = cmcdModel.getCmcdData(request);
+            expect(data.bsd).to.equal(500);
+
+            const data2 = cmcdModel.getCmcdData(request);
+            expect(data2.bsd).to.not.exist;
+            clock.restore();
+        });
+    });
 });
