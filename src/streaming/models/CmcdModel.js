@@ -696,6 +696,14 @@ function CmcdModel() {
             data.tab = Math.round(topAggregatedBitrate);
         }
 
+        // Calculate lowest aggregated bitrate (min video + min audio)
+        const lowestVideoBitrate = allVideoReps.length > 0 ? allVideoReps.reduce((min, rep) => Math.min(min, rep.bitrateInKbit), allVideoReps[0].bitrateInKbit) : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0 ? allAudioReps.reduce((min, rep) => Math.min(min, rep.bitrateInKbit), allAudioReps[0].bitrateInKbit) : 0;
+        const lowestAggregatedBitrate = lowestVideoBitrate + lowestAudioBitrate;
+        if (lowestAggregatedBitrate > 0) {
+            data.lab = Math.round(lowestAggregatedBitrate);
+        }
+
         return data;
     }
 
