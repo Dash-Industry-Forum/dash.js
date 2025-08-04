@@ -672,11 +672,17 @@ function CmcdModel() {
     }
 
     function _getAggregatedBitrateData() {
+        // defining data to return
+        const data = {};
+        
+        // checking if media player is defined
+        if (!mediaPlayer) {
+            return data;
+        }
+
         // Get current representations
         const videoRep = mediaPlayer.getCurrentRepresentationForType(Constants.VIDEO);
         const audioRep = mediaPlayer.getCurrentRepresentationForType(Constants.AUDIO);
-
-        const data = {};
 
         // Calculate aggregated bitrate (current video + audio)
         const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
