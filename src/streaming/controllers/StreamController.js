@@ -819,10 +819,11 @@ function StreamController() {
                     logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
                     videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
                 }
-                else{
-                    logger.warn(`Video is potentially frozen, seen this issue ${framesNotAdvancingErrors} consecutive times`)
+    
+                if(framesNotAdvancingErrors === 1){
+                    eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN);
+                    logger.warn(`Video is potentially frozen, enabling "handleVideoFramesNotAdvancing" will attempt to resolve this.`)
                 }
-                eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN);
             }
             else{
                 framesNotAdvancingErrors = 0;
