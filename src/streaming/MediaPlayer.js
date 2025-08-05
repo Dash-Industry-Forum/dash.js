@@ -2551,8 +2551,7 @@ function MediaPlayer() {
             serviceDescriptionController,
             throughputController,
             mediaPlayerModel,
-            errHandler,
-            mediaPlayer: instance,
+            errHandler
         });
 
         clientDataReportingController.setConfig({

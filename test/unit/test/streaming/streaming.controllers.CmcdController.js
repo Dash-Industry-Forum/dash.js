@@ -10,7 +10,7 @@ import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
 import {decodeCmcd} from '@svta/common-media-library/cmcd/decodeCmcd';
-
+import StreamMock from '../../mocks/StreamMock.js';
 import {expect} from 'chai';
 import sinon from 'sinon';
 
@@ -36,6 +36,7 @@ describe('CmcdController', function () {
 
     beforeEach(function () {
         abrControllerMock = new AbrControllerMock();
+        playbackControllerMock = new PlaybackControllerMock(); // Ensure fresh instance for each test
         cmcdController = CmcdController(context).getInstance();
         cmcdController.initialize();
         settings.update({ streaming: { cmcd: { enabled: true, cid: null } } });
@@ -2091,6 +2092,84 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.calledTwice).to.be.true;
         });
     })
+
+    describe('Event Mode - data validation', () => {
+        let urlLoaderMock;
+        let internalPlaybackControllerMock;
+
+        beforeEach(() => {
+            urlLoaderMock = {
+                load: sinon.spy()
+            };
+            cmcdController.reset();
+            internalPlaybackControllerMock = new PlaybackControllerMock();
+            
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        targets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            cmcdMode: 'event',
+                            mode: 'query',
+                            events: ['ps'],
+                            timeInterval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.setConfig({
+                abrController: abrControllerMock,
+                dashMetrics: dashMetricsMock,
+                playbackController: internalPlaybackControllerMock,
+                throughputController: throughputControllerMock,
+                serviceDescriptionController: serviceDescriptionControllerMock,
+                urlLoader: urlLoaderMock
+            });
+            cmcdController.initialize();
+        });
+
+        it('aggregated bitrate values ab, tab, lab should not be present on no active stream', () => {
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            expect(metrics).to.not.have.property('ab');
+            expect(metrics).to.not.have.property('tab');
+            expect(metrics).to.not.have.property('lab');
+        });
+
+        it('aggregated bitrate values ab, tab, lab should be present on active stream', () => {
+            // mocking active stream
+            const streamMock = new StreamMock();
+            streamMock.getRepresentationsByType = function() {
+                return [{ bitrateInKbit: 1000 }, { bitrateInKbit: 2000 }, { bitrateInKbit: 3000 }];
+            }
+            streamMock.getCurrentRepresentationForType = function() {
+                return { bitrateInKbit: 2000 };
+            }
+        
+            internalPlaybackControllerMock.streamController.activeStream = streamMock;
+            
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
+            const url = new URL(requestSent.url);
+            const cmcdString = url.searchParams.get('CMCD');
+            const metrics = decodeCmcd(cmcdString);
+            expect(metrics).to.have.property('lab');
+            expect(metrics.lab).to.equal(2000);
+            expect(metrics).to.have.property('ab');
+            expect(metrics.ab).to.equal(4000);
+            expect(metrics).to.have.property('tab');
+            expect(metrics.tab).to.equal(6000);
+        });
+    });
 
     describe('Response Mode', () => {
         let urlLoaderMock;
