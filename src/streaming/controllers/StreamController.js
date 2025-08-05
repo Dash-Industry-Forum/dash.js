@@ -822,6 +822,7 @@ function StreamController() {
                 else{
                     logger.warn(`Video is potentially frozen, seen this issue ${framesNotAdvancingErrors} consecutive times`)
                 }
+                eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN);
             }
             else{
                 framesNotAdvancingErrors = 0;

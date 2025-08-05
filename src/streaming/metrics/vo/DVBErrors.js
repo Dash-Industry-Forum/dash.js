@@ -44,19 +44,20 @@ class DVBErrors {
         // ErrorType column below the value is as described in the
         // Value column.
         //
-        // ErrorType                                            Value
-        // ---------                                            -----
-        // HTTP error status code                               HTTP status code
-        // Unknown HTTP status code                             HTTP status code
-        // SSL connection failed                                "SSL" followed by SSL alert value
-        // DNS resolution failed                                "C00"
-        // Host unreachable                                     "C01"
-        // Connection refused                                   "C02"
-        // Connection error – Not otherwise specified           "C03"
-        // Corrupt media – ISO BMFF container cannot be parsed  "M00"
-        // Corrupt media – Not otherwise specified              "M01"
-        // Changing Base URL in use due to errors               "F00"
-        // Becoming an error reporting Player                   "S00"
+        // ErrorType                                                    Value
+        // ---------                                                    -----
+        // HTTP error status code                                       HTTP status code
+        // Unknown HTTP status code                                     HTTP status code
+        // SSL connection failed                                        "SSL" followed by SSL alert value
+        // DNS resolution failed                                        "C00"
+        // Host unreachable                                             "C01"
+        // Connection refused                                           "C02"
+        // Connection error – Not otherwise specified                   "C03"
+        // Corrupt media – ISO BMFF container cannot be parsed          "M00"
+        // Corrupt media – Not otherwise specified                      "M01"
+        // Changing Base URL in use due to errors                       "F00"
+        // Becoming an error reporting Player                           "S00"
+        // Playback error, a stall has occured, the cause is unknown    "P00"
 
         this.terror = null;
         // Real-Time - Date and time at which error occurred in UTC,
@@ -93,5 +94,6 @@ DVBErrors.CORRUPT_MEDIA_ISOBMFF = 'M00';
 DVBErrors.CORRUPT_MEDIA_OTHER = 'M01';
 DVBErrors.BASE_URL_CHANGED = 'F00';
 DVBErrors.BECAME_REPORTER = 'S00';
+DVBErrors.PLAYBACK_STALLED_CAUSE_UNKNOWN = 'P00';
 
 export default DVBErrors;

@@ -88,6 +88,12 @@ function DVBErrorsTranslator(config) {
         });
     }
 
+    function onPlaybackStallCauseUnknown() {
+        report({
+            errorcode: DVBErrors.PLAYBACK_STALLED_CAUSE_UNKNOWN
+        });
+    }
+
     function handleHttpMetric(vo) {
         if ((vo.responsecode === 0) || // connection failure - unknown
             (vo.responsecode == null) || // Generated on .catch() and when uninitialized
@@ -143,6 +149,7 @@ function DVBErrorsTranslator(config) {
         eventBus.on(Events.METRIC_ADDED, onMetricEvent, instance);
         eventBus.on(Events.METRIC_UPDATED, onMetricEvent, instance);
         eventBus.on(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.on(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN, onPlaybackStallCauseUnknown, instance);
         eventBus.on(
             MetricsReportingEvents.BECAME_REPORTING_PLAYER,
             onBecameReporter,
@@ -160,6 +167,7 @@ function DVBErrorsTranslator(config) {
         eventBus.off(Events.METRIC_ADDED, onMetricEvent, instance);
         eventBus.off(Events.METRIC_UPDATED, onMetricEvent, instance);
         eventBus.off(Events.PLAYBACK_ERROR, onPlaybackError, instance);
+        eventBus.off(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN, onPlaybackStallCauseUnknown, instance);
         eventBus.off(
             MetricsReportingEvents.BECAME_REPORTING_PLAYER,
             onBecameReporter,

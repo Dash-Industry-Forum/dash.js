@@ -1579,6 +1579,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'playbackStalledCauseUnknown'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
@@ -2501,15 +2502,16 @@ declare namespace dashjs {
         ipaddress: string | null;
         servicelocation: string | null;
 
-        SSL_CONNECTION_FAILED_PREFIX: 'SSL';
-        DNS_RESOLUTION_FAILED:        'C00';
-        HOST_UNREACHABLE:             'C01';
-        CONNECTION_REFUSED:           'C02';
-        CONNECTION_ERROR:             'C03';
-        CORRUPT_MEDIA_ISOBMFF:        'M00';
-        CORRUPT_MEDIA_OTHER:          'M01';
-        BASE_URL_CHANGED:             'F00';
-        BECAME_REPORTER:              'S00';
+        SSL_CONNECTION_FAILED_PREFIX:   'SSL';
+        DNS_RESOLUTION_FAILED:          'C00';
+        HOST_UNREACHABLE:               'C01';
+        CONNECTION_REFUSED:             'C02';
+        CONNECTION_ERROR:               'C03';
+        CORRUPT_MEDIA_ISOBMFF:          'M00';
+        CORRUPT_MEDIA_OTHER:            'M01';
+        BASE_URL_CHANGED:               'F00';
+        BECAME_REPORTER:                'S00';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'P00';
     }
 
     export interface Metrics {
@@ -4313,6 +4315,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'playbackStalledCauseUnknown'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';

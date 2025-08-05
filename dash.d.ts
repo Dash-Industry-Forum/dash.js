@@ -1579,6 +1579,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'playbackStalledCauseUnknown'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
@@ -2510,6 +2511,7 @@ declare namespace dashjs {
         CORRUPT_MEDIA_OTHER:          'M01';
         BASE_URL_CHANGED:             'F00';
         BECAME_REPORTER:              'S00';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'P00';
     }
 
     export interface Metrics {
@@ -4313,6 +4315,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_STALLED_CAUSE_UNKNOWN: 'playbackStalledCauseUnknown'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';
