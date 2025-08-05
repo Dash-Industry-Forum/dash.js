@@ -416,7 +416,7 @@ function CmcdModel() {
             ot = CmcdObjectType.AUDIO;
         }
         if (request.mediaType === Constants.ENHANCEMENT) {
-            ot = 'e';
+            ot = CmcdObjectType.OTHER;
         }
         if (mediaType === Constants.TEXT) {
             if (request.representation.mediaInfo.mimeType === 'application/mp4') {
