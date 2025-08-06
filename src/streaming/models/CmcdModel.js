@@ -61,7 +61,9 @@ function CmcdModel() {
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
             [Constants.CMCD_MODE.REQUEST]: false
-        };
+        },
+        _rebufferingStartTime = {},
+        _rebufferingDuration = {};
 
     let context = this.context;
     let settings = Settings(context).getInstance();
@@ -106,6 +108,8 @@ function CmcdModel() {
         const dl = _getDeadlineByType(mediaType);
         const bl = _getBufferLevelByType(mediaType);
         const tb = _getTopBitrateByType(request.representation?.mediaInfo);
+        const tpb = _getTopPlayableBitrate(mediaType);
+        const pb = _getPlayheadBitrate(mediaType);
         const pr = internalData.pr;
 
         const nextRequest = _probeNextRequest(mediaType);
@@ -169,6 +173,14 @@ function CmcdModel() {
             data.tb = tb;
         }
 
+        if (tpb !== null && !isNaN(tpb)) {
+            data.tpb = tpb;
+        }
+        
+        if (pb !== null && !isNaN(pb)) {
+            data.pb = pb;
+        }
+
         if (!isNaN(pr) && pr !== 1) {
             data.pr = pr;
         }
@@ -176,6 +188,11 @@ function CmcdModel() {
         if (_bufferLevelStarved[mediaType]) {
             data.bs = true;
             _bufferLevelStarved[mediaType] = false;
+        }
+
+        if (_rebufferingDuration[mediaType]) {
+            data.bsd = _rebufferingDuration[mediaType];
+            delete _rebufferingDuration[mediaType];
         }
 
         if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
@@ -234,6 +251,47 @@ function CmcdModel() {
                 return rep.bitrateInKbit
             });
             return Math.max(...bitrates)
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getPlayheadBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+            
+            const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+            const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+
+            if (bitrate !== undefined && !isNaN(bitrate)) {
+                return Math.round(bitrate);
+            }
+
+            return null;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function _getTopPlayableBitrate(mediaType) {
+        try {
+            if (!streamProcessors || streamProcessors.length === 0) {
+                return null;
+            }
+
+            const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+
+            if (streamProcessor) {
+                const mediaInfo = streamProcessor.getMediaInfo();
+                const topBitrate = _getTopBitrateByType(mediaInfo);
+
+                // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+                return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
+            }
+
+            return null;
         } catch (e) {
             return null;
         }
@@ -369,6 +427,24 @@ function CmcdModel() {
 
     function onPlaybackPlaying() {
         _getMsdData();
+        for (const mediaType in _rebufferingStartTime) {
+            if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
+                onRebufferingCompleted(mediaType);
+            }
+        }
+    }
+
+    function onRebufferingStarted(mediaType) {
+        if (mediaType && !_rebufferingStartTime[mediaType]) {
+            _rebufferingStartTime[mediaType] = Date.now();
+        }
+    }
+
+    function onRebufferingCompleted(mediaType) {
+        if (_rebufferingStartTime[mediaType] != null) {
+            _rebufferingDuration[mediaType] = Date.now() - _rebufferingStartTime[mediaType];
+            delete _rebufferingStartTime[mediaType];
+        }
     }
 
     function _getMsdData() {
@@ -488,6 +564,8 @@ function CmcdModel() {
         _initialMediaRequestsDone = {};
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
+        _rebufferingStartTime = {};
+        _rebufferingDuration = {};
         _msdSent = {
             [Constants.CMCD_MODE.EVENT]: false,
             [Constants.CMCD_MODE.REQUEST]: false
@@ -697,14 +775,18 @@ function CmcdModel() {
         }
 
         // Calculate lowest aggregated bitrate (min video + min audio)
-        const lowestVideoBitrate = allVideoReps.length > 0 ? allVideoReps.reduce((min, rep) => Math.min(min, rep.bitrateInKbit), allVideoReps[0].bitrateInKbit) : 0;
-        const lowestAudioBitrate = allAudioReps.length > 0 ? allAudioReps.reduce((min, rep) => Math.min(min, rep.bitrateInKbit), allAudioReps[0].bitrateInKbit) : 0;
+        const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
         const lowestAggregatedBitrate = lowestVideoBitrate + lowestAudioBitrate;
         if (lowestAggregatedBitrate > 0) {
             data.lab = Math.round(lowestAggregatedBitrate);
         }
 
         return data;
+    }
+    
+    function getLastMediaTypeRequest() {
+        return _lastMediaTypeRequest;
     }
 
     instance = {
@@ -716,6 +798,8 @@ function CmcdModel() {
         onPeriodSwitchComplete,
         onPlaybackStarted,
         onPlaybackPlaying,
+        onRebufferingStarted,
+        onRebufferingCompleted,
         onPlayerError,
         onPlaybackSeeking,
         onPlaybackSeeked,
@@ -729,6 +813,7 @@ function CmcdModel() {
         triggerCmcdEventMode,
         getGenericCmcdData,
         isIncludedInRequestFilter,
+        getLastMediaTypeRequest,
         onEventChange
     };
 
