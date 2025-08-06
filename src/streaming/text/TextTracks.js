@@ -542,7 +542,12 @@ function TextTracks(config) {
                                     }
                                 }
                             } else {
-                                if (track.mode !== Constants.TEXT_DISABLED) {
+                                const isFragmented = this.getCurrentTrackInfo()?.isFragmented;
+                                const appendFragmentedCuesWhenTrackModeDisabled = settings.get().streaming.text.appendFragmentedCuesWhenTrackModeDisabled;
+
+                                // If disabled, add fragment cues as they'll be downloaded once.
+                                // If you miss them, they won't be downloaded again.
+                                if (track.mode !== Constants.TEXT_DISABLED || (appendFragmentedCuesWhenTrackModeDisabled && isFragmented)) {
                                     track.addCue(cue);
                                 }
                             }

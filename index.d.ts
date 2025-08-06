@@ -1049,6 +1049,7 @@ declare namespace dashjs {
                 scheduleWhilePaused?: boolean
             },
             text?: {
+                appendFragmentedCuesWhenTrackModeDisabled?: boolean,
                 defaultEnabled?: boolean,
                 dispatchForManualRendering?: boolean,
                 extendSegmentedCues?: boolean,

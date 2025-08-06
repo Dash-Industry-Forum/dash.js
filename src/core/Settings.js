@@ -488,6 +488,9 @@ import Events from './events/Events';
 
 /**
  * @typedef {Object} Text
+ * @property {boolean} [appendFragmentedCuesWhenTrackModeDisabled=true]
+ * Whether fragment cues should be appended to the TextTrack when the track mode is set to disabled.
+ * Fragment cues are fetched once. This ensures we don't miss them when the track mode is set to disabled.
  * @property {boolean} [defaultEnabled=true]
  * Enable/disable subtitle rendering by default.
  * @property {boolean} [dispatchForManualRendering=false]
@@ -974,6 +977,7 @@ function Settings() {
                 scheduleWhilePaused: true
             },
             text: {
+                appendFragmentedCuesWhenTrackModeDisabled: true,
                 defaultEnabled: true,
                 dispatchForManualRendering: false,
                 extendSegmentedCues: true,
