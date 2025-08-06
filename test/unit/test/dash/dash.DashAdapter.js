@@ -496,6 +496,7 @@ describe('DashAdapter', function () {
     describe('SetConfig previously called', function () {
         beforeEach(function () {
             dashAdapter.setConfig({
+                settings: { get: () => ({ streaming: { enhancement: { enabled: false, codecs: ['lvc1'] } } }) },
                 constants: Constants,
                 errHandler: errorHandlerMock,
                 cea608parser: new Cta608Parser(),

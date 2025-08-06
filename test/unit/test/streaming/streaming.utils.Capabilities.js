@@ -15,6 +15,7 @@ let capabilities;
 // The Media Capabilities API seems to return wrong values on Linux with Firefox. Deactivate some tests for now
 //const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
 
+const enhancementCodecs = ['lvc1'];
 
 let EssentialPropertyThumbNail = new DescriptorType;
 EssentialPropertyThumbNail.init({
@@ -548,7 +549,9 @@ describe('Capabilities', function () {
         */
 
         it('should return true for enhancement codecs', function () {
-            const res = capabilities.runCodecSupportCheck({ codec: `video/${Constants.ENHANCEMENT_CODECS[0]}` }, Constants.VIDEO);
+            settings.update({ streaming: { enhancement: { enabled: true } } });
+
+            const res = capabilities.runCodecSupportCheck({ codec: `video/${enhancementCodecs[0]}` }, Constants.VIDEO);
 
             return res.then(function (isSupported) {
                 expect(isSupported).to.be.true;

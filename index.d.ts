@@ -1911,6 +1911,10 @@ declare namespace dashjs {
                     etpWeightRatio?: number
                 }
             },
+            enhancement?: {
+                enabled?: boolean,
+                codecs?: Array<string>
+            },
             defaultSchemeIdUri?: {
                 viewpoint?: string,
                 audioChannelConfiguration?: string,

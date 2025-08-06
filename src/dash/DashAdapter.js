@@ -49,6 +49,7 @@ import Constants from '../streaming/constants/Constants.js';
 
 function DashAdapter() {
     let instance,
+        settings,
         dashManifestModel,
         patchManifestModel,
         voPeriods,
@@ -74,6 +75,10 @@ function DashAdapter() {
 
         if (config.constants) {
             constants = config.constants;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
         }
 
         if (config.cea608parser) {
@@ -1015,7 +1020,8 @@ function DashAdapter() {
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
-        mediaInfo.type = Constants.ENHANCEMENT_CODECS.some(cdc => mediaInfo.codec?.includes(cdc)) ? Constants.ENHANCEMENT : adaptation.type;
+        const enhancementCodecs = settings.get().streaming.enhancement.codecs;
+        mediaInfo.type = enhancementCodecs.some(cdc => mediaInfo.codec?.includes(cdc)) ? Constants.ENHANCEMENT : adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);

@@ -327,6 +327,10 @@ import Events from './events/Events.js';
  *                    etpWeightRatio: 0
  *                }
  *            },
+ *            enhancement: {
+ *                enabled: false,
+ *                codecs: ['lvc1']
+ *            },
  *            defaultSchemeIdUri: {
  *                viewpoint: '',
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
@@ -1054,6 +1058,8 @@ import Events from './events/Events.js';
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
+ * @property {module:Settings~EnhancementSettings} enhancement
+ * Settings related to scalable enhancement playback (e.g. LCEVC).
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
@@ -1381,6 +1387,10 @@ function Settings() {
                     applyMb: false,
                     etpWeightRatio: 0
                 }
+            },
+            enhancement: {
+                enabled: false,
+                codecs: ['lvc1']
             },
             defaultSchemeIdUri: {
                 viewpoint: '',
