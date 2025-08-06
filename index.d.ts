@@ -989,7 +989,10 @@ declare namespace dashjs {
                 lowLatencyStallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
-                handleVideoFramesNotAdvancing?: number
+                videoFramesNotAdvancing?: {
+                    enabled?: boolean
+                    threshold?: number,
+                },                
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean

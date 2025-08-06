@@ -63,7 +63,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings, totalVideoFrames, framesNotAdvancingErrors,
+        supportsChangeType, settings, totalVideoFrames, timeSinceLastPlaybackProgress,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -801,7 +801,8 @@ function StreamController() {
      * When the playback time is updated we add the droppedFrames metric to the dash metric object
      * @private
      */
-    function _onPlaybackTimeUpdated(/*e*/) {
+    function _onPlaybackTimeUpdated(event) {
+
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
 
@@ -814,19 +815,16 @@ function StreamController() {
                 && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
                 && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
             ){
-                framesNotAdvancingErrors++;
-                if(settings.get().streaming.buffer.handleVideoFramesNotAdvancing > 0 && framesNotAdvancingErrors >= settings.get().streaming.buffer.handleVideoFramesNotAdvancing){
-                    logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
-                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
-                }
-    
-                if(framesNotAdvancingErrors === 1){
+                if(timeSinceLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.threshold > event.time){
                     eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN);
-                    logger.warn(`Video is potentially frozen, enabling "handleVideoFramesNotAdvancing" will attempt to resolve this.`)
+                    if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
+                        logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
+                        videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                    }
                 }
             }
             else{
-                framesNotAdvancingErrors = 0;
+                timeSinceLastPlaybackProgress = event.time
             }
 
             if (playbackQuality) {
@@ -1589,7 +1587,7 @@ function StreamController() {
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
         totalVideoFrames = 0;
-        framesNotAdvancingErrors = 0;
+        timeSinceLastPlaybackProgress = 0;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

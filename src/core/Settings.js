@@ -109,7 +109,10 @@ import Events from './events/Events';
  *                lowLatencyStallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
- *                handleVideoFramesNotAdvancing: -1,
+ *                videoFramesNotAdvancing: {
+ *                   enabled: false
+ *                   threshold: 2,
+ *                },
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
@@ -355,7 +358,8 @@ import Events from './events/Events';
  * Specifies if we record stalled streams once the stall threshold is reached
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
  * Specified if we fire manual stall events once the stall threshold is reached
- * @property {number} [handleVideoFramesNotAdvancing=-1]
+ * 
+ * @property {number} [videoFramesNotAdvancing={enabled:false,threshold:2}]
  * Seeeks to the current time whenver the player is playing but stops advancing it's total frame count to handle https://issues.chromium.org/issues/41243192. 
  * 
  * The number signifies the number of time this issue must occur consequentively before triggering, it can be used to control the sensitivity of the mechanism
@@ -994,7 +998,10 @@ function Settings() {
                 lowLatencyStallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
-                handleVideoFramesNotAdvancing: false,
+                videoFramesNotAdvancing: {
+                    enabled: false,
+                    threshold: 2
+                },
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
                 mediaSourceDurationInfinity: true,
