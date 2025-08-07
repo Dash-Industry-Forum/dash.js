@@ -871,7 +871,7 @@ function BufferController(config) {
 
         if ((bufferLevel < stallThreshold) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-        } else if (isBufferingCompleted || bufferLevel > stallThreshold) {
+        } else if (isBufferingCompleted || bufferLevel >= stallThreshold) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
         }
     }
