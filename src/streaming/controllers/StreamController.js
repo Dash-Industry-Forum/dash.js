@@ -806,32 +806,34 @@ function StreamController() {
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
 
-            if(playbackQuality &&
-                typeof playbackQuality.totalVideoFrames === 'number' 
-                && !videoModel.isPaused()
-                && !videoModel.isStalled() // Give the player a chance to recover first
-                && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
-                && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
-                && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
-                && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
-            ){
-                if(timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.threshold < event.time){
-                    eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN,{totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
-                    if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
-                        logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
-                        videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
-                    }
-                }
-            }
-            else{
-                timeAtLastPlaybackProgress = event.time
-                if(playbackQuality && typeof playbackQuality.totalVideoFrames === 'number'){
-                    totalVideoFramesAtLastPlaybackProgress = playbackQuality.totalVideoFrames
-                }
-            }
-
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
+
+                if(
+                    typeof playbackQuality.totalVideoFrames === 'number'
+                    && !timeAtLastPlaybackProgress === 0
+                    && !videoModel.isPaused()
+                    && !videoModel.isStalled() // Give the player a chance to recover first
+                    && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
+                    && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
+                    && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
+                    && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
+                ){
+                    if(timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.threshold < event.time){
+                        eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN,{totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
+                        if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
+                            logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
+                            videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                        }
+                    }
+                }
+                else{
+                    timeAtLastPlaybackProgress = event.time
+                    if(playbackQuality && typeof playbackQuality.totalVideoFrames === 'number'){
+                        totalVideoFramesAtLastPlaybackProgress = playbackQuality.totalVideoFrames
+                    }
+                }
+
             }
 
         }
