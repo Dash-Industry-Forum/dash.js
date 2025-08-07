@@ -829,7 +829,7 @@ function StreamController() {
                 }
                 else{
                     timeAtLastPlaybackProgress = event.time
-                    if(playbackQuality && typeof playbackQuality.totalVideoFrames === 'number'){
+                    if(typeof playbackQuality.totalVideoFrames === 'number'){
                         totalVideoFramesAtLastPlaybackProgress = playbackQuality.totalVideoFrames
                     }
                 }
