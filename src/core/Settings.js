@@ -360,10 +360,10 @@ import Events from './events/Events';
  * Specified if we fire manual stall events once the stall threshold is reached
  * 
  * @property {number} [videoFramesNotAdvancing={enabled:false,threshold:2}]
- * Controls a mechanim for handling situations where the player is playing but stops advancing its total frame count to handle https://issues.chromium.org/issues/41243192. 
+ * Controls a mechanism for handling situations where the player is playing but stops advancing its total frame count to handle https://issues.chromium.org/issues/41243192. 
  * 
- * The 'enabled' property signifies whether we attempt to handle the bug should it occurs by seeeking to the current time
- * The 'threshold' is seconds determines how long the issue must be occuring before the handler is triggered, it can be used to control the sensitivity of the mechanism
+ * The 'enabled' property signifies whether we attempt to handle the bug should it occur by seeking to the current time.
+ * The 'threshold' in seconds determines how long the issue must be occuring before the handler is triggered, it can be used to control the sensitivity of the mechanism.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
