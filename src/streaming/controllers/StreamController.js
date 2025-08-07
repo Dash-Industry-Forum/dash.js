@@ -816,7 +816,7 @@ function StreamController() {
                 && playbackQuality.totalVideoFrames <= totalVideoFrames // Total frames should advance with time progression, if not something is wrong
             ){
                 if(timeSinceLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.threshold > event.time){
-                    eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN);
+                    eventBus.trigger(Events.PLAYBACK_STALLED_CAUSE_UNKNOWN,{totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
                     if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
                         logger.warn(`Video playback has frozen, attempting to recover by seeking to current time`)
                         videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
