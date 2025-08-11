@@ -868,10 +868,10 @@ function BufferController(config) {
 
         //Set stall threshold based on player mode
         const stallThreshold = playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.buffer.lowLatencyStallThreshold : settings.get().streaming.buffer.stallThreshold;
-
-        if ((bufferLevel < stallThreshold) && !isBufferingCompleted) {
+        
+        if ((bufferLevel <= stallThreshold) && !isBufferingCompleted) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_EMPTY);
-        } else if (isBufferingCompleted || bufferLevel >= stallThreshold) {
+        } else if (isBufferingCompleted || bufferLevel > stallThreshold) {
             _notifyBufferStateChanged(MetricsConstants.BUFFER_LOADED);
         }
     }
