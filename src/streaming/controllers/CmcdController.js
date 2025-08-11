@@ -148,7 +148,7 @@ function CmcdController() {
         eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
     }
     
-    let timeOuts = [];
+    let timeouts = [];
 
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
@@ -163,7 +163,7 @@ function CmcdController() {
                 const triggerEventModeInterval = () => {
                     _onEventChange(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL);
                     const timeOut = setTimeout(triggerEventModeInterval, (timeInterval * 1000));
-                    timeOuts.push(timeOut);
+                    timeouts.push(timeOut);
                 }
                 triggerEventModeInterval();
             }
@@ -649,8 +649,8 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
-        timeOuts.forEach(clearTimeout);
-        timeOuts = [];
+        timeouts.forEach(clearTimeout);
+        timeouts = [];
 
         cmcdModel.resetInitialSettings();
         cmcdBatchController.reset();
