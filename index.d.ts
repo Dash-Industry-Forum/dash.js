@@ -2219,7 +2219,7 @@ declare namespace dashjs {
 
         setProtectionData(value: ProtectionDataSet): void;
 
-        setRepresentationForTypeById(type: MediaType, id: number, forceReplace?: boolean): void;
+        setRepresentationForTypeById(type: MediaType, id: string, forceReplace?: boolean): void;
 
         setRepresentationForTypeByIndex(type: MediaType, index: number, forceReplace?: boolean): void;
 
