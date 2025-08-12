@@ -378,9 +378,9 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Sent when a stall in playback has occured but the reason for it is unclear.
-         * @event MediaPlayerEvents#PLAYBACK_STALLED_CAUSE_UNKNOWN
+         * @event MediaPlayerEvents#PLAYBACK_FROZEN
          */
-        this.PLAYBACK_STALLED_CAUSE_UNKNOWN = `playbackStalledCauseUnknown`;
+        this.PLAYBACK_FROZEN = `playbackFrozen`;
 
         /**
          * Sent when playback of the media starts after having been paused;
