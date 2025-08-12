@@ -257,6 +257,7 @@ export default {
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',
+    SEGMENT_SEQUENCE_REPRESENTATIONS: 'urn:mpeg:dash:ssr:2023',
     HDR_METADATA_FORMAT_VALUES: {
         ST2094_10: 'ST2094-10',
         SL_HDR2: 'SL-HDR2',
