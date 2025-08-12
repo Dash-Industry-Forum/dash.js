@@ -57,7 +57,7 @@ class DVBErrors {
         // Corrupt media – Not otherwise specified                      "M01"
         // Changing Base URL in use due to errors                       "F00"
         // Becoming an error reporting Player                           "S00"
-        // Playback error, a stall has occured, the cause is unknown    "P00"
+        // Playback error has occured, the cause is unknown             "P00"
 
         this.terror = null;
         // Real-Time - Date and time at which error occurred in UTC,
