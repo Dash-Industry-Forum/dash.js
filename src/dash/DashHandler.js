@@ -55,7 +55,7 @@ function DashHandler(config) {
     let instance,
         logger,
         lastSegment,
-        lastSubNumber,
+        nextSubNumber,
         isDynamicManifest,
         mediaHasFinished;
 
@@ -239,31 +239,30 @@ function DashHandler(config) {
         }
 
         const segment = segmentsController.getSegmentByTime(representation, time);
+        const previousSegment = segmentsController.getSegmentByTime(representation, time - segment.representation.segmentDuration);
         if (segment) {
             if (representation.k > 1) {
-                if (lastSubNumber === undefined) {
-                    // TODO: calculate lastSubNumber based on segment and current time
-                    // can start downloading the segment with subNumber > 0
-                    // lastSubNumber = representation.k - Math.ceil((time - segment.mediaStartTime) /
-                    //                                         (segment.representation.segmentDuration / representation.k));
-                    // Currently, we just set it to k - 1 because the next segment will be requested afterwards.
-                    lastSubNumber = representation.k - 1;
+                if (nextSubNumber === undefined) {
+                    // TODO: double check this logic
+                    nextSubNumber = representation.k - Math.ceil((time - segment.mediaStartTime) /
+                                                            (segment.representation.segmentDuration / representation.k));
                 }
-                segment.subNumber = lastSubNumber;
-                request = _getRequestForSegment(mediaInfo, segment);
-                if (lastSubNumber === representation.k - 1) {
+                segment.subNumber = nextSubNumber;
+                if (nextSubNumber === representation.k - 1) {
                     lastSegment = segment;
-                    lastSubNumber = 0; // Reset subNumber for the next segment
+                    nextSubNumber = 0;
                 } else {
-                    lastSubNumber ++;
+                    nextSubNumber ++;
+                    lastSegment = previousSegment;
                 }
 
             }
             else {
                 lastSegment = segment;
                 logger.debug('Index for time ' + time + ' is ' + segment.index);
-                request = _getRequestForSegment(mediaInfo, segment);
+
             }
+            request = _getRequestForSegment(mediaInfo, segment);
         }
 
         return request;
@@ -335,22 +334,19 @@ function DashHandler(config) {
             }
         } else {
             if (representation.k > 1) {
-                if (lastSubNumber === undefined) {
-                    lastSubNumber = 0; // Initialize subNumber if not set
-                }
-                segment.subNumber = lastSubNumber;
-                request = _getRequestForSegment(mediaInfo, segment);
-                if (lastSubNumber === representation.k - 1) {
+                segment.subNumber = nextSubNumber;
+                if (nextSubNumber === representation.k - 1) {
                     lastSegment = segment;
-                    lastSubNumber = 0;
+                    nextSubNumber = 0;
                 } else {
-                    lastSubNumber ++;
+                    nextSubNumber ++;
                 }
             }
             else {
-                request = _getRequestForSegment(mediaInfo, segment);
+
                 lastSegment = segment;
             }
+            request = _getRequestForSegment(mediaInfo, segment);
         }
 
         return request;
@@ -367,6 +363,7 @@ function DashHandler(config) {
      */
     function getValidTimeAheadOfTargetTime(time, mediaInfo, representation, targetThreshold) {
         try {
+            console.log('l3d getValidTimeAheadOfTargetTime');
 
             if (isNaN(time) || !mediaInfo || !representation) {
                 return NaN;
