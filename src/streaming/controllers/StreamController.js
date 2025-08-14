@@ -63,7 +63,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings,
+        supportsChangeType, settings, totalVideoFramesAtLastPlaybackProgress, timeAtLastPlaybackProgress, videoFramesNotAdvancingTriggered,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -798,14 +798,53 @@ function StreamController() {
     }
 
     /**
+     * Evaluates whether video frames have potentially stopped advancing, added to address https://issues.chromium.org/issues/41243192
+     * @private
+     */
+    function checkIfVideoFramesNotAdvancing(event) {
+
+        const playbackQuality = videoModel.getPlaybackQuality();
+
+        const isVideoFramesNotAdvancing = playbackQuality &&
+            typeof playbackQuality.totalVideoFrames === 'number'
+            && timeAtLastPlaybackProgress !== 0
+            && !videoModel.isPaused()
+            && !videoModel.isStalled()
+            && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
+            && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
+            && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
+            && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
+    
+        if(isVideoFramesNotAdvancing){
+            if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
+                eventBus.trigger(Events.PLAYBACK_FROZEN,{cause:'Frames have stopped advancing, Chromium bug #41243192', totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
+                if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
+                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
+                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
+                }
+                videoFramesNotAdvancingTriggered = true
+            }        
+        }
+        else{
+            timeAtLastPlaybackProgress = event.time
+            videoFramesNotAdvancingTriggered = false
+            if(typeof playbackQuality.totalVideoFrames === 'number'){
+                totalVideoFramesAtLastPlaybackProgress = playbackQuality.totalVideoFrames
+            }
+        }
+    }
+    
+    /**
      * When the playback time is updated we add the droppedFrames metric to the dash metric object
      * @private
      */
-    function _onPlaybackTimeUpdated(/*e*/) {
+    function _onPlaybackTimeUpdated(event) {
+
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
+                checkIfVideoFramesNotAdvancing(event)
             }
         }
     }
@@ -1561,6 +1600,9 @@ function StreamController() {
         supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
+        totalVideoFramesAtLastPlaybackProgress = 0;
+        timeAtLastPlaybackProgress = 0;
+        videoFramesNotAdvancingTriggered = false;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

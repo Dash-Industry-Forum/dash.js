@@ -986,8 +986,13 @@ declare namespace dashjs {
                 hybridSwitchBufferTime?: number,
                 longFormContentDurationThreshold?: number,
                 stallThreshold?: number,
+                lowLatencyStallThreshold?: number,
                 useAppendWindow?: boolean,
                 setStallState?: boolean
+                videoFramesNotAdvancing?: {
+                    enabled?: boolean
+                    thresholdInSeconds?: number,
+                },                
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
@@ -1577,6 +1582,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_FROZEN: 'playbackFrozen'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
@@ -2499,15 +2505,16 @@ declare namespace dashjs {
         ipaddress: string | null;
         servicelocation: string | null;
 
-        SSL_CONNECTION_FAILED_PREFIX: 'SSL';
-        DNS_RESOLUTION_FAILED:        'C00';
-        HOST_UNREACHABLE:             'C01';
-        CONNECTION_REFUSED:           'C02';
-        CONNECTION_ERROR:             'C03';
-        CORRUPT_MEDIA_ISOBMFF:        'M00';
-        CORRUPT_MEDIA_OTHER:          'M01';
-        BASE_URL_CHANGED:             'F00';
-        BECAME_REPORTER:              'S00';
+        SSL_CONNECTION_FAILED_PREFIX:   'SSL';
+        DNS_RESOLUTION_FAILED:          'C00';
+        HOST_UNREACHABLE:               'C01';
+        CONNECTION_REFUSED:             'C02';
+        CONNECTION_ERROR:               'C03';
+        CORRUPT_MEDIA_ISOBMFF:          'M00';
+        CORRUPT_MEDIA_OTHER:            'M01';
+        BASE_URL_CHANGED:               'F00';
+        BECAME_REPORTER:                'S00';
+        PLAYBACK_FROZEN:                'P00';
     }
 
     export interface Metrics {
@@ -4311,6 +4318,7 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
+        PLAYBACK_FROZEN: 'playbackFrozen'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';

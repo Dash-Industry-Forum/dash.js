@@ -106,8 +106,13 @@ import Events from './events/Events';
  *                hybridSwitchBufferTime: NaN,
  *                longFormContentDurationThreshold: 600,
  *                stallThreshold: 0.3,
+ *                lowLatencyStallThreshold: 0.3,
  *                useAppendWindow: true,
  *                setStallState: true,
+ *                videoFramesNotAdvancing: {
+ *                   enabled: false
+ *                   thresholdInSeconds: 2,
+ *                },
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
  *                mediaSourceDurationInfinity: true,
@@ -345,12 +350,20 @@ import Events from './events/Events';
  * When the time is set higher than the default you will have to wait longer to see automatic bitrate switches but will have a larger buffer which will increase stability.
  * @property {number} [stallThreshold=0.3]
  * Stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune.
+ * @property {number} [lowLatencyStallThreshold=0.3]
+ * Low Latency stall threshold used in BufferController.js to determine whether a track should still be changed and which buffer range to prune. 
  * @property {boolean} [useAppendWindow=true]
  * Specifies if the appendWindow attributes of the MSE SourceBuffers should be set according to content duration from manifest.
  * @property {boolean} [setStallState=true]
  * Specifies if we record stalled streams once the stall threshold is reached
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
  * Specified if we fire manual stall events once the stall threshold is reached
+ * 
+ * @property {number} [videoFramesNotAdvancing={enabled:false,thresholdInSeconds:2}]
+ * Controls a mechanism for handling situations where the player is playing but stops advancing its total frame count to handle https://issues.chromium.org/issues/41243192. 
+ * 
+ * The 'enabled' property signifies whether we attempt to handle the bug should it occur by seeking to the current time.
+ * The 'thresholdInSeconds' a time in seconds that determines how long the issue must be occuring before the handler is triggered, it can be used to control the sensitivity of the mechanism.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
@@ -983,8 +996,13 @@ function Settings() {
                 hybridSwitchBufferTime: NaN,
                 longFormContentDurationThreshold: 600,
                 stallThreshold: 0.3,
+                lowLatencyStallThreshold: 0.3,
                 useAppendWindow: true,
                 setStallState: true,
+                videoFramesNotAdvancing: {
+                    enabled: false,
+                    thresholdInSeconds: 2
+                },
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,
                 mediaSourceDurationInfinity: true,
