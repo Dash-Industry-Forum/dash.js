@@ -473,7 +473,6 @@ function CmcdModel() {
         data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
 
         data.sid = `${data.sid}`;
-
         data.ts = Date.now();
 
         if (cid) {
@@ -531,13 +530,14 @@ function CmcdModel() {
         const cmcdData = {
             ...getGenericCmcdData(),
             ...updateMsdData(Constants.CMCD_MODE.EVENT),
+            ..._getAggregatedBitrateData(),
             e: event
         };
 
         if (event == 'e') {
             cmcdData.ec = internalData.ec;
         }
-
+        
         return cmcdData;
     }
 
@@ -743,6 +743,48 @@ function CmcdModel() {
         return data;
     }
 
+    function _getAggregatedBitrateData() {
+        // defining data to return
+        const data = {};
+        // accessing active stream
+        const activeStream = playbackController.getStreamController()?.getActiveStream();
+        if (!activeStream) {
+            return data;
+        }   
+ 
+        // Get current representations
+        const videoRep = activeStream.getCurrentRepresentationForType(Constants.VIDEO);
+        const audioRep = activeStream.getCurrentRepresentationForType(Constants.AUDIO);
+
+        // Calculate aggregated bitrate (current video + audio)
+        const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
+        const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
+        const aggregatedBitrate = currentVideoBitrate + currentAudioBitrate;
+        if (aggregatedBitrate > 0) {
+            data.ab = Math.round(aggregatedBitrate);
+        }
+
+        // Calculate top aggregated bitrate (max video + max audio)
+        const allVideoReps = activeStream.getRepresentationsByType(Constants.VIDEO) || [];
+        const allAudioReps = activeStream.getRepresentationsByType(Constants.AUDIO) || [];
+        const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+        const topAggregatedBitrate = topVideoBitrate + topAudioBitrate;
+        if (topAggregatedBitrate > 0) {
+            data.tab = Math.round(topAggregatedBitrate);
+        }
+
+        // Calculate lowest aggregated bitrate (min video + min audio)
+        const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+        const lowestAggregatedBitrate = lowestVideoBitrate + lowestAudioBitrate;
+        if (lowestAggregatedBitrate > 0) {
+            data.lab = Math.round(lowestAggregatedBitrate);
+        }
+
+        return data;
+    }
+    
     function getLastMediaTypeRequest() {
         return _lastMediaTypeRequest;
     }
