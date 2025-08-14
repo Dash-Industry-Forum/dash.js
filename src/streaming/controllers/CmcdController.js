@@ -604,7 +604,7 @@ function CmcdController() {
         }
 
         if (request.url) {
-            responseModeData.url = request.url
+            responseModeData.url = request.url.split('?')[0]
         }
     
         if (response.headers){
