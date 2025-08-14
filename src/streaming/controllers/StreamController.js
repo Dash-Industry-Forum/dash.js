@@ -801,11 +801,11 @@ function StreamController() {
      * Evaluates whether video frames have potentially stopped advancing, added to address https://issues.chromium.org/issues/41243192
      * @private
      */
-    function checkIfVideoStuck(event) {
+    function checkIfVideoFramesNotAdvancing(event) {
 
         const playbackQuality = videoModel.getPlaybackQuality();
 
-        const isVideoStuck = playbackQuality &&
+        const isVideoFramesNotAdvancing = playbackQuality &&
             typeof playbackQuality.totalVideoFrames === 'number'
             && timeAtLastPlaybackProgress !== 0
             && !videoModel.isPaused()
@@ -815,7 +815,7 @@ function StreamController() {
             && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
             && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
     
-        if(isVideoStuck){
+        if(isVideoFramesNotAdvancing){
             if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
                 eventBus.trigger(Events.PLAYBACK_FROZEN,{cause:'Frames have stopped advancing, Chromium bug #41243192', totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
                 if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
@@ -844,7 +844,7 @@ function StreamController() {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
-                checkIfVideoStuck(event)
+                checkIfVideoFramesNotAdvancing(event)
             }
         }
     }
