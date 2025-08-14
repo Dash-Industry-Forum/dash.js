@@ -111,7 +111,7 @@ import Events from './events/Events';
  *                setStallState: true,
  *                videoFramesNotAdvancing: {
  *                   enabled: false
- *                   threshold: 2,
+ *                   thresholdInSeconds: 2,
  *                },
  *                avoidCurrentTimeRangePruning: false,
  *                useChangeTypeForTrackSwitch: true,
@@ -359,11 +359,11 @@ import Events from './events/Events';
  * @property {module:Settings~SyntheticStallSettings} [syntheticStallEvents]
  * Specified if we fire manual stall events once the stall threshold is reached
  * 
- * @property {number} [videoFramesNotAdvancing={enabled:false,threshold:2}]
+ * @property {number} [videoFramesNotAdvancing={enabled:false,thresholdInSeconds:2}]
  * Controls a mechanism for handling situations where the player is playing but stops advancing its total frame count to handle https://issues.chromium.org/issues/41243192. 
  * 
  * The 'enabled' property signifies whether we attempt to handle the bug should it occur by seeking to the current time.
- * The 'threshold' in seconds determines how long the issue must be occuring before the handler is triggered, it can be used to control the sensitivity of the mechanism.
+ * The 'thresholdInSeconds' a time in seconds that determines how long the issue must be occuring before the handler is triggered, it can be used to control the sensitivity of the mechanism.
  * @property {boolean} [avoidCurrentTimeRangePruning=false]
  * Avoids pruning of the buffered range that contains the current playback time.
  *
@@ -1001,7 +1001,7 @@ function Settings() {
                 setStallState: true,
                 videoFramesNotAdvancing: {
                     enabled: false,
-                    threshold: 2
+                    thresholdInSeconds: 2
                 },
                 avoidCurrentTimeRangePruning: false,
                 useChangeTypeForTrackSwitch: true,

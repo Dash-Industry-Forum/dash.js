@@ -819,7 +819,7 @@ function StreamController() {
                     && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
                     && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
                 ){
-                    if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.threshold < event.time) && !videoFramesNotAdvancingTriggered){
+                    if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
                         eventBus.trigger(Events.PLAYBACK_FROZEN,{cause:'Frames have stopped advancing, Chromium bug #41243192', totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
                         if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
                             logger.warn('Video playback has frozen, attempting to recover by seeking to current time')

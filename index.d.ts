@@ -991,7 +991,7 @@ declare namespace dashjs {
                 setStallState?: boolean
                 videoFramesNotAdvancing?: {
                     enabled?: boolean
-                    threshold?: number,
+                    thresholdInSeconds?: number,
                 },                
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
