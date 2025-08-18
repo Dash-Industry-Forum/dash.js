@@ -120,8 +120,12 @@ function AlternativeMpdController() {
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
-            videoModel.getElement().parentNode.insertBefore(fullscreenDiv, videoModel.getElement());
-            fullscreenDiv.appendChild(videoModel.getElement());
+            const videoElement = videoModel.getElement();
+            const parentNode = videoElement && videoElement.parentNode;
+            if (parentNode) {
+                parentNode.insertBefore(fullscreenDiv, videoElement);
+                fullscreenDiv.appendChild(videoElement);
+            }
         }
     }
 
@@ -326,7 +330,11 @@ function AlternativeMpdController() {
             fullscreenDiv.appendChild(altVideoElement);
 
             // Insert the alternative video element into the DOM
-            videoModel.getElement().parentNode.insertBefore(altVideoElement, videoModel.getElement().nextSibling);
+            const videoElement = videoModel.getElement();
+            const parentNode = videoElement && videoElement.parentNode;
+            if (parentNode) {
+                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
+            }
         };
 
         // Initialize alternative player
@@ -383,8 +391,10 @@ function AlternativeMpdController() {
             }
             
             // Insert into DOM if needed
-            if (!videoModel.getElement().parentNode.contains(altVideoElement)) {
-                videoModel.getElement().parentNode.insertBefore(altVideoElement, videoModel.getElement().nextSibling);
+            const videoElement = videoModel.getElement();
+            const parentNode = videoElement && videoElement.parentNode;
+            if (parentNode && !parentNode.contains(altVideoElement)) {
+                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
             }
         } else {
             // No prebuffered content, initialize normally
