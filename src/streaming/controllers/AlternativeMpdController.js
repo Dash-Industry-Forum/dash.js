@@ -130,15 +130,6 @@ function AlternativeMpdController() {
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
 
-        logger.debug(`Manifest loaded - Type: ${manifestInfo.type}, URL: ${manifestInfo.originalUrl}`);
-
-        scheduledEvents.forEach((scheduledEvent) => {
-            if (scheduledEvent.alternativeMPD.url == manifestInfo.originalUrl) {
-                scheduledEvent.type = manifestInfo.type;
-                logger.debug(`Updated scheduled event type to ${manifestInfo.type} for URL: ${scheduledEvent.alternativeMPD.url}`);
-            }
-        });
-
         logger.info('Starting playback time monitoring for static manifest');
         _startPlaybackTimeMonitoring();
     }
@@ -150,18 +141,30 @@ function AlternativeMpdController() {
             return
         }
 
-        const alternativeEvent = _parseAlternativeMPDEvent(event);
-
-        if (!alternativeEvent) {
+        if (!event) {
             return
         }
 
-        if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
-            _updateEvent(alternativeEvent);
-        } else if (alternativeEvent.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
-            _repeatEvent(alternativeEvent);
+        // Initialize trigger events properties for new events
+        if (!event.triggered) {
+            event.triggered = false;
+        }
+        if (!event.completed) {
+            event.completed = false;
+        }
+        if (event.alternativeMpd && event.alternativeMpd.executeOnce !== undefined && !event.executeOnce) {
+            event.executeOnce = event.alternativeMpd.executeOnce || false;
+        }
+        if (!event.executionCount) {
+            event.executionCount = 0;
+        }
+
+        if (event.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
+            _updateEvent(event);
+        } else if (event.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
+            _repeatEvent(event);
         } else if (scheduledEvents) {
-            scheduledEvents.push(alternativeEvent)
+            scheduledEvents.push(event)
             logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
         }
     }
@@ -171,7 +174,7 @@ function AlternativeMpdController() {
             return;
         }
         
-        const index = scheduledEvents.findIndex(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
+        const index = scheduledEvents.findIndex(e => e.id === event.id && e.eventStream?.schemeIdUri === event.eventStream?.schemeIdUri);
         if (index > -1) {
             scheduledEvents[index] = event;
             logger.info('Alternative event updated');
@@ -183,7 +186,7 @@ function AlternativeMpdController() {
             return;
         }
 
-        const originalEvent = scheduledEvents.find(e => e.id === event.id && e.schemeIdUri === event.schemeIdUri);
+        const originalEvent = scheduledEvents.find(e => e.id === event.id && e.eventStream?.schemeIdUri === event.eventStream?.schemeIdUri);
         if (originalEvent) {
             scheduledEvents.push(event);
             logger.info('Alternative event repeated');
@@ -252,51 +255,87 @@ function AlternativeMpdController() {
         }
     }
 
+    function _parseEvent(event) {
+        if (event.alternativeMpd) {
+            const timescale = event.eventStream.timescale || 1;
+            const alternativeMpdNode = event.alternativeMpd;
+            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
+            return {
+                presentationTime: event.presentationTime / timescale,
+                duration: event.duration,
+                id: event.id,
+                schemeIdUri: event.eventStream.schemeIdUri,
+                status: event.status,
+                periodId: event.eventStream.period.id,
+                maxDuration: alternativeMpdNode.maxDuration / timescale,
+                alternativeMPD: {
+                    url: alternativeMpdNode.url,
+                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
+                },
+                noJump: parseInt(alternativeMpdNode.noJump || 0, 10),
+                mode: mode,
+                type: DashConstants.STATIC,
+                ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
+                ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
+                ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
+            };
+        }
+        return event;
+    }
+
     function _getCurrentEvent(currentTime, streamId) {
         const priorityEvent = _findPriorityEvent(currentTime);
         if (priorityEvent) {
-            return priorityEvent;
+            return _parseEvent(priorityEvent);
         }
 
-        return scheduledEvents.find(event => {
+        const foundEvent = scheduledEvents.find(event => {
+            const parsedEvent = _parseEvent(event);
+            
             if (event.executeOnce && event.executionCount > 0) {
                 // Skip if executeOnce and already executed
                 return false;
             }
             
             if (event.completed) {
-                return _handleCompletedEvent(event, currentTime);
+                return _handleCompletedEvent(parsedEvent, currentTime);
             }
-            if (event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_DEFAULT) {
-                return _handleNoJumpEvent(event, currentTime);
+            if (parsedEvent.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_DEFAULT) {
+                return _handleNoJumpEvent(parsedEvent, currentTime);
             }
-            const periodCheck = _handlePeriodIdMismatch(event, streamId);
+            const periodCheck = _handlePeriodIdMismatch(parsedEvent, streamId);
             if (periodCheck === false) {
                 return false;
             }
-            return _handleDefaultEvent(event, currentTime);
+            return _handleDefaultEvent(parsedEvent, currentTime);
         });
+
+        return foundEvent ? _parseEvent(foundEvent) : null;
     }
 
     function _findPriorityEvent(currentTime) {
-        const priorityEvents = scheduledEvents.filter(event =>
-            event.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY &&
-            currentTime >= event.presentationTime
-        );
+        const priorityEvents = scheduledEvents.filter(event => {
+            const parsedEvent = _parseEvent(event);
+            return parsedEvent.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY &&
+                   currentTime >= parsedEvent.presentationTime;
+        });
 
         if (priorityEvents.length === 0) { 
             return null; 
         }
         return priorityEvents.reduce((maxEvent, event) => {
-            if (!maxEvent || event.presentationTime >= maxEvent.presentationTime) {
+            const parsedEvent = _parseEvent(event);
+            const parsedMaxEvent = maxEvent ? _parseEvent(maxEvent) : null;
+            
+            if (!maxEvent || parsedEvent.presentationTime >= parsedMaxEvent.presentationTime) {
                 if (maxEvent) {
-                    maxEvent.noJump = 0;
+                    const parsedMax = _parseEvent(maxEvent);
+                    parsedMax.noJump = 0;
                 }
                 return event;
             }
             return maxEvent;
-        }
-        , null);
+        }, null);
     }
 
     function _handleCompletedEvent(event, currentTime) {
@@ -322,21 +361,23 @@ function AlternativeMpdController() {
 
     function _getEventToPrebuff(currentTime) {
         return scheduledEvents.find(event => {
+            const parsedEvent = _parseEvent(event);
+            
             if (event.executeOnce && event.executionCount > 0) {
                 // Skip if executeOnce and already executed
                 return false;
             }
 
             if (event.triggered) {
-                const hasDuration = !isNaN(event.duration);
-                const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
-                const isBeforeStart = currentTime < event.presentationTime - event.earliestResolutionTimeOffset;
+                const hasDuration = !isNaN(parsedEvent.duration);
+                const isPastEnd = hasDuration && currentTime > parsedEvent.presentationTime + parsedEvent.duration;
+                const isBeforeStart = currentTime < parsedEvent.presentationTime - parsedEvent.alternativeMPD.earliestResolutionTimeOffset;
 
                 event.triggered = !(isPastEnd || isBeforeStart);
                 return false;
             }
-            return currentTime >= event.presentationTime - event.alternativeMPD.earliestResolutionTimeOffset &&
-                currentTime < event.presentationTime;
+            return currentTime >= parsedEvent.presentationTime - parsedEvent.alternativeMPD.earliestResolutionTimeOffset &&
+                currentTime < parsedEvent.presentationTime;
         });
     }
 
@@ -378,49 +419,21 @@ function AlternativeMpdController() {
     }
 
 
-    function _parseAlternativeMPDEvent(event) {
-        if (event.alternativeMpd) {
-            const timescale = event.eventStream.timescale || 1;
-            const alternativeMpdNode = event.alternativeMpd;
-            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
-            return {
-                presentationTime: event.presentationTime / timescale,
-                duration: event.duration,
-                id: event.id,
-                schemeIdUri: event.eventStream.schemeIdUri,
-                status: event.status,
-                periodId: event.eventStream.period.id,
-                maxDuration: alternativeMpdNode.maxDuration / timescale,
-                alternativeMPD: {
-                    url: alternativeMpdNode.url,
-                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
-                },
-                noJump: parseInt(alternativeMpdNode.noJump || 0, 10),
-                mode: mode,
-                triggered: false,
-                completed: false,
-                type: DashConstants.STATIC,
-                executeOnce: alternativeMpdNode.executeOnce || false,
-                executionCount: 0,
-                ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
-                ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
-            };
-        }
-    }
 
     function _prebufferNextAlternative(nextEvent) {
         if (nextEvent && !bufferedEvent) {
-            logger.info(`Preloading event starting at ${nextEvent.presentationTime}`)
+            const parsedEvent = _parseEvent(nextEvent);
+            logger.info(`Preloading event starting at ${parsedEvent.presentationTime}`)
             _prebufferAlternativeContent(nextEvent);
         }
     }
 
     function _prebufferAlternativeContent(event) {
+        const parsedEvent = _parseEvent(event);
         if (event.triggered) { return };
         event.triggered = true;
 
-        _initializeAlternativePlayerElement(event);
+        _initializeAlternativePlayerElement(parsedEvent);
         bufferedEvent = event;
 
         altPlayer.on(Events.STREAM_INITIALIZED, () => {
