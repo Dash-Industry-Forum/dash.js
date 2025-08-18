@@ -1116,7 +1116,7 @@ declare namespace dashjs {
 
         getUTCTimingSources(): any[];
 
-        getVoRepresentation(mediaInfo: MediaInfo): Representation[];
+        getVoRepresentations(mediaInfo: MediaInfo): Representation[];
 
         isPatchValid(manifest: object, patch: object): boolean;
 
@@ -5849,8 +5849,6 @@ declare namespace dashjs {
         getStreamInfo(): StreamInfo;
 
         getType(): string;
-
-        getVoRepresentation(quality: number): Representation;
 
         handleNewMediaInfo(mediaInfo: MediaInfo): void;
 
