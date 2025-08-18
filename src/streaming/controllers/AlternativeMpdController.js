@@ -57,7 +57,6 @@ function AlternativeMpdController() {
         manifestInfo = {},
         DashConstants,
         logger,
-        prebufferedEvents = new Map(),
         prebufferedPlayers = new Map(),
         prebufferCleanupInterval = null;
 
@@ -130,13 +129,6 @@ function AlternativeMpdController() {
         const manifest = e.data
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
-
-        logger.info('Manifest loaded for alternative MPD controller');
-        
-        // Start cleanup interval for stale prebuffered content
-        if (!prebufferCleanupInterval) {
-            prebufferCleanupInterval = setInterval(_cleanupStalePrebufferedContent, 30000); // Every 30 seconds
-        }
     }
 
     function _startAltnerativePlaybackTimeMonitoring() {
@@ -163,7 +155,7 @@ function AlternativeMpdController() {
 
             // Try to prebuffer if not already done
             const eventKey = `${parsedEvent.schemeIdUri}_${parsedEvent.id}`;
-            if (prebufferedEvents.has(eventKey) && !prebufferedEvents.get(eventKey).prebuffered) {
+            if (!prebufferedPlayers.has(eventKey)) {
                 _prebufferAlternativeContent(parsedEvent);
             }
 
@@ -182,7 +174,7 @@ function AlternativeMpdController() {
 
     function _onEventReadyToResolve(e) {
         try {
-            const { schemeIdUri, eventId } = e;
+            const { schemeIdUri, eventId, event } = e;
             
             // Check if this is an alternative MPD event
             if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
@@ -190,15 +182,13 @@ function AlternativeMpdController() {
                 
                 logger.info(`Event ${eventId} is ready for prebuffering`);
                 
-                // Mark this event as ready for prebuffering
+                // Start prebuffering if we have the event data and not already prebuffered
                 const eventKey = `${schemeIdUri}_${eventId}`;
-                if (!prebufferedEvents.has(eventKey)) {
-                    prebufferedEvents.set(eventKey, {
-                        schemeIdUri: schemeIdUri,
-                        eventId: eventId,
-                        readyTime: Date.now(),
-                        prebuffered: false
-                    });
+                if (!prebufferedPlayers.has(eventKey) && event && event.alternativeMpd) {
+                    const parsedEvent = _parseEvent(event);
+                    if (parsedEvent) {
+                        _prebufferAlternativeContent(parsedEvent);
+                    }
                 }
             }
         } catch (err) {
@@ -209,10 +199,9 @@ function AlternativeMpdController() {
     function _prebufferAlternativeContent(event) {
         try {
             const eventKey = `${event.schemeIdUri}_${event.id}`;
-            const prebufferInfo = prebufferedEvents.get(eventKey);
             
-            if (!prebufferInfo || prebufferInfo.prebuffered) {
-                return; // Already prebuffered or not ready
+            if (prebufferedPlayers.has(eventKey)) {
+                return; // Already prebuffered
             }
 
             logger.info(`Starting prebuffering for event ${event.id}`);
@@ -235,9 +224,6 @@ function AlternativeMpdController() {
                 videoElement: prebufferedVideoElement,
                 event: event
             });
-
-            // Mark as prebuffered
-            prebufferInfo.prebuffered = true;
 
             prebufferedPlayer.on(Events.STREAM_INITIALIZED, () => {
                 logger.info(`Prebuffering completed for event ${event.id}`);
@@ -267,27 +253,9 @@ function AlternativeMpdController() {
                 
                 prebufferedPlayers.delete(eventKey);
             }
-            
-            prebufferedEvents.delete(eventKey);
             logger.debug(`Cleaned up prebuffered content for ${eventKey}`);
         } catch (err) {
             logger.error('Error cleaning up prebuffered content:', err);
-        }
-    }
-
-    function _cleanupStalePrebufferedContent() {
-        try {
-            const now = Date.now();
-            const maxAge = 5 * 60 * 1000; // 5 minutes
-            
-            for (const [eventKey, eventInfo] of prebufferedEvents) {
-                if (now - eventInfo.readyTime > maxAge) {
-                    logger.debug(`Cleaning up stale prebuffered content for ${eventKey}`);
-                    _cleanupPrebufferedContent(eventKey);
-                }
-            }
-        } catch (err) {
-            logger.error('Error cleaning up stale prebuffered content:', err);
         }
     }
 
@@ -519,7 +487,6 @@ function AlternativeMpdController() {
         for (const [eventKey] of prebufferedPlayers) {
             _cleanupPrebufferedContent(eventKey);
         }
-        prebufferedEvents.clear();
         prebufferedPlayers.clear();
 
         // Clear cleanup interval
