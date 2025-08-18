@@ -49,6 +49,11 @@ function EventController() {
     const MPD_CALLBACK_VALUE = 1;
 
     const REMAINING_EVENTS_THRESHOLD = 300;
+    
+    const RETRIGGERABLES_SCHEMES = [
+        Constants.ALTERNATIVE_MPD.URIS.REPLACE,
+        Constants.ALTERNATIVE_MPD.URIS.INSERT
+    ];
 
     const EVENT_HANDLED_STATES = {
         DISCARDED: 'discarded',
@@ -172,12 +177,26 @@ function EventController() {
             const callback = function (event) {
                 if (event !== undefined) {
                     const duration = !isNaN(event.duration) ? event.duration : 0;
+                    const isRetriggerables = _isRetriggerables(event);
+                    
+                    // Check if event is ready to resolve (earliestResolutionTimeOffset feature)
+                    if (_checkEventReadyToResolve(event, currentVideoTime)) {
+                        _triggerEventReadyToResolve(event);
+                    }
+
+                    if (isRetriggerables && _canEventRetrigger(event, currentVideoTime)) {
+                        event.triggeredStartEvent = false;
+                    }
+                    
                     // The event is either about to start or has already been started and we are within its duration
                     if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
-                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime) || _eventIsInvalid(event)) {
-                        logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
-                        _removeEvent(events, event);
+                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime, isRetriggerables) || _eventIsInvalid(event)) {
+                        // Only remove non-retriggerables events or retriggerables that can't retrigger
+                        if (!isRetriggerables) {
+                            logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
+                            _removeEvent(events, event);
+                        }
                     }
                 }
             };
@@ -301,17 +320,6 @@ function EventController() {
             events[schemeIdUri] = [];
         }
 
-        if (
-            schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
-            schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT
-        ) {
-            // "type" is reserved for the eventBus
-            delete event.type
-            eventBus.trigger(Events.ALTERNATIVE_EVENT_RECEIVED, event);
-            eventState = EVENT_HANDLED_STATES.DISCARDED;
-            return eventState;
-        }
-
         const indexOfExistingEvent = events[schemeIdUri].findIndex((e) => {
             return ((!value || (e.eventStream.value && e.eventStream.value === value)) && (e.id === id));
         });
@@ -321,6 +329,7 @@ function EventController() {
             events[schemeIdUri].push(event);
             event.triggeredReceivedEvent = false;
             event.triggeredStartEvent = false;
+            event.triggeredReadyToResolve = false;
             eventState = EVENT_HANDLED_STATES.ADDED;
         }
 
@@ -329,6 +338,7 @@ function EventController() {
             const oldEvent = events[schemeIdUri][indexOfExistingEvent];
             event.triggeredReceivedEvent = oldEvent.triggeredReceivedEvent;
             event.triggeredStartEvent = oldEvent.triggeredStartEvent;
+            event.triggeredReadyToResolve = oldEvent.triggeredReadyToResolve || false;
             events[schemeIdUri][indexOfExistingEvent] = event;
             eventState = EVENT_HANDLED_STATES.UPDATED;
         }
@@ -440,15 +450,94 @@ function EventController() {
     }
 
     /**
+     * Checks if the event has an earliestResolutionTimeOffset and if it's ready to resolve
+     * @param {object} event
+     * @param {number} currentVideoTime
+     * @return {boolean}
+     * @private
+     */
+    function _checkEventReadyToResolve(event, currentVideoTime) {
+        try {
+            if (!event.earliestResolutionTimeOffset || event.triggeredReadyToResolve) {
+                return false;
+            }
+            
+            const resolutionTime = event.calculatedPresentationTime - event.earliestResolutionTimeOffset;
+            return currentVideoTime >= resolutionTime;
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Triggers the EVENT_READY_TO_RESOLVE internal event via EventBus
+     * @param {object} event
+     * @private
+     */
+    function _triggerEventReadyToResolve(event) {
+        try {
+            eventBus.trigger(Events.EVENT_READY_TO_RESOLVE, {
+                schemeIdUri: event.eventStream.schemeIdUri,
+                eventId: event.id
+            });
+            event.triggeredReadyToResolve = true;
+            logger.debug(`Event ${event.id} is ready to resolve`);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Checks if an event is retriggerables based on its schemeIdUri
+     * @param {object} event
+     * @return {boolean}
+     * @private
+     */
+    function _isRetriggerables(event) {
+        try {
+            return RETRIGGERABLES_SCHEMES.includes(event.eventStream.schemeIdUri);
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Checks if a retriggerables event can retrigger based on presentation time and duration
+     * @param {object} event
+     * @param {number} currentVideoTime
+     * @return {boolean}
+     * @private
+     */
+    function _canEventRetrigger(event, currentVideoTime) {
+        try {
+            const duration = !isNaN(event.duration) ? event.duration : 0;
+            const presentationTime = event.calculatedPresentationTime;
+            const calculatedPresentationTime = event.calculatedPresentationTime;
+            // Event can retrigger if currentTime < presentationTime OR currentTime >= presentationTime + duration
+            return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + calculatedPresentationTime + duration;
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
      * Checks if an event is expired. For instance if the presentationTime + the duration of an event are smaller than the current video time.
      * @param {number} currentVideoTime
      * @param {number} threshold
      * @param {number} calculatedPresentationTimeInSeconds
+     * @param {boolean} isRetriggerables
      * @return {boolean}
      * @private
      */
-    function _eventHasExpired(currentVideoTime, threshold, calculatedPresentationTimeInSeconds) {
+    function _eventHasExpired(currentVideoTime, threshold, calculatedPresentationTimeInSeconds, isRetriggerables = false) {
         try {
+            // Retriggerables events don't expire in the traditional sense
+            if (isRetriggerables) {
+                return false;
+            }
             return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
         } catch (e) {
             logger.error(e);

@@ -1146,7 +1146,6 @@ function DashManifestModel() {
 
                     if (alternativeMpdKey) {
                         event.alternativeMpd = getAlternativeMpd(currentMpdEvent[DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]], DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]);
-                        event.calculatedPresentationTime = 0;
                     } else {
                         event.alternativeMpd = null;
                     }

@@ -43,15 +43,12 @@ function AlternativeMpdController() {
     const eventBus = EventBus(context).getInstance();
 
     let instance,
-        scheduledEvents = [],
         videoModel,
-        bufferedEvent = null,
         currentEvent = null,
         isSwitching = false,
         hideAlternativePlayerControls = false,
         altPlayer,
         fullscreenDiv,
-        useDashEventsForScheduling = false,
         playbackController,
         altVideoElement,
         alternativeContext,
@@ -59,7 +56,10 @@ function AlternativeMpdController() {
         timeToSwitch = 0,
         manifestInfo = {},
         DashConstants,
-        logger;
+        logger,
+        prebufferedEvents = new Map(),
+        prebufferedPlayers = new Map(),
+        prebufferCleanupInterval = null;
 
     function setConfig(config) {
         if (!config) {
@@ -86,10 +86,6 @@ function AlternativeMpdController() {
             hideAlternativePlayerControls = config.hideAlternativePlayerControls;
         }
 
-        if (!!config.useDashEventsForScheduling && !useDashEventsForScheduling) {
-            logger.info(`Event strategy: ${'Timestamps based' ? config.useDashEventsForScheduling : 'Interval based'}`)
-            useDashEventsForScheduling = config.useDashEventsForScheduling;
-        }
 
         if (!!config.alternativeContext && !alternativeContext) {
             alternativeContext = config.alternativeContext
@@ -102,11 +98,16 @@ function AlternativeMpdController() {
 
     function initialize() {
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
+        
+        // Listen to alternative MPD events directly from EventController
+        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
+        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
+        
+        // Listen to event ready to resolve for prebuffering
+        eventBus.on(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
 
         if (altPlayer) {
             altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-            altPlayer.on(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
         }
 
         document.addEventListener('fullscreenchange', () => {
@@ -130,100 +131,164 @@ function AlternativeMpdController() {
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
 
-        logger.info('Starting playback time monitoring for static manifest');
-        _startPlaybackTimeMonitoring();
-    }
-
-    function _onAlternativeEventReceived(event) {
-        // Only Alternative MPD replace events can be used used for dynamic MPD
-        if (manifestInfo.type === DashConstants.DYNAMIC && event?.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
-            logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
-            return
-        }
-
-        if (!event) {
-            return
-        }
-
-        // Initialize trigger events properties for new events
-        if (!event.triggered) {
-            event.triggered = false;
-        }
-        if (!event.completed) {
-            event.completed = false;
-        }
-        if (event.alternativeMpd && event.alternativeMpd.executeOnce !== undefined && !event.executeOnce) {
-            event.executeOnce = event.alternativeMpd.executeOnce || false;
-        }
-        if (!event.executionCount) {
-            event.executionCount = 0;
-        }
-
-        if (event.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
-            _updateEvent(event);
-        } else if (event.status === Constants.ALTERNATIVE_MPD.STATUS.REPEAT) {
-            _repeatEvent(event);
-        } else if (scheduledEvents) {
-            scheduledEvents.push(event)
-            logger.info(`Added new alternative event. Total scheduled events: ${scheduledEvents.length}`);
-        }
-    }
-    
-    function _updateEvent(event) {
-        if (!event.id) {
-            return;
-        }
+        logger.info('Manifest loaded for alternative MPD controller');
         
-        const index = scheduledEvents.findIndex(e => e.id === event.id && e.eventStream?.schemeIdUri === event.eventStream?.schemeIdUri);
-        if (index > -1) {
-            scheduledEvents[index] = event;
-            logger.info('Alternative event updated');
+        // Start cleanup interval for stale prebuffered content
+        if (!prebufferCleanupInterval) {
+            prebufferCleanupInterval = setInterval(_cleanupStalePrebufferedContent, 30000); // Every 30 seconds
         }
-    }
-    
-    function _repeatEvent(event) {
-        if (!event.id) {
-            return;
-        }
-
-        const originalEvent = scheduledEvents.find(e => e.id === event.id && e.eventStream?.schemeIdUri === event.eventStream?.schemeIdUri);
-        if (originalEvent) {
-            scheduledEvents.push(event);
-            logger.info('Alternative event repeated');
-        }
-        
-    }
-
-    function _startPlaybackTimeMonitoring() {
-        eventBus.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
     }
 
     function _startAltnerativePlaybackTimeMonitoring() {
         altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
     }
 
-    // Handles main player time updates (no currentEvent)
-    function _onMainPlaybackTimeUpdated(e) {
+    function _onAlternativeEventTriggered(e) {
         try {
-            const currentTime = e.time;
-            const streamId = e.streamId || 0;
-            if (!currentEvent) {
-                const nextEvent = _getEventToPrebuff(currentTime);
-                if (nextEvent) {
-                    _prebufferNextAlternative(nextEvent);
-                }
+            const event = e.event;
+            console.log(event)
+            if (!event || !event.alternativeMpd) {
+                return;
+            }
 
-                actualEventPresentationTime = e.time;
-                const event = _getCurrentEvent(currentTime, streamId);
-                if (event && !isSwitching && !currentEvent) {
-                    currentEvent = event;
-                    timeToSwitch = event.startWithOffset ? actualEventPresentationTime - event.presentationTime : 0;
-                    timeToSwitch = timeToSwitch + _getAnchor(event.alternativeMPD.url);
-                    _switchToAlternativeContent(event, timeToSwitch);
+            // Only Alternative MPD replace events can be used for dynamic MPD
+            if (manifestInfo.type === DashConstants.DYNAMIC && event.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
+                logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
+                return;
+            }
+
+            const parsedEvent = _parseEvent(event);
+            if (!parsedEvent) {
+                return;
+            }
+
+            // Try to prebuffer if not already done
+            const eventKey = `${parsedEvent.schemeIdUri}_${parsedEvent.id}`;
+            if (prebufferedEvents.has(eventKey) && !prebufferedEvents.get(eventKey).prebuffered) {
+                _prebufferAlternativeContent(parsedEvent);
+            }
+
+            // Handle switching to alternative content
+            if (!isSwitching && !currentEvent) {
+                currentEvent = parsedEvent;
+                actualEventPresentationTime = playbackController.getTime();
+                timeToSwitch = parsedEvent.startWithOffset ? actualEventPresentationTime - parsedEvent.presentationTime : 0;
+                timeToSwitch = timeToSwitch + _getAnchor(parsedEvent.alternativeMPD.url);
+                _switchToAlternativeContent(parsedEvent, timeToSwitch);
+            }
+        } catch (err) {
+            logger.error('Error handling alternative event:', err);
+        }
+    }
+
+    function _onEventReadyToResolve(e) {
+        try {
+            const { schemeIdUri, eventId } = e;
+            
+            // Check if this is an alternative MPD event
+            if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
+                schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
+                
+                logger.info(`Event ${eventId} is ready for prebuffering`);
+                
+                // Mark this event as ready for prebuffering
+                const eventKey = `${schemeIdUri}_${eventId}`;
+                if (!prebufferedEvents.has(eventKey)) {
+                    prebufferedEvents.set(eventKey, {
+                        schemeIdUri: schemeIdUri,
+                        eventId: eventId,
+                        readyTime: Date.now(),
+                        prebuffered: false
+                    });
                 }
             }
         } catch (err) {
-            logger.error(`Error at ${actualEventPresentationTime} in _onMainPlaybackTimeUpdated:`, err);
+            logger.error('Error handling event ready to resolve:', err);
+        }
+    }
+
+    function _prebufferAlternativeContent(event) {
+        try {
+            const eventKey = `${event.schemeIdUri}_${event.id}`;
+            const prebufferInfo = prebufferedEvents.get(eventKey);
+            
+            if (!prebufferInfo || prebufferInfo.prebuffered) {
+                return; // Already prebuffered or not ready
+            }
+
+            logger.info(`Starting prebuffering for event ${event.id}`);
+            
+            // Create a prebuffered video element
+            const prebufferedVideoElement = document.createElement('video');
+            prebufferedVideoElement.style.display = 'none';
+            prebufferedVideoElement.autoplay = false;
+            prebufferedVideoElement.controls = false;
+            document.body.appendChild(prebufferedVideoElement);
+
+            // Create a prebuffered player
+            const prebufferedPlayer = MediaPlayer().create();
+            prebufferedPlayer.initialize(prebufferedVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
+            prebufferedPlayer.setAutoPlay(false);
+
+            // Store the prebuffered player
+            prebufferedPlayers.set(eventKey, {
+                player: prebufferedPlayer,
+                videoElement: prebufferedVideoElement,
+                event: event
+            });
+
+            // Mark as prebuffered
+            prebufferInfo.prebuffered = true;
+
+            prebufferedPlayer.on(Events.STREAM_INITIALIZED, () => {
+                logger.info(`Prebuffering completed for event ${event.id}`);
+            }, this);
+
+            prebufferedPlayer.on(Events.ERROR, (e) => {
+                logger.error(`Prebuffering error for event ${event.id}:`, e);
+                _cleanupPrebufferedContent(eventKey);
+            }, this);
+
+        } catch (err) {
+            logger.error('Error prebuffering alternative content:', err);
+        }
+    }
+
+    function _cleanupPrebufferedContent(eventKey) {
+        try {
+            const prebufferedPlayer = prebufferedPlayers.get(eventKey);
+            if (prebufferedPlayer) {
+                prebufferedPlayer.player.off(Events.STREAM_INITIALIZED);
+                prebufferedPlayer.player.off(Events.ERROR);
+                prebufferedPlayer.player.reset();
+                
+                if (prebufferedPlayer.videoElement && prebufferedPlayer.videoElement.parentNode) {
+                    prebufferedPlayer.videoElement.parentNode.removeChild(prebufferedPlayer.videoElement);
+                }
+                
+                prebufferedPlayers.delete(eventKey);
+            }
+            
+            prebufferedEvents.delete(eventKey);
+            logger.debug(`Cleaned up prebuffered content for ${eventKey}`);
+        } catch (err) {
+            logger.error('Error cleaning up prebuffered content:', err);
+        }
+    }
+
+    function _cleanupStalePrebufferedContent() {
+        try {
+            const now = Date.now();
+            const maxAge = 5 * 60 * 1000; // 5 minutes
+            
+            for (const [eventKey, eventInfo] of prebufferedEvents) {
+                if (now - eventInfo.readyTime > maxAge) {
+                    logger.debug(`Cleaning up stale prebuffered content for ${eventKey}`);
+                    _cleanupPrebufferedContent(eventKey);
+                }
+            }
+        } catch (err) {
+            logger.error('Error cleaning up stale prebuffered content:', err);
         }
     }
 
@@ -283,103 +348,6 @@ function AlternativeMpdController() {
         return event;
     }
 
-    function _getCurrentEvent(currentTime, streamId) {
-        const priorityEvent = _findPriorityEvent(currentTime);
-        if (priorityEvent) {
-            return _parseEvent(priorityEvent);
-        }
-
-        const foundEvent = scheduledEvents.find(event => {
-            const parsedEvent = _parseEvent(event);
-            
-            if (event.executeOnce && event.executionCount > 0) {
-                // Skip if executeOnce and already executed
-                return false;
-            }
-            
-            if (event.completed) {
-                return _handleCompletedEvent(parsedEvent, currentTime);
-            }
-            if (parsedEvent.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_DEFAULT) {
-                return _handleNoJumpEvent(parsedEvent, currentTime);
-            }
-            const periodCheck = _handlePeriodIdMismatch(parsedEvent, streamId);
-            if (periodCheck === false) {
-                return false;
-            }
-            return _handleDefaultEvent(parsedEvent, currentTime);
-        });
-
-        return foundEvent ? _parseEvent(foundEvent) : null;
-    }
-
-    function _findPriorityEvent(currentTime) {
-        const priorityEvents = scheduledEvents.filter(event => {
-            const parsedEvent = _parseEvent(event);
-            return parsedEvent.noJump === Constants.ALTERNATIVE_MPD.ATTRIBUTES.NO_JUMP_PRIORITY &&
-                   currentTime >= parsedEvent.presentationTime;
-        });
-
-        if (priorityEvents.length === 0) { 
-            return null; 
-        }
-        return priorityEvents.reduce((maxEvent, event) => {
-            const parsedEvent = _parseEvent(event);
-            const parsedMaxEvent = maxEvent ? _parseEvent(maxEvent) : null;
-            
-            if (!maxEvent || parsedEvent.presentationTime >= parsedMaxEvent.presentationTime) {
-                if (maxEvent) {
-                    const parsedMax = _parseEvent(maxEvent);
-                    parsedMax.noJump = 0;
-                }
-                return event;
-            }
-            return maxEvent;
-        }, null);
-    }
-
-    function _handleCompletedEvent(event, currentTime) {
-        const hasDuration = !isNaN(event.duration);
-        const isPastEnd = hasDuration && currentTime > event.presentationTime + event.duration;
-        const isBeforeStart = currentTime < event.presentationTime;
-        event.completed = !(isPastEnd || isBeforeStart);
-        return false;
-    }
-
-    function _handleNoJumpEvent(event, currentTime) {
-        return currentTime > event.presentationTime;
-    }
-
-    function _handlePeriodIdMismatch(event, streamId) {
-        return streamId !== event.periodId ? false : undefined;
-    }
-
-    function _handleDefaultEvent(event, currentTime) {
-        return currentTime >= event.presentationTime &&
-            (isNaN(event.duration) || currentTime < event.presentationTime + event.duration);
-    }
-
-    function _getEventToPrebuff(currentTime) {
-        return scheduledEvents.find(event => {
-            const parsedEvent = _parseEvent(event);
-            
-            if (event.executeOnce && event.executionCount > 0) {
-                // Skip if executeOnce and already executed
-                return false;
-            }
-
-            if (event.triggered) {
-                const hasDuration = !isNaN(parsedEvent.duration);
-                const isPastEnd = hasDuration && currentTime > parsedEvent.presentationTime + parsedEvent.duration;
-                const isBeforeStart = currentTime < parsedEvent.presentationTime - parsedEvent.alternativeMPD.earliestResolutionTimeOffset;
-
-                event.triggered = !(isPastEnd || isBeforeStart);
-                return false;
-            }
-            return currentTime >= parsedEvent.presentationTime - parsedEvent.alternativeMPD.earliestResolutionTimeOffset &&
-                currentTime < parsedEvent.presentationTime;
-        });
-    }
 
     function _initializeAlternativePlayerElement(event) {
         if (!altVideoElement) {
@@ -395,9 +363,7 @@ function AlternativeMpdController() {
         };
 
         // Initialize alternative player
-        if (event != bufferedEvent) {
-            _initializeAlternativePlayer(event);
-        }
+        _initializeAlternativePlayer(event);
     }
 
     function _initializeAlternativePlayer(event) {
@@ -418,29 +384,6 @@ function AlternativeMpdController() {
         }
     }
 
-
-
-    function _prebufferNextAlternative(nextEvent) {
-        if (nextEvent && !bufferedEvent) {
-            const parsedEvent = _parseEvent(nextEvent);
-            logger.info(`Preloading event starting at ${parsedEvent.presentationTime}`)
-            _prebufferAlternativeContent(nextEvent);
-        }
-    }
-
-    function _prebufferAlternativeContent(event) {
-        const parsedEvent = _parseEvent(event);
-        if (event.triggered) { return };
-        event.triggered = true;
-
-        _initializeAlternativePlayerElement(parsedEvent);
-        bufferedEvent = event;
-
-        altPlayer.on(Events.STREAM_INITIALIZED, () => {
-            logger.info('Buffering alternative content')
-        }, this);
-    }
-
     function _switchToAlternativeContent(event, time = 0) {
         if (isSwitching) { 
             logger.debug('Switch already in progress - ignoring request');
@@ -449,10 +392,37 @@ function AlternativeMpdController() {
         
         logger.info(`Switching to alternative content at time ${time}`);
         isSwitching = true;
-        event.triggered = true;
-        event.noJump = 0;
 
-        _initializeAlternativePlayerElement(event);
+        const eventKey = `${event.schemeIdUri}_${event.id}`;
+        const prebufferedContent = prebufferedPlayers.get(eventKey);
+
+        if (prebufferedContent) {
+            // Use prebuffered content
+            logger.info(`Using prebuffered content for event ${event.id}`);
+            
+            // Move prebuffered video element to visible area
+            altVideoElement = prebufferedContent.videoElement;
+            altPlayer = prebufferedContent.player;
+            
+            // Remove from prebuffered storage
+            prebufferedPlayers.delete(eventKey);
+
+            // Setup video element for display
+            altVideoElement.style.display = 'none';
+            altVideoElement.controls = !hideAlternativePlayerControls;
+            
+            if (altVideoElement.parentNode !== fullscreenDiv) {
+                fullscreenDiv.appendChild(altVideoElement);
+            }
+            
+            // Insert into DOM if needed
+            if (!videoModel.getElement().parentNode.contains(altVideoElement)) {
+                videoModel.getElement().parentNode.insertBefore(altVideoElement, videoModel.getElement().nextSibling);
+            }
+        } else {
+            // No prebuffered content, initialize normally
+            _initializeAlternativePlayerElement(event);
+        }
 
         videoModel.pause();
         logger.debug('Main video paused');
@@ -470,9 +440,6 @@ function AlternativeMpdController() {
         _startAltnerativePlaybackTimeMonitoring();
 
         isSwitching = false;
-        bufferedEvent = null;
-
-        event.executionCount++;
     }
 
     function _getAnchor(url) {
@@ -510,9 +477,6 @@ function AlternativeMpdController() {
             logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
         }
 
-        if (!event.completed) {
-            event.completed = true;
-        }
 
         if (playbackController.getIsDynamic()) {
             logger.debug('Seeking to original live point for dynamic manifest');
@@ -535,16 +499,12 @@ function AlternativeMpdController() {
         currentEvent = null;
 
         logger.debug('Alternative player resources cleaned up');
-        _prebufferNextAlternative();
     }
 
 
     function reset() {
-        scheduledEvents = [];
-
         if (altPlayer) {
             altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-            altPlayer.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
             altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
             altPlayer.off(Events.ERROR, _onAlternativePlayerError, this);
             altPlayer.reset();
@@ -556,15 +516,26 @@ function AlternativeMpdController() {
             altVideoElement = null;
         }
 
-        if (videoModel) {
-            videoModel.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onMainPlaybackTimeUpdated, this);
+        // Clean up all prebuffered content
+        for (const [eventKey] of prebufferedPlayers) {
+            _cleanupPrebufferedContent(eventKey);
+        }
+        prebufferedEvents.clear();
+        prebufferedPlayers.clear();
+
+        // Clear cleanup interval
+        if (prebufferCleanupInterval) {
+            clearInterval(prebufferCleanupInterval);
+            prebufferCleanupInterval = null;
         }
 
         isSwitching = false;
         currentEvent = null;
 
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.off(Events.ALTERNATIVE_EVENT_RECEIVED, _onAlternativeEventReceived, this);
+        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
+        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
+        eventBus.off(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
     }
 
     instance = {
