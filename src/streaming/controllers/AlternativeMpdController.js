@@ -146,7 +146,6 @@ function AlternativeMpdController() {
     function _onAlternativeEventTriggered(e) {
         try {
             const event = e.event;
-            console.log(event)
             if (!event || !event.alternativeMpd) {
                 return;
             }
