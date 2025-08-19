@@ -25,6 +25,11 @@ export function checkNoCriticalErrors(playerAdapter) {
     expect(errorEvents).to.be.empty;
 }
 
+export function checkEventHasBeenTriggered(playerAdapter, eventName) {
+    const hasBeenTriggered = playerAdapter.hasEventBeenTriggered(eventName)
+    expect(hasBeenTriggered).to.be.true;
+}
+
 export async function checkForEndedEvent(playerAdapter) {
     const ended = await playerAdapter.waitForEvent(playerAdapter.getDuration() * 1000 + Constants.TEST_TIMEOUT_THRESHOLDS.IS_FINISHED_OFFSET_TO_DURATION, dashjs.MediaPlayer.events.PLAYBACK_ENDED)
     expect(ended).to.be.true;
@@ -65,16 +70,29 @@ export function checkTimeWithinThreshold(playerAdapter, seekTime, allowedDiffere
 }
 
 export function initializeDashJsAdapter(item, mpd, settings = null) {
+    const playerAdapter = _commmonInitialization(item, settings);
+    playerAdapter.attachSource(mpd);
+
+    return playerAdapter
+}
+
+export function initializeDashJsAdapterWithoutAttachSource(item, settings = null) {
+    const playerAdapter = _commmonInitialization(item, settings);
+
+    return playerAdapter
+}
+
+function _commmonInitialization(item, settings) {
     let playerAdapter = new DashJsAdapter();
     playerAdapter.init(true);
     playerAdapter.setDrmData(item.drm);
     if (settings) {
         playerAdapter.updateSettings(settings);
     }
-    playerAdapter.attachSource(mpd);
 
     return playerAdapter
 }
+
 
 export function initializeDashJsAdapterForPreload(item, mpd, settings) {
     let playerAdapter = new DashJsAdapter();
@@ -87,6 +105,7 @@ export function initializeDashJsAdapterForPreload(item, mpd, settings) {
 
     return playerAdapter
 }
+
 
 export function isLiveContent(item) {
     return item.type === Constants.CONTENT_TYPES.LIVE
