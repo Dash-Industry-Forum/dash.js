@@ -814,8 +814,7 @@ function StreamController() {
             && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
             && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some WebKit TVs), where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
             && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some TVs), where Video Quality API, totalVideoFrames always equals the number of dropped frames.
-            && playbackQuality.totalVideoFrames >= totalVideoFramesAtLastPlaybackProgress // Handles devices (some WebKit TVs) where total video frames is reset if the decoder is reinitialised.
-            && playbackQuality.totalVideoFrames === totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong.
+            && playbackQuality.totalVideoFrames === totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong. On some some WebKit TVs the total video frames is reset if the decoder is reinitialised.
 
         if(isVideoFramesNotAdvancing){
             if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
