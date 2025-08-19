@@ -26,8 +26,6 @@ function RulesContextMock() {
 
         return fragRequest;
     };
-    this.getVoRepresentation = function () {
-    };
     this.getAbrController = function () {
         return {
             getPossibleVoRepresentationsFilteredBySettings: function () {
@@ -37,11 +35,6 @@ function RulesContextMock() {
     };
     this.getSwitchRequestHistory = function () {
         return new SwitchRequestHistoryMock();
-    };
-    this.getVoRepresentation = function () {
-        return {
-            fragmentDuration: NaN
-        };
     };
 
     this.getScheduleController = function () {
