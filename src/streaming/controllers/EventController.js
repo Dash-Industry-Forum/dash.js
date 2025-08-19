@@ -184,7 +184,7 @@ function EventController() {
                         _triggerEventReadyToResolve(event);
                     }
 
-                    if (isRetriggerables && _canEventRetrigger(event, currentVideoTime)) {
+                    if (isRetriggerables && _canEventRetrigger(event, presentationTimeThreshold)) {
                         event.triggeredStartEvent = false;
                     }
                     
@@ -511,12 +511,10 @@ function EventController() {
      * @return {boolean}
      * @private
      */
-    function _canEventRetrigger(event, currentVideoTime) {
+    function _canEventRetrigger(event, presentationTimeThreshold) {
         try {
             const duration = !isNaN(event.duration) ? event.duration : 0;
             const presentationTime = event.calculatedPresentationTime;
-            const currentVideoTime = playbackController.getTime();
-            const presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
             // Event can retrigger if currentTime < presentationTime OR currentTime >= presentationTime + duration
             return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + presentationTimeThreshold + duration;
         } catch (e) {
