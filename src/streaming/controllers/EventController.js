@@ -479,7 +479,8 @@ function EventController() {
         try {
             eventBus.trigger(Events.EVENT_READY_TO_RESOLVE, {
                 schemeIdUri: event.eventStream.schemeIdUri,
-                eventId: event.id
+                eventId: event.id,
+                event: event
             });
             event.triggeredReadyToResolve = true;
             logger.debug(`Event ${event.id} is ready to resolve`);
@@ -514,9 +515,10 @@ function EventController() {
         try {
             const duration = !isNaN(event.duration) ? event.duration : 0;
             const presentationTime = event.calculatedPresentationTime;
-            const calculatedPresentationTime = event.calculatedPresentationTime;
+            const currentVideoTime = playbackController.getTime();
+            const presentationTimeThreshold = (currentVideoTime - lastEventTimerCall);
             // Event can retrigger if currentTime < presentationTime OR currentTime >= presentationTime + duration
-            return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + calculatedPresentationTime + duration;
+            return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + presentationTimeThreshold + duration;
         } catch (e) {
             logger.error(e);
             return false;
