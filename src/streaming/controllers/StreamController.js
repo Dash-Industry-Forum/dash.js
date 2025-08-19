@@ -811,10 +811,10 @@ function StreamController() {
             && !videoModel.isPaused()
             && !videoModel.isStalled()
             && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
-            && playbackQuality.totalVideoFrames > 0 // Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns 0
-            && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some tvs), where Video Quality API, totalVideoFrames always returns max value of a 32 bit signed integer
-            && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some tvs), where Video Quality API, totalVideoFrames always equals the number of dropped frames
-            && playbackQuality.totalVideoFrames <= totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong
+            && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
+            && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some WebKit TVs), where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
+            && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some TVs), where Video Quality API, totalVideoFrames always equals the number of dropped frames.
+            && playbackQuality.totalVideoFrames !== totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong. On some WebKit TVs this value is reset if the decoder is reinitialised.
     
         if(isVideoFramesNotAdvancing){
             if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
