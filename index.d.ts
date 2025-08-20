@@ -1044,7 +1044,7 @@ declare namespace dashjs {
 
         areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
 
-        getMainAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): IAdaptation | null;
+        getMainAdaptationForType(type: MediaType, streamInfo: object): IAdaptation | null;
 
         getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
 
