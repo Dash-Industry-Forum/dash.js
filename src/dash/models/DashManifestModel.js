@@ -818,6 +818,9 @@ function DashManifestModel() {
                         // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
                         // exceeds @maxSegmentDuration
                         voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
+                        if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE) && segmentInfo.hasOwnProperty('k')) {
+                            voRepresentation.k = segmentInfo.k || 1;
+                        }
                     } else if (realRepresentation.hasOwnProperty(DashConstants.SEGMENT_TEMPLATE)) {
                         segmentInfo = realRepresentation.SegmentTemplate;
 
