@@ -135,13 +135,13 @@ describe('ProtectionController', function () {
             expect(keySystems).not.to.be.empty;
         });
 
-        // tests for maximumOpenMediaKeySessions feature
+        // tests for keepProtectionMediaKeysMaximumOpenSessions feature
         it('should close the oldest session when the maximum is reached and keepProtectionMediaKeys is true', function () {
             settingsMock.get = () => ({
                 streaming: {
                     protection: {
                         keepProtectionMediaKeys: true,
-                        maximumOpenMediaKeySessions: 2
+                        keepProtectionMediaKeysMaximumOpenSessions: 2
                     }
                 }
             });
@@ -162,7 +162,7 @@ describe('ProtectionController', function () {
                 streaming: {
                     protection: {
                         keepProtectionMediaKeys: false,
-                        maximumOpenMediaKeySessions: 2
+                        keepProtectionMediaKeysMaximumOpenSessions: 2
                     }
                 }
             });
@@ -177,12 +177,12 @@ describe('ProtectionController', function () {
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
-        it('should not close any session if keepProtectionMediaKeys is true, but maximumOpenMediaKeySessions is not set', function () {
+        it('should not close any session if keepProtectionMediaKeys is true, but keepProtectionMediaKeysMaximumOpenSessions is not set', function () {
             settingsMock.get = () => ({
                 streaming: {
                     protection: {
                         keepProtectionMediaKeys: true
-                        // maximumOpenMediaKeySessions ist undefined
+                        // keepProtectionMediaKeysMaximumOpenSessions is undefined
                     }
                 }
             });

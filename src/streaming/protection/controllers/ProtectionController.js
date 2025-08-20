@@ -387,16 +387,20 @@ function ProtectionController(config) {
         // Enforce maximum number of open MediaKeySessions, only if keepProtectionMediaKeys is true
         if (settings) {
             const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
-            const maxSessions = settings.get().streaming.protection.maximumOpenMediaKeySessions;
-            if (isKeepProtectionMediaKeysEnabled === true && typeof maxSessions === 'number' && maxSessions > 0) {
-                const sessions = protectionModel.getSessionTokens();
-                if (sessions.length >= maxSessions) {
-                    // Close the oldest session to make room for a new one
-                    const oldestSession = sessions[0];
-                    if (oldestSession) {
-                        logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
-                        closeKeySession(oldestSession);
+            const maxSessions = settings.get().streaming.protection.keepProtectionMediaKeysMaximumOpenSessions;
+            if (typeof maxSessions === 'number' && maxSessions > 0) {
+                if (isKeepProtectionMediaKeysEnabled) {
+                    const sessions = protectionModel.getSessionTokens();
+                    if (sessions.length >= maxSessions) {
+                        // Close the oldest session to make room for a new one
+                        const oldestSession = sessions[0];
+                        if (oldestSession) {
+                            logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
+                            closeKeySession(oldestSession);
+                        }
                     }
+                } else {
+                    logger.warn('DRM: keepProtectionMediaKeysMaximumOpenSessions is set to ' + maxSessions + ', keepProtectionMediaKeys is not enabled. This setting will be ignored.');
                 }
             }
         }

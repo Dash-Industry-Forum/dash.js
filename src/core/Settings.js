@@ -103,10 +103,10 @@ import Events from './events/Events.js';
  *            },
  *            protection: {
  *                keepProtectionMediaKeys: false,
+ *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false,
- *                maximumOpenMediaKeySessions: null
+ *                ignoreKeyStatuses: false
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -691,6 +691,9 @@ import Events from './events/Events.js';
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle.
  *
+ * @property {number} [keepProtectionMediaKeysMaximumOpenSessions=-1]
+ * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the oldest sessions when the limit is exceeded. -1 means unlimited.
+ * 
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
@@ -700,9 +703,6 @@ import Events from './events/Events.js';
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
- * 
- * @property {number|null} [maximumOpenMediaKeySessions=null]
- * Maximum number of open MediaKeySessions. If set, dash.js will close the oldest sessions when the limit is exceeded. Null means unlimited.
  */
 
 /**
@@ -1148,10 +1148,10 @@ function Settings() {
             },
             protection: {
                 keepProtectionMediaKeys: false,
+                keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
-                ignoreKeyStatuses: false,
-                maximumOpenMediaKeySessions: null
+                ignoreKeyStatuses: false
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
