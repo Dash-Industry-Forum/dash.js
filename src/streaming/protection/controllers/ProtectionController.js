@@ -384,26 +384,8 @@ function ProtectionController(config) {
             return;
         }
 
-        // Enforce maximum number of open MediaKeySessions, only if keepProtectionMediaKeys is true
-        if (settings) {
-            const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
-            const maxSessions = settings.get().streaming.protection.keepProtectionMediaKeysMaximumOpenSessions;
-            if (typeof maxSessions === 'number' && maxSessions > 0) {
-                if (isKeepProtectionMediaKeysEnabled) {
-                    const sessions = protectionModel.getSessionTokens();
-                    if (sessions.length >= maxSessions) {
-                        // Close the oldest session to make room for a new one
-                        const oldestSession = sessions[0];
-                        if (oldestSession) {
-                            logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
-                            closeKeySession(oldestSession);
-                        }
-                    }
-                } else {
-                    logger.warn('DRM: keepProtectionMediaKeysMaximumOpenSessions is set to ' + maxSessions + ', keepProtectionMediaKeys is not enabled. This setting will be ignored.');
-                }
-            }
-        }
+        // Enforce maximum number of open MediaKeySessions, if settings are provided
+        _enforceMediaKeySessionLimit();
 
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
         if (initDataForKS) {
@@ -429,6 +411,33 @@ function ProtectionController(config) {
                 data: null,
                 error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (selectedKeySystem ? selectedKeySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
             });
+        }
+    }
+
+    /**
+     * Enforces the maximum number of open MediaKeySessions, if settings are provided.
+     * @description This method checks the current number of open sessions and closes the oldest session if the limit is reached.
+     * @requires keepProtectionMediaKeys is enabled and keepProtectionMediaKeysMaximumOpenSessions is set with a positive value.
+     * @private
+     */
+    function _enforceMediaKeySessionLimit() {
+        if (!settings) { return; }
+        const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
+        const maxSessions = settings.get().streaming.protection.keepProtectionMediaKeysMaximumOpenSessions;
+        if (typeof maxSessions !== 'number' || maxSessions <= 0) { return; }
+        if (!isKeepProtectionMediaKeysEnabled) {
+            logger.warn('DRM: keepProtectionMediaKeysMaximumOpenSessions is set to ' + maxSessions + ', but keepProtectionMediaKeys is not enabled. Therefore, keepProtectionMediaKeysMaximumOpenSessions will be ignored.');
+            return;
+        }
+        // Ensure protectionModel is available before accessing sessions
+        if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') { return; }
+        const sessionTokens = protectionModel.getSessionTokens() || [];
+        if (sessionTokens.length < maxSessions) { return; }
+        // Limit reached. Close the oldest session to make room for a new one.
+        const oldestSession = sessionTokens[0];
+        if (oldestSession) {
+            logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
+            closeKeySession(oldestSession);
         }
     }
 
