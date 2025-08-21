@@ -1044,7 +1044,7 @@ declare namespace dashjs {
 
         areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
 
-        getMainAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): IAdaptation | null;
+        getMainAdaptationForType(type: MediaType, streamInfo: object): IAdaptation | null;
 
         getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
 
@@ -1116,7 +1116,7 @@ declare namespace dashjs {
 
         getUTCTimingSources(): any[];
 
-        getVoRepresentation(mediaInfo: MediaInfo): Representation[];
+        getVoRepresentations(mediaInfo: MediaInfo): Representation[];
 
         isPatchValid(manifest: object, patch: object): boolean;
 
@@ -2220,7 +2220,7 @@ declare namespace dashjs {
 
         setProtectionData(value: ProtectionDataSet): void;
 
-        setRepresentationForTypeById(type: MediaType, id: number, forceReplace?: boolean): void;
+        setRepresentationForTypeById(type: MediaType, id: string, forceReplace?: boolean): void;
 
         setRepresentationForTypeByIndex(type: MediaType, index: number, forceReplace?: boolean): void;
 
@@ -5850,8 +5850,6 @@ declare namespace dashjs {
         getStreamInfo(): StreamInfo;
 
         getType(): string;
-
-        getVoRepresentation(quality: number): Representation;
 
         handleNewMediaInfo(mediaInfo: MediaInfo): void;
 

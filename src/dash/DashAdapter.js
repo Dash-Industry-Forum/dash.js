@@ -132,7 +132,6 @@ function DashAdapter() {
 
     /**
      * Returns the AdaptationSet for a given period index and a given mediaType.
-     * @param {number} periodIndex
      * @param {MediaType} type
      * @param {object} streamInfo
      * @returns {null|object} adaptation

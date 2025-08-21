@@ -185,10 +185,6 @@ function VideoModel() {
         //add check of value type
         if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
             element = value;
-            // Workaround to force Firefox to fire the canplay event.
-            if (element) {
-                element.preload = 'auto';
-            }
         } else {
             throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
         }
@@ -284,7 +280,7 @@ function VideoModel() {
                     element.dispatchEvent(event);
                 }
             }
-            
+
             if (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState) {
                 resume();
             } else {
