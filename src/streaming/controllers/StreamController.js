@@ -818,6 +818,7 @@ function StreamController() {
             && event.time > settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds // We should be at least one threshold into the video before triggering
             && !videoModel.isPaused()
             && !videoModel.isStalled()
+            && !videoModel.isSeeking()
             && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
             && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
             && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some WebKit TVs), where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
