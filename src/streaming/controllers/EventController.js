@@ -52,6 +52,7 @@ function EventController() {
     const NO_JUMP_TRIGGER_LAST = 2;
 
     const REMAINING_EVENTS_THRESHOLD = 300;
+    const MAX_PRESENTATION_TIME_THRESHOLD = 2.0; // Maximum threshold in seconds to prevent false positives during seeks
     
     const RETRIGGERABLES_SCHEMES = [
         Constants.ALTERNATIVE_MPD.URIS.REPLACE,
@@ -119,6 +120,9 @@ function EventController() {
                 isStarted = false;
                 _onStopEventController();
             }
+            // Clean up event listeners
+            eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+            eventBus.off(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         } catch (e) {
             throw e;
         }
@@ -135,6 +139,9 @@ function EventController() {
             if (!isStarted && !isNaN(refreshDelay)) {
                 isStarted = true;
                 eventInterval = setInterval(_onEventTimer, refreshDelay);
+                // Set up event listeners for seek operations
+                eventBus.on(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+                eventBus.on(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
             }
         } catch (e) {
             throw e;
@@ -153,6 +160,9 @@ function EventController() {
 
                 // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
                 presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
+                // Cap the threshold to prevent false positives during seeks
+                // If threshold is too big, it indicates a seek operation occurred
+                presentationTimeThreshold = presentationTimeThreshold > MAX_PRESENTATION_TIME_THRESHOLD ? 0 : presentationTimeThreshold
 
                 _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
                 _triggerEvents(inlineEvents, presentationTimeThreshold, currentVideoTime);
@@ -436,6 +446,36 @@ function EventController() {
     }
 
     /**
+     * Handles playback seeking events to prevent false event triggers
+     * @private
+     */
+    function _onPlaybackSeeking() {
+        try {
+            // Reset the timer to current time to prevent large threshold calculations
+            const currentTime = playbackController.getTime();
+            lastEventTimerCall = currentTime;
+            logger.debug(`Seek detected, resetting lastEventTimerCall to ${currentTime}`);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
+     * Handles playback seeked events
+     * @private
+     */
+    function _onPlaybackSeeked() {
+        try {
+            // Ensure timer is properly reset after seek completes
+            const currentTime = playbackController.getTime();
+            lastEventTimerCall = currentTime;
+            logger.debug(`Seek completed, lastEventTimerCall reset to ${currentTime}`);
+        } catch (e) {
+            logger.error(e);
+        }
+    }
+
+    /**
      * Iterates over the inline/inband event object and triggers a callback for each event
      * @param {object} events
      * @param {function} callback
@@ -643,7 +683,6 @@ function EventController() {
                     return latest;
                 }
             });
-
             return event.id === lastEvent.id;
         } catch (e) {
             logger.error(e);
