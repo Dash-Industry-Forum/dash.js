@@ -805,11 +805,20 @@ function StreamController() {
 
         const playbackQuality = videoModel.getPlaybackQuality();
 
+        if(videoModel.isSeeking()){
+            totalVideoFramesAtLastPlaybackProgress = 0
+        }
+
+        const isEnded = event.timeToEnd ? event.timeToEnd >= 0 : false;
+
         const isVideoFramesNotAdvancing = playbackQuality &&
             typeof playbackQuality.totalVideoFrames === 'number'
+            && !isEnded
             && timeAtLastPlaybackProgress !== 0
+            && event.time > settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds // We should be at least one threshold into the video before triggering
             && !videoModel.isPaused()
             && !videoModel.isStalled()
+            && !videoModel.isSeeking()
             && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
             && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
             && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some WebKit TVs), where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
@@ -818,7 +827,13 @@ function StreamController() {
 
         if(isVideoFramesNotAdvancing){
             if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
-                eventBus.trigger(Events.PLAYBACK_FROZEN,{cause:'Frames have stopped advancing, Chromium bug #41243192', totalVideoFrames: playbackQuality.totalVideoFrames, time: event.time });
+                eventBus.trigger(Events.PLAYBACK_FROZEN,{
+                    cause:'Frames have stopped advancing, Chromium bug #41243192',
+                    totalVideoFrames: playbackQuality.totalVideoFrames,
+                    mediaTime: event.time,
+                    isEnded: videoModel.getEnded(),
+                    isSeeking: videoModel.isSeeking()
+                });
                 if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
                     logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
                     videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
