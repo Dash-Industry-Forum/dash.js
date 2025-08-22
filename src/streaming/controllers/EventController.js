@@ -48,6 +48,9 @@ function EventController() {
     const MPD_CALLBACK_SCHEME = 'urn:mpeg:dash:event:callback:2015';
     const MPD_CALLBACK_VALUE = 1;
 
+    const NO_JUMP_TRIGGER_ALL = 1;
+    const NO_JUMP_TRIGGER_LAST = 2;
+
     const REMAINING_EVENTS_THRESHOLD = 300;
     
     const RETRIGGERABLES_SCHEMES = [
@@ -177,7 +180,7 @@ function EventController() {
             const callback = function (event, currentPeriodEvents) {
                 if (event !== undefined) {
                     const duration = !isNaN(event.duration) ? event.duration : 0;
-                    const isRetriggerables = _isRetriggerables(event);
+                    const isRetriggerable = _isRetriggerable(event);
                     const hasNoJump = _hasNoJumpValue(event);
                     
                     // Check if event is ready to resolve (earliestResolutionTimeOffset feature)
@@ -185,7 +188,7 @@ function EventController() {
                         _triggerEventReadyToResolve(event);
                     }
 
-                    if (isRetriggerables && _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold)) {
+                    if (isRetriggerable && _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold)) {
                         event.triggeredStartEvent = false;
                     }
                     
@@ -197,9 +200,12 @@ function EventController() {
                     // Handle regular events - these check duration and timing
                     else if (event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime) {
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
-                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime, isRetriggerables) || _eventIsInvalid(event)) {
+                        if (hasNoJump) {
+                            event.triggeredNoJumpEvent = true;
+                        }
+                    } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime, isRetriggerable) || _eventIsInvalid(event)) {
                         // Only remove non-retriggerables events or retriggerables that can't retrigger
-                        if (!isRetriggerables) {
+                        if (!isRetriggerable) {
                             logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
                             _removeEvent(events, event);
                         }
@@ -503,7 +509,7 @@ function EventController() {
      * @return {boolean}
      * @private
      */
-    function _isRetriggerables(event) {
+    function _isRetriggerable(event) {
         try {
             return RETRIGGERABLES_SCHEMES.includes(event.eventStream.schemeIdUri);
         } catch (e) {
@@ -521,10 +527,17 @@ function EventController() {
      */
     function _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold) {
         try {
+            // To avoid retrigger errors the presentationTimeThreshold must not be 0
+            if (presentationTimeThreshold === 0) {
+                return false;
+            }
+            if (event.triggeredStartEvent) {
+                return false;
+            }
             const duration = !isNaN(event.duration) ? event.duration : 0;
             const presentationTime = event.calculatedPresentationTime;
             // Event can retrigger if currentTime < presentationTime OR currentTime >= presentationTime + duration
-            return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + presentationTimeThreshold + duration;
+            return currentVideoTime < presentationTime || currentVideoTime > presentationTime + presentationTimeThreshold + duration;
         } catch (e) {
             logger.error(e);
             return false;
@@ -539,7 +552,7 @@ function EventController() {
      */
     function _hasNoJumpValue(event) {
         try {
-            return event && event.alternativeMpd && (event.alternativeMpd.noJump === 1 || event.alternativeMpd.noJump === 2);
+            return event && event.alternativeMpd && (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_ALL || event.alternativeMpd.noJump === NO_JUMP_TRIGGER_LAST);
         } catch (e) {
             logger.error(e);
             return false;
@@ -570,12 +583,12 @@ function EventController() {
                 return false;
             }
 
-            if (event.alternativeMpd.noJump === 1) {
+            if (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_ALL) {
                 // noJump=1: trigger all events
                 return true;
-            } else if (event.alternativeMpd.noJump === 2) {
+            } else if (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_LAST) {
                 // noJump=2: only trigger the last event in the sequence
-                return _isLastEventInSequence(event, eventsInSamePeriod);
+                return _isLastEventInSequence(event, eventsInSamePeriod, currentVideoTime);
             }
 
             return false;
@@ -589,10 +602,11 @@ function EventController() {
      * Determines if an event is the last one in a sequence for noJump=2 logic
      * @param {object} event
      * @param {object} eventsInSamePeriod
+     * @param {number} currentVideoTime
      * @return {boolean}
      * @private
      */
-    function _isLastEventInSequence(event, eventsInSamePeriod) {
+    function _isLastEventInSequence(event, eventsInSamePeriod, currentVideoTime) {
         try {
             if (!eventsInSamePeriod || !event.eventStream) {
                 return false;
@@ -601,9 +615,11 @@ function EventController() {
             const schemeIdUri = event.eventStream.schemeIdUri;
             const eventsWithSameScheme = eventsInSamePeriod[schemeIdUri] || [];
             
-            // Get all events with noJump=2 from the same scheme
+            // Get all events with noJump=2 from the same scheme that are not in the future
             const noJump2Events = eventsWithSameScheme.filter(e => 
-                e.alternativeMpd && e.alternativeMpd.noJump === 2
+                e.alternativeMpd && 
+                e.alternativeMpd.noJump === NO_JUMP_TRIGGER_LAST && 
+                e.calculatedPresentationTime <= currentVideoTime
             );
 
             if (noJump2Events.length === 0) {
@@ -611,9 +627,22 @@ function EventController() {
             }
 
             // Find the event with the highest presentation time (the last one)
-            const lastEvent = noJump2Events.reduce((latest, current) => 
-                current.calculatedPresentationTime > latest.calculatedPresentationTime ? current : latest
-            );
+            // While doing so, flag all previous events as triggered
+            const lastEvent = noJump2Events.reduce((latest, current) => {
+                if (current.calculatedPresentationTime > latest.calculatedPresentationTime) {
+                    // Current event is later, so flag the previous (latest) as triggered
+                    if (!latest.triggeredNoJumpEvent) {
+                        latest.triggeredNoJumpEvent = true;
+                    }
+                    return current;
+                } else {
+                    // Latest event is still the last one, so flag current as triggered
+                    if (!current.triggeredNoJumpEvent) {
+                        current.triggeredNoJumpEvent = true;
+                    }
+                    return latest;
+                }
+            });
 
             return event.id === lastEvent.id;
         } catch (e) {
@@ -622,19 +651,20 @@ function EventController() {
         }
     }
 
+
     /**
      * Checks if an event is expired. For instance if the presentationTime + the duration of an event are smaller than the current video time.
      * @param {number} currentVideoTime
      * @param {number} threshold
      * @param {number} calculatedPresentationTimeInSeconds
-     * @param {boolean} isRetriggerables
+     * @param {boolean} isRetriggerable
      * @return {boolean}
      * @private
      */
-    function _eventHasExpired(currentVideoTime, threshold, calculatedPresentationTimeInSeconds, isRetriggerables = false) {
+    function _eventHasExpired(currentVideoTime, threshold, calculatedPresentationTimeInSeconds, isRetriggerable = false) {
         try {
             // Retriggerables events don't expire in the traditional sense
-            if (isRetriggerables) {
+            if (isRetriggerable) {
                 return false;
             }
             return currentVideoTime - threshold > calculatedPresentationTimeInSeconds;
@@ -681,7 +711,6 @@ function EventController() {
                 eventBus.trigger(event.eventStream.schemeIdUri, { event }, { mode });
                 return;
             }
-
             if (!event.triggeredStartEvent) {
                 if (event.eventStream.schemeIdUri === MPD_RELOAD_SCHEME && event.eventStream.value == MPD_RELOAD_VALUE) {
                     //If both are set to zero, it indicates the media is over at this point. Don't reload the manifest.
