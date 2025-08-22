@@ -190,13 +190,14 @@ function EventController() {
                     const duration = !isNaN(event.duration) ? event.duration : 0;
                     const isRetriggerable = _isRetriggerable(event);
                     const hasNoJump = _hasNoJumpValue(event);
+                    const hasExecuteOnce = _hasExecuteOnceValue(event);
                     
                     // Check if event is ready to resolve (earliestResolutionTimeOffset feature)
                     if (_checkEventReadyToResolve(event, currentVideoTime)) {
                         _triggerEventReadyToResolve(event);
                     }
 
-                    if (isRetriggerable && _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold)) {
+                    if (isRetriggerable && _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold, hasExecuteOnce)) {
                         event.triggeredStartEvent = false;
                     }
                     
@@ -212,9 +213,9 @@ function EventController() {
                             event.triggeredNoJumpEvent = true;
                         }
                     } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime, isRetriggerable) || _eventIsInvalid(event)) {
-                        // Only remove non-retriggerables events or retriggerables that can't retrigger
-                        if (!isRetriggerable) {
-                            logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired or invalid`);
+                        // Only remove non-retriggerables events or events with executeOnce that have been triggered
+                        if (!isRetriggerable || (hasExecuteOnce && event.triggeredStartEvent)) {
+                            logger.debug(`Removing event ${event.id} from period ${event.eventStream.period.id} as it is expired, invalid, or executeOnce`);
                             _removeEvent(events, event);
                         }
                     }
@@ -563,8 +564,11 @@ function EventController() {
      * @return {boolean}
      * @private
      */
-    function _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold) {
+    function _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold, executeOnce) {
         try {
+            if (executeOnce) {
+                return false;
+            }
             if (!event.triggeredStartEvent) {
                 return false;
             }
@@ -591,6 +595,21 @@ function EventController() {
     function _hasNoJumpValue(event) {
         try {
             return event && event.alternativeMpd && (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_ALL || event.alternativeMpd.noJump === NO_JUMP_TRIGGER_LAST);
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Checks if an event has executeOnce value
+     * @param {object} event
+     * @return {boolean}
+     * @private
+     */
+    function _hasExecuteOnceValue(event) {
+        try {
+            return event && event.alternativeMpd && event.alternativeMpd.executeOnce === true;
         } catch (e) {
             logger.error(e);
             return false;
