@@ -120,7 +120,6 @@ function EventController() {
                 isStarted = false;
                 _onStopEventController();
             }
-            // Clean up event listeners
             eventBus.off(Events.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
             eventBus.off(Events.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         } catch (e) {
@@ -160,8 +159,7 @@ function EventController() {
 
                 // For dynamic streams lastEventTimeCall will be large in the first iteration. Avoid firing all events at once.
                 presentationTimeThreshold = lastEventTimerCall > 0 ? Math.max(0, presentationTimeThreshold) : 0;
-                // Cap the threshold to prevent false positives during seeks
-                // If threshold is too big, it indicates a seek operation occurred
+                // If threshold is too big, it indicates a seek operation occurred, cap the threshold to prevent false positives during seeks
                 presentationTimeThreshold = presentationTimeThreshold > MAX_PRESENTATION_TIME_THRESHOLD ? 0 : presentationTimeThreshold
 
                 _triggerEvents(inbandEvents, presentationTimeThreshold, currentVideoTime);
@@ -624,14 +622,66 @@ function EventController() {
             }
 
             if (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_ALL) {
-                // noJump=1: trigger all events
-                return true;
+                // noJump=1: only trigger the first event in the sequence
+                return _isFirstEventInSequence(event, eventsInSamePeriod, currentVideoTime);
             } else if (event.alternativeMpd.noJump === NO_JUMP_TRIGGER_LAST) {
                 // noJump=2: only trigger the last event in the sequence
                 return _isLastEventInSequence(event, eventsInSamePeriod, currentVideoTime);
             }
 
             return false;
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Determines if an event is the first one in a sequence for noJump=1 logic
+     * @param {object} event
+     * @param {object} eventsInSamePeriod
+     * @param {number} currentVideoTime
+     * @return {boolean}
+     * @private
+     */
+    function _isFirstEventInSequence(event, eventsInSamePeriod, currentVideoTime) {
+        try {
+            if (!eventsInSamePeriod || !event.eventStream) {
+                return false;
+            }
+
+            const schemeIdUri = event.eventStream.schemeIdUri;
+            const eventsWithSameScheme = eventsInSamePeriod[schemeIdUri] || [];
+            
+            // Get all events with noJump=1 from the same scheme that are not in the future
+            const noJump1Events = eventsWithSameScheme.filter(e => 
+                e.alternativeMpd && 
+                e.alternativeMpd.noJump === NO_JUMP_TRIGGER_ALL && 
+                e.calculatedPresentationTime <= currentVideoTime
+            );
+
+            if (noJump1Events.length === 0) {
+                return false;
+            }
+
+            // Find the event with the lowest presentation time (the first one)
+            // While doing so, flag all subsequent events as triggered
+            const firstEvent = noJump1Events.reduce((earliest, current) => {
+                if (current.calculatedPresentationTime < earliest.calculatedPresentationTime) {
+                    // Current event is earlier, so flag the previous (earliest) as triggered
+                    if (!earliest.triggeredNoJumpEvent) {
+                        earliest.triggeredNoJumpEvent = true;
+                    }
+                    return current;
+                } else {
+                    // Earliest event is still the first one, so flag current as triggered
+                    if (!current.triggeredNoJumpEvent) {
+                        current.triggeredNoJumpEvent = true;
+                    }
+                    return earliest;
+                }
+            });
+            return event.id === firstEvent.id;
         } catch (e) {
             logger.error(e);
             return false;
