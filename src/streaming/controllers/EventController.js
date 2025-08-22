@@ -527,11 +527,11 @@ function EventController() {
      */
     function _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold) {
         try {
-            // To avoid retrigger errors the presentationTimeThreshold must not be 0
-            if (presentationTimeThreshold === 0) {
+            if (!event.triggeredStartEvent) {
                 return false;
             }
-            if (event.triggeredStartEvent) {
+            // To avoid retrigger errors the presentationTimeThreshold must not be 0
+            if (presentationTimeThreshold === 0) {
                 return false;
             }
             const duration = !isNaN(event.duration) ? event.duration : 0;
