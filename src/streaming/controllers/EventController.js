@@ -174,22 +174,28 @@ function EventController() {
      */
     function _triggerEvents(events, presentationTimeThreshold, currentVideoTime) {
         try {
-            const callback = function (event) {
+            const callback = function (event, currentPeriodEvents) {
                 if (event !== undefined) {
                     const duration = !isNaN(event.duration) ? event.duration : 0;
                     const isRetriggerables = _isRetriggerables(event);
+                    const hasNoJump = _hasNoJumpValue(event);
                     
                     // Check if event is ready to resolve (earliestResolutionTimeOffset feature)
                     if (_checkEventReadyToResolve(event, currentVideoTime)) {
                         _triggerEventReadyToResolve(event);
                     }
 
-                    if (isRetriggerables && _canEventRetrigger(event, presentationTimeThreshold)) {
+                    if (isRetriggerables && _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold)) {
                         event.triggeredStartEvent = false;
                     }
                     
-                    // The event is either about to start or has already been started and we are within its duration
-                    if ((event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime)) {
+                    // Handle noJump events first - these ignore duration and trigger when skipping ahead
+                    if (hasNoJump && _shouldTriggerNoJumpEvent(event, currentVideoTime, currentPeriodEvents)) {
+                        event.triggeredNoJumpEvent = true;
+                        _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
+                    }
+                    // Handle regular events - these check duration and timing
+                    else if (event.calculatedPresentationTime <= currentVideoTime && event.calculatedPresentationTime + presentationTimeThreshold + duration >= currentVideoTime) {
                         _startEvent(event, MediaPlayerEvents.EVENT_MODE_ON_START);
                     } else if (_eventHasExpired(currentVideoTime, duration + presentationTimeThreshold, event.calculatedPresentationTime, isRetriggerables) || _eventIsInvalid(event)) {
                         // Only remove non-retriggerables events or retriggerables that can't retrigger
@@ -330,6 +336,7 @@ function EventController() {
             event.triggeredReceivedEvent = false;
             event.triggeredStartEvent = false;
             event.triggeredReadyToResolve = false;
+            event.triggeredNoJumpEvent = false;
             eventState = EVENT_HANDLED_STATES.ADDED;
         }
 
@@ -339,6 +346,7 @@ function EventController() {
             event.triggeredReceivedEvent = oldEvent.triggeredReceivedEvent;
             event.triggeredStartEvent = oldEvent.triggeredStartEvent;
             event.triggeredReadyToResolve = oldEvent.triggeredReadyToResolve || false;
+            event.triggeredNoJumpEvent = oldEvent.triggeredNoJumpEvent || false;
             events[schemeIdUri][indexOfExistingEvent] = event;
             eventState = EVENT_HANDLED_STATES.UPDATED;
         }
@@ -438,7 +446,7 @@ function EventController() {
                         const schemeIdEvents = currentPeriod[schemeIdUris[j]];
                         schemeIdEvents.forEach((event) => {
                             if (event !== undefined) {
-                                callback(event);
+                                callback(event, currentPeriod);
                             }
                         });
                     }
@@ -511,12 +519,103 @@ function EventController() {
      * @return {boolean}
      * @private
      */
-    function _canEventRetrigger(event, presentationTimeThreshold) {
+    function _canEventRetrigger(event, currentVideoTime, presentationTimeThreshold) {
         try {
             const duration = !isNaN(event.duration) ? event.duration : 0;
             const presentationTime = event.calculatedPresentationTime;
             // Event can retrigger if currentTime < presentationTime OR currentTime >= presentationTime + duration
             return currentVideoTime < presentationTime || currentVideoTime >= presentationTime + presentationTimeThreshold + duration;
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Checks if an event has a noJump value (1 or 2)
+     * @param {object} event
+     * @return {boolean}
+     * @private
+     */
+    function _hasNoJumpValue(event) {
+        try {
+            return event && event.alternativeMpd && (event.alternativeMpd.noJump === 1 || event.alternativeMpd.noJump === 2);
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Determines if a noJump event should be triggered
+     * @param {object} event
+     * @param {number} currentVideoTime
+     * @param {object} eventsInSamePeriod
+     * @return {boolean}
+     * @private
+     */
+    function _shouldTriggerNoJumpEvent(event, currentVideoTime, eventsInSamePeriod) {
+        try {
+            if (!_hasNoJumpValue(event)) {
+                return false;
+            }
+
+            // Check if the noJump attribute has already been used for this event
+            if (event.triggeredNoJumpEvent) {
+                return false;
+            }
+
+            // Check if currentVideoTime has passed the presentation time (skip ahead condition)
+            if (currentVideoTime < event.calculatedPresentationTime) {
+                return false;
+            }
+
+            if (event.alternativeMpd.noJump === 1) {
+                // noJump=1: trigger all events
+                return true;
+            } else if (event.alternativeMpd.noJump === 2) {
+                // noJump=2: only trigger the last event in the sequence
+                return _isLastEventInSequence(event, eventsInSamePeriod);
+            }
+
+            return false;
+        } catch (e) {
+            logger.error(e);
+            return false;
+        }
+    }
+
+    /**
+     * Determines if an event is the last one in a sequence for noJump=2 logic
+     * @param {object} event
+     * @param {object} eventsInSamePeriod
+     * @return {boolean}
+     * @private
+     */
+    function _isLastEventInSequence(event, eventsInSamePeriod) {
+        try {
+            if (!eventsInSamePeriod || !event.eventStream) {
+                return false;
+            }
+
+            const schemeIdUri = event.eventStream.schemeIdUri;
+            const eventsWithSameScheme = eventsInSamePeriod[schemeIdUri] || [];
+            
+            // Get all events with noJump=2 from the same scheme
+            const noJump2Events = eventsWithSameScheme.filter(e => 
+                e.alternativeMpd && e.alternativeMpd.noJump === 2
+            );
+
+            if (noJump2Events.length === 0) {
+                return false;
+            }
+
+            // Find the event with the highest presentation time (the last one)
+            const lastEvent = noJump2Events.reduce((latest, current) => 
+                current.calculatedPresentationTime > latest.calculatedPresentationTime ? current : latest
+            );
+
+            return event.id === lastEvent.id;
         } catch (e) {
             logger.error(e);
             return false;

@@ -308,7 +308,6 @@ function AlternativeMpdController() {
                     url: alternativeMpdNode.url,
                     earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
                 },
-                noJump: parseInt(alternativeMpdNode.noJump || 0, 10),
                 mode: mode,
                 type: DashConstants.STATIC,
                 ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
