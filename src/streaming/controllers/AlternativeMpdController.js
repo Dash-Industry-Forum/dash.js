@@ -36,9 +36,6 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 
 function AlternativeMpdController() {
-
-    const DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET = 60;
-
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -301,12 +298,9 @@ function AlternativeMpdController() {
                 duration: event.duration,
                 id: event.id,
                 schemeIdUri: event.eventStream.schemeIdUri,
-                status: event.status,
-                periodId: event.eventStream.period.id,
                 maxDuration: alternativeMpdNode.maxDuration / timescale,
                 alternativeMPD: {
                     url: alternativeMpdNode.url,
-                    earliestResolutionTimeOffset: parseInt(alternativeMpdNode.earliestResolutionTimeOffset || DEFAULT_EARLIEST_RESOULTION_TIME_OFFSET, 10),
                 },
                 mode: mode,
                 type: DashConstants.STATIC,
