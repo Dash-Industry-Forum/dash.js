@@ -6,6 +6,7 @@ import EventBus from '../../../../src/core/EventBus.js';
 import DebugMock from '../../mocks/DebugMock.js';
 import ProtectionKeyControllerMock from '../../mocks/ProtectionKeyControllerMock.js';
 import ProtectionModelMock from '../../mocks/ProtectionModelMock.js';
+import CommonEncryption from '../../../../src/streaming/protection/CommonEncryption.js';
 
 import {expect} from 'chai';
 const context = {};
@@ -66,15 +67,20 @@ describe('ProtectionController', function () {
     });
 
     describe('Well initialized', function () {
+        let protectionModelMock, settingsMock;
+
         beforeEach(function () {
             const protectionKeyControllerMock = new ProtectionKeyControllerMock();
+            settingsMock = { get: () => ({ streaming: { protection: {} } }) };
+            protectionModelMock = new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus });
             protectionController = ProtectionController(context).create({
                 protectionKeyController: protectionKeyControllerMock,
                 events: ProtectionEvents,
                 debug: new DebugMock(),
-                protectionModel: new ProtectionModelMock({ events: ProtectionEvents, eventBus: eventBus }),
+                protectionModel: protectionModelMock,
                 eventBus: eventBus,
-                constants: Constants
+                constants: Constants,
+                settings: settingsMock
             });
         });
 
@@ -127,6 +133,68 @@ describe('ProtectionController', function () {
 
             expect(keySystems).to.be.instanceOf(Array);
             expect(keySystems).not.to.be.empty;
+        });
+
+        // tests for keepProtectionMediaKeysMaximumOpenSessions feature
+        it('should close the oldest session when the maximum is reached and keepProtectionMediaKeys is true', function () {
+            settingsMock.get = () => ({
+                streaming: {
+                    protection: {
+                        keepProtectionMediaKeys: true,
+                        keepProtectionMediaKeysMaximumOpenSessions: 2
+                    }
+                }
+            });
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1', sessionType: 'temporary' });
+            protectionController.createKeySession({ initData: new ArrayBuffer(16), keyId: 'session-2', sessionType: 'temporary' });
+            // add third session, should close the first one
+            protectionController.createKeySession({ initData: new ArrayBuffer(24), keyId: 'session-3', sessionType: 'temporary' });
+
+            expect(protectionModelMock.getSessionTokens().length, 'Session count should still be 2').to.equal(2);
+            expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-2', 'session-3']);
+        });
+
+        it('should add a session if keepProtectionMediaKeys is false', function () {
+            settingsMock.get = () => ({
+                streaming: {
+                    protection: {
+                        keepProtectionMediaKeys: false,
+                        keepProtectionMediaKeysMaximumOpenSessions: 2
+                    }
+                }
+            });
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            expect(protectionModelMock.getSessionTokens().length).to.equal(0);
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1', sessionType: 'temporary' });
+            protectionController.createKeySession({ initData: new ArrayBuffer(16), keyId: 'session-2', sessionType: 'temporary' });
+            protectionController.createKeySession({ initData: new ArrayBuffer(24), keyId: 'session-3', sessionType: 'temporary' });
+            expect(protectionModelMock.getSessionTokens().length).to.equal(3);
+            expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
+        });
+
+        it('should not close any session if keepProtectionMediaKeys is true, but keepProtectionMediaKeysMaximumOpenSessions is not set', function () {
+            settingsMock.get = () => ({
+                streaming: {
+                    protection: {
+                        keepProtectionMediaKeys: true
+                        // keepProtectionMediaKeysMaximumOpenSessions is undefined
+                    }
+                }
+            });
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            expect(protectionModelMock.getSessionTokens().length).to.equal(0);
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'session-1', sessionType: 'temporary' });
+            protectionController.createKeySession({ initData: new ArrayBuffer(16), keyId: 'session-2', sessionType: 'temporary' });
+            protectionController.createKeySession({ initData: new ArrayBuffer(24), keyId: 'session-3', sessionType: 'temporary' });
+            expect(protectionModelMock.getSessionTokens().length).to.equal(3);
+            expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
     });

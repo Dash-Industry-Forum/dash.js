@@ -1673,6 +1673,7 @@ declare namespace dashjs {
             },
             protection?: {
                 keepProtectionMediaKeys?: boolean,
+                keepProtectionMediaKeysMaximumOpenSessions?: number,
                 ignoreEmeEncryptedEvent?: boolean,
                 detectPlayreadyMessageFormat?: boolean,
                 ignoreKeyStatuses?: boolean,
