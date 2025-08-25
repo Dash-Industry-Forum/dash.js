@@ -301,12 +301,13 @@ function TextController(config) {
 
     function _onPlaybackSeeked(e) {
         try {
-            if (!textTracks[e.streamId]) {
+            const tracks = textTracks[e.streamId];
+
+            if (!tracks) {
                 return;
             }
 
             const currentTime = videoModel.getTime() || 0;
-            const tracks = textTracks[e.streamId];
 
             tracks.updateTextTrackWindow(currentTime, true);
         } catch (e) {
