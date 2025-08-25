@@ -253,12 +253,12 @@ function TextTracks(config) {
             }
 
             // Add to TextTrack only cues that are within the current window
-            const windowCues = cueData.allCues.findCuesInRange(windowStart, windowEnd);
-            windowCues.forEach(cue => {
-                if (track.mode !== Constants.TEXT_DISABLED) {
+            if (track.mode !== Constants.TEXT_DISABLED) {
+                const windowCues = cueData.allCues.findCuesInRange(windowStart, windowEnd);
+                windowCues.forEach(cue => {
                     track.addCue(cue);
-                }
-            });
+                });
+            }
 
             cueData.lastCueWindowUpdate = now;
         }
