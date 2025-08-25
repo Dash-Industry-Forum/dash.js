@@ -34,7 +34,7 @@
  * Lookups are O(log n + k), where n is the total number of cues and k is the number of cues in the interval.
  * @ignore
  */
-class IntervalTree {
+class CueIntervalTree {
 
     /**
      * Creates a new IntervalTree instance.
@@ -409,4 +409,4 @@ class IntervalTree {
  * @property {number} height - Height of this node in the tree
  */
 
-export { IntervalTree };
+export { CueIntervalTree };

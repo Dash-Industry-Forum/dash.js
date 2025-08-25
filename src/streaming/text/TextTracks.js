@@ -35,7 +35,7 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import Utils from '../../core/Utils.js';
-import {IntervalTree} from './IntervalTree.js';
+import {CueIntervalTree} from './CueIntervalTree.js';
 import {renderHTML} from 'imsc';
 
 function TextTracks(config) {
@@ -148,7 +148,7 @@ function TextTracks(config) {
 
                 // Initialize the track data for the newly created track
                 tracksCueData.set(textTrack, {
-                    allCues: new IntervalTree(),
+                    allCues: new CueIntervalTree(),
                     lastCueWindowUpdate: -Infinity,
                     activeCues: []
                 });
@@ -1042,7 +1042,7 @@ function TextTracks(config) {
 
 /**
  * @typedef {Object} TrackCueData
- * @property {IntervalTree} allCues - All cues for this track, stored in an interval tree for efficient lookup
+ * @property {CueIntervalTree} allCues - All cues for this track, stored in an interval tree for efficient lookup
  * @property {number} lastCueWindowUpdate - Timestamp of last cue window update (for native rendering only)
  * @property {Array} activeCues - Currently active cues for this track (for manual rendering only)
  */

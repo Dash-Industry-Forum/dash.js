@@ -1,4 +1,4 @@
-import {IntervalTree} from '../../../../src/streaming/text/IntervalTree.js';
+import {CueIntervalTree} from '../../../../src/streaming/text/CueIntervalTree.js';
 import {expect} from 'chai';
 
 describe('IntervalTree', function () {
@@ -6,7 +6,7 @@ describe('IntervalTree', function () {
     let intervalTree;
 
     beforeEach(function () {
-        intervalTree = new IntervalTree();
+        intervalTree = new CueIntervalTree();
     });
 
     describe('Constructor', function () {
