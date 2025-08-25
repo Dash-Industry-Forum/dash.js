@@ -248,8 +248,10 @@ function TextTracks(config) {
             const windowEnd = currentTime + (2 * bufferPruningInterval / playbackRate);
 
             // Clear existing cues from TextTrack
-            while (track.cues.length > 0) {
-                track.removeCue(track.cues[0]);
+            if (track.cues) {
+                while (track.cues.length > 0) {
+                    track.removeCue(track.cues[0]);
+                }
             }
 
             // Add to TextTrack only cues that are within the current window
