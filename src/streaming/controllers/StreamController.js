@@ -809,7 +809,7 @@ function StreamController() {
             totalVideoFramesAtLastPlaybackProgress = 0
         }
 
-        const isEnded = event.timeToEnd ? event.timeToEnd >= 0 : false;
+        const isEnded = event.timeToEnd ? event.timeToEnd <= 0 : false;
 
         const isVideoFramesNotAdvancing = playbackQuality &&
             typeof playbackQuality.totalVideoFrames === 'number'
