@@ -694,7 +694,7 @@ import Events from './events/Events.js';
  *
  * @property {number} [keepProtectionMediaKeysMaximumOpenSessions=-1]
  * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the oldest sessions when the limit is exceeded. -1 means unlimited.
- * 
+ *
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
@@ -1015,7 +1015,7 @@ import Events from './events/Events.js';
  *
  * @property {} [assumeDefaultRoleAsMain: true]
  * when no Role descriptor is present, assume main per default
- * 
+ *
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
@@ -1122,6 +1122,7 @@ function Settings() {
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
+                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI},
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
                         return { 'schemeIdUri': ep };
                     })

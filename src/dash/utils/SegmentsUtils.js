@@ -39,15 +39,15 @@ function getNumberForSegment(segment, segmentIndex) {
 function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
     let seg = new Segment();
 
-    seg.representation = representation;
-    seg.duration = duration;
-    seg.presentationStartTime = presentationStartTime;
-    seg.mediaStartTime = mediaStartTime;
-    seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     seg.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationEndTime + duration, representation, isDynamic);
-    seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
-    seg.replacementNumber = getNumberForSegment(seg, index);
+    seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
+    seg.duration = duration;
     seg.index = index;
+    seg.mediaStartTime = mediaStartTime;
+    seg.presentationStartTime = presentationStartTime;
+    seg.replacementNumber = getNumberForSegment(seg, index);
+    seg.representation = representation;
+    seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
     return seg;
 }

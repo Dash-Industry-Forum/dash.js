@@ -106,10 +106,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function iterateSegments(representation, iterFunc) {
-        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
-            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
-                AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
         const list = base.SegmentURL;
 
@@ -197,10 +195,20 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
 
         let segment = null;
-        let found = false;
+        let segmentFound = false;
+
+        // Helper to determine if the segment should be selected
+        function shouldSelectSegment(time, frag, fTimescale) {
+            if (lastSegmentTime < 0) {
+                return true;
+            }
+            const threshold = (lastSegmentTime * fTimescale) - (frag.d * 0.5);
+            return time >= threshold;
+        }
 
         iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
-            if (found || lastSegmentTime < 0) {
+            if (segmentFound || lastSegmentTime < 0) {
+                // Select segment when found or if lastSegmentTime is invalid
                 let media = base.media;
                 let mediaRange = frag.mediaRange;
 
@@ -222,9 +230,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     frag.tManifest);
 
                 return true;
-            } else if (time >= (lastSegmentTime * fTimescale) - (frag.d * 0.5)) { // same logic, if deviation is
-                // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
-                found = true;
+            } else if (shouldSelectSegment(time, frag, fTimescale)) {
+                // Mark as found if the time matches the selection criteria
+                segmentFound = true;
             }
 
             return false;

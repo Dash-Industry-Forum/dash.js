@@ -256,6 +256,7 @@ export default {
     EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+    SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',
     HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',
     HDR_METADATA_FORMAT_VALUES: {
         ST2094_10: 'ST2094-10',
@@ -339,7 +340,7 @@ export default {
      */
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
-    DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
+    DASH_ROLE_SCHEME_ID: 'urn:mpeg:dash:role:2011',
     CODEC_FAMILIES: {
         MP3: 'mp3',
         AAC: 'aac',

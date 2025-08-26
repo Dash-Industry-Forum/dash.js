@@ -51,6 +51,8 @@ class Segment {
         this.presentationStartTime = NaN;
         // this is the number that should be inserted into the media url
         this.replacementNumber = NaN;
+        // this is the subnumber that should be inserted into the media url
+        this.replacementSubNumber = NaN;
         // this is the time that should be inserted into the media url
         this.replacementTime = null;
         this.representation = null;
