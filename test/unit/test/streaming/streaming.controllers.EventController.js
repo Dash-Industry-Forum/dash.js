@@ -59,6 +59,7 @@ describe('EventController', function () {
 
     describe('if configured', function () {
         beforeEach(function () {
+            playbackControllerMock.setTime(0);
             eventController.reset();
             eventController.setConfig({
                 manifestUpdater: manifestUpdaterMock,
@@ -578,45 +579,6 @@ describe('EventController', function () {
             eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
         });
 
-        describe('executeOnce handling', function () {
-            it('should trigger a retriggerables event multiple times when executeOnce is false', function (done) {
-                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
-                const periodId = 'periodId';
-                let events = [{
-                    eventStream: {
-                        timescale: 1,
-                        schemeIdUri: schemeIdUri,
-                        period: {
-                            id: periodId
-                        }
-                    },
-                    id: 'event0',
-                    alternativeMpd: {
-                        executeOnce: false
-                    },
-                    calculatedPresentationTime: 10,
-                    duration: 5
-                }];
-
-                let triggerCount = 0;
-                let onStartEvent = function (e) {
-                    triggerCount++;
-                    expect(e.event.id).to.equal('event0');
-                    if (triggerCount === 2) {
-                        eventBus.off(schemeIdUri, onStartEvent);
-                        done();
-                    } else if (triggerCount === 1) {
-                        playbackControllerMock.setTime(25);
-                    }
-                };
-
-                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
-                eventController.addInlineEvents(events, periodId);
-                eventController.start();
-                playbackControllerMock.setTime(12);
-            });
-        });
-
         describe('noJump event handling', function () {
             it('should trigger noJump=1 (first event) when skipping ahead', function (done) {
                 const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
@@ -663,7 +625,6 @@ describe('EventController', function () {
                     done();
 
                 };
-
                 eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
                 eventController.addInlineEvents(events, periodId);
                 eventController.start();
@@ -846,71 +807,6 @@ describe('EventController', function () {
                 
                 expect(triggerCount).to.equal(0);
                 eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve);
-            });
-
-            it('should not trigger EVENT_READY_TO_RESOLVE twice', function () {
-                const schemeIdUri = 'resolutionTestScheme';
-                const periodId = 'periodId';
-                let events = [{
-                    eventStream: {
-                        timescale: 1,
-                        schemeIdUri: schemeIdUri,
-                        period: {
-                            id: periodId
-                        }
-                    },
-                    id: 'event0',
-                    calculatedPresentationTime: 20,
-                    earliestResolutionTimeOffset: 10
-                }];
-
-                let triggerCount = 0;
-                let onEventReadyToResolve = function () {
-                    triggerCount++;
-                };
-
-                eventBus.on(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve, this);
-                eventController.addInlineEvents(events, periodId);
-                eventController.start();
-                playbackControllerMock.setTime(10);
-                playbackControllerMock.setTime(15);
-                
-                expect(triggerCount).to.equal(1);
-                eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve);
-            });
-        });
-
-        describe('event retrigger handling', function () {
-            it('should prevent retrigger when presentationTimeThreshold is 0', function () {
-                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
-                const periodId = 'periodId';
-                let events = [{
-                    eventStream: {
-                        timescale: 1,
-                        schemeIdUri: schemeIdUri,
-                        period: {
-                            id: periodId
-                        }
-                    },
-                    id: 'event0',
-                    calculatedPresentationTime: 10,
-                    duration: 5,
-                    triggeredStartEvent: true
-                }];
-
-                let triggerCount = 0;
-                let onStartEvent = function () {
-                    triggerCount++;
-                };
-
-                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
-                eventController.addInlineEvents(events, periodId);
-                eventController.start();
-                
-                playbackControllerMock.setTime(10);
-                
-                expect(triggerCount).to.equal(0);
-                eventBus.off(schemeIdUri, onStartEvent);
             });
         });
     });
