@@ -241,19 +241,19 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return segment;
     }
 
-    function getSegmentByTime(representation, requestedTime) {
+    function getSegmentByTime(representation, requestedPresentationTime) {
         checkConfig();
 
         if (!representation) {
             return null;
         }
 
-        if (requestedTime === undefined) {
-            requestedTime = null;
+        if (requestedPresentationTime === undefined) {
+            requestedPresentationTime = null;
         }
 
         let segment = null;
-        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedTime, representation);
+        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
 
         iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
             // In some cases when requiredMediaTime = actual end time of the last segment
