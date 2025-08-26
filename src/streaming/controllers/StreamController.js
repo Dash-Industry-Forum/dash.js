@@ -798,6 +798,14 @@ function StreamController() {
     }
 
     /**
+     * Checks whether the browser environment is WebKit based or not
+     * @private
+     */
+    function isWebKit() {
+        return typeof window.webkitConvertPointFromNodeToPage === 'function' || false
+    }
+
+    /**
      * Evaluates whether video frames have potentially stopped advancing, added to address https://issues.chromium.org/issues/41243192
      * @private
      */
@@ -811,8 +819,9 @@ function StreamController() {
 
         const isEnded = event.timeToEnd ? event.timeToEnd <= 0 : false;
 
-        const isVideoFramesNotAdvancing = playbackQuality &&
-            typeof playbackQuality.totalVideoFrames === 'number'
+        const isVideoFramesNotAdvancing = !isWebKit()
+            && playbackQuality 
+            && typeof playbackQuality.totalVideoFrames === 'number'
             && !isEnded
             && timeAtLastPlaybackProgress !== 0
             && event.time > settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds // We should be at least one threshold into the video before triggering
@@ -821,18 +830,16 @@ function StreamController() {
             && !videoModel.isSeeking()
             && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
             && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
-            && playbackQuality.totalVideoFrames < 2147483647 //Handles devices (some WebKit TVs), where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
+            && playbackQuality.totalVideoFrames < 2147483647 //Handles devices, where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
             && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some TVs), where Video Quality API, totalVideoFrames always equals the number of dropped frames.
-            && playbackQuality.totalVideoFrames === totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong. On some some WebKit TVs the total video frames is reset if the decoder is reinitialised.
+            && playbackQuality.totalVideoFrames === totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong. On some some TVs the total video frames is reset if the decoder is reinitialised.
 
         if(isVideoFramesNotAdvancing){
             if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
                 eventBus.trigger(Events.PLAYBACK_FROZEN,{
                     cause:'Frames have stopped advancing, Chromium bug #41243192',
                     totalVideoFrames: playbackQuality.totalVideoFrames,
-                    mediaTime: event.time,
-                    isEnded: videoModel.getEnded(),
-                    isSeeking: videoModel.isSeeking()
+                    mediaTime: event.time
                 });
                 if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
                     logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
