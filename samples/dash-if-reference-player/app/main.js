@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -24,16 +24,7 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
-    return $resource('https://testassets.dashif.org/dashjs.json', {}, {
-        query: {
-            method: 'GET',
-            isArray: false
-        }
-    });
-});
-
-app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', 'dashifTestVectors', function ($scope, $window, sources, contributors, dashifTestVectors) {
+app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', function ($scope, $window, sources, contributors) {
     $scope.selectedItem = {
         url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
     };
@@ -49,14 +40,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         }
-
-        // DASH Industry Forum Test Vectors
-        dashifTestVectors.query(function (data) {
-            $scope.availableStreams.splice(7, 0, {
-                name: 'DASH Industry Forum Test Vectors',
-                submenu: data.items
-            });
-        });
 
         // Add provider to beginning of each Vector
         var provider = data.provider;
