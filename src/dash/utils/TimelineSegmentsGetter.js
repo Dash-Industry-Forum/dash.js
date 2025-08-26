@@ -283,7 +283,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function precisionRound(number) {
-        return parseFloat(number.toPrecision(16));
+        return parseFloat(number.toPrecision(15));
     }
 
     instance = {
