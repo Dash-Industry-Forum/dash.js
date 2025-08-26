@@ -539,18 +539,10 @@ function TextTracks(config) {
                 }
             }
 
-            try {
-                if (cue) {
-                    cueData.allCues.addCue(cue);
-                } else {
-                    logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
-                }
-            } catch (e) {
-                // Edge crash, delete everything and start adding again
-                // @see https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/11979877/
-                _deleteTrackCues(track);
-                track.addCue(cue);
-                throw e;
+            if (cue) {
+                cueData.allCues.addCue(cue);
+            } else {
+                logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
             }
         }
 
