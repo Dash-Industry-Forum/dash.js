@@ -495,7 +495,7 @@ function HTTPLoader(cfg) {
         }
 
         // Get a list of "resource" performance entries
-        const resources = performance.getEntriesByType('resource');
+        const resources = performance.getEntriesByType?.('resource');
         if (resources === undefined || resources.length <= 0) {
             return;
         }
