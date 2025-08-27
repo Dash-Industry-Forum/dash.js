@@ -141,10 +141,10 @@ function RepresentationController(config) {
             Promise.all(promises)
                 .then((data) => {
                     if (data[0] && !data[0].error) {
-                        currentRep = _onInitLoaded(currentRep, data[0]);
+                        currentRep = _onInitDataUpdated(currentRep, data[0]);
                     }
                     if (data[1] && !data[1].error) {
-                        currentRep = _onSegmentsLoaded(currentRep, data[1]);
+                        currentRep = _onSegmentDataUpdated(currentRep, data[1]);
                     }
                     currentRep.fragmentDuration = currentRep.segmentDuration ? currentRep.segmentDuration : currentRep.segments && currentRep.segments.length > 0 ? currentRep.segments[0].duration : NaN;
                     _setMediaFinishedInformation(currentRep);
@@ -161,14 +161,14 @@ function RepresentationController(config) {
         representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
     }
 
-    function _onInitLoaded(representation, e) {
+    function _onInitDataUpdated(representation, e) {
         if (!e || e.error || !e.representation) {
             return representation;
         }
         return e.representation;
     }
 
-    function _onSegmentsLoaded(representation, e) {
+    function _onSegmentDataUpdated(representation, e) {
         if (!e || e.error) {
             return;
         }

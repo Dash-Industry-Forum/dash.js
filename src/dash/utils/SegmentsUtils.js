@@ -118,35 +118,36 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     return segment;
 }
 
-export function getTimeBasedSegment(timelineConverter, isDynamic, representation, time, duration, fTimescale, url, range, index, tManifest) {
-    const scaledTime = time / fTimescale;
+export function getTimeBasedSegment(timelineConverter, isDynamic, representation, mediaTime, duration, fTimescale, mediaUrl, mediaRange, relativeIndex, tManifest) {
+    const scaledMediaTime = mediaTime / fTimescale;
     const scaledDuration = duration / fTimescale;
+    let presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledMediaTime, representation);
+    let presentationEndTime = presentationStartTime + scaledDuration;
 
-    let presentationStartTime,
+    let seg = getSegment(
+        representation,
+        scaledDuration,
+        presentationStartTime,
+        scaledMediaTime,
+        timelineConverter,
         presentationEndTime,
-        seg;
-
-    presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(scaledTime, representation);
-    presentationEndTime = presentationStartTime + scaledDuration;
-
-    seg = getSegment(representation, scaledDuration, presentationStartTime,
-        scaledTime,
-        timelineConverter, presentationEndTime, isDynamic, index);
+        isDynamic,
+        relativeIndex);
 
     if (!isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
         return null;
     }
 
-    seg.replacementTime = tManifest ? tManifest : time;
+    seg.replacementTime = tManifest ? tManifest : mediaTime;
     seg.media = processUriTemplate(
-        url,
+        mediaUrl,
         undefined,
         seg.replacementNumber,
         undefined,
         undefined,
         seg.replacementTime,
     );
-    seg.mediaRange = range;
+    seg.mediaRange = mediaRange;
 
     return seg;
 }

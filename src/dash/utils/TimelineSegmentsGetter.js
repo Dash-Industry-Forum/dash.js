@@ -32,6 +32,7 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
 import {getTimeBasedSegment} from './SegmentsUtils.js';
+import SElement from '../vo/SElement.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -56,14 +57,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
             representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
         const timeline = base.SegmentTimeline;
 
-        let time = 0;
-        let scaledTime = 0;
+        let mediaTime = 0;
+        let mediaTimeInSeconds = 0;
         let availableSegments = 0;
 
         let fragments,
             frag,
             i,
-            len,
             j,
             repeat,
             fTimescale;
@@ -71,9 +71,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
         fTimescale = representation.timescale;
         fragments = timeline.S;
 
-        len = fragments.length;
+        const length = fragments.length;
 
-        for (i = 0; i < len; i++) {
+        for (i = 0; i < length; i++) {
             frag = fragments[i];
             repeat = 0;
             if (frag.hasOwnProperty('r')) {
@@ -82,80 +82,80 @@ function TimelineSegmentsGetter(config, isDynamic) {
 
             // For a repeated S element, t belongs only to the first segment
             if (frag.hasOwnProperty('t')) {
-                time = frag.t;
-                scaledTime = time / fTimescale;
+                mediaTime = frag.t;
+                mediaTimeInSeconds = mediaTime / fTimescale;
             }
 
             // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
                 const nextFrag = fragments[i + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime);
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, mediaTimeInSeconds);
             }
 
             for (j = 0; j <= repeat; j++) {
                 availableSegments++;
 
-                time += frag.d;
-                scaledTime = time / fTimescale;
+                mediaTime += frag.d;
+                mediaTimeInSeconds = mediaTime / fTimescale;
             }
         }
 
         // We need to account for the index of the segments starting at 0. We subtract 1
-        return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: scaledTime };
+        return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: mediaTimeInSeconds };
     }
 
     function iterateSegments(representation, iterFunc) {
-        const base = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+        const segmentBase = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
             representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
-        const timeline = base.SegmentTimeline;
-        const list = base.SegmentURL;
+        const segmentTimeline = segmentBase.SegmentTimeline;
+        const segmentURL = segmentBase.SegmentURL;
 
-        let time = 0;
+        let mediaTime = 0;
         let relativeIdx = -1;
 
-        let fragments,
-            frag,
+        let parsedSElements,
+            currentSElement,
             i,
-            len,
             j,
             repeat,
             fTimescale;
 
         fTimescale = representation.timescale;
-        fragments = timeline.S;
+        parsedSElements = segmentTimeline.S;
 
         let breakIterator = false;
+        const len = parsedSElements.length;
 
-        for (i = 0, len = fragments.length; i < len && !breakIterator; i++) {
-            frag = fragments[i];
+        for (i = 0; i < len && !breakIterator; i++) {
+            currentSElement = parsedSElements[i];
             repeat = 0;
-            if (frag.hasOwnProperty('r')) {
-                repeat = frag.r;
+            if (currentSElement.hasOwnProperty('r')) {
+                repeat = currentSElement.r;
             }
 
             // For a repeated S element, t belongs only to the first segment
-            if (frag.hasOwnProperty('t')) {
-                time = frag.t;
+            if (currentSElement.hasOwnProperty('t')) {
+                mediaTime = currentSElement.t;
             }
 
             // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
-                const nextFrag = fragments[i + 1];
-                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, time / fTimescale);
+                const nextFrag = parsedSElements[i + 1];
+                repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
                 relativeIdx++;
 
-                breakIterator = iterFunc(time, base, list, frag, fTimescale, relativeIdx, i);
+                breakIterator = iterFunc(mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i);
 
                 if (breakIterator) {
-                    representation.segmentDuration = frag.d / fTimescale;
+                    representation.segmentDuration = currentSElement.d / fTimescale;
                 }
 
-                time += frag.d;
+                mediaTime += currentSElement.d;
             }
         }
     }
@@ -206,16 +206,11 @@ function TimelineSegmentsGetter(config, isDynamic) {
             return time >= threshold;
         }
 
-        iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
+        iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
+            const fTimescale = representation.timescale;
             if (segmentFound || lastSegmentTime < 0) {
-                // Select segment when found or if lastSegmentTime is invalid
-                let media = base.media;
-                let mediaRange = frag.mediaRange;
-
-                if (list) {
-                    media = list[i].media || '';
-                    mediaRange = list[i].mediaRange;
-                }
+                let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
+                let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
 
                 segment = getTimeBasedSegment(
                     timelineConverter,
@@ -223,7 +218,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
                     representation,
                     time,
                     frag.d,
-                    fTimescale,
                     media,
                     mediaRange,
                     relativeIdx,
@@ -255,31 +249,28 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
 
-        iterateSegments(representation, function (time, base, list, frag, fTimescale, relativeIdx, i) {
+        iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
             // In some cases when requiredMediaTime = actual end time of the last segment
             // it is possible that this time a bit exceeds the declared end time of the last segment.
             // in this case we still need to include the last segment in the segment list.
-            const scaledMediaTime = precisionRound(requiredMediaTime * fTimescale);
-            if (scaledMediaTime < (time + frag.d) && scaledMediaTime >= time) {
-                let media = base.media;
-                let mediaRange = frag.mediaRange;
+            const fTimescale = representation.timescale;
+            const requiredMediaTimeInTimescaleUnits = precisionRound(requiredMediaTime * fTimescale);
+            if (requiredMediaTimeInTimescaleUnits < (mediaTime + currentSElement.d) && requiredMediaTimeInTimescaleUnits >= mediaTime) {
+                let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
+                let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
 
-                if (list) {
-                    media = list[i].media || '';
-                    mediaRange = list[i].mediaRange;
-                }
+                const voSElement = new SElement()
+                voSElement.setValuesByParsedSElement(currentSElement);
 
                 segment = getTimeBasedSegment(
                     timelineConverter,
                     isDynamic,
                     representation,
-                    time,
-                    frag.d,
-                    fTimescale,
-                    media,
+                    mediaTime,
+                    voSElement,
+                    mediaUrl,
                     mediaRange,
-                    relativeIdx,
-                    frag.tManifest);
+                    relativeIdx);
 
                 return true;
             }
@@ -288,6 +279,26 @@ function TimelineSegmentsGetter(config, isDynamic) {
         });
 
         return segment;
+    }
+
+    function _getMediaUrl(segmentBase, segmentURL, index) {
+        let mediaUrl = segmentBase.media;
+
+        if (segmentURL) {
+            mediaUrl = segmentURL[index].media || '';
+        }
+
+        return mediaUrl;
+    }
+
+    function _getMediaRange(currentSElement, segmentURL, index) {
+        let mediaRange = currentSElement.mediaRange;
+
+        if (segmentURL) {
+            mediaRange = segmentURL[index].mediaRange;
+        }
+
+        return mediaRange;
     }
 
     function precisionRound(number) {
