@@ -34,6 +34,9 @@
     <script src="app/main.js"></script>
     <script src="app/rules/ThroughputRule.js"></script>
 
+    <!-- LCEVC Decoder -->
+    <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
+
     <!-- Google Cast -->
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
@@ -922,6 +925,17 @@
                        ng-change="updateCmsdEtpWeightRatio()">
             </div>
         </div>
+        <div class="options-item">
+            <div class="options-item-title">Enhancement</div>
+            <div class="options-item-body">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables enhancement. The provided stream should contain two adaptation sets, one containing the base layer and the second containing an enhancement layer. Checkbox selection will be applied the next time a stream is loaded.">
+                    <input type="checkbox" ng-model="enhancementEnabled" ng-change="toggleEnhancementEnabled()"
+                           ng-checked="enhancementEnabled">
+                    Enable Enhancement
+                </label>
+            </div>
+        </div>
 
     </div>
 
@@ -930,6 +944,8 @@
         <div class="dash-video-player col-md-9">
             <div id="videoContainer" class="videoContainer">
                 <video disableRemotePlayback="true"></video>
+                <canvas id="enhacementCanvas" class="enhancementCanvas element-hidden"></canvas>
+                <div style="min-height: 1px;"></div>
                 <div id="video-caption"></div>
                 <div id="cast-msg" ng-if="isCasting">
                     {{ castPlayerState === 'IDLE' ? 'Ready to cast stream' : castPlayerState }}

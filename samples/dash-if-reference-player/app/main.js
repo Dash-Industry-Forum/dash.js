@@ -243,6 +243,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.conformanceViolations = [];
 
+    $scope.enhancementDecoder = null;
+
     var defaultExternalSettings = {
         mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
         loop: true,
@@ -1040,6 +1042,126 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.toggleEnhancementEnabled = function () {
+        const video = document.querySelector('video');
+        const canvas = document.querySelector('canvas');
+
+        if ($scope.enhancementEnabled) {
+            canvas.classList.remove('element-hidden');
+            video.classList.add('element-hidden');
+        } else {
+            canvas.classList.add('element-hidden');
+            video.classList.remove('element-hidden');
+        }
+    };
+
+    $scope.setupEnhancementDecoder = function () {
+        /**
+         * MPEG-5 LCEVC Integration for Dash.js Player.
+         *
+         * These are the changes needed for passing the correct
+         * data to lcevc_dec.js and trigger the correct methods
+         * at the correct time.
+         */
+
+        /**
+         * Let the LCEVC Decoder Library make the decision as to when to switch, based on the currently
+         * rendered frame. If disabled, the player needs to signal LCEVC when there is a render change
+         * after an ABR switch happens.
+         *
+         * @readonly
+         * @enum {number}
+         * @public
+         */
+        const AutoRenderMode = {
+            DISABLED: 0,
+            ENABLED: 1
+        };
+
+        dashjs.Extensions = {
+            ...dashjs.Extensions,
+            /**
+             * Attaches LCEVC functionality and methods to the provided Dash.js player instance.
+             *
+             * @param {object} player the Dash.js player instance to attach LCEVC to
+             */
+            useLcevc: function useLcevc(player) {
+                if (!player) {
+                    throw new TypeError('The provided Dash.js player instance was null or undefined.');
+                }
+                const { LCEVCdec } = window;
+                if (!LCEVCdec) {
+                    throw new TypeError('LCEVC Decoder Libraries could not be loaded.');
+                }
+
+                let abrIndex = -1;
+
+                player.attachLcevc = function attachLcevc(media, canvas, LCEVCdecConfig) {
+                    player.LCEVCdec = new LCEVCdec.LCEVCdec(
+                        media,
+                        canvas,
+                        LCEVCdecConfig
+                    );
+
+                    /* Signal profile information and switches to LCEVCdecJS */
+                    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, handleQualityChange);
+                    player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, handleFragmentLoadingCompleted);
+                    player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, handleRepresentationSwitch);
+                    player.on('externalSourceBufferUpdateStart', handleBufferUpdates);
+                };
+
+                function handleFragmentLoadingCompleted(event) {
+                    if (event.mediaType === 'enhancement') {
+                        abrIndex = event.request.representation.absoluteIndex;
+                    }
+                }
+
+                function handleQualityChange(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const index = event.newRepresentation.absoluteIndex;
+                        console.log('>>> requested:', event.mediaType, index);
+                        player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                    }
+                }
+
+                function handleRepresentationSwitch(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const rep = event.currentRepresentation;
+                        const index = rep.absoluteIndex;
+                        // Workaround for very first representation played for which no QUALITY_CHANGE_REQUESTED arrives
+                        if (rep && rep.dependentRepresentation) {
+                            console.log('>>> rep switch:', event.mediaType, index);
+                            player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                        }
+                    }
+                }
+
+                function handleBufferUpdates(event) {
+                    if (event.request === 'appendBuffer') {
+                        player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, /* isMuxed */ false);
+                    }
+                    else if (event.request === 'remove') {
+                        player.LCEVCdec.flushBuffer(event.start, event.end);
+                    }
+                }
+            }
+        };
+
+        const video = document.querySelector('video');
+        const canvas = document.querySelector('canvas');
+        const LCEVCdecConfig = {
+            dynamicPerformanceScaling: false
+        };
+
+        window.LCEVCdec.ready.then(() => {
+            /* Attach LCEVC to the Dash.js player instance */
+            const player = $scope.player;
+            dashjs.Extensions.useLcevc(player);
+            player.attachLcevc(video, canvas, LCEVCdecConfig);
+            $scope.enhancementDecoder = player.LCEVCdec;
+        });
+    };
+
     $scope.toggleCmsdApplyMb = function () {
         $scope.player.updateSettings({
             streaming: {
@@ -1109,7 +1231,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     liveDelay: $scope.defaultLiveDelay
                 },
                 abr: {},
-                cmcd: {}
+                cmcd: {},
+                enhancement: {}
             }
         };
 
@@ -1174,6 +1297,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         config.streaming.cmcd.rtp = $scope.cmcdRtp ? $scope.cmcdRtp : null;
         config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
         config.streaming.cmcd.enabledKeys = $scope.cmcdEnabledKeys ? $scope._getFormatedCmcdEnabledKeys() : [];
+
+        // Cleanup enhancement decoder if it exists from previous playback
+        if ($scope.enhancementDecoder) {
+            $scope.enhancementDecoder.close();
+            $scope.enhancementDecoder = null;
+        }
+
+        // Setup enhancement decoder if checkbox is checked or if stream is from V-Nova
+        if ($scope.enhancementEnabled || $scope.selectedItem.provider === 'v-nova') {
+            config.streaming.enhancement.enabled = true;
+            $scope.enhancementEnabled = true;
+            $scope.setupEnhancementDecoder();
+        }
+
+        $scope.toggleEnhancementEnabled();
 
         $scope.player.updateSettings(config);
 
