@@ -241,7 +241,12 @@ function TimelineConverter() {
         if (isClientServerTimeSyncCompleted) return;
 
         if (e.offset !== undefined) {
-            setClientTimeOffset(e.offset / 1000);
+            var off=e.offset;
+            var settingsOffset=settings.get().streaming.utcTimeOffset;
+            if (!isNaN(settingsOffset)) {
+               off+=settingsOffset;
+            }
+            setClientTimeOffset(off / 1000);
             isClientServerTimeSyncCompleted = true;
         }
     }

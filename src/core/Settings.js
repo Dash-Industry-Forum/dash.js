@@ -73,6 +73,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  *          bufferTimeAtTopQualityLongForm: 60,
  *          longFormContentDurationThreshold: 600,
  *          wallclockTimeUpdateInterval: 50,
+ *          utcTimeOffset: NaN,
  *          lowLatencyEnabled: false,
  *          keepProtectionMediaKeys: false,
  *          useManifestDateHeaderTimeSource: true,
@@ -283,6 +284,7 @@ import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest';
  * The threshold which defines if the media is considered long form content.
  * This will directly affect the buffer targets when playing back at the top quality.
  * @property {number} [wallclockTimeUpdateInterval=50] How frequently the wallclockTimeUpdated internal event is triggered (in milliseconds).
+ * @property {number} [utcTimeOffset=NaN] a time offset applied to the segment timeline calculations of the utc offset.
  * @property {boolean} [lowLatencyEnabled=false] Enable or disable low latency mode
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle. If true, the
@@ -444,6 +446,7 @@ function Settings() {
             bufferTimeAtTopQualityLongForm: 60,
             longFormContentDurationThreshold: 600,
             wallclockTimeUpdateInterval: 50,
+            utcTimeOffset: NaN,
             lowLatencyEnabled: false,
             keepProtectionMediaKeys: false,
             useManifestDateHeaderTimeSource: true,
