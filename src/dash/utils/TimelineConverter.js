@@ -244,7 +244,7 @@ function TimelineConverter() {
             var off = e.offset;
             var settingsOffset = settings.get().streaming.utcTimeOffset;
             if (!isNaN(settingsOffset)) {
-               off += settingsOffset;
+                off += settingsOffset;
             }
             setClientTimeOffset(off / 1000);
             isClientServerTimeSyncCompleted = true;
