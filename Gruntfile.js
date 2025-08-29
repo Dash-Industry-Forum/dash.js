@@ -382,11 +382,6 @@ module.exports = function (grunt) {
                 config: '.jscsrc'
             }
         },
-        githooks: {
-            all: {
-                'pre-commit': 'lint'
-            }
-        },
         'string-replace': {
             dist: {
                 files: {
@@ -445,7 +440,6 @@ module.exports = function (grunt) {
     grunt.registerTask('release', ['smp-dist', 'test', 'jsdoc']);
     grunt.registerTask('debug', ['clean', 'browserify:all', 'exorcise:all', 'copy:dist']);
     grunt.registerTask('lint', ['jshint', 'jscs']);
-    grunt.registerTask('prepublish', ['githooks', 'dist']);
     grunt.registerTask('dev', ['browserSync', 'watch-dev']);
     grunt.registerTask('deploy', ['string-replace', 'ftp_push']);
 };
