@@ -81,9 +81,17 @@ function SegmentsController(config) {
         return representation ? representation.segments ? getters[dashConstants.SEGMENT_BASE] : getters[representation.segmentInfoType] : null;
     }
 
-    function getSegmentByIndex(representation, index, lastSegmentTime) {
+    function getSegmentByIndex(representation, index, lastSegment) {
         const getter = getSegmentsGetter(representation);
-        return getter ? getter.getSegmentByIndex(representation, index, lastSegmentTime) : null;
+
+        if (!getter) {
+            return null;
+        }
+
+        if (representation.segmentInfoType && representation.segmentInfoType === dashConstants.SEGMENT_TIMELINE) {
+            return getter.getSegmentByIndex(representation, lastSegment)
+        }
+        return getter.getSegmentByIndex(representation, index);
     }
 
     function getSegmentByTime(representation, time) {

@@ -32,31 +32,15 @@
  * @class
  * @ignore
  */
-class Segment {
+
+class PartialSegment {
     constructor() {
-        // Ignore and  discard this segment after
         this.availabilityEndTime = NaN;
-        // Do not schedule this segment until
         this.availabilityStartTime = NaN;
         this.duration = NaN;
-        // The index of the segment in the list of segments. We start at 0
-        this.index = null;
-        this.indexRange = null;
-        this.media = null;
-        this.mediaRange = null;
-        // This is supposed to match the time encoded in the media Segment
         this.mediaStartTime = NaN;
-        this.partialSegments = [];
-        // When the source buffer timeOffset is set to mseTimeOffset this is the time that will match the seekTarget and video.currentTime
         this.presentationStartTime = NaN;
-        // this is the number that should be inserted into the media url
-        this.replacementNumber = NaN;
-        // this is the time that should be inserted into the media url
-        this.replacementTime = null;
-        this.representation = null;
-        // For dynamic mpd's, this is the wall clock time that the video
-        this.wallStartTime = NaN;
+        // this is the subnumber that should be inserted into the media url. The sub-number of the first Partial Segment in the sequence is 0.
+        this.replacementSubNumber = NaN;
     }
 }
-
-export default Segment;

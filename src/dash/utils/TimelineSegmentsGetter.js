@@ -48,6 +48,111 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function getSegmentByIndex(representation, lastSegmentTime) {
+        checkConfig();
+
+        if (!representation) {
+            return null;
+        }
+
+        let segment = null;
+        let segmentFound = false;
+
+
+        function _shouldSelectSegment(time, voSElement, fTimescale) {
+            if (lastSegmentTime < 0) {
+                return true;
+            }
+            // Note: We are looking for the current segment here! There will be one more iteration in _iterateSegments after which gives us the next segment
+            // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
+            const threshold = (lastSegmentTime * fTimescale) - (voSElement.d * 0.5);
+            return time >= threshold;
+        }
+
+        function _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, voSElement, fTimescale, relativeIdx) {
+            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
+            let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
+
+            segment = getTimeBasedSegment(
+                timelineConverter,
+                isDynamic,
+                representation,
+                mediaTime,
+                voSElement,
+                fTimescale,
+                mediaUrl,
+                mediaRange,
+                relativeIdx);
+        }
+
+        _iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
+            const fTimescale = representation.timescale;
+            const voSElement = new SElement()
+            voSElement.setValuesByParsedSElement(currentSElement);
+
+            if (segmentFound || lastSegmentTime < 0) {
+                _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, voSElement, fTimescale, relativeIdx);
+                return true;
+            } else if (_shouldSelectSegment(mediaTime, voSElement, fTimescale)) {
+                segmentFound = true;
+            }
+
+            return false;
+        });
+
+        return segment;
+    }
+
+    function getSegmentByTime(representation, requestedPresentationTime) {
+        checkConfig();
+
+        if (!representation) {
+            return null;
+        }
+
+        if (requestedPresentationTime === undefined) {
+            requestedPresentationTime = null;
+        }
+
+        let segment = null;
+        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
+
+        function _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, fTimescale, relativeIdx) {
+            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
+            let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
+
+            const voSElement = new SElement()
+            voSElement.setValuesByParsedSElement(currentSElement);
+
+            segment = getTimeBasedSegment(
+                timelineConverter,
+                isDynamic,
+                representation,
+                mediaTime,
+                voSElement,
+                fTimescale,
+                mediaUrl,
+                mediaRange,
+                relativeIdx);
+        }
+
+        _iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
+            // In some cases when requiredMediaTime = actual end time of the last segment
+            // it is possible that this time a bit exceeds the declared end time of the last segment.
+            // in this case we still need to include the last segment in the segment list.
+            const fTimescale = representation.timescale;
+            const requiredMediaTimeInTimescaleUnits = _precisionRound(requiredMediaTime * fTimescale);
+            if (requiredMediaTimeInTimescaleUnits < (mediaTime + currentSElement.d) && requiredMediaTimeInTimescaleUnits >= mediaTime) {
+                _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, fTimescale, relativeIdx);
+                return true;
+            }
+
+            return false;
+        });
+
+        return segment;
+    }
+
     function getMediaFinishedInformation(representation) {
         if (!representation) {
             return 0;
@@ -105,15 +210,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: mediaTimeInSeconds };
     }
 
-    function iterateSegments(representation, iterFunc) {
-        const segmentBase = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
-            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+    function _iterateSegments(representation, iterFunc) {
+        const segmentBase = _getSegmentBase(representation);
         const segmentTimeline = segmentBase.SegmentTimeline;
         const segmentURL = segmentBase.SegmentURL;
 
         let mediaTime = 0;
         let relativeIdx = -1;
-
         let parsedSElements,
             currentSElement,
             i,
@@ -160,6 +263,11 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
+    function _getSegmentBase(representation) {
+        return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate ||
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentList;
+    }
+
     function _calculateRepeatCountForNegativeR(representation, nextFrag, frag, fTimescale, scaledTime) {
         let repeatEndTime;
 
@@ -186,101 +294,6 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return Math.max(Math.ceil((repeatEndTime - scaledTime) / (frag.d / fTimescale)) - 1, 0);
     }
 
-
-    function getSegmentByIndex(representation, index, lastSegmentTime) {
-        checkConfig();
-
-        if (!representation) {
-            return null;
-        }
-
-        let segment = null;
-        let segmentFound = false;
-
-        // Helper to determine if the segment should be selected
-        function shouldSelectSegment(time, frag, fTimescale) {
-            if (lastSegmentTime < 0) {
-                return true;
-            }
-            const threshold = (lastSegmentTime * fTimescale) - (frag.d * 0.5);
-            return time >= threshold;
-        }
-
-        iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
-            const fTimescale = representation.timescale;
-            if (segmentFound || lastSegmentTime < 0) {
-                let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
-                let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
-
-                segment = getTimeBasedSegment(
-                    timelineConverter,
-                    isDynamic,
-                    representation,
-                    time,
-                    frag.d,
-                    media,
-                    mediaRange,
-                    relativeIdx,
-                    frag.tManifest);
-
-                return true;
-            } else if (shouldSelectSegment(time, frag, fTimescale)) {
-                // Mark as found if the time matches the selection criteria
-                segmentFound = true;
-            }
-
-            return false;
-        });
-
-        return segment;
-    }
-
-    function getSegmentByTime(representation, requestedPresentationTime) {
-        checkConfig();
-
-        if (!representation) {
-            return null;
-        }
-
-        if (requestedPresentationTime === undefined) {
-            requestedPresentationTime = null;
-        }
-
-        let segment = null;
-        const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
-
-        iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
-            // In some cases when requiredMediaTime = actual end time of the last segment
-            // it is possible that this time a bit exceeds the declared end time of the last segment.
-            // in this case we still need to include the last segment in the segment list.
-            const fTimescale = representation.timescale;
-            const requiredMediaTimeInTimescaleUnits = precisionRound(requiredMediaTime * fTimescale);
-            if (requiredMediaTimeInTimescaleUnits < (mediaTime + currentSElement.d) && requiredMediaTimeInTimescaleUnits >= mediaTime) {
-                let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
-                let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
-
-                const voSElement = new SElement()
-                voSElement.setValuesByParsedSElement(currentSElement);
-
-                segment = getTimeBasedSegment(
-                    timelineConverter,
-                    isDynamic,
-                    representation,
-                    mediaTime,
-                    voSElement,
-                    mediaUrl,
-                    mediaRange,
-                    relativeIdx);
-
-                return true;
-            }
-
-            return false;
-        });
-
-        return segment;
-    }
-
     function _getMediaUrl(segmentBase, segmentURL, index) {
         let mediaUrl = segmentBase.media;
 
@@ -301,14 +314,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return mediaRange;
     }
 
-    function precisionRound(number) {
+    function _precisionRound(number) {
         return parseFloat(number.toPrecision(15));
     }
 
     instance = {
+        getMediaFinishedInformation,
         getSegmentByIndex,
-        getSegmentByTime,
-        getMediaFinishedInformation
+        getSegmentByTime
     };
 
     return instance;
