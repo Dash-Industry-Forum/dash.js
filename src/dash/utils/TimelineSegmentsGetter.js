@@ -106,13 +106,14 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 timelineConverter,
                 isDynamic,
                 representation,
-                mediaTime: lastSegment.mediaStartTime,
+                mediaTime: lastSegment.mediaStartTime * representation.timescale,
                 durationInTimescale: lastSegment.duration * representation.timescale,
                 fTimescale: representation.timescale,
                 mediaUrl: lastSegment.mediaUrl,
                 mediaRange: lastSegment.mediaRange,
                 index: lastSegment.index,
-                indexOfPartialSegment: lastSegment.indexOfPartialSegment + 1,
+                indexOfPartialSegment: lastSegment.replacementSubNumber + 1,
+                replacementSubNumberOfLastPartialSegment: lastSegment.replacementSubNumberOfLastPartialSegment
             });
         }
 
@@ -130,10 +131,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
             let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
             let durationInTimescale = currentSElement.d;
             let indexOfPartialSegment = undefined;
+            let replacementSubNumberOfLastPartialSegment = undefined;
 
             if (_hasPartialSegments(currentSElement)) {
                 durationInTimescale /= currentSElement.k;
                 indexOfPartialSegment = 0;
+                replacementSubNumberOfLastPartialSegment = currentSElement.k - 1;
             }
 
             segment = getTimeBasedSegment({
@@ -147,7 +150,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 mediaRange,
                 tManifest: currentSElement.tManifest,
                 index: sElementCounterIncludingRepeats,
-                indexOfPartialSegment
+                indexOfPartialSegment,
+                replacementSubNumberOfLastPartialSegment
             });
         }
 
@@ -236,6 +240,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                         fTimescale,
                         sElementCounterIncludingRepeats,
                         indexOfPartialSegment: hasPartialSegments ? i : undefined,
+                        replacementSubNumberOfLastPartialSegment: hasPartialSegments ? numberOfSegments - 1 : undefined
                     });
                     return true;
                 }

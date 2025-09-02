@@ -149,6 +149,7 @@ export function getTimeBasedSegment(data) {
         mediaRange,
         index,
         indexOfPartialSegment,
+        replacementSubNumberOfLastPartialSegment,
         tManifest
     } = data;
     const mediaTimeInSeconds = mediaTime / fTimescale;
@@ -181,6 +182,7 @@ export function getTimeBasedSegment(data) {
         undefined,
         seg.replacementTime,
     );
+    seg.replacementSubNumberOfLastPartialSegment = replacementSubNumberOfLastPartialSegment;
     seg.mediaRange = mediaRange;
     seg.mediaUrl = mediaUrl;
 
