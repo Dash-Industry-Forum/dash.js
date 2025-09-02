@@ -36,6 +36,7 @@ import Settings from '../core/Settings.js';
 import Constants from './constants/Constants.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import Events from '../core/events/Events.js';
+import ExternalSourceBuffer from './ExternalSourceBuffer.js';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -374,8 +375,10 @@ function SourceBufferSink(config) {
                     } catch (e) {
 
                     }
-                    if (buffer.appendBuffer) {
+                    if (buffer instanceof ExternalSourceBuffer) {
                         buffer.appendBuffer(nextChunk.data.bytes, nextChunk.data.start, nextChunk.data.end);
+                    } else if (buffer.appendBuffer) {
+                        buffer.appendBuffer(nextChunk.data.bytes);
                     } else {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
                     }
