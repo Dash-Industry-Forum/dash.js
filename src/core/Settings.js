@@ -939,6 +939,16 @@ import Events from './events/Events.js';
  */
 
 /**
+ * @typedef {Object} EnhancementSettings
+ * @property {boolean} [enabled=false]
+ * Enable or disable the scalable enhancement playback (e.g. LCEVC).
+ * @property {Array.<string>} [codecs]
+ * Specifies which scalable enhancement codecs are supported by the player.
+ *
+ * If not specified this value defaults to ['lvc1'].
+ */
+
+/**
  * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
  * Maximum number of metrics that are persisted per type.
