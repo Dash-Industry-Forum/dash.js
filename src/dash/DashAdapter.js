@@ -1021,7 +1021,7 @@ function DashAdapter() {
         mediaInfo.index = adaptation.index;
         mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-        mediaInfo.type = enhancementCodecs.some(cdc => mediaInfo.codec?.includes(cdc)) ? Constants.ENHANCEMENT : adaptation.type;
+        mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec)) ? Constants.ENHANCEMENT : adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
