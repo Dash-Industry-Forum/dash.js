@@ -32,7 +32,6 @@
 import {processUriTemplate as cmlProcessUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
 import Segment from './../vo/Segment.js';
 
-
 function _getSegment(data) {
     let seg = new Segment();
     const {
@@ -43,8 +42,8 @@ function _getSegment(data) {
         mediaTimeInSeconds,
         timelineConverter,
         isDynamic,
-        index,
-        voSElement
+        indexOfPartialSegment,
+        index
     } = data;
 
 
@@ -52,20 +51,15 @@ function _getSegment(data) {
     seg.availabilityStartTime = timelineConverter.calcAvailabilityStartTimeFromPresentationTime(presentationEndTime, representation, isDynamic);
     seg.duration = segmentDurationInSeconds;
     seg.index = index;
+    seg.isPartialSegment = indexOfPartialSegment !== undefined;
     seg.mediaStartTime = mediaTimeInSeconds;
-    seg.partialSegments = _getPartialSegments(voSElement)
     seg.presentationStartTime = presentationStartTime;
     seg.replacementNumber = representation.startNumber + index;
+    seg.replacementSubNumber = indexOfPartialSegment;
     seg.representation = representation;
     seg.wallStartTime = timelineConverter.calcWallTimeForSegment(seg, isDynamic);
 
     return seg;
-}
-
-function _getPartialSegments(voSElement) {
-    if (!voSElement || !voSElement.k || voSElement.k <= 1) {
-        return [];
-    }
 }
 
 function _isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
@@ -143,9 +137,22 @@ export function getIndexBasedSegment(timelineConverter, isDynamic, representatio
     return segment;
 }
 
-export function getTimeBasedSegment(timelineConverter, isDynamic, representation, mediaTime, voSElement, fTimescale, mediaUrl, mediaRange, index) {
+export function getTimeBasedSegment(data) {
+    const {
+        timelineConverter,
+        isDynamic,
+        representation,
+        mediaTime,
+        durationInTimescale,
+        fTimescale,
+        mediaUrl,
+        mediaRange,
+        index,
+        indexOfPartialSegment,
+        tManifest
+    } = data;
     const mediaTimeInSeconds = mediaTime / fTimescale;
-    const segmentDurationInSeconds = voSElement.d / fTimescale;
+    const segmentDurationInSeconds = durationInTimescale / fTimescale;
     let presentationStartTime = timelineConverter.calcPresentationTimeFromMediaTime(mediaTimeInSeconds, representation);
     let presentationEndTime = presentationStartTime + segmentDurationInSeconds;
 
@@ -155,26 +162,27 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
         presentationStartTime,
         presentationEndTime,
         mediaTimeInSeconds,
-        voSElement,
         timelineConverter,
         isDynamic,
-        index
+        index,
+        indexOfPartialSegment
     });
 
     if (!_isSegmentAvailable(timelineConverter, representation, seg, isDynamic)) {
         return null;
     }
 
-    seg.replacementTime = voSElement.tManifest ? voSElement.tManifest : mediaTime;
+    seg.replacementTime = tManifest ? tManifest : mediaTime;
     seg.media = processUriTemplate(
         mediaUrl,
         undefined,
         seg.replacementNumber,
-        undefined,
+        seg.replacementSubNumber,
         undefined,
         seg.replacementTime,
     );
     seg.mediaRange = mediaRange;
+    seg.mediaUrl = mediaUrl;
 
     return seg;
 }

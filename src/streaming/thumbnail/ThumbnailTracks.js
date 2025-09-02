@@ -40,7 +40,6 @@ import DashHandler from '../../dash/DashHandler.js';
 import SegmentsController from '../../dash/controllers/SegmentsController.js';
 import CommonMediaRequest from '../vo/CommonMediaRequest.js';
 import CommonMediaResponse from '../vo/CommonMediaResponse.js';
-import SElement from '../../dash/vo/SElement.js';
 
 function ThumbnailTracks(config) {
     const context = this.context;
@@ -239,19 +238,17 @@ function ThumbnailTracks(config) {
         for (i = 0, len = data.segments.length; i < len; i++) {
             s = data.segments[i];
 
-            const voSElement = new SElement()
-            voSElement.d = s.duration;
-
-            seg = getTimeBasedSegment(
+            seg = getTimeBasedSegment({
                 timelineConverter,
-                adapter.getIsDynamic(),
+                isDynamic: adapter.getIsDynamic(),
                 representation,
-                s.startTime,
-                voSElement,
-                s.timescale,
-                s.media,
-                s.mediaRange,
-                count);
+                mediaTime: s.startTime,
+                fTimescale: s.timescale,
+                durationInTimescale: s.duration,
+                mediaUrl: s.media,
+                mediaRange: s.mediaRange,
+                index: count
+            });
 
             if (seg) {
                 segments.push(seg);

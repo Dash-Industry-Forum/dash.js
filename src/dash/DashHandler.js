@@ -258,12 +258,13 @@ function DashHandler(config) {
         const segment = segmentsController.getSegmentByIndex(
             representation,
             indexToRequest,
-            lastSegment ? lastSegment.mediaStartTime : -1
+            lastSegment
         );
         if (!segment) {
             return null;
         }
         request = _getRequestForSegment(mediaInfo, segment);
+
         return request;
     }
 
@@ -299,7 +300,7 @@ function DashHandler(config) {
 
     function _getRequest(mediaInfo, representation, indexToRequest) {
         let request = null;
-        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment ? lastSegment.mediaStartTime : -1);
+        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment);
 
         // No segment found
         if (!segment) {

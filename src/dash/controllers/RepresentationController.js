@@ -32,7 +32,6 @@ import Constants from '../../streaming/constants/Constants.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import {getTimeBasedSegment} from '../utils/SegmentsUtils.js';
-import SElement from '../vo/SElement.js';
 
 function RepresentationController(config) {
 
@@ -186,19 +185,17 @@ function RepresentationController(config) {
         for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
             s = fragments[i];
 
-            const voSElement = new SElement()
-            voSElement.d = s.duration;
-
-            seg = getTimeBasedSegment(
+            seg = getTimeBasedSegment({
                 timelineConverter,
                 isDynamic,
                 representation,
-                s.startTime,
-                voSElement,
-                s.timescale,
-                s.media,
-                s.mediaRange,
-                count);
+                mediaTime: s.startTime,
+                durationInTimescale: s.duration,
+                fTimescale: s.timescale,
+                mediaUrl: s.media,
+                mediaRange: s.mediaRange,
+                index: count
+            });
 
             if (seg) {
                 segments.push(seg);

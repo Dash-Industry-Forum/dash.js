@@ -32,7 +32,6 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
 import {getTimeBasedSegment} from './SegmentsUtils.js';
-import SElement from '../vo/SElement.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -48,7 +47,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         }
     }
 
-    function getSegmentByIndex(representation, lastSegmentTime) {
+    function getSegmentByIndex(representation, lastSegment) {
         checkConfig();
 
         if (!representation) {
@@ -58,49 +57,109 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         let segmentFound = false;
 
-
-        function _shouldSelectSegment(time, voSElement, fTimescale) {
-            if (lastSegmentTime < 0) {
-                return true;
-            }
-            // Note: We are looking for the current segment here! There will be one more iteration in _iterateSegments after which gives us the next segment
-            // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
-            const threshold = (lastSegmentTime * fTimescale) - (voSElement.d * 0.5);
-            return time >= threshold;
+        if (lastSegment
+            && lastSegment.isPartialSegment
+            && !isNaN(lastSegment.replacementSubNumber)
+            && !isNaN(lastSegment.replacementSubNumberOfLastPartialSegment)
+            && lastSegment.replacementSubNumber < lastSegment.replacementSubNumberOfLastPartialSegment) {
+            _handleNextPartialSegment(lastSegment)
+        } else {
+            _handleNextCompleteSegment();
         }
 
-        function _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, voSElement, fTimescale, relativeIdx) {
-            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
-            let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
+        return segment;
 
-            segment = getTimeBasedSegment(
+        function _handleNextCompleteSegment() {
+
+            _iterateSegments(representation, function (data) {
+                const {
+                    mediaTime,
+                    segmentBase,
+                    segmentURL,
+                    currentSElement,
+                    sElementCounterIncludingRepeats,
+                    sElementCounter
+                } = data;
+                const fTimescale = representation.timescale;
+
+                if (segmentFound || lastSegment.mediaStartTime < 0) {
+                    _onCompleteSegmentFound({
+                        segmentBase,
+                        segmentURL,
+                        sElementCounter,
+                        currentSElement,
+                        mediaTime,
+                        fTimescale,
+                        sElementCounterIncludingRepeats
+                    });
+                    return true;
+                } else if (_shouldSelectSegment(mediaTime, currentSElement, fTimescale)) {
+                    segmentFound = true;
+                }
+
+                return false;
+            });
+        }
+
+        function _handleNextPartialSegment(lastSegment) {
+            segment = getTimeBasedSegment({
+                timelineConverter,
+                isDynamic,
+                representation,
+                mediaTime: lastSegment.mediaStartTime,
+                durationInTimescale: lastSegment.duration * representation.timescale,
+                fTimescale: representation.timescale,
+                mediaUrl: lastSegment.mediaUrl,
+                mediaRange: lastSegment.mediaRange,
+                index: lastSegment.index,
+                indexOfPartialSegment: lastSegment.indexOfPartialSegment + 1,
+            });
+        }
+
+        function _onCompleteSegmentFound(data) {
+            const {
+                segmentBase,
+                segmentURL,
+                sElementCounter,
+                currentSElement,
+                mediaTime,
+                fTimescale,
+                sElementCounterIncludingRepeats
+            } = data
+            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
+            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
+            let durationInTimescale = currentSElement.d;
+            let indexOfPartialSegment = undefined;
+
+            if (_hasPartialSegments(currentSElement)) {
+                durationInTimescale /= currentSElement.k;
+                indexOfPartialSegment = 0;
+            }
+
+            segment = getTimeBasedSegment({
                 timelineConverter,
                 isDynamic,
                 representation,
                 mediaTime,
-                voSElement,
+                durationInTimescale,
                 fTimescale,
                 mediaUrl,
                 mediaRange,
-                relativeIdx);
+                tManifest: currentSElement.tManifest,
+                index: sElementCounterIncludingRepeats,
+                indexOfPartialSegment
+            });
         }
 
-        _iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
-            const fTimescale = representation.timescale;
-            const voSElement = new SElement()
-            voSElement.setValuesByParsedSElement(currentSElement);
-
-            if (segmentFound || lastSegmentTime < 0) {
-                _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, voSElement, fTimescale, relativeIdx);
+        function _shouldSelectSegment(time, currentSElement, fTimescale) {
+            if (!lastSegment) {
                 return true;
-            } else if (_shouldSelectSegment(mediaTime, voSElement, fTimescale)) {
-                segmentFound = true;
             }
-
-            return false;
-        });
-
-        return segment;
+            // Note: We are looking for the current segment here! There will be one more iteration in _iterateSegments after which gives us the next segment
+            // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
+            const threshold = (lastSegment.mediaStartTime * fTimescale) - (currentSElement.d * 0.5);
+            return time >= threshold;
+        }
     }
 
     function getSegmentByTime(representation, requestedPresentationTime) {
@@ -117,40 +176,103 @@ function TimelineSegmentsGetter(config, isDynamic) {
         let segment = null;
         const requiredMediaTime = timelineConverter.calcMediaTimeFromPresentationTime(requestedPresentationTime, representation);
 
-        function _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, fTimescale, relativeIdx) {
-            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, i);
-            let mediaRange = _getMediaRange(currentSElement, segmentURL, i);
+        _iterateSegments(representation, function (data) {
+            // In some cases when requiredMediaTime = actual end time of the last segment
+            // it is possible that this time a bit exceeds the declared end time of the last segment.
+            // in this case we still need to include the last segment in the segment list.
+            const { currentSElement } = data;
+            const fTimescale = representation.timescale;
+            const requiredMediaTimeInTimescaleUnits = _precisionRound(requiredMediaTime * fTimescale);
+            const hasPartialSegments = _hasPartialSegments(currentSElement);
 
-            const voSElement = new SElement()
-            voSElement.setValuesByParsedSElement(currentSElement);
+            if (hasPartialSegments) {
+                return _handlePartialSegment(requiredMediaTimeInTimescaleUnits, data)
+            } else {
+                return _handleCompleteSegment(requiredMediaTimeInTimescaleUnits, data)
+            }
+        });
 
-            segment = getTimeBasedSegment(
+        return segment;
+
+        function _handlePartialSegment(requiredMediaTimeInTimescaleUnits, data) {
+            const { currentSElement } = data;
+            const numberOfSegments = currentSElement.k;
+            const targetDurationInTimescale = currentSElement.d / numberOfSegments;
+
+            return _iterateOverSegments(requiredMediaTimeInTimescaleUnits, numberOfSegments, targetDurationInTimescale, data, true);
+        }
+
+        function _handleCompleteSegment(requiredMediaTimeInTimescaleUnits, data) {
+            const { currentSElement } = data;
+            const numberOfSegments = 1;
+            const targetDurationInTimescale = currentSElement.d;
+
+            return _iterateOverSegments(requiredMediaTimeInTimescaleUnits, numberOfSegments, targetDurationInTimescale, data, false);
+        }
+
+        function _iterateOverSegments(requiredMediaTimeInTimescaleUnits, numberOfSegments, targetDurationInTimescale, data, hasPartialSegments) {
+            const {
+                mediaTime,
+                segmentBase,
+                segmentURL,
+                currentSElement,
+                sElementCounterIncludingRepeats,
+                sElementCounter
+            } = data;
+            const fTimescale = representation.timescale;
+
+            for (let i = 0; i < numberOfSegments; i++) {
+                const partialSegmentMediaStartTime = mediaTime + (i * targetDurationInTimescale);
+                const partialSegmentMediaEndTime = mediaTime + ((i + 1) * targetDurationInTimescale);
+
+                if (requiredMediaTimeInTimescaleUnits < partialSegmentMediaEndTime && requiredMediaTimeInTimescaleUnits >= partialSegmentMediaStartTime) {
+                    _onSegmentFound({
+                        segmentBase,
+                        segmentURL,
+                        sElementCounter,
+                        currentSElement,
+                        mediaTime: partialSegmentMediaStartTime,
+                        durationInTimescale: targetDurationInTimescale,
+                        fTimescale,
+                        sElementCounterIncludingRepeats,
+                        indexOfPartialSegment: hasPartialSegments ? i : undefined,
+                    });
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        function _onSegmentFound(data) {
+            const {
+                segmentBase,
+                segmentURL,
+                sElementCounter,
+                currentSElement,
+                mediaTime,
+                durationInTimescale,
+                fTimescale,
+                sElementCounterIncludingRepeats,
+                indexOfPartialSegment
+            } = data
+            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
+            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
+
+            segment = getTimeBasedSegment({
                 timelineConverter,
                 isDynamic,
                 representation,
                 mediaTime,
-                voSElement,
+                durationInTimescale,
                 fTimescale,
                 mediaUrl,
                 mediaRange,
-                relativeIdx);
+                index: sElementCounterIncludingRepeats,
+                tManifest: currentSElement.tManifest,
+                indexOfPartialSegment
+            });
         }
-
-        _iterateSegments(representation, function (mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i) {
-            // In some cases when requiredMediaTime = actual end time of the last segment
-            // it is possible that this time a bit exceeds the declared end time of the last segment.
-            // in this case we still need to include the last segment in the segment list.
-            const fTimescale = representation.timescale;
-            const requiredMediaTimeInTimescaleUnits = _precisionRound(requiredMediaTime * fTimescale);
-            if (requiredMediaTimeInTimescaleUnits < (mediaTime + currentSElement.d) && requiredMediaTimeInTimescaleUnits >= mediaTime) {
-                _onSegmentFound(segmentBase, segmentURL, i, currentSElement, mediaTime, fTimescale, relativeIdx);
-                return true;
-            }
-
-            return false;
-        });
-
-        return segment;
     }
 
     function getMediaFinishedInformation(representation) {
@@ -210,16 +332,20 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return { numberOfSegments: availableSegments, mediaTimeOfLastSignaledSegment: mediaTimeInSeconds };
     }
 
+    function _hasPartialSegments(currentSElement) {
+        return currentSElement.hasOwnProperty('k') && currentSElement.k !== 0;
+    }
+
     function _iterateSegments(representation, iterFunc) {
         const segmentBase = _getSegmentBase(representation);
         const segmentTimeline = segmentBase.SegmentTimeline;
         const segmentURL = segmentBase.SegmentURL;
 
         let mediaTime = 0;
-        let relativeIdx = -1;
+        let sElementCounterIncludingRepeats = -1;
         let parsedSElements,
             currentSElement,
-            i,
+            sElementCounter,
             j,
             repeat,
             fTimescale;
@@ -228,10 +354,10 @@ function TimelineSegmentsGetter(config, isDynamic) {
         parsedSElements = segmentTimeline.S;
 
         let breakIterator = false;
-        const len = parsedSElements.length;
+        const numberOfSElements = parsedSElements.length;
 
-        for (i = 0; i < len && !breakIterator; i++) {
-            currentSElement = parsedSElements[i];
+        for (sElementCounter = 0; sElementCounter < numberOfSElements && !breakIterator; sElementCounter++) {
+            currentSElement = parsedSElements[sElementCounter];
             repeat = 0;
             if (currentSElement.hasOwnProperty('r')) {
                 repeat = currentSElement.r;
@@ -245,14 +371,21 @@ function TimelineSegmentsGetter(config, isDynamic) {
             // This is a special case: "A negative value of the @r attribute of the S element indicates that the duration indicated in @d attribute repeats until the start of the next S element, the end of the Period or until the
             // next MPD update."
             if (repeat < 0) {
-                const nextFrag = parsedSElements[i + 1];
+                const nextFrag = parsedSElements[sElementCounter + 1];
                 repeat = _calculateRepeatCountForNegativeR(representation, nextFrag, currentSElement, fTimescale, mediaTime / fTimescale);
             }
 
             for (j = 0; j <= repeat && !breakIterator; j++) {
-                relativeIdx++;
+                sElementCounterIncludingRepeats++;
 
-                breakIterator = iterFunc(mediaTime, segmentBase, segmentURL, currentSElement, relativeIdx, i);
+                breakIterator = iterFunc({
+                    mediaTime,
+                    segmentBase,
+                    segmentURL,
+                    currentSElement,
+                    sElementCounterIncludingRepeats,
+                    sElementCounter
+                });
 
                 if (breakIterator) {
                     representation.segmentDuration = currentSElement.d / fTimescale;
