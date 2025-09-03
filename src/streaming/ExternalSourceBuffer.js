@@ -41,15 +41,15 @@ class ExternalSourceBuffer {
         this.mode = 'segments';
     }
 
-    appendBuffer(aData, aStart, anEnd) {
+    appendBuffer(segmentData, segmentStartTime, segmentEndTime) {
         if (this.updating) {
             throw new Error('SourceBuffer is currently updating');
         }
         this.updating = true;
-        this.eventBus.trigger('externalSourceBufferUpdateStart', { mimeType: this.mimeType, request: 'appendBuffer', data: aData, start: aStart, end: anEnd });
+        this.eventBus.trigger('externalSourceBufferUpdateStart', { mimeType: this.mimeType, request: 'appendBuffer', data: segmentData, start: segmentStartTime, end: segmentEndTime });
 
-        if (!Number.isNaN(aStart)) {
-            this.chunks.push({data: aData, start: aStart, end: anEnd});
+        if (!Number.isNaN(segmentStartTime)) {
+            this.chunks.push({data: segmentData, start: segmentStartTime, end: segmentEndTime});
             this.chunks.sort((a, b) => a.start - b.start); // sort ascending based on start times
         }
         // Simulate async data append
