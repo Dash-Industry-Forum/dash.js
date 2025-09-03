@@ -72,7 +72,6 @@ function StreamProcessor(config) {
     let mimeType = config.mimeType;
     let playbackController = config.playbackController;
     let segmentBlacklistController = config.segmentBlacklistController;
-    let enhancementStreamProcessor = null;
     let settings = config.settings;
     let streamInfo = config.streamInfo;
     let textController = config.textController;
@@ -84,6 +83,7 @@ function StreamProcessor(config) {
         containsVideoTrack,
         currentMediaInfo,
         dashHandler,
+        enhancementStreamProcessor,
         instance,
         isDynamic,
         logger,
