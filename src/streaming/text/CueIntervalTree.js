@@ -69,6 +69,21 @@ class CueIntervalTree {
     }
 
     /**
+     * Removes a cue from the interval tree.
+     *
+     * @param {TextTrackCue} cue - The cue to remove
+     * @returns {boolean} True if the cue was found and removed, false otherwise
+     */
+    removeCue(cue) {
+        const [newRoot, removed] = this._remove(cue, this.root);
+        this.root = newRoot;
+        if (removed) {
+            this.size--;
+        }
+        return removed;
+    }
+
+    /**
      * Finds all cues that overlap with the given time range.
      *
      * @param {number} start - Start time of the range
@@ -395,6 +410,97 @@ class CueIntervalTree {
         );
 
         return left;
+    }
+
+    /**
+     * Removes a node from the tree and returns the new root and a flag indicating whether it was removed.
+     *
+     * @param {TextTrackCue} cue - The cue to remove
+     * @param {IntervalTreeNode|null} node - Current subtree root
+     * @returns {[IntervalTreeNode|null, boolean]} Tuple containing [newRoot, removed]
+     * @private
+     */
+    _remove(cue, node) {
+        if (!node) {
+            return [null, false];
+        }
+
+        const comparison = this._compareCues(cue, node.cue);
+
+        if (comparison < 0) {
+            // Cue is in left subtree
+            const [newLeft, removed] = this._remove(cue, node.left);
+            node.left = newLeft;
+            if (removed) {
+                this._updateNode(node);
+            }
+            return [node, removed];
+        } else if (comparison > 0) {
+            // Cue is in right subtree
+            const [newRight, removed] = this._remove(cue, node.right);
+            node.right = newRight;
+            if (removed) {
+                this._updateNode(node);
+            }
+            return [node, removed];
+        } else {
+            // Found the cue to remove
+            if (!node.left && !node.right) {
+                // Leaf node
+                return [null, true];
+            } else if (!node.left) {
+                // Only right child
+                return [node.right, true];
+            } else if (!node.right) {
+                // Only left child
+                return [node.left, true];
+            } else {
+                // Two children - find successor (leftmost in right subtree)
+                const successor = this._findMin(node.right);
+                node.cue = successor.cue;
+                node.start = successor.start;
+                node.end = successor.end;
+
+                // Remove the successor
+                const [newRight] = this._remove(successor.cue, node.right);
+                node.right = newRight;
+
+                this._updateNode(node);
+                return [node, true];
+            }
+        }
+    }
+
+    /**
+     * Finds the leftmost (minimum) node in a subtree.
+     *
+     * @param {IntervalTreeNode} node - Root of the subtree
+     * @returns {IntervalTreeNode} The leftmost node
+     * @private
+     */
+    _findMin(node) {
+        while (node.left) {
+            node = node.left;
+        }
+        return node;
+    }
+
+    /**
+     * Updates a node's height and maxEnd after structural changes.
+     *
+     * @param {IntervalTreeNode} node - Node to update
+     * @private
+     */
+    _updateNode(node) {
+        node.height = 1 + Math.max(
+            this._getHeight(node.left),
+            this._getHeight(node.right)
+        );
+        node.maxEnd = Math.max(
+            node.end,
+            node.left ? node.left.maxEnd : 0,
+            node.right ? node.right.maxEnd : 0
+        );
     }
 }
 

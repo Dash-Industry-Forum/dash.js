@@ -38,6 +38,24 @@ import Utils from '../../core/Utils.js';
 import {CueIntervalTree} from './CueIntervalTree.js';
 import {renderHTML} from 'imsc';
 
+const CUE_PROPS_TO_COMPARE = [
+    'text',
+    'align',
+    'fontSize',
+    'id',
+    'isd',
+    'line',
+    'lineAlign',
+    'lineHeight',
+    'linePadding',
+    'position',
+    'positionAlign',
+    'region',
+    'size',
+    'snapToLines',
+    'vertical',
+];
+
 function TextTracks(config) {
 
     const context = this.context;
@@ -494,6 +512,68 @@ function TextTracks(config) {
         }
     }
 
+    /**
+     * Finds an existing cue in the interval tree that can be extended with the new cue.
+     * Looks for cues that are adjacent and have identical content.
+     *
+     * @param {TextTrackCue} newCue - The new cue to potentially extend
+     * @param {CueIntervalTree} intervalTree - The interval tree containing existing cues
+     * @returns {TextTrackCue|null} The cue to extend, or null if no suitable cue found
+     */
+    function _findCueToExtend(newCue, intervalTree) {
+        // Find cues that might be adjacent to the new cue
+        const adjacentCues = intervalTree.findCuesInRange(
+            newCue.startTime - 0.1, // Small buffer for floating point precision
+            newCue.endTime + 0.1
+        );
+
+        for (const existingCue of adjacentCues) {
+            // Check if cues are adjacent and have identical content
+            if (_areCuesAdjacent(newCue, existingCue) && _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
+                return existingCue;
+            } else if (_areCuesAdjacent(existingCue, newCue) && _cuesContentAreEqual(newCue, existingCue, CUE_PROPS_TO_COMPARE)) {
+                return existingCue;
+            }
+        }
+
+        return null;
+    }
+
+    // Check that a new cue immediately follows the previous cue
+    function _areCuesAdjacent(cue, prevCue) {
+        if (!prevCue) {
+            return false;
+        }
+        // Check previous cue endTime with current cue startTime
+        // (should we consider an epsilon margin? for example to get around rounding issues)
+        return prevCue.endTime >= cue.startTime;
+    }
+
+    /**
+     * Mutates and returns an existing cue by extending it with a new cue by merging their timing.
+     * Assumes that the two cues are adjacent and have identical content.
+     *
+     * @param {TextTrackCue} existingCue - The existing cue to extend
+     * @param {TextTrackCue} newCue - The new cue to merge with
+     * @returns {TextTrackCue} The extended existing cue
+     */
+    function _extendCue(existingCue, newCue) {
+        existingCue.startTime = Math.min(existingCue.startTime, newCue.startTime);
+        existingCue.endTime = Math.max(existingCue.endTime, newCue.endTime);
+
+        return existingCue;
+    }
+
+    function _cuesContentAreEqual(cue1, cue2, props) {
+        for (let i = 0; i < props.length; i++) {
+            const key = props[i];
+            if (JSON.stringify(cue1[key]) !== JSON.stringify(cue2[key])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     function _resolveImagesInContents(cue, contents) {
         if (!contents) {
             return;
@@ -540,6 +620,13 @@ function TextTracks(config) {
             }
 
             if (cue) {
+                if (settings.get().streaming.text.extendSegmentedCues) {
+                    const cueToExtend = _findCueToExtend(cue, cueData.allCues);
+                    if (cueToExtend) {
+                        cueData.allCues.removeCue(cueToExtend);
+                        cue = _extendCue(cueToExtend, cue);
+                    }
+                }
                 cueData.allCues.addCue(cue);
             } else {
                 logger.error('Impossible to display subtitles. You might have missed setting a TTML rendering div via player.attachTTMLRenderingDiv(TTMLRenderingDiv)');
@@ -1043,3 +1130,4 @@ function TextTracks(config) {
 
 TextTracks.__dashjs_factory_name = 'TextTracks';
 export default FactoryMaker.getClassFactory(TextTracks);
+

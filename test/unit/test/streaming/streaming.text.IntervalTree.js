@@ -198,4 +198,115 @@ describe('IntervalTree', function () {
             expect(cues).to.deep.equal([]);
         });
     });
+
+    describe('Method removeCue', function () {
+        beforeEach(function () {
+            const cues = [
+                { startTime: 0, endTime: 2, text: 'First cue' },
+                { startTime: 2, endTime: 4, text: 'Second cue' },
+                { startTime: 4, endTime: 6, text: 'Third cue' },
+                { startTime: 6, endTime: 8, text: 'Fourth cue' }
+            ];
+            cues.forEach(cue => intervalTree.addCue(cue));
+            
+            // Visual representation of the initial tree structure:
+            //        ┌─[6-8] Fourth cue
+            //    ┌─[4-6] Third cue
+            // ─[2-4] Second cue
+            //    └─[0-2] First cue
+        });
+
+        it('should remove a cue and return true', function () {
+            const cueToRemove = { startTime: 2, endTime: 4, text: 'Second cue' };
+            const result = intervalTree.removeCue(cueToRemove);
+
+            expect(result).to.be.true;
+            expect(intervalTree.getSize()).to.equal(3);
+            const allCues = intervalTree.getAllCues();
+            expect(allCues).to.have.length(3);
+            expect(allCues.some(c => c.text === 'Second cue')).to.be.false;
+        });
+
+        it('should return false when removing non-existent cue', function () {
+            const nonExistentCue = { startTime: 10, endTime: 12, text: 'Non-existent' };
+            const result = intervalTree.removeCue(nonExistentCue);
+
+            expect(result).to.be.false;
+            expect(intervalTree.getSize()).to.equal(4);
+        });
+
+        it('should remove leaf node correctly', function () {
+            const leafCue = { startTime: 6, endTime: 8, text: 'Fourth cue' };
+
+            const result = intervalTree.removeCue(leafCue);
+
+            expect(result).to.be.true;
+            expect(intervalTree.getSize()).to.equal(3);
+            const allCues = intervalTree.getAllCues();
+            expect(allCues.some(c => c.text === 'Fourth cue')).to.be.false;
+        });
+
+        it('should remove node with one child correctly', function () {
+            // Remove "Third cue" which has one child (Fourth cue)
+            const cueToRemove = { startTime: 4, endTime: 6, text: 'Third cue' };
+            const result = intervalTree.removeCue(cueToRemove);
+
+            expect(result).to.be.true;
+            expect(intervalTree.getSize()).to.equal(3);
+            const allCues = intervalTree.getAllCues();
+            expect(allCues.some(c => c.text === 'Third cue')).to.be.false;
+        });
+
+        it('should remove node with two children correctly', function () {
+            // Remove "Second cue" which is the root with both left and right children
+            const cueToRemove = { startTime: 2, endTime: 4, text: 'Second cue' };
+            const result = intervalTree.removeCue(cueToRemove);
+
+            expect(result).to.be.true;
+            expect(intervalTree.getSize()).to.equal(3);
+            const allCues = intervalTree.getAllCues();
+            expect(allCues.some(c => c.text === 'Second cue')).to.be.false;
+        });
+
+        it('should maintain tree balance after removal', function () {
+            const cueToRemove = { startTime: 2, endTime: 4, text: 'Second cue' };
+
+            intervalTree.removeCue(cueToRemove);
+
+            // Verify the tree is still functional
+            const allCues = intervalTree.getAllCues();
+            expect(allCues).to.have.length(3);
+            
+            // Test that search still works
+            const searchResult = intervalTree.findCuesInRange(0, 6);
+            expect(searchResult).to.have.length(2);
+        });
+
+        it('should handle removing all cues', function () {
+            const allCues = intervalTree.getAllCues();
+            
+            allCues.forEach((cue) => {
+                expect(intervalTree.removeCue(cue)).to.be.true;
+            });
+
+            expect(intervalTree.getSize()).to.equal(0);
+            expect(intervalTree.getAllCues()).to.deep.equal([]);
+        });
+
+        it('should handle removing cues with identical timing but different text', function () {
+            // Add a cue with identical timing but different text
+            intervalTree.addCue({ startTime: 2, endTime: 4, text: 'Different text' });
+            
+            const cueToRemove = { startTime: 2, endTime: 4, text: 'Second cue' };
+            const result = intervalTree.removeCue(cueToRemove);
+
+            expect(result).to.be.true;
+            expect(intervalTree.getSize()).to.equal(4);
+            
+            // The cue with different text should still be there
+            const remainingCues = intervalTree.getAllCues();
+            expect(remainingCues.some(c => c.text === 'Different text')).to.be.true;
+            expect(remainingCues.some(c => c.text === 'Second cue')).to.be.false;
+        });
+    });
 });

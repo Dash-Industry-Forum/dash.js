@@ -165,6 +165,85 @@ describe('TextTracks', function () {
             expect(allCues[1].text).to.equal('Second cue');
             expect(allCues[0].cueID).to.not.equal(allCues[1].cueID);
         });
+
+        it('should extend adjacent cues with identical content when streaming.text.extendSegmentedCues is enabled', function () {
+            // Enable cue extension
+            settings.update({ streaming: { text: { extendSegmentedCues: true } } });
+
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+
+            const track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            // Add cues with adjacent timing and identical content
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Same text', start: 0, end: 2},
+                {type: 'noHtml', data: 'Same text', start: 2, end: 4},
+                {type: 'noHtml', data: 'Same text', start: 4, end: 6},
+                {type: 'noHtml', data: 'Different text', start: 6, end: 8},
+                {type: 'noHtml', data: 'Same text', start: 8, end: 10},
+                {type: 'noHtml', data: 'Same text', start: 10, end: 12}
+            ]);
+
+            // Update window to include all cues
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(3);
+
+            // First cue should be extended from 0-6 (merged 0-2, 2-4, 4-6)
+            expect(track.cues[0].text).to.equal('Same text');
+            expect(track.cues[0].startTime).to.equal(0);
+            expect(track.cues[0].endTime).to.equal(6);
+
+            // Second cue should be the different content
+            expect(track.cues[1].text).to.equal('Different text');
+            expect(track.cues[1].startTime).to.equal(6);
+            expect(track.cues[1].endTime).to.equal(8);
+
+            // Third cue should be the non-adjacent same content
+            expect(track.cues[2].text).to.equal('Same text');
+            expect(track.cues[2].startTime).to.equal(8);
+            expect(track.cues[2].endTime).to.equal(12);
+        });
+
+        it('should not extend adjacent cues when streaming.text.extendSegmentedCues is disabled', function () {
+            // Ensure cue extension is disabled
+            settings.update({ streaming: { text: { extendSegmentedCues: false } } });
+
+            textTracks.addTextTrackInfo({
+                index: 0,
+                kind: 'subtitles',
+                id: 'eng',
+                defaultTrack: true,
+                isTTML: true}, 1);
+            textTracks.createTracks();
+
+            const track = videoModelMock.getTextTrack('subtitles', 'eng');
+
+            // Add cues with adjacent timing and identical content
+            textTracks.addCaptions(0, 0, [
+                {type: 'noHtml', data: 'Same text', start: 0, end: 2},
+                {type: 'noHtml', data: 'Same text', start: 2, end: 4}
+            ]);
+
+            // Update window to include all cues
+            textTracks.updateTextTrackWindow(0, true);
+
+            expect(track.cues.length).to.equal(2);
+
+            expect(track.cues[0].text).to.equal('Same text');
+            expect(track.cues[0].startTime).to.equal(0);
+            expect(track.cues[0].endTime).to.equal(2);
+
+            expect(track.cues[1].text).to.equal('Same text');
+            expect(track.cues[1].startTime).to.equal(2);
+            expect(track.cues[1].endTime).to.equal(4);
+        });
     });
 
     describe('Method updateTextTrackWindow', function () {
@@ -192,6 +271,12 @@ describe('TextTracks', function () {
             textTracks.updateTextTrackWindow(0, true);
             expect(track.cues.length).to.equal(1);
             expect(track.cues[0].text).to.equal('Cue at 0s');
+
+            // Update window at time 20 - window is [0, 40)
+            textTracks.updateTextTrackWindow(20, true);
+            expect(track.cues.length).to.equal(2);
+            expect(track.cues[0].text).to.equal('Cue at 0s');
+            expect(track.cues[1].text).to.equal('Cue at 30s');
 
             // Update window at time 30 - window is [10, 50)
             textTracks.updateTextTrackWindow(30, true);
