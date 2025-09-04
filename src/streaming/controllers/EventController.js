@@ -511,11 +511,12 @@ function EventController() {
      */
     function _checkEventReadyToResolve(event, currentVideoTime) {
         try {
-            if (!event.earliestResolutionTimeOffset || event.triggeredReadyToResolve) {
+            if (!event.alternativeMpd.earliestResolutionTimeOffset || event.triggeredReadyToResolve) {
                 return false;
             }
-            
-            const resolutionTime = event.calculatedPresentationTime - event.earliestResolutionTimeOffset;
+
+            const resolutionTime = event.calculatedPresentationTime - event.alternativeMpd .earliestResolutionTimeOffset;
+            console.log(resolutionTime, currentVideoTime);
             return currentVideoTime >= resolutionTime;
         } catch (e) {
             logger.error(e);
