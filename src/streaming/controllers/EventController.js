@@ -516,7 +516,6 @@ function EventController() {
             }
 
             const resolutionTime = event.calculatedPresentationTime - event.alternativeMpd .earliestResolutionTimeOffset;
-            console.log(resolutionTime, currentVideoTime);
             return currentVideoTime >= resolutionTime;
         } catch (e) {
             logger.error(e);
