@@ -700,13 +700,7 @@ function StreamProcessor(config) {
 
             eventBus.trigger()
 
-            if (enhancementStreamProcessor && selectedValues.selectedRepresentation.dependentRepresentation) {
-                logger.info('[' + type + '] selectMediaInfo : call selectMediaInfo on enhancementStreamProcessor for index = ' + selectedValues.selectedRepresentation.absoluteIndex);
-                enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({
-                    newMediaInfo: selectedValues.selectedRepresentation.mediaInfo,
-                    newRepresentation: selectedValues.selectedRepresentation
-                }));
-            }
+            _selectMediaInfoForEnhancementStreamProcessor(selectedValues);
 
             // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
             const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, true);
@@ -766,6 +760,16 @@ function StreamProcessor(config) {
         return {
             currentMediaInfo: selectionInput.newMediaInfo,
             selectedRepresentation: representationController.getCurrentRepresentation()
+        }
+    }
+
+    function _selectMediaInfoForEnhancementStreamProcessor(selectedValues) {
+        if (enhancementStreamProcessor && selectedValues.selectedRepresentation.dependentRepresentation) {
+            logger.info('[' + type + '] selectMediaInfo : call selectMediaInfo on enhancementStreamProcessor for index = ' + selectedValues.selectedRepresentation.absoluteIndex);
+            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({
+                newMediaInfo: selectedValues.selectedRepresentation.mediaInfo,
+                newRepresentation: selectedValues.selectedRepresentation
+            }));
         }
     }
 
