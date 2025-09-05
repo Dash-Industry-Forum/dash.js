@@ -474,12 +474,12 @@ function Stream(config) {
      * Creates the StreamProcessor for a given media type.
      * @param {array} allMediaForType
      * @param {object} mediaSource
-     * @param {object} aType
+     * @param {object} streamProcessorMediaType
      * @private
      */
-    function _createStreamProcessor(allMediaForType, mediaSource, aType) {
+    function _createStreamProcessor(allMediaForType, mediaSource, streamProcessorMediaType) {
 
-        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType.filter(m => (m.type === aType))[0] : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType.filter(m => (m.type === streamProcessorMediaType))[0] : null;
         let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
         const type = mediaInfo ? mediaInfo.type : null;
         const mimeType = mediaInfo ? mediaInfo.mimeType : null;
