@@ -132,15 +132,15 @@ function TimelineConverter() {
         return presentationTime - periodStart + presentationOffset;
     }
 
-    function calcWallTimeForSegment(segment, isDynamic) {
+    function calcWallTimeForSegment(segmentData, isDynamic) {
         let suggestedPresentationDelay,
             displayStartTime,
             wallTime;
 
         if (isDynamic) {
-            suggestedPresentationDelay = segment.representation.adaptation.period.mpd.suggestedPresentationDelay;
-            displayStartTime = segment.presentationStartTime + suggestedPresentationDelay;
-            wallTime = new Date(segment.availabilityStartTime.getTime() + (displayStartTime * 1000));
+            suggestedPresentationDelay = segmentData.representation.adaptation.period.mpd.suggestedPresentationDelay;
+            displayStartTime = segmentData.presentationStartTime + suggestedPresentationDelay;
+            wallTime = new Date(segmentData.availabilityStartTime.getTime() + (displayStartTime * 1000));
         }
 
         return wallTime;

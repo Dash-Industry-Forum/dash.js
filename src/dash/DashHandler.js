@@ -141,7 +141,7 @@ function DashHandler(config) {
         request.representation = representation;
 
         if (_setRequestUrl(request, representation.initialization, representation)) {
-            request.url = processUriTemplate(request.url, undefined, undefined, undefined, representation.bandwidth);
+            request.url = processUriTemplate(request.url, representation.id, undefined, undefined, representation.bandwidth);
             return request;
         }
     }
@@ -158,10 +158,15 @@ function DashHandler(config) {
             segment.media,
             representation.id,
             segment.replacementNumber,
-            undefined,
+            segment.replacementSubNumber,
             bandwidth,
             segment.replacementTime
         );
+
+        if (!url) {
+            console.log(`dsi url ${url}`)
+        }
+
 
         request.mediaType = getType();
         request.bandwidth = representation.bandwidth;

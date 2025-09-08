@@ -60,7 +60,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return mediaFinishedInformation;
     }
 
-    function getSegmentByIndex(representation, index) {
+    function getSegmentByIndex(representation, indexWithoutStartnumber) {
         checkConfig();
 
         if (!representation) {
@@ -71,16 +71,16 @@ function TemplateSegmentsGetter(config, isDynamic) {
             AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
 
         // This is the index without @startNumber
-        index = Math.max(index, 0);
+        indexWithoutStartnumber = Math.max(indexWithoutStartnumber, 0);
 
-        const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+        const seg = getIndexBasedSegment({timelineConverter, isDynamic, representation, index: indexWithoutStartnumber});
 
         if (seg) {
             if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
                 return null;
             }
 
-            seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
+            seg.replacementTime = Math.round(indexWithoutStartnumber * representation.segmentDuration * representation.timescale, 10);
             seg.media = processUriTemplate(
                 template.media,
                 undefined,
@@ -109,9 +109,9 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         // Calculate the relative time for the requested time in this period
         let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const index = Math.floor(periodTime / duration);
+        const indexWithoutStartnumber = Math.floor(periodTime / duration);
 
-        return getSegmentByIndex(representation, index);
+        return getSegmentByIndex(representation, indexWithoutStartnumber);
     }
 
     instance = {
