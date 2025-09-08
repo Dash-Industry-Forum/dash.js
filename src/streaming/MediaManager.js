@@ -28,20 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Events from '../../core/events/Events.js';
-import MediaPlayerEvents from '../MediaPlayerEvents.js';
-import MediaPlayer from '../MediaPlayer.js';
-import EventBus from './../../core/EventBus.js';
-import FactoryMaker from '../../core/FactoryMaker.js';
-import Constants from '../constants/Constants.js';
+import Events from '../core/events/Events.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import MediaPlayer from './MediaPlayer.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Constants from './constants/Constants.js';
 
-function AlternativeMpdController() {
-    const context = this.context;
-    const eventBus = EventBus(context).getInstance();
-
+function MediaManager() {
     let instance,
         videoModel,
-        currentEvent = null,
         isSwitching = false,
         hideAlternativePlayerControls = false,
         altPlayer,
@@ -49,10 +44,6 @@ function AlternativeMpdController() {
         playbackController,
         altVideoElement,
         alternativeContext,
-        actualEventPresentationTime = 0,
-        timeToSwitch = 0,
-        manifestInfo = {},
-        DashConstants,
         logger,
         prebufferedPlayers = new Map(),
         prebufferCleanupInterval = null;
@@ -64,10 +55,6 @@ function AlternativeMpdController() {
 
         if (!videoModel) {
             videoModel = config.videoModel;
-        }
-
-        if (config.DashConstants) {
-            DashConstants = config.DashConstants
         }
 
         if (config.logger) {
@@ -82,38 +69,12 @@ function AlternativeMpdController() {
             hideAlternativePlayerControls = config.hideAlternativePlayerControls;
         }
 
-
         if (!!config.alternativeContext && !alternativeContext) {
             alternativeContext = config.alternativeContext
-        }
-
-        if (!!config.currentEvent && !currentEvent) {
-            currentEvent = config.currentEvent;
         }
     }
 
     function initialize() {
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        
-        // Listen to alternative MPD events directly from EventController
-        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
-        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
-        
-        // Listen to event ready to resolve for prebuffering
-        eventBus.on(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
-
-        if (altPlayer) {
-            altPlayer.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        }
-
-        document.addEventListener('fullscreenchange', () => {
-            if (document.fullscreenElement === videoModel.getElement()) {
-                // TODO: Implement fullscreen
-            } else {
-                // TODO: Handle error
-            }
-        });
-
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
@@ -124,80 +85,18 @@ function AlternativeMpdController() {
                 fullscreenDiv.appendChild(videoElement);
             }
         }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (document.fullscreenElement === videoModel.getElement()) {
+                // TODO: Implement fullscreen
+            } else {
+                // TODO: Handle error
+            }
+        });
     }
 
-    function _onManifestLoaded(e) {
-        const manifest = e.data
-        manifestInfo.type = manifest.type;
-        manifestInfo.originalUrl = manifest.originalUrl;
-    }
 
-    function _startAltnerativePlaybackTimeMonitoring() {
-        altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
-    }
-
-    function _onAlternativeEventTriggered(e) {
-        try {
-            const event = e.event;
-            if (!event || !event.alternativeMpd) {
-                return;
-            }
-
-            // Only Alternative MPD replace events can be used for dynamic MPD
-            if (manifestInfo.type === DashConstants.DYNAMIC && event.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
-                logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
-                return;
-            }
-
-            const parsedEvent = _parseEvent(event);
-            if (!parsedEvent) {
-                return;
-            }
-
-            // Try to prebuffer if not already done
-            const eventKey = `${parsedEvent.schemeIdUri}_${parsedEvent.id}`;
-            if (!prebufferedPlayers.has(eventKey)) {
-                _prebufferAlternativeContent(parsedEvent);
-            }
-
-            // Handle switching to alternative content
-            if (!isSwitching && !currentEvent) {
-                currentEvent = parsedEvent;
-                actualEventPresentationTime = playbackController.getTime();
-                timeToSwitch = parsedEvent.startWithOffset ? actualEventPresentationTime - parsedEvent.presentationTime : 0;
-                timeToSwitch = timeToSwitch + _getAnchor(parsedEvent.alternativeMPD.url);
-                _switchToAlternativeContent(parsedEvent, timeToSwitch);
-            }
-        } catch (err) {
-            logger.error('Error handling alternative event:', err);
-        }
-    }
-
-    function _onEventReadyToResolve(e) {
-        try {
-            const { schemeIdUri, eventId, event } = e;
-            
-            // Check if this is an alternative MPD event
-            if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
-                schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
-                
-                logger.info(`Event ${eventId} is ready for prebuffering`);
-                
-                // Start prebuffering if we have the event data and not already prebuffered
-                const eventKey = `${schemeIdUri}_${eventId}`;
-                if (!prebufferedPlayers.has(eventKey) && event && event.alternativeMpd) {
-                    const parsedEvent = _parseEvent(event);
-                    if (parsedEvent) {
-                        _prebufferAlternativeContent(parsedEvent);
-                    }
-                }
-            }
-        } catch (err) {
-            logger.error('Error handling event ready to resolve:', err);
-        }
-    }
-
-    function _prebufferAlternativeContent(event) {
+    function prebufferAlternativeContent(event) {
         try {
             const eventKey = `${event.schemeIdUri}_${event.id}`;
             
@@ -232,7 +131,7 @@ function AlternativeMpdController() {
 
             prebufferedPlayer.on(Events.ERROR, (e) => {
                 logger.error(`Prebuffering error for event ${event.id}:`, e);
-                _cleanupPrebufferedContent(eventKey);
+                cleanupPrebufferedContent(eventKey);
             }, this);
 
         } catch (err) {
@@ -240,7 +139,7 @@ function AlternativeMpdController() {
         }
     }
 
-    function _cleanupPrebufferedContent(eventKey) {
+    function cleanupPrebufferedContent(eventKey) {
         try {
             const prebufferedPlayer = prebufferedPlayers.get(eventKey);
             if (prebufferedPlayer) {
@@ -248,8 +147,8 @@ function AlternativeMpdController() {
                 prebufferedPlayer.player.off(Events.ERROR);
                 prebufferedPlayer.player.reset();
                 
-                if (prebufferedPlayer.videoElement && prebufferedPlayer.videoElement.parentNode) {
-                    prebufferedPlayer.videoElement.parentNode.removeChild(prebufferedPlayer.videoElement);
+                if (prebufferedPlayer.videoElement && prebufferedPlayer.videoElement?.parentNode) {
+                    prebufferedPlayer.videoElement.parentNode?.removeChild(prebufferedPlayer.videoElement);
                 }
                 
                 prebufferedPlayers.delete(eventKey);
@@ -260,60 +159,7 @@ function AlternativeMpdController() {
         }
     }
 
-    // Handles alternative player time updates (with currentEvent)
-    function _onAlternativePlaybackTimeUpdated(e) {
-        try {
-            if (!currentEvent) {
-                return;
-            }
-
-            if (currentEvent.type == DashConstants.DYNAMIC) {
-                return;
-            }
-
-            const { presentationTime, maxDuration, clip } = currentEvent;
-            if (Math.round(e.time - actualEventPresentationTime) === 0) {
-                return;
-            }
-
-            const shouldSwitchBack =
-                (Math.round(altPlayer.duration() - e.time) === 0) ||
-                (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
-                (maxDuration && maxDuration <= e.time);
-            if (shouldSwitchBack) {
-                _switchBackToMainContent(currentEvent);
-            }
-        } catch (err) {
-            logger.error(`Error at ${actualEventPresentationTime} in _onAlternativePlaybackTimeUpdated:`, err);
-        }
-    }
-
-    function _parseEvent(event) {
-        if (event.alternativeMpd) {
-            const timescale = event.eventStream.timescale || 1;
-            const alternativeMpdNode = event.alternativeMpd;
-            const mode = alternativeMpdNode.mode || Constants.ALTERNATIVE_MPD.MODES.INSERT;
-            return {
-                presentationTime: event.presentationTime / timescale,
-                duration: event.duration,
-                id: event.id,
-                schemeIdUri: event.eventStream.schemeIdUri,
-                maxDuration: alternativeMpdNode.maxDuration / timescale,
-                alternativeMPD: {
-                    url: alternativeMpdNode.url,
-                },
-                mode: mode,
-                type: DashConstants.STATIC,
-                ...(alternativeMpdNode.returnOffset && { returnOffset: parseInt(alternativeMpdNode.returnOffset || '0', 10) / 1000 }),
-                ...(alternativeMpdNode.maxDuration && { clip: alternativeMpdNode.clip }),
-                ...(alternativeMpdNode.clip && { startWithOffset: alternativeMpdNode.startWithOffset }),
-            };
-        }
-        return event;
-    }
-
-
-    function _initializeAlternativePlayerElement(event) {
+    function initializeAlternativePlayerElement(event) {
         if (!altVideoElement) {
             // Create a new video element for the alternative content
             altVideoElement = document.createElement('video');
@@ -331,28 +177,28 @@ function AlternativeMpdController() {
         };
 
         // Initialize alternative player
-        _initializeAlternativePlayer(event);
+        initializeAlternativePlayer(event);
     }
 
-    function _initializeAlternativePlayer(event) {
+    function initializeAlternativePlayer(event) {
         // Clean up previous error listener if any
         if (altPlayer) {
-            altPlayer.off(Events.ERROR, _onAlternativePlayerError, this);
+            altPlayer.off(Events.ERROR, onAlternativePlayerError, this);
         }
         // Initialize alternative player
         altPlayer = MediaPlayer().create();
         altPlayer.initialize(altVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
         altPlayer.setAutoPlay(false);
-        altPlayer.on(Events.ERROR, _onAlternativePlayerError, this);
+        altPlayer.on(Events.ERROR, onAlternativePlayerError, this);
     }
 
-    function _onAlternativePlayerError(e) {
+    function onAlternativePlayerError(e) {
         if (logger) {
             logger.error('Alternative player error:', e);
         }
     }
 
-    function _switchToAlternativeContent(event, time = 0) {
+    function switchToAlternativeContent(event, time = 0) {
         if (isSwitching) { 
             logger.debug('Switch already in progress - ignoring request');
             return 
@@ -391,7 +237,7 @@ function AlternativeMpdController() {
             }
         } else {
             // No prebuffered content, initialize normally
-            _initializeAlternativePlayerElement(event);
+            initializeAlternativePlayerElement(event);
         }
 
         videoModel.pause();
@@ -407,18 +253,12 @@ function AlternativeMpdController() {
 
         altPlayer.play();
         logger.info('Alternative content playback started');
-        _startAltnerativePlaybackTimeMonitoring();
 
         isSwitching = false;
     }
 
-    function _getAnchor(url) {
-        const regexT = /#.*?t=(\d+)(?:&|$)/;
-        const t = url.match(regexT);
-        return t ? Number(t[1]) : 0;
-    }
 
-    function _switchBackToMainContent(event) {
+    function switchBackToMainContent(event) {
         if (isSwitching) { 
             logger.debug('Switch already in progress - ignoring request');
             return 
@@ -447,7 +287,6 @@ function AlternativeMpdController() {
             logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
         }
 
-
         if (playbackController.getIsDynamic()) {
             logger.debug('Seeking to original live point for dynamic manifest');
             playbackController.seekToOriginalLive(true, false, false);
@@ -458,15 +297,15 @@ function AlternativeMpdController() {
 
         videoModel.play();
         logger.info('Main content playback resumed');
+        
+        altVideoElement.parentNode.removeChild(altVideoElement);
+        altVideoElement = null;
 
         altPlayer.reset();
         altPlayer = null;
 
-        altVideoElement.parentNode.removeChild(altVideoElement);
-        altVideoElement = null;
 
         isSwitching = false;
-        currentEvent = null;
 
         logger.debug('Alternative player resources cleaned up');
     }
@@ -474,9 +313,8 @@ function AlternativeMpdController() {
 
     function reset() {
         if (altPlayer) {
-            altPlayer.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
-            altPlayer.off(Events.ERROR, _onAlternativePlayerError, this);
+            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED);
+            altPlayer.off(Events.ERROR, onAlternativePlayerError, this);
             altPlayer.reset();
             altPlayer = null;
         }
@@ -488,7 +326,7 @@ function AlternativeMpdController() {
 
         // Clean up all prebuffered content
         for (const [eventKey] of prebufferedPlayers) {
-            _cleanupPrebufferedContent(eventKey);
+            cleanupPrebufferedContent(eventKey);
         }
         prebufferedPlayers.clear();
 
@@ -499,24 +337,27 @@ function AlternativeMpdController() {
         }
 
         isSwitching = false;
-        currentEvent = null;
+    }
 
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
-        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
-        eventBus.off(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
+    function getAlternativePlayer() {
+        return altPlayer;
     }
 
     instance = {
         setConfig,
         initialize,
+        prebufferAlternativeContent,
+        cleanupPrebufferedContent,
+        switchToAlternativeContent,
+        switchBackToMainContent,
+        getAlternativePlayer,
         reset
     };
 
     return instance;
 }
 
-AlternativeMpdController.__dashjs_factory_name = 'AlternativeMpdController';
-const factory = FactoryMaker.getSingletonFactory(AlternativeMpdController);
-FactoryMaker.updateSingletonFactory(AlternativeMpdController.__dashjs_factory_name, factory);
+MediaManager.__dashjs_factory_name = 'MediaManager';
+const factory = FactoryMaker.getSingletonFactory(MediaManager);
+FactoryMaker.updateSingletonFactory(MediaManager.__dashjs_factory_name, factory);
 export default factory;
