@@ -86,6 +86,12 @@ class ExternalMediaSource {
         this._readyState = 'closed';
         this.eventBus.trigger('externalMediaSourceClosed', { });
     }
+
+    reset() {
+        this.sourceBuffers = new Map();
+        this._duration = NaN;
+        this._readyState = 'closed';
+    }
 }
 
 export default ExternalMediaSource;
