@@ -163,11 +163,6 @@ function DashHandler(config) {
             segment.replacementTime
         );
 
-        if (!url) {
-            console.log(`dsi url ${url}`)
-        }
-
-
         request.mediaType = getType();
         request.bandwidth = representation.bandwidth;
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;

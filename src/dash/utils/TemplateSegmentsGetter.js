@@ -33,7 +33,6 @@ import Constants from '../../streaming/constants/Constants.js';
 import {
     getIndexBasedSegment,
     getNumberOfPartialSegments,
-    processUriTemplate
 } from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {

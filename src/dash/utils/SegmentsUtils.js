@@ -162,10 +162,6 @@ function _isSegmentAvailable(timelineConverter, representation, segment, isDynam
         const refTime = timelineConverter.getClientReferenceTime();
         const isAvailable = segment.availabilityStartTime.getTime() <= refTime && (!isFinite(segment.availabilityEndTime) || segment.availabilityEndTime.getTime() >= refTime);
 
-        if (!isAvailable) {
-            console.log('Segment not available: ', segment);
-        }
-
         return isAvailable
     }
 
