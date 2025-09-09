@@ -224,9 +224,8 @@ function MediaManager() {
         if (prebufferedContent) {
             // Use prebuffered content
             logger.info(`Using prebuffered content for event ${event.id}`);
-            
+
             // Move prebuffered video element to visible area
-            // altVideoElement = prebufferedContent.videoElement;
             altPlayer = prebufferedContent.player;
             
             // Remove from prebuffered storage
