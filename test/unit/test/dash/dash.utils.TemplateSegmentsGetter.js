@@ -188,4 +188,84 @@ describe('TemplateSegmentsGetter', () => {
             expect(seg).to.be.null; // jshint ignore:line
         });
     });
+
+    describe('partial segments', () => {
+        function attachSegmentTemplate(representation, overrides = {}) {
+            const template = Object.assign({
+                media: 'video-$RepresentationID$-$Number$-$SubNumber$.m4s',
+                k: 3 // three partial segments
+            }, overrides);
+            representation.SegmentTemplate = template;
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+                .AdaptationSet[representation.adaptation.index]
+                .Representation[representation.index]
+                .SegmentTemplate = template;
+            return template;
+        }
+
+        it('should return partial segment chain starting at provided sub-number (getSegmentByIndex)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 6;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByIndex(representation, 2, 1); // segment index 2, start with partial 1
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.isPartialSegment).to.be.true;
+            expect(seg.index).to.equal(2);
+            expect(seg.replacementSubNumber).to.equal(1);
+            // chain should include partial 1 and 2 only
+            const subNumbers = [];
+            let cur = seg; while (cur) { subNumbers.push(cur.replacementSubNumber); cur = cur.nextPartialSegment; }
+            expect(subNumbers).to.deep.equal([1, 2]);
+        });
+
+        it('should clamp negative indexWithoutStartnumber to 0', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 50 };
+            representation.segmentDuration = 5;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByIndex(representation, -3, 0);
+            expect(seg.index).to.equal(0);
+        });
+
+        it('should select correct partial segment by time (last partial of first segment)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.adaptation.period.start = 0;
+            representation.segmentAvailabilityWindow = { start: 0, end: 50 };
+            representation.segmentDuration = 6; // full segment
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            // Time 5s into first 6s segment -> third partial (index 2)
+            const seg = templateSegmentsGetter.getSegmentByTime(representation, 5);
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.index).to.equal(0);
+            expect(seg.isPartialSegment).to.be.true;
+            expect(seg.replacementSubNumber).to.equal(2);
+            // only last partial should be returned in chain
+            expect(seg.nextPartialSegment).to.be.null; // jshint ignore:line
+        });
+
+        it('should return null for dynamic unavailable segment (future availabilityStartTime)', () => {
+            const dynamicContext = {};
+            const dynamicTimelineConverter = TimelineConverter(dynamicContext).getInstance();
+            dynamicTimelineConverter.initialize();
+            const dynamicGetter = TemplateSegmentsGetter(dynamicContext).create({ timelineConverter: dynamicTimelineConverter }, true);
+
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            const future = new Date(Date.now() + 60000); // 60s in future
+            representation.adaptation.period.mpd.availabilityStartTime = future;
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 4;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation, { k: 0, media: 'f-$Number$.m4s' });
+
+            const seg = dynamicGetter.getSegmentByIndex(representation, 0);
+            expect(seg).to.be.null; // jshint ignore:line
+        });
+    });
 });

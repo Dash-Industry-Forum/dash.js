@@ -172,7 +172,7 @@ function _isSegmentAvailable(timelineConverter, representation, segment, isDynam
     return true;
 }
 
-export function processUriTemplate(url, representationId, number, subNumber, bandwidth, time) {
+function processUriTemplate(url, representationId, number, subNumber, bandwidth, time) {
     if (!url) {
         return url;
     }
@@ -180,9 +180,16 @@ export function processUriTemplate(url, representationId, number, subNumber, ban
     return cmlProcessUriTemplate(url, representationId, number, subNumber, bandwidth, time);
 }
 
-export function getIndexBasedSegment(data) {
+function getIndexBasedSegment(data) {
     const {
-        timelineConverter, isDynamic, representation, index, numberOfPartialSegments, indexOfPartialSegmentToRequest, mediaUrl, mediaTime
+        index,
+        indexOfPartialSegmentToRequest,
+        isDynamic,
+        mediaTime,
+        mediaUrl,
+        numberOfPartialSegments,
+        representation,
+        timelineConverter,
     } = data;
     let segmentDurationInSeconds,
         presentationStartTime,
@@ -228,20 +235,20 @@ export function getIndexBasedSegment(data) {
     return segment;
 }
 
-export function getTimeBasedSegment(data) {
+function getTimeBasedSegment(data) {
     const {
-        timelineConverter,
-        isDynamic,
-        representation,
-        mediaTime,
         durationInTimescale,
         fTimescale,
-        mediaUrl,
-        mediaRange,
         index,
-        tManifest,
+        indexOfPartialSegmentToRequest,
+        isDynamic,
+        mediaRange,
+        mediaTime,
+        mediaUrl,
         numberOfPartialSegments,
-        indexOfPartialSegmentToRequest
+        representation,
+        tManifest,
+        timelineConverter,
     } = data;
     const mediaTimeInSeconds = mediaTime / fTimescale;
     const segmentDurationInSeconds = durationInTimescale / fTimescale;
@@ -272,7 +279,13 @@ export function getTimeBasedSegment(data) {
     return segment;
 }
 
-export function getNumberOfPartialSegments(element) {
+function getNumberOfPartialSegments(element) {
     return element.k;
 }
 
+export {
+    getIndexBasedSegment,
+    getNumberOfPartialSegments,
+    getTimeBasedSegment,
+    processUriTemplate,
+};

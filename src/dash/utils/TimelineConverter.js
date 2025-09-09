@@ -54,6 +54,16 @@ function TimelineConverter() {
         reset();
     }
 
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+    }
+
     function initialize() {
         resetInitialSettings();
         eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, _onUpdateTimeSyncOffset, this);
@@ -376,19 +386,20 @@ function TimelineConverter() {
     }
 
     instance = {
-        initialize,
-        getClientTimeOffset,
-        setClientTimeOffset,
-        getClientReferenceTime,
-        calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
-        calcPresentationTimeFromWallTime,
-        calcPresentationTimeFromMediaTime,
-        calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcAvailabilityStartTimeFromPresentationTime,
         calcMediaTimeFromPresentationTime,
-        calcWallTimeForSegment,
+        calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcPresentationTimeFromMediaTime,
+        calcPresentationTimeFromWallTime,
         calcTimeShiftBufferWindow,
-        reset
+        calcWallTimeForSegment,
+        getClientReferenceTime,
+        getClientTimeOffset,
+        initialize,
+        reset,
+        setClientTimeOffset,
+        setConfig,
     };
 
     setup();

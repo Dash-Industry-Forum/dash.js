@@ -186,15 +186,15 @@ function RepresentationController(config) {
             s = fragments[i];
 
             seg = getTimeBasedSegment({
-                timelineConverter,
-                isDynamic,
-                representation,
-                mediaTime: s.startTime,
                 durationInTimescale: s.duration,
                 fTimescale: s.timescale,
-                mediaUrl: s.media,
+                index: count,
+                isDynamic,
                 mediaRange: s.mediaRange,
-                index: count
+                mediaTime: s.startTime,
+                mediaUrl: s.media,
+                representation,
+                timelineConverter,
             });
 
             if (seg) {

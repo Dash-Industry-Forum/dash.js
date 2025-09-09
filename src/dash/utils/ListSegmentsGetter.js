@@ -82,11 +82,16 @@ function ListSegmentsGetter(config, isDynamic) {
         if (relativeIndex < len) {
             const s = list.SegmentURL[relativeIndex];
 
-            segment = getIndexBasedSegment({timelineConverter, isDynamic, representation, index});
+            segment = getIndexBasedSegment({
+                index ,
+                isDynamic,
+                mediaRange: s.mediaRange,
+                mediaTime:  (startNumber + index - 1) * representation.segmentDuration,
+                representation,
+                timelineConverter,
+            });
             if (segment) {
-                segment.replacementTime = (startNumber + index - 1) * representation.segmentDuration;
                 segment.media = s.media ? s.media : '';
-                segment.mediaRange = s.mediaRange;
                 segment.indexRange = s.indexRange;
             }
         }

@@ -239,15 +239,15 @@ function ThumbnailTracks(config) {
             s = data.segments[i];
 
             seg = getTimeBasedSegment({
-                timelineConverter,
-                isDynamic: adapter.getIsDynamic(),
-                representation,
-                mediaTime: s.startTime,
-                fTimescale: s.timescale,
                 durationInTimescale: s.duration,
-                mediaUrl: s.media,
+                fTimescale: s.timescale,
+                index: count,
+                isDynamic: adapter.getIsDynamic(),
                 mediaRange: s.mediaRange,
-                index: count
+                mediaTime: s.startTime,
+                mediaUrl: s.media,
+                representation,
+                timelineConverter,
             });
 
             if (seg) {
