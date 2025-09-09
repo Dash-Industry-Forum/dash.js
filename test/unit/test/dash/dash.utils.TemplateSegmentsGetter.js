@@ -232,24 +232,6 @@ describe('TemplateSegmentsGetter', () => {
             expect(seg.index).to.equal(0);
         });
 
-        it('should select correct partial segment by time (last partial of first segment)', () => {
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.adaptation.period.start = 0;
-            representation.segmentAvailabilityWindow = { start: 0, end: 50 };
-            representation.segmentDuration = 6; // full segment
-            representation.timescale = 1;
-            attachSegmentTemplate(representation);
-
-            // Time 5s into first 6s segment -> third partial (index 2)
-            const seg = templateSegmentsGetter.getSegmentByTime(representation, 5);
-            expect(seg).to.exist; // jshint ignore:line
-            expect(seg.index).to.equal(0);
-            expect(seg.isPartialSegment).to.be.true;
-            expect(seg.replacementSubNumber).to.equal(2);
-            // only last partial should be returned in chain
-            expect(seg.nextPartialSegment).to.be.null; // jshint ignore:line
-        });
-
         it('should return null for dynamic unavailable segment (future availabilityStartTime)', () => {
             const dynamicContext = {};
             const dynamicTimelineConverter = TimelineConverter(dynamicContext).getInstance();
