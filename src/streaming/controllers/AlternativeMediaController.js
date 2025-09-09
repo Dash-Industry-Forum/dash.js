@@ -124,7 +124,6 @@ function AlternativeMediaController() {
 
     function onAlternativeEventTriggered(e) {
         const event = e.event;
-        console.log('Alternative MPD event triggered:', event);
         try {
             if (!event || !event.alternativeMpd) {
                 return;

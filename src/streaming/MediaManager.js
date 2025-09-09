@@ -107,21 +107,26 @@ function MediaManager() {
             logger.info(`Starting prebuffering for event ${event.id}`);
             
             // Create a prebuffered video element
-            const prebufferedVideoElement = document.createElement('video');
-            prebufferedVideoElement.style.display = 'none';
-            prebufferedVideoElement.autoplay = false;
-            prebufferedVideoElement.controls = false;
-            document.body.appendChild(prebufferedVideoElement);
+            if (!altVideoElement) {
+                altVideoElement = document.createElement('video');
+                altVideoElement.style.display = 'none';
+                altVideoElement.autoplay = false;
+                altVideoElement.controls = false;
+                document.body.appendChild(altVideoElement);
+            }
 
             // Create a prebuffered player
             const prebufferedPlayer = MediaPlayer().create();
-            prebufferedPlayer.initialize(prebufferedVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
+            prebufferedPlayer.initialize(null, event.alternativeMPD.url, false, NaN, alternativeContext);
+            prebufferedPlayer.updateSettings({
+                streaming: {cacheInitSegments: true}
+            });
+            prebufferedPlayer.preload();
             prebufferedPlayer.setAutoPlay(false);
 
             // Store the prebuffered player
             prebufferedPlayers.set(eventKey, {
                 player: prebufferedPlayer,
-                videoElement: prebufferedVideoElement,
                 event: event
             });
 
@@ -187,7 +192,13 @@ function MediaManager() {
         }
         // Initialize alternative player
         altPlayer = MediaPlayer().create();
-        altPlayer.initialize(altVideoElement, event.alternativeMPD.url, false, NaN, alternativeContext);
+        altPlayer.updateSettings({
+            streaming: {
+                cacheInitSegments: true
+            }
+        });
+        altPlayer.initialize(null, event.alternativeMPD.url, false, NaN, alternativeContext);
+        altPlayer.preload();
         altPlayer.setAutoPlay(false);
         altPlayer.on(Events.ERROR, onAlternativePlayerError, this);
     }
@@ -215,7 +226,7 @@ function MediaManager() {
             logger.info(`Using prebuffered content for event ${event.id}`);
             
             // Move prebuffered video element to visible area
-            altVideoElement = prebufferedContent.videoElement;
+            // altVideoElement = prebufferedContent.videoElement;
             altPlayer = prebufferedContent.player;
             
             // Remove from prebuffered storage
@@ -235,6 +246,8 @@ function MediaManager() {
             if (parentNode && !parentNode.contains(altVideoElement)) {
                 parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
             }
+
+            altPlayer.attachView(altVideoElement);
         } else {
             // No prebuffered content, initialize normally
             initializeAlternativePlayerElement(event);
