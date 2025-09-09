@@ -33,19 +33,19 @@ import {processUriTemplate as cmlProcessUriTemplate} from '@svta/common-media-li
 import FullSegment from './../vo/FullSegment.js';
 import PartialSegment from '../vo/PartialSegment.js';
 
-function _getSegment(data, addTimeBasedInformation = false) {
+function _getSegment(data) {
     if (!data) {
         return null;
     }
 
     if (data.numberOfPartialSegments && !isNaN(data.numberOfPartialSegments) && data.numberOfPartialSegments > 0 && !isNaN(data.indexOfPartialSegmentToRequest)) {
-        return _getPartialSegment(data, addTimeBasedInformation);
+        return _getPartialSegment(data);
     } else {
-        return _getFullSegment(data, addTimeBasedInformation);
+        return _getFullSegment(data);
     }
 }
 
-function _getPartialSegment(data, addTimeBasedInformation) {
+function _getPartialSegment(data) {
     let selectedPartialSegment = null;
     let previousPartialSegment = null;
     const indexOfPartialSegmentToRequest = data.indexOfPartialSegmentToRequest;
@@ -53,9 +53,7 @@ function _getPartialSegment(data, addTimeBasedInformation) {
     for (let i = indexOfPartialSegmentToRequest; i < data.numberOfPartialSegments; i++) {
         const partialSegment = _createSinglePartialSegment(data, i)
 
-        if (addTimeBasedInformation) {
-            _addTimeBasedInformation(partialSegment, data);
-        }
+        _addTimeBasedInformation(partialSegment, data);
 
         if (!selectedPartialSegment) {
             selectedPartialSegment = partialSegment;
@@ -90,15 +88,13 @@ function _createSinglePartialSegment(data, indexOfPartialSegment) {
     return partialSegment;
 }
 
-function _getFullSegment(data, addTimeBasedInformation) {
+function _getFullSegment(data) {
     const fullSegment = new FullSegment();
     const segmentData = _getCommonSegmentData(data);
 
     fullSegment.assignAttributes(segmentData);
 
-    if (addTimeBasedInformation) {
-        _addTimeBasedInformation(fullSegment, data);
-    }
+    _addTimeBasedInformation(fullSegment, data);
 
     return fullSegment;
 }
@@ -185,38 +181,44 @@ export function processUriTemplate(url, representationId, number, subNumber, ban
 }
 
 export function getIndexBasedSegment(data) {
-    const { timelineConverter, isDynamic, representation, index } = data;
-    let duration,
+    const {
+        timelineConverter, isDynamic, representation, index, numberOfPartialSegments, indexOfPartialSegmentToRequest, mediaUrl, mediaTime
+    } = data;
+    let segmentDurationInSeconds,
         presentationStartTime,
         presentationEndTime;
 
 
-    duration = representation.segmentDuration;
+    segmentDurationInSeconds = representation.segmentDuration;
 
     /*
      * From spec - If neither @duration attribute nor SegmentTimeline element is present, then the Representation
      * shall contain exactly one Media Segment. The MPD start time is 0 and the MPD duration is obtained
      * in the same way as for the last Media Segment in the Representation.
      */
-    if (isNaN(duration)) {
-        duration = representation.adaptation.period.duration;
+    if (isNaN(segmentDurationInSeconds)) {
+        segmentDurationInSeconds = representation.adaptation.period.duration;
     }
 
-    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * duration)).toFixed(5));
-    presentationEndTime = parseFloat((presentationStartTime + duration).toFixed(5));
+    presentationStartTime = parseFloat((representation.adaptation.period.start + (index * segmentDurationInSeconds)).toFixed(5));
+    presentationEndTime = parseFloat((presentationStartTime + segmentDurationInSeconds).toFixed(5));
 
     const mediaTimeInSeconds = timelineConverter.calcMediaTimeFromPresentationTime(presentationStartTime, representation);
 
     const segment = _getSegment(
         {
             representation,
-            duration,
+            segmentDurationInSeconds,
             presentationStartTime,
             presentationEndTime,
             mediaTimeInSeconds,
             timelineConverter,
             isDynamic,
-            index
+            index,
+            numberOfPartialSegments,
+            indexOfPartialSegmentToRequest,
+            mediaUrl,
+            mediaTime
         });
 
     if (!_isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
@@ -261,7 +263,7 @@ export function getTimeBasedSegment(data) {
         mediaRange,
         tManifest,
         mediaTime
-    }, true);
+    });
 
     if (!_isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
         return null;
@@ -269,3 +271,8 @@ export function getTimeBasedSegment(data) {
 
     return segment;
 }
+
+export function getNumberOfPartialSegments(element) {
+    return element.k;
+}
+

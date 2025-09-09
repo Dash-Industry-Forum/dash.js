@@ -30,7 +30,11 @@
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {getIndexBasedSegment, processUriTemplate} from './SegmentsUtils.js';
+import {
+    getIndexBasedSegment,
+    getNumberOfPartialSegments,
+    processUriTemplate
+} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -60,35 +64,37 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return mediaFinishedInformation;
     }
 
-    function getSegmentByIndex(representation, indexWithoutStartnumber) {
+    function getSegmentByIndex(representation, indexWithoutStartnumber, indexOfPartialSegmentToRequest) {
         checkConfig();
 
         if (!representation) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
-            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
+        const template = _getTemplateElement(representation);
+        const numberOfPartialSegments = getNumberOfPartialSegments(template);
+
+        if (numberOfPartialSegments !== undefined && numberOfPartialSegments >= 0) {
+            indexOfPartialSegmentToRequest = indexOfPartialSegmentToRequest !== undefined ? indexOfPartialSegmentToRequest : 0;
+        }
 
         // This is the index without @startNumber
         indexWithoutStartnumber = Math.max(indexWithoutStartnumber, 0);
 
-        const seg = getIndexBasedSegment({timelineConverter, isDynamic, representation, index: indexWithoutStartnumber});
+        const seg = getIndexBasedSegment({
+            timelineConverter,
+            isDynamic,
+            representation,
+            index: indexWithoutStartnumber,
+            numberOfPartialSegments,
+            indexOfPartialSegmentToRequest,
+            mediaUrl: template.media,
+            mediaTime: Math.round(indexWithoutStartnumber * representation.segmentDuration * representation.timescale, 10)
+        });
 
-        if (seg) {
-            if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
-                return null;
-            }
 
-            seg.replacementTime = Math.round(indexWithoutStartnumber * representation.segmentDuration * representation.timescale, 10);
-            seg.media = processUriTemplate(
-                template.media,
-                undefined,
-                seg.replacementNumber,
-                undefined,
-                undefined,
-                seg.replacementTime,
-            );
+        if (seg && representation.endNumber && seg.replacementNumber > representation.endNumber) {
+            return null;
         }
 
         return seg;
@@ -108,11 +114,48 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         // Calculate the relative time for the requested time in this period
-        let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const indexWithoutStartnumber = Math.floor(periodTime / duration);
+        let requestedTimeRelativeToPeriodStart = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
 
-        return getSegmentByIndex(representation, indexWithoutStartnumber);
+        const template = _getTemplateElement(representation);
+        const indexWithoutStartnumber = Math.floor(requestedTimeRelativeToPeriodStart / duration);
+        const numberOfPartialSegments = getNumberOfPartialSegments(template);
+        const indexOfPartialSegmentToRequest = _getIndexOfPartialSegmentToRequest({
+            numberOfPartialSegments,
+            representation,
+            requestedTimeRelativeToPeriodStart,
+            indexWithoutStartnumber
+        })
+
+        return getSegmentByIndex(representation, indexWithoutStartnumber, indexOfPartialSegmentToRequest);
     }
+
+    function _getTemplateElement(representation) {
+        return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
+
+    }
+
+    function _getIndexOfPartialSegmentToRequest(data) {
+        if (!data || data.numberOfPartialSegments === undefined || isNaN(data.numberOfPartialSegments) || data.numberOfPartialSegments < 1) {
+            return undefined;
+        }
+        const {
+            numberOfPartialSegments,
+            representation,
+            requestedTimeRelativeToPeriodStart,
+            indexWithoutStartnumber
+        } = data;
+
+        const startTimeOfSegment = indexWithoutStartnumber * representation.segmentDuration;
+        const partialSegmentDuration = representation.segmentDuration / numberOfPartialSegments;
+
+        const offset = requestedTimeRelativeToPeriodStart - startTimeOfSegment;
+        let indexOfPartialSegmentToRequest = Math.floor(offset / partialSegmentDuration);
+
+        indexOfPartialSegmentToRequest = Math.max(0, Math.min(indexOfPartialSegmentToRequest, numberOfPartialSegments - 1));
+
+        return indexOfPartialSegmentToRequest;
+    }
+
 
     instance = {
         getSegmentByIndex,

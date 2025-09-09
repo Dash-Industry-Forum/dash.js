@@ -88,6 +88,12 @@ function SegmentsController(config) {
             return null;
         }
 
+        if (lastSegment
+            && lastSegment.isPartialSegment
+            && lastSegment.nextPartialSegment) {
+            return lastSegment.nextPartialSegment;
+        }
+
         if (representation.segmentInfoType && representation.segmentInfoType === dashConstants.SEGMENT_TIMELINE) {
             return getter.getSegmentByIndex(representation, lastSegment)
         }
