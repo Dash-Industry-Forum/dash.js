@@ -48,6 +48,7 @@ class FragmentRequest {
         this.endDate = null;
         this.firstByteDate = null;
         this.index = NaN;
+        this.isPartialSegmentRequest = false;
         this.mediaStartTime = NaN;
         this.mediaType = null;
         this.range = null;

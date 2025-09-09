@@ -166,6 +166,7 @@ function DashHandler(config) {
         request.mediaType = getType();
         request.bandwidth = representation.bandwidth;
         request.type = HTTPRequest.MEDIA_SEGMENT_TYPE;
+        request.isPartialSegmentRequest = segment.isPartialSegment;
         request.range = segment.mediaRange;
         request.startTime = segment.presentationStartTime;
         request.mediaStartTime = segment.mediaStartTime;

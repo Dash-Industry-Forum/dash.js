@@ -42,6 +42,7 @@ class Segment {
         // The index of the segment in the list of segments. We start at 0
         this.index = null;
         this.indexRange = null;
+        this.isPartialSegment = false;
         this.media = null;
         this.mediaRange = null;
         this.mediaUrl = null;
