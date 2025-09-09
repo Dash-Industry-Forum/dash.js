@@ -1205,7 +1205,7 @@ function Settings() {
             },
             scheduling: {
                 defaultTimeout: 500,
-                lowLatencyTimeout: 100,
+                lowLatencyTimeout: 0,
                 scheduleWhilePaused: true
             },
             text: {
