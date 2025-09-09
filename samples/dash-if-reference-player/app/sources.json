@@ -332,14 +332,6 @@
           "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/hevc-ctv.mpd",
           "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
           "provider": "bbc"
-        },
-        {
-          "name": "Ateme SSR Teststream",
-          "url": "https://gcdn.reallycloudy.com/live/database/rte/DASH/rte.mpd"
-        },
-        {
-          "name": "BBC SSR Teststream",
-          "url": "https://vs-dash-ww-rd-stage.akamaized.net/cpl/testcard2020/ll-avc-ctv-en-rel-chunks.mpd"
         }
       ]
     },
