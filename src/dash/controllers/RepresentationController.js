@@ -104,8 +104,6 @@ function RepresentationController(config) {
     function updateData(availableRepresentations, isFragmented, selectedRepresentationId) {
         return new Promise((resolve, reject) => {
             voAvailableRepresentations = availableRepresentations;
-
-            // Override selected with the dependent representation
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
