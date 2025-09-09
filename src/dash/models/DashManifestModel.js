@@ -730,8 +730,10 @@ function DashManifestModel() {
                     voRepresentation.codecFamily = Utils.getCodecFamily(voRepresentation.codecs);
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.DEPENDENCY_ID)) {
+                    const dependencyId = realRepresentation[DashConstants.DEPENDENCY_ID].toString();
+                    voRepresentation.dependencyId = dependencyId;
                     voRepresentation.dependentRepresentation = new Representation();
-                    voRepresentation.dependentRepresentation.id = realRepresentation[DashConstants.DEPENDENCY_ID].toString();
+                    voRepresentation.dependentRepresentation.id = dependencyId;
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.MIME_TYPE)) {
                     voRepresentation.mimeType = realRepresentation[DashConstants.MIME_TYPE];
