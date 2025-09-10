@@ -783,23 +783,8 @@ function StreamProcessor(config) {
             return;
         }
 
-        if (enhancementStreamProcessor) {
-            // Pass quality change on enhanced representation
-            enhancementStreamProcessor.prepareQualityChange(e);
-        }
-        else if (e.newRepresentation.mediaInfo.type !== e.oldRepresentation.mediaInfo.type) {
-            if (e.newRepresentation.mediaInfo.type !== type) {
-                // This has no enhancement and new representation is not of this type so must stop
-                logger.info('Stop ' + type + ' stream processor');
-                scheduleController.reset();
-            } else {
-                logger.info('Start ' + type + ' stream processor');
-                selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: e.newRepresentation.mediaInfo, newRepresentation: e.newRepresentation })).then(() => {
-                    scheduleController.setup();
-                    scheduleController.initialize(containsVideoTrack);
-                    scheduleController.startScheduleTimer();
-                });
-            }
+        const qualityChangeHandled = _prepareQualityChangeForEnhancementStreamProcessor(e);
+        if (qualityChangeHandled) {
             return;
         }
 
@@ -1008,6 +993,39 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
     }
 
+    /**
+     * Prepare quality change for enhancement stream processor. Returns true if the change has been handled, false otherwise.
+     * @param {object} e 
+     * @return {boolean} qualityChangeHandled returns true if the change has been handled, false otherwise
+     */
+    function _prepareQualityChangeForEnhancementStreamProcessor(e) {
+        if (enhancementStreamProcessor) {
+            // Pass quality change to enhancement stream processor
+            enhancementStreamProcessor.prepareQualityChange(e);
+        }
+        else if (type === Constants.ENHANCEMENT) {
+            // This is an enhancement stream processor, handle the quality change
+            const oldRepType = e.oldRepresentation.mediaInfo.type;
+            const newRepType = e.newRepresentation.mediaInfo.type;
+
+            if (oldRepType === Constants.ENHANCEMENT && newRepType === Constants.VIDEO) {
+                // The new representation has no enhancement, stop the enhancement stream processor
+                logger.info('Stop ' + type + ' stream processor');
+                scheduleController.reset();
+                return true;
+            } else if (oldRepType === Constants.VIDEO && newRepType === Constants.ENHANCEMENT) {
+                // The new representation has an enhancement, start the enhancement stream processor
+                logger.info('Start ' + type + ' stream processor');
+                selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: e.newRepresentation.mediaInfo, newRepresentation: e.newRepresentation })).then(() => {
+                    scheduleController.setup();
+                    scheduleController.initialize(containsVideoTrack);
+                    scheduleController.startScheduleTimer();
+                });
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * We have canceled the download of a fragment and need to adjust the buffer time or reload an init segment
