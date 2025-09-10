@@ -189,6 +189,10 @@ function DashHandler(config) {
             return false;
         }
 
+        if ((representation?.endNumber ?? Infinity) < (lastSegment?.index ?? -Infinity)) {
+            return false;
+        }
+
         // Either transition from dynamic to static was done or no next static segment found
         if (mediaHasFinished) {
             return true;
