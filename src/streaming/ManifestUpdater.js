@@ -249,6 +249,7 @@ function ManifestUpdater() {
             eventBus.trigger(Events.DYNAMIC_TO_STATIC);
             isUpdating = false;
             isStopped = true;
+            eventBus.trigger(Events.MANIFEST_UPDATED, { manifest: manifest });
             return;
         }
 
