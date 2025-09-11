@@ -30,19 +30,19 @@
       ]
     },
     {
+      "name": "Alternative MPD Replace - VOD to LIVE Test",
+      "type": "vod",
+      "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-replace-vod-to-live.mpd",
+      "includedTestfiles": [
+        "feature-support/alternative/alternative-mpd-replace"
+      ]
+    },
+    {
       "name": "Alternative MPD Insert - VOD to VOD Test",
       "type": "vod",
       "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-vod.mpd",
       "includedTestfiles": [
         "feature-support/alternative/alternative-mpd-insert"
-      ]
-    },
-    {
-      "name": "Alternative MPD Execute Once Test",
-      "type": "vod",
-      "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-executeOnce.mpd",
-      "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-executeOnce"
       ]
     },
     {
