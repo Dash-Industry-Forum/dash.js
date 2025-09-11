@@ -139,7 +139,7 @@ function Capabilities() {
         }
 
         const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-        if (settings.get().streaming.enhancement.enabled && basicConfiguration.codec.includes('video') && enhancementCodecs.some(cdc => basicConfiguration.codec.includes(cdc))) {
+        if (settings.get().streaming.enhancement.enabled && enhancementCodecs.some(cdc => basicConfiguration.codec.includes(cdc))) {
             return Promise.resolve(true);
         }
 
