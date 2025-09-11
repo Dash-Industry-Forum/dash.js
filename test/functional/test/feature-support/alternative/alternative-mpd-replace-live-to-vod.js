@@ -91,6 +91,9 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             let backToOriginalDetected = false;
             let eventTriggered = false;
             let timeAfterSwitch = 0;
+            let alternativeStartTime = 0;
+            let alternativeEndTime = 0;
+            let expectedAlternativeDuration = 0;
             
             
             const timeout = setTimeout(() => {
@@ -106,6 +109,8 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             player.registerEvent(Constants.ALTERNATIVE_MPD.CONTENT_START, (data) => {
                 if (data.event.mode === 'replace') {
                     alternativeContentDetected = true;
+                    alternativeStartTime = Date.now();
+                    expectedAlternativeDuration = data.event.duration;
                 }
             });
             
@@ -113,6 +118,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             player.registerEvent(Constants.ALTERNATIVE_MPD.CONTENT_END, (data) => {
                 if (data.event.mode === 'replace') {
                     timeAfterSwitch = videoElement.currentTime;
+                    alternativeEndTime = Date.now();
                     backToOriginalDetected = true;
                     clearTimeout(timeout);
                     
@@ -121,6 +127,11 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
                         expect(eventTriggered).to.be.true;
                         expect(alternativeContentDetected).to.be.true;
                         expect(backToOriginalDetected).to.be.true;
+                        
+                        // Verify that alternative content played for its full duration
+                        const actualAlternativeDuration = (alternativeEndTime - alternativeStartTime) / 1000; // Convert to seconds
+                        expect(actualAlternativeDuration).to.be.at.least(expectedAlternativeDuration - 1); // Allow 1 second tolerance
+                        expect(actualAlternativeDuration).to.be.at.most(expectedAlternativeDuration + 1); // Allow 1 second tolerance
                         
                         // For REPLACE mode from live to VOD, verify timing behavior
                         // The expected behavior is to return at presentationTime + duration or returnOffset
