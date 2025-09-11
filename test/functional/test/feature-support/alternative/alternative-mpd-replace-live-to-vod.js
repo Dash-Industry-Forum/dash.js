@@ -7,11 +7,11 @@ import { expect } from 'chai';
  * Utility function to modify a live manifest by injecting Alternative MPD events
  * This simulates the functionality from the demo.html tool for live to VOD scenarios
  */
-function injectAlternativeMpdEvents(player, liveManifestUrl, alternativeVodUrl, callback) {
+function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeManifestUrl, callback) {
     // Access the underlying MediaPlayer instance
     const mediaPlayer = player.player;
     
-    mediaPlayer.retrieveManifest(liveManifestUrl, (manifest) => {
+    mediaPlayer.retrieveManifest(originalManifestUrl, (manifest) => {
         // Initialize EventStream if it doesn't exist
         if (!manifest.Period[0].EventStream) {
             manifest.Period[0].EventStream = [];
@@ -38,7 +38,7 @@ function injectAlternativeMpdEvents(player, liveManifestUrl, alternativeVodUrl, 
                 presentationTime: presentationTime,
                 duration: duration,
                 ReplacePresentation: {
-                    url: alternativeVodUrl,
+                    url: alternativeManifestUrl,
                     earliestResolutionTimeOffset: earliestResolutionTimeOffset,
                     returnOffset: returnOffset,
                     maxDuration: maxDuration,
@@ -62,8 +62,8 @@ function injectAlternativeMpdEvents(player, liveManifestUrl, alternativeVodUrl, 
 
 Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-replace-live-to-vod').forEach((item) => {
     const name = item.name;
-    const liveUrl = item.liveUrl;
-    const vodUrl = item.vodUrl;
+    const originalUrl = item.originalUrl;
+    const alternativeUrl = item.alternativeUrl;
 
     describe(`Alternative MPD Replace Live to VOD functionality tests for: ${name}`, () => {
 
@@ -74,7 +74,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             player = initializeDashJsAdapter(item, null);
             
             // Use the utility function to inject Alternative MPD events
-            injectAlternativeMpdEvents(player, liveUrl, vodUrl, () => {
+            injectAlternativeMpdEvents(player, originalUrl, alternativeUrl, () => {
                 done();
             });
         });

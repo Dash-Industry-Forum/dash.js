@@ -56,8 +56,8 @@
     {
       "name": "Alternative MPD Replace - Live to VOD Test",
       "type": "live",
-      "liveUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
-      "vodUrl": "https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd",
+      "originalUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "alternativeUrl": "https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd",
       "includedTestfiles": [
         "feature-support/alternative/alternative-mpd-replace-live-to-vod"
       ]
