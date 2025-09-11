@@ -14,9 +14,9 @@
   },
   "testfiles": {
     "included": [
-      "feature-support/alternative/alternative-mpd-replace",
-      "feature-support/alternative/alternative-mpd-insert",
-      "feature-support/alternative/alternative-mpd-replace-live-to-vod"
+      "feature-support/alternative/alternative-mpd-replace-vod",
+      "feature-support/alternative/alternative-mpd-insert-vod",
+      "feature-support/alternative/alternative-mpd-replace-live"
     ],
     "excluded": []
   },
@@ -26,7 +26,7 @@
       "type": "vod",
       "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-replace-vod-to-vod.mpd",
       "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-replace"
+        "feature-support/alternative/alternative-mpd-replace-vod"
       ]
     },
     {
@@ -34,7 +34,7 @@
       "type": "vod",
       "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-replace-vod-to-live.mpd",
       "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-replace"
+        "feature-support/alternative/alternative-mpd-replace-vod"
       ]
     },
     {
@@ -42,7 +42,7 @@
       "type": "vod",
       "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-vod.mpd",
       "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-insert"
+        "feature-support/alternative/alternative-mpd-insert-vod"
       ]
     },
     {
@@ -50,7 +50,7 @@
       "type": "vod",
       "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-live.mpd",
       "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-insert"
+        "feature-support/alternative/alternative-mpd-insert-vod"
       ]
     },
     {
@@ -59,7 +59,7 @@
       "originalUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
       "alternativeUrl": "https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd",
       "includedTestfiles": [
-        "feature-support/alternative/alternative-mpd-replace-live-to-vod"
+        "feature-support/alternative/alternative-mpd-replace-live"
       ]
     }
   ]
