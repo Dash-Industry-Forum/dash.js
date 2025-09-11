@@ -46,6 +46,14 @@
       ]
     },
     {
+      "name": "Alternative MPD Insert - VOD to LIVE Test",
+      "type": "vod",
+      "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-live.mpd",
+      "includedTestfiles": [
+        "feature-support/alternative/alternative-mpd-insert"
+      ]
+    },
+    {
       "name": "Alternative MPD Replace - Live to VOD Test",
       "type": "live",
       "liveUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
