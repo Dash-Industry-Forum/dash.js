@@ -46,7 +46,9 @@ function AlternativeMediaController() {
         playbackController,
         currentEvent = null,
         actualEventPresentationTime = 0,
-        timeToSwitch = 0;
+        alternativeSwitched = false,
+        timeToSwitch = 0,
+        realMaxDuration = 0;
 
     function setConfig(config) {
         if (!config) {
@@ -203,16 +205,26 @@ function AlternativeMediaController() {
             if (Math.round(e.time - actualEventPresentationTime) === 0) {
                 return;
             }
+            
+            const deltaTime = e.time - timeToSwitch;
+            if (!alternativeSwitched) {
+                alternativeSwitched = true;
+                realMaxDuration = deltaTime + maxDuration;
+            }
             const shouldSwitchBack =
+                // Check if the alternative content has finished playing
                 (Math.round(mediaManager.getAlternativePlayer().duration() - e.time) === 0) ||
-                (clip && actualEventPresentationTime + (e.time - timeToSwitch) >= presentationTime + maxDuration) ||
-                (maxDuration && maxDuration <= e.time);
+                // Check if the alternative content reached the max duration
+                (clip && actualEventPresentationTime + deltaTime >= presentationTime + realMaxDuration) ||
+                (realMaxDuration && realMaxDuration <= e.time);
             if (shouldSwitchBack) {
                 mediaManager.switchBackToMainContent(currentEvent);
                 // Reset current event after switching back
                 currentEvent = null;
                 actualEventPresentationTime = 0;
                 timeToSwitch = 0;
+                alternativeSwitched = false;
+                realMaxDuration = 0;
             }
         } catch (err) {
             console.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
