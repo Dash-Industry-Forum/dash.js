@@ -37,6 +37,7 @@ import Constants from './constants/Constants.js';
 function MediaManager() {
     let instance,
         videoModel,
+        eventBus,
         isSwitching = false,
         hideAlternativePlayerControls = false,
         altPlayer,
@@ -59,6 +60,10 @@ function MediaManager() {
 
         if (config.logger) {
             logger = config.logger;
+        }
+
+        if (config.eventBus) {
+            eventBus = config.eventBus;
         }
 
         if (!!config.playbackController && !playbackController) {
@@ -265,7 +270,14 @@ function MediaManager() {
 
         altPlayer.play();
         logger.info('Alternative content playback started');
-
+        
+        if (eventBus){
+            eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_START, { 
+                event: event,
+                player: altPlayer
+            });
+        }
+        
         isSwitching = false;
     }
 
@@ -309,6 +321,12 @@ function MediaManager() {
 
         videoModel.play();
         logger.info('Main content playback resumed');
+
+        if (eventBus){
+            eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { 
+                event: event 
+            });
+        }
         
         altVideoElement.parentNode.removeChild(altVideoElement);
         altVideoElement = null;

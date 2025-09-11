@@ -65,8 +65,11 @@ function AlternativeMediaController() {
             mediaManager = MediaManager(context).getInstance();
         }
 
-        // Forward config to media manager
-        mediaManager.setConfig(config);
+        // Forward config to media manager including shared eventBus
+        mediaManager.setConfig({
+            ...config,
+            eventBus
+        });
     }
 
     function initialize() {
