@@ -3,7 +3,7 @@
 <Period id="0" start="PT0.0S">
   <EventStream xmlns="" schemeIdUri="urn:mpeg:dash:event:alternativeMPD:replace:2025" timescale="1000">
     <Event presentationTime="5000" duration="9000" id="1">
-      <ReplacePresentation url="https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd" earliestResolutionTimeOffset="5000" returnOffset="9000" maxDuration="9000" clip="false"/>
+      <ReplacePresentation url="https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd" earliestResolutionTimeOffset="5000" maxDuration="9000" clip="false"/>
     </Event>
 </EventStream>
 <AdaptationSet mimeType="video/mp4" contentType="video" subsegmentAlignment="true" subsegmentStartsWithSAP="1" par="16:9">
