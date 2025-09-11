@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import AbrController from './controllers/AbrController.js';
-import AlternativeMpdController from './controllers/AlternativeMpdController.js';
+import AlternativeMediaController from './controllers/AlternativeMediaController.js';
 import BASE64 from '../../externals/base64.js';
 import BaseURLController from './controllers/BaseURLController.js';
 import BoxParser from './utils/BoxParser.js';
@@ -141,7 +141,7 @@ function MediaPlayer() {
         throughputController,
         schemeLoaderFactory,
         timelineConverter,
-        alternativeMpdController,
+        alternativeMediaController,
         mediaController,
         protectionController,
         metricsReportingController,
@@ -223,8 +223,8 @@ function MediaPlayer() {
         if (config.gapController) {
             gapController = config.gapController;
         }
-        if (config.alternativeMpdController) {
-            alternativeMpdController = config.alternativeMpdController;
+        if (config.alternativeMediaController) {
+            alternativeMediaController = config.alternativeMediaController;
         }
         if (config.throughputController) {
             throughputController = config.throughputController
@@ -322,8 +322,8 @@ function MediaPlayer() {
                 schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
             }
 
-            if (!alternativeMpdController) {
-                alternativeMpdController = AlternativeMpdController(alternativeContext ? alternativeContext : context).getInstance();
+            if (!alternativeMediaController) {
+                alternativeMediaController = AlternativeMediaController(alternativeContext ? alternativeContext : context).getInstance();
             }
 
             if (!playbackController) {
@@ -396,7 +396,7 @@ function MediaPlayer() {
                 adapter
             });
 
-            alternativeMpdController.setConfig({
+            alternativeMediaController.setConfig({
                 videoModel,
                 DashConstants,
                 mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
@@ -2458,6 +2458,7 @@ function MediaPlayer() {
             }
         }
         textController.reset();
+        alternativeMediaController.reset();
         cmcdModel.reset();
         cmsdModel.reset();
     }
@@ -2590,7 +2591,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        alternativeMpdController.initialize();
+        alternativeMediaController.initialize();
         cmcdModel.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
