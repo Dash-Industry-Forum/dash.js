@@ -48,7 +48,7 @@ function AlternativeMediaController() {
         actualEventPresentationTime = 0,
         alternativeSwitched = false,
         timeToSwitch = 0,
-        realMaxDuration = 0;
+        calculatedMaxDuration = 0;
 
     function setConfig(config) {
         if (!config) {
@@ -206,29 +206,34 @@ function AlternativeMediaController() {
                 return;
             }
             
+            const altPlayer = mediaManager.getAlternativePlayer();
+            
             const deltaTime = e.time - timeToSwitch;
             if (!alternativeSwitched) {
                 alternativeSwitched = true;
-                realMaxDuration = deltaTime + maxDuration;
+                calculatedMaxDuration = altPlayer.isDynamic() ? deltaTime + maxDuration : maxDuration;
             }
             const shouldSwitchBack =
                 // Check if the alternative content has finished playing
-                (Math.round(mediaManager.getAlternativePlayer().duration() - e.time) === 0) ||
+                (Math.round(altPlayer.duration() - e.time) === 0) ||
                 // Check if the alternative content reached the max duration
-                (clip && actualEventPresentationTime + deltaTime >= presentationTime + realMaxDuration) ||
-                (realMaxDuration && realMaxDuration <= e.time);
+                (clip && actualEventPresentationTime + deltaTime >= presentationTime + calculatedMaxDuration) ||
+                (calculatedMaxDuration && calculatedMaxDuration <= e.time);
             if (shouldSwitchBack) {
                 mediaManager.switchBackToMainContent(currentEvent);
-                // Reset current event after switching back
-                currentEvent = null;
-                actualEventPresentationTime = 0;
-                timeToSwitch = 0;
-                alternativeSwitched = false;
-                realMaxDuration = 0;
+                resetAlternativeSwitchStates();
             }
         } catch (err) {
             console.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
         }
+    }
+
+    function resetAlternativeSwitchStates() {
+        currentEvent = null;
+        actualEventPresentationTime = 0;
+        timeToSwitch = 0;
+        alternativeSwitched = false;
+        calculatedMaxDuration = 0;
     }
 
     function reset() {
@@ -236,10 +241,7 @@ function AlternativeMediaController() {
             mediaManager.reset();
         }
 
-        // Reset current event state
-        currentEvent = null;
-        actualEventPresentationTime = 0;
-        timeToSwitch = 0;
+        resetAlternativeSwitchStates();
 
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, onManifestLoaded, this);
         eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, onAlternativeEventTriggered, this);
