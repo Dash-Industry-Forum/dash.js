@@ -60,7 +60,7 @@ function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeMani
     });
 }
 
-Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-replace-live-to-vod').forEach((item) => {
+Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-replace-live').forEach((item) => {
     const name = item.name;
     const originalUrl = item.originalUrl;
     const alternativeUrl = item.alternativeUrl;

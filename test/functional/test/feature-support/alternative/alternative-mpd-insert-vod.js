@@ -3,7 +3,7 @@ import Utils from '../../../src/Utils.js';
 import { initializeDashJsAdapter } from '../../common/common.js';
 import { expect } from 'chai';
 
-Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-insert').forEach((item) => {
+Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-insert-vod').forEach((item) => {
     const name = item.name;
     const url = item.url;
 
