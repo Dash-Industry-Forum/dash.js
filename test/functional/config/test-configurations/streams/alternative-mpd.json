@@ -61,6 +61,15 @@
       "includedTestfiles": [
         "feature-support/alternative/alternative-mpd-replace-live"
       ]
+    },
+    {
+      "name": "Alternative MPD Replace - Live to Live Test",
+      "type": "live",
+      "originalUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "alternativeUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/alternative/alternative-mpd-replace-live"
+      ]
     }
   ]
 }
