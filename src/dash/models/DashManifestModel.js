@@ -936,6 +936,24 @@ function DashManifestModel() {
         return (periodStart - presentationOffset);
     }
 
+    function _convertType(element) {
+        if (getIsMuxed(element)) {
+            return Constants.MUXED;
+        } else if (getIsAudio(element)) {
+            return Constants.AUDIO;
+        } else if (getIsVideo(element)) {
+            return Constants.VIDEO;
+        } else if (getIsText(element)) {
+            return Constants.TEXT;
+        } else if (getIsImage(element)) {
+            return Constants.IMAGE;
+        } else {
+            logger.warn('Unknown Preselection stream type');
+        }
+
+        return null;
+    }
+
     function getAdaptationsForPeriod(voPeriod) {
         const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
         const voAdaptations = [];
@@ -953,19 +971,8 @@ function DashManifestModel() {
                 voAdaptationSet.index = i;
                 voAdaptationSet.period = voPeriod;
 
-                if (getIsMuxed(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.MUXED;
-                } else if (getIsAudio(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.AUDIO;
-                } else if (getIsVideo(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.VIDEO;
-                } else if (getIsText(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.TEXT;
-                } else if (getIsImage(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.IMAGE;
-                } else {
-                    logger.warn('Unknown Adaptation stream type');
-                }
+                voAdaptationSet.type = _convertType(realAdaptationSet);
+                
                 voAdaptations.push(voAdaptationSet);
             }
         }
@@ -1037,19 +1044,7 @@ function DashManifestModel() {
                         voPreselection.order = realPreselection.order;
                     }
 
-                    if (getIsMuxed(preselectionAdaptationSets[0])) {
-                        voPreselection.type = Constants.MUXED;
-                    } else if (getIsAudio(preselectionAdaptationSets[0])) {
-                        voPreselection.type = Constants.AUDIO;
-                    } else if (getIsVideo(preselectionAdaptationSets[0])) {
-                        voPreselection.type = Constants.VIDEO;
-                    } else if (getIsText(preselectionAdaptationSets[0])) {
-                        voPreselection.type = Constants.TEXT;
-                    } else if (getIsImage(preselectionAdaptationSets[0])) {
-                        voPreselection.type = Constants.IMAGE;
-                    } else {
-                        logger.warn('Unknown Preselection stream type');
-                    }
+                    voPreselection.type = _convertType(preselectionAdaptationSets[0]);
                     
                     voPreselections.push(voPreselection);
                 } else {
