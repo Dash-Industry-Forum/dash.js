@@ -65,7 +65,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
     const originalUrl = item.originalUrl;
     const alternativeUrl = item.alternativeUrl;
 
-    describe(`Alternative MPD Replace Live to VOD functionality tests for: ${name}`, () => {
+    describe(`Alternative MPD Replace Live functionality tests for: ${name}`, () => {
 
         let player;
 
@@ -85,7 +85,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             }
         });
 
-        it('should play live content, switch to VOD alternative content, then back to live content', (done) => {
+        it('should play live content, switch to alternative content, then back to live content', (done) => {
             const videoElement = player.getVideoElement();
             let alternativeContentDetected = false;
             let backToOriginalDetected = false;
