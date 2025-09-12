@@ -181,11 +181,6 @@ function DashManifestModel() {
         return getIsTypeOf(adaptation, Constants.TEXT);
     }
 
-    function getIsTextForPreselection(preselection, adaptations) {
-        const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
-        return getIsText(mainAdaptationSet);
-    }
-
     function getIsMuxed(adaptation) {
         return getIsTypeOf(adaptation, Constants.MUXED);
     }
@@ -451,17 +446,6 @@ function DashManifestModel() {
 
     function getMimeType(adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
-    }
-
-    function getMimeTypeForPreselection(preselection, adaptations) {
-        let mime = null;
-        
-        if (preselection && adaptations ) {
-            const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
-            mime = getMimeType(mainAdaptationSet);
-        }
-        
-        return mime;
     }
 
     function getSegmentAlignment(adaptation) {
@@ -972,7 +956,7 @@ function DashManifestModel() {
                 voAdaptationSet.period = voPeriod;
 
                 voAdaptationSet.type = _convertType(realAdaptationSet);
-                
+
                 voAdaptations.push(voAdaptationSet);
             }
         }
@@ -1682,7 +1666,6 @@ function DashManifestModel() {
         getIsDynamic,
         getIsFragmented,
         getIsText,
-        getIsTextForPreselection,
         getIsTypeOf,
         getLabelsForAdaptation,
         getLanguageForAdaptation,
@@ -1691,7 +1674,6 @@ function DashManifestModel() {
         getCommonRepresentationForPreselection,
         getManifestUpdatePeriod,
         getMimeType,
-        getMimeTypeForPreselection,
         getMpd,
         getPatchLocation,
         getPreselectionIsTypeOf,
