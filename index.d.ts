@@ -457,8 +457,6 @@ declare namespace dashjs {
 
         getIsText(adaptation: object): boolean;
 
-        getIsTextForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): boolean;
-
         getIsTypeOf(adaptation: object, type: string): boolean;
 
         getIsVideo(adaptation: object): boolean;
@@ -478,8 +476,6 @@ declare namespace dashjs {
         getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
         getMimeType(adaptation: object): object;
-
-        getMimeTypeForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): object;
 
         getMpd(manifest: object): Mpd;
 
