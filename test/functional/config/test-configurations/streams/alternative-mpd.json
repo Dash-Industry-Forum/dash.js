@@ -16,7 +16,8 @@
     "included": [
       "feature-support/alternative/alternative-mpd-replace-vod",
       "feature-support/alternative/alternative-mpd-insert-vod",
-      "feature-support/alternative/alternative-mpd-replace-live"
+      "feature-support/alternative/alternative-mpd-replace-live",
+      "feature-support/alternative/alternative-mpd-executeOnce"
     ],
     "excluded": []
   },
@@ -69,6 +70,14 @@
       "alternativeUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
       "includedTestfiles": [
         "feature-support/alternative/alternative-mpd-replace-live"
+      ]
+    },
+    {
+      "name": "Alternative MPD Execute Once - VOD to VOD Test",
+      "type": "vod",
+      "url": "/base/test/functional/content/alternative-mpd/alternative-mpd-executeOnce.mpd",
+      "includedTestfiles": [
+        "feature-support/alternative/alternative-mpd-executeOnce"
       ]
     }
   ]
