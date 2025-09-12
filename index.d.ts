@@ -2842,6 +2842,7 @@ declare namespace dashjs {
     export interface Constants {
         STREAM: 'stream',
         VIDEO: 'video',
+        ENHANCEMENT: 'enhancement',
         AUDIO: 'audio',
         TEXT: 'text',
         MUXED: 'muxed',
