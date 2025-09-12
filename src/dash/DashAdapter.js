@@ -249,7 +249,7 @@ function DashAdapter() {
             }
         }
 
-        if (settings.get().streaming.includePreselectionsInMediainfo) {
+        if (settings.get().streaming.includePreselectionsInMediainfoArray) {
             const voPreselections = dashManifestModel.getPreselectionsForPeriod(period);
             
             for (i = 0, ln = voPreselections.length; i < ln; i++) {
