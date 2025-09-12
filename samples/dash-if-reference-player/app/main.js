@@ -1205,6 +1205,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     };
 
     $scope.doStop = function () {
+        $scope.controlbar.disable();
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
         $scope.conformanceViolations = [];
