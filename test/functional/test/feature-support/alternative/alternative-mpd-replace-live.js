@@ -26,7 +26,6 @@ function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeMani
         const presentationTime = currentPresentationTime + 4000; // 4 seconds from now
         const duration = 9000;
         const earliestResolutionTimeOffset = 5000;
-        const returnOffset = 9000;
         const maxDuration = 9000;
         
         // Create the replace event
@@ -40,10 +39,8 @@ function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeMani
                 ReplacePresentation: {
                     url: alternativeManifestUrl,
                     earliestResolutionTimeOffset: earliestResolutionTimeOffset,
-                    returnOffset: returnOffset,
                     maxDuration: maxDuration,
-                    clip: 'false',
-                    startAtPlayhead: 'false'
+                    clip: false,
                 }
             }]
         };
