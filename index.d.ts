@@ -415,6 +415,8 @@ declare namespace dashjs {
 
         getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
+        getCodecForPreselection(preselection: Preselection, adaptations: AdaptationSet[], addResolutionInfo: boolean): string;
+
         getContentProtectionByAdaptation(adaptation: object): any;
 
         getContentProtectionByManifest(manifest: object): any[];
@@ -427,7 +429,7 @@ declare namespace dashjs {
 
         getEndTimeForLastPeriod(voPeriod: Period): number;
 
-        getEssentialPropertiesForRepresentation(realRepresentation: object): { schemeIdUri: string, value: string }
+        getEssentialProperties(element: object): DescriptorType | [];
 
         getEventStreamForAdaptationSet(manifest: object, adaptation: object): EventStream[];
 
@@ -467,11 +469,21 @@ declare namespace dashjs {
 
         getLoction(manifest: object): MpdLocation | [];
 
+        getMainAdaptationSetForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): AdaptationSet | undefined;
+
+        getCommonRepresentationForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): Representation | undefined;
+
         getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
         getMimeType(adaptation: object): object;
 
         getMpd(manifest: object): Mpd;
+
+        getPatchLocation(manifest: object): PatchLocation[];
+
+        getPreselectionIsTypeOf(preselection: Preselection, adaptations: AdaptationSet[], type: MediaType): boolean;
+
+        getPreselectionsForPeriod(voPeriod: object): Preselection[];
 
         getPeriodId(realPeriod: Period, i: number): string;
 
@@ -509,9 +521,7 @@ declare namespace dashjs {
 
         getSuggestedPresentationDelay(mpd: Mpd): any;
 
-        getSupplementalPropertiesForAdaptation(adaptation: object): DescriptorType | [];
-
-        getSupplementalPropertiesForRepresentation(representation: Representation): DescriptorType | [];
+        getSupplementalProperties(element: object): DescriptorType | [];
 
         getUTCTimingSources(manifest: object): any[];
 
@@ -672,6 +682,7 @@ declare namespace dashjs {
 
     export class AdaptationSet {
         period: Period | null;
+        id: string | null;
         index: number;
         type: string | null;
     }
@@ -879,6 +890,7 @@ declare namespace dashjs {
         index: number | null;
         isEmbedded: any | null;
         isFragmented: any | null;
+        isPreselection: boolean;
         isText: boolean;
         labels: { text: string, lang?: string }[];
         lang: string | null;
@@ -942,6 +954,16 @@ declare namespace dashjs {
         mpd: Mpd;
         nextPeriodId: string | null;
         start: number;
+    }
+
+    export interface Preselection {
+        period: Period | null;
+        index: number;
+        id: string | null;
+        order: string | null;
+        preselectionComponents: any[];
+        tag: string | null;
+        type: string | null;
     }
 
     export interface ProducerReferenceTime {
@@ -1056,13 +1078,15 @@ declare namespace dashjs {
 
         getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
+        getCodecForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): string;
+
+        getCommonRepresentationForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): Representation | null;
+        
         getContentSteering(manifest: object): object;
 
         getDuration(externalManifest?: object): number;
 
-        getEssentialPropertiesAdaptationSet(adaptationSet: AdaptationSet): object | [];
-
-        getEssentialPropertiesForRepresentation(representation: Representation): any[];
+        getEssentialProperties(element: AdaptationSet | Representation | Preselection): DescriptorType | [];
 
         getEvent(eventBox: object, eventStreams: object, mediaStartTime: number, voRepresentation: object): null | Event;
 
@@ -1086,6 +1110,10 @@ declare namespace dashjs {
 
         getLocation(manifest: object): MpdLocation[];
 
+        getMainAdaptationForType(type: string, streamInfo: object): object;
+        
+        getMainAdaptationSetForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): AdaptationSet | undefined; 
+
         getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
         getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
@@ -1095,6 +1123,8 @@ declare namespace dashjs {
         getPatchLocation(manifest: object): PatchLocation[];
 
         getPeriodById(id: string): Period | null;
+
+        getPreselectionIsTypeOf(preselection: Preselection, adaptations: AdaptationSet[], type: MediaType): boolean;
 
         getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
 
@@ -1112,7 +1142,7 @@ declare namespace dashjs {
 
         getSuggestedPresentationDelay(): string;
 
-        getSupplementalCodex(representation: Representation): Array<any>;
+        getSupplementalCodecs(representation: Representation): Array<any>;
 
         getUTCTimingSources(): any[];
 
@@ -1771,6 +1801,8 @@ declare namespace dashjs {
                 video?: TrackSwitchMode;
                 audio?: TrackSwitchMode;
             };
+            includePreselectionsInMediainfo?: boolean;
+            includePreselectionsForInitialTrackSelection?: boolean;
             ignoreSelectionPriority?: boolean;
             prioritizeRoleMain?: boolean;
             assumeDefaultRoleAsMain?: boolean;

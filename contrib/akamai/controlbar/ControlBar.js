@@ -577,7 +577,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     var info = '';
 
                     if (element.lang) {
-                        info += 'Language - ' + element.lang + ' ';
+                        info += 'Language: ' + element.lang + ' ';
                     }
 
                     if (element.roles && element.roles.length > 0) {
@@ -594,6 +594,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
                     if (element.id) {
                         info += '- Id: ' + element.id + ' ';
+                    }
+
+                    if (element.isPreselection) {
+                        info += '- Preselection';
                     }
 
                     return label || info
@@ -785,6 +789,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var isTracksEqual = function (t1, t2) {
+        if (!t1 && !t2) return true;
+        if (!t1 || !t2) return false;
+        if (t1.isPreselection !== t2.isPreselection) return false;
         var sameId = t1.id === t2.id;
         var sameViewpoint = t1.viewpoint === t2.viewpoint;
         var sameLang = t1.lang === t2.lang;

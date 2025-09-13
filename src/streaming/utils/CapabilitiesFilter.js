@@ -74,6 +74,9 @@ function CapabilitiesFilter() {
                     if (settings.get().streaming.capabilities.filterUnsupportedEssentialProperties) {
                         _filterUnsupportedEssentialProperties(manifest);
                     }
+
+                    _removeMultiRepresentationPreselections(manifest);
+                    
                     return _applyCustomFilters(manifest);
                 })
                 .then(() => {
@@ -95,6 +98,7 @@ function CapabilitiesFilter() {
         manifest.Period
             .forEach((period) => {
                 _filterUnsupportedAdaptationSetsOfPeriod(period, type);
+                _filterUnsupportedPreselectionsOfPeriod(period, type);
             })
     }
 
@@ -116,6 +120,32 @@ function CapabilitiesFilter() {
             }
 
             return supported;
+        })
+    }
+
+    function _filterUnsupportedPreselectionsOfPeriod(period, type) {
+        if (!period || !period.Preselection || period.Preselection.length === 0) {
+            return;
+        }
+
+        period.Preselection = period.Preselection.filter((prsl) => {
+            if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
+                const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                let isPrslCodecSupported = true;
+                if (codec) {
+                    let repr = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+
+                    isPrslCodecSupported = _isCodecSupported(type, repr, codec);
+                }
+
+                if (!isPrslCodecSupported) {
+                    logger.warn(`[CapabilitiesFilter] Preselection@codecs ${codec} not supported. Removing Preselection with ID ${prsl.id}`);
+                }
+
+                return isPrslCodecSupported;
+            } else {
+                return true;
+            }
         })
     }
 
@@ -157,8 +187,8 @@ function CapabilitiesFilter() {
         return isSupplementalCodecSupported
     }
 
-    function _isCodecSupported(type, rep, codec) {
-        const config = _createConfiguration(type, rep, codec);
+    function _isCodecSupported(type, rep, codec, prslRep) {
+        const config = _createConfiguration(type, rep, codec, prslRep);
 
         return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
@@ -185,13 +215,23 @@ function CapabilitiesFilter() {
                     });
                 }
             });
+            if (period.Preselection && period.Preselection.length) {
+                period.Preselection.forEach((prsl) => {
+                    if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
+                        const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                        const prslRep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+
+                        _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prslRep);
+                    }
+                });
+            }
         });
 
         return configurations;
     }
 
-    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations) {
-        const config = _createConfiguration(type, rep, codec);
+    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prslRep) {
+        const config = _createConfiguration(type, rep, codec, prslRep);
         const configString = JSON.stringify(config);
 
         if (!configurationsSet.has(configString)) {
@@ -200,31 +240,51 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createConfiguration(type, rep, codec) {
+    function _createConfiguration(type, rep, codec, prslRep) {
         let config = null;
         switch (type) {
             case Constants.VIDEO:
-                config = _createVideoConfiguration(rep, codec);
+                config = _createVideoConfiguration(rep, codec, prslRep);
                 break;
             case Constants.AUDIO:
-                config = _createAudioConfiguration(rep, codec);
+                config = _createAudioConfiguration(rep, codec, prslRep);
                 break;
             default:
                 return config;
         }
 
+        if (prslRep) {
+            config = _addGenericAttributesToConfig(prslRep, config);
+        }
+
         return _addGenericAttributesToConfig(rep, config);
     }
 
-    function _createVideoConfiguration(rep, codec) {
+    function _createVideoConfiguration(rep, codec, prslRep) {
         let config = {
             codec: codec,
-            width: rep.width || null,
-            height: rep.height || null,
+            width: rep ? rep.width || null : null,
+            height: rep ? rep.height || null : null,
             framerate: adapter.getFramerate(rep) || null,
-            bitrate: rep.bandwidth || null,
+            bitrate: rep ? rep.bandwidth || null : null,
             isSupported: true
         }
+
+        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+            if (!config.width) {
+                config.width = prslRep.width || null;
+            }
+            if (!config.height) {
+                config.height = prslRep.height || null;
+            }
+            if (!config.bitrate) {
+                config.bitrate = prslRep.bandwidth || null;
+            }
+            if (!config.framerate) {
+                config.framerate = adapter.getFramerate(prslRep) || null;
+            }
+        }
+
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             Object.assign(config, _convertHDRColorimetryToConfig(rep));
         }
@@ -305,9 +365,18 @@ function CapabilitiesFilter() {
         return cfg;
     }
 
-    function _createAudioConfiguration(rep, codec) {
-        const samplerate = rep.audioSamplingRate || null;
-        const bitrate = rep.bandwidth || null;
+    function _createAudioConfiguration(rep, codec, prslRep) {
+        var samplerate = rep ? rep.audioSamplingRate || null : null;
+        var bitrate = rep ? rep.bandwidth || null : null;
+
+        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+            if (!samplerate) {
+                samplerate = prslRep.audioSamplingRate || null;
+            }
+            if (!bitrate) {
+                bitrate = prslRep.bandwidth || null;
+            }
+        }
 
         return {
             codec,
@@ -337,7 +406,7 @@ function CapabilitiesFilter() {
                     return true;
                 }
 
-                const adaptationSetEssentialProperties = adapter.getEssentialPropertiesForAdaptationSet(as);
+                const adaptationSetEssentialProperties = adapter.getEssentialProperties(as);
                 const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
 
                 if (!doesSupportEssentialProperties) {
@@ -345,12 +414,26 @@ function CapabilitiesFilter() {
                 }
 
                 as.Representation = as.Representation.filter((rep) => {
-                    const essentialProperties = adapter.getEssentialPropertiesForRepresentation(rep);
+                    const essentialProperties = adapter.getEssentialProperties(rep);
                     return _doesSupportEssentialProperties(essentialProperties);
                 });
 
                 return as.Representation && as.Representation.length > 0;
             });
+
+            if (period.Preselection && period.Preselection.length) {
+                period.Preselection = period.Preselection.filter(prsl => {
+                    const preselectionEssentialProperties = adapter.getEssentialProperties(prsl);
+                    const doesSupportEssentialProperties = _doesSupportEssentialProperties(preselectionEssentialProperties);
+
+                    if (!doesSupportEssentialProperties) {
+                        logger.warn(`[CapabilitiesFilter] removed Preselection (id: ${prsl.id}) with unsupported EssentialProperty`);
+                        return false;
+                    }
+
+                    return true;
+                })
+            }
         });
     }
 
@@ -369,6 +452,24 @@ function CapabilitiesFilter() {
         }
 
         return true
+    }
+
+    function _removeMultiRepresentationPreselections(manifest) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+            return;
+        }
+
+        manifest.Period.forEach((period) => {
+            if (period.Preselection) {
+                period.Preselection = period.Preselection.filter((prsl) => {
+                    const len = String(prsl.preselectionComponents).split(' ').length;
+                    if (len !== 1) {
+                        logger.warn(`Multi-Representation Preselection (id: ${prsl.id}) removed as not supported.`);
+                    }
+                    return len === 1;
+                });
+            }
+        });
     }
 
     function _applyCustomFilters(manifest) {
