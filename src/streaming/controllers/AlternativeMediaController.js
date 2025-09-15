@@ -306,6 +306,12 @@ function AlternativeMediaController() {
     }
 
     function reset() {
+        // Clean up alternative player event handlers before resetting media manager
+        const altPlayer = mediaManager && mediaManager.getAlternativePlayer();
+        if (altPlayer) {
+            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
+        }
+
         if (mediaManager) {
             mediaManager.reset();
         }

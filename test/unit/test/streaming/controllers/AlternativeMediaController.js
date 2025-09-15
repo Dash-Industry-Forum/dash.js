@@ -13,8 +13,6 @@ import sinon from 'sinon';
 import { expect } from 'chai';
 
 describe('AlternativeMediaController', function () {
-
-    const context = {};
     const EVENT_WAIT_TIMEOUT = 1000;
     let eventBus;
     let alternativeMediaController;
@@ -23,13 +21,6 @@ describe('AlternativeMediaController', function () {
     let videoModelMock;
     let debugMock;
 
-    /**
-     * Helper function to wait for a specific event on the event bus
-     * @param {string} eventName - The name of the event to wait for
-     * @param {Object} eventBus - The event bus instance
-     * @param {number} timeout - Timeout in milliseconds (default: EVENT_WAIT_TIMEOUT)
-     * @returns {Promise} Promise that resolves when event is triggered or rejects on timeout
-     */
     function waitForEvent(eventName, eventBus, timeout = EVENT_WAIT_TIMEOUT) {
         return new Promise((resolve, reject) => {
             const timeoutId = setTimeout(() => {
@@ -48,19 +39,33 @@ describe('AlternativeMediaController', function () {
     }
 
     beforeEach(function () {
-        eventBus = EventBus(context).getInstance();
+        // Create a new context for each test to avoid singleton issues
+        const testContext = {};
+        eventBus = EventBus(testContext).getInstance();
         mediaManagerMock = new MediaManagerMock();
         playbackControllerMock = new PlaybackControllerMock();
         videoModelMock = new VideoModelMock();
         debugMock = new DebugMock();
 
-        alternativeMediaController = AlternativeMediaController(context).getInstance();
+        alternativeMediaController = AlternativeMediaController(testContext).getInstance();
+
+        alternativeMediaController.setConfig({
+            playbackController: playbackControllerMock,
+            videoModel: videoModelMock,
+            mediaManager: mediaManagerMock,
+            debug: debugMock
+        });
+        alternativeMediaController.initialize();
+
+        eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {
+            data: { type: DashConstants.STATIC, originalUrl: 'http://example.com/manifest.mpd' }
+        });
     });
 
     afterEach(function () {
         alternativeMediaController.reset();
         mediaManagerMock.reset();
-        eventBus.off();
+        eventBus.reset();
     });
 
     describe('Configuration and Initialization', function () {
@@ -94,28 +99,12 @@ describe('AlternativeMediaController', function () {
     });
 
     describe('Alternative MPD Event Triggering', function () {
-        beforeEach(function () {
-            alternativeMediaController.reset();
-            alternativeMediaController.setConfig({
-                playbackController: playbackControllerMock,
-                videoModel: videoModelMock,
-                mediaManager: mediaManagerMock,
-                debug: debugMock
-            });
-            alternativeMediaController.initialize();
-            
-            // Mock manifest info as static
-            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { 
-                data: { type: DashConstants.STATIC, originalUrl: 'http://example.com/manifest.mpd' } 
-            });
-        });
-
         it('should handle REPLACE mode alternative event', function (done) {
             const mockEvent = {
                 event: {
-                    presentationTime: 10000, // 10 seconds in timescale
+                    presentationTime: 10000,
                     duration: 5000,
-                    id: 'test-event-1',
+                    id: 'test-event-replace',
                     eventStream: {
                         schemeIdUri: Constants.ALTERNATIVE_MPD.URIS.REPLACE,
                         timescale: 1000
@@ -123,16 +112,15 @@ describe('AlternativeMediaController', function () {
                     alternativeMpd: {
                         mode: Constants.ALTERNATIVE_MPD.MODES.REPLACE,
                         url: 'http://example.com/alternative.mpd',
-                        maxDuration: 30000, // 30 seconds in timescale
-                        returnOffset: 5000, // 5 seconds in timescale
+                        maxDuration: 30000,
+                        returnOffset: 5000,
                         clip: true,
                         startWithOffset: true
                     }
                 }
             };
 
-            // Mock playback controller methods
-            playbackControllerMock.getTime = sinon.stub().returns(8); // Current time 8 seconds
+            playbackControllerMock.getTime = sinon.stub().returns(12);
 
             waitForEvent(Constants.ALTERNATIVE_MPD.CONTENT_START, eventBus)
                 .then((eventData) => {
@@ -143,7 +131,6 @@ describe('AlternativeMediaController', function () {
                     done(error);
                 });
 
-            // Trigger the alternative event which should cause CONTENT_START to be emitted
             eventBus.trigger(Constants.ALTERNATIVE_MPD.URIS.REPLACE, mockEvent);
         });
 
@@ -174,12 +161,10 @@ describe('AlternativeMediaController', function () {
                     done(error);
                 });
 
-            // Trigger the alternative event which should cause CONTENT_START to be emitted
             eventBus.trigger(Constants.ALTERNATIVE_MPD.URIS.INSERT, mockEvent);
         });
 
         it('should reject INSERT mode for dynamic manifests', function () {
-            // Change manifest to dynamic
             eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { 
                 data: { type: DashConstants.DYNAMIC, originalUrl: 'http://example.com/manifest.mpd' } 
             });
@@ -234,23 +219,11 @@ describe('AlternativeMediaController', function () {
                     done(error);
                 });
 
-            // Trigger the alternative event which should cause CONTENT_START to be emitted
             eventBus.trigger(Constants.ALTERNATIVE_MPD.URIS.REPLACE, mockEvent);
         });
     });
 
     describe('Event Ready to Resolve Handling', function () {
-        
-        beforeEach(function () {
-            alternativeMediaController.setConfig({
-                playbackController: playbackControllerMock,
-                videoModel: videoModelMock,
-                mediaManager: mediaManagerMock,
-                debug: debugMock
-            });
-            alternativeMediaController.initialize();
-        });
-
         it('should handle event ready to resolve for REPLACE events', function () {
             const mockEventData = {
                 schemeIdUri: Constants.ALTERNATIVE_MPD.URIS.REPLACE,
@@ -298,6 +271,58 @@ describe('AlternativeMediaController', function () {
             eventBus.trigger(Events.EVENT_READY_TO_RESOLVE, mockEventData);
 
             expect(debugMock.log.info).to.equal('Event prebuffer-event-2 is ready for prebuffering');
+        });
+    });
+
+    describe('should handle the switch back to main content logic', function () {
+        it('should switch back when alternative content duration is reached', function (done) {
+            const mockEvent = {
+                event: {
+                    presentationTime: 10000,
+                    duration: 5000,
+                    id: 'test-event-switch-back',
+                    eventStream: {
+                        schemeIdUri: Constants.ALTERNATIVE_MPD.URIS.REPLACE,
+                        timescale: 1000
+                    },
+                    alternativeMpd: {
+                        mode: Constants.ALTERNATIVE_MPD.MODES.REPLACE,
+                        url: 'http://example.com/alternative.mpd',
+                        maxDuration: 30000,
+                        returnOffset: 5000,
+                        clip: true,
+                        startWithOffset: true
+                    }
+                }
+            };
+
+            playbackControllerMock.getTime = sinon.stub().returns(12);
+
+            waitForEvent(Constants.ALTERNATIVE_MPD.CONTENT_START, eventBus)
+                .then((eventData) => {
+                    const altPlayer = eventData.player || mediaManagerMock.getAlternativePlayer();
+                    if (altPlayer) {
+                        altPlayer.triggerTimeUpdate(30);
+                    } else {
+                        done(new Error('Alternative player not available'));
+                    }
+                })
+                .catch((error) => {
+                    done(error);
+                });
+
+            waitForEvent(Constants.ALTERNATIVE_MPD.CONTENT_END, eventBus, 1000)
+                .then((eventData) => {
+                    expect(eventData).to.exist;
+                    expect(eventData.event).to.exist;
+                    expect(mediaManagerMock.switchBackToMainContent.calledOnce).to.be.true;
+                    done();
+                })
+                .catch((error) => {
+                    done(error);
+                });
+
+            eventBus.trigger(Constants.ALTERNATIVE_MPD.URIS.REPLACE, mockEvent);
         });
     });
 });

@@ -762,7 +762,9 @@ describe('EventController', function () {
                     },
                     id: 'event0',
                     calculatedPresentationTime: 20,
-                    earliestResolutionTimeOffset: 10
+                    alternativeMpd: {
+                        earliestResolutionTimeOffset: 10
+                    }
                 }];
 
                 let onEventReadyToResolve = function (e) {
@@ -792,7 +794,9 @@ describe('EventController', function () {
                     },
                     id: 'event0',
                     calculatedPresentationTime: 20,
-                    earliestResolutionTimeOffset: 10
+                    alternativeMpd: {
+                        earliestResolutionTimeOffset: 10
+                    }
                 }];
 
                 let triggerCount = 0;
@@ -804,7 +808,7 @@ describe('EventController', function () {
                 eventController.addInlineEvents(events, periodId);
                 eventController.start();
                 playbackControllerMock.setTime(5);
-                
+
                 expect(triggerCount).to.equal(0);
                 eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve);
             });
