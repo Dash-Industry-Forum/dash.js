@@ -79,20 +79,22 @@ function AlternativeMediaController() {
             playbackController = config.playbackController;
         }
 
-        // Initialize the media manager if not already done
-        if (!mediaManager) {
-            mediaManager = MediaManager(context).getInstance();
+        // Use provided MediaManager
+        if (config.mediaManager && !mediaManager) {
+            mediaManager = config.mediaManager;
         }
 
-        // Forward config to media manager including shared eventBus
-        mediaManager.setConfig({
-            ...config,
-            eventBus
-        });
+        // Forward config to media manager including shared eventBus if mediaManager exists
+        if (mediaManager) {
+            mediaManager.setConfig({
+                ...config,
+                eventBus
+            });
+        }
     }
 
     function initialize() {
-        // Initialize the media manager
+        // Initialize the media manager if not already provided via config
         if (!mediaManager) {
             mediaManager = MediaManager(context).getInstance();
         }
@@ -193,18 +195,7 @@ function AlternativeMediaController() {
                     });
                 }
             } else {
-                mediaManager.switchToAlternativeContent(
-                    parsedEvent.id,
-                    parsedEvent.alternativeMPD.url
-                );
-                
-                // Trigger content start event
-                if (eventBus){
-                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_START, { 
-                        event: parsedEvent,
-                        player: mediaManager.getAlternativePlayer()
-                    });
-                }
+                throw new Error('Playback controller is not initialized');
             }
 
             const altPlayer = mediaManager.getAlternativePlayer();
