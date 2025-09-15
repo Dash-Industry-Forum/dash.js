@@ -1,6 +1,7 @@
 import MediaManagerMock from '../../../mocks/MediaManagerMock.js';
 import PlaybackControllerMock from '../../../mocks/PlaybackControllerMock.js';
 import VideoModelMock from '../../../mocks/VideoModelMock.js';
+import DebugMock from '../../../mocks/DebugMock.js';
 import AlternativeMediaController from '../../../../../src/streaming/controllers/AlternativeMediaController.js';
 import EventBus from '../../../../../src/core/EventBus.js';
 import Events from '../../../../../src/core/events/Events.js';
@@ -20,6 +21,7 @@ describe('AlternativeMediaController', function () {
     let mediaManagerMock;
     let playbackControllerMock;
     let videoModelMock;
+    let debugMock;
 
     /**
      * Helper function to wait for a specific event on the event bus
@@ -50,7 +52,8 @@ describe('AlternativeMediaController', function () {
         mediaManagerMock = new MediaManagerMock();
         playbackControllerMock = new PlaybackControllerMock();
         videoModelMock = new VideoModelMock();
-        
+        debugMock = new DebugMock();
+
         alternativeMediaController = AlternativeMediaController(context).getInstance();
     });
 
@@ -66,7 +69,7 @@ describe('AlternativeMediaController', function () {
                 playbackController: playbackControllerMock,
                 videoModel: videoModelMock,
                 mediaManager: mediaManagerMock,
-                logger: console
+                debug: debugMock
             };
             
             // Should not throw error
@@ -82,7 +85,8 @@ describe('AlternativeMediaController', function () {
             alternativeMediaController.setConfig({
                 playbackController: playbackControllerMock,
                 videoModel: videoModelMock,
-                mediaManager: mediaManagerMock
+                mediaManager: mediaManagerMock,
+                debug: debugMock
             });
             
             expect(() => alternativeMediaController.initialize()).to.not.throw();
@@ -95,7 +99,8 @@ describe('AlternativeMediaController', function () {
             alternativeMediaController.setConfig({
                 playbackController: playbackControllerMock,
                 videoModel: videoModelMock,
-                mediaManager: mediaManagerMock
+                mediaManager: mediaManagerMock,
+                debug: debugMock
             });
             alternativeMediaController.initialize();
             
@@ -195,12 +200,9 @@ describe('AlternativeMediaController', function () {
                 }
             };
 
-            const consoleSpy = sinon.spy(console, 'warn');
-            
             eventBus.trigger(Constants.ALTERNATIVE_MPD.URIS.INSERT, mockEvent);
-            
-            expect(consoleSpy.calledWith('Insert mode not supported for dynamic manifests - ignoring event')).to.be.true;
-            consoleSpy.restore();
+
+            expect(debugMock.log.warn).to.equal('Insert mode not supported for dynamic manifests - ignoring event');
         });
 
         it('should handle anchor parsing from URL', function (done) {
@@ -243,7 +245,8 @@ describe('AlternativeMediaController', function () {
             alternativeMediaController.setConfig({
                 playbackController: playbackControllerMock,
                 videoModel: videoModelMock,
-                mediaManager: mediaManagerMock
+                mediaManager: mediaManagerMock,
+                debug: debugMock
             });
             alternativeMediaController.initialize();
         });
@@ -268,12 +271,9 @@ describe('AlternativeMediaController', function () {
                 }
             };
 
-            const consoleSpy = sinon.spy(console, 'info');
-            
             eventBus.trigger(Events.EVENT_READY_TO_RESOLVE, mockEventData);
-            
-            expect(consoleSpy.calledWith('Event prebuffer-event-1 is ready for prebuffering')).to.be.true;
-            consoleSpy.restore();
+
+            expect(debugMock.log.info).to.equal('Event prebuffer-event-1 is ready for prebuffering');
         });
 
         it('should handle event ready to resolve for INSERT events', function () {
@@ -295,12 +295,9 @@ describe('AlternativeMediaController', function () {
                 }
             };
 
-            const consoleSpy = sinon.spy(console, 'info');
-
             eventBus.trigger(Events.EVENT_READY_TO_RESOLVE, mockEventData);
 
-            expect(consoleSpy.calledWith('Event prebuffer-event-2 is ready for prebuffering')).to.be.true;
-            consoleSpy.restore();
+            expect(debugMock.log.info).to.equal('Event prebuffer-event-2 is ready for prebuffering');
         });
     });
 });

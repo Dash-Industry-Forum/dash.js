@@ -35,6 +35,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import MediaManager from '../MediaManager.js';
+import Debug from '../../core/Debug.js';
 
 function AlternativeMediaController() {
     const context = this.context;
@@ -45,21 +46,23 @@ function AlternativeMediaController() {
         if (currentEvent.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
             if (currentEvent.returnOffset || currentEvent.returnOffset === 0) {
                 seekTime = currentEvent.presentationTime + currentEvent.returnOffset;
-                console.debug(`Using return offset - seeking to: ${seekTime}`);
+                logger.debug(`Using return offset - seeking to: ${seekTime}`);
             } else {
                 const alternativeDuration = altPlayer.duration()
                 const alternativeEffectiveDuration = !isNaN(currentEvent.maxDuration) ? Math.min(currentEvent.maxDuration, alternativeDuration) : alternativeDuration
                 seekTime = currentEvent.presentationTime + alternativeEffectiveDuration;
-                console.debug(`Using alternative duration - seeking to: ${seekTime}`);
+                logger.debug(`Using alternative duration - seeking to: ${seekTime}`);
             }
         } else if (currentEvent.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
             seekTime = currentEvent.presentationTime;
-            console.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
+            logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
         }
         return seekTime;
     }
 
     let instance,
+        debug,
+        logger,
         manifestInfo = {},
         mediaManager,
         playbackController,
@@ -69,9 +72,21 @@ function AlternativeMediaController() {
         timeToSwitch = 0,
         calculatedMaxDuration = 0;
 
+    function setup() {
+        if (!debug) {
+            debug = Debug(context).getInstance();
+        }
+        logger = debug.getLogger(instance);
+    }
+
     function setConfig(config) {
         if (!config) {
             return;
+        }
+
+        // Store debug reference
+        if (config.debug) {
+            debug = config.debug;
         }
 
         // Store playbackController reference
@@ -94,11 +109,13 @@ function AlternativeMediaController() {
     }
 
     function initialize() {
+        setup();
+
         // Initialize the media manager if not already provided via config
         if (!mediaManager) {
             mediaManager = MediaManager(context).getInstance();
         }
-        
+
         mediaManager.initialize();
 
         // Set up event listeners
@@ -157,7 +174,7 @@ function AlternativeMediaController() {
 
             // Only Alternative MPD replace events can be used for dynamic MPD
             if (manifestInfo.type === DashConstants.DYNAMIC && event.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
-                console.warn('Insert mode not supported for dynamic manifests - ignoring event');
+                logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
                 return;
             }
 
@@ -203,7 +220,7 @@ function AlternativeMediaController() {
                 altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
             }
         } catch (err) {
-            console.error('Error handling alternative event:', err);
+            logger.error('Error handling alternative event:', err);
         }
     }
 
@@ -215,7 +232,7 @@ function AlternativeMediaController() {
             if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
                 schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
                 
-                console.info(`Event ${eventId} is ready for prebuffering`);
+                logger.info(`Event ${eventId} is ready for prebuffering`);
                 
                 // Start prebuffering if we have the event data
                 if (event && event.alternativeMpd) {
@@ -229,7 +246,7 @@ function AlternativeMediaController() {
                 }
             }
         } catch (err) {
-            console.error('Error handling event ready to resolve:', err);
+            logger.error('Error handling event ready to resolve:', err);
         }
     }
 
@@ -276,7 +293,7 @@ function AlternativeMediaController() {
                 _resetAlternativeSwitchStates();
             }
         } catch (err) {
-            console.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
+            logger.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
         }
     }
 
