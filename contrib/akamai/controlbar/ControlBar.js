@@ -615,7 +615,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
     var _matchTrackWithNativeTrack = function (track, nativeTrack) {
-        let label = track.id !== undefined ? track.id.toString() : track.lang;
+        let label = (track.id !== undefined && track.id !== null) ? track.id.toString() : track.lang;
 
         return !!(
             (track.kind === nativeTrack.kind) &&
