@@ -1,12 +1,12 @@
 # dash.js
 
-> dash.js is a reference client implementation for the playback of MPEG DASH via JavaScript in browser based environments that support the Media Source Extensions.
+> dash.js is a reference client implementation for the playback of MPEG DASH via JavaScript in browser based environments that support the Media Source Extensions and optionally the Encrypted Media Extensions.
 
 ## Docs
 
-- [dash.js Quickstart](https://dashif.org/dash.js/pages/quickstart): A brief overview of how to use dash.js
-- [Installation Instructions](https://dashif.org/dash.js/pages/quickstart/installation.html): How to obtain the dash.js bundles
-- [Setup Guide](https://dashif.org/dash.js/pages/quickstart/setup.html): An overview how to setup dash.js in your application
+- [dash.js Quickstart](https://dashif.org/dash.js/pages/quickstart): A brief overview on how to use dash.js
+- [Installation Instructions](https://dashif.org/dash.js/pages/quickstart/installation.html): Instructions on how to obtain the dash.js bundles
+- [Setup Guide](https://dashif.org/dash.js/pages/quickstart/setup.html): An overview on how to setup dash.js in your application
 - [Usage Guide](https://dashif.org/dash.js/pages/usage/): Various examples on how to use specific features of dash.js
 
 ## API
