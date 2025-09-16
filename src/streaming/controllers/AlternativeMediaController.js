@@ -268,11 +268,13 @@ function AlternativeMediaController() {
                 return;
             }
 
-            if (currentEvent.type == DashConstants.DYNAMIC) {
+            const event = { ...currentEvent };
+
+            if (event.type == DashConstants.DYNAMIC) {
                 return;
             }
 
-            const { presentationTime, maxDuration, clip } = currentEvent;
+            const { presentationTime, maxDuration, clip } = event;
             if (Math.round(e.time - actualEventPresentationTime) === 0) {
                 return;
             }
@@ -291,15 +293,12 @@ function AlternativeMediaController() {
                 (clip && actualEventPresentationTime + deltaTime >= presentationTime + calculatedMaxDuration) ||
                 (calculatedMaxDuration && calculatedMaxDuration <= e.time);
             if (shouldSwitchBack) {
-                const seekTime = _calculateSeekTime(currentEvent, altPlayer);
-                
+                const seekTime = _calculateSeekTime(event, altPlayer);
                 mediaManager.switchBackToMainContent(seekTime);
                 
                 // Trigger content end event
                 if (eventBus){
-                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { 
-                        event: currentEvent 
-                    });
+                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { event });
                 }
                 
                 _resetAlternativeSwitchStates();
