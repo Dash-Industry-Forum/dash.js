@@ -190,8 +190,11 @@ function DashHandler(config) {
         }
 
         // Either transition from dynamic to static was done or no next static segment found
-        if (mediaHasFinished && (representation?.endNumber ?? Infinity) <= (lastSegment?.replacementNumber ?? -Infinity)) {
-            return true;
+        if (mediaHasFinished) {
+          if(representation.endNumber != null && representation.endNumber > lastSegment.replacementNumber) {
+            return false;
+          }
+          return true;
         }
 
         // Period is endless
