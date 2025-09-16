@@ -35,12 +35,34 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../constants/Constants.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import MediaManager from '../MediaManager.js';
+import Debug from '../../core/Debug.js';
 
 function AlternativeMediaController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
+    function _calculateSeekTime(currentEvent, altPlayer) {
+        let seekTime;
+        if (currentEvent.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
+            if (currentEvent.returnOffset || currentEvent.returnOffset === 0) {
+                seekTime = currentEvent.presentationTime + currentEvent.returnOffset;
+                logger.debug(`Using return offset - seeking to: ${seekTime}`);
+            } else {
+                const alternativeDuration = altPlayer.duration()
+                const alternativeEffectiveDuration = !isNaN(currentEvent.maxDuration) ? Math.min(currentEvent.maxDuration, alternativeDuration) : alternativeDuration
+                seekTime = currentEvent.presentationTime + alternativeEffectiveDuration;
+                logger.debug(`Using alternative duration - seeking to: ${seekTime}`);
+            }
+        } else if (currentEvent.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
+            seekTime = currentEvent.presentationTime;
+            logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
+        }
+        return seekTime;
+    }
+
     let instance,
+        debug,
+        logger,
         manifestInfo = {},
         mediaManager,
         playbackController,
@@ -50,9 +72,21 @@ function AlternativeMediaController() {
         timeToSwitch = 0,
         calculatedMaxDuration = 0;
 
+    function setup() {
+        if (!debug) {
+            debug = Debug(context).getInstance();
+        }
+        logger = debug.getLogger(instance);
+    }
+
     function setConfig(config) {
         if (!config) {
             return;
+        }
+
+        // Store debug reference
+        if (config.debug) {
+            debug = config.debug;
         }
 
         // Store playbackController reference
@@ -60,50 +94,54 @@ function AlternativeMediaController() {
             playbackController = config.playbackController;
         }
 
-        // Initialize the media manager if not already done
-        if (!mediaManager) {
-            mediaManager = MediaManager(context).getInstance();
+        // Use provided MediaManager
+        if (config.mediaManager && !mediaManager) {
+            mediaManager = config.mediaManager;
         }
 
-        // Forward config to media manager including shared eventBus
-        mediaManager.setConfig({
-            ...config,
-            eventBus
-        });
+        // Forward config to media manager including shared eventBus if mediaManager exists
+        if (mediaManager) {
+            mediaManager.setConfig({
+                ...config,
+                eventBus
+            });
+        }
     }
 
     function initialize() {
-        // Initialize the media manager
+        setup();
+
+        // Initialize the media manager if not already provided via config
         if (!mediaManager) {
             mediaManager = MediaManager(context).getInstance();
         }
-        
+
         mediaManager.initialize();
 
         // Set up event listeners
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         
         // Listen to alternative MPD events directly from EventController
-        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.REPLACE, onAlternativeEventTriggered, this);
-        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.INSERT, onAlternativeEventTriggered, this);
+        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
+        eventBus.on(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
         
         // Listen to event ready to resolve for prebuffering
-        eventBus.on(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve, this);
+        eventBus.on(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
     }
 
-    function onManifestLoaded(e) {
+    function _onManifestLoaded(e) {
         const manifest = e.data
         manifestInfo.type = manifest.type;
         manifestInfo.originalUrl = manifest.originalUrl;
     }
 
-    function getAnchor(url) {
+    function _getAnchor(url) {
         const regexT = /#.*?t=(\d+)(?:&|$)/;
         const t = url.match(regexT);
         return t ? Number(t[1]) : 0;
     }
 
-    function parseEvent(event) {
+    function _parseEvent(event) {
         if (event.alternativeMpd) {
             const timescale = event.eventStream.timescale || 1;
             const alternativeMpdNode = event.alternativeMpd;
@@ -127,7 +165,7 @@ function AlternativeMediaController() {
         return event;
     }
 
-    function onAlternativeEventTriggered(e) {
+    function _onAlternativeEventTriggered(e) {
         const event = e.event;
         try {
             if (!event || !event.alternativeMpd) {
@@ -136,17 +174,20 @@ function AlternativeMediaController() {
 
             // Only Alternative MPD replace events can be used for dynamic MPD
             if (manifestInfo.type === DashConstants.DYNAMIC && event.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
-                console.warn('Insert mode not supported for dynamic manifests - ignoring event');
+                logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
                 return;
             }
 
-            const parsedEvent = parseEvent(event);
+            const parsedEvent = _parseEvent(event);
             if (!parsedEvent) {
                 return;
             }
 
             // Try to prebuffer if not already done
-            mediaManager.prebufferAlternativeContent(parsedEvent);
+            mediaManager.prebufferAlternativeContent(
+                parsedEvent.id, 
+                parsedEvent.alternativeMPD.url
+            );
 
             // Set current event and timing variables
             currentEvent = parsedEvent;
@@ -156,22 +197,34 @@ function AlternativeMediaController() {
             if (playbackController) {
                 actualEventPresentationTime = playbackController.getTime();
                 timeToSwitch = parsedEvent.startWithOffset ? actualEventPresentationTime - parsedEvent.presentationTime : 0;
-                timeToSwitch = timeToSwitch + getAnchor(parsedEvent.alternativeMPD.url);
-                mediaManager.switchToAlternativeContent(parsedEvent, timeToSwitch);
+                timeToSwitch = timeToSwitch + _getAnchor(parsedEvent.alternativeMPD.url);
+                mediaManager.switchToAlternativeContent(
+                    parsedEvent.id,
+                    parsedEvent.alternativeMPD.url,
+                    timeToSwitch
+                );
+                
+                // Trigger content start event
+                if (eventBus){
+                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_START, { 
+                        event: parsedEvent,
+                        player: mediaManager.getAlternativePlayer()
+                    });
+                }
             } else {
-                mediaManager.switchToAlternativeContent(parsedEvent);
+                throw new Error('Playback controller is not initialized');
             }
 
             const altPlayer = mediaManager.getAlternativePlayer();
             if (altPlayer) {
-                altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, onAlternativePlaybackTimeUpdated, this);
+                altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
             }
         } catch (err) {
-            console.error('Error handling alternative event:', err);
+            logger.error('Error handling alternative event:', err);
         }
     }
 
-    function onEventReadyToResolve(e) {
+    function _onEventReadyToResolve(e) {
         const { schemeIdUri, eventId, event } = e;
         
         try {
@@ -179,22 +232,25 @@ function AlternativeMediaController() {
             if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
                 schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
                 
-                console.info(`Event ${eventId} is ready for prebuffering`);
+                logger.info(`Event ${eventId} is ready for prebuffering`);
                 
                 // Start prebuffering if we have the event data
                 if (event && event.alternativeMpd) {
-                    const parsedEvent = parseEvent(event);
+                    const parsedEvent = _parseEvent(event);
                     if (parsedEvent) {
-                        mediaManager.prebufferAlternativeContent(parsedEvent);
+                        mediaManager.prebufferAlternativeContent(
+                            parsedEvent.id,
+                            parsedEvent.alternativeMPD.url
+                        );
                     }
                 }
             }
         } catch (err) {
-            console.error('Error handling event ready to resolve:', err);
+            logger.error('Error handling event ready to resolve:', err);
         }
     }
 
-    function onAlternativePlaybackTimeUpdated(e) {
+    function _onAlternativePlaybackTimeUpdated(e) {
         try {
             if (!currentEvent) {
                 return;
@@ -223,15 +279,25 @@ function AlternativeMediaController() {
                 (clip && actualEventPresentationTime + deltaTime >= presentationTime + calculatedMaxDuration) ||
                 (calculatedMaxDuration && calculatedMaxDuration <= e.time);
             if (shouldSwitchBack) {
-                mediaManager.switchBackToMainContent(currentEvent);
-                resetAlternativeSwitchStates();
+                const seekTime = _calculateSeekTime(currentEvent, altPlayer);
+                
+                mediaManager.switchBackToMainContent(seekTime);
+                
+                // Trigger content end event
+                if (eventBus){
+                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { 
+                        event: currentEvent 
+                    });
+                }
+                
+                _resetAlternativeSwitchStates();
             }
         } catch (err) {
-            console.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
+            logger.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
         }
     }
 
-    function resetAlternativeSwitchStates() {
+    function _resetAlternativeSwitchStates() {
         currentEvent = null;
         actualEventPresentationTime = 0;
         timeToSwitch = 0;
@@ -240,16 +306,22 @@ function AlternativeMediaController() {
     }
 
     function reset() {
+        // Clean up alternative player event handlers before resetting media manager
+        const altPlayer = mediaManager && mediaManager.getAlternativePlayer();
+        if (altPlayer) {
+            altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
+        }
+
         if (mediaManager) {
             mediaManager.reset();
         }
 
-        resetAlternativeSwitchStates();
+        _resetAlternativeSwitchStates();
 
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, onManifestLoaded, this);
-        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, onAlternativeEventTriggered, this);
-        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.INSERT, onAlternativeEventTriggered, this);
-        eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve, this);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
+        eventBus.off(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
+        eventBus.off(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
     }
 
     instance = {

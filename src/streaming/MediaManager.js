@@ -32,12 +32,10 @@ import Events from '../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import MediaPlayer from './MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Constants from './constants/Constants.js';
 
 function MediaManager() {
     let instance,
         videoModel,
-        eventBus,
         isSwitching = false,
         hideAlternativePlayerControls = false,
         altPlayer,
@@ -60,10 +58,6 @@ function MediaManager() {
 
         if (config.logger) {
             logger = config.logger;
-        }
-
-        if (config.eventBus) {
-            eventBus = config.eventBus;
         }
 
         if (!!config.playbackController && !playbackController) {
@@ -101,15 +95,13 @@ function MediaManager() {
     }
 
 
-    function prebufferAlternativeContent(event) {
+    function prebufferAlternativeContent(playerId, alternativeMpdUrl) {
         try {
-            const eventKey = `${event.schemeIdUri}_${event.id}`;
-            
-            if (prebufferedPlayers.has(eventKey)) {
+            if (prebufferedPlayers.has(playerId)) {
                 return; // Already prebuffered
             }
 
-            logger.info(`Starting prebuffering for event ${event.id}`);
+            logger.info(`Starting prebuffering for player ${playerId}`);
             
             // Create a prebuffered video element
             if (!altVideoElement) {
@@ -122,7 +114,7 @@ function MediaManager() {
 
             // Create a prebuffered player
             const prebufferedPlayer = MediaPlayer().create();
-            prebufferedPlayer.initialize(null, event.alternativeMPD.url, false, NaN, alternativeContext);
+            prebufferedPlayer.initialize(null, alternativeMpdUrl, false, NaN, alternativeContext);
             prebufferedPlayer.updateSettings({
                 streaming: {cacheInitSegments: true}
             });
@@ -130,18 +122,18 @@ function MediaManager() {
             prebufferedPlayer.setAutoPlay(false);
 
             // Store the prebuffered player
-            prebufferedPlayers.set(eventKey, {
+            prebufferedPlayers.set(playerId, {
                 player: prebufferedPlayer,
-                event: event
+                playerId: playerId
             });
 
             prebufferedPlayer.on(Events.STREAM_INITIALIZED, () => {
-                logger.info(`Prebuffering completed for event ${event.id}`);
+                logger.info(`Prebuffering completed for player ${playerId}`);
             }, this);
 
             prebufferedPlayer.on(Events.ERROR, (e) => {
-                logger.error(`Prebuffering error for event ${event.id}:`, e);
-                cleanupPrebufferedContent(eventKey);
+                logger.error(`Prebuffering error for player ${playerId}:`, e);
+                cleanupPrebufferedContent(playerId);
             }, this);
 
         } catch (err) {
@@ -149,9 +141,9 @@ function MediaManager() {
         }
     }
 
-    function cleanupPrebufferedContent(eventKey) {
+    function cleanupPrebufferedContent(playerId) {
         try {
-            const prebufferedPlayer = prebufferedPlayers.get(eventKey);
+            const prebufferedPlayer = prebufferedPlayers.get(playerId);
             if (prebufferedPlayer) {
                 prebufferedPlayer.player.off(Events.STREAM_INITIALIZED);
                 prebufferedPlayer.player.off(Events.ERROR);
@@ -161,15 +153,15 @@ function MediaManager() {
                     prebufferedPlayer.videoElement.parentNode?.removeChild(prebufferedPlayer.videoElement);
                 }
                 
-                prebufferedPlayers.delete(eventKey);
+                prebufferedPlayers.delete(playerId);
             }
-            logger.debug(`Cleaned up prebuffered content for ${eventKey}`);
+            logger.debug(`Cleaned up prebuffered content for ${playerId}`);
         } catch (err) {
             logger.error('Error cleaning up prebuffered content:', err);
         }
     }
 
-    function initializeAlternativePlayerElement(event) {
+    function initializeAlternativePlayerElement(alternativeMpdUrl) {
         if (!altVideoElement) {
             // Create a new video element for the alternative content
             altVideoElement = document.createElement('video');
@@ -187,10 +179,10 @@ function MediaManager() {
         };
 
         // Initialize alternative player
-        initializeAlternativePlayer(event);
+        initializeAlternativePlayer(alternativeMpdUrl);
     }
 
-    function initializeAlternativePlayer(event) {
+    function initializeAlternativePlayer(alternativeMpdUrl) {
         // Clean up previous error listener if any
         if (altPlayer) {
             altPlayer.off(Events.ERROR, onAlternativePlayerError, this);
@@ -202,7 +194,7 @@ function MediaManager() {
                 cacheInitSegments: true
             }
         });
-        altPlayer.initialize(null, event.alternativeMPD.url, false, NaN, alternativeContext);
+        altPlayer.initialize(null, alternativeMpdUrl, false, NaN, alternativeContext);
         altPlayer.preload();
         altPlayer.setAutoPlay(false);
         altPlayer.on(Events.ERROR, onAlternativePlayerError, this);
@@ -214,7 +206,7 @@ function MediaManager() {
         }
     }
 
-    function switchToAlternativeContent(event, time = 0) {
+    function switchToAlternativeContent(playerId, alternativeMpdUrl, time = 0) {
         if (isSwitching) { 
             logger.debug('Switch already in progress - ignoring request');
             return 
@@ -223,18 +215,17 @@ function MediaManager() {
         logger.info(`Switching to alternative content at time ${time}`);
         isSwitching = true;
 
-        const eventKey = `${event.schemeIdUri}_${event.id}`;
-        const prebufferedContent = prebufferedPlayers.get(eventKey);
+        const prebufferedContent = prebufferedPlayers.get(playerId);
 
         if (prebufferedContent) {
             // Use prebuffered content
-            logger.info(`Using prebuffered content for event ${event.id}`);
+            logger.info(`Using prebuffered content for player ${playerId}`);
 
             // Move prebuffered video element to visible area
             altPlayer = prebufferedContent.player;
             
             // Remove from prebuffered storage
-            prebufferedPlayers.delete(eventKey);
+            prebufferedPlayers.delete(playerId);
 
             // Setup video element for display
             altVideoElement.style.display = 'none';
@@ -254,7 +245,7 @@ function MediaManager() {
             altPlayer.attachView(altVideoElement);
         } else {
             // No prebuffered content, initialize normally
-            initializeAlternativePlayerElement(event);
+            initializeAlternativePlayerElement(alternativeMpdUrl);
         }
 
         videoModel.pause();
@@ -271,18 +262,11 @@ function MediaManager() {
         altPlayer.play();
         logger.info('Alternative content playback started');
         
-        if (eventBus){
-            eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_START, { 
-                event: event,
-                player: altPlayer
-            });
-        }
-        
         isSwitching = false;
     }
 
 
-    function switchBackToMainContent(event) {
+    function switchBackToMainContent(seekTime) {
         if (isSwitching) { 
             logger.debug('Switch already in progress - ignoring request');
             return 
@@ -295,22 +279,6 @@ function MediaManager() {
         altVideoElement.style.display = 'none';
         videoModel.getElement().style.display = 'block';
 
-        let seekTime;
-        if (event.mode === Constants.ALTERNATIVE_MPD.MODES.REPLACE) {
-            if (event.returnOffset || event.returnOffset === 0) {
-                seekTime = event.presentationTime + event.returnOffset;
-                logger.debug(`Using return offset - seeking to: ${seekTime}`);
-            } else {
-                const alternativeDuration = altPlayer.duration()
-                const alternativeEffectiveDuration = !isNaN(event.maxDuration) ? Math.min(event.maxDuration, alternativeDuration) : alternativeDuration
-                seekTime = event.presentationTime + alternativeEffectiveDuration;
-                logger.debug(`Using alternative duration - seeking to: ${seekTime}`);
-            }
-        } else if (event.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
-            seekTime = event.presentationTime;
-            logger.debug(`Insert mode - seeking to original presentation time: ${seekTime}`);
-        }
-
         if (playbackController.getIsDynamic()) {
             logger.debug('Seeking to original live point for dynamic manifest');
             playbackController.seekToOriginalLive(true, false, false);
@@ -321,12 +289,6 @@ function MediaManager() {
 
         videoModel.play();
         logger.info('Main content playback resumed');
-
-        if (eventBus){
-            eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { 
-                event: event 
-            });
-        }
         
         altVideoElement.parentNode.removeChild(altVideoElement);
         altVideoElement = null;
@@ -355,8 +317,8 @@ function MediaManager() {
         }
 
         // Clean up all prebuffered content
-        for (const [eventKey] of prebufferedPlayers) {
-            cleanupPrebufferedContent(eventKey);
+        for (const [playerId] of prebufferedPlayers) {
+            cleanupPrebufferedContent(playerId);
         }
         prebufferedPlayers.clear();
 
