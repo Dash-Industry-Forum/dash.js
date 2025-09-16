@@ -1,0 +1,23 @@
+---
+layout: null
+---
+
+# LLM Feed for dashif.org/dash.js/
+_Generated: {{ site.time | date_to_rfc822 }}_
+> dash.js is a reference client implementation for the playback of MPEG DASH via JavaScript in browser based environments that support the Media Source Extensions and optionally the Encrypted Media Extensions.
+
+
+## Documentation
+The links below take you to the raw Markdown content.
+
+{% assign page_files = site.pages | where_exp: "p", "p.path contains 'pages/'" | sort: "path" %}
+{% for page in page_files %}{% if page.path contains '.md' %}- [{{ page.title | default: page.name }}](https://raw.githubusercontent.com/Dash-Industry-Forum/dash.js/refs/heads/gh-pages/{{ page.path }})
+{% endif %}{% endfor %}
+
+## API
+
+- [API List](https://cdn.dashjs.org/latest/jsdoc/index.html): A complete API reference for dash.js
+
+## Examples
+
+- [Sample Section](https://reference.dashif.org/dash.js/nightly/samples/index.html): Various samples demonstrating dash.js features
