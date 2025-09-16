@@ -70,7 +70,10 @@ function AlternativeMediaController() {
         actualEventPresentationTime = 0,
         alternativeSwitched = false,
         timeToSwitch = 0,
-        calculatedMaxDuration = 0;
+        calculatedMaxDuration = 0,
+        videoModel = null,
+        alternativeContext = null,
+        hideAlternativePlayerControls = false;
 
     function setup() {
         if (!debug) {
@@ -84,27 +87,28 @@ function AlternativeMediaController() {
             return;
         }
 
-        // Store debug reference
         if (config.debug) {
             debug = config.debug;
         }
 
-        // Store playbackController reference
         if (config.playbackController && !playbackController) {
             playbackController = config.playbackController;
         }
 
-        // Use provided MediaManager
         if (config.mediaManager && !mediaManager) {
             mediaManager = config.mediaManager;
         }
 
-        // Forward config to media manager including shared eventBus if mediaManager exists
-        if (mediaManager) {
-            mediaManager.setConfig({
-                ...config,
-                eventBus
-            });
+        if (config.videoModel) {
+            videoModel = config.videoModel;
+        }
+
+        if (config.alternativeContext) {
+            alternativeContext = config.alternativeContext;
+        }
+
+        if (config.hideAlternativePlayerControls) {
+            hideAlternativePlayerControls = config.hideAlternativePlayerControls;
         }
     }
 
@@ -115,6 +119,14 @@ function AlternativeMediaController() {
         if (!mediaManager) {
             mediaManager = MediaManager(context).getInstance();
         }
+
+        mediaManager.setConfig({
+            videoModel,
+            logger,
+            playbackController,
+            alternativeContext,
+            hideAlternativePlayerControls
+        });
 
         mediaManager.initialize();
 

@@ -1,13 +1,13 @@
-import MediaManagerMock from '../../../mocks/MediaManagerMock.js';
-import PlaybackControllerMock from '../../../mocks/PlaybackControllerMock.js';
-import VideoModelMock from '../../../mocks/VideoModelMock.js';
-import DebugMock from '../../../mocks/DebugMock.js';
-import AlternativeMediaController from '../../../../../src/streaming/controllers/AlternativeMediaController.js';
-import EventBus from '../../../../../src/core/EventBus.js';
-import Events from '../../../../../src/core/events/Events.js';
-import MediaPlayerEvents from '../../../../../src/streaming/MediaPlayerEvents.js';
-import Constants from '../../../../../src/streaming/constants/Constants.js';
-import DashConstants from '../../../../../src/dash/constants/DashConstants.js';
+import MediaManagerMock from '../../mocks/MediaManagerMock.js';
+import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
+import VideoModelMock from '../../mocks/VideoModelMock.js';
+import DebugMock from '../../mocks/DebugMock.js';
+import AlternativeMediaController from '../../../../src/streaming/controllers/AlternativeMediaController.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import Constants from '../../../../src/streaming/constants/Constants.js';
+import DashConstants from '../../../../src/dash/constants/DashConstants.js';
 
 import sinon from 'sinon';
 import { expect } from 'chai';
@@ -76,7 +76,7 @@ describe('AlternativeMediaController', function () {
                 mediaManager: mediaManagerMock,
                 debug: debugMock
             };
-            
+
             // Should not throw error
             expect(() => alternativeMediaController.setConfig(config)).to.not.throw();
         });
@@ -93,7 +93,7 @@ describe('AlternativeMediaController', function () {
                 mediaManager: mediaManagerMock,
                 debug: debugMock
             });
-            
+
             expect(() => alternativeMediaController.initialize()).to.not.throw();
         });
     });
@@ -165,8 +165,8 @@ describe('AlternativeMediaController', function () {
         });
 
         it('should reject INSERT mode for dynamic manifests', function () {
-            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, { 
-                data: { type: DashConstants.DYNAMIC, originalUrl: 'http://example.com/manifest.mpd' } 
+            eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {
+                data: { type: DashConstants.DYNAMIC, originalUrl: 'http://example.com/manifest.mpd' }
             });
 
             const mockEvent = {
