@@ -255,10 +255,11 @@ function DashHandler(config) {
      */
     function getNextSegmentRequestIdempotent(mediaInfo, representation) {
         let request = null;
-        let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
+        let { indexToRequest, subNumberOfPartialSegmentToRequest } = _getIndicesToRequest(lastSegment);
         const segment = segmentsController.getSegmentByIndex(
             representation,
             indexToRequest,
+            subNumberOfPartialSegmentToRequest,
             lastSegment
         );
         if (!segment) {
@@ -280,13 +281,46 @@ function DashHandler(config) {
             return null;
         }
 
-        let indexToRequest = lastSegment ? lastSegment.index + 1 : 0;
+        let { indexToRequest, subNumberOfPartialSegmentToRequest } = _getIndicesToRequest(lastSegment);
         if (representation && lastSegment && representation.endNumber && lastSegment.replacementNumber && lastSegment.replacementNumber >= representation.endNumber) {
             mediaHasFinished = true;
             return null;
         }
 
-        return _getRequest(mediaInfo, representation, indexToRequest);
+        return _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest);
+    }
+
+    function _getIndicesToRequest(lastSegment) {
+        // Default values if no last segment
+        if (!lastSegment) {
+            return { indexToRequest: 0, subNumberOfPartialSegmentToRequest: NaN };
+        }
+
+        // Handle partial segments
+        const isPartial = lastSegment.isPartialSegment;
+        const hasValidSubNumber = !isNaN(lastSegment.replacementSubNumber);
+        const hasValidPartialCount = !isNaN(lastSegment.numberOfPartialSegments);
+
+        if (isPartial && hasValidSubNumber && hasValidPartialCount) {
+            const nextSubNumber = lastSegment.replacementSubNumber + 1;
+            if (nextSubNumber < lastSegment.numberOfPartialSegments) {
+                return {
+                    indexToRequest: lastSegment.index,
+                    subNumberOfPartialSegmentToRequest: nextSubNumber
+                };
+            } else {
+                return {
+                    indexToRequest: lastSegment.index + 1,
+                    subNumberOfPartialSegmentToRequest: 0
+                };
+            }
+        }
+
+        // Default: next segment index
+        return {
+            indexToRequest: lastSegment.index + 1,
+            subNumberOfPartialSegmentToRequest: NaN
+        };
     }
 
     function repeatSegmentRequest(mediaInfo, representation) {
@@ -294,14 +328,20 @@ function DashHandler(config) {
             return null;
         }
 
-        let indexToRequest = lastSegment ? lastSegment.index : 0;
+        const indexToRequest = lastSegment ? lastSegment.index : 0;
+        const subNumberOfPartialSegmentToRequest = lastSegment && lastSegment.isPartialSegment && !isNaN(lastSegment.replacementSubNumber) ? lastSegment.replacementSubNumber : NaN;
 
-        return _getRequest(mediaInfo, representation, indexToRequest);
+        return _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest);
     }
 
-    function _getRequest(mediaInfo, representation, indexToRequest) {
+    function _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest) {
         let request = null;
-        const segment = segmentsController.getSegmentByIndex(representation, indexToRequest, lastSegment);
+        const segment = segmentsController.getSegmentByIndex(
+            representation,
+            indexToRequest,
+            subNumberOfPartialSegmentToRequest,
+            lastSegment
+        );
 
         // No segment found
         if (!segment) {

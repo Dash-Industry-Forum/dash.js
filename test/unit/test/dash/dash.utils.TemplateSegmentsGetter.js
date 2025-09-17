@@ -221,7 +221,7 @@ describe('TemplateSegmentsGetter', () => {
             expect(subNumbers).to.deep.equal([1, 2]);
         });
 
-        it('should clamp negative indexWithoutStartnumber to 0', () => {
+        it('should clamp negative indexWithoutStartNumber to 0', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
             representation.segmentAvailabilityWindow = { start: 0, end: 50 };
             representation.segmentDuration = 5;

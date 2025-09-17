@@ -38,7 +38,7 @@ function _getSegment(data) {
         return null;
     }
 
-    if (data.numberOfPartialSegments && !isNaN(data.numberOfPartialSegments) && data.numberOfPartialSegments > 0 && !isNaN(data.indexOfPartialSegmentToRequest)) {
+    if (data.numberOfPartialSegments && !isNaN(data.numberOfPartialSegments) && data.numberOfPartialSegments > 0 && !isNaN(data.subNumberOfPartialSegmentToRequest)) {
         return _getPartialSegment(data);
     } else {
         return _getFullSegment(data);
@@ -46,44 +46,32 @@ function _getSegment(data) {
 }
 
 function _getPartialSegment(data) {
-    let selectedPartialSegment = null;
-    let previousPartialSegment = null;
-    const indexOfPartialSegmentToRequest = data.indexOfPartialSegmentToRequest;
+    const subNumberOfPartialSegmentToRequest = data.subNumberOfPartialSegmentToRequest;
+    const partialSegment = _createSinglePartialSegment(data, subNumberOfPartialSegmentToRequest)
 
-    for (let i = indexOfPartialSegmentToRequest; i < data.numberOfPartialSegments; i++) {
-        const partialSegment = _createSinglePartialSegment(data, i)
+    _addTimeBasedInformation(partialSegment, data);
 
-        _addTimeBasedInformation(partialSegment, data);
-
-        if (!selectedPartialSegment) {
-            selectedPartialSegment = partialSegment;
-        }
-
-        if (previousPartialSegment) {
-            previousPartialSegment.nextPartialSegment = partialSegment;
-        }
-        previousPartialSegment = partialSegment;
-    }
-
-    return selectedPartialSegment;
+    return partialSegment;
 }
 
-function _createSinglePartialSegment(data, indexOfPartialSegment) {
+function _createSinglePartialSegment(data, subNumberOfPartialSegmentToRequest) {
     const partialSegment = new PartialSegment();
     const partialSegmentDurationInSeconds = data.segmentDurationInSeconds / data.numberOfPartialSegments;
+    const { representation, timelineConverter, isDynamic, index, numberOfPartialSegments } = data;
     const inputData = {
-        representation: data.representation,
+        representation,
         segmentDurationInSeconds: partialSegmentDurationInSeconds,
-        presentationStartTime: data.presentationStartTime + indexOfPartialSegment * partialSegmentDurationInSeconds,
-        presentationEndTime: data.presentationStartTime + ((indexOfPartialSegment + 1) * partialSegmentDurationInSeconds),
-        timelineConverter: data.timelineConverter,
-        isDynamic: data.isDynamic,
-        mediaTimeInSeconds: data.mediaTimeInSeconds + indexOfPartialSegment * partialSegmentDurationInSeconds,
-        index: data.index,
+        presentationStartTime: data.presentationStartTime + subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
+        presentationEndTime: data.presentationStartTime + ((subNumberOfPartialSegmentToRequest + 1) * partialSegmentDurationInSeconds),
+        timelineConverter,
+        isDynamic,
+        mediaTimeInSeconds: data.mediaTimeInSeconds + subNumberOfPartialSegmentToRequest * partialSegmentDurationInSeconds,
+        index
     }
     const segmentData = _getCommonSegmentData(inputData);
     partialSegment.assignAttributes(segmentData);
-    partialSegment.replacementSubNumber = indexOfPartialSegment;
+    partialSegment.replacementSubNumber = subNumberOfPartialSegmentToRequest;
+    partialSegment.numberOfPartialSegments = numberOfPartialSegments;
 
     return partialSegment;
 }
@@ -179,7 +167,7 @@ function processUriTemplate(url, representationId, number, subNumber, bandwidth,
 function getIndexBasedSegment(data) {
     const {
         index,
-        indexOfPartialSegmentToRequest,
+        subNumberOfPartialSegmentToRequest,
         isDynamic,
         mediaTime,
         mediaUrl,
@@ -219,7 +207,7 @@ function getIndexBasedSegment(data) {
             isDynamic,
             index,
             numberOfPartialSegments,
-            indexOfPartialSegmentToRequest,
+            subNumberOfPartialSegmentToRequest,
             mediaUrl,
             mediaTime
         });
@@ -236,7 +224,7 @@ function getTimeBasedSegment(data) {
         durationInTimescale,
         fTimescale,
         index,
-        indexOfPartialSegmentToRequest,
+        subNumberOfPartialSegmentToRequest,
         isDynamic,
         mediaRange,
         mediaTime,
@@ -261,7 +249,7 @@ function getTimeBasedSegment(data) {
         isDynamic,
         index,
         numberOfPartialSegments,
-        indexOfPartialSegmentToRequest,
+        subNumberOfPartialSegmentToRequest,
         mediaUrl,
         mediaRange,
         tManifest,

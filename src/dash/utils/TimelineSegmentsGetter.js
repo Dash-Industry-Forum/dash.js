@@ -108,7 +108,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
             let durationInTimescale = currentSElement.d;
             const numberOfPartialSegments = getNumberOfPartialSegments(currentSElement);
-            const indexOfPartialSegmentToRequest = 0;
+            const subNumberOfPartialSegmentToRequest = 0;
 
             segment = getTimeBasedSegment({
                 timelineConverter,
@@ -122,7 +122,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 index: sElementCounterIncludingRepeats,
                 tManifest: currentSElement.tManifest,
                 numberOfPartialSegments,
-                indexOfPartialSegmentToRequest
+                subNumberOfPartialSegmentToRequest
             });
         }
 
@@ -211,7 +211,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
             let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
             let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
             const numberOfPartialSegments = getNumberOfPartialSegments(currentSElement);
-            const indexOfPartialSegmentToRequest = _getIndexOfPartialSegmentToRequest({
+            const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequest({
                 durationInTimescale,
                 requiredMediaTimeInTimescaleUnits,
                 mediaTime,
@@ -230,7 +230,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 index: sElementCounterIncludingRepeats,
                 tManifest: currentSElement.tManifest,
                 numberOfPartialSegments,
-                indexOfPartialSegmentToRequest
+                subNumberOfPartialSegmentToRequest
             });
         }
     }
@@ -407,7 +407,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return parseFloat(number.toPrecision(15));
     }
 
-    function _getIndexOfPartialSegmentToRequest(data) {
+    function _getSubNumberOfPartialSegmentToRequest(data) {
         if (!data || data.numberOfPartialSegments === undefined || isNaN(data.numberOfPartialSegments) || data.numberOfPartialSegments < 1) {
             return undefined;
         }

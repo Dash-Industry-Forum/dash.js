@@ -63,32 +63,32 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return mediaFinishedInformation;
     }
 
-    function getSegmentByIndex(representation, indexWithoutStartnumber, indexOfPartialSegmentToRequest) {
+    function getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest) {
         checkConfig();
 
         if (!representation) {
             return null;
         }
 
-        const template = _getTemplateElement(representation);
+        const template = _getSegmentTemplateElement(representation);
         const numberOfPartialSegments = getNumberOfPartialSegments(template);
 
         if (numberOfPartialSegments !== undefined && numberOfPartialSegments >= 0) {
-            indexOfPartialSegmentToRequest = indexOfPartialSegmentToRequest !== undefined ? indexOfPartialSegmentToRequest : 0;
+            subNumberOfPartialSegmentToRequest = subNumberOfPartialSegmentToRequest !== undefined && subNumberOfPartialSegmentToRequest < numberOfPartialSegments ? subNumberOfPartialSegmentToRequest : 0;
         }
 
         // This is the index without @startNumber
-        indexWithoutStartnumber = Math.max(indexWithoutStartnumber, 0);
+        indexWithoutStartNumber = Math.max(indexWithoutStartNumber, 0);
 
         const seg = getIndexBasedSegment({
             timelineConverter,
             isDynamic,
             representation,
-            index: indexWithoutStartnumber,
+            index: indexWithoutStartNumber,
             numberOfPartialSegments,
-            indexOfPartialSegmentToRequest,
+            subNumberOfPartialSegmentToRequest,
             mediaUrl: template.media,
-            mediaTime: Math.round(indexWithoutStartnumber * representation.segmentDuration * representation.timescale, 10)
+            mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10)
         });
 
 
@@ -115,25 +115,25 @@ function TemplateSegmentsGetter(config, isDynamic) {
         // Calculate the relative time for the requested time in this period
         let requestedTimeRelativeToPeriodStart = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
 
-        const template = _getTemplateElement(representation);
-        const indexWithoutStartnumber = Math.floor(requestedTimeRelativeToPeriodStart / duration);
+        const template = _getSegmentTemplateElement(representation);
+        const indexWithoutStartNumber = Math.floor(requestedTimeRelativeToPeriodStart / duration);
         const numberOfPartialSegments = getNumberOfPartialSegments(template);
-        const indexOfPartialSegmentToRequest = _getIndexOfPartialSegmentToRequest({
+        const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
             numberOfPartialSegments,
             representation,
             requestedTimeRelativeToPeriodStart,
-            indexWithoutStartnumber
+            indexWithoutStartNumber
         })
 
-        return getSegmentByIndex(representation, indexWithoutStartnumber, indexOfPartialSegmentToRequest);
+        return getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest);
     }
 
-    function _getTemplateElement(representation) {
+    function _getSegmentTemplateElement(representation) {
         return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
 
     }
 
-    function _getIndexOfPartialSegmentToRequest(data) {
+    function _getSubNumberOfPartialSegmentToRequestByTime(data) {
         if (!data || data.numberOfPartialSegments === undefined || isNaN(data.numberOfPartialSegments) || data.numberOfPartialSegments < 1) {
             return undefined;
         }
@@ -141,25 +141,25 @@ function TemplateSegmentsGetter(config, isDynamic) {
             numberOfPartialSegments,
             representation,
             requestedTimeRelativeToPeriodStart,
-            indexWithoutStartnumber
+            indexWithoutStartNumber
         } = data;
 
-        const startTimeOfSegment = indexWithoutStartnumber * representation.segmentDuration;
+        const startTimeOfSegment = indexWithoutStartNumber * representation.segmentDuration;
         const partialSegmentDuration = representation.segmentDuration / numberOfPartialSegments;
 
         const offset = requestedTimeRelativeToPeriodStart - startTimeOfSegment;
-        let indexOfPartialSegmentToRequest = Math.floor(offset / partialSegmentDuration);
+        let subNumberOfPartialSegmentToRequest = Math.floor(offset / partialSegmentDuration);
 
-        indexOfPartialSegmentToRequest = Math.max(0, Math.min(indexOfPartialSegmentToRequest, numberOfPartialSegments - 1));
+        subNumberOfPartialSegmentToRequest = Math.max(0, Math.min(subNumberOfPartialSegmentToRequest, numberOfPartialSegments - 1));
 
-        return indexOfPartialSegmentToRequest;
+        return subNumberOfPartialSegmentToRequest;
     }
 
 
     instance = {
+        getMediaFinishedInformation,
         getSegmentByIndex,
         getSegmentByTime,
-        getMediaFinishedInformation
     };
 
     return instance;

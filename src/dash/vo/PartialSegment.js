@@ -38,8 +38,9 @@ class PartialSegment extends Segment {
     constructor() {
         super();
         this.isPartialSegment = true;
-        this.nextPartialSegment = undefined;
+        // The sub-number of the first Partial Segment in the sequence is 0
         this.replacementSubNumber = NaN;
+        this.numberOfPartialSegments = NaN;
     }
 }
 
