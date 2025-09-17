@@ -48,8 +48,13 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function getSegmentByIndex(representation, lastSegment) {
-        const safetyOffset = 0.05
-        return getSegmentByTime(representation, lastSegment.presentationStartTime + lastSegment.duration + safetyOffset);
+        if (!representation) {
+            return null;
+        }
+        const safetyOffset = 0.05;
+        const requestedPresentationTime = lastSegment && !isNaN(lastSegment.presentationStartTime) ? lastSegment.presentationStartTime + lastSegment.duration + safetyOffset : 0;
+
+        return getSegmentByTime(representation, requestedPresentationTime);
     }
 
     function getSegmentByTime(representation, requestedPresentationTime) {

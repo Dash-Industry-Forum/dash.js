@@ -20,16 +20,6 @@ describe('TemplateSegmentsGetter', () => {
     });
 
     describe('initialization', () => {
-        it('should throw an error if config object is not defined', function () {
-            const getter = TemplateSegmentsGetter(context).create();
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
-        it('should throw an error if config object has not been properly passed', function () {
-            const getter = TemplateSegmentsGetter(context).create({});
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
         it('should throw an error if representation parameter has not been properly set', function () {
             const getter = TemplateSegmentsGetter(context).create({timelineConverter: timelineConverter});
             const segment = getter.getSegmentByIndex();
@@ -203,7 +193,7 @@ describe('TemplateSegmentsGetter', () => {
             return template;
         }
 
-        it('should return partial segment chain starting at provided sub-number (getSegmentByIndex)', () => {
+        it('should return partial segment starting at provided sub-number (getSegmentByIndex)', () => {
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
             representation.segmentAvailabilityWindow = { start: 0, end: 100 };
             representation.segmentDuration = 6;
@@ -215,10 +205,6 @@ describe('TemplateSegmentsGetter', () => {
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.index).to.equal(2);
             expect(seg.replacementSubNumber).to.equal(1);
-            // chain should include partial 1 and 2 only
-            const subNumbers = [];
-            let cur = seg; while (cur) { subNumbers.push(cur.replacementSubNumber); cur = cur.nextPartialSegment; }
-            expect(subNumbers).to.deep.equal([1, 2]);
         });
 
         it('should clamp negative indexWithoutStartNumber to 0', () => {

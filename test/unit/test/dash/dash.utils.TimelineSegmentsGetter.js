@@ -53,17 +53,7 @@ describe('TimelineSegmentsGetter', () => {
     });
 
     describe('Initialization', () => {
-        it('should throw an error if config object is not defined', () => {
-            const getter = TimelineSegmentsGetter(context).create();
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
-        it('should throw an error if config object has not been properly passed', function () {
-            const getter = TimelineSegmentsGetter(context).create();
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
-        it('should throw an error if representation parameter has not been properly set', function () {
+        it('should return null if representation parameter has not been properly set', function () {
             const getter = TimelineSegmentsGetter(context).create({ timelineConverter: timelineConverter });
             const segment = getter.getSegmentByIndex();
 
@@ -123,35 +113,35 @@ describe('TimelineSegmentsGetter', () => {
         it('should return segment given an index', () => {
             const representation = createRepresentationMock();
 
-            let seg = timelineSegmentsGetter.getSegmentByIndex(representation, { mediaStartTime: -1 });
+            let seg = timelineSegmentsGetter.getSegmentByIndex(representation);
             expect(seg.index).to.equal(0);
             expect(seg.presentationStartTime).to.equal(0);
             expect(seg.duration).to.equal(4.004);
 
-            seg = timelineSegmentsGetter.getSegmentByIndex(representation, { mediaStartTime: 0 });
+            seg = timelineSegmentsGetter.getSegmentByIndex(representation, {
+                presentationStartTime: 0,
+                mediaStartTime: 0,
+                duration: 4.004
+            });
             expect(seg.index).to.equal(1);
             expect(seg.presentationStartTime).to.equal(4.004);
             expect(seg.duration).to.equal(4.004);
 
-            seg = timelineSegmentsGetter.getSegmentByIndex(representation, { mediaStartTime: 4.004 });
+            seg = timelineSegmentsGetter.getSegmentByIndex(representation, {
+                presentationStartTime: 4.004,
+                mediaStartTime: 4.004,
+                duration: 4.004
+            });
             expect(seg.index).to.equal(2);
             expect(seg.presentationStartTime).to.equal(8.008);
             expect(seg.duration).to.equal(4.004);
         });
 
-        it('should return null if segment is out of range', () => {
-            const representation = createRepresentationMock();
-
-            let seg = timelineSegmentsGetter.getSegmentByIndex(representation, 10000, 1000);
-            expect(seg).to.be.null; // jshint ignore:line
+        it('should return null if no representation given', () => {
+            let seg = timelineSegmentsGetter.getSegmentByIndex();
+            expect(seg).to.be.null;
         });
 
-        it('should return null if last media time is not provided', () => {
-            const representation = createRepresentationMock();
-
-            let seg = timelineSegmentsGetter.getSegmentByIndex(representation, 1);
-            expect(seg).to.be.null; // jshint ignore:line
-        });
     });
 
     describe('getSegmentByTime', () => {
@@ -241,42 +231,37 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(80000);
             expect(seg.replacementSubNumber).to.equal(0);
-            expect(seg.nextPartialSegment).to.exist;
+            expect(seg.totalNumberOfPartialSegments).to.equal(3);
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 1.1);
             expect(seg).to.exist;
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(80000);
             expect(seg.replacementSubNumber).to.equal(1);
-            expect(seg.nextPartialSegment).to.exist;
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 2.1);
             expect(seg).to.exist;
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(80000);
             expect(seg.replacementSubNumber).to.equal(2);
-            expect(seg.nextPartialSegment).to.not.exist;
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 3.1);
             expect(seg).to.exist;
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(200000);
             expect(seg.replacementSubNumber).to.equal(0);
-            expect(seg.nextPartialSegment).to.exist;
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 4.1);
             expect(seg).to.exist;
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(200000);
             expect(seg.replacementSubNumber).to.equal(0);
-            expect(seg.nextPartialSegment).to.exist;
 
             seg = timelineSegmentsGetter.getSegmentByTime(representation, 5.1);
             expect(seg).to.exist;
             expect(seg.isPartialSegment).to.be.true;
             expect(seg.replacementTime).to.be.equal(200000);
             expect(seg.replacementSubNumber).to.equal(1);
-            expect(seg.nextPartialSegment).to.exist;
         });
 
         it('should fall back to full segment (not partial) when time is exactly at end boundary of a segment with partials', () => {

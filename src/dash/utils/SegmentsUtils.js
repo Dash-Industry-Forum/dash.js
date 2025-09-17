@@ -167,13 +167,13 @@ function processUriTemplate(url, representationId, number, subNumber, bandwidth,
 function getIndexBasedSegment(data) {
     const {
         index,
-        subNumberOfPartialSegmentToRequest,
         isDynamic,
         mediaTime,
         mediaUrl,
-        totalNumberOfPartialSegments,
         representation,
+        subNumberOfPartialSegmentToRequest,
         timelineConverter,
+        totalNumberOfPartialSegments,
     } = data;
     let segmentDurationInSeconds,
         presentationStartTime,

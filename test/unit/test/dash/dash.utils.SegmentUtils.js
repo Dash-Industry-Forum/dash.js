@@ -83,9 +83,9 @@ describe('SegmentsUtils', function () {
                 expect(segment.availabilityStartTime).to.be.equal(representation.adaptation.period.mpd.availabilityStartTime);
                 expect(segment.duration).to.be.equal(representation.segmentDuration);
                 expect(segment.index).to.be.equal(2);
-                expect(segment.isPartialSegment).to.be.undefined;
+                expect(segment.isPartialSegment).to.be.false;
                 expect(segment.mediaStartTime).to.be.equal(8);
-                expect(segment.presentationStartTime).to.be.equal(18.0),
+                expect(segment.presentationStartTime).to.be.equal(18.0);
                 expect(segment.replacementNumber).to.equal(representation.startNumber + 2);
                 expect(segment.media).to.be.a('string');
                 expect(segment.media).to.be.equal(`media_video_1_${representation.startNumber + 2}.m4s`);
@@ -120,36 +120,27 @@ describe('SegmentsUtils', function () {
                 expect(segment).to.be.null;
             });
 
-            it('should create a partial segment chain starting at provided partial index', function () {
+            it('should create a partial segment starting at provided partial index', function () {
                 const representation = createRepresentation();
-                const numberOfPartialSegments = 3;
-                const indexOfPartialSegmentToRequest = 1;
+                const totalNumberOfPartialSegments = 3;
+                const subNumberOfPartialSegmentToRequest = 1;
                 const baseIndex = 0;
                 const segment = getIndexBasedSegment({
-                    timelineConverter,
-                    isDynamic: false,
-                    representation,
                     index: baseIndex,
-                    numberOfPartialSegments,
-                    indexOfPartialSegmentToRequest,
+                    isDynamic: false,
+                    mediaTime: 0,
                     mediaUrl: 'media_$RepresentationID$_$Number$_$SubNumber$.m4s',
-                    mediaTime: 0
+                    representation,
+                    subNumberOfPartialSegmentToRequest,
+                    timelineConverter,
+                    totalNumberOfPartialSegments,
                 });
                 expect(segment).to.exist;
                 expect(segment.isPartialSegment).to.be.true;
-                expect(segment.replacementSubNumber).to.equal(indexOfPartialSegmentToRequest);
-                const expectedPartialDuration = representation.segmentDuration / numberOfPartialSegments;
+                expect(segment.replacementSubNumber).to.equal(subNumberOfPartialSegmentToRequest);
+                const expectedPartialDuration = representation.segmentDuration / totalNumberOfPartialSegments;
                 expect(segment.duration).to.equal(expectedPartialDuration);
-                let count = 0;
-                let current = segment;
-                const subNumbers = [];
-                while (current) {
-                    count++;
-                    subNumbers.push(current.replacementSubNumber);
-                    current = current.nextPartialSegment;
-                }
-                expect(count).to.equal(numberOfPartialSegments - indexOfPartialSegmentToRequest);
-                expect(subNumbers).to.deep.equal([1, 2]);
+                expect(segment.totalNumberOfPartialSegments).to.equal(totalNumberOfPartialSegments);
             });
         })
 
@@ -215,26 +206,24 @@ describe('SegmentsUtils', function () {
                 expect(Math.abs(diff - (30 + 4) * 1000)).to.be.lessThan(25);
             });
 
-            it('should create dynamic partial segment chain', function () {
+            it('should create dynamic partial segment', function () {
                 const representation = createDynamicRepresentation();
                 const segment = getTimeBasedSegment({
-                    timelineConverter,
-                    isDynamic: true,
-                    representation,
-                    mediaTime: 12,
                     durationInTimescale: 6,
                     fTimescale: 1,
-                    mediaUrl: 'media_$RepresentationID$_$Number$_$SubNumber$.m4s',
-                    mediaRange: '0-100',
                     index: 3,
-                    numberOfPartialSegments: 3,
-                    indexOfPartialSegmentToRequest: 0
+                    isDynamic: true,
+                    mediaRange: '0-100',
+                    mediaTime: 12,
+                    mediaUrl: 'media_$RepresentationID$_$Number$_$SubNumber$.m4s',
+                    representation,
+                    subNumberOfPartialSegmentToRequest: 0,
+                    timelineConverter,
+                    totalNumberOfPartialSegments: 3,
                 });
                 expect(segment).to.exist;
                 expect(segment.isPartialSegment).to.be.true;
-                // chain length should be 3
-                let count = 0; let cur = segment; while (cur) { count++; cur = cur.nextPartialSegment; }
-                expect(count).to.equal(3);
+                expect(segment.totalNumberOfPartialSegments).to.equal(3);
             });
 
             it('should return null for dynamic segment not yet available (future availabilityStartTime)', function () {
@@ -282,31 +271,30 @@ describe('SegmentsUtils', function () {
                 index: 2
             });
             expect(segment).to.exist;
-            expect(segment.isPartialSegment).to.be.undefined;
+            expect(segment.isPartialSegment).to.be.false;
             expect(segment.duration).to.equal(4);
             expect(segment.mediaRange).to.equal('0-100');
         });
 
-        it('should create partial time-based segment chain', function () {
+        it('should create partial time-based segment', function () {
             const representation = createRepresentation();
             const segment = getTimeBasedSegment({
-                timelineConverter,
-                isDynamic: false,
-                representation,
-                mediaTime: 12,
                 durationInTimescale: 6,
                 fTimescale: 1,
-                mediaUrl: 'media_$RepresentationID$_$Number$_$SubNumber$.m4s',
-                mediaRange: '0-100',
                 index: 3,
-                numberOfPartialSegments: 2,
-                indexOfPartialSegmentToRequest: 0
+                isDynamic: false,
+                mediaRange: '0-100',
+                mediaTime: 12,
+                mediaUrl: 'media_$RepresentationID$_$Number$_$SubNumber$.m4s',
+                representation,
+                subNumberOfPartialSegmentToRequest: 0,
+                timelineConverter,
+                totalNumberOfPartialSegments: 2,
             });
             expect(segment).to.exist;
             expect(segment.isPartialSegment).to.be.true;
             expect(segment.duration).to.equal(3);
-            expect(segment.nextPartialSegment).to.exist;
-            expect(segment.nextPartialSegment.replacementSubNumber).to.equal(1);
+            expect(segment.totalNumberOfPartialSegments).to.equal(2);
         });
     });
 
