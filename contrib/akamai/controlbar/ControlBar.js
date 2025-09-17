@@ -577,7 +577,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                     var info = '';
 
                     if (element.lang) {
-                        info += 'Language - ' + element.lang + ' ';
+                        info += 'Language: ' + element.lang + ' ';
                     }
 
                     if (element.roles && element.roles.length > 0) {
@@ -596,6 +596,10 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
                         info += '- Id: ' + element.id + ' ';
                     }
 
+                    if (element.isPreselection) {
+                        info += '- Preselection';
+                    }
+
                     return label || info
                 };
                 trackSwitchMenu = createMenu(availableTracks, contentFunc);
@@ -611,7 +615,7 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
 
     // Match up the current dashjs text tracks against native video element tracks by ensuring they have matching properties
     var _matchTrackWithNativeTrack = function (track, nativeTrack) {
-        let label = track.id !== undefined ? track.id.toString() : track.lang;
+        let label = (track.id !== undefined && track.id !== null) ? track.id.toString() : track.lang;
 
         return !!(
             (track.kind === nativeTrack.kind) &&
@@ -785,6 +789,9 @@ var ControlBar = function (dashjsMediaPlayer, displayUTCTimeCodes) {
     };
 
     var isTracksEqual = function (t1, t2) {
+        if (!t1 && !t2) return true;
+        if (!t1 || !t2) return false;
+        if (t1.isPreselection !== t2.isPreselection) return false;
         var sameId = t1.id === t2.id;
         var sameViewpoint = t1.viewpoint === t2.viewpoint;
         var sameLang = t1.lang === t2.lang;
