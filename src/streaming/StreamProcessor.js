@@ -584,7 +584,8 @@ function StreamProcessor(config) {
      * @private
      */
     function _noValidRequest() {
-        scheduleController.startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+        const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
+        scheduleController.startScheduleTimer(scheduleTimeout);
     }
 
     function _onDataUpdateCompleted() {

@@ -122,6 +122,7 @@ function ScheduleController(config) {
      * Schedule the request for an init or a media segment
      */
     function schedule() {
+        const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
             // Check if we are supposed to stop scheduling
             if (_shouldClearScheduleTimer()) {
@@ -141,10 +142,10 @@ function ScheduleController(config) {
                 }
 
             } else {
-                startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+                startScheduleTimer(scheduleTimeout);
             }
         } catch (e) {
-            startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+            startScheduleTimer(scheduleTimeout);
         }
     }
 
