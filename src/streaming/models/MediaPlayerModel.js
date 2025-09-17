@@ -273,7 +273,7 @@ function MediaPlayerModel() {
     }
 
     function getScheduleTimeout() {
-        playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout
+        return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout
     }
 
     function reset() {
