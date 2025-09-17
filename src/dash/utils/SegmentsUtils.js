@@ -38,7 +38,7 @@ function _getSegment(data) {
         return null;
     }
 
-    if (data.numberOfPartialSegments && !isNaN(data.numberOfPartialSegments) && data.numberOfPartialSegments > 0 && !isNaN(data.subNumberOfPartialSegmentToRequest)) {
+    if (data.totalNumberOfPartialSegments && !isNaN(data.totalNumberOfPartialSegments) && data.totalNumberOfPartialSegments > 0 && !isNaN(data.subNumberOfPartialSegmentToRequest)) {
         return _getPartialSegment(data);
     } else {
         return _getFullSegment(data);
@@ -56,8 +56,8 @@ function _getPartialSegment(data) {
 
 function _createSinglePartialSegment(data, subNumberOfPartialSegmentToRequest) {
     const partialSegment = new PartialSegment();
-    const partialSegmentDurationInSeconds = data.segmentDurationInSeconds / data.numberOfPartialSegments;
-    const { representation, timelineConverter, isDynamic, index, numberOfPartialSegments } = data;
+    const partialSegmentDurationInSeconds = data.segmentDurationInSeconds / data.totalNumberOfPartialSegments;
+    const { representation, timelineConverter, isDynamic, index, totalNumberOfPartialSegments } = data;
     const inputData = {
         representation,
         segmentDurationInSeconds: partialSegmentDurationInSeconds,
@@ -71,7 +71,7 @@ function _createSinglePartialSegment(data, subNumberOfPartialSegmentToRequest) {
     const segmentData = _getCommonSegmentData(inputData);
     partialSegment.assignAttributes(segmentData);
     partialSegment.replacementSubNumber = subNumberOfPartialSegmentToRequest;
-    partialSegment.numberOfPartialSegments = numberOfPartialSegments;
+    partialSegment.totalNumberOfPartialSegments = totalNumberOfPartialSegments;
 
     return partialSegment;
 }
@@ -171,7 +171,7 @@ function getIndexBasedSegment(data) {
         isDynamic,
         mediaTime,
         mediaUrl,
-        numberOfPartialSegments,
+        totalNumberOfPartialSegments,
         representation,
         timelineConverter,
     } = data;
@@ -206,7 +206,7 @@ function getIndexBasedSegment(data) {
             timelineConverter,
             isDynamic,
             index,
-            numberOfPartialSegments,
+            totalNumberOfPartialSegments,
             subNumberOfPartialSegmentToRequest,
             mediaUrl,
             mediaTime
@@ -229,7 +229,7 @@ function getTimeBasedSegment(data) {
         mediaRange,
         mediaTime,
         mediaUrl,
-        numberOfPartialSegments,
+        totalNumberOfPartialSegments,
         representation,
         tManifest,
         timelineConverter,
@@ -248,7 +248,7 @@ function getTimeBasedSegment(data) {
         timelineConverter,
         isDynamic,
         index,
-        numberOfPartialSegments,
+        totalNumberOfPartialSegments,
         subNumberOfPartialSegmentToRequest,
         mediaUrl,
         mediaRange,
@@ -263,13 +263,13 @@ function getTimeBasedSegment(data) {
     return segment;
 }
 
-function getNumberOfPartialSegments(element) {
+function getTotalNumberOfPartialSegments(element) {
     return element.k;
 }
 
 export {
     getIndexBasedSegment,
-    getNumberOfPartialSegments,
+    getTotalNumberOfPartialSegments,
     getTimeBasedSegment,
     processUriTemplate,
 };

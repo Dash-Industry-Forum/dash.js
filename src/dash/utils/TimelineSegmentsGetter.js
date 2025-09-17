@@ -31,7 +31,7 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
-import {getTimeBasedSegment, getNumberOfPartialSegments} from './SegmentsUtils.js';
+import {getTimeBasedSegment, getTotalNumberOfPartialSegments} from './SegmentsUtils.js';
 
 function TimelineSegmentsGetter(config, isDynamic) {
 
@@ -48,94 +48,8 @@ function TimelineSegmentsGetter(config, isDynamic) {
     }
 
     function getSegmentByIndex(representation, lastSegment) {
-        checkConfig();
-
-        if (!representation) {
-            return null;
-        }
-
-        let segment = null;
-        let segmentFound = false;
-
-        _handleNextCompleteSegment();
-
-
-        return segment;
-
-        function _handleNextCompleteSegment() {
-
-            _iterateSegments(representation, function (data) {
-                const {
-                    mediaTime,
-                    segmentBase,
-                    segmentURL,
-                    currentSElement,
-                    sElementCounterIncludingRepeats,
-                    sElementCounter
-                } = data;
-                const fTimescale = representation.timescale;
-
-                if (segmentFound || lastSegment.mediaStartTime < 0) {
-                    _onCompleteSegmentFound({
-                        segmentBase,
-                        segmentURL,
-                        sElementCounter,
-                        currentSElement,
-                        mediaTime,
-                        fTimescale,
-                        sElementCounterIncludingRepeats
-                    });
-                    return true;
-                } else if (_shouldSelectSegment(mediaTime, currentSElement, fTimescale)) {
-                    segmentFound = true;
-                }
-
-                return false;
-            });
-        }
-
-        function _onCompleteSegmentFound(data) {
-            const {
-                segmentBase,
-                segmentURL,
-                sElementCounter,
-                currentSElement,
-                mediaTime,
-                fTimescale,
-                sElementCounterIncludingRepeats
-            } = data
-            let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
-            let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
-            let durationInTimescale = currentSElement.d;
-            const numberOfPartialSegments = getNumberOfPartialSegments(currentSElement);
-            const subNumberOfPartialSegmentToRequest = 0;
-
-            segment = getTimeBasedSegment({
-                timelineConverter,
-                isDynamic,
-                representation,
-                mediaTime,
-                durationInTimescale,
-                fTimescale,
-                mediaUrl,
-                mediaRange,
-                index: sElementCounterIncludingRepeats,
-                tManifest: currentSElement.tManifest,
-                numberOfPartialSegments,
-                subNumberOfPartialSegmentToRequest
-            });
-        }
-
-        function _shouldSelectSegment(time, currentSElement, fTimescale) {
-            if (!lastSegment) {
-                return true;
-            }
-            // Note: We are looking for the current segment here! There will be one more iteration in _iterateSegments after which gives us the next segment
-            // 50% of segment duration, segment is found if time is greater than or equal to (startTime of previous segment - half of the previous segment duration)
-            const referenceMediaStartTime = lastSegment.isPartialSegment ? lastSegment.mediaStartTime - lastSegment.duration * lastSegment.replacementSubNumber : lastSegment.mediaStartTime;
-            const threshold = (referenceMediaStartTime * fTimescale) - (currentSElement.d * 0.5);
-            return time >= threshold;
-        }
+        const safetyOffset = 0.05
+        return getSegmentByTime(representation, lastSegment.presentationStartTime + lastSegment.duration + safetyOffset);
     }
 
     function getSegmentByTime(representation, requestedPresentationTime) {
@@ -210,12 +124,12 @@ function TimelineSegmentsGetter(config, isDynamic) {
             } = data
             let mediaUrl = _getMediaUrl(segmentBase, segmentURL, sElementCounter);
             let mediaRange = _getMediaRange(currentSElement, segmentURL, sElementCounter);
-            const numberOfPartialSegments = getNumberOfPartialSegments(currentSElement);
-            const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequest({
+            const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(currentSElement);
+            const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
                 durationInTimescale,
                 requiredMediaTimeInTimescaleUnits,
                 mediaTime,
-                numberOfPartialSegments
+                totalNumberOfPartialSegments
             })
 
             segment = getTimeBasedSegment({
@@ -229,7 +143,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
                 mediaRange,
                 index: sElementCounterIncludingRepeats,
                 tManifest: currentSElement.tManifest,
-                numberOfPartialSegments,
+                totalNumberOfPartialSegments,
                 subNumberOfPartialSegmentToRequest
             });
         }
@@ -407,14 +321,19 @@ function TimelineSegmentsGetter(config, isDynamic) {
         return parseFloat(number.toPrecision(15));
     }
 
-    function _getSubNumberOfPartialSegmentToRequest(data) {
-        if (!data || data.numberOfPartialSegments === undefined || isNaN(data.numberOfPartialSegments) || data.numberOfPartialSegments < 1) {
+    function _getSubNumberOfPartialSegmentToRequestByTime(data) {
+        if (!data || data.totalNumberOfPartialSegments === undefined || isNaN(data.totalNumberOfPartialSegments) || data.totalNumberOfPartialSegments < 1) {
             return undefined;
         }
-        const { durationInTimescale, requiredMediaTimeInTimescaleUnits, mediaTime, numberOfPartialSegments } = data;
-        const partialSegmentDuration = durationInTimescale / numberOfPartialSegments;
+        const {
+            durationInTimescale,
+            requiredMediaTimeInTimescaleUnits,
+            mediaTime,
+            totalNumberOfPartialSegments
+        } = data;
+        const partialSegmentDuration = durationInTimescale / totalNumberOfPartialSegments;
 
-        for (let i = 0; i < numberOfPartialSegments; i++) {
+        for (let i = 0; i < totalNumberOfPartialSegments; i++) {
             const start = mediaTime + i * partialSegmentDuration;
             const end = start + partialSegmentDuration;
             if (requiredMediaTimeInTimescaleUnits >= start && requiredMediaTimeInTimescaleUnits < end) {

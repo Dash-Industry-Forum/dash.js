@@ -40,7 +40,7 @@ class PartialSegment extends Segment {
         this.isPartialSegment = true;
         // The sub-number of the first Partial Segment in the sequence is 0
         this.replacementSubNumber = NaN;
-        this.numberOfPartialSegments = NaN;
+        this.totalNumberOfPartialSegments = NaN;
     }
 }
 

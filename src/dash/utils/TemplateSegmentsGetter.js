@@ -32,7 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Constants from '../../streaming/constants/Constants.js';
 import {
     getIndexBasedSegment,
-    getNumberOfPartialSegments,
+    getTotalNumberOfPartialSegments,
 } from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
@@ -71,10 +71,10 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         const template = _getSegmentTemplateElement(representation);
-        const numberOfPartialSegments = getNumberOfPartialSegments(template);
+        const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(template);
 
-        if (numberOfPartialSegments !== undefined && numberOfPartialSegments >= 0) {
-            subNumberOfPartialSegmentToRequest = subNumberOfPartialSegmentToRequest !== undefined && subNumberOfPartialSegmentToRequest < numberOfPartialSegments ? subNumberOfPartialSegmentToRequest : 0;
+        if (totalNumberOfPartialSegments !== undefined && totalNumberOfPartialSegments >= 0) {
+            subNumberOfPartialSegmentToRequest = subNumberOfPartialSegmentToRequest !== undefined && subNumberOfPartialSegmentToRequest < totalNumberOfPartialSegments ? subNumberOfPartialSegmentToRequest : 0;
         }
 
         // This is the index without @startNumber
@@ -85,7 +85,7 @@ function TemplateSegmentsGetter(config, isDynamic) {
             isDynamic,
             representation,
             index: indexWithoutStartNumber,
-            numberOfPartialSegments,
+            totalNumberOfPartialSegments,
             subNumberOfPartialSegmentToRequest,
             mediaUrl: template.media,
             mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10)
@@ -117,9 +117,9 @@ function TemplateSegmentsGetter(config, isDynamic) {
 
         const template = _getSegmentTemplateElement(representation);
         const indexWithoutStartNumber = Math.floor(requestedTimeRelativeToPeriodStart / duration);
-        const numberOfPartialSegments = getNumberOfPartialSegments(template);
+        const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(template);
         const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
-            numberOfPartialSegments,
+            totalNumberOfPartialSegments,
             representation,
             requestedTimeRelativeToPeriodStart,
             indexWithoutStartNumber
@@ -134,23 +134,23 @@ function TemplateSegmentsGetter(config, isDynamic) {
     }
 
     function _getSubNumberOfPartialSegmentToRequestByTime(data) {
-        if (!data || data.numberOfPartialSegments === undefined || isNaN(data.numberOfPartialSegments) || data.numberOfPartialSegments < 1) {
+        if (!data || data.totalNumberOfPartialSegments === undefined || isNaN(data.totalNumberOfPartialSegments) || data.totalNumberOfPartialSegments < 1) {
             return undefined;
         }
         const {
-            numberOfPartialSegments,
+            totalNumberOfPartialSegments,
             representation,
             requestedTimeRelativeToPeriodStart,
             indexWithoutStartNumber
         } = data;
 
         const startTimeOfSegment = indexWithoutStartNumber * representation.segmentDuration;
-        const partialSegmentDuration = representation.segmentDuration / numberOfPartialSegments;
+        const partialSegmentDuration = representation.segmentDuration / totalNumberOfPartialSegments;
 
         const offset = requestedTimeRelativeToPeriodStart - startTimeOfSegment;
         let subNumberOfPartialSegmentToRequest = Math.floor(offset / partialSegmentDuration);
 
-        subNumberOfPartialSegmentToRequest = Math.max(0, Math.min(subNumberOfPartialSegmentToRequest, numberOfPartialSegments - 1));
+        subNumberOfPartialSegmentToRequest = Math.max(0, Math.min(subNumberOfPartialSegmentToRequest, totalNumberOfPartialSegments - 1));
 
         return subNumberOfPartialSegmentToRequest;
     }
