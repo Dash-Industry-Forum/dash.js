@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Constants from '../../streaming/constants/Constants.js';
 import {
     getIndexBasedSegment,
     getTotalNumberOfPartialSegments,
@@ -40,12 +39,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
     const timelineConverter = config.timelineConverter;
 
     let instance;
-
-    function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
 
     function getMediaFinishedInformation(representation) {
         const mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN }
@@ -64,8 +57,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
     }
 
     function getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest) {
-        checkConfig();
-
         if (!representation) {
             return null;
         }
@@ -91,7 +82,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
             mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10)
         });
 
-
         if (seg && representation.endNumber && seg.replacementNumber > representation.endNumber) {
             return null;
         }
@@ -100,8 +90,6 @@ function TemplateSegmentsGetter(config, isDynamic) {
     }
 
     function getSegmentByTime(representation, requestedTime) {
-        checkConfig();
-
         if (!representation) {
             return null;
         }

@@ -3,7 +3,7 @@ import {
     processUriTemplate,
     getIndexBasedSegment,
     getTimeBasedSegment,
-    getNumberOfPartialSegments
+    getTotalNumberOfPartialSegments
 } from '../../../../src/dash/utils/SegmentsUtils.js';
 import TimelineConverter from '../../../../src/dash/utils/TimelineConverter.js';
 
@@ -310,10 +310,10 @@ describe('SegmentsUtils', function () {
         });
     });
 
-    describe('getNumberOfPartialSegments', function () {
+    describe('getTotalNumberOfPartialSegments', function () {
         it('should return the k attribute', function () {
             const el = { k: 5 };
-            expect(getNumberOfPartialSegments(el)).to.equal(5);
+            expect(getTotalNumberOfPartialSegments(el)).to.equal(5);
         });
     });
 });

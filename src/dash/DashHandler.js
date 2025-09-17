@@ -281,12 +281,12 @@ function DashHandler(config) {
             return null;
         }
 
-        let { indexToRequest, subNumberOfPartialSegmentToRequest } = _getIndicesToRequest(lastSegment);
-        if (_hasMediaFinished()) {
+        if (_hasMediaFinished(representation)) {
             mediaHasFinished = true;
             return null;
         }
 
+        let { indexToRequest, subNumberOfPartialSegmentToRequest } = _getIndicesToRequest(lastSegment);
         return _getRequest(mediaInfo, representation, indexToRequest, subNumberOfPartialSegmentToRequest);
     }
 
