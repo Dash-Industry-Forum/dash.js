@@ -1,6 +1,6 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
 
 Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-insert-vod').forEach((item) => {
@@ -12,7 +12,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-ins
         let player;
 
         before(() => {
-            player = initializeDashJsAdapter(item, url);
+            player = initializeDashJsAdapterForAlternativMedia(item, url);
         });
 
         after(() => {

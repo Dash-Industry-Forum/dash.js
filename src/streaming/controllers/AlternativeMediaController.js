@@ -131,6 +131,10 @@ function AlternativeMediaController() {
 
         mediaManager.initialize();
 
+        if (alternativeVideoElement) {
+            mediaManager.setAlternativeVideoElement(alternativeVideoElement);
+        }
+
         // Set up event listeners
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         
@@ -342,11 +346,9 @@ function AlternativeMediaController() {
     }
 
     function setAlternativeVideoElement(element) {
+        alternativeVideoElement = element;
         if (mediaManager) {
             mediaManager.setAlternativeVideoElement(element);
-            alternativeVideoElement = element;
-        } else {
-            logger.warn('Cannot set alternative video element: MediaManager has not been initialized.');
         }
     }
 

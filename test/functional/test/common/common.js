@@ -88,6 +88,18 @@ export function initializeDashJsAdapterForPreload(item, mpd, settings) {
     return playerAdapter
 }
 
+export function initializeDashJsAdapterForAlternativMedia(item, mpd, settings) {
+    let playerAdapter = new DashJsAdapter();
+    playerAdapter.initForAlternativeMedia(mpd);
+    playerAdapter.setDrmData(item.drm);
+    if (settings) {
+        playerAdapter.updateSettings(settings);
+    }
+
+    playerAdapter.attachSource(mpd);
+    return playerAdapter
+}
+
 export function isLiveContent(item) {
     return item.type === Constants.CONTENT_TYPES.LIVE
 }
