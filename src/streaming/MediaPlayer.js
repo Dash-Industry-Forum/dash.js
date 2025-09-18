@@ -288,7 +288,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function initialize(view, source, autoPlay, startTime = NaN, alternativeContext = null) {
+    function initialize(view, source, autoPlay, startTime = NaN) {
         if (!capabilities) {
             capabilities = Capabilities(context).getInstance();
             capabilities.setConfig({
@@ -323,7 +323,7 @@ function MediaPlayer() {
             }
 
             if (!alternativeMediaController) {
-                alternativeMediaController = AlternativeMediaController(alternativeContext ? alternativeContext : context).getInstance();
+                alternativeMediaController = AlternativeMediaController(context).getInstance();
             }
 
             if (!playbackController) {
