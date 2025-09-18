@@ -87,6 +87,10 @@ class MediaManagerMock {
         this.altPlayer = player;
     }
 
+    setAlternativeVideoElement(element) {
+        this.alternativeVideoElement = element;
+    }
+
     reset() {
         this.isSwitching = false;
 
