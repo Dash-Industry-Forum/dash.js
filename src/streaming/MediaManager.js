@@ -101,6 +101,8 @@ function MediaManager() {
                 return; // Already prebuffered
             }
 
+            logger.info(`Starting prebuffering for player ${playerId}`);
+
             // Create a prebuffered player
             const prebufferedPlayer = MediaPlayer().create();
             prebufferedPlayer.initialize(null, alternativeMpdUrl, false, NaN);
