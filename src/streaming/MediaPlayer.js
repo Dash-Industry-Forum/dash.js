@@ -2156,9 +2156,6 @@ function MediaPlayer() {
         }
 
         if (alternativeMediaController) {
-            alternativeMediaController.setConfig({
-                alternativeVideoElement: element
-            });
             alternativeMediaController.setAlternativeVideoElement(element);
         }
     }
