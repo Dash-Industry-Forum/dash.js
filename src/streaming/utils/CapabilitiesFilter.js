@@ -5,6 +5,8 @@ import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
+import getNChanFromAudioChannelConfig from './AudioChannelConfiguration.js';
+
 function CapabilitiesFilter() {
 
     const context = this.context;
@@ -366,23 +368,46 @@ function CapabilitiesFilter() {
     }
 
     function _createAudioConfiguration(rep, codec, prslRep) {
-        var samplerate = rep ? rep.audioSamplingRate || null : null;
-        var bitrate = rep ? rep.bandwidth || null : null;
+        let cfg = {
+            codec,
+            samplerate: rep ? rep.audioSamplingRate || null : null,
+            bitrate: rep ? rep.bandwidth || null : null,
+            isSupported: true,
+        };
 
         if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
-            if (!samplerate) {
-                samplerate = prslRep.audioSamplingRate || null;
+            if (!cfg.samplerate) {
+                cfg.samplerate = prslRep.audioSamplingRate || null;
             }
-            if (!bitrate) {
-                bitrate = prslRep.bandwidth || null;
+            if (!cfg.bitrate) {
+                cfg.bitrate = prslRep.bandwidth || null;
             }
         }
 
+        if (settings.get().streaming.capabilities.filterAudioChannelConfiguration) {
+            Object.assign(cfg, _convertAudioChannelConfigurationToConfig(rep))
+        }
+        }
+
+        return cfg;
+    }
+
+    function _convertAudioChannelConfigurationToConfig(representation) {
+
+        let channels = null;
+
+        const channelCounts = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(channelConfig => getNChanFromAudioChannelConfig(channelConfig))
+
+        // ensure that all AudioChannelConfiguration elements are the same value, otherwise ignore
+        if (channelCounts.every(e => e == channelCounts[0])) {
+            channels = channelCounts[0]
+        }
+
         return {
-            codec,
-            bitrate,
-            samplerate,
-            isSupported: true
+            channels
+        }
+    }
+
         };
     }
 
