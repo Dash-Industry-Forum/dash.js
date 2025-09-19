@@ -73,7 +73,8 @@ function AlternativeMediaController() {
         calculatedMaxDuration = 0,
         videoModel = null,
         alternativeContext = null,
-        hideAlternativePlayerControls = false;
+        hideAlternativePlayerControls = false,
+        alternativeVideoElement = null;
 
     function setup() {
         if (!debug) {
@@ -130,6 +131,10 @@ function AlternativeMediaController() {
 
         mediaManager.initialize();
 
+        if (alternativeVideoElement) {
+            mediaManager.setAlternativeVideoElement(alternativeVideoElement);
+        }
+
         // Set up event listeners
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         
@@ -181,6 +186,11 @@ function AlternativeMediaController() {
         const event = e.event;
         try {
             if (!event || !event.alternativeMpd) {
+                return;
+            }
+
+            if (!alternativeVideoElement) {
+                logger.error('Cannot trigger alternative event. Alternative video element has not been set.');
                 return;
             }
 
@@ -335,8 +345,16 @@ function AlternativeMediaController() {
         eventBus.off(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
     }
 
+    function setAlternativeVideoElement(element) {
+        alternativeVideoElement = element;
+        if (mediaManager) {
+            mediaManager.setAlternativeVideoElement(element);
+        }
+    }
+
     instance = {
         setConfig,
+        setAlternativeVideoElement,
         initialize,
         reset
     };

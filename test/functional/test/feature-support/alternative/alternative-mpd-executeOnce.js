@@ -1,6 +1,6 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
 
 /**
@@ -46,7 +46,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-exe
         let player;
 
         before(() => {
-            player = initializeDashJsAdapter(item, url);
+            player = initializeDashJsAdapterForAlternativMedia(item, url);
         });
 
         after(() => {
@@ -148,7 +148,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-exe
             };
             
             const initPlayerWithModifiedManifest = () => {
-                testPlayer = initializeDashJsAdapter(item, null);
+                testPlayer = initializeDashJsAdapterForAlternativMedia(item, null);
                 
                 injectExecuteOnce(testPlayer, url, 'false', () => {
                     runExecuteOnceFalseTest();

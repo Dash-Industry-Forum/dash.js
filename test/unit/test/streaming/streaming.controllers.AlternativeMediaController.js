@@ -57,6 +57,9 @@ describe('AlternativeMediaController', function () {
         });
         alternativeMediaController.initialize();
 
+        const alternativeVideoElement = document.createElement('video');
+        alternativeMediaController.setAlternativeVideoElement(alternativeVideoElement);
+
         eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADED, {
             data: { type: DashConstants.STATIC, originalUrl: 'http://example.com/manifest.mpd' }
         });

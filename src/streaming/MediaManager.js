@@ -102,15 +102,6 @@ function MediaManager() {
             }
 
             logger.info(`Starting prebuffering for player ${playerId}`);
-            
-            // Create a prebuffered video element
-            if (!altVideoElement) {
-                altVideoElement = document.createElement('video');
-                altVideoElement.style.display = 'none';
-                altVideoElement.autoplay = false;
-                altVideoElement.controls = false;
-                document.body.appendChild(altVideoElement);
-            }
 
             // Create a prebuffered player
             const prebufferedPlayer = MediaPlayer().create();
@@ -161,33 +152,11 @@ function MediaManager() {
         }
     }
 
-    function initializeAlternativePlayerElement(alternativeMpdUrl) {
-        if (!altVideoElement) {
-            // Create a new video element for the alternative content
-            altVideoElement = document.createElement('video');
-            altVideoElement.style.display = 'none';
-            altVideoElement.autoplay = false;
-            altVideoElement.controls = !hideAlternativePlayerControls;
-            fullscreenDiv.appendChild(altVideoElement);
-
-            // Insert the alternative video element into the DOM
-            const videoElement = videoModel.getElement();
-            const parentNode = videoElement && videoElement.parentNode;
-            if (parentNode) {
-                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
-            }
-        };
-
-        // Initialize alternative player
-        initializeAlternativePlayer(alternativeMpdUrl);
-    }
-
     function initializeAlternativePlayer(alternativeMpdUrl) {
-        // Clean up previous error listener if any
         if (altPlayer) {
             altPlayer.off(Events.ERROR, onAlternativePlayerError, this);
         }
-        // Initialize alternative player
+
         altPlayer = MediaPlayer().create();
         altPlayer.updateSettings({
             streaming: {
@@ -244,8 +213,7 @@ function MediaManager() {
 
             altPlayer.attachView(altVideoElement);
         } else {
-            // No prebuffered content, initialize normally
-            initializeAlternativePlayerElement(alternativeMpdUrl);
+            initializeAlternativePlayer(alternativeMpdUrl);
         }
 
         videoModel.pause();
@@ -289,13 +257,9 @@ function MediaManager() {
 
         videoModel.play();
         logger.info('Main content playback resumed');
-        
-        altVideoElement.parentNode.removeChild(altVideoElement);
-        altVideoElement = null;
 
-        altPlayer.reset();
+        altPlayer.destroy();
         altPlayer = null;
-
 
         isSwitching = false;
 
@@ -311,9 +275,8 @@ function MediaManager() {
             altPlayer = null;
         }
 
-        if (altVideoElement && altVideoElement.parentNode) {
-            altVideoElement.parentNode.removeChild(altVideoElement);
-            altVideoElement = null;
+        if (altVideoElement) {
+            altVideoElement.style.display = 'none';
         }
 
         // Clean up all prebuffered content
@@ -335,6 +298,10 @@ function MediaManager() {
         return altPlayer;
     }
 
+    function setAlternativeVideoElement(alternativeVideoElement) {
+        altVideoElement = alternativeVideoElement;
+    }
+
     instance = {
         setConfig,
         initialize,
@@ -343,6 +310,7 @@ function MediaManager() {
         switchToAlternativeContent,
         switchBackToMainContent,
         getAlternativePlayer,
+        setAlternativeVideoElement,
         reset
     };
 

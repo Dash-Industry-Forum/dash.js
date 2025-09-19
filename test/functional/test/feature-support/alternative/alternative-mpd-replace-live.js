@@ -1,6 +1,6 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
 
 /**
@@ -68,7 +68,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
 
         before((done) => {
             // Initialize the player without attaching source immediately
-            player = initializeDashJsAdapter(item, null);
+            player = initializeDashJsAdapterForAlternativMedia(item, null);
             
             // Use the utility function to inject Alternative MPD events
             injectAlternativeMpdEvents(player, originalUrl, alternativeUrl, () => {

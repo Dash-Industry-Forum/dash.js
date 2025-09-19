@@ -2150,6 +2150,16 @@ function MediaPlayer() {
         streamController.load(source);
     }
 
+    function setAlternativeVideoElement(element) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (alternativeMediaController) {
+            alternativeMediaController.setAlternativeVideoElement(element);
+        }
+    }
+
     /**
      * Use this method to set a source URL to a valid MPD manifest file OR
      * a previously downloaded and parsed manifest object.  Optionally, can
@@ -2951,6 +2961,7 @@ function MediaPlayer() {
         setProtectionData,
         setRepresentationForTypeById,
         setRepresentationForTypeByIndex,
+        setAlternativeVideoElement,
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
