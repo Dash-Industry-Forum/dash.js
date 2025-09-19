@@ -5,7 +5,7 @@ import { expect } from 'chai';
 
 /**
  * Utility function to modify a live manifest by injecting Alternative MPD events
- * This simulates the functionality from the demo.html tool for live to VOD scenarios
+ * This simulates the functionality from the demo.html tool for live to VOD and live to live scenarios
  */
 function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeManifestUrl, callback) {
     // Access the underlying MediaPlayer instance
