@@ -49,6 +49,8 @@ function MediaManager() {
         prebufferedPlayers = new Map(),
         prebufferCleanupInterval = null;
 
+    const context = this.context;
+
     function setConfig(config) {
         if (!config) {
             return;
