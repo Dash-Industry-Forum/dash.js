@@ -11,12 +11,10 @@ describe('MediaManager', function () {
     let debugMock;
 
     beforeEach(function () {
-        // Setup mocks
         videoModelMock = new VideoModelMock();
         playbackControllerMock = new PlaybackControllerMock();
         debugMock = new DebugMock();
 
-        // Configure MediaManager
         mediaManager.setConfig({
             videoModel: videoModelMock,
             playbackController: playbackControllerMock,
@@ -44,24 +42,70 @@ describe('MediaManager', function () {
         });
     });
 
+    describe('prebufferAlternativeContent', function () {
+        it('should start prebuffering alternative content and log the action', function () {
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+
+            mediaManager.prebufferAlternativeContent(testPlayerId, testUrl);
+
+            expect(debugMock.log.info).to.equal(`Starting prebuffering for player ${testPlayerId}`);
+        });
+    });
+
+    describe('switchToAlternativeContent', function () {
+        beforeEach(function () {
+            const mockVideoElement = videoModelMock.getElement();
+            mediaManager.setAlternativeVideoElement(mockVideoElement);
+        });
+
+        it('should switch to alternative content without prebuffered content', function () {
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+
+            mediaManager.switchToAlternativeContent(testPlayerId, testUrl);
+
+            expect(debugMock.log.info).to.equal(`Alternative content playback started for player ${testPlayerId}`);
+        });
+
+        it('should switch to alternative content with prebuffered content', function () {
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+
+            mediaManager.prebufferAlternativeContent(testPlayerId, testUrl);
+            expect(debugMock.log.info).to.equal(`Starting prebuffering for player ${testPlayerId}`);
+
+            mediaManager.switchToAlternativeContent(testPlayerId, testUrl);
+            expect(debugMock.log.info).to.equal(`Alternative content playback started for player ${testPlayerId}`);
+        });
+
+        it('should switch to alternative content and seek to a given time', function () {
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+            const testTime = 15;
+
+            mediaManager.switchToAlternativeContent(testPlayerId, testUrl, testTime);
+
+            expect(debugMock.log.debug).to.equal(`Seeking alternative content to time: ${testTime}`);
+            expect(debugMock.log.info).to.equal(`Alternative content playback started for player ${testPlayerId}`);
+        });
+    });
+
     describe('getAlternativePlayer', function () {
         beforeEach(function () {
             const mockVideoElement = videoModelMock.getElement();
             mediaManager.setAlternativeVideoElement(mockVideoElement);
         });
 
-        it('should return undefined when no alternative player is set', function () {
+        it('should return null when no alternative player is set', function () {
             const result = mediaManager.getAlternativePlayer();
-            expect(result).to.be.undefined;
+            expect(result).to.be.null;
         });
 
         it('should return the alternative player when it is set', function () {
-            // Initialize an alternative player by calling initializeAlternativePlayer
-            // We need to access the private method through switchToAlternativeContent
             const testUrl = 'http://test.mpd';
             const testPlayerId = 'testPlayer';
 
-            // Trigger initialization of alternative player
             mediaManager.switchToAlternativeContent(testPlayerId, testUrl, 0);
 
             const result = mediaManager.getAlternativePlayer();
