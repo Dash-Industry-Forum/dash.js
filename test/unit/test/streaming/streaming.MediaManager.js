@@ -56,12 +56,9 @@ describe('MediaManager', function () {
         });
 
         it('should return the alternative player when it is set', function () {
-            // Initialize an alternative player by calling initializeAlternativePlayer
-            // We need to access the private method through switchToAlternativeContent
             const testUrl = 'http://test.mpd';
             const testPlayerId = 'testPlayer';
 
-            // Trigger initialization of alternative player
             mediaManager.switchToAlternativeContent(testPlayerId, testUrl, 0);
 
             const result = mediaManager.getAlternativePlayer();
