@@ -32,7 +32,7 @@ describe('MediaManager', function () {
         }
     });
 
-    describe('setAlternativeVideoElement', function () {
+    describe('set the alternative video element', function () {
         it('should not throw error when setting alternative video element', function () {
             const mockVideoElement = videoModelMock.getElement();
 
@@ -42,7 +42,7 @@ describe('MediaManager', function () {
         });
     });
 
-    describe('prebufferAlternativeContent', function () {
+    describe('prebuffer the alternative content', function () {
         it('should start prebuffering alternative content and log the action', function () {
             const testUrl = 'http://test.mpd';
             const testPlayerId = 'testPlayer';
@@ -53,7 +53,7 @@ describe('MediaManager', function () {
         });
     });
 
-    describe('switchToAlternativeContent', function () {
+    describe('switch to the alternative content', function () {
         beforeEach(function () {
             const mockVideoElement = videoModelMock.getElement();
             mediaManager.setAlternativeVideoElement(mockVideoElement);
@@ -73,8 +73,6 @@ describe('MediaManager', function () {
             const testPlayerId = 'testPlayer';
 
             mediaManager.prebufferAlternativeContent(testPlayerId, testUrl);
-            expect(debugMock.log.info).to.equal(`Starting prebuffering for player ${testPlayerId}`);
-
             mediaManager.switchToAlternativeContent(testPlayerId, testUrl);
             expect(debugMock.log.info).to.equal(`Alternative content playback started for player ${testPlayerId}`);
         });
@@ -91,7 +89,7 @@ describe('MediaManager', function () {
         });
     });
 
-    describe('getAlternativePlayer', function () {
+    describe('get alternative player', function () {
         beforeEach(function () {
             const mockVideoElement = videoModelMock.getElement();
             mediaManager.setAlternativeVideoElement(mockVideoElement);
@@ -111,6 +109,31 @@ describe('MediaManager', function () {
             const result = mediaManager.getAlternativePlayer();
             expect(result).to.not.be.undefined;
             expect(result).to.be.an('object');
+        });
+    });
+
+    describe('switch back to the main content', function () {
+        beforeEach(function () {
+            const mockVideoElement = videoModelMock.getElement();
+            mediaManager.setAlternativeVideoElement(mockVideoElement);
+        });
+
+        it('should warn when no alternative player is set', function () {
+            mediaManager.switchBackToMainContent(10);
+
+            expect(debugMock.log.warn).to.equal('No alternative player to switch back from');
+        });
+
+        it('should switch back to main content', function () {
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+            const seekTime = 20;
+
+            mediaManager.switchToAlternativeContent(testPlayerId, testUrl, 0);
+            mediaManager.switchBackToMainContent(seekTime);
+
+            expect(debugMock.log.info).to.equal('Main content playback resumed');
+            expect(mediaManager.getAlternativePlayer()).to.be.null;
         });
     });
 });
