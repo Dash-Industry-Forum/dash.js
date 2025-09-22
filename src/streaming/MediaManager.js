@@ -32,6 +32,7 @@ import Events from '../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import MediaPlayer from './MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
 
 function MediaManager() {
     let instance,
@@ -44,6 +45,7 @@ function MediaManager() {
         altVideoElement,
         alternativeContext,
         logger,
+        debug,
         prebufferedPlayers = new Map(),
         prebufferCleanupInterval = null;
 
@@ -56,8 +58,8 @@ function MediaManager() {
             videoModel = config.videoModel;
         }
 
-        if (config.logger) {
-            logger = config.logger;
+        if (config.debug) {
+            debug = config.debug;
         }
 
         if (!!config.playbackController && !playbackController) {
@@ -74,6 +76,12 @@ function MediaManager() {
     }
 
     function initialize() {
+        if (!debug) {
+            debug = Debug(context).getInstance();
+        }
+
+        logger = debug.getLogger(instance);
+
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
