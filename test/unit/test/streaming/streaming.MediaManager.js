@@ -35,12 +35,38 @@ describe('MediaManager', function () {
     });
 
     describe('setAlternativeVideoElement', function () {
-        it.only('should not throw error when setting alternative video element', function () {
+        it('should not throw error when setting alternative video element', function () {
             const mockVideoElement = videoModelMock.getElement();
 
             expect(() => {
                 mediaManager.setAlternativeVideoElement(mockVideoElement);
             }).to.not.throw();
+        });
+    });
+
+    describe('getAlternativePlayer', function () {
+        beforeEach(function () {
+            const mockVideoElement = videoModelMock.getElement();
+            mediaManager.setAlternativeVideoElement(mockVideoElement);
+        });
+
+        it.only('should return undefined when no alternative player is set', function () {
+            const result = mediaManager.getAlternativePlayer();
+            expect(result).to.be.undefined;
+        });
+
+        it.only('should return the alternative player when it is set', function () {
+            // Initialize an alternative player by calling initializeAlternativePlayer
+            // We need to access the private method through switchToAlternativeContent
+            const testUrl = 'http://test.mpd';
+            const testPlayerId = 'testPlayer';
+
+            // Trigger initialization of alternative player
+            mediaManager.switchToAlternativeContent(testPlayerId, testUrl, 0);
+
+            const result = mediaManager.getAlternativePlayer();
+            expect(result).to.not.be.null;
+            expect(result).to.be.an('object');
         });
     });
 });

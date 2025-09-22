@@ -197,33 +197,15 @@ function MediaManager() {
         const prebufferedContent = prebufferedPlayers.get(playerId);
 
         if (prebufferedContent) {
-            // Use prebuffered content
             logger.info(`Using prebuffered content for player ${playerId}`);
-
-            // Move prebuffered video element to visible area
             altPlayer = prebufferedContent.player;
-            
-            // Remove from prebuffered storage
             prebufferedPlayers.delete(playerId);
-
-            // Setup video element for display
-            altVideoElement.style.display = 'none';
-            altVideoElement.controls = !hideAlternativePlayerControls;
-            
-            if (altVideoElement.parentNode !== fullscreenDiv) {
-                fullscreenDiv.appendChild(altVideoElement);
-            }
-            
-            // Insert into DOM if needed
-            const videoElement = videoModel.getElement();
-            const parentNode = videoElement && videoElement.parentNode;
-            if (parentNode && !parentNode.contains(altVideoElement)) {
-                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
-            }
-
-            altPlayer.attachView(altVideoElement);
         } else {
             initializeAlternativePlayer(alternativeMpdUrl);
+        }
+
+        if (altPlayer && altVideoElement) {
+            altPlayer.attachView(altVideoElement);
         }
 
         videoModel.pause();

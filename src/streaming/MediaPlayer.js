@@ -610,7 +610,6 @@ function MediaPlayer() {
         }
         if (source) {
             const playbackTime = time ? time : providedStartTime;
-            console.log(playbackTime)
             _initializePlayback(playbackTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
