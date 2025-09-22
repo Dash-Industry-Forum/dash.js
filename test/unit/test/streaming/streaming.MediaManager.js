@@ -50,12 +50,12 @@ describe('MediaManager', function () {
             mediaManager.setAlternativeVideoElement(mockVideoElement);
         });
 
-        it.only('should return undefined when no alternative player is set', function () {
+        it('should return undefined when no alternative player is set', function () {
             const result = mediaManager.getAlternativePlayer();
             expect(result).to.be.undefined;
         });
 
-        it.only('should return the alternative player when it is set', function () {
+        it('should return the alternative player when it is set', function () {
             // Initialize an alternative player by calling initializeAlternativePlayer
             // We need to access the private method through switchToAlternativeContent
             const testUrl = 'http://test.mpd';
