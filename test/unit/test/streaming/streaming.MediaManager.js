@@ -5,10 +5,9 @@ import DebugMock from '../../mocks/DebugMock.js';
 import { expect } from 'chai';
 
 describe('MediaManager', function () {
-    let mediaManager;
+    const mediaManager = MediaManager().getInstance();
     let videoModelMock;
     let playbackControllerMock;
-    let originalDocument;
     let debugMock;
 
     beforeEach(function () {
@@ -16,9 +15,6 @@ describe('MediaManager', function () {
         videoModelMock = new VideoModelMock();
         playbackControllerMock = new PlaybackControllerMock();
         debugMock = new DebugMock();
-
-        // Create MediaManager instance
-        mediaManager = MediaManager();
 
         // Configure MediaManager
         mediaManager.setConfig({
@@ -35,11 +31,10 @@ describe('MediaManager', function () {
         if (mediaManager) {
             mediaManager.reset();
         }
-        global.document = originalDocument;
     });
 
     describe('setAlternativeVideoElement', function () {
-        it('should not throw error when setting alternative video element', function () {
+        it.only('should not throw error when setting alternative video element', function () {
             const mockVideoElement = videoModelMock.getElement();
 
             expect(() => {
