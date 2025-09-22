@@ -25,6 +25,7 @@ describe('MediaManager', function () {
             alternativeContext: {}
         });
 
+        mediaManager.initialize();
     });
 
     afterEach(function () {
