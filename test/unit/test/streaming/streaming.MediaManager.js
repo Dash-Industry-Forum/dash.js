@@ -65,7 +65,7 @@ describe('MediaManager', function () {
             mediaManager.switchToAlternativeContent(testPlayerId, testUrl, 0);
 
             const result = mediaManager.getAlternativePlayer();
-            expect(result).to.not.be.null;
+            expect(result).to.not.be.undefined;
             expect(result).to.be.an('object');
         });
     });
