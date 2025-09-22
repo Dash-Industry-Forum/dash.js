@@ -32,7 +32,7 @@ import Events from '../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import MediaPlayer from './MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Debug from '../../core/Debug.js';
+import Debug from '../core/Debug.js';
 
 function MediaManager() {
     let instance,
