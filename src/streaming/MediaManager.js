@@ -32,6 +32,7 @@ import Events from '../core/events/Events.js';
 import MediaPlayerEvents from './MediaPlayerEvents.js';
 import MediaPlayer from './MediaPlayer.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import Debug from '../core/Debug.js';
 
 function MediaManager() {
     let instance,
@@ -44,8 +45,11 @@ function MediaManager() {
         altVideoElement,
         alternativeContext,
         logger,
+        debug,
         prebufferedPlayers = new Map(),
         prebufferCleanupInterval = null;
+
+    const context = this.context;
 
     function setConfig(config) {
         if (!config) {
@@ -56,8 +60,8 @@ function MediaManager() {
             videoModel = config.videoModel;
         }
 
-        if (config.logger) {
-            logger = config.logger;
+        if (config.debug) {
+            debug = config.debug;
         }
 
         if (!!config.playbackController && !playbackController) {
@@ -74,6 +78,12 @@ function MediaManager() {
     }
 
     function initialize() {
+        if (!debug) {
+            debug = Debug(context).getInstance();
+        }
+
+        logger = debug.getLogger(instance);
+
         if (!fullscreenDiv) {
             fullscreenDiv = document.createElement('div');
             fullscreenDiv.id = 'fullscreenDiv';
@@ -187,33 +197,15 @@ function MediaManager() {
         const prebufferedContent = prebufferedPlayers.get(playerId);
 
         if (prebufferedContent) {
-            // Use prebuffered content
             logger.info(`Using prebuffered content for player ${playerId}`);
-
-            // Move prebuffered video element to visible area
             altPlayer = prebufferedContent.player;
-            
-            // Remove from prebuffered storage
             prebufferedPlayers.delete(playerId);
-
-            // Setup video element for display
-            altVideoElement.style.display = 'none';
-            altVideoElement.controls = !hideAlternativePlayerControls;
-            
-            if (altVideoElement.parentNode !== fullscreenDiv) {
-                fullscreenDiv.appendChild(altVideoElement);
-            }
-            
-            // Insert into DOM if needed
-            const videoElement = videoModel.getElement();
-            const parentNode = videoElement && videoElement.parentNode;
-            if (parentNode && !parentNode.contains(altVideoElement)) {
-                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
-            }
-
-            altPlayer.attachView(altVideoElement);
         } else {
             initializeAlternativePlayer(alternativeMpdUrl);
+        }
+
+        if (altPlayer && altVideoElement) {
+            altPlayer.attachView(altVideoElement);
         }
 
         videoModel.pause();

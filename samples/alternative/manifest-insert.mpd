@@ -2,7 +2,7 @@
 <BaseURL>https://dash.akamaized.net/akamai/bbb_30fps/</BaseURL>
 <Period id="0" start="PT0.0S">
   <EventStream xmlns="" schemeIdUri="urn:mpeg:dash:event:alternativeMPD:insert:2025" timescale="1000">
-    <Event presentationTime="5000" duration="9000" id="1">
+    <Event presentationTime="5000" duration="3000" id="1">
       <InsertPresentation url="https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/ad-insertion-testcase1.mpd" earliestResolutionTimeOffset="5000" maxDuration="7000"/>
     </Event>
 </EventStream>
