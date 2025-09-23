@@ -46,6 +46,8 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
                     alternativeContentDetected = true;
                     alternativeStartTime = player.getCurrentTime();
                     expectedAlternativeDuration = data.event.duration;
+                    // Validate that alternativeStartTime is close to presentation time
+                    expect(alternativeStartTime).to.be.closeTo(5, 1);
                 }
             });
             
