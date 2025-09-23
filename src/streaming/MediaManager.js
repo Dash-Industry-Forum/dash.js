@@ -220,7 +220,7 @@ function MediaManager() {
         }
 
         altPlayer.play();
-        logger.info('Alternative content playback started');
+        logger.info(`Alternative content playback started for player ${playerId}`);
         
         isSwitching = false;
     }
