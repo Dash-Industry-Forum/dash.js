@@ -40,7 +40,6 @@ function MediaManager() {
         isSwitching = false,
         hideAlternativePlayerControls = false,
         altPlayer,
-        fullscreenDiv,
         playbackController,
         altVideoElement,
         alternativeContext,
@@ -84,17 +83,6 @@ function MediaManager() {
 
         logger = debug.getLogger(instance);
 
-        if (!fullscreenDiv) {
-            fullscreenDiv = document.createElement('div');
-            fullscreenDiv.id = 'fullscreenDiv';
-            const videoElement = videoModel.getElement();
-            const parentNode = videoElement && videoElement.parentNode;
-            if (parentNode) {
-                parentNode.insertBefore(fullscreenDiv, videoElement);
-                fullscreenDiv.appendChild(videoElement);
-            }
-        }
-
         document.addEventListener('fullscreenchange', () => {
             if (document.fullscreenElement === videoModel.getElement()) {
                 // TODO: Implement fullscreen
@@ -117,7 +105,9 @@ function MediaManager() {
             const prebufferedPlayer = MediaPlayer().create();
             prebufferedPlayer.initialize(null, alternativeMpdUrl, false, NaN);
             prebufferedPlayer.updateSettings({
-                streaming: {cacheInitSegments: true}
+                streaming: {
+                    cacheInitSegments: true
+                }
             });
             prebufferedPlayer.preload();
             prebufferedPlayer.setAutoPlay(false);
@@ -162,7 +152,6 @@ function MediaManager() {
         if (altPlayer) {
             altPlayer.off(Events.ERROR, onAlternativePlayerError, this);
         }
-
         altPlayer = MediaPlayer().create();
         altPlayer.updateSettings({
             streaming: {
@@ -201,14 +190,13 @@ function MediaManager() {
         }
 
         if (altPlayer && altVideoElement) {
+            altVideoElement.style.display = 'block';
             altPlayer.attachView(altVideoElement);
         }
 
         videoModel.pause();
-        logger.debug('Main video paused');
-
         videoModel.getElement().style.display = 'none';
-        altVideoElement.style.display = 'block';
+        logger.debug('Main video paused');
 
         if (time) {
             logger.debug(`Seeking alternative content to time: ${time}`);
@@ -242,7 +230,12 @@ function MediaManager() {
 
         if (playbackController.getIsDynamic()) {
             logger.debug('Seeking to original live point for dynamic manifest');
-            playbackController.seekToOriginalLive(true, false, false);
+            if (seekTime > playbackController.getDvrWindowStart()) {
+                playbackController.seek(seekTime, false, false);
+            } else {
+                logger.warn('Seek time is before DVR window start, seeking to start of DVR window');
+                playbackController.seekToDvrWindowStart();
+            }   
         } else {
             logger.debug(`Seeking main content to time: ${seekTime}`);
             playbackController.seek(seekTime, false, false);
