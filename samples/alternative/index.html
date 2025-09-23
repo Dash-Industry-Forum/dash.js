@@ -15,7 +15,8 @@
             width: 640px;
             height: 360px;
         }
-        #alternativeVideo {
+
+        #alternative-video-element {
             display: none;
         }
     </style>
@@ -31,8 +32,8 @@
                 // url = 'http://localhost:3000/samples/alternative/manifest-replace-clip.mpd';
                 // url = 'http://localhost:3000/samples/alternative/manifest-replace-start-with-offset.mpd';
 
-            video = document.querySelector('#mainVideo');
-            
+            video = document.getElementById('video-element');
+            alternativeVideo = document.getElementById('alternative-video-element');
             player = dashjs.MediaPlayer().create();
             alternativeVideo = document.querySelector('#alternativeVideo');
             player.initialize(video, url, false);
@@ -57,8 +58,8 @@
                 </div>
             </div>
             <div class="col-md-8">
-                <video id="mainVideo" controls="true"></video>
-                <video id="alternativeVideo" controls="true"></video>
+                <video id="video-element" controls="true"></video>
+                <video id="alternative-video-element" controls="true"></video>
             </div>
         </div>
         <div class="row">

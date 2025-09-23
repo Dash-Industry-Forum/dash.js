@@ -76,13 +76,6 @@ function AlternativeMediaController() {
         hideAlternativePlayerControls = false,
         alternativeVideoElement = null;
 
-    function setup() {
-        if (!debug) {
-            debug = Debug(context).getInstance();
-        }
-        logger = debug.getLogger(instance);
-    }
-
     function setConfig(config) {
         if (!config) {
             return;
@@ -114,7 +107,10 @@ function AlternativeMediaController() {
     }
 
     function initialize() {
-        setup();
+        if (!debug) {
+            debug = Debug(context).getInstance();
+        }
+        logger = debug.getLogger(instance);
 
         // Initialize the media manager if not already provided via config
         if (!mediaManager) {
