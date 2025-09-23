@@ -1,11 +1,11 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
 
 /**
  * Utility function to modify a live manifest by injecting Alternative MPD events
- * This simulates the functionality from the demo.html tool for live to VOD scenarios
+ * This simulates the functionality from the demo.html tool for live to VOD and live to live scenarios
  */
 function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeManifestUrl, callback) {
     // Access the underlying MediaPlayer instance
@@ -68,7 +68,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
 
         before((done) => {
             // Initialize the player without attaching source immediately
-            player = initializeDashJsAdapter(item, null);
+            player = initializeDashJsAdapterForAlternativMedia(item, null);
             
             // Use the utility function to inject Alternative MPD events
             injectAlternativeMpdEvents(player, originalUrl, alternativeUrl, () => {

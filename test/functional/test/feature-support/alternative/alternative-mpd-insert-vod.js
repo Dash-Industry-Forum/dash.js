@@ -1,7 +1,11 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
+
+// Executes with:
+// test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-vod.mpd
+// test/functional/content/alternative-mpd/alternative-mpd-insert-vod-to-live.mpd
 
 Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-insert-vod').forEach((item) => {
     const name = item.name;
@@ -12,7 +16,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-ins
         let player;
 
         before(() => {
-            player = initializeDashJsAdapter(item, url);
+            player = initializeDashJsAdapterForAlternativMedia(item, url);
         });
 
         after(() => {
@@ -40,6 +44,8 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-ins
             player.registerEvent(Constants.ALTERNATIVE_MPD.URIS.INSERT, () => {
                 eventTriggered = true;
                 timeBeforeSwitch = videoElement.currentTime;
+                // Validate that timeBeforeSwitch is close to presentation time
+                expect(timeBeforeSwitch).to.be.closeTo(5, 1);
             });
 
             // Listen for alternative content start event

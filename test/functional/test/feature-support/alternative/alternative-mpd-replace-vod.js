@@ -1,7 +1,11 @@
 import Constants from '../../../../../src/streaming/constants/Constants.js';
 import Utils from '../../../src/Utils.js';
-import { initializeDashJsAdapter } from '../../common/common.js';
+import { initializeDashJsAdapterForAlternativMedia } from '../../common/common.js';
 import { expect } from 'chai';
+
+// Executes with:
+// test/functional/content/alternative-mpd/alternative-mpd-replace-vod-to-vod.mpd
+// test/functional/content/alternative-mpd/alternative-mpd-replace-vod-to-live.mpd
 
 Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-replace-vod').forEach((item) => {
     const name = item.name;
@@ -12,7 +16,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
         let player;
 
         before(() => {
-            player = initializeDashJsAdapter(item, url);
+            player = initializeDashJsAdapterForAlternativMedia(item, url);
         });
 
         after(() => {
@@ -44,8 +48,10 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             player.registerEvent(Constants.ALTERNATIVE_MPD.CONTENT_START, (data) => {
                 if (data.event.mode === 'replace') {
                     alternativeContentDetected = true;
-                    alternativeStartTime = Date.now();
+                    alternativeStartTime = player.getCurrentTime();
                     expectedAlternativeDuration = data.event.duration;
+                    // Validate that alternativeStartTime is close to presentation time
+                    expect(alternativeStartTime).to.be.closeTo(5, 1);
                 }
             });
             
@@ -53,7 +59,7 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
             player.registerEvent(Constants.ALTERNATIVE_MPD.CONTENT_END, (data) => {
                 if (data.event.mode === 'replace') {
                     timeAfterSwitch = videoElement.currentTime;
-                    alternativeEndTime = Date.now();
+                    alternativeEndTime = player.getCurrentTime();
                     backToOriginalDetected = true;
                     clearTimeout(timeout);
                     
@@ -64,9 +70,9 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
                         expect(backToOriginalDetected).to.be.true;
                         
                         // Verify that alternative content played for its full duration
-                        const actualAlternativeDuration = (alternativeEndTime - alternativeStartTime) / 1000; // Convert to seconds
+                        const actualAlternativeDuration = alternativeEndTime - alternativeStartTime; // Both are in seconds now
                         expect(actualAlternativeDuration).to.be.at.least(expectedAlternativeDuration - 1); // Allow 1 second tolerance
-                        expect(actualAlternativeDuration).to.be.at.most(expectedAlternativeDuration + 1.5); // Allow 1 second tolerance
+                        expect(actualAlternativeDuration).to.be.at.most(expectedAlternativeDuration + 1.5); // Allow 1.5 second tolerance
                         
                         // For REPLACE mode, it expectes to return on presentationTime + duration
                         const expectedMinTime = data.event.presentationTime + data.event.duration;

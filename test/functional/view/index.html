@@ -14,6 +14,7 @@ Reloaded before every execution run.
 <div id="ttml-rendering-div"></div>
 <div id="ad-ui"></div>
 <video id="video-element" controls style="width: 640px; height: 480px; background-color: black" muted></video>
+<video id="alternative-video-element" controls style="width: 640px; height: 480px; background-color: black; display: none" muted></video>
 <!-- The scripts need to be in the body DOM element, as some test running frameworks need the body
      to have already been created so they can insert their magic into it. For example, if loaded
      before body, Angular Scenario test framework fails to find the body and crashes and burns in
