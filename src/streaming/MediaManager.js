@@ -108,7 +108,7 @@ function MediaManager() {
     function prebufferAlternativeContent(playerId, alternativeMpdUrl) {
         try {
             if (prebufferedPlayers.has(playerId)) {
-                return; // Already prebuffered
+                return;
             }
 
             logger.info(`Starting prebuffering for player ${playerId}`);
@@ -149,10 +149,6 @@ function MediaManager() {
                 prebufferedPlayer.player.off(Events.STREAM_INITIALIZED);
                 prebufferedPlayer.player.off(Events.ERROR);
                 prebufferedPlayer.player.reset();
-                
-                if (prebufferedPlayer.videoElement && prebufferedPlayer.videoElement?.parentNode) {
-                    prebufferedPlayer.videoElement.parentNode?.removeChild(prebufferedPlayer.videoElement);
-                }
                 
                 prebufferedPlayers.delete(playerId);
             }
@@ -231,6 +227,11 @@ function MediaManager() {
             logger.debug('Switch already in progress - ignoring request');
             return 
         };
+
+        if (!altPlayer) {
+            logger.warn('No alternative player to switch back from');
+            return;
+        }
         
         logger.info('Switching back to main content');
         isSwitching = true;
