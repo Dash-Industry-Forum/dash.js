@@ -71,23 +71,37 @@ function RepresentationController(config) {
         }
     }
 
-    function getCurrentRepresentation(selectByType = true) {
-        let representation = null;
-        if (!selectByType || currentVoRepresentation?.mediaInfo.type === type) {
-            representation = currentVoRepresentation;
+    function getCurrentRepresentation() {
+        // Video RepresentationController should return a representation of type video, and enhancement
+        // RepresentationController should return a representation of type enhancement, i.e. type should match
+        if (currentVoRepresentation?.mediaInfo.type === type) {
+            return currentVoRepresentation;
         }
         else {
-            let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
-            if (currentVoRepDep) {
-                if (!currentVoRepDep.mediaInfo) {
-                    throw new Error('dependentRepresentation has no mediaInfo!');
-                }
-                if (currentVoRepDep.mediaInfo.type === type) {
-                    representation = currentVoRepDep;
-                }
+            return getCurrentDependentRepresentation();
+        }
+        
+    }
+
+    function getCurrentDependentRepresentation() {
+        let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
+        if (currentVoRepDep) {
+            if (!currentVoRepDep.mediaInfo) {
+                throw new Error('dependentRepresentation has no mediaInfo!');
+            }
+            if (currentVoRepDep.mediaInfo.type === type) {
+                return currentVoRepDep;
             }
         }
-        return representation;
+        return null;
+    }
+
+    /**
+     * Returns the combined effective Representation, i.e. the dependent representation plus its declared complementary representation.
+     * @return {object} Representation
+     */
+    function getCurrentCompositeRepresentation() {
+        return currentVoRepresentation;
     }
 
     function resetInitialSettings() {
@@ -321,6 +335,8 @@ function RepresentationController(config) {
     }
 
     instance = {
+        getCurrentCompositeRepresentation,
+        getCurrentDependentRepresentation,
         getCurrentRepresentation,
         getRepresentationById,
         getStreamId,

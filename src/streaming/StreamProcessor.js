@@ -597,7 +597,7 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
-        const currentRepresentation = representationController.getCurrentRepresentation(false)
+        const currentRepresentation = representationController.getCurrentCompositeRepresentation();
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -1218,7 +1218,7 @@ function StreamProcessor(config) {
     }
 
     function getAbrRepresentation() {
-        return representationController ? representationController.getCurrentRepresentation(false) : null;
+        return representationController ? representationController.getCurrentCompositeRepresentation() : null;
     }
 
     function isBufferingCompleted() {
