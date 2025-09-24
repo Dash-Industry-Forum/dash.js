@@ -247,6 +247,9 @@ import Events from './events/Events';
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *            cmsd: {
  *                enabled: false,
  *                abr: {
@@ -784,6 +787,12 @@ import Events from './events/Events';
  */
 
 /**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Overide DVB reporting url.
+ */
+
+/**
  * @typedef {Object} module:Settings~CmsdSettings
  * @property {boolean} [enabled=false]
  * Enable or disable the CMSD response headers parsing.
@@ -913,6 +922,8 @@ import Events from './events/Events';
  * @property {module:Settings~AbrSettings} abr
  * Adaptive Bitrate algorithm related settings.
  * @property {module:Settings~CmcdSettings} cmcd
+ * Settings related to Common Media Client Data reporting.
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
@@ -1178,6 +1189,9 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+            },
+            dvbReporting: {
+                reportingUrl: null,
             },
             cmsd: {
                 enabled: false,

@@ -44,7 +44,8 @@ function DVBReporting(config) {
         reportingPlayerStatusDecided,
         isReportingPlayer,
         reportingUrl,
-        rangeController;
+        rangeController,
+        settings;
 
     let USE_DRAFT_DVB_SPEC = true;
     let allowPendingRequestsToCompleteOnReset = true;
@@ -141,13 +142,13 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = entry.dvb_reportingUrl;
+        reportingUrl = settings.get().dvbReporting.reportingUrl || entry.dvb_reportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
         if (!reportingUrl) {
             throw new Error(
-                'required parameter missing (dvb:reportingUrl)'
+                'MPD parameter missing "dvb:reportingUrl" or URL not given in settings'
             );
         }
 
@@ -174,6 +175,9 @@ function DVBReporting(config) {
         isReportingPlayer = false;
         reportingUrl = null;
         rangeController = null;
+        if (config.settings) {
+            settings = config.settings;
+        }
     }
 
     function reset() {
