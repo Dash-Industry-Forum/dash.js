@@ -50,7 +50,8 @@ function ReportingFactory(config) {
         try {
             reporting = knownReportingSchemeIdUris[entry.schemeIdUri](context).create({
                 metricsConstants: metricsConstants,
-                mediaPlayerModel: mediaPlayerModel
+                mediaPlayerModel: mediaPlayerModel,
+                settings: config.settings
             });
 
             reporting.initialize(entry, rangeController);
