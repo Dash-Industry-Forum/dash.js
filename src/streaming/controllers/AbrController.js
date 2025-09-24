@@ -673,7 +673,7 @@ function AbrController() {
             }
 
             const streamProcessor = streamProcessorDict[streamId][type];
-            const currentRepresentation = streamProcessor.getAbrRepresentation();
+            const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
                 throughputController,
@@ -722,7 +722,7 @@ function AbrController() {
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
-        const currentRepresentation = streamProcessor.getAbrRepresentation();
+        const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
 
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {

@@ -1217,10 +1217,6 @@ function StreamProcessor(config) {
         return voRepresentation
     }
 
-    function getAbrRepresentation() {
-        return representationController ? representationController.getCurrentCompositeRepresentation() : null;
-    }
-
     function isBufferingCompleted() {
         return bufferController ? bufferController.getIsBufferingCompleted() : false;
     }
@@ -1587,7 +1583,6 @@ function StreamProcessor(config) {
         getMediaInfo,
         getMediaSource,
         getRepresentation,
-        getAbrRepresentation,
         getRepresentationController,
         getScheduleController,
         getStreamId,
