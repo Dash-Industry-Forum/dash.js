@@ -55,7 +55,6 @@ function MetricsController(config) {
                 debug: config.debug,
                 metricsConstants: config.metricsConstants,
                 mediaPlayerModel: config.mediaPlayerModel,
-                settings: config.settings
             });
 
             reportingController.initialize(metricsEntry.Reporting, rangeController);

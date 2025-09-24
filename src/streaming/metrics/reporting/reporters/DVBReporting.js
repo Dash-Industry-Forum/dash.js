@@ -32,7 +32,7 @@
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
 import CustomParametersModel from '../../../models/CustomParametersModel';
-
+import Settings from '../../../../core/Settings';
 function DVBReporting(config) {
     config = config || {};
     let instance;
@@ -45,7 +45,7 @@ function DVBReporting(config) {
         isReportingPlayer,
         reportingUrl,
         rangeController,
-        settings;
+        settings = Settings(context).getInstance();
 
     let USE_DRAFT_DVB_SPEC = true;
     let allowPendingRequestsToCompleteOnReset = true;
@@ -175,9 +175,6 @@ function DVBReporting(config) {
         isReportingPlayer = false;
         reportingUrl = null;
         rangeController = null;
-        if (config.settings) {
-            settings = config.settings;
-        }
     }
 
     function reset() {
