@@ -142,7 +142,7 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = settings.get().dvbReporting.reportingUrl || entry.dvb_reportingUrl;
+        reportingUrl = settings.get().streaming.dvbReporting.reportingUrl || entry.dvb_reportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
