@@ -154,19 +154,19 @@ function StreamProcessor(config) {
         abrController.registerStreamType(type, instance);
 
         representationController = RepresentationController(context).create({
-            streamInfo,
-            type,
             abrController,
-            dashMetrics,
-            playbackController,
-            timelineConverter,
-            dashConstants: DashConstants,
-            events: Events,
-            eventBus,
-            errors: Errors,
-            isDynamic,
             adapter,
-            segmentsController
+            dashConstants: DashConstants,
+            dashMetrics,
+            errors: Errors,
+            eventBus,
+            events: Events,
+            isDynamic,
+            playbackController,
+            segmentsController,
+            streamInfo,
+            timelineConverter,
+            type,
         });
 
         bufferController = _createBufferControllerForType(type, isFragmented);
@@ -175,20 +175,20 @@ function StreamProcessor(config) {
         }
 
         scheduleController = ScheduleController(context).create({
-            streamInfo,
-            type,
-            mimeType,
-            adapter,
-            dashMetrics,
-            mediaPlayerModel,
-            fragmentModel,
             abrController,
-            playbackController,
-            textController,
-            mediaController,
+            adapter,
             bufferController,
+            dashMetrics,
+            fragmentModel,
+            mediaController,
+            mediaPlayerModel,
+            mimeType,
+            playbackController,
             representationController,
-            settings
+            settings,
+            streamInfo,
+            textController,
+            type,
         });
 
         scheduleController.initialize(hasVideoTrack);
@@ -245,21 +245,20 @@ function StreamProcessor(config) {
             abrController.unRegisterStreamType(getStreamId(), type);
         }
 
-        eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
-        eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(Events.BUFFER_CLEARED, _onBufferCleared, instance);
-        eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
+        eventBus.off(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.off(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.off(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+        eventBus.off(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.off(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
+        eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.off(Events.SEEK_TARGET, _onSeekTarget, instance);
         eventBus.off(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.off(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
-        eventBus.off(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
         eventBus.off(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
-        eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
-
 
         resetInitialSettings();
         type = null;
