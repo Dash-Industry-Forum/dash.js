@@ -317,9 +317,7 @@ function RepresentationController(config) {
 
     function _setCurrentVoRepresentation(value) {
         if (!currentVoRepresentation || currentVoRepresentation.id !== value.id) {
-            let dependentRep = value.dependentRepresentation;
-            let switchRep = (dependentRep && dependentRep.mediaInfo && dependentRep.mediaInfo.type === type) ? dependentRep : value;
-            _addRepresentationSwitch(switchRep);
+            _addRepresentationSwitch(value);
         }
         currentVoRepresentation = value;
     }
