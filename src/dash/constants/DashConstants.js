@@ -163,6 +163,7 @@ export default {
     SEGMENT_BASE: 'SegmentBase',
     SEGMENT_LIST: 'SegmentList',
     SEGMENT_PROFILES: 'segmentProfiles',
+    SEGMENT_SEQUENCE_PROPERTIES: 'SegmentSequenceProperties',
     SEGMENT_TEMPLATE: 'SegmentTemplate',
     SEGMENT_TIMELINE: 'SegmentTimeline',
     SEGMENT_TYPE: 'segment',

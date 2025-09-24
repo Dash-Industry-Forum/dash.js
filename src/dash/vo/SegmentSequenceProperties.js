@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
  * @class
  * @ignore
@@ -38,6 +39,15 @@ class SegmentSequenceProperties {
         this.type = 0;
         this.event = true;
         this.alignment = null;
+    }
+
+    init(data) {
+        if (data) {
+            this.cadence = data.cadence !== undefined && !isNaN(data.cadence) ? data.cadence : 1;
+            this.type = data.type !== undefined && !isNaN(data.type) ? data.type : 0;
+            this.event = data.event !== undefined ? data.event : true;
+            this.alignment = data.alignment !== undefined ? data.alignment : null;
+        }
     }
 }
 

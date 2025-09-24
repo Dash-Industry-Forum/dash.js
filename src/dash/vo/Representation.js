@@ -69,6 +69,7 @@ class Representation {
         this.segments = null;
         this.segmentDuration = NaN;
         this.segmentInfoType = null;
+        this.segmentSequenceProperties = [];
         this.supplementalProperties = [];
         this.startNumber = 1;
         this.timescale = 1;

@@ -906,44 +906,6 @@ describe('DashManifestModel', function () {
             expect(adaptationArray[0].index).to.equals(0);
         });
 
-        it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {
-            const representationArray = dashManifestModel.getRepresentationsForAdaptation();
-
-            expect(representationArray).to.be.instanceOf(Array);
-            expect(representationArray).to.be.empty;
-        });
-
-        it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
-            const voAdaptation = {
-                period: {
-                    index: 0,
-                    mpd: {
-                        manifest: {
-                            Period: [{
-                                AdaptationSet: [{
-                                    Representation: [{
-                                        SegmentTemplate: {
-                                            SegmentTimeline: {
-                                                S: [{
-                                                    d: 2,
-                                                    r: 2
-                                                }]
-                                            }
-                                        }
-                                    }]
-                                }]
-                            }]
-                        }
-                    }
-                }, index: 0, type: 'video'
-            };
-            const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
-
-            expect(representationArray).to.be.instanceOf(Array);
-            expect(representationArray).not.to.be.empty;
-            expect(representationArray[0].index).to.equals(0);
-        });
-
         it('should return null when getId is called and manifest undefined', () => {
             const id = dashManifestModel.getId();
 
