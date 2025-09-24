@@ -124,28 +124,30 @@ function ScheduleController(config) {
     function schedule() {
         const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
-            // Check if we are supposed to stop scheduling
             if (_shouldClearScheduleTimer()) {
                 clearScheduleTimer();
                 return;
             }
 
             if (_shouldScheduleNextRequest()) {
-                let qualityChange = false;
-                if (checkPlaybackQuality) {
-                    // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
-                    // The StreamProcessor will also start the schedule timer again once the quality switch has beeen prepared. Consequently, we only call _getNextFragment if the quality is not changed.
-                    qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
-                }
-                if (!qualityChange) {
-                    _getNextFragment();
-                }
-
+                _scheduleNextRequest()
             } else {
                 startScheduleTimer(scheduleTimeout);
             }
         } catch (e) {
             startScheduleTimer(scheduleTimeout);
+        }
+    }
+
+    function _scheduleNextRequest() {
+        let qualityChange = false;
+        if (checkPlaybackQuality) {
+            // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
+            // The StreamProcessor will also start the schedule timer again once the quality switch has been prepared. Consequently, we only call _getNextFragment if the quality is not changed.
+            qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
+        }
+        if (!qualityChange) {
+            _getNextFragment();
         }
     }
 
@@ -158,30 +160,35 @@ function ScheduleController(config) {
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
-            if (switchTrack) {
-                logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
-                switchTrack = false;
-            } else {
-                logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentation.id);
-            }
-            eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                { representationId: currentRepresentation.id, sender: instance },
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            checkPlaybackQuality = false;
-            initSegmentRequired = false;
+            _initFragmentNeeded(currentRepresentation)
         }
-
-        // Request a media segment instead
         else {
-            logger.debug(`Media segment needed for ${type} and stream id ${streamInfo.id}`);
-            eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
-                {},
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            checkPlaybackQuality = true;
+            _mediaFragmentNeeded()
         }
+    }
 
+    function _initFragmentNeeded(currentRepresentation) {
+        if (switchTrack) {
+            logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
+            switchTrack = false;
+        } else {
+            logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentation.id);
+        }
+        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+            { representationId: currentRepresentation.id, sender: instance },
+            { streamId: streamInfo.id, mediaType: type }
+        );
+        checkPlaybackQuality = false;
+        initSegmentRequired = false;
+    }
+
+    function _mediaFragmentNeeded() {
+        logger.debug(`Media segment needed for ${type} and stream id ${streamInfo.id}`);
+        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
+            {},
+            { streamId: streamInfo.id, mediaType: type }
+        );
+        checkPlaybackQuality = true;
     }
 
     /**

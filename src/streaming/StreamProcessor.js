@@ -99,20 +99,20 @@ function StreamProcessor(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         resetInitialSettings();
 
-        eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
-        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.on(Events.BUFFER_CLEARED, _onBufferCleared, instance);
-        eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
+        eventBus.on(Events.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
         eventBus.on(Events.FRAGMENT_LOADING_ABANDONED, _onFragmentLoadingAbandoned, instance);
         eventBus.on(Events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_NEEDED, _onInitFragmentNeeded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_NEEDED, _onMediaFragmentNeeded, instance);
         eventBus.on(Events.QUOTA_EXCEEDED, _onQuotaExceeded, instance);
+        eventBus.on(Events.SEEK_TARGET, _onSeekTarget, instance);
         eventBus.on(Events.SET_FRAGMENTED_TEXT_AFTER_DISABLED, _onSetFragmentedTextAfterDisabled, instance);
         eventBus.on(Events.SET_NON_FRAGMENTED_TEXT, _onSetNonFragmentedText, instance);
         eventBus.on(Events.SOURCE_BUFFER_ERROR, _onSourceBufferError, instance);
-        eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
     function initialize(mediaSource, hasVideoTrack, isFragmented) {
@@ -128,22 +128,22 @@ function StreamProcessor(config) {
         });
 
         dashHandler = DashHandler(context).create({
-            streamInfo,
-            type,
-            timelineConverter,
-            dashMetrics,
-            mediaPlayerModel,
             baseURLController: config.baseURLController,
+            boxParser,
+            constants: Constants,
+            dashConstants: DashConstants,
+            dashMetrics,
+            debug: Debug(context).getInstance(),
             errHandler,
+            errors: Errors,
+            eventBus,
+            events: Events,
+            mediaPlayerModel,
             segmentsController,
             settings,
-            boxParser,
-            events: Events,
-            eventBus,
-            errors: Errors,
-            debug: Debug(context).getInstance(),
-            dashConstants: DashConstants,
-            constants: Constants,
+            streamInfo,
+            timelineConverter,
+            type,
             urlUtils: URLUtils(context).getInstance()
         });
 
