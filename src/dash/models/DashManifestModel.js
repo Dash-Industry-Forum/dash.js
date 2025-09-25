@@ -730,7 +730,10 @@ function DashManifestModel() {
                     voRepresentation.codecFamily = Utils.getCodecFamily(voRepresentation.codecs);
                 }
                 if (realRepresentation.hasOwnProperty(DashConstants.DEPENDENCY_ID)) {
-                    const dependencyId = realRepresentation[DashConstants.DEPENDENCY_ID].toString();
+                    const dependencyIdListString = realRepresentation[DashConstants.DEPENDENCY_ID].toString();
+                    const dependencyIds = dependencyIdListString.split(' ');
+                    const dependencyId = dependencyIds[0];
+
                     voRepresentation.dependencyId = dependencyId;
                     voRepresentation.dependentRepresentation = new Representation();
                     voRepresentation.dependentRepresentation.id = dependencyId;
