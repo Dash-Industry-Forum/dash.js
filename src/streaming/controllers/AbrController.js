@@ -67,7 +67,7 @@ function AbrController() {
         customParametersModel,
         cmsdModel,
         domStorage,
-        playbackRepresentationId,
+        currentRepresentationId,
         switchRequestHistory,
         droppedFramesHistory,
         throughputController,
@@ -161,7 +161,7 @@ function AbrController() {
             switchRequestHistory.reset();
         }
 
-        playbackRepresentationId = undefined;
+        currentRepresentationId = undefined;
         droppedFramesHistory = undefined;
         switchRequestHistory = undefined;
         clearTimeout(abandonmentTimeout);
@@ -581,10 +581,8 @@ function AbrController() {
      */
     function _onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
-            if (playbackRepresentationId !== undefined) {
-                droppedFramesHistory.push(e.streamId, playbackRepresentationId, videoModel.getPlaybackQuality());
-            }
-            playbackRepresentationId = e.newRepresentation.id;
+            _addDroppedFramesHistoryEntry(e.streamId);
+            currentRepresentationId = e.newRepresentation.id;
         }
     }
 
@@ -646,12 +644,7 @@ function AbrController() {
                 return false;
             }
 
-            if (droppedFramesHistory) {
-                const playbackQuality = videoModel.getPlaybackQuality();
-                if (playbackQuality) {
-                    droppedFramesHistory.push(streamId, playbackRepresentationId, playbackQuality);
-                }
-            }
+            _addDroppedFramesHistoryEntry(streamId)
 
             if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
                 return false;
@@ -675,12 +668,9 @@ function AbrController() {
             }
 
             let newRepresentation = switchRequest.representation;
-            switchRequestHistory.push({
-                currentRepresentation,
-                newRepresentation
-            });
 
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
+                _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
                 _changeQuality(currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
@@ -690,6 +680,22 @@ function AbrController() {
             logger.error(e);
             return false;
         }
+    }
+
+    function _addDroppedFramesHistoryEntry(streamId) {
+        if (droppedFramesHistory) {
+            const playbackQuality = videoModel.getPlaybackQuality();
+            if (playbackQuality) {
+                droppedFramesHistory.push(streamId, currentRepresentationId, playbackQuality);
+            }
+        }
+    }
+
+    function _addSwitchHistoryEntry(currentRepresentation, newRepresentation) {
+        switchRequestHistory.push({
+            currentRepresentation,
+            newRepresentation
+        })
     }
 
     /**
@@ -730,7 +736,6 @@ function AbrController() {
 
     }
 
-
     /**
      * Changes the internal qualityDict values according to the new quality
      * @param {Representation} oldRepresentation
@@ -741,29 +746,36 @@ function AbrController() {
     function _changeQuality(oldRepresentation, newRepresentation, reason) {
         const streamId = newRepresentation.mediaInfo.streamInfo.id;
         const type = newRepresentation.mediaInfo.type;
-        if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
-            const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
-            const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
 
-            logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
+        if (!type || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+            return
+        }
 
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
-                {
-                    isAdaptationSetSwitch,
-                    mediaType: type,
-                    newRepresentation: newRepresentation,
-                    oldRepresentation: oldRepresentation,
-                    reason,
-                    streamInfo,
-                },
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            const bitrate = throughputController.getAverageThroughput(type);
-            if (!isNaN(bitrate)) {
-                domStorage.setSavedBitrateSettings(type, bitrate);
-            }
+        const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
+        const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
+
+        logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
+        eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
+            {
+                isAdaptationSetSwitch,
+                mediaType: type,
+                newRepresentation: newRepresentation,
+                oldRepresentation: oldRepresentation,
+                reason,
+                streamInfo,
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
+
+        _saveBitrateSettings(type)
+    }
+
+    function _saveBitrateSettings(type) {
+        const bitrate = throughputController.getAverageThroughput(type);
+        if (!isNaN(bitrate)) {
+            domStorage.setSavedBitrateSettings(type, bitrate);
         }
     }
 

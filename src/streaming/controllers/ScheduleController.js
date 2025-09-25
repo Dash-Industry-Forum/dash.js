@@ -161,8 +161,7 @@ function ScheduleController(config) {
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
             _initFragmentNeeded(currentRepresentation)
-        }
-        else {
+        } else {
             _mediaFragmentNeeded()
         }
     }
@@ -347,7 +346,7 @@ function ScheduleController(config) {
         _completeQualityChange(true);
     }
 
-    function _completeQualityChange(trigger) {
+    function _completeQualityChange(triggerQualityChangeRenderedEvent) {
         if (playbackController && fragmentModel) {
             const item = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -356,27 +355,35 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && trigger) {
-                    logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
-                    eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
-                        mediaType: type,
-                        oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
-                        newMediaInfo: item.representation.mediaInfo,
-                        streamId: streamInfo.id
-                    });
+                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && triggerQualityChangeRenderedEvent) {
+                    _triggerTrackChangeRendered(item);
                 }
-                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && trigger) {
-                    logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
-                    eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
-                        mediaType: type,
-                        oldRepresentation: lastFragmentRequest.representation ? lastFragmentRequest.representation : null,
-                        newRepresentation: item.representation,
-                        streamId: streamInfo.id
-                    });
+                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && triggerQualityChangeRenderedEvent) {
+                    _triggerQualityChangeRendered(item);
                 }
                 lastFragmentRequest.representation = item.representation
             }
         }
+    }
+
+    function _triggerTrackChangeRendered(item) {
+        logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
+        eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
+            mediaType: type,
+            oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
+            newMediaInfo: item.representation.mediaInfo,
+            streamId: streamInfo.id
+        });
+    }
+
+    function _triggerQualityChangeRendered(item) {
+        logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
+        eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
+            mediaType: type,
+            oldRepresentation: lastFragmentRequest.representation ? lastFragmentRequest.representation : null,
+            newRepresentation: item.representation,
+            streamId: streamInfo.id
+        });
     }
 
     function _onURLResolutionFailed() {
