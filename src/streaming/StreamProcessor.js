@@ -703,7 +703,7 @@ function StreamProcessor(config) {
             _selectMediaInfoForEnhancementStreamProcessor(selectedValues);
 
             // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
-            const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, true);
+            const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
             return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, selectedValues.selectedRepresentation.id)
                 .then(() => {
                     _onDataUpdateCompleted()
@@ -749,7 +749,7 @@ function StreamProcessor(config) {
             bitrateInKbit = abrController.getInitialBitrateFor(type);
         }
 
-        const selectedRepresentation = abrController.getOptimalRepresentationForBitrate(selectionInput.newMediaInfo, bitrateInKbit, true);
+        const selectedRepresentation = abrController.getOptimalRepresentationForBitrate(selectionInput.newMediaInfo, bitrateInKbit, false);
         return {
             selectedRepresentation,
             currentMediaInfo: selectionInput.newMediaInfo
