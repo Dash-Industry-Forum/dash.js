@@ -531,6 +531,13 @@ function AbrController() {
             return;
         }
 
+        const lastSegment = streamProcessor.getLastSegment();
+        const canPerformQualitySwitch = _canAbandonRequest(lastSegment);
+
+        if (!canPerformQualitySwitch) {
+            return;
+        }
+
         const rulesContext = RulesContext(context).create({
             abrController: instance,
             streamProcessor,
@@ -544,6 +551,14 @@ function AbrController() {
         if (switchRequest && switchRequest.representation !== SwitchRequest.NO_CHANGE) {
             _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
         }
+    }
+
+    function _canAbandonRequest(lastSegment) {
+        // For now we only allow abandoning the first partial segment as we are sure there is an IDR at the beginning of the segment
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return true
+        }
+        return lastSegment.replacementSubNumber === 0;
     }
 
     function _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest) {
@@ -646,11 +661,15 @@ function AbrController() {
 
             _addDroppedFramesHistoryEntry(streamId)
 
-            if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
+            const streamProcessor = streamProcessorDict[streamId][type];
+            const lastSegment = streamProcessor.getLastSegment();
+            const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
+
+            if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canPerformQualitySwitch) {
                 return false;
             }
 
-            const streamProcessor = streamProcessorDict[streamId][type];
+
             const currentRepresentation = streamProcessor.getRepresentation();
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
@@ -680,6 +699,18 @@ function AbrController() {
             logger.error(e);
             return false;
         }
+    }
+
+    /**
+     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another partial segment or another full segment.
+     * @private
+     */
+    function _canPerformQualitySwitch(lastSegment) {
+        // For now we only allow a switch when the last partial segment has been loaded and a new "full segment" possibly consisting of multiple partial segments is about to be loaded
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return true
+        }
+        return lastSegment.replacementSubNumber === (lastSegment.totalNumberOfPartialSegments - 1);
     }
 
     function _addDroppedFramesHistoryEntry(streamId) {

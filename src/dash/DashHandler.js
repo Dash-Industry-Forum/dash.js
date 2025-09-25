@@ -446,6 +446,10 @@ function DashHandler(config) {
         return lastSegment ? lastSegment.index : -1;
     }
 
+    function getLastSegment() {
+        return lastSegment;
+    }
+
     function _onDynamicToStatic() {
         logger.debug('Dynamic stream complete');
         mediaHasFinished = true;
@@ -454,6 +458,7 @@ function DashHandler(config) {
     instance = {
         getCurrentIndex,
         getInitRequest,
+        getLastSegment,
         getNextSegmentRequest,
         getNextSegmentRequestIdempotent,
         getSegmentRequestForTime,

@@ -1524,6 +1524,10 @@ function StreamProcessor(config) {
         dashMetrics.pushPlayListTraceMetrics(time, reason);
     }
 
+    function getLastSegment() {
+        return dashHandler.getLastSegment();
+    }
+
     instance = {
         checkAndHandleCompletedBuffering,
         clearScheduleTimer,
@@ -1535,6 +1539,7 @@ function StreamProcessor(config) {
         getBufferController,
         getBufferLevel,
         getFragmentModel,
+        getLastSegment,
         getMediaInfo,
         getMediaSource,
         getRepresentation,

@@ -100,7 +100,6 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
-
         //return if both buffering and playback have ended
         if (bufferController.getIsBufferingCompleted()) {
             return;
