@@ -26,8 +26,10 @@ class ObjectsHelper {
             getRepresentation: () => {
                 return null
             },
-            getAbrRepresentation: () => {
-                return null
+            getRepresentationController: () => {
+                return {
+                    getCurrentCompositeRepresentation: () => null
+                }
             }
         }
     }
