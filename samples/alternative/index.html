@@ -35,7 +35,6 @@
             video = document.getElementById('video-element');
             alternativeVideo = document.getElementById('alternative-video-element');
             player = dashjs.MediaPlayer().create();
-            alternativeVideo = document.querySelector('#alternativeVideo');
             player.initialize(video, url, false);
             player.setAlternativeVideoElement(alternativeVideo);
         }

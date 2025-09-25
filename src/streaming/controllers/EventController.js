@@ -503,6 +503,29 @@ function EventController() {
     }
 
     /**
+     * Auxiliary method to check for earliest resolution time events and return alternative MPD
+     * @param {object} event
+     * @return {object|null} - Returns the alternative MPD if it exists and has earliestResolutionTimeOffset, null otherwise
+     * @private
+     */
+    function _checkForEarliestResolutionTimeEvents(event) {
+        try {
+            if (!event || !event.alternativeMpd) {
+                return null;
+            }
+
+            if (event.alternativeMpd.earliestResolutionTimeOffset !== undefined) {
+                return event.alternativeMpd;
+            }
+
+            return null;
+        } catch (e) {
+            logger.error(e);
+            return null;
+        }
+    }
+
+    /**
      * Checks if the event has an earliestResolutionTimeOffset and if it's ready to resolve
      * @param {object} event
      * @param {number} currentVideoTime
@@ -511,11 +534,13 @@ function EventController() {
      */
     function _checkEventReadyToResolve(event, currentVideoTime) {
         try {
-            if (!event.alternativeMpd.earliestResolutionTimeOffset || event.triggeredReadyToResolve) {
+            const earlyToResolveEvent = _checkForEarliestResolutionTimeEvents(event);
+
+            if (!earlyToResolveEvent || event.triggeredReadyToResolve) {
                 return false;
             }
 
-            const resolutionTime = event.calculatedPresentationTime - event.alternativeMpd .earliestResolutionTimeOffset;
+            const resolutionTime = event.calculatedPresentationTime - earlyToResolveEvent.earliestResolutionTimeOffset;
             return currentVideoTime >= resolutionTime;
         } catch (e) {
             logger.error(e);

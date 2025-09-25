@@ -267,6 +267,25 @@ function PlaybackController() {
         seek(seektime, stickToBuffered, internal, adjustLiveDelay);
     }
 
+    function seekToStartDvrWindow(stickToBuffered = false, internal = false, adjustLiveDelay = false) {
+        const dvrWindowStart = getDvrWindowStart();
+
+        if (dvrWindowStart === 0) {
+            return;
+        }
+
+        seek(dvrWindowStart, stickToBuffered, internal, adjustLiveDelay);
+    }
+
+    function getDvrWindowStart() {
+        if (!streamInfo || !videoModel || !isDynamic) {
+            return;
+        }
+        const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
+        const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
+        return dvrInfo && dvrInfo.range ? dvrInfo.range.start : 0;
+    }
+    
     function _getDvrWindowEnd() {
         if (!streamInfo || !videoModel || !isDynamic) {
             return;
@@ -922,6 +941,7 @@ function PlaybackController() {
         getAvailabilityStartTime,
         getBufferLevel,
         getCurrentLiveLatency,
+        getDvrWindowStart,
         getEnded,
         getInitialCatchupModeActivated,
         getIsDynamic,
@@ -947,6 +967,7 @@ function PlaybackController() {
         seek,
         seekToCurrentLive,
         seekToOriginalLive,
+        seekToStartDvrWindow,
         setConfig,
         updateCurrentTime,
     };
