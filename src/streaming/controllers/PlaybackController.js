@@ -293,7 +293,6 @@ function PlaybackController() {
 
         const type = streamController && streamController.hasVideoTrack() ? Constants.VIDEO : Constants.AUDIO;
         const dvrInfo = dashMetrics.getCurrentDVRInfo(type);
-        console.log(dvrInfo);
 
         return dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
     }

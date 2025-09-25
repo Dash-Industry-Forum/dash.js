@@ -534,13 +534,13 @@ function EventController() {
      */
     function _checkEventReadyToResolve(event, currentVideoTime) {
         try {
-            const erarlyToResolveEvent = _checkForEarliestResolutionTimeEvents(event);
+            const earlyToResolveEvent = _checkForEarliestResolutionTimeEvents(event);
 
-            if (!erarlyToResolveEvent || event.triggeredReadyToResolve) {
+            if (!earlyToResolveEvent || event.triggeredReadyToResolve) {
                 return false;
             }
 
-            const resolutionTime = event.calculatedPresentationTime - erarlyToResolveEvent.earliestResolutionTimeOffset;
+            const resolutionTime = event.calculatedPresentationTime - earlyToResolveEvent.earliestResolutionTimeOffset;
             return currentVideoTime >= resolutionTime;
         } catch (e) {
             logger.error(e);
