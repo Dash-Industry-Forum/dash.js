@@ -687,9 +687,8 @@ function AbrController() {
             }
 
             let newRepresentation = switchRequest.representation;
-
+            _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
-                _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
                 _changeQuality(currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
