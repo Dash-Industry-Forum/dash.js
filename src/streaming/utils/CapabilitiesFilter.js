@@ -396,7 +396,7 @@ function CapabilitiesFilter() {
 
         let channels = null;
 
-        const channelCounts = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(channelConfig => getNChanFromAudioChannelConfig(channelConfig))
+        const channelCounts = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true))
 
         // ensure that all AudioChannelConfiguration elements are the same value, otherwise ignore
         if (channelCounts.every(e => e == channelCounts[0])) {
