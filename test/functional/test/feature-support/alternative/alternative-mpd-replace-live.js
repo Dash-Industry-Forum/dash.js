@@ -7,7 +7,7 @@ import { expect } from 'chai';
  * Utility function to modify a live manifest by injecting Alternative MPD events
  * This simulates the functionality from the demo.html tool for live to VOD and live to live scenarios
  */
-function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeManifestUrl, callback) {
+function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeManifestUrl, presentationTime, callback) {
     // Access the underlying MediaPlayer instance
     const mediaPlayer = player.player;
     
@@ -20,10 +20,7 @@ function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeMani
             manifest.Period[0].EventStream = [];
         }
         
-        // Calculate presentation time for live content
-        // For live streams, use current time + offset to ensure the event is in the future
-        const currentPresentationTime = Date.now();
-        const presentationTime = currentPresentationTime + 4000; // 4 seconds from now
+        // Use the provided presentation time
         const duration = 9000;
         const earliestResolutionTimeOffset = 5000;
         const maxDuration = 9000;
@@ -65,13 +62,19 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
     describe(`Alternative MPD Replace Live functionality tests for: ${name}`, () => {
 
         let player;
+        let presentationTime;
 
         before((done) => {
             // Initialize the player without attaching source immediately
             player = initializeDashJsAdapterForAlternativMedia(item, null);
-            
+
+            // Calculate presentation time for live content
+            // For live streams, use current time + offset to ensure the event is in the future
+            const currentPresentationTime = Date.now();
+            presentationTime = currentPresentationTime + 4000; // 4 seconds from now
+
             // Use the utility function to inject Alternative MPD events
-            injectAlternativeMpdEvents(player, originalUrl, alternativeUrl, () => {
+            injectAlternativeMpdEvents(player, originalUrl, alternativeUrl, presentationTime, () => {
                 done();
             });
         });
@@ -108,6 +111,11 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
                     alternativeContentDetected = true;
                     alternativeStartTime = Date.now();
                     expectedAlternativeDuration = data.event.duration;
+                    const latency = player.getCurrentLiveLatency();
+                    if (!isNaN(latency)){ //prevents execution if player is not loaded yet
+                        let expectedStartTimeWithLatency = presentationTime + (latency * 1000);
+                        expect(alternativeStartTime).to.be.closeTo(expectedStartTimeWithLatency, 1000); // Allow tolerance
+                    }
                 }
             });
             
@@ -127,14 +135,12 @@ Utils.getTestvectorsForTestcase('feature-support/alternative/alternative-mpd-rep
                         
                         // Verify that alternative content played for its full duration
                         const actualAlternativeDuration = (alternativeEndTime - alternativeStartTime) / 1000; // Convert to seconds
-                        expect(actualAlternativeDuration).to.be.at.least(expectedAlternativeDuration - 1); // Allow 1 second tolerance
-                        expect(actualAlternativeDuration).to.be.at.most(expectedAlternativeDuration + 1.5); // Allow 1 second tolerance
+                        expect(actualAlternativeDuration).to.be.closeTo(expectedAlternativeDuration, 1.5); // Allow 1 second tolerance
                         
                         // For REPLACE mode from live to VOD, verify timing behavior
                         // The expected behavior is to return at presentationTime + duration or returnOffset
                         const expectedMinTime = data.event.presentationTime + data.event.duration;
-                        expect(timeAfterSwitch).to.be.at.least(expectedMinTime - 1); // Allow 1 second tolerance
-                        expect(timeAfterSwitch).to.be.at.most(expectedMinTime + 2); // Allow 2 seconds tolerance for live content
+                        expect(timeAfterSwitch).to.be.closeTo(expectedMinTime, 2); // Allow 2 seconds tolerance for live content
                         done();
                     }, 2000);
                 }
