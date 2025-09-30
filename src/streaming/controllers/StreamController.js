@@ -405,39 +405,40 @@ function StreamController() {
     function _calculateStartTimeAndSwitchStream() {
         // Figure out the correct start time and the correct start period
         const startTime = _getInitialStartTime();
-        let initialStream = getStreamForTime(startTime);
-        const startStream = initialStream !== null ? initialStream : streams[0];
+        let streamForTime = getStreamForTime(startTime);
+        const initialStream = streamForTime !== null ? streamForTime : streams[0];
 
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
-        _switchStream(startStream, null, startTime);
+
+        _switchStream(initialStream, null, startTime);
         _startPlaybackEndedTimerInterval();
     }
 
     /**
      * Switch from the current stream (period) to the next stream (period).
-     * @param {object} stream
+     * @param {object} targetStream
      * @param {object} previousStream
      * @param {number} seekTime
      * @private
      */
-    function _switchStream(stream, previousStream, seekTime) {
+    function _switchStream(targetStream, previousStream, seekTime) {
         try {
-            if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.getIsActive())) {
+            if (isStreamSwitchingInProgress || !targetStream || (previousStream === targetStream && targetStream.getIsActive())) {
                 return;
             }
 
             isStreamSwitchingInProgress = true;
             eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
                 fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
-                toStreamInfo: stream.getStreamInfo()
+                toStreamInfo: targetStream.getStreamInfo()
             });
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
-            activeStream = stream;
+            activeStream = targetStream;
 
             if (previousStream) {
-                keepBuffers = _canSourceBuffersBeKept(stream, previousStream);
+                keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
@@ -445,8 +446,8 @@ function StreamController() {
             // Determine seek time when switching to new period
             // - seek at given seek time
             // - or seek at period start if upcoming period is not prebuffered
-            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
-            logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
+            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? targetStream.getStreamInfo().start : NaN);
+            logger.info(`Switch to stream ${targetStream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
             preloadingStreams = preloadingStreams.filter((s) => {
                 return s.getId() !== activeStream.getId();
