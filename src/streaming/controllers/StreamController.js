@@ -342,18 +342,9 @@ function StreamController() {
             // If the start is in the future we need to wait
             const dvrRange = dashMetrics.getCurrentDVRInfo().range;
             if (dvrRange.end < dvrRange.start) {
-                if (waitForPlaybackStartTimeout) {
-                    clearTimeout(waitForPlaybackStartTimeout);
-                }
-                const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
-                logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-                eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
-                waitForPlaybackStartTimeout = setTimeout(() => {
-                    _initializeForFirstStream(streamsInfo, resolve, reject);
-                }, waitingTime);
+                _handleStartTimeInFuture(dvrRange, streamsInfo, resolve, reject);
                 return;
             }
-
 
             // Calculate the producer reference time offsets if given
             if (settings.get().streaming.applyProducerReferenceTime) {
@@ -392,6 +383,18 @@ function StreamController() {
         }
     }
 
+    function _handleStartTimeInFuture(dvrRange, streamsInfo, resolve, reject) {
+        if (waitForPlaybackStartTimeout) {
+            clearTimeout(waitForPlaybackStartTimeout);
+        }
+        const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
+        logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+        eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
+        waitForPlaybackStartTimeout = setTimeout(() => {
+            _initializeForFirstStream(streamsInfo, resolve, reject);
+        }, waitingTime);
+    }
+
     function _applyContentSteeringBeforeStart() {
         if (settings.get().streaming.applyContentSteering && contentSteeringController.shouldQueryBeforeStart()) {
             return contentSteeringController.loadSteeringData();
@@ -404,6 +407,7 @@ function StreamController() {
         const startTime = _getInitialStartTime();
         let initialStream = getStreamForTime(startTime);
         const startStream = initialStream !== null ? initialStream : streams[0];
+
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
         _switchStream(startStream, null, startTime);
         _startPlaybackEndedTimerInterval();
@@ -1112,57 +1116,70 @@ function StreamController() {
         let startTime;
         const isDynamic = adapter.getIsDynamic();
         if (isDynamic) {
-            // For dynamic stream, start by default at (live edge - live delay)
-            const dvrInfo = dashMetrics.getCurrentDVRInfo();
-            const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
-            // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-            startTime = liveEdge - playbackController.getOriginalLiveDelay();
-            // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
-            const dvrWindow = dvrInfo ? dvrInfo.range : null;
-            if (dvrWindow) {
-                // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
-                if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
-                    logger.info(`Start time provided by the app: ${providedStartTime}`);
-                    const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
-                    if (!isNaN(providedStartTimeAsPresentationTime)) {
-                        // Do not move closer to the live edge as defined by live delay
-                        startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
-                    }
-                } else {
-                    // #t shall be relative to period start
-                    const startTimeFromUri = _getStartTimeFromUriParameters(true);
-                    if (!isNaN(startTimeFromUri)) {
-                        logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
-                        // Do not move closer to the live edge as defined by live delay
-                        startTime = Math.min(startTime, startTimeFromUri);
-                    }
-                }
-                // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
-                const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
-                startTime = Math.max(startTime, dvrWindow.start + offset);
-            }
+            startTime = _getInitialStartTimeForDynamicStream();
         } else {
-            // For static stream, start by default at period start
-            const streams = getStreams();
-            const streamInfo = streams[0].getStreamInfo();
-            startTime = streamInfo.start;
+            startTime = _getInitialStartTimeForStaticStream();
+        }
 
+        return startTime;
+    }
+
+    function _getInitialStartTimeForDynamicStream() {
+        let startTime;
+        // For dynamic stream, start by default at (live edge - live delay)
+        const dvrInfo = dashMetrics.getCurrentDVRInfo();
+        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
+        // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
+        startTime = liveEdge - playbackController.getOriginalLiveDelay();
+        // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
+        const dvrWindow = dvrInfo ? dvrInfo.range : null;
+        if (dvrWindow) {
             // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
-            if (!isNaN(providedStartTime)) {
+            if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
                 logger.info(`Start time provided by the app: ${providedStartTime}`);
-                const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
+                const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
                 if (!isNaN(providedStartTimeAsPresentationTime)) {
-                    // Do not play earlier than the start of the first period
-                    startTime = Math.max(startTime, providedStartTimeAsPresentationTime);
+                    // Do not move closer to the live edge as defined by live delay
+                    startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
                 }
             } else {
-                // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = _getStartTimeFromUriParameters(false);
+                // #t shall be relative to period start
+                const startTimeFromUri = _getStartTimeFromUriParameters(true);
                 if (!isNaN(startTimeFromUri)) {
                     logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
-                    // Do not play earlier than the start of the first period
-                    startTime = Math.max(startTime, startTimeFromUri);
+                    // Do not move closer to the live edge as defined by live delay
+                    startTime = Math.min(startTime, startTimeFromUri);
                 }
+            }
+            // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+            const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+            startTime = Math.max(startTime, dvrWindow.start + offset);
+        }
+
+        return startTime;
+    }
+
+    function _getInitialStartTimeForStaticStream() {
+        // For static stream, start by default at period start
+        const streams = getStreams();
+        const streamInfo = streams[0].getStreamInfo();
+        let startTime = streamInfo.start;
+
+        // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+        if (!isNaN(providedStartTime)) {
+            logger.info(`Start time provided by the app: ${providedStartTime}`);
+            const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
+            if (!isNaN(providedStartTimeAsPresentationTime)) {
+                // Do not play earlier than the start of the first period
+                startTime = Math.max(startTime, providedStartTimeAsPresentationTime);
+            }
+        } else {
+            // If start time in URI, take max value between period start and time from URI (if in period range)
+            const startTimeFromUri = _getStartTimeFromUriParameters(false);
+            if (!isNaN(startTimeFromUri)) {
+                logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                // Do not play earlier than the start of the first period
+                startTime = Math.max(startTime, startTimeFromUri);
             }
         }
 

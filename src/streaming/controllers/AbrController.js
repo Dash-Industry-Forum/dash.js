@@ -532,9 +532,9 @@ function AbrController() {
         }
 
         const lastSegment = streamProcessor.getLastSegment();
-        const canPerformQualitySwitch = _canAbandonRequest(lastSegment);
+        const canAbandonRequest = _canAbandonRequest(lastSegment);
 
-        if (!canPerformQualitySwitch) {
+        if (!canAbandonRequest) {
             return;
         }
 
