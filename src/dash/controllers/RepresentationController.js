@@ -94,7 +94,7 @@ function RepresentationController(config) {
 
 
             if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
-                endDataUpdate();
+                _endDataUpdate();
                 resolve();
                 return;
             }
@@ -123,7 +123,7 @@ function RepresentationController(config) {
             dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
         }
 
-        endDataUpdate();
+        _endDataUpdate();
     }
 
     function _updateRepresentation(currentRep) {
@@ -242,7 +242,7 @@ function RepresentationController(config) {
         return null;
     }
 
-    function endDataUpdate(error) {
+    function _endDataUpdate(error) {
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
             {
                 currentRepresentation: currentVoRepresentation,

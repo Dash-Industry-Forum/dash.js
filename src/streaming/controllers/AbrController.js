@@ -52,27 +52,28 @@ function AbrController() {
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
 
-    let instance,
-        logger,
-        abrRulesCollection,
-        streamController,
-        capabilities,
-        streamProcessorDict,
-        abandonmentStateDict,
+    let abandonmentStateDict,
         abandonmentTimeout,
-        windowResizeEventCalled,
+        abrRulesCollection,
         adapter,
-        videoModel,
-        mediaPlayerModel,
-        customParametersModel,
+        capabilities,
         cmsdModel,
-        domStorage,
         currentRepresentationId,
-        switchRequestHistory,
-        droppedFramesHistory,
-        throughputController,
+        customParametersModel,
         dashMetrics,
-        settings;
+        domStorage,
+        droppedFramesHistory,
+        instance,
+        logger,
+        mediaPlayerModel,
+        queuedManualQualitySwitches,
+        settings,
+        streamController,
+        streamProcessorDict,
+        switchRequestHistory,
+        throughputController,
+        videoModel,
+        windowResizeEventCalled;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -149,6 +150,7 @@ function AbrController() {
     function resetInitialSettings() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
+        queuedManualQualitySwitches = new Map();
 
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
@@ -538,19 +540,25 @@ function AbrController() {
             return;
         }
 
-        const rulesContext = RulesContext(context).create({
-            abrController: instance,
-            streamProcessor,
-            currentRequest: e.request,
-            throughputController,
-            adapter,
-            videoModel
-        });
+        const rulesContext = _createRulesContext(streamProcessor, e.request);
         const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
         if (switchRequest && switchRequest.representation !== SwitchRequest.NO_CHANGE) {
             _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
         }
+    }
+
+    function _createRulesContext(streamProcessor, currentRequest) {
+        return RulesContext(context).create({
+            abrController: instance,
+            streamProcessor,
+            currentRequest,
+            switchRequestHistory,
+            droppedFramesHistory,
+            throughputController,
+            adapter,
+            videoModel
+        });
     }
 
     function _canAbandonRequest(lastSegment) {
@@ -669,17 +677,8 @@ function AbrController() {
                 return false;
             }
 
-
             const currentRepresentation = streamProcessor.getRepresentation();
-            const rulesContext = RulesContext(context).create({
-                abrController: instance,
-                throughputController,
-                switchRequestHistory,
-                droppedFramesHistory,
-                streamProcessor,
-                adapter,
-                videoModel
-            });
+            const rulesContext = _createRulesContext(streamProcessor);
             const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
 
             if (!switchRequest || !switchRequest.representation) {
@@ -739,16 +738,74 @@ function AbrController() {
      */
     function setPlaybackQuality(type, streamInfo, representation, reason = {}) {
         if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type] || !representation) {
-            return;
+            return false;
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
         const currentRepresentation = streamProcessor.getRepresentation();
 
-
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
-            _changeQuality(currentRepresentation, representation, reason);
+            return _changeQuality(currentRepresentation, representation, reason);
         }
+
+        return false;
+    }
+
+    function manuallySetPlaybackQuality(type, streamInfo, representation, reason = {}) {
+        const streamProcessor = streamProcessorDict[streamInfo.id][type];
+        const lastSegment = streamProcessor.getLastSegment();
+        const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
+
+        if (!canPerformQualitySwitch) {
+            _queueManualQualitySwitch(type, streamInfo, representation, reason);
+            return;
+        }
+
+        return setPlaybackQuality(type, streamInfo, representation, reason);
+    }
+
+    function _queueManualQualitySwitch(type, streamInfo, representation, reason) {
+        try {
+            logger.debug(`[AbrController] Queuing manual quality switch for stream ${streamInfo.id} and type ${type} to representation ${representation.id}`);
+            const key = _getManualQualitySwitchKey(streamInfo.id, type);
+            queuedManualQualitySwitches.set(key, { type, streamInfo, representation, reason });
+        } catch (e) {
+            logger.error(`Can not queue manual quality switch: ${e}`);
+        }
+    }
+
+    function handlePendingManualQualitySwitch(streamId, mediaType) {
+        try {
+            const streamProcessor = streamProcessorDict[streamId][mediaType];
+            const lastSegment = streamProcessor.getLastSegment();
+            const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
+
+            if (!canPerformQualitySwitch) {
+                return false
+            }
+
+            const key = _getManualQualitySwitchKey(streamId, mediaType);
+            let switchRequest = null;
+            if (queuedManualQualitySwitches.has(key)) {
+                switchRequest = queuedManualQualitySwitches.get(key);
+            }
+
+            if (!switchRequest) {
+                return false
+            }
+
+            const { type, streamInfo, representation, reason } = switchRequest;
+
+            queuedManualQualitySwitches.delete(key);
+            setPlaybackQuality(type, streamInfo, representation, reason);
+            return true;
+        } catch (e) {
+            logger.error(`Can not handle pending manual quality switch: ${e}`);
+        }
+    }
+
+    function _getManualQualitySwitchKey(streamId, mediaType) {
+        return `${streamId}-${mediaType}`
     }
 
     /**
@@ -778,7 +835,7 @@ function AbrController() {
         const type = newRepresentation.mediaInfo.type;
 
         if (!type || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
-            return
+            return false
         }
 
         const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
@@ -800,6 +857,7 @@ function AbrController() {
         );
 
         _saveBitrateSettings(type)
+        return true
     }
 
     function _saveBitrateSettings(type) {
@@ -908,9 +966,11 @@ function AbrController() {
         getPossibleVoRepresentationsFilteredBySettings,
         getRepresentationByAbsoluteIndex,
         handleNewMediaInfo,
+        handlePendingManualQualitySwitch,
         initialize,
         isPlayingAtLowestQuality,
         isPlayingAtTopQuality,
+        manuallySetPlaybackQuality,
         registerStreamType,
         reset,
         setConfig,

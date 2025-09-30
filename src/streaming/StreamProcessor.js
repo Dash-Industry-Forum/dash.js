@@ -331,7 +331,7 @@ function StreamProcessor(config) {
                                 scheduleController.setInitSegmentRequired(true);
 
                                 // Right after a seek we should not immediately check the playback quality
-                                scheduleController.setCheckPlaybackQuality(false);
+                                scheduleController.setShouldCheckPlaybackQuality(false);
                                 scheduleController.startScheduleTimer();
                                 resolve();
                             });
@@ -868,7 +868,7 @@ function StreamProcessor(config) {
             streamId: streamInfo.id
         }, { mediaType: type, streamId: streamInfo.id });
 
-        scheduleController.setCheckPlaybackQuality(false);
+        scheduleController.setShouldCheckPlaybackQuality(false);
 
         // Abort appending segments to the buffer. Also adjust the appendWindow as we might have been in the progress of prebuffering stuff.
         bufferController.prepareForForceReplacementQualitySwitch(newPresentation, oldRepresentation)
@@ -899,7 +899,7 @@ function StreamProcessor(config) {
     function _abandonQualitySwitchPreparationDone() {
         fragmentModel.abortRequests();
         shouldRepeatRequest = true;
-        scheduleController.setCheckPlaybackQuality(false);
+        scheduleController.setShouldCheckPlaybackQuality(false);
         scheduleController.startScheduleTimer();
         qualityChangeInProgress = false;
     }
@@ -945,7 +945,7 @@ function StreamProcessor(config) {
         fragmentModel.abortRequests();
         const targetTime = time + safeBufferLevel;
         setExplicitBufferingTime(targetTime);
-        scheduleController.setCheckPlaybackQuality(false);
+        scheduleController.setShouldCheckPlaybackQuality(false);
         scheduleController.startScheduleTimer();
         qualityChangeInProgress = false;
     }
@@ -971,7 +971,7 @@ function StreamProcessor(config) {
     }
 
     function _defaultQualitySwitchPreparationDone() {
-        scheduleController.setCheckPlaybackQuality(false);
+        scheduleController.setShouldCheckPlaybackQuality(false);
         if (currentMediaInfo.segmentAlignment || currentMediaInfo.subSegmentAlignment) {
             scheduleController.startScheduleTimer();
         } else {

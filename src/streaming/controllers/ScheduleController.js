@@ -53,18 +53,18 @@ function ScheduleController(config) {
     const representationController = config.representationController
     const settings = config.settings;
 
-    let instance,
-        streamInfo,
-        logger,
-        timeToLoadDelay,
-        scheduleTimeout,
+    let shouldCheckPlaybackQuality,
         hasVideoTrack,
+        initSegmentRequired,
+        instance,
         lastFragmentRequest,
         lastInitializedRepresentationId,
-        switchTrack,
-        initSegmentRequired,
+        logger,
         managedMediaSourceAllowsRequest,
-        checkPlaybackQuality;
+        scheduleTimeout,
+        streamInfo,
+        switchTrack,
+        timeToLoadDelay;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -107,7 +107,7 @@ function ScheduleController(config) {
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
-        scheduleTimeout = setTimeout(schedule, timeoutValue);
+        scheduleTimeout = setTimeout(_schedule, timeoutValue);
     }
 
     function clearScheduleTimer() {
@@ -120,7 +120,7 @@ function ScheduleController(config) {
     /**
      * Schedule the request for an init or a media segment
      */
-    function schedule() {
+    function _schedule() {
         const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
             if (_shouldClearScheduleTimer()) {
@@ -139,8 +139,14 @@ function ScheduleController(config) {
     }
 
     function _scheduleNextRequest() {
+        const hasTriggeredManualQualitySwitch = abrController.handlePendingManualQualitySwitch(streamInfo.id, type);
+
+        if (hasTriggeredManualQualitySwitch) {
+            return
+        }
+
         let qualityChange = false;
-        if (checkPlaybackQuality) {
+        if (shouldCheckPlaybackQuality) {
             // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
             // The StreamProcessor will also start the schedule timer again once the quality switch has been prepared. Consequently, we only call _getNextFragment if the quality is not changed.
             qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
@@ -176,7 +182,7 @@ function ScheduleController(config) {
             { representationId: currentRepresentation.id, sender: instance },
             { streamId: streamInfo.id, mediaType: type }
         );
-        checkPlaybackQuality = false;
+        shouldCheckPlaybackQuality = false;
         initSegmentRequired = false;
     }
 
@@ -186,7 +192,7 @@ function ScheduleController(config) {
             {},
             { streamId: streamInfo.id, mediaType: type }
         );
-        checkPlaybackQuality = true;
+        shouldCheckPlaybackQuality = true;
     }
 
     /**
@@ -408,8 +414,8 @@ function ScheduleController(config) {
         return timeToLoadDelay;
     }
 
-    function setCheckPlaybackQuality(value) {
-        checkPlaybackQuality = value;
+    function setShouldCheckPlaybackQuality(value) {
+        shouldCheckPlaybackQuality = value;
     }
 
     function setInitSegmentRequired(value) {
@@ -421,7 +427,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
-        checkPlaybackQuality = true;
+        shouldCheckPlaybackQuality = true;
         timeToLoadDelay = 0;
         lastInitializedRepresentationId = null;
         lastFragmentRequest = {
@@ -460,7 +466,7 @@ function ScheduleController(config) {
         getType,
         initialize,
         reset,
-        setCheckPlaybackQuality,
+        setShouldCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,
         setSwitchTrack,
