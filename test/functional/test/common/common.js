@@ -106,6 +106,9 @@ export function initializeDashJsAdapterForPreload(item, mpd, settings) {
     return playerAdapter
 }
 
+export function playForDuration(durationInMilliseconds) {
+    return new Promise(resolve => setTimeout(resolve, durationInMilliseconds));
+}
 
 export function isLiveContent(item) {
     return item.type === Constants.CONTENT_TYPES.LIVE
