@@ -349,8 +349,9 @@ export default {
             NO_JUMP_PRIORITY: 2
         },
         CONTENT_START: 'alternativeContentStart',
-        CONTENT_END: 'alternativeContentEnd'
-        
+        CONTENT_END: 'alternativeContentEnd',
+        EVENT_UPDATED: 'alternativeEventUpdated'
+
     },
 
     /**
