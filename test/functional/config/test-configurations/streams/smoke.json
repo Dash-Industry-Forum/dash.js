@@ -352,6 +352,19 @@
       "testdata": {
         "forcedSubtitles": {}
       }
+    },
+    {
+      "name": "Dynamic to static transition with LiveSim2",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/stoprel_5/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/dynamic-to-static"
+      ],
+      "testdata": {
+        "dynamicToStatic": {
+          "runtime": 20000
+        }
+      }
     }
   ]
 }
