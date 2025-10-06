@@ -51,6 +51,7 @@ function AlternativeMediaController() {
         actualEventPresentationTime = 0,
         alternativeSwitched = false,
         timeToSwitch = 0,
+        switchTime = null,
         calculatedMaxDuration = 0,
         videoModel = null,
         alternativeContext = null,
@@ -262,6 +263,7 @@ function AlternativeMediaController() {
                     const parsedEvent = _parseEvent(event);
                     if (parsedEvent) {
                         currentEvent = parsedEvent;
+                        alternativeSwitched = false;
                         logger.info(`Alternative event ${eventId} has been updated`);
                     }
                 }
@@ -293,7 +295,8 @@ function AlternativeMediaController() {
             const adjustedTime = e.time - timeToSwitch;
             if (!alternativeSwitched && adjustedTime > 0) {
                 alternativeSwitched = true;
-                calculatedMaxDuration = altPlayer.isDynamic() ? adjustedTime + maxDuration : maxDuration;
+                switchTime = switchTime ? switchTime : adjustedTime;
+                calculatedMaxDuration = altPlayer.isDynamic() ? switchTime + maxDuration : maxDuration;
             }
             const shouldSwitchBack =
                 calculatedMaxDuration > 0 && (
@@ -342,6 +345,7 @@ function AlternativeMediaController() {
         currentEvent = null;
         actualEventPresentationTime = 0;
         timeToSwitch = 0;
+        switchTime = null;
         alternativeSwitched = false;
         calculatedMaxDuration = 0;
     }
