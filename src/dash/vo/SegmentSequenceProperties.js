@@ -36,7 +36,7 @@
 class SegmentSequenceProperties {
     constructor() {
         this.cadence = 1;
-        this.type = 0;
+        this.sapType = 0;
         this.event = true;
         this.alignment = null;
     }
@@ -44,7 +44,7 @@ class SegmentSequenceProperties {
     init(data) {
         if (data) {
             this.cadence = data.cadence !== undefined && !isNaN(data.cadence) ? data.cadence : 1;
-            this.type = data.type !== undefined && !isNaN(data.type) ? data.type : 0;
+            this.sapType = data.sapType !== undefined && !isNaN(data.sapType) ? data.sapType : 0;
             this.event = data.event !== undefined ? data.event : true;
             this.alignment = data.alignment !== undefined ? data.alignment : null;
         }
