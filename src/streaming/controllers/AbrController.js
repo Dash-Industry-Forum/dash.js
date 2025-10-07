@@ -671,13 +671,13 @@ function AbrController() {
 
             const streamProcessor = streamProcessorDict[streamId][type];
             const lastSegment = streamProcessor.getLastSegment();
-            const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
+            const currentRepresentation = streamProcessor.getRepresentation();
+            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
 
-            if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canPerformQualitySwitch) {
+            if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canSwitchQuality) {
                 return false;
             }
 
-            const currentRepresentation = streamProcessor.getRepresentation();
             const rulesContext = _createRulesContext(streamProcessor);
             const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
 
@@ -703,12 +703,36 @@ function AbrController() {
      * When playing Segment Sequence Representations we can not simply switch from one partial segment to another partial segment or another full segment.
      * @private
      */
-    function _canPerformQualitySwitch(lastSegment) {
-        // For now we only allow a switch when the last partial segment has been loaded and a new "full segment" possibly consisting of multiple partial segments is about to be loaded
+    function canPerformQualitySwitch(lastSegment, currentRepresentation) {
         if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
             return true
         }
-        return lastSegment.replacementSubNumber === (lastSegment.totalNumberOfPartialSegments - 1);
+
+        // For partial segments without SegmentSequenceProperties we can only switch if we are at the end of a segment sequence
+        if (lastSegment.replacementSubNumber === (lastSegment.totalNumberOfPartialSegments - 1)) {
+            return true;
+        }
+
+        return _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation);
+    }
+
+    function _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation) {
+        if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties || currentRepresentation.segmentSequenceProperties.length <= 0) {
+            return false;
+        }
+        const segmentSequencePropertiesWithTargetSapType = currentRepresentation.segmentSequenceProperties.filter((ssp) => {
+            return !isNaN(ssp.sapType) && ssp.sapType <= 1;
+        })
+
+        if (segmentSequencePropertiesWithTargetSapType.length === 0) {
+            return false;
+        }
+
+        let nextPartialSubNumber = (lastSegment.replacementSubNumber + 1) % lastSegment.totalNumberOfPartialSegments;
+
+        return segmentSequencePropertiesWithTargetSapType.some((ssp) => {
+            return nextPartialSubNumber % ssp.cadence === 0
+        })
     }
 
     function _addDroppedFramesHistoryEntry(streamId) {
@@ -754,9 +778,10 @@ function AbrController() {
     function manuallySetPlaybackQuality(type, streamInfo, representation, reason = {}) {
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
         const lastSegment = streamProcessor.getLastSegment();
-        const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
+        const currentRepresentation = streamProcessor.getRepresentation();
+        const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
 
-        if (!canPerformQualitySwitch) {
+        if (!canSwitchQuality) {
             _queueManualQualitySwitch(type, streamInfo, representation, reason);
             return;
         }
@@ -776,27 +801,28 @@ function AbrController() {
 
     function handlePendingManualQualitySwitch(streamId, mediaType) {
         try {
-            const streamProcessor = streamProcessorDict[streamId][mediaType];
-            const lastSegment = streamProcessor.getLastSegment();
-            const canPerformQualitySwitch = _canPerformQualitySwitch(lastSegment);
-
-            if (!canPerformQualitySwitch) {
-                return false
-            }
-
-            const key = _getManualQualitySwitchKey(streamId, mediaType);
+            const manualQualitySwitchKey = _getManualQualitySwitchKey(streamId, mediaType);
             let switchRequest = null;
-            if (queuedManualQualitySwitches.has(key)) {
-                switchRequest = queuedManualQualitySwitches.get(key);
+            if (queuedManualQualitySwitches.has(manualQualitySwitchKey)) {
+                switchRequest = queuedManualQualitySwitches.get(manualQualitySwitchKey);
             }
 
             if (!switchRequest) {
                 return false
             }
 
+            const streamProcessor = streamProcessorDict[streamId][mediaType];
+            const lastSegment = streamProcessor.getLastSegment();
+            const currentRepresentation = streamProcessor.getRepresentation();
+            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+
+            if (!canSwitchQuality) {
+                return false
+            }
+
             const { type, streamInfo, representation, reason } = switchRequest;
 
-            queuedManualQualitySwitches.delete(key);
+            queuedManualQualitySwitches.delete(manualQualitySwitchKey);
             setPlaybackQuality(type, streamInfo, representation, reason);
             return true;
         } catch (e) {
@@ -957,6 +983,7 @@ function AbrController() {
 
 
     instance = {
+        canPerformQualitySwitch,
         checkPlaybackQuality,
         clearDataForStream,
         getAbandonmentStateFor,
@@ -988,3 +1015,4 @@ AbrController.__dashjs_factory_name = 'AbrController';
 const factory = FactoryMaker.getSingletonFactory(AbrController);
 FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;
+

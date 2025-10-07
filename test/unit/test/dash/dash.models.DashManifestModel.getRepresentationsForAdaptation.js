@@ -118,7 +118,7 @@ describe('getRepresentationsForAdaptation', function () {
         expect(r.essentialProperties[0].schemeIdUri).to.equal('urn:foo');
         expect(r.supplementalProperties[0].schemeIdUri).to.equal('urn:supp');
         expect(r.segmentSequenceProperties[0].cadence).to.equal(2);
-        expect(r.segmentSequenceProperties[0].type).to.equal(1);
+        expect(r.segmentSequenceProperties[0].sapType).to.equal(0);
         expect(r.segmentSequenceProperties[0].event).to.equal(false);
         expect(r.segmentSequenceProperties[0].alignment).to.equal('id1');
         expect(r.index).to.equal(0);

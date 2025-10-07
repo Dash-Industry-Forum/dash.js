@@ -19,6 +19,7 @@ import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
+import SegmentSequenceProperties from '../../../../src/dash/vo/SegmentSequenceProperties.js';
 
 describe('AbrController', function () {
     const context = {};
@@ -433,6 +434,127 @@ describe('AbrController', function () {
             let optimalRepresentationForBitrate = abrCtrl.getOptimalRepresentationForBitrate(mediaInfo, bitrateList[2].bandwidth / 1000);
             expect(optimalRepresentationForBitrate.id).to.be.equal(3);
         });
+    })
+
+    describe('abrCtrl.canPerformQualitySwitch()', function () {
+
+        it('should return true if lastSegment is undefined', function() {
+            expect(abrCtrl.canPerformQualitySwitch(undefined, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment is not a partial segment', function() {
+            expect(abrCtrl.canPerformQualitySwitch({ isPartialSegment: false }, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment has no information about total number of segments', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: NaN,
+                replacementSubNumber: 0
+            }, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment has no information about replacementSubNumber', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 2,
+                replacementSubNumber: NaN
+            }, {})).to.be.true;
+        });
+
+        it('should return true if replacementSubNumber is at the end of the sequence', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 3,
+                replacementSubNumber: 2
+            }, {})).to.be.true;
+        });
+
+        it('should return false if no segmentSequenceProperties are defined', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 3,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: []
+            })).to.be.false;
+        });
+
+        it('should return false if segmentSequenceProperties are defined but no segmentSequenceProperties with SAP type 0 or 1 are available', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 2
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return false if next partial segment number does not have the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 10
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 0
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return true if all partial segments have the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 2
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
+        it('should return true if next partial segment number has the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 2;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
+        it('should return false if next partial segment number has not the right SAP type for high number of partial segments', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 16;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber: 14
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return true if next partial segment number has the right SAP type for high number of partial segments', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 16;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 32,
+                replacementSubNumber: 15
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
     })
 
     describe('Additional Tests', function () {
