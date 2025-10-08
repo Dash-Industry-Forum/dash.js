@@ -841,6 +841,36 @@
     ]
   },
   {
+    "section": "Alternative Media Presentations",
+    "samples": [
+      {
+        "title": "Alternative Media Presentations",
+        "description": "A sample showing alternative media presentations with a dedicated alternative video element for content switching (Insert/Replace modes).",
+        "href": "alternative/index.html",
+        "image": "lib/img/bbb-1.jpg",
+        "labels": [
+          "VoD",
+          "Alternative MPD",
+          "Video",
+          "Audio"
+        ]
+      },
+      {
+        "title": "Live-to-Live Alternative Media Presentations",
+        "description": "A sample showing live-to-live alternative media presentations where both original and alternative content are live streams. Configure replace events with dynamic presentation times.",
+        "href": "alternative/live-to-live.html",
+        "image": "lib/img/livesim-1.jpg",
+        "labels": [
+          "Live",
+          "Alternative MPD",
+          "Replace Events",
+          "Video",
+          "Audio"
+        ]
+      }
+    ]
+  },
+  {
     "section": "MPEG-5 Part 2 - LCEVC",
     "samples": [
       {
