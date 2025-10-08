@@ -51,6 +51,7 @@ function AlternativeMediaController() {
         actualEventPresentationTime = 0,
         alternativeSwitched = false,
         timeToSwitch = 0,
+        switchTime = null,
         calculatedMaxDuration = 0,
         videoModel = null,
         alternativeContext = null,
@@ -114,13 +115,16 @@ function AlternativeMediaController() {
 
         // Set up event listeners
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
-        
+
         // Listen to alternative MPD events directly from EventController
         eventBus.on(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
         eventBus.on(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
-        
+
         // Listen to event ready to resolve for prebuffering
         eventBus.on(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
+
+        // Listen to alternative event updates
+        eventBus.on(Constants.ALTERNATIVE_MPD.EVENT_UPDATED, _onAlternativeEventUpdated, this);
     }
 
     function _onManifestLoaded(e) {
@@ -225,14 +229,14 @@ function AlternativeMediaController() {
 
     function _onEventReadyToResolve(e) {
         const { schemeIdUri, eventId, event } = e;
-        
+
         try {
             // Check if this is an alternative MPD event
-            if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE || 
+            if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE ||
                 schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
-                
+
                 logger.info(`Event ${eventId} is ready for prebuffering`);
-                
+
                 // Start prebuffering if we have the event data
                 if (event && event.alternativeMpd) {
                     const parsedEvent = _parseEvent(event);
@@ -246,6 +250,26 @@ function AlternativeMediaController() {
             }
         } catch (err) {
             logger.error('Error handling event ready to resolve:', err);
+        }
+    }
+
+    function _onAlternativeEventUpdated(e) {
+        const { schemeIdUri, eventId, event } = e;
+
+        try {
+            if (schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.REPLACE ||
+                schemeIdUri === Constants.ALTERNATIVE_MPD.URIS.INSERT) {
+                if (currentEvent && currentEvent.id === eventId) {
+                    const parsedEvent = _parseEvent(event);
+                    if (parsedEvent) {
+                        currentEvent = parsedEvent;
+                        alternativeSwitched = false;
+                        logger.info(`Alternative event ${eventId} has been updated`);
+                    }
+                }
+            }
+        } catch (err) {
+            logger.error('Error on alternative event update:', err);
         }
     }
 
@@ -271,7 +295,8 @@ function AlternativeMediaController() {
             const adjustedTime = e.time - timeToSwitch;
             if (!alternativeSwitched && adjustedTime > 0) {
                 alternativeSwitched = true;
-                calculatedMaxDuration = altPlayer.isDynamic() ? adjustedTime + maxDuration : maxDuration;
+                switchTime = switchTime ? switchTime : adjustedTime;
+                calculatedMaxDuration = altPlayer.isDynamic() ? switchTime + maxDuration : maxDuration;
             }
             const shouldSwitchBack =
                 calculatedMaxDuration > 0 && (
@@ -320,6 +345,7 @@ function AlternativeMediaController() {
         currentEvent = null;
         actualEventPresentationTime = 0;
         timeToSwitch = 0;
+        switchTime = null;
         alternativeSwitched = false;
         calculatedMaxDuration = 0;
     }
@@ -341,6 +367,7 @@ function AlternativeMediaController() {
         eventBus.off(Constants.ALTERNATIVE_MPD.URIS.REPLACE, _onAlternativeEventTriggered, this);
         eventBus.off(Constants.ALTERNATIVE_MPD.URIS.INSERT, _onAlternativeEventTriggered, this);
         eventBus.off(Events.EVENT_READY_TO_RESOLVE, _onEventReadyToResolve, this);
+        eventBus.off(Constants.ALTERNATIVE_MPD.EVENT_UPDATED, _onAlternativeEventUpdated, this);
     }
 
     function setAlternativeVideoElement(element) {

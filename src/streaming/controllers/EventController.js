@@ -345,6 +345,27 @@ function EventController() {
             return ((!value || (e.eventStream.value && e.eventStream.value === value)) && (e.id === id));
         });
 
+        if (event.status === Constants.ALTERNATIVE_MPD.STATUS.UPDATE) {
+            if (indexOfExistingEvent !== -1) {
+                const oldEvent = events[schemeIdUri][indexOfExistingEvent];
+                event.triggeredReceivedEvent = oldEvent.triggeredReceivedEvent;
+                event.triggeredStartEvent = oldEvent.triggeredStartEvent;
+                event.triggeredReadyToResolve = oldEvent.triggeredReadyToResolve || false;
+                event.triggeredNoJumpEvent = oldEvent.triggeredNoJumpEvent || false;
+                events[schemeIdUri][indexOfExistingEvent] = event;
+                eventState = EVENT_HANDLED_STATES.UPDATED;
+
+                eventBus.trigger(Constants.ALTERNATIVE_MPD.EVENT_UPDATED, {
+                    schemeIdUri: event.eventStream.schemeIdUri,
+                    eventId: event.id,
+                    event: event
+                })
+            } else {
+                logger.debug(`Ignoring update event with id ${id} - no existing event found`);
+            }
+            return eventState;
+        }
+
         // New event, we add it to our list of events
         if (indexOfExistingEvent === -1) {
             events[schemeIdUri].push(event);
