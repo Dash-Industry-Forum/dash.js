@@ -63,7 +63,7 @@ function ManifestLoader(config) {
     function setup() {
         logger = debug.getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
-        eventBus.on(Events.MPD_EXPIRE_UPDATE, updateManifest, instance);
+        eventBus.on(Events.MPD_EXPIRE_UPDATE, _updateManifest, instance);
 
         urlLoader = URLLoader(context).create({
             errHandler: config.errHandler,
@@ -250,7 +250,7 @@ function ManifestLoader(config) {
         });
     }
 
-    function updateManifest(e) {
+    function _updateManifest(e) {
         // Manage situations in which success is called after calling reset
         if (!xlinkController) {
             return;
