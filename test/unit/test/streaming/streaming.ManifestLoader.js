@@ -118,7 +118,6 @@ describe('ManifestLoader', function () {
         });
 
         it('should successfully process valid DASH manifest and trigger INTERNAL_MANIFEST_LOADED without error', function (done) {
-            // Arrange: Set up event listener to capture successful processing
             const successHandler = function (event) {
                 try {
                     expect(event.manifest).to.exist;
@@ -133,7 +132,6 @@ describe('ManifestLoader', function () {
 
             eventBus.on(Events.INTERNAL_MANIFEST_LOADED, successHandler, this);
 
-            // Act: Trigger MPD_EXPIRE_UPDATE with valid DASH manifest
             const validDashManifest = `<?xml version="1.0" encoding="UTF-8"?>
                 <MPD xmlns="urn:mpeg:dash:schema:mpd:2011"
                      profiles="urn:mpeg:dash:profile:isoff-live:2011"
