@@ -359,12 +359,12 @@ function ManifestUpdater() {
     }
 
     instance = {
-        initialize,
-        setManifest,
-        refreshManifest,
         getIsUpdating,
+        initialize,
+        refreshManifest,
+        reset,
         setConfig,
-        reset
+        setManifest
     };
 
     setup();
