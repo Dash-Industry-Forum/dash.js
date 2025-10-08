@@ -195,11 +195,11 @@ export default {
     TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with the highest selectionPriority as defined in the manifest
+     *  @constant {string} CMCD_QUERY_KEY specifies the key that is used for the CMCD query parameter.
      *  @memberof Constants#
      *  @static
      */
-    TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY: 'highestSelectionPriority',
+    CMCD_QUERY_KEY: 'CMCD',
 
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
@@ -216,14 +216,20 @@ export default {
     CMCD_MODE_HEADER: 'header',
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the availables keys for CMCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
+    /**
+     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the availables requests type for CMCD metrics.
+     *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
      *  @static
      */

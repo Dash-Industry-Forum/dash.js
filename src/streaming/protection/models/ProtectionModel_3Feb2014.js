@@ -336,7 +336,9 @@ function ProtectionModel_3Feb2014(config) {
             // Implements SessionToken
             session: keySession,
             keyId: ksInfo.keyId,
+            normalizedKeyId: ksInfo && ksInfo.keyId && typeof ksInfo.keyId === 'string' ? ksInfo.keyId.replace(/-/g, '').toLowerCase() : '',
             initData: ksInfo.initData,
+            hasTriggeredKeyStatusMapUpdate: false,
 
             getKeyId: function () {
                 return this.keyId;

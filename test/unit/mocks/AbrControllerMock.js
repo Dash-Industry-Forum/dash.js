@@ -57,21 +57,6 @@ function AbrControllerMock () {
 
     this.isPlayingAtTopQuality = function () {};
 
-    this.getQualityFor = function (type) {
-        var quality;
-
-        if (!this.currentStreamId || !this.qualityDict.hasOwnProperty(this.currentStreamId)) {
-            return QUALITY_DEFAULT;
-        }
-
-        if (!this.qualityDict[this.currentStreamId].hasOwnProperty(type)) {
-            return QUALITY_DEFAULT;
-        }
-
-        quality = this.qualityDict[this.currentStreamId][type];
-        return quality;
-    };
-
     this.setQualityFor = function (type, id, value) {
         this.currentStreamId = id;
         this.qualityDict[id] = this.qualityDict[id] || {};

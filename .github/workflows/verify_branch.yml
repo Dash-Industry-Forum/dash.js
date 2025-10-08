@@ -28,7 +28,4 @@ jobs:
                 continue-on-error: true
                 run: npm list
             -   run: npm install
-            -   run: tsc
-            -   run: npm run lint
-            -   run: npm run test
-            -   run: npm run webpack-build
+            -   run: npm run build

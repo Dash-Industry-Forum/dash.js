@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Load with a parsed manifest object</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -244,7 +244,7 @@
 
             video = document.querySelector("video");
             player = dashjs.MediaPlayer().create();
-            
+
 
             player.initialize(video, null, false);
             player.attachSource(parsedManifest);

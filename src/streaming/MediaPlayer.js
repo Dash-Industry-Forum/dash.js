@@ -28,59 +28,56 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
-import Constants from './constants/Constants.js';
-import DashConstants from '../dash/constants/DashConstants.js';
-import MetricsConstants from './constants/MetricsConstants.js';
-import PlaybackController from './controllers/PlaybackController.js';
-import StreamController from './controllers/StreamController.js';
-import GapController from './controllers/GapController.js';
-import CatchupController from './controllers/CatchupController.js';
-import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
-import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
-import MediaController from './controllers/MediaController.js';
+import AbrController from './controllers/AbrController.js';
+import BASE64 from '../../externals/base64.js';
 import BaseURLController from './controllers/BaseURLController.js';
-import ManifestLoader from './ManifestLoader.js';
-import ErrorHandler from './utils/ErrorHandler.js';
+import BoxParser from './utils/BoxParser.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
-import URIFragmentModel from './models/URIFragmentModel.js';
-import ManifestModel from './models/ManifestModel.js';
-import MediaPlayerModel from './models/MediaPlayerModel.js';
-import AbrController from './controllers/AbrController.js';
-import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
-import VideoModel from './models/VideoModel.js';
+import CatchupController from './controllers/CatchupController.js';
+import ClientDataReportingController from './controllers/ClientDataReportingController.js';
 import CmcdModel from './models/CmcdModel.js';
 import CmsdModel from './models/CmsdModel.js';
+import Constants from './constants/Constants.js';
+import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
+import CustomParametersModel from './models/CustomParametersModel.js';
 import DOMStorage from './utils/DOMStorage.js';
+import DashAdapter from '../dash/DashAdapter.js';
+import DashConstants from '../dash/constants/DashConstants.js';
+import DashJSError from './vo/DashJSError.js';
+import DashMetrics from '../dash/DashMetrics.js';
 import Debug from './../core/Debug.js';
+import ErrorHandler from './utils/ErrorHandler.js';
 import Errors from './../core/errors/Errors.js';
 import EventBus from './../core/EventBus.js';
 import Events from './../core/events/Events.js';
-import MediaPlayerEvents from './MediaPlayerEvents.js';
+import ExternalSubtitle from './vo/ExternalSubtitle.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Settings from '../core/Settings.js';
-import {getVersionString} from '../core/Version.js';
-
-//Dash
-import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
-import DashAdapter from '../dash/DashAdapter.js';
-import DashMetrics from '../dash/DashMetrics.js';
-import TimelineConverter from '../dash/utils/TimelineConverter.js';
-import {
-    HTTPRequest
-} from './vo/metrics/HTTPRequest.js';
-import BASE64 from '../../externals/base64.js';
+import GapController from './controllers/GapController.js';
 import ISOBoxer from 'codem-isoboxer';
-import DashJSError from './vo/DashJSError.js';
-import {checkParameterType} from './utils/SupervisorTools.js';
+import ManifestLoader from './ManifestLoader.js';
+import ManifestModel from './models/ManifestModel.js';
 import ManifestUpdater from './ManifestUpdater.js';
-import URLUtils from '../streaming/utils/URLUtils.js';
-import BoxParser from './utils/BoxParser.js';
+import MediaController from './controllers/MediaController.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import MediaPlayerModel from './models/MediaPlayerModel.js';
+import MetricsConstants from './constants/MetricsConstants.js';
+import PlaybackController from './controllers/PlaybackController.js';
+import SchemeLoaderFactory from './net/SchemeLoaderFactory.js';
+import SegmentBaseController from '../dash/controllers/SegmentBaseController.js';
+import ServiceDescriptionController from '../dash/controllers/ServiceDescriptionController.js';
+import Settings from '../core/Settings.js';
+import StreamController from './controllers/StreamController.js';
 import TextController from './text/TextController.js';
-import CustomParametersModel from './models/CustomParametersModel.js';
 import ThroughputController from './controllers/ThroughputController.js';
-import ClientDataReportingController from './controllers/ClientDataReportingController.js';
+import TimelineConverter from '../dash/utils/TimelineConverter.js';
+import URIFragmentModel from './models/URIFragmentModel.js';
+import URLUtils from '../streaming/utils/URLUtils.js';
+import VideoModel from './models/VideoModel.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
+import {checkParameterType} from './utils/SupervisorTools.js';
+import {getVersionString} from '../core/Version.js';
 
 /**
  * The media types
@@ -977,6 +974,10 @@ function MediaPlayer() {
         return t
     }
 
+    /**
+     * Returns information about the current DVR window including the start time, the end time, the window size.
+     * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
+     */
     function getDvrWindow() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
@@ -1034,7 +1035,7 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function timeAsUtc() {
+    function timeAsUTC() {
         if (!playbackInitialized) {
             throw PLAYBACK_NOT_INITIALIZED_ERROR;
         }
@@ -1229,6 +1230,20 @@ function MediaPlayer() {
     }
 
     /**
+     * Returns the average latency computed in the ThroughputController in milliseconds
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getAverageLatency(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getAverageLatency(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
      * Returns the average throughput computed in the ThroughputController in kbit/s
      *
      * @param {MediaType} type
@@ -1238,8 +1253,34 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function getAverageThroughput(type, calculationMode = null, sampleSize = NaN) {
+    function getAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
         return throughputController ? throughputController.getAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     * Returns the safe average throughput computed in the ThroughputController in kbit/s. The safe average throughput is the average throughput multiplied by bandwidthSafetyFactor
+     *
+     * @param {MediaType} type
+     * @param {string} calculationMode
+     * @param {number} sampleSize
+     * @return {number} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getSafeAverageThroughput(type = Constants.VIDEO, calculationMode = null, sampleSize = NaN) {
+        return throughputController ? throughputController.getSafeAverageThroughput(type, calculationMode, sampleSize) : 0;
+    }
+
+    /**
+     *  Returns the raw throughput data without calculating the average. This can be used to calculate the current throughput yourself.
+     *
+     * @param {MediaType} type
+     * @return {Array} value
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getRawThroughputData(type = Constants.VIDEO) {
+        return throughputController ? throughputController.getRawThroughputData(type) : [];
     }
 
     /**
@@ -1453,6 +1494,7 @@ function MediaPlayer() {
 
         if (playbackInitialized) { //Reset if we have been playing before, so this is a new element.
             _resetPlaybackControllers();
+            _resetPlaybackSessionSpecificSettings();
         }
 
         _initializePlayback(providedStartTime);
@@ -1537,7 +1579,7 @@ function MediaPlayer() {
      * This value will be overwritten by the ABR rules unless autoSwitchBitrate is set to false.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest bitrate
+     * @param {number} id , The ID of the Representation
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -1574,7 +1616,7 @@ function MediaPlayer() {
      * Do NOT use representation.absoluteIndex here as this index was assigned prior to applying any filter function. If you want to select a specific representation then use setRepresentationForTypeById() instead.
      *
      * @param {MediaType} type - 'video', 'audio' or 'image'
-     * @param {number} value - the quality index, 0 corresponding to the lowest possible index
+     * @param {number} index - the quality index, 0 corresponding to the lowest possible index
      * @param {boolean} forceReplace - true if segments have to be replaced by segments of the new quality
      * @memberof module:MediaPlayer
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
@@ -1814,6 +1856,43 @@ function MediaPlayer() {
     }
 
     /**
+     * Adds an external subtitle file. The provided externalSubtitle must be an instance of the ExternalSubtitle class.
+     * @param {ExternalSubtitle} externalSubtitle
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function addExternalSubtitle(externalSubtitle) {
+        if (!(externalSubtitle instanceof ExternalSubtitle)) {
+            logger.error('Invalid external subtitle object. Must be an instance of dashjs.ExternalSubtitle');
+        }
+        customParametersModel.addExternalSubtitle(externalSubtitle);
+    }
+
+    /**
+     * Removes an external subtitle file by its ID.
+     * @param {string} id
+     */
+    function removeExternalSubtitleById(id) {
+        customParametersModel.removeExternalSubtitleById(id);
+    }
+
+    /**
+     * Removes an external subtitle file by its url.
+     * @param {string} url
+     */
+    function removeExternalSubtitleByUrl(url) {
+        customParametersModel.removeExternalSubtitleByUrl(url);
+    }
+
+    /**
+     * Returns all external subtitles
+     */
+    function getExternalSubtitles() {
+        customParametersModel.getExternalSubtitles();
+    }
+
+
+    /**
      * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
      * The interceptors are applied in the order they are added.
@@ -2040,7 +2119,7 @@ function MediaPlayer() {
     /**
      * Sets the source to a new manifest URL or object without reloading
      * Useful for updating CDN tokens
-     * @param urlOrManifest
+     * @param {string | object} urlOrManifest
      */
     function updateSource(urlOrManifest) {
         source = urlOrManifest
@@ -2086,6 +2165,7 @@ function MediaPlayer() {
 
         if (streamingInitialized || playbackInitialized) {
             _resetPlaybackControllers();
+            _resetPlaybackSessionSpecificSettings()
         }
 
         if (isReady()) {
@@ -2358,6 +2438,10 @@ function MediaPlayer() {
         cmsdModel.reset();
     }
 
+    function _resetPlaybackSessionSpecificSettings() {
+        customParametersModel.resetPlaybackSessionSpecificSettings()
+    }
+
     function _createPlaybackControllers() {
         // creates or get objects instances
         const manifestLoader = _createManifestLoader();
@@ -2482,7 +2566,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        cmcdModel.initialize();
+        cmcdModel.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
@@ -2666,6 +2750,7 @@ function MediaPlayer() {
 
         function __sanitizeDescriptorType(name, val, defaultSchemeIdUri) {
             let out = {};
+            // For an empty string, let's unset the descriptor, i.e. return null
             if (val) {
                 if (val instanceof Array) {
                     throw ARRAY_NOT_SUPPORTED_ERROR;
@@ -2682,22 +2767,30 @@ function MediaPlayer() {
             return null;
         }
 
-        if (value.lang) {
+        if (value.id !== undefined) {
+            output.id = value.id;
+        }
+        if (value.lang !== undefined) {
             output.lang = value.lang;
         }
         if (!isNaN(value.index)) {
             output.index = value.index;
         }
-        if (value.viewpoint) {
+        if (value.viewpoint !== undefined) {
             output.viewpoint = __sanitizeDescriptorType('viewpoint', value.viewpoint, defaults.viewpoint);
         }
-        if (value.audioChannelConfiguration) {
+        if (value.audioChannelConfiguration !== undefined) {
             output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
         }
-        if (value.role) {
+        if (value.role !== undefined) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
+
+            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+            if (output.role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
+                output.role.value = DashConstants.MAIN;
+            }
         }
-        if (value.accessibility) {
+        if (value.accessibility !== undefined) {
             output.accessibility = __sanitizeDescriptorType('accessibility', value.accessibility, defaults.accessibility);
         }
 
@@ -2735,6 +2828,7 @@ function MediaPlayer() {
 
     instance = {
         addABRCustomRule,
+        addExternalSubtitle,
         addRequestInterceptor,
         addResponseInterceptor,
         addUTCTimingSource,
@@ -2756,25 +2850,29 @@ function MediaPlayer() {
         getAutoPlay,
         getAvailableBaseUrls,
         getAvailableLocations,
+        getAverageLatency,
         getAverageThroughput,
         getBufferLength,
         getCurrentLiveLatency,
+        getCurrentRepresentationForType,
         getCurrentSteeringResponseData,
         getCurrentTextTrackIndex,
         getCurrentTrackFor,
-        getDvrSeekOffset,
-        getDvrWindow,
         getDashAdapter,
         getDashMetrics,
         getDebug,
+        getDvrSeekOffset,
+        getDvrWindow,
+        getExternalSubtitles,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
+        getManifest,
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
-        getCurrentRepresentationForType,
-        getManifest,
+        getRawThroughputData,
         getRepresentationsByType,
+        getSafeAverageThroughput,
         getSettings,
         getSource,
         getStreamsFromManifest,
@@ -2799,15 +2897,17 @@ function MediaPlayer() {
         play,
         preload,
         provideThumbnail,
+        refreshManifest,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
         removeABRCustomRule,
         removeAllABRCustomRule,
+        removeExternalSubtitleById,
+        removeExternalSubtitleByUrl,
         removeRequestInterceptor,
         removeResponseInterceptor,
         removeUTCTimingSource,
-        refreshManifest,
         reset,
         resetCustomInitialTrackSelectionFunction,
         resetSettings,
@@ -2824,13 +2924,13 @@ function MediaPlayer() {
         setMute,
         setPlaybackRate,
         setProtectionData,
-        setRepresentationForTypeByIndex,
         setRepresentationForTypeById,
+        setRepresentationForTypeByIndex,
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,
         time,
-        timeAsUtc,
+        timeAsUTC,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

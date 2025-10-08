@@ -221,7 +221,7 @@ function CapabilitiesFilter() {
             codec: codec,
             width: rep.width || null,
             height: rep.height || null,
-            framerate: rep.frameRate || null,
+            framerate: adapter.getFramerate(rep) || null,
             bitrate: rep.bandwidth || null,
             isSupported: true
         }
@@ -318,7 +318,7 @@ function CapabilitiesFilter() {
     }
 
     function _addGenericAttributesToConfig(rep, config) {
-        if (rep && rep[DashConstants.CONTENT_PROTECTION] && rep[DashConstants.CONTENT_PROTECTION].length > 0) {
+        if (protectionController && rep && rep[DashConstants.CONTENT_PROTECTION] && rep[DashConstants.CONTENT_PROTECTION].length > 0) {
             config.keySystemsMetadata = protectionController.getSupportedKeySystemMetadataFromContentProtection(rep[DashConstants.CONTENT_PROTECTION])
         }
         return config

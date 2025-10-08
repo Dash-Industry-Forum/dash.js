@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -24,16 +24,7 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
-    return $resource('https://testassets.dashif.org/dashjs.json', {}, {
-        query: {
-            method: 'GET',
-            isArray: false
-        }
-    });
-});
-
-app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', 'dashifTestVectors', function ($scope, $window, sources, contributors, dashifTestVectors) {
+app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', function ($scope, $window, sources, contributors) {
     $scope.selectedItem = {
         url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
     };
@@ -49,14 +40,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         }
-
-        // DASH Industry Forum Test Vectors
-        dashifTestVectors.query(function (data) {
-            $scope.availableStreams.splice(7, 0, {
-                name: 'DASH Industry Forum Test Vectors',
-                submenu: data.items
-            });
-        });
 
         // Add provider to beginning of each Vector
         var provider = data.provider;
@@ -331,6 +314,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.currentLogLevel = 'info';
     $scope.cmcdMode = 'query';
     $scope.cmcdAllKeys = ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+
+    $scope.stallThreshold = 0.3;
+    $scope.lowLatencyStallThreshold = 0.3;
 
     // Persistent license
     $scope.persistentSessionId = {};
@@ -778,6 +764,26 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateStallThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    stallThreshold: parseFloat($scope.stallThreshold)
+                }
+            }
+        });
+    }
+
+    $scope.updateLowLatencyStallThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                buffer: {
+                    lowLatencyStallThreshold: parseFloat($scope.lowLatencyStallThreshold)
+                }
+            }
+        });
+    }
+
     $scope.updateInitialRoleVideo = function () {
         $scope.player.setInitialMediaSettingsFor('video', {
             role: $scope.initialSettings.video
@@ -813,7 +819,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope._backconvertRoleScheme = function (setting) {
         var scheme = 'off';
-        
+
         if (setting) {
             scheme = undefined;
             switch (setting.schemeIdUri) {
@@ -1134,6 +1140,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         const maxBitrate = parseInt($scope.maxVideoBitrate);
         if (!isNaN(maxBitrate)) {
             config.streaming.abr.maxBitrate = { 'video': maxBitrate };
+        }
+
+        const stallThreshold = parseFloat($scope.stallThreshold);
+        if (!isNaN(stallThreshold)) {
+            config.streaming.buffer.stallThreshold = stallThreshold;
+        }
+
+        const lowLatencyStallThreshold = parseFloat($scope.lowLatencyStallThreshold);
+        if (!isNaN(lowLatencyStallThreshold)) {
+            config.streaming.buffer.lowLatencyStallThreshold = lowLatencyStallThreshold;
         }
 
         config.streaming.cmcd.sid = $scope.cmcdSessionId ? $scope.cmcdSessionId : null;
@@ -1935,7 +1951,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     if (scheme === 'off') {
                         delete settings.accessibility;
                     } else {
-                        Object.assign(settings, {accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility)} );
+                        Object.assign(settings, { accessibility: $scope._genSettingsAudioAccessibility(scheme, $scope.initialSettings.audioAccessibility) });
                     }
                     $scope.player.setInitialMediaSettingsFor('audio', settings);
                     break;
@@ -2308,6 +2324,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
     }
 
+    function setStallThresholdOptions() {
+        var currentConfig = $scope.player.getSettings();
+        $scope.stallThreshold = currentConfig.streaming.buffer.stallThreshold;
+        $scope.lowLatencyStallThreshold = currentConfig.streaming.buffer.lowLatencyStallThreshold;
+    }
+
     function setInitialSettings() {
         var currentConfig = $scope.player.getSettings();
         if (currentConfig.streaming.abr.initialBitrate.video !== -1) {
@@ -2468,6 +2490,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setDrmOptions();
             setTextOptions();
             setLiveDelayOptions();
+            setStallThresholdOptions()
             setInitialSettings();
             setTrackSwitchModeSettings();
             setInitialLogLevel();

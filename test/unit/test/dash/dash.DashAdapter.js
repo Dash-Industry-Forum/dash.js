@@ -1,12 +1,12 @@
 import DashAdapter from '../../../../src/dash/DashAdapter.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import DashConstants from '../../../../src/dash/constants/DashConstants.js';
-import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import { Cta608Parser } from '@svta/common-media-library/cta/608/Cta608Parser';
 import VoHelper from '../../helpers/VOHelper.js';
 import PatchHelper from '../../helpers/PatchHelper.js';
 import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
-import {expect} from 'chai';
+import { expect } from 'chai';
 
 const context = {};
 const voHelper = new VoHelper();
@@ -87,6 +87,90 @@ const manifest_with_supplemental_properties = {
                 schemeIdUri: 'test:scheme',
                 value: 'value1'
             }, { schemeIdUri: 'test:scheme', value: 'value2' }]
+        }]
+    }]
+};
+const manifest_with_essential_properties_on_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period: [{
+        AdaptationSet: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.ESSENTIAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value1' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value3' }
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000,
+                    [DashConstants.ESSENTIAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value4' },
+                        { schemeIdUri: 'test:scheme', value: 'value3' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value0' }
+                    ]
+                },
+                {
+                    id: 12, bandwidth: 192000,
+                    [DashConstants.ESSENTIAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value3' },
+                        { schemeIdUri: 'test:scheme', value: 'value1' }
+                    ]
+                }
+            ]
+        }]
+    }]
+};
+const manifest_with_supplemental_properties_on_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period: [{
+        AdaptationSet: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value1' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value3' }
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value1' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value4' }
+                    ]
+                }
+            ]
+        }]
+    }]
+};
+const manifest_with_supplemental_properties_on_not_all_repr = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period: [{
+        AdaptationSet: [{
+            id: 0, mimeType: Constants.VIDEO,
+            [DashConstants.REPRESENTATION]: [
+                {
+                    id: 10, bandwidth: 128000,
+                    [DashConstants.SUPPLEMENTAL_PROPERTY]: [
+                        { schemeIdUri: 'test:scheme', value: 'value1' },
+                        { schemeIdUri: 'test:scheme', value: 'value2' },
+                        { schemeIdUri: 'test:scheme', value: 'value3' }
+                    ]
+                },
+                {
+                    id: 11, bandwidth: 160000
+                }
+            ]
         }]
     }]
 };
@@ -425,6 +509,34 @@ describe('DashAdapter', function () {
             expect(voRepresentations).to.be.empty;
         });
 
+        it('should return the adaptation with Role Main when getMainAdaptationForType is called', () => {
+            const manifest_with_video = {
+                loadedTime: new Date(),
+                mediaPresentationDuration: 10,
+                Period: [{
+                    AdaptationSet: [
+                        {
+                            id: 1,
+                            mimeType: Constants.VIDEO,
+                            Role: [{ schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'alternate' }]
+                        },
+                        {
+                            id: 2,
+                            mimeType: Constants.VIDEO,
+                            Role: [
+                                { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: DashConstants.MAIN },
+                                { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'dub' }
+                            ]
+                        }
+                    ]
+                }]
+            };
+            dashAdapter.updatePeriods(manifest_with_video);
+            const adaptation = dashAdapter.getMainAdaptationForType(Constants.VIDEO, { index: 0 });
+
+            expect(adaptation.id).to.equal(2);
+        });
+
         it('should return the first adaptation when getMainAdaptationForType is called and streamInfo is undefined', () => {
             const manifest_with_video = {
                 loadedTime: new Date(),
@@ -597,6 +709,25 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].essentialProperties.length).equals(2);
                 });
 
+                it('essential properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_essential_properties_on_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].representationCount).equals(3);
+                    expect(mediaInfoArray[0].codec).not.to.be.null;
+
+                    expect(mediaInfoArray[0].essentialProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].essentialProperties.length).equals(1);
+
+                    expect(mediaInfoArray[0].essentialProperties[0].schemeIdUri).equals('test:scheme');
+                    expect(mediaInfoArray[0].essentialProperties[0].value).equals('value3');
+                });
+
                 it('essential properties should not be filled if not set on all representations', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
                         id: 'defaultId_0',
@@ -638,6 +769,41 @@ describe('DashAdapter', function () {
 
                     expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].supplementalProperties.length).equals(2);
+                });
+
+                it('supplemental properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].representationCount).equals(2);
+                    expect(mediaInfoArray[0].codec).not.to.be.null;
+
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(2);
+
+                    expect(mediaInfoArray[0].supplementalProperties[1].schemeIdUri).equals('test:scheme');
+                    expect(mediaInfoArray[0].supplementalProperties[1].value).equals('value2');
+                });
+
+                it('supplemental properties should be filled if set on all representations', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.VIDEO, manifest_with_supplemental_properties_on_not_all_repr);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(1);
+
+                    expect(mediaInfoArray[0].representationCount).equals(2);
+                    expect(mediaInfoArray[0].codec).not.to.be.null;
+
+                    expect(mediaInfoArray[0].supplementalProperties).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[0].supplementalProperties.length).equals(0);
                 });
 
                 it('supplemental properties should not be filled if not set on all representations', function () {

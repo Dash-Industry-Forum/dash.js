@@ -1,7 +1,7 @@
 import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
-import {MediaPlayer, Debug} from '../../../dist/esm/dash.all.min.esm.js';
-import '../../../dist/dash.mss.min.js';
+import {MediaPlayer, Debug} from '../../../dist/modern/esm/dash.all.min.js';
+import '../../../dist/modern/esm/dash.mss.min.js';
 
 class DashJsAdapter {
 
@@ -12,6 +12,9 @@ class DashJsAdapter {
         this.startedFragmentDownloads = [];
         this.logEvents = {};
         this.errorEvents = [];
+        this.registeredEvents = new Set();
+        this.triggeredEvents = new Map();
+        this._onEventTriggered = this._onEventTriggered.bind(this);
         this._onFragmentLoadedHandler = this._onFragmentLoaded.bind(this);
         this._onLogEvent = this._onLogEvent.bind(this);
         this._onErrorEvent = this._onErrorEvent.bind(this);
@@ -83,6 +86,8 @@ class DashJsAdapter {
     destroy() {
         this.logEvents = {};
         this.errorEvents = [];
+        this.registeredEvents.clear()
+        this.triggeredEvents.clear()
         if (this.player) {
             this._unregisterInternalEvents();
             this.player.resetSettings();
@@ -122,16 +127,34 @@ class DashJsAdapter {
         this.player.off(MediaPlayer.events.FRAGMENT_LOADING_STARTED, this._onFragmentLoadedHandler)
         this.player.off(MediaPlayer.events.LOG, this._onLogEvent)
         this.player.off(MediaPlayer.events.ERROR, this._onErrorEvent);
-
     }
 
     /**
      *
-     * @param type
+     * @param eventName
      * @param callback
      */
-    registerEvent(type, callback) {
-        this.player.on(type, callback)
+    registerEvent(eventName, callback) {
+        if (callback) {
+            this.player.on(eventName, callback)
+        }
+        if (!this.registeredEvents.has(eventName)) {
+            this.registeredEvents.add(eventName);
+            this.player.on(eventName, this._onEventTriggered)
+        }
+    }
+
+    _onEventTriggered(event) {
+        if (!this.triggeredEvents.has(event.type)) {
+            this.triggeredEvents.set(event.type, []);
+        }
+        this.triggeredEvents.get(event.type).push({
+            timestamp: Date.now(),
+        });
+    }
+
+    hasEventBeenTriggered(eventName) {
+        return this.triggeredEvents.has(eventName) && this.triggeredEvents.get(eventName).length > 0;
     }
 
     /**
@@ -141,6 +164,10 @@ class DashJsAdapter {
      */
     unregisterEvent(type, callback) {
         this.player.off(type, callback)
+        if (this.registeredEvents.has(type)) {
+            this.registeredEvents.delete(type);
+            this.player.off(type, this._onEventTriggered)
+        }
     }
 
     _onFragmentLoaded(e) {
@@ -572,7 +599,7 @@ class DashJsAdapter {
         })
     }
 
-    async waitForMediaSegmentDownload(timeoutValue) {
+    async waitForMediaSegmentDownload(timeoutValue, mediaType = 'all') {
         return new Promise((resolve) => {
             let timeout = null;
 
@@ -586,7 +613,7 @@ class DashJsAdapter {
                 _onComplete({});
             }
             const _onEvent = (e) => {
-                if (e.request.type === 'MediaSegment') {
+                if (e.request.type === 'MediaSegment' && (e.request.mediaType === mediaType || mediaType === 'all')) {
                     _onComplete(e);
                 }
             }

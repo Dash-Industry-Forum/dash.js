@@ -384,6 +384,9 @@ function ProtectionController(config) {
             return;
         }
 
+        // Enforce maximum number of open MediaKeySessions, if settings are provided
+        _enforceMediaKeySessionLimit();
+
         const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, keySystemMetadata ? keySystemMetadata.initData : null);
         if (initDataForKS) {
 
@@ -408,6 +411,33 @@ function ProtectionController(config) {
                 data: null,
                 error: new DashJSError(ProtectionErrors.KEY_SESSION_CREATED_ERROR_CODE, ProtectionErrors.KEY_SESSION_CREATED_ERROR_MESSAGE + 'Selected key system is ' + (selectedKeySystem ? selectedKeySystem.systemString : null) + '.  needkey/encrypted event contains no initData corresponding to that key system!')
             });
+        }
+    }
+
+    /**
+     * Enforces the maximum number of open MediaKeySessions, if settings are provided.
+     * @description This method checks the current number of open sessions and closes the oldest session if the limit is reached.
+     * @requires keepProtectionMediaKeys is enabled and keepProtectionMediaKeysMaximumOpenSessions is set with a positive value.
+     * @private
+     */
+    function _enforceMediaKeySessionLimit() {
+        if (!settings) { return; }
+        const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
+        const maxSessions = settings.get().streaming.protection.keepProtectionMediaKeysMaximumOpenSessions;
+        if (typeof maxSessions !== 'number' || maxSessions <= 0) { return; }
+        if (!isKeepProtectionMediaKeysEnabled) {
+            logger.warn('DRM: keepProtectionMediaKeysMaximumOpenSessions is set to ' + maxSessions + ', but keepProtectionMediaKeys is not enabled. Therefore, keepProtectionMediaKeysMaximumOpenSessions will be ignored.');
+            return;
+        }
+        // Ensure protectionModel is available before accessing sessions
+        if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') { return; }
+        const sessionTokens = protectionModel.getSessionTokens() || [];
+        if (sessionTokens.length < maxSessions) { return; }
+        // Limit reached. Close the oldest session to make room for a new one.
+        const oldestSession = sessionTokens[0];
+        if (oldestSession) {
+            logger.info('DRM: Maximum number of open MediaKeySessions reached (' + maxSessions + '), closing oldest session.');
+            closeKeySession(oldestSession);
         }
     }
 
@@ -717,7 +747,7 @@ function ProtectionController(config) {
      * @param {object} error
      * @private
      */
-    function _sendLicenseRequestCompleteEvent(data, error) {
+    function _sendLicenseRequestCompleteEvent(data, error = null) {
         eventBus.trigger(events.LICENSE_REQUEST_COMPLETE, { data: data, error: error });
     }
 
@@ -1053,54 +1083,56 @@ function ProtectionController(config) {
      * @private
      */
     function _onNeedKey(event, retry) {
-        if (!settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
-            logger.debug('DRM: onNeedKey');
+        if (settings.get().streaming.protection.ignoreEmeEncryptedEvent) {
+            return
+        }
 
-            // Ignore non-cenc initData
-            if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
-                logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+        logger.debug('DRM: onNeedKey');
+
+        // Ignore non-cenc initData
+        if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
+            logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+            return;
+        }
+
+        if (mediaInfoArr.length === 0) {
+            logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
+            retry = typeof retry === 'undefined' ? 1 : retry + 1;
+            if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
+                needkeyRetries.push(setTimeout(() => {
+                    _onNeedKey(event, retry);
+                }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
                 return;
             }
+        }
 
-            if (mediaInfoArr.length === 0) {
-                logger.warn('DRM: onNeedKey called before initializeForMedia, wait until initialized');
-                retry = typeof retry === 'undefined' ? 1 : retry + 1;
-                if (retry < NEEDKEY_BEFORE_INITIALIZE_RETRIES) {
-                    needkeyRetries.push(setTimeout(() => {
-                        _onNeedKey(event, retry);
-                    }, NEEDKEY_BEFORE_INITIALIZE_TIMEOUT));
+        // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
+        // Convert to ArrayBuffer
+        let abInitData = event.key.initData;
+        if (ArrayBuffer.isView(abInitData)) {
+            abInitData = abInitData.buffer;
+        }
+
+        // If key system has already been selected and initData already seen, then do nothing
+        if (selectedKeySystem) {
+            const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+            if (initDataForKS) {
+                // Check for duplicate initData
+                if (_isInitDataDuplicate(initDataForKS)) {
                     return;
                 }
             }
-
-            // Some browsers return initData as Uint8Array (IE), some as ArrayBuffer (Chrome).
-            // Convert to ArrayBuffer
-            let abInitData = event.key.initData;
-            if (ArrayBuffer.isView(abInitData)) {
-                abInitData = abInitData.buffer;
-            }
-
-            // If key system has already been selected and initData already seen, then do nothing
-            if (selectedKeySystem) {
-                const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
-                if (initDataForKS) {
-                    // Check for duplicate initData
-                    if (_isInitDataDuplicate(initDataForKS)) {
-                        return;
-                    }
-                }
-            }
-
-            logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-
-            const supportedKs = protectionKeyController.getSupportedKeySystemsFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
-            if (supportedKs.length === 0) {
-                logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
-                return;
-            }
-
-            _handleKeySystemFromPssh(supportedKs);
         }
+
+        logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
+
+        const supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+        if (supportedKeySystemsMetadata.length === 0) {
+            logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
+            return;
+        }
+
+        _handleKeySystemFromPssh(supportedKeySystemsMetadata);
     }
 
     /**
@@ -1127,6 +1159,7 @@ function ProtectionController(config) {
                 return
             }
 
+            e.sessionToken.hasTriggeredKeyStatusMapUpdate = true;
             const parsedKeyStatuses = e.parsedKeyStatuses;
             const ua = Utils.parseUserAgent();
             const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
@@ -1138,7 +1171,9 @@ function ProtectionController(config) {
                 }
 
                 const keyIdInHex = Utils.bufferSourceToHex(keyStatus.keyId).slice(0, 32);
-                keyStatusMap.set(keyIdInHex, keyStatus.status);
+                if (keyIdInHex && keyIdInHex !== '') {
+                    keyStatusMap.set(keyIdInHex, keyStatus.status);
+                }
             })
             eventBus.trigger(events.KEY_STATUSES_MAP_UPDATED, { keyStatusMap });
         } catch (e) {
@@ -1159,18 +1194,14 @@ function ProtectionController(config) {
 
     function areKeyIdsUsable(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
                 return true;
             }
 
-            let usable = true
-
-            normalizedKeyIds.forEach((normalizedKeyId) => {
-                const keyStatus = keyStatusMap.get(normalizedKeyId)
-                usable = !keyStatus || (keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED);
-            })
-
-            return usable
+            return [...normalizedKeyIds].some((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId);
+                return keyStatus && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.INTERNAL_ERROR && keyStatus !== ProtectionConstants.MEDIA_KEY_STATUSES.OUTPUT_RESTRICTED;
+            });
         } catch (error) {
             logger.error(error);
             return true
@@ -1179,22 +1210,48 @@ function ProtectionController(config) {
 
     function areKeyIdsExpired(normalizedKeyIds) {
         try {
-            if (!normalizedKeyIds || normalizedKeyIds.size === 0) {
+            if (!_shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap)) {
                 return false;
             }
 
-            let expired = false
-
-            normalizedKeyIds.forEach((normalizedKeyId) => {
-                const keyStatus = keyStatusMap.get(normalizedKeyId)
-                expired = keyStatus && keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED
+            return [...normalizedKeyIds].every((normalizedKeyId) => {
+                const keyStatus = keyStatusMap.get(normalizedKeyId);
+                return keyStatus === ProtectionConstants.MEDIA_KEY_STATUSES.EXPIRED;
             })
-
-            return expired
         } catch (error) {
             logger.error(error);
+            return false
+        }
+    }
+
+    function _shouldCheckKeyStatusMap(normalizedKeyIds, keyStatusMap) {
+        if (normalizedKeyIds.size <= 0) {
+            return false;
+        }
+
+        const allHaveStatus = keyStatusMap.size > 0 && [...normalizedKeyIds].every((normalizedKeyId) => {
+            const keyStatus = keyStatusMap.get(normalizedKeyId);
+            return typeof keyStatus !== 'undefined' && keyStatus !== '';
+        });
+
+        if (allHaveStatus) {
             return true
         }
+
+        const sessionTokens = protectionModel.getSessionTokens();
+
+        if (sessionTokens && sessionTokens.length > 0) {
+            const targetSessionTokens = sessionTokens.filter((sessionToken) => {
+                return [...normalizedKeyIds].includes(sessionToken.normalizedKeyId);
+            })
+            const hasNotTriggeredKeyStatusMapUpdate = targetSessionTokens.some((sessionToken) => {
+                return !sessionToken.hasTriggeredKeyStatusMapUpdate;
+            })
+            if (hasNotTriggeredKeyStatusMapUpdate || targetSessionTokens.length === 0) {
+                return false;
+            }
+        }
+        return !settings.get().streaming.protection.ignoreKeyStatuses && normalizedKeyIds && normalizedKeyIds.size > 0 && keyStatusMap && keyStatusMap.size > 0
     }
 
     instance = {

@@ -1,0 +1,38 @@
+name: deploy_build_latest_as_version_folder
+
+on:
+    push:
+        branches:
+            - 'master'
+
+jobs:
+    get_version_number:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
+        runs-on: ubuntu-latest
+        outputs:
+            version: ${{ steps.set_version.outputs.version }}
+        steps:
+            -   name: Check out repository
+                uses: actions/checkout@v4
+
+            -   name: Read version from package.json
+                id: set_version
+                run: |
+                    echo "version=$(jq -r .version package.json)" >> $GITHUB_OUTPUT
+                shell: bash
+
+            -   name: Print version
+                run: |
+                    echo "Version: ${{ steps.set_version.outputs.version }}"
+
+    deploy:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
+        needs: get_version_number
+        uses: ./.github/workflows/deploy_build.yml
+        with:
+            envname: v${{ needs.get_version_number.outputs.version }}
+            deploy_path: '/377335'
+        secrets:
+            host: ${{ secrets.HOST }}
+            user: ${{ secrets.USER }}
+            private_key: ${{ secrets.PRIVATE_KEY }}

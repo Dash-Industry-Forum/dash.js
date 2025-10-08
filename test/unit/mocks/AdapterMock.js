@@ -17,6 +17,14 @@ function AdapterMock() {
         return null;
     };
 
+    this.getFramerate = function (rep) {
+        if (rep && rep.frameRate) {
+            return rep.frameRate
+        }
+
+        return null
+    }
+
     this.getEventsFor = function () {
         return [];
     };

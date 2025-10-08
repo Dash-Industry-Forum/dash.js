@@ -45,6 +45,8 @@ import CustomParametersModel from '../models/CustomParametersModel.js';
 import CommonAccessTokenController from '../controllers/CommonAccessTokenController.js';
 import ClientDataReportingController from '../controllers/ClientDataReportingController.js';
 import ExtUrlQueryInfoController from '../controllers/ExtUrlQueryInfoController.js';
+import CommonMediaRequest from '../vo/CommonMediaRequest.js';
+import CommonMediaResponse from '../vo/CommonMediaResponse.js';
 
 /**
  * @module HTTPLoader
@@ -167,16 +169,16 @@ function HTTPLoader(cfg) {
                 if (!event.lengthComputable ||
                     (event.lengthComputable && event.total !== event.loaded)) {
                     requestObject.firstByteDate = currentTime;
-                    httpResponse.resourceTiming.responseStart = currentTime.getTime();
+                    commonMediaResponse.resourceTiming.responseStart = currentTime.getTime();
                 }
             }
 
             // lengthComputable indicating if the resource concerned by the ProgressEvent has a length that can be calculated. If not, the ProgressEvent.total property has no significant value.
             if (event.lengthComputable) {
-                requestObject.bytesLoaded = httpResponse.length = event.loaded;
-                requestObject.bytesTotal = httpResponse.resourceTiming.encodedBodySize = event.total;
-                httpResponse.length = event.total;
-                httpResponse.resourceTiming.encodedBodySize = event.loaded;
+                requestObject.bytesLoaded = commonMediaResponse.length = event.loaded;
+                requestObject.bytesTotal = commonMediaResponse.resourceTiming.encodedBodySize = event.total;
+                commonMediaResponse.length = event.total;
+                commonMediaResponse.resourceTiming.encodedBodySize = event.loaded;
             }
 
             if (!event.noTrace) {
@@ -200,8 +202,8 @@ function HTTPLoader(cfg) {
             if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
-                    logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
-                    loader.abort(httpRequest);
+                    logger.warn('Abort request ' + commonMediaRequest.url + ' due to progress timeout');
+                    loader.abort(commonMediaRequest);
                     _onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
             }
@@ -236,8 +238,8 @@ function HTTPLoader(cfg) {
 
         const _onRequestEnd = function (aborted = false) {
             // Remove the request from our list of requests
-            if (httpRequests.indexOf(httpRequest) !== -1) {
-                httpRequests.splice(httpRequests.indexOf(httpRequest), 1);
+            if (httpRequests.indexOf(commonMediaRequest) !== -1) {
+                httpRequests.splice(httpRequests.indexOf(commonMediaRequest), 1);
             }
 
             if (progressTimeout) {
@@ -245,15 +247,15 @@ function HTTPLoader(cfg) {
                 progressTimeout = null;
             }
 
-            commonAccessTokenController.processResponseHeaders(httpResponse);
+            commonAccessTokenController.processResponseHeaders(commonMediaResponse);
 
             _updateRequestTimingInfo();
             _updateResourceTimingInfo();
 
-            _applyResponseInterceptors(httpResponse).then((_httpResponse) => {
-                httpResponse = _httpResponse;
+            _applyResponseInterceptors(commonMediaResponse).then((_httpResponse) => {
+                commonMediaResponse = _httpResponse;
 
-                _addHttpRequestMetric(httpRequest, httpResponse, traces);
+                _addHttpRequestMetric(commonMediaRequest, commonMediaResponse, traces);
 
                 // Ignore aborted requests
                 if (aborted) {
@@ -268,18 +270,18 @@ function HTTPLoader(cfg) {
                     eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
                 }
 
-                if (httpResponse.status >= 200 && httpResponse.status <= 299 && httpResponse.data) {
+                if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && commonMediaResponse.data) {
                     if (config.success) {
-                        config.success(httpResponse.data, httpResponse.statusText, httpResponse.url);
+                        config.success(commonMediaResponse.data, commonMediaResponse.statusText, commonMediaResponse.url);
                     }
 
                     if (config.complete) {
-                        config.complete(requestObject, httpResponse.statusText);
+                        config.complete(requestObject, commonMediaResponse.statusText);
                     }
                 } else {
                     // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
                     try {
-                        if (httpResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+                        if (commonMediaResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
                             // Only trigger a sync if the loading failed for the first time
                             const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(HTTPRequest.MEDIA_SEGMENT_TYPE);
                             if (initialNumberOfAttempts === remainingAttempts) {
@@ -292,7 +294,6 @@ function HTTPLoader(cfg) {
                     _retriggerRequest();
                 }
             });
-
         };
 
         const _updateRequestTimingInfo = function () {
@@ -302,11 +303,11 @@ function HTTPLoader(cfg) {
         }
 
         const _updateResourceTimingInfo = function () {
-            httpResponse.resourceTiming.responseEnd = Date.now();
+            commonMediaResponse.resourceTiming.responseEnd = Date.now();
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
             // These values are more accurate and can be used by the ThroughputController later
-            _addResourceTimingValues(httpRequest, httpResponse);
+            _addResourceTimingValues(commonMediaRequest, commonMediaResponse);
         }
 
         const _loadRequest = function (loader, httpRequest, httpResponse) {
@@ -333,6 +334,9 @@ function HTTPLoader(cfg) {
         const _retriggerRequest = function () {
             if (remainingAttempts > 0) {
                 remainingAttempts--;
+                if (config && config.request) {
+                    config.request.retryAttempts += 1;
+                }
                 let retryRequest = { config: config };
                 retryRequests.push(retryRequest);
                 retryRequest.timeout = setTimeout(function () {
@@ -350,15 +354,15 @@ function HTTPLoader(cfg) {
 
                 errHandler.error(new DashJSError(downloadErrorToRequestTypeMap[requestObject.type], requestObject.url + ' is not available', {
                     request: requestObject,
-                    response: httpResponse
+                    response: commonMediaResponse
                 }));
 
                 if (config.error) {
-                    config.error(requestObject, 'error', httpResponse.statusText, httpResponse);
+                    config.error(requestObject, 'error', commonMediaResponse.statusText, commonMediaResponse);
                 }
 
                 if (config.complete) {
-                    config.complete(requestObject, httpResponse.statusText);
+                    config.complete(requestObject, commonMediaResponse.statusText);
                 }
             }
         }
@@ -368,8 +372,8 @@ function HTTPLoader(cfg) {
         const traces = [];
         let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, progressTimeout;
 
-        let httpRequest; // CommonMediaRequest
-        let httpResponse; // CommonMediaResponse
+        let commonMediaRequest;
+        let commonMediaResponse;
 
         requestObject.bytesLoaded = NaN;
         requestObject.bytesTotal = NaN;
@@ -396,7 +400,8 @@ function HTTPLoader(cfg) {
         }
         const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
 
-        httpRequest = /* CommonMediaRequest */{
+
+        commonMediaRequest = new CommonMediaRequest({
             url: requestObject.url,
             method: HTTPRequest.GET,
             responseType: requestObject.responseType,
@@ -405,29 +410,28 @@ function HTTPLoader(cfg) {
             timeout: requestTimeout,
             cmcd: cmcdModel.getCmcdData(requestObject),
             customData: { request: requestObject }
-        };
+        });
 
-        // Init response (CommoneMediaResponse)
-        httpResponse = {
-            request: httpRequest,
+        commonMediaResponse = new CommonMediaResponse({
+            request: commonMediaRequest,
             resourceTiming: {
                 startTime: Date.now(),
                 encodedBodySize: 0
             },
             status: 0
-        };
+        });
 
         // Adds the ability to delay single fragment loading time to control buffer.
         let now = new Date().getTime();
         if (isNaN(requestObject.delayLoadingTime) || now >= requestObject.delayLoadingTime) {
             // no delay - just send
-            httpRequests.push(httpRequest);
-            return _loadRequest(loader, httpRequest, httpResponse);
+            httpRequests.push(commonMediaRequest);
+            return _loadRequest(loader, commonMediaRequest, commonMediaResponse);
         } else {
             // delay
             let delayedRequest = {
-                httpRequest,
-                httpResponse
+                httpRequest: commonMediaRequest,
+                httpResponse: commonMediaResponse
             };
             delayedRequests.push(delayedRequest);
             delayedRequest.delayTimeout = setTimeout(function () {
@@ -497,7 +501,7 @@ function HTTPLoader(cfg) {
         }
 
         // Get a list of "resource" performance entries
-        const resources = performance.getEntriesByType('resource');
+        const resources = performance.getEntriesByType?.('resource');
         if (resources === undefined || resources.length <= 0) {
             return;
         }
@@ -581,7 +585,9 @@ function HTTPLoader(cfg) {
      */
     function _updateRequestUrlAndHeaders(request) {
         _updateRequestUrlAndHeadersWithCmcd(request);
-        _addExtUrlQueryParameters(request);
+        if (request.retryAttempts === 0) {
+            _addExtUrlQueryParameters(request);
+        }
         _addPathwayCloningParameters(request);
         _addCommonAccessToken(request);
     }
@@ -624,10 +630,12 @@ function HTTPLoader(cfg) {
         const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
         const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) &&
             clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
+
         if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
+                request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
                 const additionalQueryParameter = _getAdditionalQueryParameter(request);
                 request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
             } else if (cmcdMode === Constants.CMCD_MODE_HEADER) {

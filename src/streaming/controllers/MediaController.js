@@ -37,6 +37,7 @@ import {bcp47Normalize} from 'bcp-47-normalize';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
+import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
 
 function MediaController() {
 
@@ -398,18 +399,26 @@ function MediaController() {
         return notEmpty ? settings : null;
     }
 
-    function filterTracksBySettings(tracks, filterFn, settings) {
+    function filterTracksBySettings(tracks, filterFn, preferences) {
         let tracksAfterMatcher = [];
         tracks.forEach(function (track) {
-            if (filterFn(settings, track)) {
+            if (filterFn(preferences, track)) {
                 tracksAfterMatcher.push(track);
             }
         });
         if (tracksAfterMatcher.length !== 0) {
             return tracksAfterMatcher;
-        } else {
-            logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         }
+
+        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} )) {
+            logger.info('no track with Role set to main - assuming main as default and searching again');
+            tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
+            if (tracksAfterMatcher.length !== 0) {
+                return tracksAfterMatcher;
+            }
+        } 
+
+        logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         return tracks;
     }
 
@@ -440,10 +449,17 @@ function MediaController() {
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
+        if ( !track.roles) {
+            return false;
+        }
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
             return _compareDescriptorType(item, settings.role);
         })[0];
         return (matchRole || (track.type === Constants.AUDIO && isTrackActive));
+    }
+
+    function _matchRoleAbsent(_, track) {
+        return (!track.roles) || (track.roles.length === 0);
     }
 
     function matchSettingsAccessibility(settings, track) {
@@ -565,7 +581,7 @@ function MediaController() {
         return result;
     }
 
-    function getTracksWithHighestEfficiency(trackArr) {
+    function _getVideoTracksWithHighestEfficiency(trackArr) {
         let min = Infinity;
         let result = [];
         let tmp;
@@ -585,8 +601,61 @@ function MediaController() {
                 result.push(track);
             }
         });
-
         return result;
+    }
+
+    function _getAudioTracksWithHighestEfficiency(trackArr) {
+        let min = Infinity;
+        let result = [];
+
+        // Note:
+        // we ignore potential AudioChannelConfiguration descriptors assigned to different bitrates=Representations
+        // since this should not happen per IOP
+        trackArr.forEach(function (track) {
+            const tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
+                let nChan = getNChanFromAudioChannelConfig(audioChanCfg) || 0;
+                return acc + nChan;
+            }, 0);
+            let avgChan = tmp / track.audioChannelConfiguration.length;
+
+            if (track.hasOwnProperty('supplementalProperties')) {
+                if (track.supplementalProperties.some(
+                    prop => {
+                        return (prop.schemeIdUri === 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018' && prop.value === 'JOC');
+                    })) {
+                    avgChan = 16;
+                }
+            }
+
+            // avgChan may be undefined, e.g. when audioChannelConfiguration is absent
+            if (!avgChan) {
+                avgChan = 1;
+            }
+
+            let sumEff = track.bitrateList.reduce(function (acc, t) {
+                const trackEff = t.bandwidth / avgChan;
+                return acc + trackEff;
+            }, 0);
+            let eff = sumEff / track.bitrateList.length;
+
+            if (eff < min) {
+                min = eff;
+                result = [track];
+            } else if (eff === min) {
+                result.push(track);
+            }
+        });
+        return result;
+    }
+
+    function getTracksWithHighestEfficiency(trackArr) {
+        if (trackArr[0] && (trackArr[0].type === Constants.VIDEO)) {
+            return _getVideoTracksWithHighestEfficiency(trackArr);
+        } else if (trackArr[0] && (trackArr[0].type === Constants.AUDIO)) {
+            return _getAudioTracksWithHighestEfficiency(trackArr);
+        }
+
+        return trackArr;
     }
 
     function getTracksWithWidestRange(trackArr) {
@@ -630,27 +699,35 @@ function MediaController() {
 
         // Use the track selection function that is defined in the settings
         else {
-            let mode = settings.get().streaming.selectionModeForInitialTrack;
-            switch (mode) {
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_SELECTION_PRIORITY:
-                    tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
-                    tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
-                    tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
-                    break;
-                case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
-                    tmpArr = _trackSelectionModeWidestRange(tmpArr);
-                    break;
-                default:
-                    logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
-                    tmpArr = _trackSelectionModeFirstTrack(tmpArr);
-                    break;
+            if (!settings.get().streaming.ignoreSelectionPriority) {
+                logger.info('Trying to find track with highest selectionPriority');
+                tmpArr = _trackSelectionModeHighestSelectionPriority(tmpArr);
+            }
+            if (tmpArr.length > 1 && settings.get().streaming.prioritizeRoleMain) {
+                logger.info('Trying to find a main track');
+                tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {role: {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} });
+            }
+            if (tmpArr.length > 1) {
+                logger.info('Selecting track based on selectionModeForInitialTrack');
+                let mode = settings.get().streaming.selectionModeForInitialTrack;
+                switch (mode) {
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE:
+                        tmpArr = _trackSelectionModeHighestBitrate(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_FIRST_TRACK:
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY:
+                        tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
+                        tmpArr = _trackSelectionModeWidestRange(tmpArr);
+                        break;
+                    default:
+                        logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
+                        tmpArr = _trackSelectionModeFirstTrack(tmpArr);
+                        break;
+                }
             }
         }
 
@@ -794,18 +871,6 @@ function MediaController() {
     function _trackSelectionModeHighestSelectionPriority(tracks) {
         let tmpArr = getTracksWithHighestSelectionPriority(tracks);
 
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestEfficiency(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithHighestBitrate(tmpArr);
-        }
-
-        if (tmpArr.length > 1) {
-            tmpArr = getTracksWithWidestRange(tmpArr);
-        }
-
         return tmpArr;
     }
 
@@ -885,12 +950,21 @@ function MediaController() {
         };
     }
 
+    function clearDataForStream(streamId) {
+        if (tracks[streamId]) {
+            delete tracks[streamId];
+        }
+    }
+
+
     instance = {
         addTrack,
         areTracksEqual,
+        clearDataForStream,
         getCurrentTrackFor,
         getInitialSettings,
         getTracksFor,
+        getTracksWithHighestSelectionPriority,
         getTracksWithHighestBitrate,
         getTracksWithHighestEfficiency,
         getTracksWithWidestRange,

@@ -28,15 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
-import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
-import FactoryMaker from '../core/FactoryMaker.js';
+import Constants from './constants/Constants.js';
+import CustomParametersModel from '../streaming/models/CustomParametersModel.js';
+import DashConstants from '../dash/constants/DashConstants.js';
 import Debug from '../core/Debug.js';
 import Errors from '../core/errors/Errors.js';
-import DashConstants from '../dash/constants/DashConstants.js';
-import URLUtils from './utils/URLUtils.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 import LocationSelector from './utils/LocationSelector.js';
+import MediaPlayerEvents from '../streaming/MediaPlayerEvents.js';
+import URLUtils from './utils/URLUtils.js';
 import Utils from '../core/Utils.js';
 
 function ManifestUpdater() {
@@ -45,25 +47,28 @@ function ManifestUpdater() {
     const eventBus = EventBus(context).getInstance();
     const urlUtils = URLUtils(context).getInstance();
 
-    let instance,
-        logger,
-        refreshDelay,
-        refreshTimer,
+    let adapter,
+        contentSteeringController,
+        customParametersModel,
+        errHandler,
+        instance,
         isPaused,
         isStopped,
         isUpdating,
+        locationSelector,
+        logger,
         manifestLoader,
         manifestModel,
-        locationSelector,
-        adapter,
-        errHandler,
-        contentSteeringController,
-        settings,
-        refreshDisabled;
+        refreshDelay,
+        refreshDisabled,
+        refreshTimer,
+        settings;
+
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         locationSelector = LocationSelector(context).create();
+        customParametersModel = CustomParametersModel(context).getInstance();
     }
 
     function setConfig(config) {
@@ -92,20 +97,23 @@ function ManifestUpdater() {
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
         }
+        if (config.customParametersModel) {
+            customParametersModel = config.customParametersModel;
+        }
     }
 
     function initialize() {
         resetInitialSettings();
 
-        eventBus.on(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this)
     }
 
     function setManifest(manifest) {
-        update(manifest);
+        _update(manifest);
     }
 
     function resetInitialSettings() {
@@ -113,20 +121,20 @@ function ManifestUpdater() {
         isUpdating = false;
         isPaused = true;
         isStopped = false;
-        stopManifestRefreshTimer();
+        _stopManifestRefreshTimer();
     }
 
     function reset() {
 
-        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, onPlaybackStarted, this);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, onPlaybackPaused, this);
-        eventBus.off(Events.STREAMS_COMPOSED, onStreamsComposed, this);
-        eventBus.off(Events.INTERNAL_MANIFEST_LOADED, onManifestLoaded, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
+        eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
+        eventBus.off(Events.INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
 
         resetInitialSettings();
     }
 
-    function stopManifestRefreshTimer() {
+    function _stopManifestRefreshTimer() {
         if (refreshTimer !== null) {
             clearTimeout(refreshTimer);
             refreshTimer = null;
@@ -134,7 +142,7 @@ function ManifestUpdater() {
     }
 
     function startManifestRefreshTimer(delay) {
-        stopManifestRefreshTimer();
+        _stopManifestRefreshTimer();
 
         if (isStopped) {
             return;
@@ -146,7 +154,7 @@ function ManifestUpdater() {
 
         if (!isNaN(delay) && !refreshDisabled) {
             logger.debug('Refresh manifest in ' + delay + ' milliseconds.');
-            refreshTimer = setTimeout(onRefreshTimer, delay);
+            refreshTimer = setTimeout(_onRefreshTimer, delay);
         }
     }
 
@@ -159,7 +167,7 @@ function ManifestUpdater() {
 
         // Remove previous CMCD parameters from URL
         if (url) {
-            url = Utils.removeQueryParameterFromUrl(url, 'CMCD');
+            url = Utils.removeQueryParameterFromUrl(url, Constants.CMCD_QUERY_KEY);
         }
 
         // Check for PatchLocation and Location alternatives
@@ -196,7 +204,7 @@ function ManifestUpdater() {
         return manifestLocations.concat(synthesizedElements);
     }
 
-    function update(manifest) {
+    function _update(manifest) {
         if (!manifest) {
             // successful update with no content implies existing manifest remains valid
             manifest = manifestModel.getValue();
@@ -264,7 +272,7 @@ function ManifestUpdater() {
         }
     }
 
-    function onRefreshTimer() {
+    function _onRefreshTimer() {
         if (isPaused) {
             return;
         }
@@ -275,36 +283,73 @@ function ManifestUpdater() {
         refreshManifest();
     }
 
-    function onManifestLoaded(e) {
+    function _onManifestLoaded(e) {
         if (!e.error) {
-            update(e.manifest);
+            const manifest = e.manifest;
+            _addExternalElements(manifest);
+            _update(manifest);
         } else if (e.error.code === Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE) {
             errHandler.error(e.error);
         }
     }
 
+    function _addExternalElements(manifest) {
+        _addExternalSubtitles(manifest)
+    }
+
+    function _addExternalSubtitles(manifest) {
+        const externalSubtitles = customParametersModel.getExternalSubtitles();
+        if (!externalSubtitles || externalSubtitles.length === 0) {
+            return;
+        }
+        const numberOfPeriods = manifest && manifest.Period ? manifest.Period.length : 0;
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.periodId === null && numberOfPeriods > 1) {
+                logger.warn(`External subtitle with id ${externalSubtitle.id} has no periodId and the MPD contains more than one period. Unable to add the external subtitle as it is not clear which period shall be used.`);
+            } else if (numberOfPeriods === 1) {
+                _spliceExternalSubtitleInPeriod(manifest.Period[0], externalSubtitle);
+            } else {
+                const targetPeriod = manifest.Period.find((period) => {
+                    return period.id === externalSubtitle.periodId;
+                });
+                if (targetPeriod) {
+                    _spliceExternalSubtitleInPeriod(targetPeriod, externalSubtitle);
+                } else {
+                    logger.warn(`External subtitle with id ${externalSubtitle.id} has periodId ${externalSubtitle.periodId} but the MPD does not contain a period with that id. Unable to add the external subtitle.`);
+                }
+            }
+        })
+    }
+
+    function _spliceExternalSubtitleInPeriod(period, externalSubtitle) {
+        if (!period || !period.AdaptationSet) {
+            return period
+        }
+        period.AdaptationSet.push(externalSubtitle.serializeToMpdParserFormat());
+    }
+
     function onManifestValidityChanged(e) {
         const { minimumUpdatePeriod } = manifestModel.getValue();
         if (minimumUpdatePeriod === 0 && e.inbandEvent) {
-            stopManifestRefreshTimer();
+            _stopManifestRefreshTimer();
             refreshDisabled = true;
         }
     }
 
-    function onPlaybackStarted(/*e*/) {
+    function _onPlaybackStarted(/*e*/) {
         isPaused = false;
         startManifestRefreshTimer();
     }
 
-    function onPlaybackPaused(/*e*/) {
+    function _onPlaybackPaused(/*e*/) {
         isPaused = !settings.get().streaming.scheduling.scheduleWhilePaused;
 
         if (isPaused) {
-            stopManifestRefreshTimer();
+            _stopManifestRefreshTimer();
         }
     }
 
-    function onStreamsComposed(/*e*/) {
+    function _onStreamsComposed(/*e*/) {
         // When streams are ready we can consider manifest update completed. Resolve the update promise.
         isUpdating = false;
     }
@@ -316,10 +361,10 @@ function ManifestUpdater() {
     instance = {
         getIsUpdating,
         initialize,
-        setConfig,
-        setManifest,
         refreshManifest,
         reset,
+        setConfig,
+        setManifest
     };
 
     setup();

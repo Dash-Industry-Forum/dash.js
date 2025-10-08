@@ -127,13 +127,12 @@ function DashAdapter() {
      */
     function getIsMain(adaptation) {
         return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
-            return role.value === DashConstants.MAIN;
+            return role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === DashConstants.MAIN;
         })[0];
     }
 
     /**
      * Returns the AdaptationSet for a given period index and a given mediaType.
-     * @param {number} periodIndex
      * @param {MediaType} type
      * @param {object} streamInfo
      * @returns {null|object} adaptation
@@ -769,6 +768,15 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the framerate of a Representation as number
+     * @param representation
+     * @returns {number}
+     */
+    function getFramerate(representation) {
+        return dashManifestModel.getFramerate(representation);
+    }
+
+    /**
      * Returns the bandwidth for a given representation id and the corresponding period index
      * @param {number} representationId
      * @param {number} periodIdx
@@ -1043,8 +1051,8 @@ function DashAdapter() {
         }
 
         mediaInfo.isText = dashManifestModel.getIsText(realAdaptation);
-        mediaInfo.essentialProperties = dashManifestModel.getEssentialPropertiesForAdaptationSet(realAdaptation);
-        mediaInfo.supplementalProperties = dashManifestModel.getSupplementalPropertiesForAdaptation(realAdaptation);
+        mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realAdaptation);
+        mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realAdaptation);
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
@@ -1095,7 +1103,7 @@ function DashAdapter() {
     function _getNormalizedKeyIds(contentProtection) {
         const normalizedKeyIds = new Set();
         contentProtection.forEach((contentProtectionElement) => {
-            if (contentProtectionElement.cencDefaultKid) {
+            if (contentProtectionElement.cencDefaultKid && typeof contentProtectionElement.cencDefaultKid === 'string') {
                 normalizedKeyIds.add(contentProtectionElement.cencDefaultKid.replace(/-/g, '').toLowerCase());
             }
         })
@@ -1229,6 +1237,7 @@ function DashAdapter() {
         getEssentialPropertiesForRepresentation,
         getEvent,
         getEventsFor,
+        getFramerate,
         getIndexForRepresentation,
         getIsDVB,
         getIsDynamic,

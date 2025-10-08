@@ -9,7 +9,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
-import {decodeCmcd} from '@svta/common-media-library';
+import {decodeCmcd} from '@svta/common-media-library/cmcd/decodeCmcd';
 
 import {expect} from 'chai';
 
@@ -425,7 +425,7 @@ describe('CmcdModel', function () {
                     return e.split('=')[0]
                 })).to.not.include('dl');
                 expect(headers[STATUS_HEADER_NAME]).to.be.undefined;
-                expect(headers[SESSION_HEADER_NAME]).to.be.empty;
+                expect(headers[SESSION_HEADER_NAME]).to.be.undefined;
             });
 
             it('getHeadersParameters() should return no parameters if enabled keys is empty', function () {
@@ -540,7 +540,6 @@ describe('CmcdModel', function () {
                             type: MEDIA_SEMGENT_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -548,7 +547,6 @@ describe('CmcdModel', function () {
                             type: INIT_SEMGENT_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -556,7 +554,6 @@ describe('CmcdModel', function () {
                             type: XLINK_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -564,7 +561,6 @@ describe('CmcdModel', function () {
                             type: MDP_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -572,7 +568,6 @@ describe('CmcdModel', function () {
                             type: STEERING_REQUEST_TYPE,
                         };
                         headers = cmcdModel.getHeaderParameters(request);
-                        expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
 
@@ -712,6 +707,70 @@ describe('CmcdModel', function () {
                         expect(headers).to.have.property(OBJECT_HEADER_NAME);
                         expect(headers).to.have.property(REQUEST_HEADER_NAME);
                         expect(headers).to.have.property(SESSION_HEADER_NAME);
+                    });
+                });
+
+
+                describe('getHeadersParameters() return CMCD v2 data correctly', () => {
+                    it('getHeadersParameters() should return cmcd v2 data if version is 2', function () {
+                        const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const MEDIA_TYPE = 'video';
+        
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+
+                        settings.update({
+                            streaming: {
+                                cmcd: {
+                                    version: 2,
+                                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                                }
+                            }
+                        });
+        
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
+                        expect(metrics).to.have.property('ltc');
+
+                        eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+                        eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+        
+                        headers = cmcdModel.getHeaderParameters(request);
+                        metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
+                        expect(metrics).to.have.property('msd');
+                    });
+        
+                    it('getHeadersParameters() should not return cmcd v2 data if the cmcd version is 1', function () {
+                        const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                        const MEDIA_TYPE = 'video';
+        
+                        let request = {
+                            type: REQUEST_TYPE,
+                            mediaType: MEDIA_TYPE
+                        };
+                        
+                        settings.update({
+                            streaming: {
+                                cmcd: {
+                                    enabled: true,
+                                    version: 1
+                                },
+                                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                            }
+                        });
+        
+                        let headers = cmcdModel.getHeaderParameters(request);
+                        let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
+                        expect(metrics).to.not.have.property('ltc');
+                
+                        eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+                        eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+        
+                        headers = cmcdModel.getHeaderParameters(request);
+                        metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
+                        expect(metrics).to.not.have.property('msd');
                     });
                 });
 
@@ -1393,6 +1452,68 @@ describe('CmcdModel', function () {
                         expect(parameters.value).to.not.equals(null);
                     });
                 })
+            });
+        });
+
+        describe('getQueryParameter() return CMCD v2 data correctly', () => {
+            it('getQueryParameter() should return cmcd v2 data if the cmcd version is 2', function () {
+                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                const MEDIA_TYPE = 'video';
+
+                let request = {
+                    type: REQUEST_TYPE,
+                    mediaType: MEDIA_TYPE
+                };
+
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            version: 2,
+                            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                        }
+                    }
+                });
+                let parameters = cmcdModel.getQueryParameter(request);
+                let metrics = decodeCmcd(parameters.value);
+                expect(metrics).to.have.property('ltc');
+
+                eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+                eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+                parameters = cmcdModel.getQueryParameter(request);
+                metrics = decodeCmcd(parameters.value);
+                expect(metrics).to.have.property('msd');
+            });
+
+            it('getQueryParameter() sould not return cmcd v2 data if the cmcd version is 1', function () {
+                const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
+                const MEDIA_TYPE = 'video';
+
+                let request = {
+                    type: REQUEST_TYPE,
+                    mediaType: MEDIA_TYPE
+                };
+
+                settings.update({
+                    streaming: {
+                        cmcd: {
+                            enabled: true,
+                            version: 1,
+                            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
+                        }
+                    }
+                });
+
+                let parameters = cmcdModel.getQueryParameter(request);
+                let metrics = decodeCmcd(parameters.value);
+                expect(metrics).to.not.have.property('ltc');
+
+                eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
+                eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+                parameters = cmcdModel.getQueryParameter(request);
+                metrics = decodeCmcd(parameters.value);
+                expect(metrics).to.not.have.property('msd');
             });
         });
 

@@ -153,7 +153,6 @@ function MetricsModel(config) {
                 mediaType: request.mediaType,
                 type: request.type,
                 url: request.url,
-                quality: request.quality,
                 serviceLocation: null,
                 range: request.range,
                 startDate: request.startDate,
@@ -187,7 +186,6 @@ function MetricsModel(config) {
         vo._tfinish = request.endDate;
         vo._stream = request.mediaType;
         vo._mediaduration = request.duration;
-        vo._quality = request.quality;
         // For backward compatibility, convert response headers into string representation
         vo._responseHeaders = '';
         for (const key in response.headers) {
@@ -373,23 +371,23 @@ function MetricsModel(config) {
     }
 
     instance = {
-        clearCurrentMetricsForType,
-        clearAllCurrentMetrics,
-        getMetricsFor,
-        addHttpRequest,
-        addRepresentationSwitch,
         addBufferLevel,
         addBufferState,
+        addDVBErrors,
         addDVRInfo,
         addDroppedFrames,
-        addSchedulingInfo,
-        addRequestsQueue,
+        addHttpRequest,
         addManifestUpdate,
-        updateManifestUpdateInfo,
-        addManifestUpdateStreamInfo,
         addManifestUpdateRepresentationInfo,
+        addManifestUpdateStreamInfo,
         addPlayList,
-        addDVBErrors
+        addRepresentationSwitch,
+        addRequestsQueue,
+        addSchedulingInfo,
+        clearAllCurrentMetrics,
+        clearCurrentMetricsForType,
+        getMetricsFor,
+        updateManifestUpdateInfo,
     };
 
     setup();

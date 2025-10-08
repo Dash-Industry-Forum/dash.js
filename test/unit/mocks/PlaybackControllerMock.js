@@ -133,6 +133,10 @@ class PlaybackControllerMock {
         this.lowLatencyEnabled = value;
     }
 
+    getCurrentLiveLatency() {
+        return 15;
+    }
+
 }
 
 

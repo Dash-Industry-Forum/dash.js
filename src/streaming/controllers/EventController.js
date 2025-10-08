@@ -36,6 +36,9 @@ import EventBus from '../../core/EventBus.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 import XHRLoader from '../net/XHRLoader.js';
 import Constants from '../constants/Constants.js';
+import Utils from '../../core/Utils.js';
+import CommonMediaRequest from '../vo/CommonMediaRequest.js';
+import CommonMediaResponse from '../vo/CommonMediaResponse.js';
 
 function EventController() {
 
@@ -123,7 +126,7 @@ function EventController() {
         try {
             checkConfig();
             logger.debug('Start Event Controller');
-            const refreshDelay = settings.get().streaming.eventControllerRefreshDelay;
+            const refreshDelay = settings.get().streaming.events.eventControllerRefreshDelay;
             if (!isStarted && !isNaN(refreshDelay)) {
                 isStarted = true;
                 eventInterval = setInterval(_onEventTimer, refreshDelay);
@@ -510,7 +513,7 @@ function EventController() {
             if (mode === MediaPlayerEvents.EVENT_MODE_ON_RECEIVE && !event.triggeredReceivedEvent) {
                 logger.debug(`Received event ${eventId}`);
                 event.triggeredReceivedEvent = true;
-                eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                eventBus.trigger(event.eventStream.schemeIdUri, { event }, { mode });
                 return;
             }
 
@@ -522,10 +525,17 @@ function EventController() {
                     }
                 } else if (event.eventStream.schemeIdUri === MPD_CALLBACK_SCHEME && event.eventStream.value == MPD_CALLBACK_VALUE) {
                     logger.debug(`Starting callback event ${eventId} at ${currentVideoTime}`);
-                    _sendCallbackRequest(event.messageData);
+                    const url = event.messageData instanceof Uint8Array ? Utils.uint8ArrayToString(event.messageData) : event.messageData;
+                    _sendCallbackRequest(url);
                 } else {
                     logger.debug(`Starting event ${eventId} from period ${event.eventStream.period.id} at ${currentVideoTime}`);
-                    eventBus.trigger(event.eventStream.schemeIdUri, { event: event }, { mode });
+                    eventBus.trigger(event.eventStream.schemeIdUri, { event }, { mode });
+                    if (settings.get().streaming.events.deleteEventMessageDataTimeout > -1) {
+                        setTimeout(() => {
+                            delete event.messageData;
+                            delete event.parsedMessageData;
+                        }, settings.get().streaming.events.deleteEventMessageDataTimeout);
+                    }
                 }
                 event.triggeredStartEvent = true;
             }
@@ -620,13 +630,16 @@ function EventController() {
     function _sendCallbackRequest(url) {
         try {
             let loader = XHRLoader(context).create({});
-            loader.load({
-                method: 'get',
-                url: url,
-                request: {
-                    responseType: 'arraybuffer'
+            const commonMediaRequest = new CommonMediaRequest(
+                {
+                    method: 'get',
+                    url: url,
+                    responseType: 'arraybuffer',
+                    customData: {}
                 }
-            });
+            );
+            const commonMediaResponse = new CommonMediaResponse({ request: commonMediaRequest });
+            loader.load(commonMediaRequest, commonMediaResponse);
         } catch (e) {
             logger.error(e);
         }

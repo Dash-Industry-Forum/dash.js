@@ -23,7 +23,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         after(() => {
-            playerAdapter.destroy();
+            if (playerAdapter) {
+                playerAdapter.destroy();
+            }
         })
 
         it(`Checking playing state`, async () => {

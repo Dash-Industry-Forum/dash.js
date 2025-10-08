@@ -130,6 +130,20 @@ describe('DashManifestModel', function () {
             expect(rolesArray).to.be.empty;
         });
 
+        it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
+            const rolesArray = dashManifestModel.getRolesForAdaptation({
+                Role: [
+                    {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:'Main'},
+                    {schemeIdUri:'my.own.scheme', value:'Main'}]
+            });
+
+            expect(rolesArray).to.be.instanceOf(Array);
+            expect(rolesArray.length).to.equal(2);
+            expect(rolesArray[0]).to.be.instanceOf(DescriptorType);
+            expect(rolesArray[0].value).equals(DashConstants.MAIN);
+            expect(rolesArray[1].value).equals('Main');
+        });
+
         it('should return an empty array when getEssentialPropertiesForAdaptationSet', () => {
             const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptationSet();
 
@@ -186,22 +200,22 @@ describe('DashManifestModel', function () {
             expect(essPropArray[0].value).equals('testVal');
         });
 
-        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
 
             expect(suppPropArray).to.be.instanceOf(Object);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getSupplementalPropertiesForAdaptation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation();
+        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptation is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptation({
+        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptationSet is called', () => {
+            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet({
                 SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
                     schemeIdUri: 'test.scheme',
                     value: 'test2Val'
@@ -1513,8 +1527,8 @@ describe('DashManifestModel', function () {
 
             it('should return client data reporting from manifest', () => {
                 const manifestData = {
-                    ServiceDescription:[{
-                        'ClientDataReporting':{
+                    ServiceDescription: [{
+                        'ClientDataReporting': {
                             'CMCDParameters': { schemeIdUri: 'urn:mpeg:dash:cta-5004:2023' },
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
@@ -1541,8 +1555,8 @@ describe('DashManifestModel', function () {
 
             it('should NOT return client data reporting if schemeIdUri is missed in manifest', () => {
                 const manifestData = {
-                    ServiceDescription:[{
-                        'ClientDataReporting':{
+                    ServiceDescription: [{
+                        'ClientDataReporting': {
                             'CMCDParameters': {},
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
@@ -1567,8 +1581,8 @@ describe('DashManifestModel', function () {
 
             it('should NOT return client data reporting if schemeIdUri is invalid in manifest', () => {
                 const manifestData = {
-                    ServiceDescription:[{
-                        'ClientDataReporting':{
+                    ServiceDescription: [{
+                        'ClientDataReporting': {
                             'CMCDParameters': { schemeIdUri: 'urn:mpeg:daaash:ctaa-5003:2003' },
                             'serviceLocations': 'cdn-a cdn-b',
                             'adaptationSets': 'test1 test2'
@@ -1598,14 +1612,14 @@ describe('DashManifestModel', function () {
                 const mode = 'query';
                 const sessionID = 2;
                 const manifestData = {
-                    ServiceDescription:[{
-                        'ClientDataReporting':{
+                    ServiceDescription: [{
+                        'ClientDataReporting': {
                             'CMCDParameters': {
-                                'contentID':contentID,
-                                'includeInRequests':includeInRequests,
-                                'keys':keys,
-                                'mode':mode,
-                                'sessionID':sessionID,
+                                'contentID': contentID,
+                                'includeInRequests': includeInRequests,
+                                'keys': keys,
+                                'mode': mode,
+                                'sessionID': sessionID,
                                 'version': 1,
                                 'schemeIdUri': 'urn:mpeg:dash:cta-5004:2023'
                             },
@@ -1633,14 +1647,14 @@ describe('DashManifestModel', function () {
                 const serviceLocations = 'cdn-a cdn-b';
                 const adaptationSets = 'test1 test2';
                 const manifestData = {
-                    ServiceDescription:[{
-                        'ClientDataReporting':{
+                    ServiceDescription: [{
+                        'ClientDataReporting': {
                             'CMCDParameters': {
-                                'contentID':contentID,
-                                'includeInRequests':includeInRequests,
-                                'keys':keys,
-                                'mode':mode,
-                                'sessionID':sessionID,
+                                'contentID': contentID,
+                                'includeInRequests': includeInRequests,
+                                'keys': keys,
+                                'mode': mode,
+                                'sessionID': sessionID,
                                 'schemeIdUri': 'urn:mpeg:dash:cta-5004:2023'
                             },
                             'serviceLocations': serviceLocations,
@@ -1661,6 +1675,29 @@ describe('DashManifestModel', function () {
                 expect(cmcdParameters.sessionID).to.be.equal(sessionID);
             })
 
+        })
+
+        describe('getFramerate()', () => {
+
+            it('Should be null when no Representation is provided', () => {
+                const framerate = dashManifestModel.getFramerate();
+                expect(framerate).to.be.null;
+            })
+
+            it('Should be null when not defined', () => {
+                const framerate = dashManifestModel.getFramerate({});
+                expect(framerate).to.be.null;
+            })
+
+            it('Should parse single integer', () => {
+                const framerate = dashManifestModel.getFramerate({frameRate: '24'});
+                expect(framerate).to.be.equal(24);
+            })
+
+            it('Should parse two separated Integers', () => {
+                const framerate = dashManifestModel.getFramerate({frameRate: '48/2'});
+                expect(framerate).to.be.equal(24);
+            })
         })
     });
 });
