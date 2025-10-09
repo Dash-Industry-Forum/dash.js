@@ -35,10 +35,8 @@
 import FragmentRequest from './FragmentRequest.js';
 
 class CmcdReportRequest extends FragmentRequest {
-    constructor(url, type, method) {
+    constructor(method) {
         super();
-        this.url = url || null;
-        this.type = type || null;
         this.method = method || null;
     }
 }
