@@ -43,6 +43,7 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import DashParser from '../dash/parser/DashParser.js';
 
 function ManifestLoader(config) {
+
     config = config || {};
     const context = this.context;
     const debug = config.debug;
@@ -58,12 +59,10 @@ function ManifestLoader(config) {
 
     let mssHandler = config.mssHandler;
     let errHandler = config.errHandler;
-    let manifestModel = config.manifestModel;
 
     function setup() {
         logger = debug.getLogger(instance);
         eventBus.on(Events.XLINK_READY, onXlinkReady, instance);
-        eventBus.on(Events.MPD_EXPIRE_UPDATE, _updateManifest, instance);
 
         urlLoader = URLLoader(context).create({
             errHandler: config.errHandler,
@@ -248,79 +247,6 @@ function ManifestLoader(config) {
                 });
             }
         });
-    }
-
-    function _updateManifest(e) {
-        // Manage situations in which success is called after calling reset
-        if (!xlinkController) {
-            return;
-        }
-        const strManifest = e.xmlString
-        let currentManifest = manifestModel.getValue();
-        let manifest;
-
-        // Create parser according to manifest type
-        parser = createParser(strManifest);
-
-        if (parser === null) {
-            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-                manifest: null,
-                error: new DashJSError(
-                    Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                )
-            });
-            return;
-        }
-        // init xlinkcontroller with created parser
-        xlinkController.setParser(parser);
-
-        try {
-            manifest = parser.parse(strManifest);
-        } catch (e) {
-            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-                manifest: null,
-                error: new DashJSError(
-                    Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                )
-            });
-            return;
-        }
-
-        if (manifest) {
-            manifest.url = currentManifest.url; 
-
-            // URL from which the MPD was originally retrieved (MPD updates will not change this value)
-            if (!manifest.originalUrl) {
-                manifest.originalUrl = manifest.url;
-            }
-
-            // If there is a mismatch between the manifest's specified duration and the total duration of all periods,
-            // and the specified duration is greater than the total duration of all periods,
-            // overwrite the manifest's duration attribute. This is a patch for if a manifest is generated incorrectly.
-            if (settings &&
-                settings.get().streaming.enableManifestDurationMismatchFix &&
-                manifest.mediaPresentationDuration &&
-                manifest.Period.length > 1) {
-                const sumPeriodDurations = manifest.Period.reduce((totalDuration, period) => totalDuration + period.duration, 0);
-                if (!isNaN(sumPeriodDurations) && manifest.mediaPresentationDuration > sumPeriodDurations) {
-                    logger.warn('Media presentation duration greater than duration of all periods. Setting duration to total period duration');
-                    manifest.mediaPresentationDuration = sumPeriodDurations;
-                }
-            }
-
-            // manifest.baseUri = baseUri;
-            manifest.loadedTime = new Date();
-            xlinkController.resolveManifestOnLoad(manifest);
-
-            eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: e.xmlString });
-        } else {
-            eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
-                manifest: null,
-                error: new DashJSError(
-                    Errors.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE,
-                )
-            });
-        }
     }
 
     function reset() {
