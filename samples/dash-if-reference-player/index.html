@@ -364,8 +364,11 @@
                             <option value="3000">SL3000</option>
                             <option value="2000">SL2000</option>
                             <option value="150">  SL150</option>
+                            <option value="CUSTOM"></option>
                         </select>
+                        <!-- If custom, show textbox -->
 
+                        <label class="options-label">Video Robustness</label>
                         <select name="playreadyVideoRobustness" id="playreadyVideoRobustness" ng-model="drmPlayready.videoRobustness"
                         ng-init="drmPlayready.videoRobustness=''">
                             <option value="">   Default</option>
@@ -438,6 +441,7 @@
                             Add Request-Headers
                         </button>
 
+                        <label class="options-label">Audio Robustness</label>
                         <select name="widevineAudioRobustness" id="widevineAudioRobustness" ng-model="drmWidevine.audioRobustness"
                         ng-init="drmWidevine.audioRobustness=''">
                             <option value="">   Default</option>
@@ -448,6 +452,7 @@
                             <option value="HW_SECURE_ALL"   >HW Secure All   </option>
                         </select>
 
+                        <label class="options-label">Video Robustness</label>
                         <select name="widevineVideoRobustness" id="widevineVideoRobustness" ng-model="drmWidevine.videoRobustness"
                         ng-init="drmWidevine.videoRobustness=''">
                             <option value="">   Default</option>
