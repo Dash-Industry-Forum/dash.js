@@ -16,7 +16,6 @@ function CmcdBatchController() {
         urlLoader,
         retryQueue,
         retryTimers,
-        retryDelays,
         goneUrls;
 
     function setup() {
@@ -24,7 +23,6 @@ function CmcdBatchController() {
         timers = new Map(); // Map<key, timeoutRef>
         retryQueue = [];
         retryTimers = new Map();
-        retryDelays = [100, 500, 1000, 3000, 5000]; // ms
         goneUrls = new Set();
     }
 
@@ -113,10 +111,12 @@ function CmcdBatchController() {
                     if (response && response.status === 410) {
                         goneUrls.add(target.url);
                     } else if (response && response.status === 429) {
+                        const retryDelays = target.batchRetryDelays || Constants.CMCD_DEFAULT_BATCH_RETRY_DELAYS;
                         retryQueue.push({
                             request: httpRequest,
                             retryCount: 0,
-                            sendTime: new Date().getTime() + retryDelays[0]
+                            sendTime: new Date().getTime() + retryDelays[0],
+                            target: target
                         });
                         if (retryQueue.length === 1) {
                             retryTimers.set('retry', setTimeout(_processRetryQueue, retryDelays[0]));
@@ -152,6 +152,7 @@ function CmcdBatchController() {
                     if (response && response.status === 410) {
                         goneUrls.add(report.request.url);
                     } else if (response && response.status === 429) {
+                        const retryDelays = report.target.batchRetryDelays || Constants.CMCD_DEFAULT_BATCH_RETRY_DELAYS;
                         report.retryCount++;
                         if (report.retryCount < retryDelays.length) {
                             report.sendTime = new Date().getTime() + retryDelays[report.retryCount];

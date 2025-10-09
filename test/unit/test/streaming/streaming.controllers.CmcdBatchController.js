@@ -251,5 +251,45 @@ describe('CmcdBatchController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
         });
+
+        it('should use custom batchRetryDelays from target configuration', async function () {
+            const customRetryDelays = [50, 200, 800];
+            const target = {
+                url: 'http://test.com/report',
+                batchSize: 1,
+                batchRetryDelays: customRetryDelays
+            };
+            const cmcdData = 'ot%3Dm';
+
+            urlLoaderMock.load.onCall(0).returns(Promise.resolve({ status: 429 }));
+            urlLoaderMock.load.onCall(1).returns(Promise.resolve({ status: 429 }));
+            urlLoaderMock.load.onCall(2).returns(Promise.resolve({ status: 200 }));
+
+            cmcdBatchController.addReport(target, cmcdData);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            await clock.tickAsync(50);
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+
+            await clock.tickAsync(200);
+            expect(urlLoaderMock.load.calledThrice).to.be.true;
+        });
+
+        it('should use default retry delays when batchRetryDelays is not specified', async function () {
+            const target = {
+                url: 'http://test.com/report',
+                batchSize: 1
+            };
+            const cmcdData = 'ot%3Dm';
+
+            urlLoaderMock.load.onCall(0).returns(Promise.resolve({ status: 429 }));
+            urlLoaderMock.load.onCall(1).returns(Promise.resolve({ status: 200 }));
+
+            cmcdBatchController.addReport(target, cmcdData);
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+
+            await clock.tickAsync(100);
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+        });
     });
 });

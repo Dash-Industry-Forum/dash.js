@@ -294,6 +294,13 @@ export default {
         'Content-Type': 'application/cmcd+text'
     },
 
+    /**
+     *  @constant {Array.<number>} CMCD_DEFAULT_BATCH_RETRY_DELAYS specifies default retry delays in milliseconds for batched CMCD reporting failures
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_DEFAULT_BATCH_RETRY_DELAYS: [100, 500, 1000, 3000, 5000],
+
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
     TEXT_HIDDEN: 'hidden',

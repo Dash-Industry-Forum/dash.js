@@ -939,7 +939,11 @@ import Events from './events/Events.js';
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
  * @property {Array.<string>} [includeOnRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment'). 
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<number>} [batchRetryDelays]
+ * Array of retry delay values in milliseconds for batched CMCD reporting failures.
+ * Each value represents the delay before the next retry attempt.
+ * If not specified, defaults to Constants.CMCD_DEFAULT_BATCH_RETRY_DELAYS.
 */
 
 /**
