@@ -229,12 +229,6 @@ export default {
     CMCD_MODE_BODY: 'body',
 
     /**
-     *  @constant {string} CMCD_MANDATORY_KEYS specifies all the mandatory keys for across all CMCD modes (event, request, and response).
-     *  @memberof Constants#
-     *  @static
-     */
-    CMCD_MANDATORY_KEYS: ['ts'],
-    /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
      *  @memberof Constants#
      *  @static
