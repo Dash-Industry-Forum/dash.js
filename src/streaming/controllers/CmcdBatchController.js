@@ -214,9 +214,9 @@ function CmcdBatchController() {
 
     instance = {
         addReport,
-        setConfig,
         flushBatch,
-        reset
+        reset,
+        setConfig
     };
 
     setup();
