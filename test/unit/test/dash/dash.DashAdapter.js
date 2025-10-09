@@ -356,6 +356,20 @@ describe('DashAdapter', function () {
             expect(event).to.be.an('object');
         });
 
+        it('should return an event with a valid parsedMessageData', function () {
+            const representation = { presentationTimeOffset: 0, adaptation: { period: { start: 0 } } };
+            const messageData = new Uint8Array([10, 20, 30]);
+            const eventBox = {
+                scheme_id_uri: 'id',
+                value: 'value',
+                message_data: messageData,
+            }
+
+            const event = dashAdapter.getEvent( eventBox, { 'id/value': {} }, 0, representation);
+            expect(event.parsedMessageData).to.be.a('string').and.not.empty;
+            expect(event.parsedMessageData).to.not.be.undefined;
+        });
+
         it('should calculate correct start time for a version 0 event without PTO', function () {
             const representation = { adaptation: { period: { start: 10 } } };
             const eventBox = { scheme_id_uri: 'id', value: 'value', presentation_time_delta: 12, version: 0 };
