@@ -33,16 +33,22 @@
  * @ignore
  */
 class ErrorsBase {
-    extend (errors, config) {
-        if (!errors) return;
+    extend(errors, config) {
+        if (!errors) {
+            return;
+        }
 
         let override = config ? config.override : false;
         let publicOnly = config ? config.publicOnly : false;
 
 
         for (const err in errors) {
-            if (!errors.hasOwnProperty(err) || (this[err] && !override)) continue;
-            if (publicOnly && errors[err].indexOf('public_') === -1) continue;
+            if (!errors.hasOwnProperty(err) || (this[err] && !override)) {
+                continue;
+            }
+            if (publicOnly && errors[err].indexOf('public_') === -1) {
+                continue;
+            }
             this[err] = errors[err];
 
         }

@@ -37,7 +37,6 @@ function LowestBitrateRuleClass() {
     let factory = dashjs.FactoryMaker;
     let SwitchRequest = factory.getClassFactoryByName('SwitchRequest');
     let MetricsModel = factory.getSingletonFactoryByName('MetricsModel');
-    let StreamController = factory.getSingletonFactoryByName('StreamController');
     let context = this.context;
     let instance;
 
@@ -45,7 +44,7 @@ function LowestBitrateRuleClass() {
     }
 
     // Always use lowest bitrate
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         // here you can get some informations aboit metrics for example, to implement the rule
         let metricsModel = MetricsModel(context).getInstance();
         var mediaType = rulesContext.getMediaInfo().type;
@@ -56,25 +55,25 @@ function LowestBitrateRuleClass() {
         console.log(metrics);
 
         // Get current bitrate
-        let streamController = StreamController(context).getInstance();
-        let abrController = rulesContext.getAbrController();
-        let current = abrController.getQualityFor(mediaType, streamController.getActiveStreamInfo().id);
-
+        const abrController = rulesContext.getAbrController();
+        const representation = rulesContext.getRepresentation();
         // If already in lowest bitrate, don't do anything
-        if (current === 0) {
+        if (abrController.isPlayingAtLowestQuality(representation)) {
             return SwitchRequest(context).create();
         }
 
         // Ask to switch to the lowest bitrate
+        const mediaInfo = rulesContext.getMediaInfo();
+        const newRepresentation = abrController.getOptimalRepresentationForBitrate(mediaInfo, 0, true);
         let switchRequest = SwitchRequest(context).create();
-        switchRequest.quality = 0;
+        switchRequest.representation = newRepresentation;
         switchRequest.reason = 'Always switching to the lowest bitrate';
         switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
         return switchRequest;
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
     setup();

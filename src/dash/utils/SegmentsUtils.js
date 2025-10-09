@@ -29,104 +29,11 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Segment from './../vo/Segment';
-
-
-function zeroPadToLength(numStr, minStrLength) {
-    while (numStr.length < minStrLength) {
-        numStr = '0' + numStr;
-    }
-    return numStr;
-}
+import {processUriTemplate as cmlProcessUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
+import Segment from './../vo/Segment.js';
 
 function getNumberForSegment(segment, segmentIndex) {
     return segment.representation.startNumber + segmentIndex;
-}
-
-export function unescapeDollarsInTemplate(url) {
-    return url ? url.split('$$').join('$') : url;
-}
-
-export function replaceIDForTemplate(url, value) {
-    if (!value || !url || url.indexOf('$RepresentationID$') === -1) {
-        return url;
-    }
-    let v = value.toString();
-    return url.split('$RepresentationID$').join(v);
-}
-
-export function replaceTokenForTemplate(url, token, value) {
-    const formatTag = '%0';
-
-    let startPos,
-        endPos,
-        formatTagPos,
-        specifier,
-        width,
-        paddedValue;
-
-    const tokenLen = token.length;
-    const formatTagLen = formatTag.length;
-
-    if (!url) {
-        return url;
-    }
-
-    // keep looping round until all instances of <token> have been
-    // replaced. once that has happened, startPos below will be -1
-    // and the completed url will be returned.
-    while (true) {
-
-        // check if there is a valid $<token>...$ identifier
-        // if not, return the url as is.
-        startPos = url.indexOf('$' + token);
-        if (startPos < 0) {
-            return url;
-        }
-
-        // the next '$' must be the end of the identifier
-        // if there isn't one, return the url as is.
-        endPos = url.indexOf('$', startPos + tokenLen);
-        if (endPos < 0) {
-            return url;
-        }
-
-        // now see if there is an additional format tag suffixed to
-        // the identifier within the enclosing '$' characters
-        formatTagPos = url.indexOf(formatTag, startPos + tokenLen);
-        if (formatTagPos > startPos && formatTagPos < endPos) {
-
-            specifier = url.charAt(endPos - 1);
-            width = parseInt(url.substring(formatTagPos + formatTagLen, endPos - 1), 10);
-
-            // support the minimum specifiers required by IEEE 1003.1
-            // (d, i , o, u, x, and X) for completeness
-            switch (specifier) {
-                // treat all int types as uint,
-                // hence deliberate fallthrough
-                case 'd':
-                case 'i':
-                case 'u':
-                    paddedValue = zeroPadToLength(value.toString(), width);
-                    break;
-                case 'x':
-                    paddedValue = zeroPadToLength(value.toString(16), width);
-                    break;
-                case 'X':
-                    paddedValue = zeroPadToLength(value.toString(16), width).toUpperCase();
-                    break;
-                case 'o':
-                    paddedValue = zeroPadToLength(value.toString(8), width);
-                    break;
-                default:
-                    return url;
-            }
-        } else {
-            paddedValue = value;
-        }
-
-        url = url.substring(0, startPos) + paddedValue + url.substring(endPos + 1);
-    }
 }
 
 function getSegment(representation, duration, presentationStartTime, mediaStartTime, timelineConverter, presentationEndTime, isDynamic, index) {
@@ -148,9 +55,9 @@ function getSegment(representation, duration, presentationStartTime, mediaStartT
 function isSegmentAvailable(timelineConverter, representation, segment, isDynamic) {
     const voPeriod = representation.adaptation.period;
 
-    // Avoid requesting segments that overlap the period boundary
+    // Avoid requesting segments for which the start time overlaps the period boundary
     if (isFinite(voPeriod.duration) && voPeriod.start + voPeriod.duration <= segment.presentationStartTime) {
-        return false;
+        return false
     }
 
     if (isDynamic) {
@@ -169,6 +76,14 @@ function isSegmentAvailable(timelineConverter, representation, segment, isDynami
     }
 
     return true;
+}
+
+export function processUriTemplate(url, representationId, number, subNumber, bandwidth, time) {
+    if (!url) {
+        return url;
+    }
+
+    return cmlProcessUriTemplate(url, representationId, number, subNumber, bandwidth, time);
 }
 
 export function getIndexBasedSegment(timelineConverter, isDynamic, representation, index) {
@@ -223,10 +138,14 @@ export function getTimeBasedSegment(timelineConverter, isDynamic, representation
     }
 
     seg.replacementTime = tManifest ? tManifest : time;
-
-    url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
-    url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
-    seg.media = url;
+    seg.media = processUriTemplate(
+        url,
+        undefined,
+        seg.replacementNumber,
+        undefined,
+        undefined,
+        seg.replacementTime,
+    );
     seg.mediaRange = range;
 
     return seg;

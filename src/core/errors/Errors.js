@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ErrorsBase from './ErrorsBase';
+import ErrorsBase from './ErrorsBase.js';
 
 /**
  * Errors declaration
@@ -154,6 +154,12 @@ class Errors extends ErrorsBase {
          */
         this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
 
+        /**
+         * Error code returned when the available Adaptation Sets can not be selected because the corresponding key ids have an invalid key status
+         * @type {number}
+         */
+        this.NO_SUPPORTED_KEY_IDS = 36;
+
         this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
         this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
         this.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading Xlink element: ';
@@ -170,6 +176,7 @@ class Errors extends ErrorsBase {
         this.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE = 'mediakeys is not supported';
         this.TIMED_TEXT_ERROR_MESSAGE_PARSE = 'parsing error :';
         this.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE = 'Error creating source buffer of type : ';
+        this.NO_SUPPORTED_KEY_IDS_MESSAGE = 'All possible Adaptation Sets have an invalid key status';
     }
 }
 

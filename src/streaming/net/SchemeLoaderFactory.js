@@ -28,8 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import HTTPLoader from '../../streaming/net/HTTPLoader';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import HTTPLoader from '../../streaming/net/HTTPLoader.js';
 
 /**
  * @module
@@ -79,11 +79,11 @@ function SchemeLoaderFactory() {
     setup();
 
     instance = {
-        getLoader: getLoader,
-        registerLoader: registerLoader,
-        unregisterLoader: unregisterLoader,
-        unregisterAllLoader: unregisterAllLoader,
-        reset: reset
+        getLoader,
+        registerLoader,
+        unregisterLoader,
+        unregisterAllLoader,
+        reset
     };
 
     return instance;

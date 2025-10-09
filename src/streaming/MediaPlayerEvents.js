@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventsBase from '../core/events/EventsBase';
+import EventsBase from '../core/events/EventsBase.js';
 
 /**
  * @class
@@ -80,6 +80,24 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#BUFFER_LEVEL_UPDATED
          */
         this.BUFFER_LEVEL_UPDATED = 'bufferLevelUpdated';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download has been added to the document FontFaceSet interface.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_ADDED
+         */
+        this.DVB_FONT_DOWNLOAD_ADDED = 'dvbFontDownloadAdded';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download has successfully downloaded and the FontFace can be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_COMPLETE
+         */
+        this.DVB_FONT_DOWNLOAD_COMPLETE = 'dvbFontDownloadComplete';
+
+        /**
+         * Triggered when a font signalled by a DVB Font Download could not be successfully downloaded, so the FontFace will not be used.
+         * @event MediaPlayerEvents#DVB_FONT_DOWNLOAD_FAILED
+         */
+        this.DVB_FONT_DOWNLOAD_FAILED = 'dvbFontDownloadFailed';
 
         /**
          * Triggered when a dynamic stream changed to static (transition phase between Live and On-Demand).
@@ -188,6 +206,12 @@ class MediaPlayerEvents extends EventsBase {
         this.QUALITY_CHANGE_RENDERED = 'qualityChangeRendered';
 
         /**
+         * Triggered when the new track is being selected
+         * @event MediaPlayerEvents#NEW_TRACK_SELECTED
+         */
+        this.NEW_TRACK_SELECTED = 'newTrackSelected';
+
+        /**
          * Triggered when the new track is being rendered.
          * @event MediaPlayerEvents#TRACK_CHANGE_RENDERED
          */
@@ -240,6 +264,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#TEXT_TRACK_ADDED
          */
         this.TEXT_TRACK_ADDED = 'textTrackAdded';
+
+        /**
+         * Triggered when a text track should be shown
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_ENTER = 'cueEnter'
+
+        /**
+         * Triggered when a text track should be hidden
+         * @event MediaPlayerEvents#CUE_ENTER
+         */
+        this.CUE_EXIT = 'cueExit'
 
         /**
          * Triggered when a throughput measurement based on the last segment request has been stored
@@ -297,6 +333,13 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#PLAYBACK_ERROR
          */
         this.PLAYBACK_ERROR = 'playbackError';
+
+        /**
+         * This event is fired once the playback has been initialized by MediaPlayer.js.
+         * After that event methods such as setTextTrack() can be used.
+         * @event MediaPlayerEvents#PLAYBACK_INITIALIZED
+         */
+        this.PLAYBACK_INITIALIZED = 'playbackInitialized';
 
         /**
          * Sent when playback is not allowed (for example if user gesture is needed).
@@ -438,6 +481,18 @@ class MediaPlayerEvents extends EventsBase {
          * @event MediaPlayerEvents#INBAND_PRFT
          */
         this.INBAND_PRFT = 'inbandPrft';
+
+        /**
+         * The streaming attribute of the Managed Media Source is true
+         * @type {string}
+         */
+        this.MANAGED_MEDIA_SOURCE_START_STREAMING = 'managedMediaSourceStartStreaming';
+
+        /**
+         * The streaming attribute of the Managed Media Source is false
+         * @type {string}
+         */
+        this.MANAGED_MEDIA_SOURCE_END_STREAMING = 'managedMediaSourceEndStreaming';
     }
 }
 

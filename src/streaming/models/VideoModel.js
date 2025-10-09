@@ -29,11 +29,12 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import Debug from '../../core/Debug';
-import Constants from '../constants/Constants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../constants/Constants.js';
+import Settings from '../../core/Settings.js';
 
 
 const READY_STATES_TO_EVENT_NAMES = new Map([
@@ -47,9 +48,11 @@ function VideoModel() {
 
     let instance,
         logger,
+        settings,
         element,
         _currentTime,
         setCurrentTimeReadyStateFunction,
+        resumeReadyStateFunction,
         TTMLRenderingDiv,
         vttRenderingDiv,
         previousPlaybackRate,
@@ -63,6 +66,7 @@ function VideoModel() {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        settings = Settings(context).getInstance();
         _currentTime = NaN;
     }
 
@@ -73,23 +77,33 @@ function VideoModel() {
     function reset() {
         clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
+        stalledStreams.length = 0;
     }
 
-    function onPlaybackCanPlay() {
-        if (element) {
-            element.playbackRate = previousPlaybackRate || 1;
-            element.removeEventListener('canplay', onPlaybackCanPlay);
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.settings) {
+            settings = config.settings;
         }
     }
 
     function setPlaybackRate(value, ignoreReadyState = false) {
-        if (!element) return;
-        if (!ignoreReadyState && element.readyState <= 2 && value > 0) {
-            // If media element hasn't loaded enough data to play yet, wait until it has
-            element.addEventListener('canplay', onPlaybackCanPlay);
-        } else {
-            element.playbackRate = value;
+        if (!element) {
+            return;
         }
+
+        if (ignoreReadyState) {
+            element.playbackRate = value;
+            return;
+        }
+
+        // If media element hasn't loaded enough data to play yet, wait until it has
+        waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, () => {
+            element.playbackRate = value;
+        });
     }
 
     //TODO Move the DVR window calculations from MediaPlayer to Here.
@@ -171,10 +185,6 @@ function VideoModel() {
         //add check of value type
         if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
             element = value;
-            // Workaround to force Firefox to fire the canplay event.
-            if (element) {
-                element.preload = 'auto';
-            }
         } else {
             throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
         }
@@ -188,6 +198,12 @@ function VideoModel() {
                 element.removeAttribute('src');
                 element.load();
             }
+        }
+    }
+
+    function setDisableRemotePlayback(value) {
+        if (element) {
+            element.disableRemotePlayback = value;
         }
     }
 
@@ -227,12 +243,21 @@ function VideoModel() {
     }
 
     function addStalledStream(type) {
-
         if (type === null || !element || element.seeking || stalledStreams.indexOf(type) !== -1) {
             return;
         }
 
         stalledStreams.push(type);
+
+        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && stalledStreams.length === 1 && (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState || getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA)) {
+            // Halt playback until nothing is stalled
+            previousPlaybackRate = element.playbackRate;
+            setPlaybackRate(0, true);
+
+            const event = document.createEvent('Event');
+            event.initEvent('waiting', true, false);
+            element.dispatchEvent(event);
+        }
     }
 
     function removeStalledStream(type) {
@@ -245,6 +270,26 @@ function VideoModel() {
             stalledStreams.splice(index, 1);
         }
 
+        if (settings.get().streaming.buffer.syntheticStallEvents.enabled && element && !isStalled()) {
+            const resume = () => {
+                setPlaybackRate(previousPlaybackRate || 1, settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState);
+
+                if (!element.paused) {
+                    const event = document.createEvent('Event');
+                    event.initEvent('playing', true, false);
+                    element.dispatchEvent(event);
+                }
+            }
+
+            if (settings.get().streaming.buffer.syntheticStallEvents.ignoreReadyState) {
+                resume();
+            } else {
+                if (resumeReadyStateFunction && resumeReadyStateFunction.func && resumeReadyStateFunction.event) {
+                    removeEventListener(resumeReadyStateFunction.event, resumeReadyStateFunction.func);
+                }
+                resumeReadyStateFunction = waitForReadyState(Constants.VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, resume);
+            }
+        }
     }
 
     function stallStream(type, isStalled) {
@@ -458,6 +503,18 @@ function VideoModel() {
         return { func, event }
     }
 
+    function getVideoElementSize() {
+        const hasPixelRatio = settings.get().streaming.abr.usePixelRatioInLimitBitrateByPortal && window.hasOwnProperty('devicePixelRatio');
+        const pixelRatio = hasPixelRatio ? window.devicePixelRatio : 1;
+        const elementWidth = getClientWidth() * pixelRatio;
+        const elementHeight = getClientHeight() * pixelRatio;
+
+        return {
+            elementWidth,
+            elementHeight
+        }
+    }
+
     instance = {
         addEventListener,
         addTextTrack,
@@ -476,6 +533,7 @@ function VideoModel() {
         getTextTrack,
         getTextTracks,
         getTime,
+        getVideoElementSize,
         getVideoHeight,
         getVideoRelativeOffsetLeft,
         getVideoRelativeOffsetTop,
@@ -490,7 +548,9 @@ function VideoModel() {
         removeChild,
         removeEventListener,
         reset,
+        setConfig,
         setCurrentTime,
+        setDisableRemotePlayback,
         setElement,
         setPlaybackRate,
         setSource,

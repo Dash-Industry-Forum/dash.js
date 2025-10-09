@@ -28,20 +28,19 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ThroughputRule from './ThroughputRule';
-import InsufficientBufferRule from './InsufficientBufferRule';
-import AbandonRequestsRule from './AbandonRequestsRule';
-import DroppedFramesRule from './DroppedFramesRule';
-import SwitchHistoryRule from './SwitchHistoryRule';
-import BolaRule from './BolaRule';
+import ThroughputRule from './ThroughputRule.js';
+import InsufficientBufferRule from './InsufficientBufferRule.js';
+import AbandonRequestsRule from './AbandonRequestsRule.js';
+import DroppedFramesRule from './DroppedFramesRule.js';
+import SwitchHistoryRule from './SwitchHistoryRule.js';
+import BolaRule from './BolaRule.js';
 import L2ARule from './L2ARule.js';
 import LoLPRule from './lolp/LoLpRule.js';
-import FactoryMaker from '../../../core/FactoryMaker';
-import SwitchRequest from '../SwitchRequest';
-import Constants from '../../constants/Constants';
-
-const QUALITY_SWITCH_RULES = 'qualitySwitchRules';
-const ABANDON_FRAGMENT_RULES = 'abandonFragmentRules';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
+import Constants from '../../constants/Constants.js';
 
 
 function ABRRulesCollection(config) {
@@ -53,98 +52,136 @@ function ABRRulesCollection(config) {
     const customParametersModel = config.customParametersModel;
     const dashMetrics = config.dashMetrics;
     const settings = config.settings;
+    const eventBus = EventBus(context).getInstance();
 
     let instance,
         qualitySwitchRules,
-        abandonFragmentRules;
+        abandonFragmentRules,
+        shouldUseBolaRuleByMediaType;
 
     function initialize() {
         qualitySwitchRules = [];
         abandonFragmentRules = [];
+        shouldUseBolaRuleByMediaType = {};
+        _updateRules();
 
-        if (settings.get().streaming.abr.useDefaultABRRules) {
+        eventBus.on(Events.SETTING_UPDATED_ABR_ACTIVE_RULES, _onAbrSettingsActiveRulesUpdated, instance);
+    }
 
-            // If L2A is used we only need this one rule
-            if (settings.get().streaming.abr.ABRStrategy === Constants.ABR_STRATEGY_L2A) {
-                qualitySwitchRules.push(
-                    L2ARule(context).create({
-                        dashMetrics: dashMetrics,
-                        settings: settings
-                    })
-                );
-            }
-            // If LoLP is used we only need this one rule
-            else if (settings.get().streaming.abr.ABRStrategy === Constants.ABR_STRATEGY_LoLP) {
-                qualitySwitchRules.push(
-                    LoLPRule(context).create({
-                        dashMetrics: dashMetrics
-                    })
-                );
-            } else {
-                // Only one of BolaRule and ThroughputRule will give a switchRequest.quality !== SwitchRequest.NO_CHANGE.
-                // This is controlled by useBufferOccupancyABR mechanism in AbrController.
-                qualitySwitchRules.push(
-                    BolaRule(context).create({
-                        dashMetrics: dashMetrics,
-                        mediaPlayerModel: mediaPlayerModel,
-                        settings: settings
-                    })
-                );
+    /**
+     * Adds and removes rules to/from the respective rules arrays
+     * @private
+     */
+    function _updateRules() {
+        let qualitySwitchRulesList = Object.values(Constants.QUALITY_SWITCH_RULES)
+        qualitySwitchRulesList.forEach((ruleName) => {
+            qualitySwitchRules = _handleRuleUpdate(ruleName, qualitySwitchRules)
+        })
 
-                qualitySwitchRules.push(
-                    ThroughputRule(context).create({
-                        dashMetrics: dashMetrics
-                    })
-                );
-
-                if (settings.get().streaming.abr.additionalAbrRules.insufficientBufferRule) {
-                    qualitySwitchRules.push(
-                        InsufficientBufferRule(context).create({
-                            dashMetrics: dashMetrics,
-                            settings
-                        })
-                    );
-                }
-
-                if (settings.get().streaming.abr.additionalAbrRules.switchHistoryRule) {
-                    qualitySwitchRules.push(
-                        SwitchHistoryRule(context).create()
-                    );
-                }
-
-                if (settings.get().streaming.abr.additionalAbrRules.droppedFramesRule) {
-                    qualitySwitchRules.push(
-                        DroppedFramesRule(context).create()
-                    );
-                }
-
-                if (settings.get().streaming.abr.additionalAbrRules.abandonRequestsRule) {
-                    abandonFragmentRules.push(
-                        AbandonRequestsRule(context).create({
-                            dashMetrics: dashMetrics,
-                            mediaPlayerModel: mediaPlayerModel,
-                            settings: settings
-                        })
-                    );
-                }
-            }
-        }
+        let abandonFragmentRulesList = Object.values(Constants.ABANDON_FRAGMENT_RULES)
+        abandonFragmentRulesList.forEach((ruleName) => {
+            abandonFragmentRules = _handleRuleUpdate(ruleName, abandonFragmentRules)
+        })
 
         // add custom ABR rules if any
         const customRules = customParametersModel.getAbrCustomRules();
         customRules.forEach(function (rule) {
-            if (rule.type === QUALITY_SWITCH_RULES) {
+            if (rule.type === Constants.RULES_TYPES.QUALITY_SWITCH_RULES) {
                 qualitySwitchRules.push(rule.rule(context).create());
             }
 
-            if (rule.type === ABANDON_FRAGMENT_RULES) {
+            if (rule.type === Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES) {
                 abandonFragmentRules.push(rule.rule(context).create());
             }
         });
+
+        // If we still got no rule for quality switch use Throughput and Bola
+        if (qualitySwitchRules.length === 0) {
+            qualitySwitchRules.push(
+                BolaRule(context).create({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
+                })
+            );
+            qualitySwitchRules.push(
+                ThroughputRule(context).create({
+                    dashMetrics: dashMetrics
+                })
+            );
+        }
+    }
+
+    function _handleRuleUpdate(ruleName, rulesCollection) {
+        // we use camel case in the settings while the rules start with a capital latter. Not ideal but convert between these formats
+        const attribute = ruleName.charAt(0).toLowerCase() + ruleName.slice(1);
+        if (settings.get().streaming.abr.rules[attribute].active && !_arrayContainsRule(rulesCollection, ruleName)) {
+            rulesCollection.push(
+                _createRuleInstance(ruleName)
+            );
+
+            return rulesCollection
+        } else if (!settings.get().streaming.abr.rules[attribute].active) {
+            return _removeRuleFromArray(rulesCollection, ruleName)
+        }
+
+        return rulesCollection
+    }
+
+    function _createRuleInstance(rule) {
+        switch (rule) {
+            case Constants.QUALITY_SWITCH_RULES.BOLA_RULE:
+                return BolaRule(context).create({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
+                })
+            case Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE:
+                return ThroughputRule(context).create({
+                    dashMetrics: dashMetrics
+                })
+            case Constants.QUALITY_SWITCH_RULES.INSUFFICIENT_BUFFER_RULE:
+                return InsufficientBufferRule(context).create({
+                    dashMetrics: dashMetrics,
+                    settings
+                })
+            case Constants.QUALITY_SWITCH_RULES.SWITCH_HISTORY_RULE:
+                return SwitchHistoryRule(context).create()
+            case Constants.QUALITY_SWITCH_RULES.DROPPED_FRAMES_RULE:
+                return DroppedFramesRule(context).create()
+            case Constants.QUALITY_SWITCH_RULES.LEARN_TO_ADAPT_RULE:
+                return L2ARule(context).create({
+                    dashMetrics: dashMetrics,
+                    settings: settings
+                })
+            case Constants.QUALITY_SWITCH_RULES.LOL_PLUS_RULE:
+                return LoLPRule(context).create({
+                    dashMetrics: dashMetrics
+                })
+            case Constants.ABANDON_FRAGMENT_RULES.ABANDON_REQUEST_RULE:
+                return AbandonRequestsRule(context).create({
+                    dashMetrics: dashMetrics,
+                    mediaPlayerModel: mediaPlayerModel,
+                    settings: settings
+                })
+
+        }
+    }
+
+    function _arrayContainsRule(arr, ruleName) {
+        return arr.filter((rule) => {
+            return rule.getClassName() === ruleName
+        }).length > 0
+    }
+
+    function _removeRuleFromArray(arr, ruleName) {
+        return arr.filter((rule) => {
+            return rule.getClassName() !== ruleName
+        })
     }
 
     function _getRulesWithChange(srArray) {
-        return srArray.filter(sr => sr.quality > SwitchRequest.NO_CHANGE);
+        return srArray.filter(sr => sr.representation !== SwitchRequest.NO_CHANGE);
     }
 
     /**
@@ -157,59 +194,69 @@ function ABRRulesCollection(config) {
         let newSwitchReq = null;
         let i,
             len,
-            req,
-            quality,
-            reason;
+            currentSwitchRequest;
 
         if (srArray.length === 0) {
             return;
         }
 
-        values[SwitchRequest.PRIORITY.STRONG] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.WEAK] = { quality: SwitchRequest.NO_CHANGE, reason: null };
-        values[SwitchRequest.PRIORITY.DEFAULT] = { quality: SwitchRequest.NO_CHANGE, reason: null };
+        values[SwitchRequest.PRIORITY.STRONG] = null;
+        values[SwitchRequest.PRIORITY.WEAK] = null;
+        values[SwitchRequest.PRIORITY.DEFAULT] = null;
 
         for (i = 0, len = srArray.length; i < len; i += 1) {
-            req = srArray[i];
-            if (req.quality !== SwitchRequest.NO_CHANGE) {
-                // We only use the new quality in case it is lower than the already saved one or if no new quality has been selected for the respective priority
-                if (values[req.priority].quality === SwitchRequest.NO_CHANGE || values[req.priority].quality > req.quality) {
-                    values[req.priority].quality = req.quality;
-                    values[req.priority].reason = req.reason || null;
+            currentSwitchRequest = srArray[i];
+            if (currentSwitchRequest.representation !== SwitchRequest.NO_CHANGE) {
+                // We only use the new quality in case the bitrate is lower than the already saved one or if no new quality has been selected for the respective priority
+                if (values[currentSwitchRequest.priority] === null ||
+                    (values[currentSwitchRequest.priority].representation !== SwitchRequest.NO_CHANGE && currentSwitchRequest.representation.bitrateInKbit < values[currentSwitchRequest.priority].representation.bitrateInKbit)) {
+                    values[currentSwitchRequest.priority] = currentSwitchRequest;
                 }
             }
         }
 
-        if (values[SwitchRequest.PRIORITY.WEAK].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.WEAK] && values[SwitchRequest.PRIORITY.WEAK].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.WEAK];
         }
 
-        if (values[SwitchRequest.PRIORITY.DEFAULT].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.DEFAULT] && values[SwitchRequest.PRIORITY.DEFAULT].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.DEFAULT];
         }
 
-        if (values[SwitchRequest.PRIORITY.STRONG].quality !== SwitchRequest.NO_CHANGE) {
+        if (values[SwitchRequest.PRIORITY.STRONG] && values[SwitchRequest.PRIORITY.STRONG].representation !== SwitchRequest.NO_CHANGE) {
             newSwitchReq = values[SwitchRequest.PRIORITY.STRONG];
         }
 
-        if (newSwitchReq) {
-            quality = newSwitchReq.quality;
-            reason = newSwitchReq.reason;
-        }
-
-        return SwitchRequest(context).create(quality, reason);
+        return newSwitchReq
     }
 
-    function getMaxQuality(rulesContext) {
-        const switchRequestArray = qualitySwitchRules.map(rule => rule.getMaxIndex(rulesContext));
+    function getBestPossibleSwitchRequest(rulesContext) {
+        if (!rulesContext) {
+            return SwitchRequest(context).create()
+        }
+        // Only Throughput or Bola are active at the same time.
+        const activeQualitySwitchRules = qualitySwitchRules.filter((rule) => {
+            const ruleName = rule.getClassName();
+
+            if (ruleName !== Constants.QUALITY_SWITCH_RULES.BOLA_RULE && ruleName !== Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE) {
+                return true
+            }
+            const mediaType = rulesContext.getMediaType();
+
+            return (shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.BOLA_RULE) || (!shouldUseBolaRuleByMediaType[mediaType] && ruleName === Constants.QUALITY_SWITCH_RULES.THROUGHPUT_RULE)
+        })
+        const switchRequestArray = activeQualitySwitchRules.map(rule => rule.getSwitchRequest(rulesContext));
         const activeRules = _getRulesWithChange(switchRequestArray);
         const maxQuality = getMinSwitchRequest(activeRules);
 
         return maxQuality || SwitchRequest(context).create();
     }
 
-    function shouldAbandonFragment(rulesContext, streamId) {
-        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext, streamId));
+    function shouldAbandonFragment(rulesContext) {
+        if (!rulesContext) {
+            return SwitchRequest(context).create()
+        }
+        const abandonRequestArray = abandonFragmentRules.map(rule => rule.shouldAbandon(rulesContext));
         const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 
@@ -228,19 +275,55 @@ function ABRRulesCollection(config) {
         });
         qualitySwitchRules = [];
         abandonFragmentRules = [];
+        shouldUseBolaRuleByMediaType = {}
+        eventBus.off(Events.SETTING_UPDATED_ABR_ACTIVE_RULES, _onAbrSettingsActiveRulesUpdated, instance);
+    }
+
+    function clearDataForStream(streamId) {
+        [qualitySwitchRules, abandonFragmentRules].forEach(rules => {
+            if (rules && rules.length) {
+                rules.forEach(rule => rule.clearDataForStream && typeof rule.clearDataForStream === 'function' && rule.clearDataForStream(streamId));
+            }
+        });
     }
 
     function getQualitySwitchRules() {
         return qualitySwitchRules;
     }
 
+    function getAbandonFragmentRules() {
+        return abandonFragmentRules
+    }
+
+    function setBolaState(mediaType, value) {
+        shouldUseBolaRuleByMediaType[mediaType] = value
+    }
+
+    function getBolaState(mediaType) {
+        return shouldUseBolaRuleByMediaType[mediaType]
+    }
+
+    function _onAbrSettingsActiveRulesUpdated() {
+        _updateRules()
+    }
+
+    function handleNewMediaInfo(newMediaInfo) {
+        qualitySwitchRules.forEach(rule => rule.handleNewMediaInfo && rule.handleNewMediaInfo(newMediaInfo));
+        abandonFragmentRules.forEach(rule => rule.handleNewMediaInfo && rule.handleNewMediaInfo(newMediaInfo));
+    }
+
     instance = {
+        clearDataForStream,
+        getAbandonFragmentRules,
+        getBestPossibleSwitchRequest,
+        getBolaState,
+        getMinSwitchRequest,
+        getQualitySwitchRules,
+        handleNewMediaInfo,
         initialize,
         reset,
-        getMaxQuality,
-        getMinSwitchRequest,
+        setBolaState,
         shouldAbandonFragment,
-        getQualitySwitchRules
     };
 
     return instance;
@@ -248,8 +331,6 @@ function ABRRulesCollection(config) {
 
 ABRRulesCollection.__dashjs_factory_name = 'ABRRulesCollection';
 const factory = FactoryMaker.getClassFactory(ABRRulesCollection);
-factory.QUALITY_SWITCH_RULES = QUALITY_SWITCH_RULES;
-factory.ABANDON_FRAGMENT_RULES = ABANDON_FRAGMENT_RULES;
 FactoryMaker.updateSingletonFactory(ABRRulesCollection.__dashjs_factory_name, factory);
 
 export default factory;

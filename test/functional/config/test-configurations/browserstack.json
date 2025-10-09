@@ -1,0 +1,33 @@
+{
+  "browsers": [
+    "bs_chrome_win_11"
+  ],
+  "customLaunchers": {
+    "bs_chrome_win_11": {
+      "base": "BrowserStack",
+      "browser": "chrome",
+      "browser_version": "latest",
+      "os": "Windows",
+      "os_version": "11"
+    },
+    "bs_firefox_win_11": {
+      "base": "BrowserStack",
+      "browser": "firefox",
+      "browser_version": "latest",
+      "os": "Windows",
+      "os_version": "11"
+    },
+    "bs_safari_mac": {
+      "base": "BrowserStack",
+      "browser_version": "latest",
+      "os": "OS X",
+      "os_version": "Ventura",
+      "browser": "safari"
+    }
+  },
+  "reporters": [
+    "mocha",
+    "junit",
+    "coverage"
+  ]
+}

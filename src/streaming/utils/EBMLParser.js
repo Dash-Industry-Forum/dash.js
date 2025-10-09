@@ -1,4 +1,4 @@
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
  * Creates an instance of an EBMLParser class which implements a large subset

@@ -1,0 +1,92 @@
+name: verify_pull_request
+
+on:
+    pull_request:
+        branches:
+            - 'development'
+
+jobs:
+    merge_build_and_unit_test:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout development branch of origin
+                uses: actions/checkout@v4
+                with:
+                    repository: Dash-Industry-Forum/dash.js
+                    ref: development
+            -   name: Merge to development
+                run: |
+                    git config --global user.name "GitHub Action"
+                    git config --global user.email "action@github.com"
+                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+                    git merge pr-branch --no-ff
+            -   name: Setup node
+                uses: actions/setup-node@v4
+                with:
+                    node-version: '20'
+                    cache: 'npm'
+            -   name: Cache node modules
+                id: cache-npm
+                uses: actions/cache@v3
+                with:
+                    path: node_modules
+                    key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+                    restore-keys: |
+                        ${{ runner.os }}-build-
+                        ${{ runner.os }}-
+            -   if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+                name: List the state of node modules
+                continue-on-error: true
+                run: npm list
+            -   run: npm install
+            -   run: npm run build
+
+    run_functional_test_single_stream_lambdatest:
+        if: github.event.pull_request.head.repo.fork == false
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout development branch of origin
+                uses: actions/checkout@v4
+                with:
+                    repository: Dash-Industry-Forum/dash.js
+                    ref: development
+            -   name: Merge to development
+                run: |
+                    git config --global user.name "GitHub Action"
+                    git config --global user.email "action@github.com"
+                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
+                    git merge pr-branch --no-ff
+            -   name: Setup node
+                uses: actions/setup-node@v4
+                with:
+                    node-version: '18'
+                    cache: 'npm'
+            -   name: Cache node modules
+                id: cache-npm
+                uses: actions/cache@v3
+                with:
+                    path: node_modules
+                    key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+                    restore-keys: |
+                        ${{ runner.os }}-build-
+                        ${{ runner.os }}-
+            -   if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
+                name: List the state of node modules
+                continue-on-error: true
+                run: npm list
+            -   run: npm install
+            -   run: npm run webpack-build-modern
+            -   name: Start Tunnel
+                uses: LambdaTest/LambdaTest-tunnel-action@v2
+                id: tunnel
+                with:
+                    user: ${{ secrets.LT_USERNAME }}
+                    accessKey: ${{ secrets.LT_ACCESS_KEY }}
+                    tunnelName: "dashjs-tunnel-${{github.run_number}}"
+            -   name: Run functional tests for a single vector on Lambdatest
+                env:
+                    LT_USERNAME: ${{ secrets.LT_USERNAME }}
+                    LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
+                run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
+
+

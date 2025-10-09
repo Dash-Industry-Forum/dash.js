@@ -1,10 +1,10 @@
-import EBMLParser from '../streaming/utils/EBMLParser';
-import Constants from '../streaming/constants/Constants';
-import FactoryMaker from '../core/FactoryMaker';
-import Segment from './vo/Segment';
-import FragmentRequest from '../streaming/vo/FragmentRequest';
-import URLLoader from '../streaming/net/URLLoader';
-import DashJSError from '../streaming/vo/DashJSError';
+import EBMLParser from '../streaming/utils/EBMLParser.js';
+import Constants from '../streaming/constants/Constants.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import Segment from './vo/Segment.js';
+import FragmentRequest from '../streaming/vo/FragmentRequest.js';
+import URLLoader from '../streaming/net/URLLoader.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
 
 function WebmSegmentBaseLoader() {
 
@@ -14,7 +14,6 @@ function WebmSegmentBaseLoader() {
         logger,
         WebM,
         errHandler,
-        requestModifier,
         dashMetrics,
         mediaPlayerModel,
         urlLoader,
@@ -92,7 +91,6 @@ function WebmSegmentBaseLoader() {
             errHandler: errHandler,
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
-            requestModifier: requestModifier,
             errors: errors
         });
     }
@@ -107,7 +105,6 @@ function WebmSegmentBaseLoader() {
         errHandler = config.errHandler;
         errors = config.errors;
         logger = config.debug.getLogger(instance);
-        requestModifier = config.requestModifier;
     }
 
     function parseCues(ab) {
@@ -347,7 +344,8 @@ function WebmSegmentBaseLoader() {
                 request: request,
                 url: media,
                 init: false,
-                mediaType: mediaType
+                mediaType: mediaType,
+                representation
             };
 
             request = _getFragmentRequest(info);

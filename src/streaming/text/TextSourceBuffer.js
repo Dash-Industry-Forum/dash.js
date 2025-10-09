@@ -28,20 +28,22 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../constants/Constants';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest';
-import TextTrackInfo from '../vo/TextTrackInfo';
-import BoxParser from '../utils/BoxParser';
-import CustomTimeRanges from '../utils/CustomTimeRanges';
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender';
+import Constants from '../constants/Constants.js';
+import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import TextTrackInfo from '../vo/TextTrackInfo.js';
+import BoxParser from '../utils/BoxParser.js';
+import CustomTimeRanges from '../utils/CustomTimeRanges.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EmbeddedTextHtmlRender from './EmbeddedTextHtmlRender.js';
 import ISOBoxer from 'codem-isoboxer';
-import cea608parser from '../../../externals/cea608-parser';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
-import DashJSError from '../vo/DashJSError';
-import Errors from '../../core/errors/Errors';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
+import DashJSError from '../vo/DashJSError.js';
+import Errors from '../../core/errors/Errors.js';
+import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
+import {extractCta608DataFromSample} from '@svta/common-media-library/cta/608/extractCta608DataFromSample';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function TextSourceBuffer(config) {
     const errHandler = config.errHandler;
@@ -135,7 +137,7 @@ function TextSourceBuffer(config) {
         }
 
         for (let i = 0; i < mInfos.length; i++) {
-            _createTextTrackFromMediaInfo(mInfos[i]);
+            _createTextTrackInfoFromMediaInfo(mInfos[i]);
         }
 
     }
@@ -145,22 +147,26 @@ function TextSourceBuffer(config) {
      * @param {object} mediaInfo
      * @private
      */
-    function _createTextTrackFromMediaInfo(mediaInfo) {
+    function _createTextTrackInfoFromMediaInfo(mediaInfo) {
+
+        // We are mapping DASH specification strings to the ones of the HTML specification.
+        // See also https://html.spec.whatwg.org/multipage/media.html#text-track-kind
+        const trackKindMap = {};
+        trackKindMap[DashConstants.SUBTITLE] = 'subtitles'
+        trackKindMap[DashConstants.CAPTION] = 'captions'
+        trackKindMap[DashConstants.FORCED_SUBTITLE] = 'subtitles'
+
         const textTrackInfo = new TextTrackInfo();
-        const trackKindMap = { subtitle: 'subtitles', caption: 'captions' }; //Dash Spec has no "s" on end of KIND but HTML needs plural.
 
         for (let key in mediaInfo) {
             textTrackInfo[key] = mediaInfo[key];
         }
 
-        textTrackInfo.labels = mediaInfo.labels;
         textTrackInfo.defaultTrack = getIsDefault(mediaInfo);
-        textTrackInfo.isFragmented = mediaInfo.isFragmented;
-        textTrackInfo.isEmbedded = !!mediaInfo.isEmbedded;
         textTrackInfo.isTTML = _checkTtml(mediaInfo);
         textTrackInfo.kind = _getKind(mediaInfo, trackKindMap);
 
-        textTracks.addTextTrack(textTrackInfo);
+        textTracks.addTextTrackInfo(textTrackInfo);
     }
 
     function abort() {
@@ -176,7 +182,7 @@ function TextSourceBuffer(config) {
     function _onVideoChunkReceived(e) {
         const chunk = e.chunk;
 
-        if (chunk.mediaInfo.embeddedCaptions) {
+        if (chunk.representation.mediaInfo.embeddedCaptions) {
             append(chunk.bytes, chunk);
         }
     }
@@ -247,15 +253,15 @@ function TextSourceBuffer(config) {
     }
 
     function _getKind(mediaInfo, trackKindMap) {
-        let kind = (mediaInfo.roles && mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0]] : trackKindMap.caption;
+        let kind = (mediaInfo.roles && mediaInfo.roles.length > 0) ? trackKindMap[mediaInfo.roles[0].value] : trackKindMap.caption;
 
-        kind = (kind === trackKindMap.caption || kind === trackKindMap.subtitle) ? kind : trackKindMap.caption;
+        kind = Object.values(trackKindMap).includes(kind) ? kind : trackKindMap.caption;
 
         return kind;
     }
 
     function append(bytes, chunk) {
-        const mediaInfo = chunk.mediaInfo;
+        const mediaInfo = chunk.representation.mediaInfo;
         const mediaType = mediaInfo.type;
         const mimeType = mediaInfo.mimeType;
         const codecType = mediaInfo.codec || mimeType;
@@ -290,6 +296,7 @@ function TextSourceBuffer(config) {
             if (sampleList.length > 0) {
                 firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
             }
+
             if (codecType.search(Constants.STPP) >= 0) {
                 _appendFragmentedSttp(bytes, sampleList, codecType);
             } else {
@@ -325,15 +332,15 @@ function TextSourceBuffer(config) {
             try {
                 const manifest = manifestModel.getValue();
 
-                // Only used for Miscrosoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
+                // Only used for Microsoft Smooth Streaming support - caption time is relative to sample time. In this case, we apply an offset.
                 const offsetTime = manifest.ttmlTimeIsRelative ? sampleStart / timescale : 0;
-
-                const result = parser.parse(ccContent, offsetTime, sampleStart / timescale, (sampleStart + sample.duration) / timescale, images);
+                const result = parser.parse(ccContent, offsetTime, (sampleStart / timescale), ((sampleStart + sample.duration) / timescale), images);
                 textTracks.addCaptions(currFragmentedTrackIdx, timestampOffset, result);
+
             } catch (e) {
                 fragmentModel.removeExecutedRequestsBeforeTime();
-                this.remove();
-                logger.error('TTML parser error: ' + e.message);
+                remove();
+                logger.error('TTML parser error: ' + e);
             }
         }
     }
@@ -493,7 +500,7 @@ function TextSourceBuffer(config) {
             }
 
             const handler = _makeCueAdderForIndex(trackIdx);
-            embeddedCea608FieldParsers[i] = new cea608parser.Cea608Parser(i + 1, {
+            embeddedCea608FieldParsers[i] = new Cta608Parser(i + 1, {
                 newCue: handler
             }, null);
         }
@@ -539,22 +546,20 @@ function TextSourceBuffer(config) {
         const raw = new DataView(data);
         for (let i = 0; i < samples.length; i++) {
             const sample = samples[i];
-            const cea608Ranges = cea608parser.findCea608Nalus(raw, sample.offset, sample.size);
+            const ccData = extractCta608DataFromSample(raw, sample.offset, sample.size);
+
             let lastSampleTime = null;
             let idx = 0;
-            for (let j = 0; j < cea608Ranges.length; j++) {
-                const ccData = cea608parser.extractCea608DataFromRange(raw, cea608Ranges[j]);
-                for (let k = 0; k < 2; k++) {
-                    if (ccData[k].length > 0) {
-                        if (sample.cts !== lastSampleTime) {
-                            idx = 0;
-                        } else {
-                            idx += 1;
-                        }
-                        const timestampOffset = _getTimestampOffset();
-                        allCcData.fields[k].push([sample.cts + (timestampOffset * embeddedTimescale), ccData[k], idx]);
-                        lastSampleTime = sample.cts;
+            for (let k = 0; k < 2; k++) {
+                if (ccData[k].length > 0) {
+                    if (sample.cts !== lastSampleTime) {
+                        idx = 0;
+                    } else {
+                        idx += 1;
                     }
+                    const timestampOffset = _getTimestampOffset();
+                    allCcData.fields[k].push([sample.cts + (timestampOffset * embeddedTimescale), ccData[k], idx]);
+                    lastSampleTime = sample.cts;
                 }
             }
         }

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Custom ABR Rules</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -23,16 +23,35 @@
         function init() {
             var video,
                 player,
-                url = "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd";
+                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
-            video = document.querySelector("video");
+            video = document.querySelector('video');
             player = dashjs.MediaPlayer().create();
 
             /* don't use dash.js default rules */
             player.updateSettings({
-                'streaming': {
-                    'abr': {
-                        'useDefaultABRRules': false
+                streaming: {
+                    abr: {
+                        rules: {
+                            throughputRule: {
+                                active: false
+                            },
+                            bolaRule: {
+                                active: false
+                            },
+                            insufficientBufferRule: {
+                                active: false
+                            },
+                            switchHistoryRule: {
+                                active: false
+                            },
+                            droppedFramesRule: {
+                                active: false
+                            },
+                            abandonRequestsRule: {
+                                active: false
+                            }
+                        }
                     }
                 }
             });

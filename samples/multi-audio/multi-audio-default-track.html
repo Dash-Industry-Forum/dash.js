@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Multi Audio - Initial Track</title>
 
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -34,7 +34,7 @@
                 }
             })
             player.initialize(video, null, false);
-            
+
             attachSourceButton.onclick = function () {
                 player.attachSource(url);
                 player.setInitialMediaSettingsFor('audio', {

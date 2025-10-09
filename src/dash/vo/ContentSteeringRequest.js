@@ -33,7 +33,7 @@
  * @ignore
  */
 
-import {HTTPRequest} from '../../streaming/vo/metrics/HTTPRequest';
+import {HTTPRequest} from '../../streaming/vo/metrics/HTTPRequest.js';
 
 class ContentSteeringRequest {
     constructor(url) {

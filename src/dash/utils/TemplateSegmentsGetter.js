@@ -28,11 +28,9 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../../streaming/constants/Constants';
-
-import {replaceTokenForTemplate, getIndexBasedSegment} from './SegmentsUtils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Constants from '../../streaming/constants/Constants.js';
+import {getIndexBasedSegment, processUriTemplate} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
@@ -69,19 +67,28 @@ function TemplateSegmentsGetter(config, isDynamic) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period_asArray[representation.adaptation.period.index].AdaptationSet_asArray[representation.adaptation.index].Representation_asArray[representation.index].SegmentTemplate;
+        const template = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
+            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
 
         // This is the index without @startNumber
         index = Math.max(index, 0);
 
         const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
-        if (seg) {
-            seg.replacementTime = Math.round((index - 1) * representation.segmentDuration * representation.timescale, 10);
 
-            let url = template.media;
-            url = replaceTokenForTemplate(url, 'Number', seg.replacementNumber);
-            url = replaceTokenForTemplate(url, 'Time', seg.replacementTime);
-            seg.media = url;
+        if (seg) {
+            if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
+                return null;
+            }
+
+            seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
+            seg.media = processUriTemplate(
+                template.media,
+                undefined,
+                seg.replacementNumber,
+                undefined,
+                undefined,
+                seg.replacementTime,
+            );
         }
 
         return seg;

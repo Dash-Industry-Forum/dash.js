@@ -29,358 +29,355 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import Constants from '../constants/Constants';
-import { modifyRequest } from '../utils/RequestModifier';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import Constants from '../constants/Constants.js';
+import Debug from '../../core/Debug.js';
 
 /**
  * @module FetchLoader
  * @ignore
  * @description Manages download of resources via HTTP using fetch.
- * @param {Object} cfg - dependencies from parent
  */
-function FetchLoader(cfg) {
+function FetchLoader() {
 
-    cfg = cfg || {};
     const context = this.context;
-    const requestModifier = cfg.requestModifier;
-    const lowLatencyThroughputModel = cfg.lowLatencyThroughputModel;
-    const boxParser = cfg.boxParser;
     const settings = Settings(context).getInstance();
-    let instance, dashMetrics;
+    let instance, boxParser, logger;
 
-    function setup(cfg) {
-        dashMetrics = cfg.dashMetrics;
+    function setConfig(cfg) {
+        boxParser = cfg.boxParser
     }
 
-    function load(httpRequest) {
-        if (requestModifier && requestModifier.modifyRequest) {
-            modifyRequest(httpRequest, requestModifier)
-                .then(() => request(httpRequest));
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+    }
+
+    /**
+     * Load request
+     * With HTTP responses that use chunked transfer encoding, the promise returned by fetch will resolve as soon as the response's headers are received.
+     * @param {CommonMediaRequest} commonMediaRequest
+     * @param {CommonMediaResponse} commonMediaResponse
+     */
+    function load(commonMediaRequest, commonMediaResponse) {
+        const headers = _getHeaders(commonMediaRequest);
+        const abortController = _setupAbortMechanism(commonMediaRequest);
+        const fetchResourceRequestObject = _getFetchResourceRequestObject(commonMediaRequest, headers, abortController);
+
+        fetch(fetchResourceRequestObject)
+            .then((fetchResponse) => {
+                _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse);
+            })
+            .catch(() => {
+                _handleFetchError(commonMediaRequest);
+            })
+    }
+
+    function _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse) {
+        _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse);
+
+        if (!fetchResponse.ok) {
+            commonMediaRequest.customData.onloadend();
         }
-        else {
-            request(httpRequest);
+
+        let totalBytesReceived = 0;
+        let signaledFirstByte = false;
+        let receivedData = new Uint8Array();
+        let endPositionOfLastProcessedBoxInReceivedData = 0;
+
+        commonMediaRequest.customData.reader = fetchResponse.body.getReader();
+        let downloadedData = [];
+        let moofStartTimeData = [];
+        let mdatEndTimeData = [];
+        let lastChunkWasFinished = true;
+
+        const calculationMode = settings.get().streaming.abr.throughput.lowLatencyDownloadTimeCalculationMode;
+
+        /**
+         * Callback function for ReadableStreamDefaultReader
+         * @param value - chunk data. Always undefined when done is true.
+         * @param done - true if the stream has already given you all its data.
+         */
+        const _processResult = ({ value, done }) => {
+
+            if (done) {
+                _handleRequestComplete()
+                return;
+            }
+
+            if (value && value.length > 0) {
+                _handleReceivedChunkData(value)
+            }
+
+            _readResponseBody(commonMediaRequest, commonMediaResponse, _processResult);
+        };
+
+        /**
+         * Once a request is completed throw final progress event with the calculated bytes and download time
+         * @private
+         */
+        function _handleRequestComplete() {
+            if (receivedData) {
+                const calculatedDownloadTime = _calculateDownloadTime();
+
+                // In this case we push an entry to the traces.
+                // This is the only entry we push as the other calls to onprogress use noTrace = true
+                commonMediaRequest.customData.onprogress({
+                    loaded: totalBytesReceived,
+                    total: totalBytesReceived,
+                    lengthComputable: true,
+                    time: calculatedDownloadTime
+                });
+
+                commonMediaResponse.data = receivedData.buffer;
+            }
+            commonMediaRequest.customData.onloadend();
+        }
+
+        function _calculateDownloadTime() {
+            // If there is pending data, call progress so network metrics
+            // are correctly generated
+            // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
+            let downloadTime = null;
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
+                downloadTime = _getDownloadTimeForMoofParsing();
+            } else if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
+                downloadTime = _getDownloadTimeForDownloadedData()
+            }
+
+            return downloadTime;
+        }
+
+        function _getDownloadTimeForMoofParsing() {
+            const calculatedThroughput = _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData);
+
+            if (calculatedThroughput) {
+                return totalBytesReceived * 8 / calculatedThroughput;
+            }
+
+            return null;
+        }
+
+        function _getDownloadTimeForDownloadedData() {
+            return calculateDownloadedTime(downloadedData, totalBytesReceived);
+        }
+
+        /**
+         * Called every time we received data if the request is not completed
+         * @param value
+         * @private
+         */
+        function _handleReceivedChunkData(value) {
+            receivedData = _concatTypedArray(receivedData, value);
+            totalBytesReceived += value.length;
+
+            downloadedData.push({
+                timestamp: _getCurrentTimestamp(),
+                bytes: value.length
+            });
+
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && lastChunkWasFinished) {
+                _findMoofBoxInChunkData();
+            }
+
+            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
+            if (boxesInfo.found) {
+                _handleTopIsoBoxCompleted(boxesInfo);
+            } else {
+                _handleNoCompletedTopIsoBox(boxesInfo);
+            }
+        }
+
+        function _findMoofBoxInChunkData() {
+            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
+
+            if (boxesInfo.found) {
+                lastChunkWasFinished = false;
+                moofStartTimeData.push({
+                    timestamp: _getCurrentTimestamp()
+                });
+            }
+        }
+
+        function _handleTopIsoBoxCompleted(boxesInfo) {
+            const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox + boxesInfo.sizeOfLastFoundTargetBox;
+            const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
+
+            // Store the end time of each chunk download  with its size in array EndTimeData
+            if (calculationMode === Constants.LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
+                lastChunkWasFinished = true;
+                mdatEndTimeData.push({
+                    timestamp: _getCurrentTimestamp(),
+                    bytes: data.length
+                });
+            }
+
+            // Announce progress but don't track traces. Throughput measures are quite unstable
+            // when they are based in small amount of data
+            commonMediaRequest.customData.onprogress({
+                data: data.buffer,
+                lengthComputable: false,
+                noTrace: true
+            });
+
+            endPositionOfLastProcessedBoxInReceivedData = 0;
+        }
+
+        /**
+         * Make the data that we received available for playback
+         * If we are going to pass full buffer, avoid copying it and pass
+         * complete buffer. Otherwise, clone the part of the buffer that is completed
+         * and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
+         * keeps a reference to the original data
+         * @param endPositionOfLastTargetBox
+         * @returns {Uint8Array}
+         * @private
+         */
+        function _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox) {
+            let data;
+
+            if (endPositionOfLastTargetBox === receivedData.length) {
+                data = receivedData;
+                receivedData = new Uint8Array();
+            } else {
+                data = new Uint8Array(receivedData.subarray(0, endPositionOfLastTargetBox));
+                receivedData = receivedData.subarray(endPositionOfLastTargetBox);
+            }
+
+            return data
+        }
+
+        function _handleNoCompletedTopIsoBox(boxesInfo) {
+            endPositionOfLastProcessedBoxInReceivedData = boxesInfo.startOffsetOfLastCompletedBox + boxesInfo.sizeOfLastCompletedBox;
+            // Call progress, so it generates traces that will be later used to know when the first byte
+            // were received
+            if (!signaledFirstByte) {
+                commonMediaRequest.customData.onprogress({
+                    lengthComputable: false,
+                    noTrace: true
+                });
+                signaledFirstByte = true;
+            }
+        }
+
+        _readResponseBody(commonMediaRequest, commonMediaResponse, _processResult);
+    }
+
+    /**
+     * Reads the response of the request. For details refer to https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultReader/read
+     * @param {CommonMediaRequest} commonMediaRequest
+     * @param {CommonMediaResponse} commonMediaResponse
+     * @param processResult
+     * @private
+     */
+    function _readResponseBody(commonMediaRequest, commonMediaResponse, processResult) {
+        commonMediaRequest.customData.reader.read()
+            .then(processResult)
+            .catch(function () {
+                _handleFetchError(commonMediaRequest);
+            });
+    }
+
+    function _handleFetchError(commonMediaRequest) {
+        if (commonMediaRequest.customData.onloadend) {
+            commonMediaRequest.customData.onloadend();
         }
     }
 
-    function request(httpRequest) {
-        // Variables will be used in the callback functions
-        const requestStartTime = new Date();
-        const request = httpRequest.request;
+    function _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse) {
+        commonMediaResponse.status = fetchResponse.status;
+        commonMediaResponse.statusText = fetchResponse.statusText;
+        commonMediaResponse.url = fetchResponse.url;
 
-        const headers = new Headers(); /*jshint ignore:line*/
-        if (request.range) {
-            headers.append('Range', 'bytes=' + request.range);
+        const responseHeaders = {};
+        for (const key of fetchResponse.headers.keys()) {
+            responseHeaders[key] = fetchResponse.headers.get(key);
         }
+        commonMediaResponse.headers = responseHeaders;
+    }
 
-        if (httpRequest.headers) {
-            for (let header in httpRequest.headers) {
-                let value = httpRequest.headers[header];
+    function _getHeaders(commonMediaRequest) {
+        const headers = new Headers();
+
+        if (commonMediaRequest.headers) {
+            for (let header in commonMediaRequest.headers) {
+                let value = commonMediaRequest.headers[header];
                 if (value) {
                     headers.append(header, value);
                 }
             }
         }
 
-        if (!request.requestStartDate) {
-            request.requestStartDate = requestStartTime;
-        }
+        return headers
+    }
 
-        if (requestModifier && requestModifier.modifyRequestHeader) {
-            // modifyRequestHeader expects a XMLHttpRequest object so,
-            // to keep backward compatibility, we should expose a setRequestHeader method
-            // TODO: Remove RequestModifier dependency on XMLHttpRequest object and define
-            // a more generic way to intercept/modify requests
-            requestModifier.modifyRequestHeader({
-                setRequestHeader: function (header, value) {
-                    headers.append(header, value);
-                }
-            }, {
-                url: httpRequest.url
-            });
-        }
-
+    function _setupAbortMechanism(commonMediaRequest) {
         let abortController;
+
         if (typeof window.AbortController === 'function') {
-            abortController = new AbortController(); /*jshint ignore:line*/
-            httpRequest.abortController = abortController;
-            abortController.signal.onabort = httpRequest.onabort;
+            abortController = new AbortController();
+            commonMediaRequest.customData.abortController = abortController;
+            abortController.signal.onabort = commonMediaRequest.customData.onabort;
         }
 
-        const reqOptions = {
-            method: httpRequest.method,
+        commonMediaRequest.customData.abort = abort.bind(commonMediaRequest);
+
+        return abortController
+    }
+
+    function _getFetchResourceRequestObject(commonMediaRequest, headers, abortController) {
+        const fetchResourceRequestObject = new Request(commonMediaRequest.url, {
+            method: commonMediaRequest.method,
             headers: headers,
-            credentials: httpRequest.withCredentials ? 'include' : undefined,
+            credentials: commonMediaRequest.credentials,
             signal: abortController ? abortController.signal : undefined
-        };
+        });
 
-        const calculationMode = settings.get().streaming.abr.fetchThroughputCalculationMode;
-        const requestTime = Date.now();
-        let throughputCapacityDelayMS = 0;
-
-        new Promise((resolve) => {
-            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
-                throughputCapacityDelayMS = lowLatencyThroughputModel.getThroughputCapacityDelayMS(request, dashMetrics.getCurrentBufferLevel(request.mediaType) * 1000);
-                if (throughputCapacityDelayMS) {
-                    // safely delay the "fetch" call a bit to be able to meassure the throughput capacity of the line.
-                    // this will lead to first few chunks downloaded at max network speed
-                    return setTimeout(resolve, throughputCapacityDelayMS);
-                }
-            }
-            resolve();
-        })
-            .then(() => {
-                let markBeforeFetch = Date.now();
-
-                fetch(httpRequest.url, reqOptions).then(function (response) {
-                    if (!httpRequest.response) {
-                        httpRequest.response = {};
-                    }
-                    httpRequest.response.status = response.status;
-                    httpRequest.response.statusText = response.statusText;
-                    httpRequest.response.responseURL = response.url;
-
-                    if (!response.ok) {
-                        httpRequest.onerror();
-                    }
-
-                    let responseHeaders = '';
-                    for (const key of response.headers.keys()) {
-                        responseHeaders += key + ': ' + response.headers.get(key) + '\r\n';
-                    }
-                    httpRequest.response.responseHeaders = responseHeaders;
-
-                    if (!response.body) {
-                        // Fetch returning a ReadableStream response body is not currently supported by all browsers.
-                        // Browser compatibility: https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API
-                        // If it is not supported, returning the whole segment when it's ready (as xhr)
-                        return response.arrayBuffer().then(function (buffer) {
-                            httpRequest.response.response = buffer;
-                            const event = {
-                                loaded: buffer.byteLength,
-                                total: buffer.byteLength,
-                                stream: false
-                            };
-                            httpRequest.progress(event);
-                            httpRequest.onload();
-                            httpRequest.onend();
-                            return;
-                        });
-                    }
-
-                    const totalBytes = parseInt(response.headers.get('Content-Length'), 10);
-                    let bytesReceived = 0;
-                    let signaledFirstByte = false;
-                    let remaining = new Uint8Array();
-                    let offset = 0;
-
-                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST && lowLatencyThroughputModel) {
-                        let markA = markBeforeFetch;
-                        let markB = 0;
-
-                        function fetchMeassurement(stream) {
-                            const reader = stream.getReader();
-                            const measurement = [];
-
-                            reader.read().then(function processFetch(args) {
-                                const value = args.value;
-                                const done = args.done;
-                                markB = Date.now();
-
-                                if (value && value.length) {
-                                    const chunkDownloadDurationMS = markB - markA;
-                                    const chunkBytes = value.length;
-                                    measurement.push({
-                                        chunkDownloadTimeRelativeMS: markB - markBeforeFetch,
-                                        chunkDownloadDurationMS,
-                                        chunkBytes,
-                                        kbps: Math.round(8 * chunkBytes / (chunkDownloadDurationMS / 1000)),
-                                        bufferLevel: dashMetrics.getCurrentBufferLevel(request.mediaType)
-                                    });
-                                }
-
-                                if (done) {
-
-                                    const fetchDuration = markB - markBeforeFetch;
-                                    const bytesAllChunks = measurement.reduce((prev, curr) => prev + curr.chunkBytes, 0);
-
-                                    lowLatencyThroughputModel.addMeasurement(request, fetchDuration, measurement, requestTime, throughputCapacityDelayMS, responseHeaders);
-
-                                    httpRequest.progress({
-                                        loaded: bytesAllChunks,
-                                        total: bytesAllChunks,
-                                        lengthComputable: true,
-                                        time: lowLatencyThroughputModel.getEstimatedDownloadDurationMS(request),
-                                        stream: true
-                                    });
-                                    return;
-                                }
-                                markA = Date.now();
-                                return reader.read().then(processFetch);
-                            });
-                        }
-                        // tee'ing streams is supported by all current major browsers
-                        // https://developer.mozilla.org/en-US/docs/Web/API/ReadableStream/tee
-                        const [forMeasure, forConsumer] = response.body.tee();
-                        fetchMeassurement(forMeasure);
-                        httpRequest.reader = forConsumer.getReader();
-                    } else {
-                        httpRequest.reader = response.body.getReader();
-                    }
-
-                    let downloadedData = [];
-                    let startTimeData = [];
-                    let endTimeData = [];
-                    let lastChunkWasFinished = true;
-
-
-                    const processResult = function ({ value, done }) { // Bug fix Parse whenever data is coming [value] better than 1ms looking that increase CPU
-                        if (done) {
-                            if (remaining) {
-                                if (calculationMode !== Constants.ABR_FETCH_THROUGHPUT_CALCULATION_AAST) {
-                                    // If there is pending data, call progress so network metrics
-                                    // are correctly generated
-                                    // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
-                                    let calculatedThroughput = null;
-                                    let calculatedTime = null;
-                                    if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING) {
-                                        calculatedThroughput = calculateThroughputByChunkData(startTimeData, endTimeData);
-                                        if (calculatedThroughput) {
-                                            calculatedTime = bytesReceived * 8 / calculatedThroughput;
-                                        }
-                                    }
-                                    else if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_DOWNLOADED_DATA) {
-                                        calculatedTime = calculateDownloadedTime(downloadedData, bytesReceived);
-                                    }
-
-                                    httpRequest.progress({
-                                        loaded: bytesReceived,
-                                        total: isNaN(totalBytes) ? bytesReceived : totalBytes,
-                                        lengthComputable: true,
-                                        time: calculatedTime,
-                                        stream: true
-                                    });
-                                }
-
-                                httpRequest.response.response = remaining.buffer;
-                            }
-                            httpRequest.onload();
-                            httpRequest.onend();
-                            return;
-                        }
-
-                        if (value && value.length > 0) {
-                            remaining = concatTypedArray(remaining, value);
-                            bytesReceived += value.length;
-
-                            downloadedData.push({
-                                ts: Date.now(),
-                                bytes: value.length
-                            });
-
-                            if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && lastChunkWasFinished) {
-                                // Parse the payload and capture the the 'moof' box
-                                const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], remaining, offset);
-                                if (boxesInfo.found) {
-                                    // Store the beginning time of each chunk download in array StartTimeData
-                                    lastChunkWasFinished = false;
-                                    startTimeData.push({
-                                        ts: performance.now(), /* jshint ignore:line */
-                                        bytes: value.length
-                                    });
-                                }
-                            }
-
-                            const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], remaining, offset);
-                            if (boxesInfo.found) {
-                                const end = boxesInfo.lastCompletedOffset + boxesInfo.size;
-
-                                // Store the end time of each chunk download  with its size in array EndTimeData
-                                if (calculationMode === Constants.ABR_FETCH_THROUGHPUT_CALCULATION_MOOF_PARSING && !lastChunkWasFinished) {
-                                    lastChunkWasFinished = true;
-                                    endTimeData.push({
-                                        ts: performance.now(), /* jshint ignore:line */
-                                        bytes: remaining.length
-                                    });
-                                }
-
-                                // If we are going to pass full buffer, avoid copying it and pass
-                                // complete buffer. Otherwise clone the part of the buffer that is completed
-                                // and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
-                                // keeps a reference to the original data
-                                let data;
-                                if (end === remaining.length) {
-                                    data = remaining;
-                                    remaining = new Uint8Array();
-                                } else {
-                                    data = new Uint8Array(remaining.subarray(0, end));
-                                    remaining = remaining.subarray(end);
-                                }
-                                // Announce progress but don't track traces. Throughput measures are quite unstable
-                                // when they are based in small amount of data
-                                httpRequest.progress({
-                                    data: data.buffer,
-                                    lengthComputable: false,
-                                    noTrace: true
-                                });
-
-                                offset = 0;
-                            } else {
-                                offset = boxesInfo.lastCompletedOffset;
-                                // Call progress so it generates traces that will be later used to know when the first byte
-                                // were received
-                                if (!signaledFirstByte) {
-                                    httpRequest.progress({
-                                        lengthComputable: false,
-                                        noTrace: true
-                                    });
-                                    signaledFirstByte = true;
-                                }
-                            }
-                        }
-                        read(httpRequest, processResult);
-                    };
-                    read(httpRequest, processResult);
-                })
-                    .catch(function (e) {
-                        if (httpRequest.onerror) {
-                            httpRequest.onerror(e);
-                        }
-                    });
-            });
+        return fetchResourceRequestObject
     }
 
-    function read(httpRequest, processResult) {
-        httpRequest.reader.read()
-            .then(processResult)
-            .catch(function (e) {
-                if (httpRequest.onerror && httpRequest.response.status === 200) {
-                    // Error, but response code is 200, trigger error
-                    httpRequest.onerror(e);
-                }
-            });
+    function _getCurrentTimestamp() {
+        if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+            return performance.now();
+        } else {
+            return Date.now();
+        }
     }
 
-    function concatTypedArray(remaining, data) {
-        if (remaining.length === 0) {
+    /**
+     * Creates a new Uint8 array and adds the existing data as well as new data
+     * @param receivedData
+     * @param data
+     * @returns {Uint8Array|*}
+     * @private
+     */
+    function _concatTypedArray(receivedData, data) {
+        if (receivedData.length === 0) {
             return data;
         }
-        const result = new Uint8Array(remaining.length + data.length);
-        result.set(remaining);
-        result.set(data, remaining.length);
+        const result = new Uint8Array(receivedData.length + data.length);
+        result.set(receivedData);
+
+        // set(typedarray, targetOffset)
+        result.set(data, receivedData.length);
+
         return result;
     }
 
-    function abort(request) {
-        if (request.abortController) {
+    /**
+     * Use the AbortController to abort a request
+     * @param request
+     */
+    function abort() {
+        // this = httpRequest (CommonMediaRequest)
+        if (this.customData.abortController) {
             // For firefox and edge
-            request.abortController.abort();
-        } else if (request.reader) {
+            this.customData.abortController.abort();
+        } else if (this.customData.reader) {
             // For Chrome
             try {
-                request.reader.cancel();
-                request.onabort();
+                this.customData.reader.cancel();
+                this.onabort();
             } catch (e) {
                 // throw exceptions (TypeError) when reader was previously closed,
                 // for example, because a network issue
@@ -388,17 +385,28 @@ function FetchLoader(cfg) {
         }
     }
 
+    function reset() {
+
+    }
+
+    /**
+     * Default throughput calculation
+     * @param downloadedData
+     * @param bytesReceived
+     * @returns {number|null}
+     * @private
+     */
     function calculateDownloadedTime(downloadedData, bytesReceived) {
         try {
             downloadedData = downloadedData.filter(data => data.bytes > ((bytesReceived / 4) / downloadedData.length));
             if (downloadedData.length > 1) {
                 let time = 0;
-                const avgTimeDistance = (downloadedData[downloadedData.length - 1].ts - downloadedData[0].ts) / downloadedData.length;
+                const avgTimeDistance = (downloadedData[downloadedData.length - 1].timestamp - downloadedData[0].timestamp) / downloadedData.length;
                 downloadedData.forEach((data, index) => {
                     // To be counted the data has to be over a threshold
                     const next = downloadedData[index + 1];
                     if (next) {
-                        const distance = next.ts - data.ts;
+                        const distance = next.timestamp - data.timestamp;
                         time += distance < avgTimeDistance ? distance : 0;
                     }
                 });
@@ -410,45 +418,56 @@ function FetchLoader(cfg) {
         }
     }
 
-    function calculateThroughputByChunkData(startTimeData, endTimeData) {
+    function _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData) {
         try {
-            let datum, datumE;
+            let filteredMoofStartTimeData,
+                filteredMdatEndTimeData;
+
             // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
-            datum = startTimeData.filter((data, i) => i < startTimeData.length - 1);
-            datumE = endTimeData.filter((dataE, i) => i < endTimeData.length - 1);
-            let chunkThroughputs = [];
-            // Compute the average throughput of the filtered chunk data
-            if (datum.length > 1) {
-                let shortDurationBytesReceived = 0;
-                let shortDurationStartTime = 0;
-                for (let i = 0; i < datum.length; i++) {
-                    if (datum[i] && datumE[i]) {
-                        let chunkDownloadTime = datumE[i].ts - datum[i].ts;
-                        if (chunkDownloadTime > 1) {
-                            chunkThroughputs.push((8 * datumE[i].bytes) / chunkDownloadTime);
+            filteredMoofStartTimeData = moofStartTimeData.slice(0, -1);
+            filteredMdatEndTimeData = mdatEndTimeData.slice(0, -1);
+
+            if (filteredMoofStartTimeData.length !== filteredMdatEndTimeData.length) {
+                logger.warn(`[FetchLoader] Moof and Mdat data arrays have different lengths. Moof: ${filteredMoofStartTimeData.length}, Mdat: ${filteredMdatEndTimeData.length}`);
+            }
+
+            if (filteredMoofStartTimeData.length <= 1) {
+                return null;
+            }
+
+            let chunkThroughputValues = [];
+            let shortDurationBytesReceived = 0;
+            let shortDurationStartTime = 0;
+
+            for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
+                if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
+                    let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
+                    if (chunkDownloadTime > 1) {
+                        const throughput = _getThroughputInBitPerMs(filteredMdatEndTimeData[i].bytes, chunkDownloadTime);
+                        chunkThroughputValues.push(throughput);
+                        shortDurationStartTime = 0;
+                    } else {
+                        if (shortDurationStartTime === 0) {
+                            shortDurationStartTime = filteredMoofStartTimeData[i].timestamp;
+                            shortDurationBytesReceived = 0;
+                        }
+                        let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
+                        if (cumulatedChunkDownloadTime > 1) {
+                            shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
+                            const throughput = _getThroughputInBitPerMs(shortDurationBytesReceived, cumulatedChunkDownloadTime);
+                            chunkThroughputValues.push(throughput);
                             shortDurationStartTime = 0;
                         } else {
-                            if (shortDurationStartTime === 0) {
-                                shortDurationStartTime = datum[i].ts;
-                                shortDurationBytesReceived = 0;
-                            }
-                            let cumulatedChunkDownloadTime = datumE[i].ts - shortDurationStartTime;
-                            if (cumulatedChunkDownloadTime > 1) {
-                                shortDurationBytesReceived += datumE[i].bytes;
-                                chunkThroughputs.push((8 * shortDurationBytesReceived) / cumulatedChunkDownloadTime);
-                                shortDurationStartTime = 0;
-                            } else {
-                                // continue cumulating short duration data
-                                shortDurationBytesReceived += datumE[i].bytes;
-                            }
+                            // continue cumulating short duration data
+                            shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
                         }
                     }
                 }
+            }
 
-                if (chunkThroughputs.length > 0) {
-                    const sumOfChunkThroughputs = chunkThroughputs.reduce((a, b) => a + b, 0);
-                    return sumOfChunkThroughputs / chunkThroughputs.length;
-                }
+            if (chunkThroughputValues.length > 0) {
+                const sumOfChunkThroughputValues = chunkThroughputValues.reduce((a, b) => a + b, 0);
+                return sumOfChunkThroughputValues / chunkThroughputValues.length;
             }
 
             return null;
@@ -457,11 +476,18 @@ function FetchLoader(cfg) {
         }
     }
 
+    function _getThroughputInBitPerMs(bytes, timeInMs) {
+        return (8 * bytes) / timeInMs
+    }
+
+    setup();
+
     instance = {
-        load: load,
-        abort: abort,
-        calculateDownloadedTime: calculateDownloadedTime,
-        setup
+        abort,
+        calculateDownloadedTime,
+        load,
+        reset,
+        setConfig,
     };
 
     return instance;

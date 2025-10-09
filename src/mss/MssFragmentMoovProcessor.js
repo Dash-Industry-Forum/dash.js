@@ -28,7 +28,8 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import MssErrors from './errors/MssErrors';
+import MssErrors from './errors/MssErrors.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 /**
  * @module MssFragmentMoovProcessor
@@ -140,7 +141,7 @@ function MssFragmentMoovProcessor(config) {
         createTrexBox(mvex);
 
         if (contentProtection && protectionController) {
-            let supportedKS = protectionController.getSupportedKeySystemsFromContentProtection(contentProtection);
+            let supportedKS = protectionController.getSupportedKeySystemMetadataFromContentProtection(contentProtection);
             createProtectionSystemSpecificHeaderBox(moov, supportedKS);
         }
     }
@@ -632,9 +633,9 @@ function MssFragmentMoovProcessor(config) {
 
         period = adaptationSet.period;
         trackId = adaptationSet.index + 1;
-        contentProtection = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].ContentProtection;
+        contentProtection = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].ContentProtection;
 
-        timescale = period.mpd.manifest.Period_asArray[period.index].AdaptationSet_asArray[adaptationSet.index].SegmentTemplate.timescale;
+        timescale = period.mpd.manifest.Period[period.index].AdaptationSet[adaptationSet.index].SegmentTemplate.timescale;
 
         isoFile = ISOBoxer.createFile();
         createFtypBox(isoFile);
@@ -653,4 +654,4 @@ function MssFragmentMoovProcessor(config) {
 }
 
 MssFragmentMoovProcessor.__dashjs_factory_name = 'MssFragmentMoovProcessor';
-export default dashjs.FactoryMaker.getClassFactory(MssFragmentMoovProcessor); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MssFragmentMoovProcessor);

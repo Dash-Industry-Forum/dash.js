@@ -1,5 +1,4 @@
-
-import ManifestLoaderMock from './ManifestLoaderMock';
+import ManifestLoaderMock from './ManifestLoaderMock.js';
 
 class ManifestUpdaterMock {
     constructor() {
@@ -9,6 +8,10 @@ class ManifestUpdaterMock {
     getManifestLoader() {
         return this.manifestLoader;
     }
+
+    refreshManifest() {}
+
+    getIsUpdating() {}
 }
 
 export default ManifestUpdaterMock;

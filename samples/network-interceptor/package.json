@@ -1,0 +1,16 @@
+{
+  "scripts": {
+    "build": "webpack --mode development"
+  },
+  "devDependencies": {
+    "@svta/common-media-library": "^0.17.1",
+    "@types/node": "^18.14.0",
+    "copy-webpack-plugin": "^12.0.2",
+    "dashjs": "file:../..",
+    "source-map-loader": "^4.0.1",
+    "ts-loader": "^9.4.2",
+    "typescript": "^4.9.3",
+    "webpack": "^5.82.1",
+    "webpack-cli": "^5.1.1"
+  }
+}

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <title>Multiple Language EBU Timed Text Sample</title>
     <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
-    <script src="../../dist/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
     <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
@@ -39,7 +39,7 @@
             player = dashjs.MediaPlayer().create();
             player.initialize(video, url, true);
             player.attachTTMLRenderingDiv(TTMLRenderingDiv);
-            controlbar = new ControlBar(player); 
+            controlbar = new ControlBar(player);
             controlbar.initialize();
         }
 

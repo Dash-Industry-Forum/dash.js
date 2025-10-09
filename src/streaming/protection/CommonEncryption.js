@@ -28,10 +28,11 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import DashConstants from '../../dash/constants/DashConstants.js';
+import ProtectionConstants from '../constants/ProtectionConstants.js';
 
 const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
-    attributes: ['Laurl', 'laurl'],
-    prefixes: ['clearkey', 'dashif']
+    prefixes: ['clearkey', 'dashif', 'ck']
 };
 
 /**
@@ -41,19 +42,20 @@ const LICENSE_SERVER_MANIFEST_CONFIGURATIONS = {
 class CommonEncryption {
     /**
      * Find and return the ContentProtection element in the given array
-     * that indicates support for MPEG Common Encryption
+     * that indicates support for MP4 Common Encryption
      *
      * @param {Array} cpArray array of content protection elements
      * @returns {Object|null} the Common Encryption content protection element or
      * null if one was not found
      */
-    static findCencContentProtection(cpArray) {
+    static findMp4ProtectionElement(cpArray) {
         let retVal = null;
         for (let i = 0; i < cpArray.length; ++i) {
             let cp = cpArray[i];
-            if (cp.schemeIdUri.toLowerCase() === 'urn:mpeg:dash:mp4protection:2011' &&
-                (cp.value.toLowerCase() === 'cenc' || cp.value.toLowerCase() === 'cbcs'))
+            if (cp.schemeIdUri && cp.schemeIdUri.toLowerCase() === DashConstants.MP4_PROTECTION_SCHEME && cp.value &&
+                (cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CENC || cp.value.toLowerCase() === ProtectionConstants.ENCRYPTION_SCHEME_CBCS)) {
                 retVal = cp;
+            }
         }
         return retVal;
     }
@@ -108,7 +110,7 @@ class CommonEncryption {
      * @returns {ArrayBuffer|null} the init data or null if not found
      */
     static parseInitDataFromContentProtection(cpData, BASE64) {
-        if ('pssh' in cpData) {
+        if ('pssh' in cpData && cpData.pssh) {
 
             // Remove whitespaces and newlines from pssh text
             cpData.pssh.__text = cpData.pssh.__text.replace(/\r?\n|\r/g, '').replace(/\s+/g, '');
@@ -129,8 +131,9 @@ class CommonEncryption {
      */
     static parsePSSHList(data) {
 
-        if (data === null || data === undefined)
+        if (data === null || data === undefined) {
             return [];
+        }
 
         let dv = new DataView(data.buffer || data); // data.buffer first for Uint8Array support
         let done = false;
@@ -146,8 +149,9 @@ class CommonEncryption {
                 systemID;
             let boxStart = byteCursor;
 
-            if (byteCursor >= dv.buffer.byteLength)
+            if (byteCursor >= dv.buffer.byteLength) {
                 break;
+            }
 
             /* Box size */
             size = dv.getUint32(byteCursor);
@@ -217,40 +221,33 @@ class CommonEncryption {
         return pssh;
     }
 
-    static getLicenseServerUrlFromMediaInfo(mediaInfo, schemeIdUri) {
+    static getLicenseServerUrlFromMediaInfo(mediaInfoArr, schemeIdUri) {
         try {
 
-            if (!mediaInfo || mediaInfo.length === 0) {
+            if (!mediaInfoArr || mediaInfoArr.length === 0) {
                 return null;
             }
 
             let i = 0;
             let licenseServer = null;
 
-            while (i < mediaInfo.length && !licenseServer) {
-                const info = mediaInfo[i];
+            while (i < mediaInfoArr.length && !licenseServer) {
+                const mediaInfo = mediaInfoArr[i];
 
-                if (info && info.contentProtection && info.contentProtection.length > 0) {
-                    const targetProtectionData = info.contentProtection.filter((cp) => {
+                if (mediaInfo && mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0) {
+                    const targetProtectionData = mediaInfo.contentProtection.filter((cp) => {
                         return cp.schemeIdUri && cp.schemeIdUri === schemeIdUri;
                     });
 
                     if (targetProtectionData && targetProtectionData.length > 0) {
                         let j = 0;
                         while (j < targetProtectionData.length && !licenseServer) {
-                            const ckData = targetProtectionData[j];
-                            let k = 0;
-                            while (k < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes.length && !licenseServer) {
-                                let l = 0;
-                                const attribute = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.attributes[k];
-                                while (l < LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.length && !licenseServer) {
-                                    const prefix = LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes[l];
-                                    if (ckData[attribute] && ckData[attribute].__prefix && ckData[attribute].__prefix === prefix && ckData[attribute].__text) {
-                                        licenseServer = ckData[attribute].__text;
-                                    }
-                                    l += 1;
-                                }
-                                k += 1;
+                            const contentProtection = targetProtectionData[j];
+                            if (contentProtection.laUrl
+                                && contentProtection.laUrl.__prefix
+                                && LICENSE_SERVER_MANIFEST_CONFIGURATIONS.prefixes.includes(contentProtection.laUrl.__prefix)
+                                && contentProtection.laUrl.__text) {
+                                licenseServer = contentProtection.laUrl.__text;
                             }
                             j += 1;
                         }
@@ -262,6 +259,16 @@ class CommonEncryption {
         } catch (e) {
             return null;
         }
+    }
+
+    static hexKidToBufferSource(hexKid) {
+        const cleanedHexKid = hexKid.replace(/-/g, '');
+
+        const typedArray = new Uint8Array(cleanedHexKid.match(/[\da-f]{2}/gi).map(function (h) {
+            return parseInt(h, 16)
+        }))
+
+        return typedArray.buffer
     }
 }
 

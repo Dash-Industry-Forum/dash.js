@@ -28,24 +28,24 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import EventBus from '../../../core/EventBus';
-import Events from '../../../core/events/Events';
-import FactoryMaker from '../../../core/FactoryMaker';
-import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest';
-import Constants from '../../constants/Constants';
-import MetricsConstants from '../../constants/MetricsConstants';
-import MediaPlayerEvents from '../../MediaPlayerEvents';
+import EventBus from '../../../core/EventBus.js';
+import Events from '../../../core/events/Events.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import Debug from '../../../core/Debug.js';
+import SwitchRequest from '../SwitchRequest.js';
+import Constants from '../../constants/Constants.js';
+import MetricsConstants from '../../constants/MetricsConstants.js';
+import MediaPlayerEvents from '../../MediaPlayerEvents.js';
+import Settings from '../../../core/Settings.js';
 
 function InsufficientBufferRule(config) {
 
     config = config || {};
-    const INSUFFICIENT_BUFFER_SAFETY_FACTOR = 0.5;
-    const SEGMENT_IGNORE_COUNT = 2;
 
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const dashMetrics = config.dashMetrics;
+    const settings = Settings(context).getInstance();
 
     let instance,
         logger,
@@ -53,87 +53,83 @@ function InsufficientBufferRule(config) {
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
-        resetInitialSettings();
+        _resetInitialSettings();
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
-    function checkConfig() {
-        if (!dashMetrics || !dashMetrics.hasOwnProperty('getCurrentBufferLevel') || !dashMetrics.hasOwnProperty('getCurrentBufferState')) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
-
 
     /**
-     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest.quality=0 until BUFFER_LOADED happens.
-     * Otherwise InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
+     * If a BUFFER_EMPTY event happens, then InsufficientBufferRule returns switchRequest. Quality=0 until BUFFER_LOADED happens.
+     * Otherwise, InsufficientBufferRule gives a maximum bitrate depending on throughput and bufferLevel such that
      * a whole fragment can be downloaded before the buffer runs out, subject to a conservative safety factor of 0.5.
      * If the bufferLevel is low, then InsufficientBufferRule avoids rebuffering risk.
      * If the bufferLevel is high, then InsufficientBufferRule give a high MaxIndex allowing other rules to take over.
      * @param rulesContext
      * @return {object}
      */
-    function getMaxIndex(rulesContext) {
+    function getSwitchRequest(rulesContext) {
         const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
 
         if (!rulesContext || !rulesContext.hasOwnProperty('getMediaType')) {
             return switchRequest;
         }
 
-        checkConfig();
-
         const mediaType = rulesContext.getMediaType();
         const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
-        const representationInfo = rulesContext.getRepresentationInfo();
-        const fragmentDuration = representationInfo.fragmentDuration;
-        const streamInfo = rulesContext.getStreamInfo();
-        const streamId = streamInfo ? streamInfo.id : null;
+        const voRepresentation = rulesContext.getRepresentation();
+        const fragmentDuration = voRepresentation.fragmentDuration;
         const scheduleController = rulesContext.getScheduleController();
-        const isDynamic = streamInfo && streamInfo.manifestInfo && streamInfo.manifestInfo.isDynamic;
         const playbackController = scheduleController.getPlaybackController();
 
-
-        // Don't ask for a bitrate change if there is not info about buffer state or if fragmentDuration is not defined
-        const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
-        if (shouldIgnore(lowLatencyEnabled, mediaType) || !fragmentDuration) {
+        if (!_shouldExecuteRule(playbackController, mediaType, fragmentDuration)) {
             return switchRequest;
         }
 
+        const mediaInfo = rulesContext.getMediaInfo();
+        const abrController = rulesContext.getAbrController();
         if (currentBufferState && currentBufferState.state === MetricsConstants.BUFFER_EMPTY) {
             logger.debug('[' + mediaType + '] Switch to index 0; buffer is empty.');
-            switchRequest.quality = 0;
-            switchRequest.reason = 'InsufficientBufferRule: Buffer is empty';
+            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, 0, true);
+            switchRequest.reason = {
+                message: '[InsufficientBufferRule]: Switching to lowest Representation because buffer is empty'
+            };
         } else {
-            const mediaInfo = rulesContext.getMediaInfo();
-            const abrController = rulesContext.getAbrController();
-            const throughputHistory = abrController.getThroughputHistory();
-
+            const throughputController = rulesContext.getThroughputController();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
-            const throughput = throughputHistory.getAverageThroughput(mediaType, isDynamic);
-            const latency = throughputHistory.getAverageLatency(mediaType);
-            const bitrate = throughput * (bufferLevel / fragmentDuration) * INSUFFICIENT_BUFFER_SAFETY_FACTOR;
+            const throughput = throughputController.getAverageThroughput(mediaType, null, NaN);
+            const safeThroughput = throughput * settings.get().streaming.abr.rules.insufficientBufferRule.parameters.throughputSafetyFactor;
+            const bitrate = safeThroughput * bufferLevel / fragmentDuration
 
-            switchRequest.quality = abrController.getQualityForBitrate(mediaInfo, bitrate, streamId, latency);
-            switchRequest.reason = 'InsufficientBufferRule: being conservative to avoid immediate rebuffering';
+            if (isNaN(bitrate) || bitrate <= 0) {
+                return switchRequest
+            }
+
+            switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true);
+            switchRequest.reason = {
+                message: '[InsufficientBufferRule]: Limiting maximum bitrate to avoid a buffer underrun.',
+                bitrate
+            };
         }
 
         return switchRequest;
-
     }
 
-    function shouldIgnore(lowLatencyEnabled, mediaType) {
-        return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount > 0;
+    function _shouldExecuteRule(playbackController, mediaType, fragmentDuration) {
+        const lowLatencyEnabled = playbackController.getLowLatencyModeEnabled();
+        return !lowLatencyEnabled && bufferStateDict[mediaType].ignoreCount <= 0 && fragmentDuration;
     }
 
-    function resetInitialSettings() {
+    function _resetInitialSettings() {
+        const segmentIgnoreCount = settings.get().streaming.abr.rules.insufficientBufferRule.parameters.segmentIgnoreCount
         bufferStateDict = {};
-        bufferStateDict[Constants.VIDEO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
-        bufferStateDict[Constants.AUDIO] = { ignoreCount: SEGMENT_IGNORE_COUNT };
+        bufferStateDict[Constants.VIDEO] = { ignoreCount: segmentIgnoreCount };
+        bufferStateDict[Constants.AUDIO] = { ignoreCount: segmentIgnoreCount };
     }
 
     function _onPlaybackSeeking() {
-        resetInitialSettings();
+        _resetInitialSettings();
     }
 
     function _onBytesAppended(e) {
@@ -145,13 +141,13 @@ function InsufficientBufferRule(config) {
     }
 
     function reset() {
-        resetInitialSettings();
+        _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(Events.BYTES_APPENDED_END_FRAGMENT, _onBytesAppended, instance);
     }
 
     instance = {
-        getMaxIndex,
+        getSwitchRequest,
         reset
     };
 

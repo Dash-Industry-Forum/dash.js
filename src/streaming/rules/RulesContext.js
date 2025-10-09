@@ -29,21 +29,19 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function RulesContext(config) {
 
     config = config || {};
     let instance;
     const abrController = config.abrController;
-    const switchHistory = config.switchHistory;
+    const throughputController = config.throughputController;
+    const switchRequestHistory = config.switchRequestHistory;
     const droppedFramesHistory = config.droppedFramesHistory;
     const currentRequest = config.currentRequest;
-    const bufferOccupancyABR = config.useBufferOccupancyABR;
-    const l2AABR = config.useL2AABR;
-    const loLP = config.useLoLPABR;
     const scheduleController = config.streamProcessor ? config.streamProcessor.getScheduleController() : null;
-    const representationInfo = config.streamProcessor ? config.streamProcessor.getRepresentationInfo() : null;
+    const voRepresentation = config.streamProcessor ? config.streamProcessor.getRepresentation() : null;
     const videoModel = config.videoModel ? config.videoModel : null;
 
     function getMediaType() {
@@ -57,11 +55,11 @@ function RulesContext(config) {
     }
 
     function getMediaInfo() {
-        return representationInfo ? representationInfo.mediaInfo : null;
+        return voRepresentation ? voRepresentation.mediaInfo : null;
     }
 
-    function getRepresentationInfo() {
-        return representationInfo;
+    function getRepresentation() {
+        return voRepresentation;
     }
 
     function getScheduleController() {
@@ -72,8 +70,12 @@ function RulesContext(config) {
         return abrController;
     }
 
-    function getSwitchHistory() {
-        return switchHistory;
+    function getThroughputController() {
+        return throughputController;
+    }
+
+    function getSwitchRequestHistory() {
+        return switchRequestHistory;
     }
 
     function getVideoModel() {
@@ -88,31 +90,18 @@ function RulesContext(config) {
         return currentRequest;
     }
 
-    function useBufferOccupancyABR() {
-        return bufferOccupancyABR;
-    }
-    function useL2AABR() {
-        return l2AABR;
-    }
-
-    function useLoLPABR() {
-        return loLP;
-    }
-
     instance = {
-        getMediaType,
-        getMediaInfo,
-        getDroppedFramesHistory,
-        getCurrentRequest,
-        getSwitchHistory,
-        getStreamInfo,
-        getScheduleController,
         getAbrController,
-        getRepresentationInfo,
-        useBufferOccupancyABR,
-        useL2AABR,
-        useLoLPABR,
-        getVideoModel
+        getCurrentRequest,
+        getDroppedFramesHistory,
+        getMediaInfo,
+        getMediaType,
+        getRepresentation,
+        getScheduleController,
+        getStreamInfo,
+        getSwitchRequestHistory,
+        getThroughputController,
+        getVideoModel,
     };
 
     return instance;

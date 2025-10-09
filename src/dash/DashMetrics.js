@@ -28,17 +28,14 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Constants from '../streaming/constants/Constants';
-import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest';
-import FactoryMaker from '../core/FactoryMaker';
-import MetricsConstants from '../streaming/constants/MetricsConstants';
-import Round10 from './utils/Round10';
-import MetricsModel from '../streaming/models/MetricsModel';
-import Utils from '../core/Utils';
-import {
-    PlayList,
-    PlayListTrace
-} from '../streaming/vo/metrics/PlayList';
+import Constants from '../streaming/constants/Constants.js';
+import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import MetricsConstants from '../streaming/constants/MetricsConstants.js';
+import Round10 from './utils/Round10.js';
+import MetricsModel from '../streaming/models/MetricsModel.js';
+import Utils from '../core/Utils.js';
+import {PlayList, PlayListTrace} from '../streaming/vo/metrics/PlayList.js';
 
 /**
  * @module DashMetrics
@@ -59,7 +56,7 @@ function DashMetrics(config) {
     let metricsModel = config.metricsModel;
 
     function setup() {
-        metricsModel = metricsModel || MetricsModel(context).getInstance({settings: config.settings});
+        metricsModel = metricsModel || MetricsModel(context).getInstance({ settings: config.settings });
         resetInitialSettings();
     }
 
@@ -154,7 +151,7 @@ function DashMetrics(config) {
      * @instance
      * @ignore
      */
-    function clearAllCurrentMetrics () {
+    function clearAllCurrentMetrics() {
         metricsModel.clearAllCurrentMetrics();
     }
 
@@ -285,7 +282,7 @@ function DashMetrics(config) {
             request.startTime,
             request.availabilityStartTime,
             request.duration,
-            request.quality,
+            request.bandwidth,
             request.range,
             state);
     }
@@ -332,37 +329,24 @@ function DashMetrics(config) {
      * @ignore
      */
     function addManifestUpdate(request) {
-        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.requestStartDate, request.requestEndDate);
+        metricsModel.addManifestUpdate(Constants.STREAM, request.type, request.startDate, request.endDate);
     }
 
     /**
      * @param {object} request
-     * @param {string} responseURL
+     * @param {string} responseUrl
      * @param {number} responseStatus
      * @param {object} responseHeaders
      * @param {object} traces
+     * @param {object} cmsd
      * @memberof module:DashMetrics
      * @instance
      * @ignore
      */
-    function addHttpRequest(request, responseURL, responseStatus, responseHeaders, traces, cmsd) {
-        metricsModel.addHttpRequest(request.mediaType,
-            null,
-            request.type,
-            request.url,
-            request.quality,
-            responseURL,
-            request.serviceLocation || null,
-            request.range || null,
-            request.requestStartDate,
-            request.firstByteDate,
-            request.requestEndDate,
-            responseStatus,
-            request.duration,
-            responseHeaders,
-            traces,
-            request.fileLoaderType,
-            cmsd);
+    function addHttpRequest(request, responseUrl, responseStatus, responseHeaders, traces,cmsd) {
+        const response = { status: responseStatus, headers: responseHeaders, url: responseUrl };
+
+        metricsModel.addHttpRequest(request, response, traces, cmsd);
     }
 
     /**
@@ -375,7 +359,7 @@ function DashMetrics(config) {
     function addManifestUpdateRepresentationInfo(representation, mediaType) {
         if (representation) {
             const manifestUpdateInfo = this.getCurrentManifestUpdate();
-            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation.id, representation.index, representation.streamIndex, mediaType, representation.presentationTimeOffset, representation.startNumber, representation.fragmentInfoType);
+            metricsModel.addManifestUpdateRepresentationInfo(manifestUpdateInfo, representation, mediaType);
         }
     }
 
@@ -494,7 +478,7 @@ function DashMetrics(config) {
      * @ignore
      */
     function createPlaylistTraceMetrics(representationId, mediaStartTime, speed) {
-        if (playListTraceMetricsClosed === true ) {
+        if (playListTraceMetricsClosed === true) {
             playListTraceMetricsClosed = false;
             playListTraceMetrics = new PlayListTrace();
 
@@ -527,8 +511,7 @@ function DashMetrics(config) {
     function pushPlayListTraceMetrics(endTime, reason) {
         if (playListTraceMetricsClosed === false && playListMetrics && playListTraceMetrics && playListTraceMetrics.start) {
             const startTime = playListTraceMetrics.start;
-            const duration = endTime.getTime() - startTime.getTime();
-            playListTraceMetrics.duration = duration;
+            playListTraceMetrics.duration = endTime.getTime() - startTime.getTime();
             playListTraceMetrics.stopreason = reason;
             playListMetrics.trace.push(playListTraceMetrics);
             playListTraceMetricsClosed = true;

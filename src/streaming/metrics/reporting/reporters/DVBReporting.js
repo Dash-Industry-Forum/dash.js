@@ -29,9 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricSerialiser from '../../utils/MetricSerialiser';
-import RNG from '../../utils/RNG';
-import CustomParametersModel from '../../../models/CustomParametersModel';
+import MetricSerialiser from '../../utils/MetricSerialiser.js';
+import RNG from '../../utils/RNG.js';
+import CustomParametersModel from '../../../models/CustomParametersModel.js';
+import FactoryMaker from '../../../../core/FactoryMaker.js';
 
 function DVBReporting(config) {
     config = config || {};
@@ -141,7 +142,7 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = entry.dvb_reportingUrl;
+        reportingUrl = entry.dvbReportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
@@ -155,7 +156,7 @@ function DVBReporting(config) {
         // static for the duration of the MPD, regardless of MPD updates.
         // (i.e. only calling reset (or failure) changes this state)
         if (!reportingPlayerStatusDecided) {
-            probability = entry.dvb_probability;
+            probability = entry.dvbProbability;
             // TS 103 285 Clause 10.12.3.4
             // If the @probability attribute is set to 1000, it shall be a reporting Player.
             // If the @probability attribute is absent it will take the default value of 1000.
@@ -197,4 +198,4 @@ function DVBReporting(config) {
 }
 
 DVBReporting.__dashjs_factory_name = 'DVBReporting';
-export default dashjs.FactoryMaker.getClassFactory(DVBReporting); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(DVBReporting); 

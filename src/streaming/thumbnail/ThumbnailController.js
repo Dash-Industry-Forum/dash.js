@@ -29,12 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import FactoryMaker from '../../core/FactoryMaker';
-import Constants from '../constants/Constants';
-import Thumbnail from '../vo/Thumbnail';
-import ThumbnailTracks from './ThumbnailTracks';
-import BitrateInfo from '../vo/BitrateInfo';
-import {replaceTokenForTemplate, unescapeDollarsInTemplate} from '../../dash/utils/SegmentsUtils';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Thumbnail from '../vo/Thumbnail.js';
+import ThumbnailTracks from './ThumbnailTracks.js';
+import {processUriTemplate} from '../../dash/utils/SegmentsUtils.js';
 
 function ThumbnailController(config) {
 
@@ -121,33 +119,36 @@ function ThumbnailController(config) {
 
     function _buildUrlFromTemplate(track, seq) {
         const seqIdx = seq + track.startNumber;
-        let url = replaceTokenForTemplate(track.templateUrl, 'Number', seqIdx);
-        url = replaceTokenForTemplate(url, 'Time', (seqIdx - 1) * track.segmentDuration * track.timescale);
-        url = replaceTokenForTemplate(url, 'Bandwidth', track.bandwidth);
-        return unescapeDollarsInTemplate(url);
+        const url = processUriTemplate(
+            track.templateUrl,
+            undefined,
+            seqIdx,
+            undefined,
+            track.bandwidth,
+            (seqIdx - 1) * track.segmentDuration * track.timescale,
+        );
+        return url;
     }
 
     function setTrackByIndex(index) {
         thumbnailTracks.setTrackByIndex(index);
     }
 
+    function setTrackById(id) {
+        thumbnailTracks.setTrackById(id);
+    }
+
     function getCurrentTrackIndex() {
         return thumbnailTracks.getCurrentTrackIndex();
     }
 
-    function getBitrateList() {
-        const tracks = thumbnailTracks.getTracks();
-        let i = 0;
+    function getCurrentTrack() {
+        return thumbnailTracks.getCurrentTrack();
+    }
 
-        return tracks.map((t) => {
-            const bitrateInfo = new BitrateInfo();
-            bitrateInfo.mediaType = Constants.IMAGE;
-            bitrateInfo.qualityIndex = i++;
-            bitrateInfo.bitrate = t.bitrate;
-            bitrateInfo.width = t.width;
-            bitrateInfo.height = t.height;
-            return bitrateInfo;
-        });
+    function getPossibleVoRepresentations() {
+        return thumbnailTracks.getRepresentations();
+
     }
 
     function reset() {
@@ -157,13 +158,15 @@ function ThumbnailController(config) {
     }
 
     instance = {
+        getCurrentTrack,
+        getCurrentTrackIndex,
+        getPossibleVoRepresentations,
         getStreamId,
         initialize,
         provide,
+        reset,
         setTrackByIndex,
-        getCurrentTrackIndex,
-        getBitrateList,
-        reset
+        setTrackById
     };
 
     setup();

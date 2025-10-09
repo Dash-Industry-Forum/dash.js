@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import { HTTPRequest } from '../vo/metrics/HTTPRequest';
+import {HTTPRequest} from './metrics/HTTPRequest.js';
 
 /**
  * @class
@@ -38,29 +38,29 @@ import { HTTPRequest } from '../vo/metrics/HTTPRequest';
 class FragmentRequest {
     constructor(url) {
         this.action = FragmentRequest.ACTION_DOWNLOAD;
-        this.startTime = NaN;
-        this.mediaStartTime = NaN;
-        this.mediaType = null;
-        this.mediaInfo = null;
-        this.type = null;
-        this.duration = NaN;
-        this.timescale = NaN;
-        this.range = null;
-        this.url = url || null;
-        this.serviceLocation = null;
-        this.requestStartDate = null;
-        this.firstByteDate = null;
-        this.requestEndDate = null;
-        this.quality = NaN;
-        this.index = NaN;
-        this.availabilityStartTime = null;
         this.availabilityEndTime = null;
-        this.wallStartTime = null;
+        this.availabilityStartTime = null;
+        this.bandwidth = NaN;
         this.bytesLoaded = NaN;
         this.bytesTotal = NaN;
         this.delayLoadingTime = NaN;
+        this.duration = NaN;
+        this.endDate = null;
+        this.firstByteDate = null;
+        this.index = NaN;
+        this.mediaStartTime = NaN;
+        this.mediaType = null;
+        this.range = null;
+        this.representation = null;
         this.responseType = 'arraybuffer';
-        this.representationId = null;
+        this.retryAttempts = 0;
+        this.serviceLocation = null;
+        this.startDate = null;
+        this.startTime = NaN;
+        this.timescale = NaN;
+        this.type = null;
+        this.url = url || null;
+        this.wallStartTime = null;
     }
 
     isInitializationRequest() {
@@ -72,6 +72,7 @@ class FragmentRequest {
         this.url = info && info.url ? info.url : null;
         this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
         this.mediaType = info && info.mediaType ? info.mediaType : null;
+        this.representation = info && info.representation ? info.representation : null;
     }
 }
 

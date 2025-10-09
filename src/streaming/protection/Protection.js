@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import ProtectionController from './controllers/ProtectionController';
-import ProtectionKeyController from './controllers/ProtectionKeyController';
-import ProtectionEvents from './ProtectionEvents';
-import ProtectionErrors from './errors/ProtectionErrors';
-import ProtectionModel_21Jan2015 from './models/ProtectionModel_21Jan2015';
-import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014';
-import ProtectionModel_01b from './models/ProtectionModel_01b';
+import ProtectionController from './controllers/ProtectionController.js';
+import ProtectionKeyController from './controllers/ProtectionKeyController.js';
+import ProtectionEvents from './ProtectionEvents.js';
+import ProtectionErrors from './errors/ProtectionErrors.js';
+import DefaultProtectionModel from './models/DefaultProtectionModel.js';
+import ProtectionModel_3Feb2014 from './models/ProtectionModel_3Feb2014.js';
+import ProtectionModel_01b from './models/ProtectionModel_01b.js';
 
 const APIS_ProtectionModel_01b = [
     // Un-prefixed as per spec
@@ -121,17 +121,17 @@ function Protection() {
 
         let protectionModel = _getProtectionModel(config);
 
-        if (!controller && protectionModel) {//TODO add ability to set external controller if still needed at all?
+        if (protectionModel) {
             controller = ProtectionController(context).create({
-                protectionModel: protectionModel,
-                protectionKeyController: protectionKeyController,
-                eventBus: config.eventBus,
-                debug: config.debug,
-                events: config.events,
                 BASE64: config.BASE64,
-                constants: config.constants,
                 cmcdModel: config.cmcdModel,
+                constants: config.constants,
                 customParametersModel: config.customParametersModel,
+                debug: config.debug,
+                eventBus: config.eventBus,
+                events: config.events,
+                protectionKeyController: protectionKeyController,
+                protectionModel: protectionModel,
                 settings: config.settings
             });
             config.capabilities.setEncryptedMediaSupported(true);
@@ -148,8 +148,8 @@ function Protection() {
 
         if ((!videoElement || videoElement.onencrypted !== undefined) &&
             (!videoElement || videoElement.mediaKeys !== undefined)) {
-            logger.info('EME detected on this user agent! (ProtectionModel_21Jan2015)');
-            return ProtectionModel_21Jan2015(context).create({
+            logger.info('EME detected on this user agent! (DefaultProtectionModel');
+            return DefaultProtectionModel(context).create({
                 debug: debug,
                 eventBus: eventBus,
                 events: config.events
@@ -200,8 +200,8 @@ function Protection() {
 }
 
 Protection.__dashjs_factory_name = 'Protection';
-const factory = dashjs.FactoryMaker.getClassFactory(Protection); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(Protection);
 factory.events = ProtectionEvents;
 factory.errors = ProtectionErrors;
-dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory); /* jshint ignore:line */
+dashjs.FactoryMaker.updateClassFactory(Protection.__dashjs_factory_name, factory);
 export default factory;

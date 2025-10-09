@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../../core/FactoryMaker';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function DVBSelector(config) {
 
@@ -42,8 +42,8 @@ function DVBSelector(config) {
 
         const samePrioritiesFilter = function (el) {
             if (removedPriorities.length) {
-                if ((el.dvb_priority) &&
-                        (removedPriorities.indexOf(el.dvb_priority) !== -1)) {
+                if ((el.dvbPriority) &&
+                        (removedPriorities.indexOf(el.dvbPriority) !== -1)) {
                     return false;
                 }
             }
@@ -56,8 +56,8 @@ function DVBSelector(config) {
                 // whenever a BaseURL is removed from the available list of
                 // BaseURLs, any other BaseURL with the same @priority
                 // value as the BaseURL being removed shall also be removed
-                if (baseUrl.dvb_priority) {
-                    removedPriorities.push(baseUrl.dvb_priority);
+                if (baseUrl.dvbPriority) {
+                    removedPriorities.push(baseUrl.dvbPriority);
                 }
 
                 // all URLs in the list which have a @serviceLocation
@@ -74,14 +74,14 @@ function DVBSelector(config) {
 
     function selectByWeight(availableUrls) {
         const prioritySorter = function (a, b) {
-            let diff = a.dvb_priority - b.dvb_priority;
+            let diff = a.dvbPriority - b.dvbPriority;
             return isNaN(diff) ? 0 : diff;
         };
 
         const topPriorityFilter = function (baseUrl, idx, arr) {
             return !idx || (
-                (arr[0].dvb_priority && baseUrl.dvb_priority) &&
-                (arr[0].dvb_priority === baseUrl.dvb_priority)
+                (arr[0].dvbPriority && baseUrl.dvbPriority) &&
+                (arr[0].dvbPriority === baseUrl.dvbPriority)
             );
         };
 
@@ -106,7 +106,7 @@ function DVBSelector(config) {
 
                 // add all the weights together, storing the accumulated weight per entry
                 urls.forEach(baseUrl => {
-                    totalWeight += baseUrl.dvb_weight;
+                    totalWeight += baseUrl.dvbWeight;
                     cumulWeights.push(totalWeight);
                 });
 

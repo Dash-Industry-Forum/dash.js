@@ -29,8 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import ObjectUtils from '../utils/ObjectUtils';
-import FactoryMaker from '../../core/FactoryMaker';
+import ObjectUtils from '../utils/ObjectUtils.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 const DEFAULT_INDEX = NaN;
 
@@ -95,16 +95,16 @@ function BaseURLTreeModel() {
             root.data.selectedIdx = DEFAULT_INDEX;
         }
 
-        if (manifest && manifest.Period_asArray) {
-            manifest.Period_asArray.forEach((p, pi) => {
+        if (manifest && manifest.Period) {
+            manifest.Period.forEach((p, pi) => {
                 updateChildData(root.children, pi, p);
 
-                if (p.AdaptationSet_asArray) {
-                    p.AdaptationSet_asArray.forEach((a, ai) => {
+                if (p.AdaptationSet) {
+                    p.AdaptationSet.forEach((a, ai) => {
                         updateChildData(root.children[pi].children, ai, a);
 
-                        if (a.Representation_asArray) {
-                            a.Representation_asArray.sort(
+                        if (a.Representation) {
+                            a.Representation.sort(
                                 adapter.getRepresentationSortFunction()
                             ).forEach((r, ri) => {
                                 updateChildData(
@@ -125,7 +125,18 @@ function BaseURLTreeModel() {
         const synthesizedBaseUrls = contentSteeringController.getSynthesizedBaseUrlElements(targetBaseUrls);
 
         if (synthesizedBaseUrls && synthesizedBaseUrls.length > 0) {
-            targetBaseUrls = targetBaseUrls.concat(synthesizedBaseUrls)
+            synthesizedBaseUrls.forEach((synthesizedBaseUrl) => {
+                // If we already have a BaseURL with the same serviceLocation, we overwrite it with the synthesized one
+                const foundIndex = targetBaseUrls.findIndex((elem) => {
+                    return elem.serviceLocation === synthesizedBaseUrl.serviceLocation
+                })
+
+                if (foundIndex !== -1) {
+                    targetBaseUrls[foundIndex] = synthesizedBaseUrl;
+                } else {
+                    targetBaseUrls.push(synthesizedBaseUrl)
+                }
+            })
         }
 
         return targetBaseUrls;

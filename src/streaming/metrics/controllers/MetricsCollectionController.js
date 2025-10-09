@@ -29,9 +29,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import MetricsController from './MetricsController';
-import ManifestParsing from '../utils/ManifestParsing';
-import MetricsReportingEvents from '../MetricsReportingEvents';
+import MetricsController from './MetricsController.js';
+import ManifestParsing from '../utils/ManifestParsing.js';
+import MetricsReportingEvents from '../MetricsReportingEvents.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 function MetricsCollectionController(config) {
 
@@ -108,4 +109,4 @@ function MetricsCollectionController(config) {
 }
 
 MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController';
-export default dashjs.FactoryMaker.getClassFactory(MetricsCollectionController); /* jshint ignore:line */
+export default FactoryMaker.getClassFactory(MetricsCollectionController); 

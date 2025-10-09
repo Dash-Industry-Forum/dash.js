@@ -31,7 +31,7 @@
 
 /* global escape: true */
 
-import FactoryMaker from '../../../core/FactoryMaker';
+import FactoryMaker from '../../../core/FactoryMaker.js';
 
 /**
  * Microsoft PlayReady Test License Server
@@ -147,4 +147,4 @@ function PlayReady() {
 }
 
 PlayReady.__dashjs_factory_name = 'PlayReady';
-export default FactoryMaker.getSingletonFactory(PlayReady); /* jshint ignore:line */
+export default FactoryMaker.getSingletonFactory(PlayReady); 

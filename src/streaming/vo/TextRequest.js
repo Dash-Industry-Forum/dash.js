@@ -32,8 +32,8 @@
  * @class
  * @ignore
  */
-import Constants from '../constants/Constants';
-import FragmentRequest from './FragmentRequest';
+import Constants from '../constants/Constants.js';
+import FragmentRequest from './FragmentRequest.js';
 
 class TextRequest extends FragmentRequest {
     constructor(url, type) {

@@ -28,24 +28,26 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import Debug from '../../core/Debug';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
+import Debug from '../../core/Debug.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
 
+const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
+const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
+const DEFAULT_CATCHUP_MAX_DRIFT = 12;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
+const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
 const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
-const LOW_LATENCY_REDUCTION_FACTOR = 10;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
-const DEFAULT_CATCHUP_MAX_DRIFT = 12;
-const DEFAULT_CATCHUP_PLAYBACK_RATE_MIN = -0.5;
-const DEFAULT_CATCHUP_PLAYBACK_RATE_MAX = 0.5;
-const CATCHUP_PLAYBACK_RATE_MIN_LIMIT = -0.5;
-const CATCHUP_PLAYBACK_RATE_MAX_LIMIT = 1;
+const LOW_LATENCY_REDUCTION_FACTOR = 10;
+
 
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
  * In some cases we require additional logic to be applied and the settings might need to be adjusted before being used.
  * @class
+ * @ignore
  * @constructor
  */
 function MediaPlayerModel() {
@@ -73,18 +75,20 @@ function MediaPlayerModel() {
 
     /**
      * Checks the supplied min playback rate is a valid vlaue and within supported limits
-     * @param {number} rate - Supplied min playback rate 
-     * @param {boolean} log - wether to shown warning or not 
+     * @param {number} rate - Supplied min playback rate
+     * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected min playback rate
      */
-    function _checkMinPlaybackRate (rate, log) {
-        if (isNaN(rate)) return 0;
+    function _checkMinPlaybackRate(rate, log) {
+        if (isNaN(rate)) {
+            return 0;
+        }
         if (rate > 0) {
             if (log) {
                 logger.warn(`Supplied minimum playback rate is a positive value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)
             }
             return 0;
-        } 
+        }
         if (rate < CATCHUP_PLAYBACK_RATE_MIN_LIMIT) {
             if (log) {
                 logger.warn(`Supplied minimum playback rate is out of range and will be limited to ${CATCHUP_PLAYBACK_RATE_MIN_LIMIT}: ${CATCHUP_PLAYBACK_RATE_MIN_LIMIT * 100}% playback speed.`);
@@ -96,18 +100,20 @@ function MediaPlayerModel() {
 
     /**
      * Checks the supplied max playback rate is a valid vlaue and within supported limits
-     * @param {number} rate - Supplied max playback rate 
-     * @param {boolean} log - wether to shown warning or not 
+     * @param {number} rate - Supplied max playback rate
+     * @param {boolean} log - wether to shown warning or not
      * @returns {number} corrected max playback rate
      */
-    function _checkMaxPlaybackRate (rate, log) {
-        if (isNaN(rate)) return 0;
+    function _checkMaxPlaybackRate(rate, log) {
+        if (isNaN(rate)) {
+            return 0;
+        }
         if (rate < 0) {
             if (log) {
                 logger.warn(`Supplied maximum playback rate is a negative value when it should be negative or 0. The supplied rate will not be applied and set to 0: 100% playback speed.`)
             }
             return 0;
-        } 
+        }
         if (rate > CATCHUP_PLAYBACK_RATE_MAX_LIMIT) {
             if (log) {
                 logger.warn(`Supplied maximum playback rate is out of range and will be limited to ${CATCHUP_PLAYBACK_RATE_MAX_LIMIT}: ${(1 + CATCHUP_PLAYBACK_RATE_MAX_LIMIT) * 100}% playback speed.`);
@@ -122,12 +128,12 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getCatchupMaxDrift() {
-        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift > 0) {
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift >= 0) {
             return settings.get().streaming.liveCatchup.maxDrift;
         }
 
         const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift > 0) {
+        if (serviceDescriptionSettings && serviceDescriptionSettings.liveCatchup && !isNaN(serviceDescriptionSettings.liveCatchup.maxDrift) && serviceDescriptionSettings.liveCatchup.maxDrift >= 0) {
             return serviceDescriptionSettings.liveCatchup.maxDrift;
         }
 
@@ -141,8 +147,8 @@ function MediaPlayerModel() {
      */
     function getCatchupPlaybackRates(log) {
         const settingsPlaybackRate = settings.get().streaming.liveCatchup.playbackRate;
-        
-        if(!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
+
+        if (!isNaN(settingsPlaybackRate.min) || !isNaN(settingsPlaybackRate.max)) {
             return {
                 min: _checkMinPlaybackRate(settingsPlaybackRate.min, log),
                 max: _checkMaxPlaybackRate(settingsPlaybackRate.max, log),
@@ -184,18 +190,17 @@ function MediaPlayerModel() {
     function getAbrBitrateParameter(field, mediaType) {
         try {
             const setting = settings.get().streaming.abr[field][mediaType];
-            if(!isNaN(setting) && setting !== -1) {
+            if (!isNaN(setting) && setting !== -1) {
                 return setting;
             }
 
             const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
-            if(serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
+            if (serviceDescriptionSettings && serviceDescriptionSettings[field] && !isNaN(serviceDescriptionSettings[field][mediaType])) {
                 return serviceDescriptionSettings[field][mediaType];
             }
 
             return -1;
-        }
-        catch(e) {
+        } catch (e) {
             return -1;
         }
     }
@@ -211,18 +216,26 @@ function MediaPlayerModel() {
             return 0;
         }
 
-        return Math.min(getStableBufferTime(), initialBufferLevel);
+        return Math.min(getBufferTimeDefault(), initialBufferLevel);
     }
 
     /**
      * Returns the stable buffer time taking the live delay into account
      * @return {number}
      */
-    function getStableBufferTime() {
-        let stableBufferTime = settings.get().streaming.buffer.stableBufferTime > 0 ? settings.get().streaming.buffer.stableBufferTime : settings.get().streaming.buffer.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
+    function getBufferTimeDefault() {
+        const bufferTimeDefault = getBufferTimeDefaultUnadjusted();
         const liveDelay = playbackController.getLiveDelay();
 
-        return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(stableBufferTime, liveDelay) : stableBufferTime;
+        return !isNaN(liveDelay) && liveDelay > 0 ? Math.min(bufferTimeDefault, liveDelay) : bufferTimeDefault;
+    }
+
+    /**
+     * Returns the stable buffer
+     * @return {number}
+     */
+    function getBufferTimeDefaultUnadjusted() {
+        return settings.get().streaming.buffer.bufferTimeDefault > 0 ? settings.get().streaming.buffer.bufferTimeDefault : getFastSwitchEnabled() ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }
 
     /**
@@ -247,13 +260,27 @@ function MediaPlayerModel() {
         return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.retryIntervals[type] / lowLatencyReductionFactor : settings.get().streaming.retryIntervals[type];
     }
 
+    /**
+     * Returns whether the fast switch mode is defined in the settings options. If not we enable it by default but only for non low-latency playback.
+     * @return {boolean}
+     */
+    function getFastSwitchEnabled() {
+        if (settings.get().streaming.buffer.fastSwitchEnabled !== null) {
+            return settings.get().streaming.buffer.fastSwitchEnabled;
+        }
+
+        return !playbackController.getLowLatencyModeEnabled();
+    }
+
     function reset() {
     }
 
     instance = {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
-        getStableBufferTime,
+        getBufferTimeDefault,
+        getBufferTimeDefaultUnadjusted,
+        getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,

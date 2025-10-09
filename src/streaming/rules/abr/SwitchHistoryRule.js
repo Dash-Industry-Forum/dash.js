@@ -1,44 +1,44 @@
-
-import FactoryMaker from '../../../core/FactoryMaker';
-import Debug from '../../../core/Debug';
-import SwitchRequest from '../SwitchRequest';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+import SwitchRequest from '../SwitchRequest.js';
+import Settings from '../../../core/Settings.js';
 
 function SwitchHistoryRule() {
 
     const context = this.context;
+    const settings = Settings(context).getInstance();
+    let instance;
 
-    let instance,
-        logger;
+    function getSwitchRequest(rulesContext) {
+        const switchRequest = SwitchRequest(context).create();
+        switchRequest.rule = this.getClassName();
 
-    //MAX_SWITCH is the number of drops made. It doesn't consider the size of the drop.
-    const MAX_SWITCH = 0.075;
+        if (!rulesContext) {
+            return switchRequest;
+        }
 
-    //Before this number of switch requests(no switch or actual), don't apply the rule.
-    //must be < SwitchRequestHistory SWITCH_REQUEST_HISTORY_DEPTH to enable rule
-    const SAMPLE_SIZE = 6;
-
-    function setup() {
-        logger = Debug(context).getInstance().getLogger(instance);
-    }
-
-    function getMaxIndex(rulesContext) {
-        const switchRequestHistory = rulesContext ? rulesContext.getSwitchHistory() : null;
-        const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests() : [];
+        const streamId = rulesContext.getStreamInfo().id;
+        const mediaType = rulesContext.getMediaType();
+        const switchRequestHistory = rulesContext ? rulesContext.getSwitchRequestHistory() : null;
+        const switchRequests = switchRequestHistory ? switchRequestHistory.getSwitchRequests(streamId, mediaType) : {};
+        const abrController = rulesContext.getAbrController();
+        const mediaInfo = rulesContext.getMediaInfo();
+        const representations = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
         let drops = 0;
         let noDrops = 0;
-        let dropSize = 0;
-        const switchRequest = SwitchRequest(context).create();
 
-        for (let i = 0; i < switchRequests.length; i++) {
-            if (switchRequests[i] !== undefined) {
-                drops += switchRequests[i].drops;
-                noDrops += switchRequests[i].noDrops;
-                dropSize += switchRequests[i].dropSize;
+        for (let i = 0; i < representations.length; i++) {
+            const currentPossibleRepresentation = representations[i];
+            if (currentPossibleRepresentation && switchRequests[currentPossibleRepresentation.id]) {
+                drops += switchRequests[currentPossibleRepresentation.id].drops;
+                noDrops += switchRequests[currentPossibleRepresentation.id].noDrops;
 
-                if (drops + noDrops >= SAMPLE_SIZE && (drops / noDrops > MAX_SWITCH)) {
-                    switchRequest.quality = (i > 0 && switchRequests[i].drops > 0) ? i - 1 : i;
-                    switchRequest.reason = {index: switchRequest.quality, drops: drops, noDrops: noDrops, dropSize: dropSize};
-                    logger.debug('Switch history rule index: ' + switchRequest.quality + ' samples: ' + (drops + noDrops) + ' drops: ' + drops);
+                if (drops + noDrops >= settings.get().streaming.abr.rules.switchHistoryRule.parameters.sampleSize && (drops / noDrops > settings.get().streaming.abr.rules.switchHistoryRule.parameters.switchPercentageThreshold)) {
+                    switchRequest.representation = (i > 0 && switchRequests[currentPossibleRepresentation.id].drops > 0) ? representations[i - 1] : currentPossibleRepresentation;
+                    switchRequest.reason = {
+                        drops: drops,
+                        noDrops: noDrops,
+                        message: `[SwitchHistoryRule]: Switch to index: ${switchRequest.representation.absoluteIndex} samples: ${(drops + noDrops)} drops:  ${drops}`
+                    };
                     break;
                 }
             }
@@ -48,10 +48,10 @@ function SwitchHistoryRule() {
     }
 
     instance = {
-        getMaxIndex: getMaxIndex
+        getSwitchRequest
     };
 
-    setup();
+
 
     return instance;
 }

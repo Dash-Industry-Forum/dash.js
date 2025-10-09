@@ -28,16 +28,49 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import ObjectIron from './objectiron';
-import X2JS from '../../../externals/xml2json';
-import StringMatcher from './matchers/StringMatcher';
-import DurationMatcher from './matchers/DurationMatcher';
-import DateTimeMatcher from './matchers/DateTimeMatcher';
-import NumericMatcher from './matchers/NumericMatcher';
-import LangMatcher from './matchers/LangMatcher';
-import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap';
-import SegmentValuesMap from './maps/SegmentValuesMap';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import DashConstants from '../constants/DashConstants.js';
+import ObjectIron from './objectiron.js';
+import DurationMatcher from './matchers/DurationMatcher.js';
+import DateTimeMatcher from './matchers/DateTimeMatcher.js';
+import NumericMatcher from './matchers/NumericMatcher.js';
+import LangMatcher from './matchers/LangMatcher.js';
+import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
+import SegmentValuesMap from './maps/SegmentValuesMap.js';
+import { parseXml as cmlParseXml } from '@svta/common-media-library/xml/parseXml.js';
+
+// List of node that shall be represented as arrays
+const arrayNodes = [
+    DashConstants.PERIOD,
+    DashConstants.BASE_URL,
+    DashConstants.ADAPTATION_SET,
+    DashConstants.REPRESENTATION,
+    DashConstants.CONTENT_PROTECTION,
+    DashConstants.ROLE,
+    DashConstants.ACCESSIBILITY,
+    DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+    DashConstants.CONTENT_COMPONENT,
+    DashConstants.ESSENTIAL_PROPERTY,
+    DashConstants.LABEL,
+    DashConstants.S,
+    DashConstants.SEGMENT_URL,
+    DashConstants.EVENT,
+    DashConstants.EVENT_STREAM,
+    DashConstants.LOCATION,
+    DashConstants.SERVICE_DESCRIPTION,
+    DashConstants.SUPPLEMENTAL_PROPERTY,
+    DashConstants.METRICS,
+    DashConstants.REPORTING,
+    DashConstants.PATCH_LOCATION,
+    DashConstants.PRESELECTION,
+    DashConstants.REPLACE,
+    DashConstants.ADD,
+    DashConstants.REMOVE,
+    DashConstants.UTC_TIMING,
+    DashConstants.INBAND_EVENT_STREAM,
+    DashConstants.PRODUCER_REFERENCE_TIME,
+    DashConstants.CONTENT_STEERING
+];
 
 function DashParser(config) {
 
@@ -48,7 +81,6 @@ function DashParser(config) {
     let instance,
         logger,
         matchers,
-        converter,
         objectIron;
 
     function setup() {
@@ -57,29 +89,13 @@ function DashParser(config) {
             new DurationMatcher(),
             new DateTimeMatcher(),
             new NumericMatcher(),
-            new LangMatcher(),
-            new StringMatcher()// last in list to take precedence over NumericMatcher
+            new LangMatcher()
         ];
-
-        converter = new X2JS({
-            escapeMode: false,
-            attributePrefix: '',
-            arrayAccessForm: 'property',
-            emptyNodeForm: 'object',
-            stripWhitespaces: false,
-            enableToStringFunc: true,
-            ignoreRoot: false,
-            matchers: matchers
-        });
 
         objectIron = ObjectIron(context).create({
             adaptationset: new RepresentationBaseValuesMap(),
             period: new SegmentValuesMap()
         });
-    }
-
-    function getMatchers() {
-        return matchers;
     }
 
     function getIron() {
@@ -90,23 +106,21 @@ function DashParser(config) {
         let manifest;
         const startTime = window.performance.now();
 
-        manifest = converter.xml_str2json(data);
+        manifest = parseXml(data);
 
         if (!manifest) {
-            throw new Error('parsing the manifest failed');
+            throw new Error('failed to parse the manifest');
         }
-
-        const jsonTime = window.performance.now();
 
         // handle full MPD and Patch ironing separately
         if (manifest.Patch) {
             manifest = manifest.Patch; // drop root reference
             // apply iron to patch operations individually
-            if (manifest.add_asArray) {
-                manifest.add_asArray.forEach((operand) => objectIron.run(operand));
+            if (manifest.add) {
+                manifest.add.forEach((operand) => objectIron.run(operand));
             }
-            if (manifest.replace_asArray) {
-                manifest.replace_asArray.forEach((operand) => objectIron.run(operand));
+            if (manifest.replace) {
+                manifest.replace.forEach((operand) => objectIron.run(operand));
             }
             // note that we don't need to iron remove as they contain no children
         } else {
@@ -114,18 +128,101 @@ function DashParser(config) {
             objectIron.run(manifest);
         }
 
-        const ironedTime = window.performance.now();
-        logger.info('Parsing complete: ( xml2json: ' + (jsonTime - startTime).toPrecision(3) + 'ms, objectiron: ' + (ironedTime - jsonTime).toPrecision(3) + 'ms, total: ' + ((ironedTime - startTime) / 1000).toPrecision(3) + 's)');
+        const parsedTime = window.performance.now();
+        logger.info('Parsing complete: ' + (parsedTime - startTime).toPrecision(3) + 'ms');
 
         manifest.protocol = 'DASH';
 
         return manifest;
     }
 
+    function processXml(data) {
+        const xml = cmlParseXml(data);
+        const root = xml.childNodes.find(child => child.nodeName === 'MPD' || child.nodeName === 'Patch') || xml.childNodes[0];
+
+        function processNode(node) {
+            // Convert tag name
+            let p = node.nodeName.indexOf(':');
+            if (p !== -1) {
+                node.__prefix = node.prefix;
+                node.nodeName = node.localName;
+            }
+
+            const { childNodes, attributes, nodeName } = node;
+            node.tagName = nodeName;
+
+            // Convert attributes
+            for (let k in attributes) {
+                let value = attributes[k];
+
+                if (nodeName === 'S') {
+                    value = parseInt(value);
+                }
+                else {
+                    for (let i = 0, len = matchers.length; i < len; i++) {
+                        const matcher = matchers[i];
+                        if (matcher.test(nodeName, k, value)) {
+                            value = matcher.converter(value);
+                            break;
+                        }
+                    }
+                }
+
+                node[k] = value;
+            }
+
+            // Convert children
+            const len = childNodes?.length;
+
+            for (let i = 0; i < len; i++) {
+                const child = childNodes[i];
+
+                if (child.nodeName === '#text') {
+                    node.__text = child.nodeValue;
+                    continue;
+                }
+
+                processNode(child);
+
+                const { nodeName } = child;
+
+                if (Array.isArray(node[nodeName])) {
+                    node[nodeName].push(child);
+                }
+                else if (arrayNodes.indexOf(nodeName) !== -1) {
+                    if (!node[nodeName]) {
+                        node[nodeName] = [];
+                    }
+                    node[nodeName].push(child);
+                } else {
+                    node[nodeName] = child;
+                }
+            }
+
+            node.__children = childNodes;
+        }
+
+        processNode(root);
+
+        return root;
+    }
+
+    function parseXml(data) {
+        try {
+            const root = processXml(data);
+
+            return {
+                [root.tagName]: root
+            };
+        } catch (e) {
+            return null;
+        }
+    }
+
     instance = {
-        parse: parse,
-        getMatchers: getMatchers,
-        getIron: getIron
+        getIron: getIron,
+        parseXml: parseXml,
+        parse: parse
     };
 
     setup();

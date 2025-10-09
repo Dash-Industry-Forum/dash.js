@@ -28,10 +28,10 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import Constants from '../../streaming/constants/Constants';
-import DashConstants from '../constants/DashConstants';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import Constants from '../../streaming/constants/Constants.js';
+import DashConstants from '../constants/DashConstants.js';
 
 const SUPPORTED_SCHEMES = [Constants.SERVICE_DESCRIPTION_DVB_LL_SCHEME];
 const MEDIA_TYPES = {
@@ -56,7 +56,9 @@ function ServiceDescriptionController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.adapter) {
             adapter = config.adapter;
@@ -80,7 +82,8 @@ function ServiceDescriptionController() {
             minBitrate: {},
             maxBitrate: {},
             initialBitrate: {},
-            contentSteering: null
+            contentSteering: null,
+            clientDataReporting: null,
         };
         prftOffsets = [];
     }
@@ -107,7 +110,9 @@ function ServiceDescriptionController() {
         let sd = (supportedServiceDescriptions.length > 0)
             ? supportedServiceDescriptions[supportedServiceDescriptions.length - 1]
             : allClientsServiceDescriptions[allClientsServiceDescriptions.length - 1];
-        if (!sd) return;
+        if (!sd) {
+            return;
+        }
 
         if (sd.latency && sd.latency.target > 0) {
             _applyServiceDescriptionLatency(sd);
@@ -127,6 +132,10 @@ function ServiceDescriptionController() {
 
         if (sd.contentSteering) {
             _applyServiceDescriptionContentSteering(sd);
+        }
+
+        if (sd.clientDataReporting) {
+            _applyServiceDescriptionClientDataReporting(sd);
         }
     }
 
@@ -291,6 +300,15 @@ function ServiceDescriptionController() {
      */
     function _applyServiceDescriptionContentSteering(sd) {
         serviceDescriptionSettings.contentSteering = sd.contentSteering;
+    }
+
+    /**
+     * Add information about client data reporting element. Handling is up to the CMCDModel
+     *  @param {object} sd
+     *  @private
+     */
+    function _applyServiceDescriptionClientDataReporting(sd) {
+        serviceDescriptionSettings.clientDataReporting = sd.clientDataReporting;
     }
 
     /**

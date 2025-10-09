@@ -12,6 +12,10 @@ class MediaControllerMock {
         this.tracks = [];
     }
 
+    initialize() {
+
+    }
+
     checkInitialMediaSettingsForType() {
     }
 
@@ -41,7 +45,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     setTrack(track) {
-        if (!track) return;
+        if (!track) {
+            return;
+        }
         this.track = track;
     }
 
@@ -51,7 +57,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     setInitialSettings(type, value) {
-        if (!type || !value) return;
+        if (!type || !value) {
+            return;
+        }
 
         this.initialSettings[type] = value;
     }
@@ -62,7 +70,9 @@ class MediaControllerMock {
      * @memberof MediaController#
      */
     getInitialSettings(type) {
-        if (!type) return null;
+        if (!type) {
+            return null;
+        }
 
         return this.initialSettings[type];
     }
@@ -89,7 +99,7 @@ class MediaControllerMock {
         return (type === 'audio' || type === 'video' || type === 'text');
     }
 
-    isTracksEqual(currentTrack, mediaInfoForType) {
+    areTracksEqual(currentTrack, mediaInfoForType) {
         return (mediaInfoForType.lang === 'deu');
     }
 
@@ -108,6 +118,9 @@ class MediaControllerMock {
 
     reset() {
         this.setup();
+    }
+
+    clearDataForStream() {
     }
 
 }

@@ -28,12 +28,12 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import UTCTiming from '../../dash/vo/UTCTiming';
-import FactoryMaker from '../../core/FactoryMaker';
-import Settings from '../../core/Settings';
-import {checkParameterType} from '../utils/SupervisorTools';
-import ABRRulesCollection from '../rules/abr/ABRRulesCollection';
-import Constants from '../constants/Constants';
+import UTCTiming from '../../dash/vo/UTCTiming.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
+import {checkParameterType} from '../utils/SupervisorTools.js';
+import Constants from '../constants/Constants.js';
+import ExternalSubtitle from '../vo/ExternalSubtitle.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 
@@ -42,10 +42,13 @@ function CustomParametersModel() {
     let instance,
         utcTimingSources,
         xhrWithCredentials,
+        requestInterceptors,
+        responseInterceptors,
         licenseRequestFilters,
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
+        externalSubtitles,
         customAbrRules;
 
     const context = this.context;
@@ -59,17 +62,24 @@ function CustomParametersModel() {
     }
 
     function _resetInitialSettings() {
+        requestInterceptors = [];
+        responseInterceptors = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
+        externalSubtitles = new Set();
     }
 
 
     function reset() {
         _resetInitialSettings();
+    }
+
+    function resetPlaybackSessionSpecificSettings() {
+        externalSubtitles = new Set();
     }
 
     function setConfig() {
@@ -161,7 +171,7 @@ function CustomParametersModel() {
 
     /**
      * Registers a custom capabilities filter. This enables application to filter representations to use.
-     * The provided callback function shall return a boolean based on whether or not to use the representation.
+     * The provided callback function shall return a boolean or promise resolving to a boolean based on whether or not to use the representation.
      * The filters are applied in the order they are registered.
      * @param {function} filter - the custom capabilities filter callback
      */
@@ -191,7 +201,9 @@ function CustomParametersModel() {
                 return true;
             }
         });
-        if (index < 0) return;
+        if (index < 0) {
+            return;
+        }
         filters.splice(index, 1);
     }
 
@@ -220,7 +232,7 @@ function CustomParametersModel() {
      * @throws {@link Constants#BAD_ARGUMENT_ERROR BAD_ARGUMENT_ERROR} if called with invalid arguments.
      */
     function addAbrCustomRule(type, rulename, rule) {
-        if (typeof type !== 'string' || (type !== ABRRulesCollection.ABANDON_FRAGMENT_RULES && type !== ABRRulesCollection.QUALITY_SWITCH_RULES) ||
+        if (typeof type !== 'string' || (type !== Constants.RULES_TYPES.ABANDON_FRAGMENT_RULES && type !== Constants.RULES_TYPES.QUALITY_SWITCH_RULES) ||
             typeof rulename !== 'string') {
             throw Constants.BAD_ARGUMENT_ERROR;
         }
@@ -273,6 +285,97 @@ function CustomParametersModel() {
         return customAbrRules;
     }
 
+    /**
+     * Adds a request interceptor. This enables application to monitor, manipulate, overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise with updated request that shall be resolved once the process of the request is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the request interceptor callback
+     */
+    function addRequestInterceptor(interceptor) {
+        requestInterceptors.push(interceptor);
+    }
+
+    /**
+     * Adds a response interceptor. This enables application to monitor, manipulate, overwrite the response data
+     * The provided callback function shall return a promise with updated response that shall be resolved once the process of the response is completed.
+     * The interceptors are applied in the order they are added.
+     * @param {function} interceptor - the response interceptor callback
+     */
+    function addResponseInterceptor(interceptor) {
+        responseInterceptors.push(interceptor);
+    }
+
+    /**
+     * Unregisters a request interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     */
+    function removeRequestInterceptor(interceptor) {
+        _unregisterFilter(requestInterceptors, interceptor);
+    }
+
+    /**
+     * Unregisters a response interceptor.
+     * @param {function} interceptor - the request interceptor callback
+     */
+    function removeResponseInterceptor(interceptor) {
+        _unregisterFilter(responseInterceptors, interceptor);
+    }
+
+    /**
+     * Returns all request interceptors
+     * @return {array}
+     */
+    function getRequestInterceptors() {
+        return requestInterceptors;
+    }
+
+    /**
+     * Returns all response interceptors
+     * @return {array}
+     */
+    function getResponseInterceptors() {
+        return responseInterceptors;
+    }
+
+    function addExternalSubtitle(externalSubtitleObj) {
+        if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
+            return
+        }
+        const externalSubtitle = new ExternalSubtitle(externalSubtitleObj);
+        if (!_hasExternalSubtitleByKeyValue('url', externalSubtitle.url) && !_hasExternalSubtitleByKeyValue('id', externalSubtitle.id)) {
+            externalSubtitles.add(externalSubtitle);
+        }
+    }
+
+    function removeExternalSubtitleByUrl(url) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.url === url) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function removeExternalSubtitleById(id) {
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle.id === id) {
+                externalSubtitles.delete(externalSubtitle);
+            }
+        })
+    }
+
+    function _hasExternalSubtitleByKeyValue(key, value) {
+        let found = false;
+        externalSubtitles.forEach((externalSubtitle) => {
+            if (externalSubtitle[key] === value) {
+                found = true;
+            }
+        });
+        return found;
+    }
+
+    function getExternalSubtitles() {
+        return externalSubtitles;
+    }
 
     /**
      * Add a UTC timing source at the top of the list
@@ -342,31 +445,42 @@ function CustomParametersModel() {
     }
 
     instance = {
-        getCustomInitialTrackSelectionFunction,
-        setCustomInitialTrackSelectionFunction,
-        resetCustomInitialTrackSelectionFunction,
-        getLicenseResponseFilters,
-        getLicenseRequestFilters,
-        getCustomCapabilitiesFilters,
-        registerCustomCapabilitiesFilter,
-        registerLicenseResponseFilter,
-        registerLicenseRequestFilter,
-        unregisterCustomCapabilitiesFilter,
-        unregisterLicenseResponseFilter,
-        unregisterLicenseRequestFilter,
         addAbrCustomRule,
-        removeAllAbrCustomRule,
-        removeAbrCustomRule,
-        getAbrCustomRules,
+        addExternalSubtitle,
+        addRequestInterceptor,
+        addResponseInterceptor,
         addUTCTimingSource,
-        removeUTCTimingSource,
-        getUTCTimingSources,
         clearDefaultUTCTimingSources,
-        restoreDefaultUTCTimingSources,
-        setXHRWithCredentialsForType,
+        getAbrCustomRules,
+        getCustomCapabilitiesFilters,
+        getCustomInitialTrackSelectionFunction,
+        getExternalSubtitles,
+        getLicenseRequestFilters,
+        getLicenseResponseFilters,
+        getRequestInterceptors,
+        getResponseInterceptors,
+        getUTCTimingSources,
         getXHRWithCredentialsForType,
+        registerCustomCapabilitiesFilter,
+        registerLicenseRequestFilter,
+        registerLicenseResponseFilter,
+        removeAbrCustomRule,
+        removeAllAbrCustomRule,
+        removeExternalSubtitleById,
+        removeExternalSubtitleByUrl,
+        removeRequestInterceptor,
+        removeResponseInterceptor,
+        removeUTCTimingSource,
+        reset,
+        resetCustomInitialTrackSelectionFunction,
+        resetPlaybackSessionSpecificSettings,
+        restoreDefaultUTCTimingSources,
         setConfig,
-        reset
+        setCustomInitialTrackSelectionFunction,
+        setXHRWithCredentialsForType,
+        unregisterCustomCapabilitiesFilter,
+        unregisterLicenseRequestFilter,
+        unregisterLicenseResponseFilter,
     };
 
     setup();

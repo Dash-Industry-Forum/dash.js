@@ -28,17 +28,21 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
 
 function MediaSourceController() {
 
     let instance,
         mediaSource,
         settings,
+        mediaSourceType,
         logger;
 
     const context = this.context;
+    const eventBus = EventBus(context).getInstance();
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -48,11 +52,19 @@ function MediaSourceController() {
 
         let hasWebKit = ('WebKitMediaSource' in window);
         let hasMediaSource = ('MediaSource' in window);
+        let hasManagedMediaSource = ('ManagedMediaSource' in window);
 
-        if (hasMediaSource) {
+        if (hasManagedMediaSource) {
+            mediaSource = new ManagedMediaSource();
+            mediaSourceType = 'managedMediaSource';
+            logger.info(`Created ManagedMediaSource`)
+        } else if (hasMediaSource) {
             mediaSource = new MediaSource();
+            mediaSourceType = 'mediaSource';
+            logger.info(`Created MediaSource`)
         } else if (hasWebKit) {
             mediaSource = new WebKitMediaSource();
+            logger.info(`Created WebkitMediaSource`)
         }
 
         return mediaSource;
@@ -64,6 +76,16 @@ function MediaSourceController() {
 
         videoModel.setSource(objectURL);
 
+        if (mediaSourceType === 'managedMediaSource') {
+            videoModel.setDisableRemotePlayback(true);
+            mediaSource.addEventListener('startstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_START_STREAMING)
+            })
+            mediaSource.addEventListener('endstreaming', () => {
+                eventBus.trigger(MediaPlayerEvents.MANAGED_MEDIA_SOURCE_END_STREAMING)
+            })
+        }
+
         return objectURL;
     }
 
@@ -72,9 +94,15 @@ function MediaSourceController() {
     }
 
     function setDuration(value) {
-        if (!mediaSource || mediaSource.readyState !== 'open') return;
-        if (value === null && isNaN(value)) return;
-        if (mediaSource.duration === value) return;
+        if (!mediaSource || mediaSource.readyState !== 'open') {
+            return;
+        }
+        if (value === null && isNaN(value)) {
+            return;
+        }
+        if (mediaSource.duration === value) {
+            return;
+        }
 
         if (value === Infinity && !settings.get().streaming.buffer.mediaSourceDurationInfinity) {
             value = Math.pow(2, 32);
@@ -139,13 +167,13 @@ function MediaSourceController() {
     }
 
     instance = {
-        createMediaSource,
         attachMediaSource,
+        createMediaSource,
         detachMediaSource,
+        setConfig,
         setDuration,
         setSeekable,
         signalEndOfStream,
-        setConfig
     };
 
     setup();

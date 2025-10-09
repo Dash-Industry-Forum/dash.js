@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import IndexDBStore from '../storage/IndexDBStore';
+import IndexDBStore from '../storage/IndexDBStore.js';
 
 function IndexDBOfflineLoader(config) {
     config = config || {};
@@ -100,5 +100,5 @@ function IndexDBOfflineLoader(config) {
 }
 
 IndexDBOfflineLoader.__dashjs_factory_name = 'IndexDBOfflineLoader';
-const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); /* jshint ignore:line */
+const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); 
 export default factory;

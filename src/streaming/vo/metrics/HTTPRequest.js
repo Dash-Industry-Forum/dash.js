@@ -119,11 +119,6 @@ class HTTPRequest {
          */
         this._mediaduration = null;
         /**
-         * The media segment quality
-         * @public
-         */
-        this._quality = null;
-        /**
          * all the response headers from request.
          * @public
          */
@@ -137,6 +132,10 @@ class HTTPRequest {
          * The type of the loader that was used. Distinguish between fetch loader and xhr loader
          */
         this._fileLoaderType = null;
+        /**
+         * The values derived from the ResourceTimingAPI.
+         */
+        this._resourceTimingValues = null;
     }
 }
 

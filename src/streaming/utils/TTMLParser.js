@@ -28,13 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import EventBus from '../../core/EventBus';
-import Events from '../../core/events/Events';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import Events from '../../core/events/Events.js';
 import {fromXML, generateISD} from 'imsc';
-import MediaPlayerEvents from '../MediaPlayerEvents';
-import ConformanceViolationConstants from '../constants/ConformanceViolationConstants';
+import MediaPlayerEvents from '../MediaPlayerEvents.js';
+import ConformanceViolationConstants from '../constants/ConformanceViolationConstants.js';
 
 function TTMLParser() {
 
@@ -66,7 +66,8 @@ function TTMLParser() {
      * @param {number} offsetTime - offset time to apply to cue time
      * @param {integer} startTimeSegment - startTime for the current segment
      * @param {integer} endTimeSegment - endTime for the current segment
-     * @param {Array} images - images array referenced by subs MP4 box
+     * @param {array} images - images array referenced by subs MP4 box
+     * @returns {array} captionArray
      */
     function parse(data, offsetTime, startTimeSegment, endTimeSegment, images) {
         let errorMsg = '';
@@ -127,7 +128,7 @@ function TTMLParser() {
 
         eventBus.trigger(Events.TTML_TO_PARSE, content);
 
-        const imsc1doc = fromXML(content.data, function (msg) {
+        let imsc1doc = fromXML(content.data, function (msg) {
             errorMsg = msg;
         }, metadataHandler);
 

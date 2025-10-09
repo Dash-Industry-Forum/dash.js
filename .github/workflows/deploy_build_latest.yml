@@ -1,0 +1,18 @@
+name: deploy_latest
+
+on:
+    push:
+        branches:
+            - 'master'
+
+jobs:
+    deploy_latest:
+        if: github.repository == 'Dash-Industry-Forum/dash.js'
+        uses: ./.github/workflows/deploy_build.yml
+        with:
+            envname: latest
+            deploy_path: '/377335'
+        secrets:
+            host: ${{secrets.HOST}}
+            user: ${{secrets.USER}}
+            private_key: ${{secrets.PRIVATE_KEY}}

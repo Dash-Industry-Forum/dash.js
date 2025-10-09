@@ -28,17 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import FactoryMaker from '../../core/FactoryMaker';
-import Debug from '../../core/Debug';
-import URLLoader from '../../streaming/net/URLLoader';
-import Errors from '../../core/errors/Errors';
-import ContentSteeringRequest from '../vo/ContentSteeringRequest';
-import ContentSteeringResponse from '../vo/ContentSteeringResponse';
-import DashConstants from '../constants/DashConstants';
-import MediaPlayerEvents from '../../streaming/MediaPlayerEvents';
-import URLUtils from '../../streaming/utils/URLUtils';
-import BaseURL from '../vo/BaseURL';
-import MpdLocation from '../vo/MpdLocation';
+import FactoryMaker from '../../core/FactoryMaker.js';
+import Debug from '../../core/Debug.js';
+import URLLoader from '../../streaming/net/URLLoader.js';
+import Errors from '../../core/errors/Errors.js';
+import ContentSteeringRequest from '../vo/ContentSteeringRequest.js';
+import ContentSteeringResponse from '../vo/ContentSteeringResponse.js';
+import DashConstants from '../constants/DashConstants.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
+import URLUtils from '../../streaming/utils/URLUtils.js';
+import BaseURL from '../vo/BaseURL.js';
+import MpdLocation from '../vo/MpdLocation.js';
 import Utils from '../../core/Utils.js';
 
 const QUERY_PARAMETER_KEYS = {
@@ -64,8 +64,8 @@ function ContentSteeringController() {
         dashMetrics,
         mediaPlayerModel,
         manifestModel,
-        requestModifier,
         serviceDescriptionController,
+        throughputController,
         eventBus,
         adapter;
 
@@ -75,7 +75,9 @@ function ContentSteeringController() {
     }
 
     function setConfig(config) {
-        if (!config) return;
+        if (!config) {
+            return;
+        }
 
         if (config.adapter) {
             adapter = config.adapter;
@@ -89,14 +91,14 @@ function ContentSteeringController() {
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
-        if (config.requestModifier) {
-            requestModifier = config.requestModifier;
-        }
         if (config.manifestModel) {
             manifestModel = config.manifestModel;
         }
         if (config.serviceDescriptionController) {
             serviceDescriptionController = config.serviceDescriptionController;
+        }
+        if (config.throughputController) {
+            throughputController = config.throughputController;
         }
         if (config.eventBus) {
             eventBus = config.eventBus;
@@ -111,12 +113,10 @@ function ContentSteeringController() {
             errHandler,
             dashMetrics,
             mediaPlayerModel,
-            requestModifier,
             errors: Errors
         });
         eventBus.on(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
-        eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
         eventBus.on(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
 
     }
@@ -140,35 +140,16 @@ function ContentSteeringController() {
     }
 
     /**
-     * Basic throughput calculation for manifest requests
-     * @param {object} e
-     * @private
-     */
-    function _onManifestLoadingFinished(e) {
-        if (!e || !e.request || !e.request.serviceLocation || !e.request.requestStartDate || !e.request.requestEndDate || isNaN(e.request.bytesTotal)) {
-            return;
-        }
-
-        const serviceLocation = e.request.serviceLocation;
-        const elapsedTime = e.request.requestEndDate.getTime() - e.request.requestStartDate.getTime();
-        const throughput = parseInt((((e.request.bytesTotal * 8) / elapsedTime) * 1000)) // bit/s
-
-        _storeThroughputForServiceLocation(serviceLocation, throughput);
-    }
-
-    /**
-     * When a throughput measurement for fragments was stored in ThroughputHistory we save it as well
+     * When a throughput measurement  was stored in ThroughputModel we save it
      * @param {object} e
      * @private
      */
     function _onThroughputMeasurementStored(e) {
-        if (!e || !e.httpRequest || !e.httpRequest._serviceLocation || isNaN(e.throughput)) {
+        if (!e || !e.throughputValues || !e.throughputValues.serviceLocation) {
             return;
         }
-        const serviceLocation = e.httpRequest._serviceLocation;
-        const throughput = e.throughput * 1000;
 
-        _storeThroughputForServiceLocation(serviceLocation, throughput);
+        _storeThroughputForServiceLocation(e.throughputValues.serviceLocation, e.throughputValues);
     }
 
     /**
@@ -301,7 +282,6 @@ function ContentSteeringController() {
 
         const additionalQueryParameter = [];
 
-
         const serviceLocations = serviceLocationList.baseUrl.all.concat(serviceLocationList.location.all);
         if (serviceLocations.length > 0) {
 
@@ -314,26 +294,18 @@ function ContentSteeringController() {
                 }
             })
 
-            // Sort in descending order to put all elements without throughput (-1) in the end
-            data.sort((a, b) => {
-                return b.throughput - a.throughput
-            })
-
             let pathwayString = '';
             let throughputString = '';
 
             data.forEach((entry, index) => {
                 if (index !== 0) {
-                    pathwayString = `${pathwayString},`;
-                    if (entry.throughput > -1) {
-                        throughputString = `${throughputString},`;
-                    }
+                    pathwayString += ',';
+                    throughputString += ',';
                 }
-                pathwayString = `${pathwayString}${entry.serviceLocation}`;
-                if (entry.throughput > -1) {
-                    throughputString = `${throughputString}${entry.throughput}`;
-                }
-            })
+
+                pathwayString += entry.serviceLocation;
+                throughputString += entry.throughput > -1 ? entry.throughput : '';
+            });
 
             additionalQueryParameter.push({
                 key: QUERY_PARAMETER_KEYS.PATHWAY,
@@ -345,7 +317,7 @@ function ContentSteeringController() {
             });
         }
 
-        url = Utils.addAditionalQueryParameterToUrl(url, additionalQueryParameter);
+        url = Utils.addAdditionalQueryParameterToUrl(url, additionalQueryParameter);
         return url;
     }
 
@@ -359,12 +331,9 @@ function ContentSteeringController() {
         if (!serviceLocation || !throughputList[serviceLocation] || throughputList[serviceLocation].length === 0) {
             return -1;
         }
+        const throughput = throughputController.getArithmeticMean(throughputList[serviceLocation], throughputList[serviceLocation].length, true);
 
-        const throughput = throughputList[serviceLocation].reduce((acc, curr) => {
-            return acc + curr;
-        }) / throughputList[serviceLocation].length;
-
-        return parseInt(throughput);
+        return parseInt(throughput * 1000);
     }
 
 
@@ -426,8 +395,8 @@ function ContentSteeringController() {
             return synthesizedElements.map((element) => {
                 const synthesizedBaseUrl = new BaseURL(element.synthesizedUrl, element.serviceLocation)
                 synthesizedBaseUrl.queryParams = element.queryParams;
-                synthesizedBaseUrl.dvb_priority = element.reference.dvb_priority;
-                synthesizedBaseUrl.dvb_weight = element.reference.dvb_weight;
+                synthesizedBaseUrl.dvbPriority = element.reference.dvbPriority;
+                synthesizedBaseUrl.dvbWeight = element.reference.dvbWeight;
                 synthesizedBaseUrl.availabilityTimeOffset = element.reference.availabilityTimeOffset;
                 synthesizedBaseUrl.availabilityTimeComplete = element.reference.availabilityTimeComplete;
 
@@ -580,7 +549,6 @@ function ContentSteeringController() {
         _resetInitialSettings();
         eventBus.off(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, instance);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, instance);
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_FINISHED, _onManifestLoadingFinished, instance);
         eventBus.off(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, _onThroughputMeasurementStored, instance);
     }
 
