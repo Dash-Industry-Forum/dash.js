@@ -935,7 +935,7 @@ import Events from './events/Events.js';
  * @property {string} [events]
  * The events that should trigger the CMCD reporting.
  * @property {string} [timeInterval]
- * The time interval for the CMCD reporting in event mode. The 't' event should be setted in the events array to use this parameter.
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
  * @property {Array.<string>} [includeOnRequests]
