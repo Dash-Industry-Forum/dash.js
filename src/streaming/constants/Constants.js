@@ -253,11 +253,11 @@ export default {
      */
     CMCD_DEFAULT_TIME_INTERVAL: CMCD_DEFAULT_TIME_INTERVAL,
     /**
-     *  @constant {string} CMCD_MODE specifies all the available modes for CMCD.
+     *  @constant {string} CMCD_REPORTING_MODE specifies all the available modes for CMCD.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE: CmcdReportingMode,
+    CMCD_REPORTING_MODE: CmcdReportingMode,
 
     /**
      *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.

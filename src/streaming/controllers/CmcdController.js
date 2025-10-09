@@ -152,7 +152,7 @@ function CmcdController() {
 
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.EVENT);
         eventModeTargets.forEach(({ timeInterval, events }) => {
             if (!events || !events.includes(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL)) {
                 return;
@@ -229,7 +229,7 @@ function CmcdController() {
 
     function triggerCmcdEventMode(event){
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.EVENT);
+        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.EVENT);
 
         if (eventModeTargets.length === 0) {
             return;
@@ -525,7 +525,7 @@ function CmcdController() {
         requestModeSequenceNumber += 1;
         let cmcdRequestData = {
             ...cmcdModel.getCmcdData(request),
-            ...cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST),
+            ...cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST),
             sn: requestModeSequenceNumber
         };
 
@@ -560,7 +560,7 @@ function CmcdController() {
 
         cmcdData = _addCmcdResponseModeData(response, cmcdData);
         const targets = settings.get().streaming.cmcd.targets;
-        const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_MODE.RESPONSE);
+        const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.RESPONSE);
         responseModeTargets.forEach(targetSettings => {
             if (targetSettings.enabled && cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
                 let httpRequest = new CmcdReportRequest();

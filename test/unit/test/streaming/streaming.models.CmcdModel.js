@@ -226,7 +226,7 @@ describe('CmcdModel', function () {
             cmcdModel.onPlaybackStarted();
             cmcdModel.onPlaybackPlaying();
             
-            const msdData = cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST);
+            const msdData = cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST);
             expect(msdData).to.have.property('msd').that.is.a('number');
         });
 
@@ -239,7 +239,7 @@ describe('CmcdModel', function () {
                 }
             });
             
-            const msdData = cmcdModel.updateMsdData(Constants.CMCD_MODE.REQUEST);
+            const msdData = cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST);
             expect(Object.keys(msdData)).to.have.length(0);
         });
     });

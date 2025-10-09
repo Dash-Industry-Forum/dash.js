@@ -48,7 +48,7 @@ describe('CmcdBatchController', function () {
             const target = {
                 url: 'http://test.com/report',
                 batchSize: 2,
-                cmcdMode: Constants.CMCD_MODE.RESPONSE
+                cmcdMode: Constants.CMCD_REPORTING_MODE.RESPONSE
             };
             const cmcdData1 = 'ot%3Dm%2Csid%3D%session1';
             const cmcdData2 = 'ot%3Da%2Csid%3D%session2';
@@ -71,7 +71,7 @@ describe('CmcdBatchController', function () {
             const target = {
                 url: 'http://test.com/report',
                 batchTimer: 5,
-                cmcdMode: Constants.CMCD_MODE.EVENT
+                cmcdMode: Constants.CMCD_REPORTING_MODE.EVENT
             };
             const cmcdData = 'ot%3Dm%2Csid%3D%session1';
 
@@ -178,13 +178,13 @@ describe('CmcdBatchController', function () {
             const target1 = {
                 url: 'http://test.com/report',
                 batchSize: 2,
-                cmcdMode: Constants.CMCD_MODE.RESPONSE
+                cmcdMode: Constants.CMCD_REPORTING_MODE.RESPONSE
             };
 
             const target2 = {
                 url: 'http://test.com/report',
                 batchSize: 1,
-                cmcdMode: Constants.CMCD_MODE.EVENT
+                cmcdMode: Constants.CMCD_REPORTING_MODE.EVENT
             };
 
             const cmcdData1 = 'ot%3Dm';

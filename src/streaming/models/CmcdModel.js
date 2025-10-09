@@ -59,8 +59,8 @@ function CmcdModel() {
         _isSeeking,
         streamProcessors,
         _msdSent = {
-            [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false
+            [Constants.CMCD_REPORTING_MODE.EVENT]: false,
+            [Constants.CMCD_REPORTING_MODE.REQUEST]: false
         },
         _rebufferingStartTime = {},
         _rebufferingDuration = {};
@@ -529,7 +529,7 @@ function CmcdModel() {
     function triggerCmcdEventMode(event){
         const cmcdData = {
             ...getGenericCmcdData(),
-            ...updateMsdData(Constants.CMCD_MODE.EVENT),
+            ...updateMsdData(Constants.CMCD_REPORTING_MODE.EVENT),
             ..._getAggregatedBitrateData(),
             e: event
         };
@@ -567,8 +567,8 @@ function CmcdModel() {
         _rebufferingStartTime = {};
         _rebufferingDuration = {};
         _msdSent = {
-            [Constants.CMCD_MODE.EVENT]: false,
-            [Constants.CMCD_MODE.REQUEST]: false
+            [Constants.CMCD_REPORTING_MODE.EVENT]: false,
+            [Constants.CMCD_REPORTING_MODE.REQUEST]: false
         }
 
         _updateStreamProcessors();

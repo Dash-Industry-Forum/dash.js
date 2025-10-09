@@ -102,9 +102,9 @@ function CmcdBatchController() {
             httpRequest.body = cmcdData;
             httpRequest.headers = Constants.CMCD_CONTENT_TYPE_HEADER
 
-            if (target.cmcdMode === Constants.CMCD_MODE.EVENT) {
+            if (target.cmcdMode === Constants.CMCD_REPORTING_MODE.EVENT) {
                 httpRequest.type = HTTPRequest.CMCD_EVENT;
-            } else if (target.cmcdMode === Constants.CMCD_MODE.RESPONSE) {
+            } else if (target.cmcdMode === Constants.CMCD_REPORTING_MODE.RESPONSE) {
                 httpRequest.type = HTTPRequest.CMCD_RESPONSE;
             }
 
