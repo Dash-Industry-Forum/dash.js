@@ -19,7 +19,8 @@
       "feature-support/alternative/alternative-mpd-replace-live",
       "feature-support/alternative/alternative-mpd-executeOnce",
       "feature-support/alternative/alternative-mpd-clip-vod",
-      "feature-support/alternative/alternative-mpd-clip-live"
+      "feature-support/alternative/alternative-mpd-clip-live",
+      "feature-support/alternative/alternative-mpd-returnOffset"
     ],
     "excluded": []
   },
@@ -97,6 +98,15 @@
       "alternativeUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
       "includedTestfiles": [
         "feature-support/alternative/alternative-mpd-clip-live"
+      ]
+    },
+    {
+      "name": "Alternative MPD returnOffset - Live to Live Test",
+      "type": "live",
+      "originalUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "alternativeUrl": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/alternative/alternative-mpd-returnOffset"
       ]
     }
   ]

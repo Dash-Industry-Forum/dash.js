@@ -12,13 +12,7 @@ function injectAlternativeMpdEvents(player, originalManifestUrl, alternativeMani
     const mediaPlayer = player.player;
     
     mediaPlayer.retrieveManifest(originalManifestUrl, (manifest) => {
-        // Initialize EventStream if it doesn't exist
-        if (!manifest.Period[0].EventStream) {
-            manifest.Period[0].EventStream = [];
-        } else {
-            // Clear existing EventStreams
-            manifest.Period[0].EventStream = [];
-        }
+        manifest.Period[0].EventStream = [];
         
         // Use the provided presentation time
         const duration = 9000;

@@ -11,11 +11,7 @@ function injectAlternativeMpdClipEvents(player, originalManifestUrl, alternative
     const mediaPlayer = player.player;
 
     mediaPlayer.retrieveManifest(originalManifestUrl, (manifest) => {
-        if (!manifest.Period[0].EventStream) {
-            manifest.Period[0].EventStream = [];
-        } else {
-            manifest.Period[0].EventStream = [];
-        }
+        manifest.Period[0].EventStream = [];
 
         const duration = 8000;
         const earliestResolutionTimeOffset = 3000;
