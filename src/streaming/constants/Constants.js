@@ -229,12 +229,6 @@ export default {
     CMCD_MODE_BODY: 'body',
 
     /**
-     *  @constant {string} CMCD_V2_KEYS_MAPPING
-     *  @memberof Constants#
-     *  @static
-    */
-    CMCD_V2_KEYS_NAME_MAPPING: { EVENT: 'e' },
-    /**
      *  @constant {string} CMCD_MANDATORY_KEYS specifies all the mandatory keys for across all CMCD modes (event, request, and response).
      *  @memberof Constants#
      *  @static
