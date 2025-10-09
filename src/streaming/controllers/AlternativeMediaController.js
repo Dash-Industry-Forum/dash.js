@@ -221,6 +221,8 @@ function AlternativeMediaController() {
             const altPlayer = mediaManager.getAlternativePlayer();
             if (altPlayer) {
                 altPlayer.on(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
+                altPlayer.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onAlternativeDynamicToStatic, this)
+                altPlayer.on(MediaPlayerEvents.PLAYBACK_ENDED, _onAlternativePlaybackEnded, this)
             }
         } catch (err) {
             logger.error('Error handling alternative event:', err);
@@ -307,19 +309,41 @@ function AlternativeMediaController() {
                     (calculatedMaxDuration && calculatedMaxDuration <= adjustedTime)
                 );
             if (shouldSwitchBack) {
-                const seekTime = _calculateSeekTime(event, altPlayer);
-                mediaManager.switchBackToMainContent(seekTime);
-                
-                // Trigger content end event
-                if (eventBus){
-                    eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { event });
-                }
-                
-                _resetAlternativeSwitchStates();
+                _switchBackToMainContent(altPlayer, event);
             }
         } catch (err) {
             logger.error(`Error at ${actualEventPresentationTime} in onAlternativePlaybackTimeUpdated:`, err);
         }
+    }
+
+    function _onAlternativePlaybackEnded(e){
+        if (e.isLast){
+            const event = { ...currentEvent };
+            const altPlayer = mediaManager.getAlternativePlayer();
+            if (altPlayer.isDynamic()){
+                _switchBackToMainContent(altPlayer, event);
+            }
+        }
+    }
+
+    function _onAlternativeDynamicToStatic(){
+        const event = { ...currentEvent };
+        const altPlayer = mediaManager.getAlternativePlayer();
+        if (altPlayer.isDynamic()){
+            _switchBackToMainContent(altPlayer, event);
+        }
+    }
+
+    function _switchBackToMainContent(altPlayer, event) {
+        const seekTime = _calculateSeekTime(event, altPlayer);
+        mediaManager.switchBackToMainContent(seekTime);
+
+        // Trigger content end event
+        if (eventBus){
+            eventBus.trigger(Constants.ALTERNATIVE_MPD.CONTENT_END, { event });
+        }
+
+        _resetAlternativeSwitchStates();
     }
 
     function _calculateSeekTime(currentEvent, altPlayer) {
