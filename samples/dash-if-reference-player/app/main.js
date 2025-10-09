@@ -198,7 +198,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.microsoft.playready',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 1
+        priority: 1,
+        audioRobustness: '',
+        videoRobustness: ''
     }
 
     $scope.drmWidevine = {
@@ -206,7 +208,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.widevine.alpha',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 0
+        priority: 0,
+        audioRobustness: '',
+        videoRobustness: ''
     }
 
     $scope.drmClearkey = {
@@ -1230,6 +1234,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (!angular.equals(input.httpRequestHeaders, {})) {
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
+
+                        if(input.audioRobustness){
+                            protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                        }
+
+                        if(input.videoRobustness){
+                            protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                        }
                     } else {
                         alert('Kid and Key must be specified!');
                     }
@@ -1270,12 +1282,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     if (!angular.equals(input.httpRequestHeaders, {})) {
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                     }
+
+                    if(input.audioRobustness){
+                        protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                    }
+
+                    if(input.videoRobustness){
+                        protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                    }
                 }
             }
         }
 
         $scope.protectionData = protectionData;
         $scope.player.setProtectionData(protectionData);
+        console.log(protectionData);
     }
 
     $scope.addPopupInput = function (keySystem) {

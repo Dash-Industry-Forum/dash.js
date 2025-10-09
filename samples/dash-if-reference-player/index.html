@@ -406,6 +406,23 @@
                             Add Request-Headers
                         </button>
 
+                        <label class="options-label">Audio Robustness</label>
+                        <select name="playreadyAudioRobustness" id="playreadyAudioRobustness" ng-model="drmPlayready.audioRobustness"
+                        ng-init="drmPlayready.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+
+                        <select name="playreadyVideoRobustness" id="playreadyVideoRobustness" ng-model="drmPlayready.videoRobustness"
+                        ng-init="drmPlayready.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+
                         <!-- Header Dialogue Window Content -->
                         <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
                             <div class="requestHeaderDialogueContent">
@@ -469,6 +486,26 @@
                                 ng-click="openDialogue('widevine')">
                             Add Request-Headers
                         </button>
+
+                        <select name="widevineAudioRobustness" id="widevineAudioRobustness" ng-model="drmWidevine.audioRobustness"
+                        ng-init="drmWidevine.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
+
+                        <select name="widevineVideoRobustness" id="widevineVideoRobustness" ng-model="drmWidevine.videoRobustness"
+                        ng-init="drmWidevine.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
 
                         <!-- Header Dialogue Window Content -->
                         <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
