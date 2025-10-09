@@ -657,12 +657,8 @@ function CmcdModel() {
 
     function getCmcdData(request) {
         try {
-            let cmcdData = null;
-
-            
-            cmcdData = {
-                ..._updateLastMediaTypeRequest(request.type, request.mediaType)
-            }
+            _updateLastMediaTypeRequest(request.type, request.mediaType);
+            let cmcdData = {};
 
             if (isIncludedInRequestFilter(request.type)) {
                 if (request.type === HTTPRequest.MPD_TYPE) {
