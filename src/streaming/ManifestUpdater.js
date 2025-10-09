@@ -60,7 +60,6 @@ function ManifestUpdater() {
         manifestLoader,
         manifestModel,
         refreshDelay,
-        refreshDisabled,
         refreshTimer,
         settings;
 
@@ -109,7 +108,6 @@ function ManifestUpdater() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
         eventBus.on(Events.INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
-        eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, onManifestValidityChanged, this)
     }
 
     function setManifest(manifest) {
@@ -152,7 +150,7 @@ function ManifestUpdater() {
             delay = refreshDelay * 1000;
         }
 
-        if (!isNaN(delay) && !refreshDisabled) {
+        if (!isNaN(delay)) {
             logger.debug('Refresh manifest in ' + delay + ' milliseconds.');
             refreshTimer = setTimeout(_onRefreshTimer, delay);
         }
@@ -326,14 +324,6 @@ function ManifestUpdater() {
             return period
         }
         period.AdaptationSet.push(externalSubtitle.serializeToMpdParserFormat());
-    }
-
-    function onManifestValidityChanged(e) {
-        const { minimumUpdatePeriod } = manifestModel.getValue();
-        if (minimumUpdatePeriod === 0 && e.inbandEvent) {
-            _stopManifestRefreshTimer();
-            refreshDisabled = true;
-        }
     }
 
     function _onPlaybackStarted(/*e*/) {

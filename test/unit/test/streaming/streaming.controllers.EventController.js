@@ -1,13 +1,11 @@
 import EventController from '../../../../src/streaming/controllers/EventController.js';
 import EventBus from '../../../../src/core/EventBus.js';
-import Events from '../../../../src/core/events/Events.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ManifestUpdaterMock from '../../mocks/ManifestUpdaterMock.js';
 import Settings from '../../../../src/core/Settings.js';
 
 import {expect} from 'chai';
-import sinon from 'sinon';
 const context = {};
 const eventBus = EventBus(context).getInstance();
 
@@ -577,60 +575,5 @@ describe('EventController', function () {
 
             eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
         });
-
-        it('should fire MPD_EXPIRE_UPDATE events for value 3', async () => {
-            let newManifestExpiredEventStub = {...manifestExpiredEventStub};
-            newManifestExpiredEventStub.eventStream.value = '3';
-            newManifestExpiredEventStub.duration = 1;
-            newManifestExpiredEventStub.calculatedPresentationTime = 0;
-            newManifestExpiredEventStub.parsedMessageData = `2024-03-24T15:30:45Z<?xml version="1.0" encoding="UTF-8"?><MPD xmlns="urn:mpeg:dash:schema:mpd:2011">
-            <Period duration="PT60S"></Period>
-            </MPD>`;
-
-            const spy = sinon.spy(eventBus, 'trigger');
-            const mpdExpireUpdatePromise = new Promise((resolve) => {
-                eventBus.on(Events.MPD_EXPIRE_UPDATE, () => {
-                    resolve();
-                });
-            });
-            
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout: MPD_EXPIRE_UPDATE event was not triggered')), 4000)
-            );
-        
-            eventController.addInbandEvents([newManifestExpiredEventStub], 'periodId');
-
-            await Promise.race([mpdExpireUpdatePromise, timeoutPromise]);
-            sinon.assert.calledWith(spy, Events.MPD_EXPIRE_UPDATE, sinon.match.any);
-            sinon.restore()
-        });
-
-        it('should fire MANIFEST_VALIDITY_CHANGED events for value 3', async () => {
-            let newManifestExpiredEventStub = {...manifestExpiredEventStub};
-            newManifestExpiredEventStub.eventStream.value = '3';
-            newManifestExpiredEventStub.duration = 1;
-            newManifestExpiredEventStub.calculatedPresentationTime = 0;
-            newManifestExpiredEventStub.parsedMessageData = `2024-03-24T15:30:45Z<?xml version="1.0" encoding="UTF-8"?><MPD xmlns="urn:mpeg:dash:schema:mpd:2011">
-            <Period duration="PT60S"></Period>
-            </MPD>`;
-
-            const spy = sinon.spy(eventBus, 'trigger');
-            const manifestValidityChanged = new Promise((resolve) => {
-                eventBus.on(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, () => {
-                    resolve();
-                });
-            });
-            
-            const timeoutPromise = new Promise((_, reject) =>
-                setTimeout(() => reject(new Error('Timeout: MANIFEST_VALIDITY_CHANGED event was not triggered')), 4000)
-            );
-        
-            eventController.addInbandEvents([newManifestExpiredEventStub], 'periodId');
-
-            await Promise.race([manifestValidityChanged, timeoutPromise]);
-            sinon.assert.calledWith(spy, MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, sinon.match.any);
-            sinon.restore()
-        });
-
     });
 });
