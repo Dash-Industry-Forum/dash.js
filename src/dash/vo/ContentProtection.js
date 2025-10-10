@@ -47,6 +47,7 @@ class ContentProtection extends DescriptorType {
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
+        this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]
     }
 
     init(data) {
@@ -60,6 +61,8 @@ class ContentProtection extends DescriptorType {
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
             this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
+            const rawCert = data[DashConstants.CERT_URL] || data[DashConstants.CERT_URL_LOWER_CASE];
+            this.certUrls = ContentProtection._normalizeCertUrls(rawCert);
         }
     }
 
@@ -70,6 +73,50 @@ class ContentProtection extends DescriptorType {
                 this[attribute] = reference[attribute]
             }
         })
+        // Merge certUrls: append any from reference that we don't already have (by URL + certType)
+        if (reference.certUrls && reference.certUrls.length) {
+            const existing = new Set(this.certUrls.map(c => `${c.url}||${c.certType || ''}`));
+            reference.certUrls.forEach(c => {
+                const key = `${c.url}||${c.certType || ''}`;
+                if (!existing.has(key)) {
+                    this.certUrls.push({ url: c.url, certType: c.certType || null });
+                }
+            });
+        }
+    }
+
+    /**
+     * Normalize CERT_URL data into an array of {url, certType|null} objects.
+     * Handles string, object, or array input.
+     * @param {string|object|array} raw
+     * @returns {Array<{url: string, certType: string|null}>}
+     * @private
+     */
+    static _normalizeCertUrls(raw) {
+        if (!raw) { return []; }
+        const arr = Array.isArray(raw) ? raw : [raw];
+        return arr.map(item => {
+            if (!item) { return null; }
+            if (typeof item === 'string') {
+                const url = item.trim();
+                return url ? { url, certType: null } : null;
+            }
+            if (typeof item === 'object') {
+                let url = (item.__text || item.text || '').trim();
+                if (!url && typeof item.url === 'string') { // fallback if pre-normalized
+                    url = item.url.trim();
+                }
+                let certType = item.certType || item['@certType'] || null;
+                if (certType && typeof certType === 'string') {
+                    certType = certType.trim();
+                    if (certType === '') { certType = null; }
+                } else {
+                    certType = null;
+                }
+                return url ? { url, certType } : null;
+            }
+            return null;
+        }).filter(Boolean);
     }
 }
 
