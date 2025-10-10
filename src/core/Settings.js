@@ -106,7 +106,9 @@ import Events from './events/Events.js';
  *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false
+ *                ignoreKeyStatuses: false,
+ *                certificateRetryAttempts: 2,
+ *                preferredCertType: null
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -705,6 +707,12 @@ import Events from './events/Events.js';
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
+ *
+ * @property {number} [certificateRetryAttempts=2]
+ * Number of retry attempts per certificate URL before moving to the next candidate when fetching DRM server certificates via Certurl elements.
+ *
+ * @property {string|null} [preferredCertType=null]
+ * Optional certificate type preference. If multiple <Certurl> elements are present with differing '@certType' attributes, those matching this value are tried first.
  */
 
 /**
@@ -1159,7 +1167,9 @@ function Settings() {
                 keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
-                ignoreKeyStatuses: false
+                ignoreKeyStatuses: false,
+                certificateRetryAttempts: 2,
+                preferredCertType: null
             },
             buffer: {
                 enableSeekDecorrelationFix: false,

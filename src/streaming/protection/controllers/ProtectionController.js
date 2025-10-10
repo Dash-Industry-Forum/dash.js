@@ -90,7 +90,8 @@ function ProtectionController(config) {
         pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
-        sessionType;
+        sessionType,
+        certificateCache;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -101,6 +102,7 @@ function ProtectionController(config) {
         licenseXhrRequest = null;
         licenseRequestRetryTimeout = null;
         keyStatusMap = new Map();
+        certificateCache = new Map();
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
     }
 
@@ -238,7 +240,68 @@ function ProtectionController(config) {
             protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
         }
 
+        // If no explicit serverCertificate provided, attempt auto certificate acquisition via Certurl
+        _acquireCertificateFromManifest();
+
         _handlePendingMediaTypes();
+    }
+
+    /**
+     * Attempt to acquire and set a server certificate using Certurl entries from the manifest
+     * Only runs if no certificate already applied via protData
+     * @private
+     */
+    function _acquireCertificateFromManifest() {
+        if (!selectedKeySystem) { return; }
+        const ksString = selectedKeySystem.systemString;
+        const cacheEntry = certificateCache.get(ksString);
+        if (cacheEntry && cacheEntry.applied) { return; }
+        // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
+        const preferredType = settings.get().streaming.protection.preferredCertType;
+        const certCandidates = _collectCertificateUrlsForSelectedKeySystem(preferredType);
+        if (!certCandidates.length) { return; }
+        // TODO: implement actual certificate acquisition logic (fetch, retry, set via protectionModel.setServerCertificate())
+        logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + ' (download logic to be implemented).');
+    }
+
+    /**
+     * Collect certificate URL objects for the selected key system from mediaInfo content protection data
+     * @param {string|null} preferredType
+     * @return {Array<{url:string, certType:string|null}>}
+     * @private
+     */
+    function _collectCertificateUrlsForSelectedKeySystem(preferredType) {
+        const urls = [];
+        mediaInfoArr.forEach(mediaInfo => {
+            if (!mediaInfo || !mediaInfo.contentProtection) { return; }
+            mediaInfo.contentProtection.forEach(contentProtection => {
+                // Match by schemeIdUri UUID presence in keySystems metadata later; for now collect all
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
+                    contentProtection.certUrls.forEach(c => { urls.push(c); });
+                }
+            });
+        });
+        if (preferredType) {
+            const filtered = urls.filter(c => c.certType === preferredType);
+            if (filtered.length) { return _dedupeCertUrls(filtered); }
+        }
+        return _dedupeCertUrls(urls);
+    }
+
+    /**
+     * Deduplicate certificate URL list by URL + certType
+     * @param {Array<{url:string, certType:string|null}>} list
+     * @return {Array<{url:string, certType:string|null}>}
+     * @private
+     */
+    function _dedupeCertUrls(list) {
+        const seen = new Set();
+        return list.filter(item => {
+            const key = item.url + '||' + (item.certType || '');
+            if (seen.has(key)) { return false; }
+            seen.add(key);
+            return true;
+        });
     }
 
     /**
