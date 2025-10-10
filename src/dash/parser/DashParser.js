@@ -46,6 +46,7 @@ const arrayNodes = [
     DashConstants.ADAPTATION_SET,
     DashConstants.REPRESENTATION,
     DashConstants.CONTENT_PROTECTION,
+    DashConstants.CERT_URL,
     DashConstants.ROLE,
     DashConstants.ACCESSIBILITY,
     DashConstants.AUDIO_CHANNEL_CONFIGURATION,
