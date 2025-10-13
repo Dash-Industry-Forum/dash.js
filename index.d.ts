@@ -412,7 +412,9 @@ export interface DashManifestModel {
 
     getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
-    getContentProtectionByAdaptation(adaptation: object): any;
+        getCodecForPreselection(preselection: Preselection, adaptations: AdaptationSet[], addResolutionInfo: boolean): string;
+
+        getContentProtectionByAdaptation(adaptation: object): any;
 
     getContentProtectionByManifest(manifest: object): any[];
 
@@ -424,7 +426,7 @@ export interface DashManifestModel {
 
     getEndTimeForLastPeriod(voPeriod: Period): number;
 
-    getEssentialPropertiesForRepresentation(realRepresentation: object): { schemeIdUri: string, value: string }
+        getEssentialProperties(element: object): DescriptorType | [];
 
     getEventStreamForAdaptationSet(manifest: object, adaptation: object): EventStream[];
 
@@ -464,13 +466,23 @@ export interface DashManifestModel {
 
     getLoction(manifest: object): MpdLocation | [];
 
-    getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
+        getMainAdaptationSetForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): AdaptationSet | undefined;
+
+        getCommonRepresentationForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): Representation | undefined;
+
+        getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
     getMimeType(adaptation: object): object;
 
     getMpd(manifest: object): Mpd;
 
-    getPeriodId(realPeriod: Period, i: number): string;
+        getPatchLocation(manifest: object): PatchLocation[];
+
+        getPreselectionIsTypeOf(preselection: Preselection, adaptations: AdaptationSet[], type: MediaType): boolean;
+
+        getPreselectionsForPeriod(voPeriod: object): Preselection[];
+
+        getPeriodId(realPeriod: Period, i: number): string;
 
     getProducerReferenceTimesForAdaptation(adaptation: object): any[];
 
@@ -506,9 +518,7 @@ export interface DashManifestModel {
 
     getSuggestedPresentationDelay(mpd: Mpd): any;
 
-    getSupplementalPropertiesForAdaptation(adaptation: object): DescriptorType | [];
-
-    getSupplementalPropertiesForRepresentation(representation: Representation): DescriptorType | [];
+        getSupplementalProperties(element: object): DescriptorType | [];
 
     getUTCTimingSources(manifest: object): any[];
 
@@ -667,11 +677,12 @@ export interface TimelineSegmentsGetter {
  * Dash - Vo
  **/
 
-export class AdaptationSet {
-    period: Period | null;
-    index: number;
-    type: string | null;
-}
+    export class AdaptationSet {
+        period: Period | null;
+        id: string | null;
+        index: number;
+        type: string | null;
+    }
 
 export interface ThroughputDictEntry {
     downloadTimeInMs: number;
@@ -864,32 +875,33 @@ export interface IPssh {
     __text: string;
 }
 
-export class MediaInfo {
-    KID: any | null;
-    accessibility: DescriptorType[] | null;
-    audioChannelConfiguration: DescriptorType[] | null;
-    bitrateList: Bitrate[];
-    codec: string | null;
-    contentProtection: any | null;
-    essentialProperties: object;
-    id: string | null;
-    index: number | null;
-    isEmbedded: any | null;
-    isFragmented: any | null;
-    isText: boolean;
-    labels: { text: string, lang?: string }[];
-    lang: string | null;
-    mimeType: string | null;
-    representationCount: number;
-    roles: DescriptorType[] | null;
-    segmentAlignment: boolean;
-    selectionPriority: number;
-    streamInfo: StreamInfo | null;
-    subSegmentAlignment: boolean;
-    supplementalProperties: object;
-    type: MediaType | null;
-    viewpoint: DescriptorType[] | null;
-}
+    export class MediaInfo {
+        KID: any | null;
+        accessibility: DescriptorType[] | null;
+        audioChannelConfiguration: DescriptorType[] | null;
+        bitrateList: Bitrate[];
+        codec: string | null;
+        contentProtection: any | null;
+        essentialProperties: object;
+        id: string | null;
+        index: number | null;
+        isEmbedded: any | null;
+        isFragmented: any | null;
+        isPreselection: boolean;
+        isText: boolean;
+        labels: { text: string, lang?: string }[];
+        lang: string | null;
+        mimeType: string | null;
+        representationCount: number;
+        roles: DescriptorType[] | null;
+        segmentAlignment: boolean;
+        selectionPriority: number;
+        streamInfo: StreamInfo | null;
+        subSegmentAlignment: boolean;
+        supplementalProperties: object;
+        type: MediaType | null;
+        viewpoint: DescriptorType[] | null;
+    }
 
 export interface Mpd {
     availabilityEndTime: number;
@@ -941,15 +953,25 @@ export interface Period {
     start: number;
 }
 
-export interface ProducerReferenceTime {
-    UTCTiming: any;
-    applicationSchme: any;
-    id: any;
-    inband: boolean;
-    presentationTime: number;
-    type: 'encoder';
-    wallClockTime: any;
-}
+    export interface Preselection {
+        period: Period | null;
+        index: number;
+        id: string | null;
+        order: string | null;
+        preselectionComponents: any[];
+        tag: string | null;
+        type: string | null;
+    }
+
+    export interface ProducerReferenceTime {
+        UTCTiming: any;
+        applicationSchme: any;
+        id: any;
+        inband: boolean;
+        presentationTime: number;
+        type: 'encoder';
+        wallClockTime: any;
+    }
 
 export interface Representation {
     absoluteIndex: number;
@@ -1041,7 +1063,7 @@ export interface DashAdapter {
 
     areMediaInfosEqual(mInfoOne: MediaInfo, mInfoTwo: MediaInfo): boolean;
 
-    getMainAdaptationForType(periodIndex: number, type: MediaType, streamInfo: object): IAdaptation | null;
+        getMainAdaptationForType(type: MediaType, streamInfo: object): IAdaptation | null;
 
     getAllMediaInfoForType(streamInfo: object, type: MediaType, externalManifest?: object | null): any[];
 
@@ -1053,13 +1075,15 @@ export interface DashAdapter {
 
     getCodec(adaptation: object, representationIndex: number, addResolutionInfo: boolean): string;
 
-    getContentSteering(manifest: object): object;
+        getCodecForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): string;
+
+        getCommonRepresentationForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): Representation | null;
+        
+        getContentSteering(manifest: object): object;
 
     getDuration(externalManifest?: object): number;
 
-    getEssentialPropertiesAdaptationSet(adaptationSet: AdaptationSet): object | [];
-
-    getEssentialPropertiesForRepresentation(representation: Representation): any[];
+        getEssentialProperties(element: AdaptationSet | Representation | Preselection): DescriptorType | [];
 
     getEvent(eventBox: object, eventStreams: object, mediaStartTime: number, voRepresentation: object): null | Event;
 
@@ -1083,7 +1107,11 @@ export interface DashAdapter {
 
     getLocation(manifest: object): MpdLocation[];
 
-    getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
+        getMainAdaptationForType(type: string, streamInfo: object): object;
+        
+        getMainAdaptationSetForPreselection(preselection: Preselection, adaptations: AdaptationSet[]): AdaptationSet | undefined; 
+
+        getManifestUpdatePeriod(manifest: object, latencyOfLastUpdate?: number): number;
 
     getMediaInfoForType(streamInfo: object, type: MediaType): MediaInfo | null;
 
@@ -1093,7 +1121,9 @@ export interface DashAdapter {
 
     getPeriodById(id: string): Period | null;
 
-    getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
+        getPreselectionIsTypeOf(preselection: Preselection, adaptations: AdaptationSet[], type: MediaType): boolean;
+
+        getProducerReferenceTime(streamInfo: StreamInfo, mediaInfo: MediaInfo): object | [];
 
     getPublishTime(manifest: object): number | null;
 
@@ -1109,11 +1139,11 @@ export interface DashAdapter {
 
     getSuggestedPresentationDelay(): string;
 
-    getSupplementalCodex(representation: Representation): Array<any>;
+        getSupplementalCodecs(representation: Representation): Array<any>;
 
     getUTCTimingSources(): any[];
 
-    getVoRepresentation(mediaInfo: MediaInfo): Representation[];
+        getVoRepresentations(mediaInfo: MediaInfo): Representation[];
 
     isPatchValid(manifest: object, patch: object): boolean;
 
@@ -1626,299 +1656,304 @@ export class ProtectionMediaInfo {
     contentProtection: any | null;
 }
 
-export class MediaPlayerSettingClass {
-    debug?: {
-        logLevel?: LogLevel;
-        dispatchEvent?: boolean;
-    };
-    streaming?: {
-        abandonLoadTimeout?: number,
-        wallclockTimeUpdateInterval?: number,
-        manifestUpdateRetryInterval?: number,
-        liveUpdateTimeThresholdInMilliseconds?: number,
-        cacheInitSegments?: boolean,
-        applyServiceDescription?: boolean,
-        applyProducerReferenceTime?: boolean,
-        applyContentSteering?: boolean,
-        enableManifestDurationMismatchFix?: boolean,
-        parseInbandPrft?: boolean,
-        enableManifestTimescaleMismatchFix?: boolean,
-        capabilities?: {
-            filterUnsupportedEssentialProperties?: boolean,
-            supportedEssentialProperties?: [
-                { schemeIdUri?: string, value?: RegExp }
-            ],
-            useMediaCapabilitiesApi?: boolean,
-            filterHDRMetadataFormatEssentialProperties?: boolean,
-            filterVideoColorimetryEssentialProperties?: boolean
-        },
-        events?: {
-            eventControllerRefreshDelay?: number,
-            deleteEventMessageDataTimeout?: number
-        }
-        timeShiftBuffer?: {
-            calcFromSegmentTimeline?: boolean
-            fallbackToSegmentTimeline?: boolean
-        },
-        metrics?: {
-            maxListDepth?: number
-        },
-        delay?: {
-            liveDelayFragmentCount?: number,
-            liveDelay?: number,
-            useSuggestedPresentationDelay?: boolean
-        },
-        protection?: {
-            keepProtectionMediaKeys?: boolean,
-            ignoreEmeEncryptedEvent?: boolean,
-            detectPlayreadyMessageFormat?: boolean,
-            ignoreKeyStatuses?: boolean,
-        },
-        buffer?: {
-            enableSeekDecorrelationFix?: boolean,
-            fastSwitchEnabled?: boolean,
-            flushBufferAtTrackSwitch?: boolean,
-            reuseExistingSourceBuffers?: boolean,
-            bufferPruningInterval?: number,
-            bufferToKeep?: number,
-            bufferTimeAtTopQuality?: number,
-            bufferTimeAtTopQualityLongForm?: number,
-            initialBufferLevel?: number,
-            bufferTimeDefault?: number,
-            longFormContentDurationThreshold?: number,
-            stallThreshold?: number,
-            lowLatencyStallThreshold?: number,
-            useAppendWindow?: boolean,
-            setStallState?: boolean
-            avoidCurrentTimeRangePruning?: boolean
-            useChangeType?: boolean
-            mediaSourceDurationInfinity?: boolean
-            resetSourceBuffersForTrackSwitch?: boolean
-            syntheticStallEvents?: {
+    export class MediaPlayerSettingClass {
+        debug?: {
+            logLevel?: LogLevel;
+            dispatchEvent?: boolean;
+        };
+        streaming?: {
+            abandonLoadTimeout?: number,
+            wallclockTimeUpdateInterval?: number,
+            manifestUpdateRetryInterval?: number,
+            liveUpdateTimeThresholdInMilliseconds?: number,
+            cacheInitSegments?: boolean,
+            applyServiceDescription?: boolean,
+            applyProducerReferenceTime?: boolean,
+            applyContentSteering?: boolean,
+            enableManifestDurationMismatchFix?: boolean,
+            parseInbandPrft?: boolean,
+            enableManifestTimescaleMismatchFix?: boolean,
+            capabilities?: {
+                filterUnsupportedEssentialProperties?: boolean,
+                supportedEssentialProperties?: [
+                    { schemeIdUri?: string, value?: RegExp }
+                ],
+                useMediaCapabilitiesApi?: boolean,
+                filterHDRMetadataFormatEssentialProperties?: boolean,
+                filterVideoColorimetryEssentialProperties?: boolean
+            },
+            events?: {
+                eventControllerRefreshDelay?: number,
+                deleteEventMessageDataTimeout?: number
+            }
+            timeShiftBuffer?: {
+                calcFromSegmentTimeline?: boolean
+                fallbackToSegmentTimeline?: boolean
+            },
+            metrics?: {
+                maxListDepth?: number
+            },
+            delay?: {
+                liveDelayFragmentCount?: number,
+                liveDelay?: number,
+                useSuggestedPresentationDelay?: boolean
+            },
+            protection?: {
+                keepProtectionMediaKeys?: boolean,
+                keepProtectionMediaKeysMaximumOpenSessions?: number,
+                ignoreEmeEncryptedEvent?: boolean,
+                detectPlayreadyMessageFormat?: boolean,
+                ignoreKeyStatuses?: boolean,
+            },
+            buffer?: {
+                enableSeekDecorrelationFix?: boolean,
+                fastSwitchEnabled?: boolean,
+                flushBufferAtTrackSwitch?: boolean,
+                reuseExistingSourceBuffers?: boolean,
+                bufferPruningInterval?: number,
+                bufferToKeep?: number,
+                bufferTimeAtTopQuality?: number,
+                bufferTimeAtTopQualityLongForm?: number,
+                initialBufferLevel?: number,
+                bufferTimeDefault?: number,
+                longFormContentDurationThreshold?: number,
+                stallThreshold?: number,
+                lowLatencyStallThreshold?: number,
+                useAppendWindow?: boolean,
+                setStallState?: boolean
+                avoidCurrentTimeRangePruning?: boolean
+                useChangeType?: boolean
+                mediaSourceDurationInfinity?: boolean
+                resetSourceBuffersForTrackSwitch?: boolean
+                syntheticStallEvents?: {
+                    enabled?: boolean
+                    ignoreReadyState?: boolean
+                }
+            },
+            gaps?: {
+                jumpGaps?: boolean,
+                jumpLargeGaps?: boolean,
+                smallGapLimit?: number,
+                threshold?: number,
+                enableSeekFix?: boolean,
+                enableStallFix?: boolean,
+                stallSeek?: number
+            },
+            utcSynchronization?: {
+                enabled?: boolean,
+                useManifestDateHeaderTimeSource?: boolean,
+                backgroundAttempts?: number,
+                timeBetweenSyncAttempts?: number,
+                maximumTimeBetweenSyncAttempts?: number,
+                minimumTimeBetweenSyncAttempts?: number,
+                timeBetweenSyncAttemptsAdjustmentFactor?: number,
+                maximumAllowedDrift?: number,
+                enableBackgroundSyncAfterSegmentDownloadError?: boolean,
+                defaultTimingSource?: {
+                    scheme?: string,
+                    value?: string
+                }
+            },
+            scheduling?: {
+                defaultTimeout?: number,
+                lowLatencyTimeout?: number,
+                scheduleWhilePaused?: boolean
+            },
+            text?: {
+                defaultEnabled?: boolean,
+                dispatchForManualRendering?: boolean,
+                extendSegmentedCues?: boolean,
+                imsc?: {
+                    displayForcedOnlyMode?: boolean,
+                    enableRollUp?: boolean
+                },
+                webvtt?: {
+                    customRenderingEnabled?: number
+                }
+            },
+            liveCatchup?: {
+                maxDrift?: number;
+                playbackRate?: {
+                    min?: number,
+                    max?: number
+                },
+                playbackBufferMin?: number,
                 enabled?: boolean
-                ignoreReadyState?: boolean
+                mode?: string
             }
-        },
-        gaps?: {
-            jumpGaps?: boolean,
-            jumpLargeGaps?: boolean,
-            smallGapLimit?: number,
-            threshold?: number,
-            enableSeekFix?: boolean,
-            enableStallFix?: boolean,
-            stallSeek?: number
-        },
-        utcSynchronization?: {
-            enabled?: boolean,
-            useManifestDateHeaderTimeSource?: boolean,
-            backgroundAttempts?: number,
-            timeBetweenSyncAttempts?: number,
-            maximumTimeBetweenSyncAttempts?: number,
-            minimumTimeBetweenSyncAttempts?: number,
-            timeBetweenSyncAttemptsAdjustmentFactor?: number,
-            maximumAllowedDrift?: number,
-            enableBackgroundSyncAfterSegmentDownloadError?: boolean,
-            defaultTimingSource?: {
-                scheme?: string,
-                value?: string
-            }
-        },
-        scheduling?: {
-            defaultTimeout?: number,
-            lowLatencyTimeout?: number,
-            scheduleWhilePaused?: boolean
-        },
-        text?: {
-            defaultEnabled?: boolean,
-            dispatchForManualRendering?: boolean,
-            extendSegmentedCues?: boolean,
-            imsc?: {
-                displayForcedOnlyMode?: boolean,
-                enableRollUp?: boolean
-            },
-            webvtt?: {
-                customRenderingEnabled?: number
-            }
-        },
-        liveCatchup?: {
-            maxDrift?: number;
-            playbackRate?: {
-                min?: number,
-                max?: number
-            },
-            playbackBufferMin?: number,
-            enabled?: boolean
-            mode?: string
-        }
-        lastBitrateCachingInfo?: {
-            enabled?: boolean;
-            ttl?: number;
-        };
-        lastMediaSettingsCachingInfo?: {
-            enabled?: boolean;
-            ttl?: number;
-        };
-        saveLastMediaSettingsForCurrentStreamingSession?: boolean;
-        cacheLoadThresholds?: {
-            video?: number;
-            audio?: number;
-        };
-        trackSwitchMode?: {
-            video?: TrackSwitchMode;
-            audio?: TrackSwitchMode;
-        };
-        ignoreSelectionPriority?: boolean;
-        selectionModeForInitialTrack?: TrackSelectionMode;
-        fragmentRequestTimeout?: number;
-        fragmentRequestProgressTimeout?: number;
-        manifestRequestTimeout?: number;
-        retryIntervals?: {
-            'MPD'?: number;
-            'XLinkExpansion'?: number;
-            'MediaSegment'?: number;
-            'InitializationSegment'?: number;
-            'BitstreamSwitchingSegment'?: number;
-            'IndexSegment'?: number;
-            'FragmentInfoSegment'?: number;
-            'license'?: number;
-            'other'?: number;
-            'lowLatencyReductionFactor'?: number;
-        };
-        retryAttempts?: {
-            'MPD'?: number;
-            'XLinkExpansion'?: number;
-            'MediaSegment'?: number;
-            'InitializationSegment'?: number;
-            'BitstreamSwitchingSegment'?: number;
-            'IndexSegment'?: number;
-            'FragmentInfoSegment'?: number;
-            'license'?: number;
-            'other'?: number;
-            'lowLatencyMultiplyFactor'?: number;
-        };
-        abr?: {
-            limitBitrateByPortal?: boolean;
-            usePixelRatioInLimitBitrateByPortal?: boolean;
-            enableSupplementalPropertyAdaptationSetSwitching?: boolean,
-            rules?: {
-                throughputRule?: {
-                    active?: boolean
-                },
-                bolaRule?: {
-                    active?: boolean
-                },
-                insufficientBufferRule?: {
-                    active?: boolean,
-                    parameters?: {
-                        throughputSafetyFactor?: number,
-                        segmentIgnoreCount?: number
-                    }
-                },
-                switchHistoryRule?: {
-                    active?: boolean,
-                    parameters?: {
-                        sampleSize?: number,
-                        switchPercentageThreshold?: number
-                    }
-                },
-                droppedFramesRule?: {
-                    active?: boolean,
-                    parameters?: {
-                        minimumSampleSize?: number,
-                        droppedFramesPercentageThreshold?: number
-                    }
-                },
-                abandonRequestsRule?: {
-                    active?: boolean,
-                    parameters?: {
-                        abandonDurationMultiplier?: number,
-                        minSegmentDownloadTimeThresholdInMs?: number,
-                        minThroughputSamplesThreshold?: number
-                    }
-                }
-                l2ARule?: {
-                    active?: boolean
-                }
-                loLPRule?: {
-                    active?: boolean
-                }
-            },
-            throughput?: {
-                averageCalculationMode?: ThroughputCalculationModes,
-                lowLatencyDownloadTimeCalculationMode?: LowLatencyDownloadTimeCalculationModes,
-                useResourceTimingApi?: boolean,
-                useNetworkInformationApi?: {
-                    xhr?: boolean,
-                    fetch?: boolean
-                },
-                useDeadTimeLatency?: boolean,
-                bandwidthSafetyFactor?: number,
-                sampleSettings: {
-                    live?: number,
-                    vod?: number,
-                    enableSampleSizeAdjustment?: boolean,
-                    decreaseScale?: number,
-                    increaseScale?: number,
-                    maxMeasurementsToKeep?: number,
-                    averageLatencySampleAmount?: number,
-                },
-                ewma: {
-                    throughputSlowHalfLifeSeconds?: number,
-                    throughputFastHalfLifeSeconds?: number,
-                    latencySlowHalfLifeCount?: number,
-                    latencyFastHalfLifeCount?: number,
-                    weightDownloadTmeMultiplicationFactor?: number
-                }
-            }
-            maxBitrate?: {
-                audio?: number;
-                video?: number;
+            lastBitrateCachingInfo?: {
+                enabled?: boolean;
+                ttl?: number;
             };
-            minBitrate?: {
-                audio?: number;
-                video?: number;
+            lastMediaSettingsCachingInfo?: {
+                enabled?: boolean;
+                ttl?: number;
             };
-            initialBitrate?: {
-                audio?: number;
+            saveLastMediaSettingsForCurrentStreamingSession?: boolean;
+            cacheLoadThresholds?: {
                 video?: number;
+                audio?: number;
             };
-            autoSwitchBitrate?: {
-                audio?: boolean;
-                video?: boolean;
-            }
-        },
-        cmcd?: {
-            applyParametersFromMpd?: boolean,
-            enabled?: boolean,
-            sid?: string | null,
-            cid?: string | null,
-            rtp?: number | null,
-            rtpSafetyFactor?: number,
-            mode?: 'query' | 'header',
-            enabledKeys?: Array<string>,
-            includeInRequests?: Array<string>,
-            version?: number
-        },
-        cmsd?: {
-            enabled?: boolean,
+            trackSwitchMode?: {
+                video?: TrackSwitchMode;
+                audio?: TrackSwitchMode;
+            };
+            includePreselectionsInMediainfo?: boolean;
+            includePreselectionsForInitialTrackSelection?: boolean;
+            ignoreSelectionPriority?: boolean;
+            prioritizeRoleMain?: boolean;
+            assumeDefaultRoleAsMain?: boolean;
+            selectionModeForInitialTrack?: TrackSelectionMode;
+            fragmentRequestTimeout?: number;
+            fragmentRequestProgressTimeout?: number;
+            manifestRequestTimeout?: number;
+            retryIntervals?: {
+                'MPD'?: number;
+                'XLinkExpansion'?: number;
+                'MediaSegment'?: number;
+                'InitializationSegment'?: number;
+                'BitstreamSwitchingSegment'?: number;
+                'IndexSegment'?: number;
+                'FragmentInfoSegment'?: number;
+                'license'?: number;
+                'other'?: number;
+                'lowLatencyReductionFactor'?: number;
+            };
+            retryAttempts?: {
+                'MPD'?: number;
+                'XLinkExpansion'?: number;
+                'MediaSegment'?: number;
+                'InitializationSegment'?: number;
+                'BitstreamSwitchingSegment'?: number;
+                'IndexSegment'?: number;
+                'FragmentInfoSegment'?: number;
+                'license'?: number;
+                'other'?: number;
+                'lowLatencyMultiplyFactor'?: number;
+            };
             abr?: {
-                applyMb: boolean,
-                etpWeightRatio?: number
+                limitBitrateByPortal?: boolean;
+                usePixelRatioInLimitBitrateByPortal?: boolean;
+                enableSupplementalPropertyAdaptationSetSwitching?: boolean,
+                rules?: {
+                    throughputRule?: {
+                        active?: boolean
+                    },
+                    bolaRule?: {
+                        active?: boolean
+                    },
+                    insufficientBufferRule?: {
+                        active?: boolean,
+                        parameters?: {
+                            throughputSafetyFactor?: number,
+                            segmentIgnoreCount?: number
+                        }
+                    },
+                    switchHistoryRule?: {
+                        active?: boolean,
+                        parameters?: {
+                            sampleSize?: number,
+                            switchPercentageThreshold?: number
+                        }
+                    },
+                    droppedFramesRule?: {
+                        active?: boolean,
+                        parameters?: {
+                            minimumSampleSize?: number,
+                            droppedFramesPercentageThreshold?: number
+                        }
+                    },
+                    abandonRequestsRule?: {
+                        active?: boolean,
+                        parameters?: {
+                            abandonDurationMultiplier?: number,
+                            minSegmentDownloadTimeThresholdInMs?: number,
+                            minThroughputSamplesThreshold?: number
+                        }
+                    }
+                    l2ARule?: {
+                        active?: boolean
+                    }
+                    loLPRule?: {
+                        active?: boolean
+                    }
+                },
+                throughput?: {
+                    averageCalculationMode?: ThroughputCalculationModes,
+                    lowLatencyDownloadTimeCalculationMode?: LowLatencyDownloadTimeCalculationModes,
+                    useResourceTimingApi?: boolean,
+                    useNetworkInformationApi?: {
+                        xhr?: boolean,
+                        fetch?: boolean
+                    },
+                    useDeadTimeLatency?: boolean,
+                    bandwidthSafetyFactor?: number,
+                    sampleSettings: {
+                        live?: number,
+                        vod?: number,
+                        enableSampleSizeAdjustment?: boolean,
+                        decreaseScale?: number,
+                        increaseScale?: number,
+                        maxMeasurementsToKeep?: number,
+                        averageLatencySampleAmount?: number,
+                    },
+                    ewma: {
+                        throughputSlowHalfLifeSeconds?: number,
+                        throughputFastHalfLifeSeconds?: number,
+                        latencySlowHalfLifeCount?: number,
+                        latencyFastHalfLifeCount?: number,
+                        weightDownloadTmeMultiplicationFactor?: number
+                    }
+                }
+                maxBitrate?: {
+                    audio?: number;
+                    video?: number;
+                };
+                minBitrate?: {
+                    audio?: number;
+                    video?: number;
+                };
+                initialBitrate?: {
+                    audio?: number;
+                    video?: number;
+                };
+                autoSwitchBitrate?: {
+                    audio?: boolean;
+                    video?: boolean;
+                }
+            },
+            cmcd?: {
+                applyParametersFromMpd?: boolean,
+                enabled?: boolean,
+                sid?: string | null,
+                cid?: string | null,
+                rtp?: number | null,
+                rtpSafetyFactor?: number,
+                mode?: 'query' | 'header',
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>,
+                version?: number
+            },
+            cmsd?: {
+                enabled?: boolean,
+                abr?: {
+                    applyMb: boolean,
+                    etpWeightRatio?: number
+                }
+            },
+            defaultSchemeIdUri?: {
+                viewpoint?: string,
+                audioChannelConfiguration?: string,
+                role?: string,
+                accessibility?: string
             }
-        },
-        defaultSchemeIdUri?: {
-            viewpoint?: string,
-            audioChannelConfiguration?: string,
-            role?: string,
-            accessibility?: string
-        }
-    };
-    errors?: {
-        recoverAttempts?: {
-            mediaErrorDecode?: number
+        };
+        errors?: {
+            recoverAttempts?: {
+                mediaErrorDecode?: number
+            }
         }
     }
-}
 
 export interface MediaFinishedInformation {
     mediaTimeOfLastSignaledSegment: number
@@ -2216,7 +2251,7 @@ export interface MediaPlayerClass {
 
     setProtectionData(value: ProtectionDataSet): void;
 
-    setRepresentationForTypeById(type: MediaType, id: number, forceReplace?: boolean): void;
+        setRepresentationForTypeById(type: MediaType, id: string, forceReplace?: boolean): void;
 
     setRepresentationForTypeByIndex(type: MediaType, index: number, forceReplace?: boolean): void;
 
@@ -5850,9 +5885,7 @@ export interface StreamProcessor {
 
     getType(): string;
 
-    getVoRepresentation(quality: number): Representation;
-
-    handleNewMediaInfo(mediaInfo: MediaInfo): void;
+        handleNewMediaInfo(mediaInfo: MediaInfo): void;
 
     initialize(mediaSource: MediaSource, hasVideoTrack: boolean, isFragmented: boolean): void;
 

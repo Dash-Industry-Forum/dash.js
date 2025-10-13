@@ -103,6 +103,7 @@ import Events from './events/Events.js';
  *            },
  *            protection: {
  *                keepProtectionMediaKeys: false,
+ *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
  *                ignoreKeyStatuses: false
@@ -188,6 +189,8 @@ import Events from './events/Events.js';
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
+ *            includePreselectionsInMediainfoArray: true,
+ *            includePreselectionsForInitialTrackSelection: false,
  *            ignoreSelectionPriority: false,
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
@@ -689,8 +692,11 @@ import Events from './events/Events.js';
  * @typedef {Object} Protection
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle.
- *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ *
+ * @property {number} [keepProtectionMediaKeysMaximumOpenSessions=-1]
+ * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the oldest sessions when the limit is exceeded. -1 means unlimited.
+ * 
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
@@ -1003,6 +1009,12 @@ import Events from './events/Events.js';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
+ * @property {} [includePreselectionsInMediainfoArray: true]
+ * provides the option to include Preselections in the MediaInfo object
+ *
+ * @property {} [includePreselectionsForInitialTrackSelection: false]
+ * provides the option to include Preselections for initial track selection
+ *
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
@@ -1144,6 +1156,7 @@ function Settings() {
             },
             protection: {
                 keepProtectionMediaKeys: false,
+                keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
                 ignoreKeyStatuses: false
@@ -1241,6 +1254,8 @@ function Settings() {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
+            includePreselectionsInMediainfoArray: true,
+            includePreselectionsForInitialTrackSelection: false,
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
