@@ -227,18 +227,22 @@ function ProtectionController(config) {
     }
 
     function _onMediaKeysCreated(keySystem, keySystemAccess) {
-        selectedKeySystem = keySystem;
-        keySystemSelectionInProgress = false;
+        try {
+            selectedKeySystem = keySystem;
+            keySystemSelectionInProgress = false;
 
-        eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
+            eventBus.trigger(events.KEY_SYSTEM_SELECTED, { data: keySystemAccess });
 
-        // Set server certificate from protData
-        const protData = _getProtDataForKeySystem(selectedKeySystem);
-        if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
-            protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+            // Set server certificate from protData
+            const protData = _getProtDataForKeySystem(selectedKeySystem);
+            if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
+                protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
+            }
+
+            _handlePendingMediaTypes();
+        } catch (e) {
+            logger.error(e);
         }
-
-        _handlePendingMediaTypes();
     }
 
     /**
@@ -421,18 +425,26 @@ function ProtectionController(config) {
      * @private
      */
     function _enforceMediaKeySessionLimit() {
-        if (!settings) { return; }
+        if (!settings) {
+            return;
+        }
         const isKeepProtectionMediaKeysEnabled = settings.get().streaming.protection.keepProtectionMediaKeys;
         const maxSessions = settings.get().streaming.protection.keepProtectionMediaKeysMaximumOpenSessions;
-        if (typeof maxSessions !== 'number' || maxSessions <= 0) { return; }
+        if (typeof maxSessions !== 'number' || maxSessions <= 0) {
+            return;
+        }
         if (!isKeepProtectionMediaKeysEnabled) {
             logger.warn('DRM: keepProtectionMediaKeysMaximumOpenSessions is set to ' + maxSessions + ', but keepProtectionMediaKeys is not enabled. Therefore, keepProtectionMediaKeysMaximumOpenSessions will be ignored.');
             return;
         }
         // Ensure protectionModel is available before accessing sessions
-        if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') { return; }
+        if (!protectionModel || typeof protectionModel.getSessionTokens !== 'function') {
+            return;
+        }
         const sessionTokens = protectionModel.getSessionTokens() || [];
-        if (sessionTokens.length < maxSessions) { return; }
+        if (sessionTokens.length < maxSessions) {
+            return;
+        }
         // Limit reached. Close the oldest session to make room for a new one.
         const oldestSession = sessionTokens[0];
         if (oldestSession) {
@@ -579,11 +591,12 @@ function ProtectionController(config) {
      * certificate
      * @memberof module:ProtectionController
      * @instance
+     * @return {Promise}
      * @fires ProtectionController#ServerCertificateUpdated
      */
     function setServerCertificate(serverCertificate) {
         _checkConfig();
-        protectionModel.setServerCertificate(serverCertificate);
+        return protectionModel.setServerCertificate(serverCertificate);
     }
 
     /**
