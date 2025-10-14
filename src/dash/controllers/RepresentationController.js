@@ -78,12 +78,12 @@ function RepresentationController(config) {
             return currentVoRepresentation;
         }
         else {
-            return getCurrentDependentRepresentation();
+            return _getCurrentDependentRepresentation();
         }
         
     }
 
-    function getCurrentDependentRepresentation() {
+    function _getCurrentDependentRepresentation() {
         let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
         if (currentVoRepDep) {
             if (!currentVoRepDep.mediaInfo) {
@@ -334,7 +334,6 @@ function RepresentationController(config) {
 
     instance = {
         getCurrentCompositeRepresentation,
-        getCurrentDependentRepresentation,
         getCurrentRepresentation,
         getRepresentationById,
         getStreamId,
