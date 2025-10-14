@@ -639,6 +639,10 @@ function CmcdController() {
         return next;
     }
 
+    function getCmcdParametersFromManifest() {
+        return cmcdModel.getCmcdParametersFromManifest();
+    }
+
     function reset() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
@@ -655,7 +659,7 @@ function CmcdController() {
 
         cmcdModel.resetInitialSettings();
         cmcdBatchController.reset();
-        
+
         if (targetSequenceNumbers) {
             targetSequenceNumbers.clear();
         }
@@ -667,6 +671,7 @@ function CmcdController() {
         getHeaderParameters,
         getCmcdRequestInterceptors,
         getCmcdResponseInterceptors,
+        getCmcdParametersFromManifest,
         initialize,
         isCmcdEnabled,
         reset,

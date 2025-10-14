@@ -41,7 +41,6 @@ import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
-import CmcdModel from '../../models/CmcdModel.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -79,9 +78,6 @@ function ProtectionController(config) {
     const settings = config.settings;
     let protectionModel = config.protectionModel;
     let needkeyRetries = [];
-
-    let context = this.context;
-    const cmcdModel = CmcdModel(context).getInstance();
 
     let applicationProvidedProtectionData,
         instance,
@@ -874,7 +870,7 @@ function ProtectionController(config) {
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
-        const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
+        const cmcdParameters = cmcdController.getCmcdParametersFromManifest();
 
         if (cmcdController.isCmcdEnabled()) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
