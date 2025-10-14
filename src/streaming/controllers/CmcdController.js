@@ -438,7 +438,16 @@ function CmcdController() {
 
     function _targetCanBeEnabled(targetSettings) {
         const cmcdVersion = settings.get().streaming.cmcd.version ?? Constants.DEFAULT_CMCD_VERSION;
-        return (cmcdVersion === 2 && targetSettings?.enabled);
+
+        if (cmcdVersion !== 2) {
+            logger.warn('CMCD version 2 is required for target configuration');
+        }
+
+        if (!targetSettings?.url) {
+            logger.warn('Target URL is not configured');
+        }
+
+        return (cmcdVersion === 2 && targetSettings?.enabled && targetSettings?.url);
     }
 
     function _checkTargetIncludeInRequests(targetSettings) {
