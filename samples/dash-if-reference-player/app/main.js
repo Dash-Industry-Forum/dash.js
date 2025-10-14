@@ -184,7 +184,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.microsoft.playready',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 1
+        serverCertificate: '',
+        httpTimeout: 5000,
+        priority: 1,
+        audioRobustness: '',
+        videoRobustness: '',
+        isCustomRobustness: false
     }
 
     $scope.drmWidevine = {
@@ -192,7 +197,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.widevine.alpha',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 0
+        serverCertificate: '',
+        httpTimeout: 5000,
+        priority: 0,
+        audioRobustness: '',
+        videoRobustness: '',
+        isCustomRobustness: false
     }
 
     $scope.drmClearkey = {
@@ -200,6 +210,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'org.w3.clearkey',
         licenseServerUrl: '',
         httpRequestHeaders: {},
+        serverCertificate: '',
+        httpTimeout: 5000,
         kid: '',
         key: '',
         clearkeys: {},
@@ -1205,6 +1217,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     };
 
     $scope.doStop = function () {
+        $scope.controlbar.disable();
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
         $scope.conformanceViolations = [];
@@ -1329,6 +1342,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (!angular.equals(input.httpRequestHeaders, {})) {
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
+
+                        if(input.audioRobustness){
+                            protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                        }
+
+                        if(input.videoRobustness){
+                            protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                        }
                     } else {
                         alert('Kid and Key must be specified!');
                     }
@@ -1369,12 +1390,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     if (!angular.equals(input.httpRequestHeaders, {})) {
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                     }
+
+                    if(input.audioRobustness){
+                        protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                    }
+
+                    if(input.videoRobustness){
+                        protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                    }
                 }
             }
         }
 
         $scope.protectionData = protectionData;
         $scope.player.setProtectionData(protectionData);
+        console.log(protectionData);
     }
 
     $scope.addPopupInput = function (keySystem) {
@@ -1842,7 +1872,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             key !== 'priority' &&
                             key !== 'kid' &&
                             key !== 'key' &&
-                            key !== 'inputMode') {
+                            key !== 'inputMode' &&
+                            key !== 'isCustomRobustness') {
                             queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                         }
                     }
@@ -1875,7 +1906,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         key !== 'drmKeySystem' &&
                         key !== 'licenseServerUrl' &&
                         key !== 'httpRequestHeaders' &&
-                        key !== 'priority') {
+                        key !== 'priority' &&
+                        key !== 'isCustomRobustness') {
                         queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                     }
                 }

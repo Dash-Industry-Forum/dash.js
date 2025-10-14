@@ -93,9 +93,10 @@ function _getNChanDolby2015(value) {
     }
 
     // see ETSI TS 103190-2, table A.27
-    // 0b001101111000000010: single channel flags
+    // 0b001100111000000010: single channel flags
     // 0b110010000110111101: channel pair flags
-    return _getNChanFromBitMask(value, [0b001101111000000010, 0b110010000110111101]);
+    // 0b000001000001000000: LFE - excluded
+    return _getNChanFromBitMask(value, [0b001100111000000010, 0b110010000110111101]);
 }
 
 function _getNChanDTSUHD(value) {

@@ -189,6 +189,8 @@ import Events from './events/Events.js';
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
+ *            includePreselectionsInMediainfoArray: true,
+ *            includePreselectionsForInitialTrackSelection: false,
  *            ignoreSelectionPriority: false,
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
@@ -1007,6 +1009,12 @@ import Events from './events/Events.js';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
+ * @property {} [includePreselectionsInMediainfoArray: true]
+ * provides the option to include Preselections in the MediaInfo object
+ *
+ * @property {} [includePreselectionsForInitialTrackSelection: false]
+ * provides the option to include Preselections for initial track selection
+ *
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
@@ -1246,6 +1254,8 @@ function Settings() {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
+            includePreselectionsInMediainfoArray: true,
+            includePreselectionsForInitialTrackSelection: false,
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
