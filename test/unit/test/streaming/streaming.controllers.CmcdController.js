@@ -2083,6 +2083,8 @@ describe('CmcdController', function () {
         });
 
         it('should send reports periodically according to the timeInterval', () => {
+            expect(urlLoaderMock.load.called).to.be.false;
+            clock.tick(1000);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             let requestSent = urlLoaderMock.load.firstCall.args[0].request;
             let headers = requestSent.headers;

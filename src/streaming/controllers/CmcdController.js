@@ -165,7 +165,8 @@ function CmcdController() {
                     const timeOut = setTimeout(triggerEventModeInterval, (timeInterval * 1000));
                     timeouts.push(timeOut);
                 }
-                triggerEventModeInterval();
+                const timeOut = setTimeout(triggerEventModeInterval, (timeInterval * 1000));
+                timeouts.push(timeOut);
             }
         });
     }
