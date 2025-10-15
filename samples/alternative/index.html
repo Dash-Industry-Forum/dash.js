@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Manual-player instantiation example</title>
+    <title>Alternative Media Presentations</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -19,26 +19,57 @@
         #alternative-video-element {
             display: none;
         }
-    </style>
 
-    <script class="code">
-        function init() {
-            var video,
-                alternativeVideo,
-                player,
-                url = 'http://localhost:3000/samples/alternative/manifest-insert.mpd';
-                // url = 'http://localhost:3000/samples/alternative/manifest-replace.mpd';
-                // url = 'http://localhost:3000/samples/alternative/manifest-execute-once.mpd';
-                // url = 'http://localhost:3000/samples/alternative/manifest-replace-clip.mpd';
-                // url = 'http://localhost:3000/samples/alternative/manifest-replace-start-with-offset.mpd';
-
-            video = document.getElementById('video-element');
-            alternativeVideo = document.getElementById('alternative-video-element');
-            player = dashjs.MediaPlayer().create();
-            player.initialize(video, url, false);
-            player.setAlternativeVideoElement(alternativeVideo);
+        #manifestViewer {
+            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+            background: #1e1e1e;
+            color: #dcdcdc;
+            padding: 1em;
+            white-space: pre;
+            overflow: auto;
+            border: 1px solid #444;
+            font-size: 10px;
+            border-radius: 4px;
+            max-height: 400px;
         }
-    </script>
+        #manifestViewer .token\.tag { color: #569CD6; }
+        #manifestViewer .token\.attr-name { color: #9CDCFE; }
+        #manifestViewer .token\.attr-value { color: #CE9178; }
+        #manifestViewer .token\.text { color: #D4D4D4; }
+        #manifestViewer .token\.altmpd { color: #06ff06; }
+        #manifestViewer .token\.altmpd-bg { background-color: rgb(36, 179, 36); }
+
+        .event-config {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .form-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .event-type-selector {
+            margin-bottom: 15px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .event-type-btn {
+            flex: 1;
+        }
+
+        .event-type-btn.active {
+            background-color: #0d6efd;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
@@ -50,25 +81,96 @@
                  width="200">
         </header>
         <div class="row">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>Alternative Media Presentations</h3>
-                    <p>A sample showing alternative media presentations with a dedicated alternative video element. The red-bordered video element will be used for alternative content.</p>
+                    <p>A sample showing alternative media presentations with a dedicated alternative video element. Configure replace or insert events with direct presentation times.</p>
                     <h5 class="mt-4">Additional Samples:</h5>
                     <ul>
                         <li><a href="live-to-live.html">Live-to-Live Alternative MPD</a></li>
                         <li><a href="listen-mode.html">Alternative MPD Listen Mode</a></li>
                     </ul>
+
+                    <div class="event-config">
+                        <h5>VOD Configuration</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Main VOD URL:</label>
+                            <input type="text" id="manifestUrl" class="form-control"  value="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Alternative VOD URL:</label>
+                            <input type="text" id="alternativeUrl" class="form-control" value="https://dash.akamaized.net/akamai/tos/tears-blend-no-steering.mpd" />
+                        </div>
+
+                        <div class="event-type-selector">
+                            <label class="form-label">Event Type:</label>
+                            <div class="btn-group">
+                                <button id="replaceTypeBtn" class="btn btn-outline-primary event-type-btn active" onclick="selectEventType('replace')">Replace</button>
+                                <button id="insertTypeBtn" class="btn btn-outline-primary event-type-btn" onclick="selectEventType('insert')">Insert</button>
+                            </div>
+                            <small class="text-muted d-block mt-2">
+                                <strong>Replace:</strong> Replaces main content with alternative content.<br>
+                                <strong>Insert:</strong> Inserts alternative content, then returns to the same point in main content.
+                            </small>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Presentation Time (seconds):</label>
+                                <input type="number" id="presentationTime" class="form-control" value="5" min="0" step="0.1" />
+                                <small class="text-muted">Time in main video to trigger event</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Duration (ms):</label>
+                                <input type="number" id="duration" class="form-control" value="15000" min="1000" max="120000" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3" id="replaceOptions">
+                            <div class="col-md-6">
+                                <label class="form-label">Return Offset (ms):</label>
+                                <input type="number" id="returnOffset" class="form-control" value="5000" min="0" />
+                                <small class="text-muted">Offset in main content after alternative ends</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Max Duration (ms):</label>
+                                <input type="number" id="maxDuration" class="form-control" value="5000" min="1000" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="clipEnabled">
+                                    <label class="form-check-label" for="clipEnabled">Enable Clip</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="startAtPlayhead" checked>
+                                    <label class="form-check-label" for="startAtPlayhead">Start at Playhead</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button id="addEvent" class="btn btn-primary me-2">Add Event</button>
+                            <button id="loadPlayer" class="btn btn-success">Load Player</button>
+                        </div>
+
+                        <div id="eventsContainer" class="mt-3"></div>
+                    </div>
                 </div>
             </div>
-            <div class="col-md-8">
+            <div class="col-md-6">
                 <video id="video-element" controls="true"></video>
                 <video id="alternative-video-element" controls="true"></video>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
+
+                <div class="mt-3">
+                    <h6>Generated Manifest Events:</h6>
+                    <div id="manifestViewer">No events configured yet...</div>
+                </div>
             </div>
         </div>
         <footer class="pt-3 mt-4 text-muted border-top">
@@ -77,8 +179,251 @@
     </div>
 </main>
 
+<script class="code">
+    let player;
+    let events = [];
+    let eventCounter = 0;
+    let currentEventType = 'replace';
 
-<script>
+    function init() {
+        var video = document.getElementById('video-element');
+        var alternativeVideo = document.getElementById('alternative-video-element');
+
+        // Initialize with basic setup, player will be created when loading
+        setupEventListeners();
+    }
+
+    function setupEventListeners() {
+        const addEventBtn = document.getElementById('addEvent');
+        const loadPlayerBtn = document.getElementById('loadPlayer');
+
+        addEventBtn.addEventListener('click', addEvent);
+        loadPlayerBtn.addEventListener('click', loadPlayer);
+    }
+
+    function selectEventType(type) {
+        currentEventType = type;
+
+        // Update button states
+        const replaceBtn = document.getElementById('replaceTypeBtn');
+        const insertBtn = document.getElementById('insertTypeBtn');
+
+        if (type === 'replace') {
+            replaceBtn.classList.add('active');
+            insertBtn.classList.remove('active');
+            document.getElementById('replaceOptions').style.display = 'flex';
+        } else {
+            insertBtn.classList.add('active');
+            replaceBtn.classList.remove('active');
+            document.getElementById('replaceOptions').style.display = 'none';
+        }
+    }
+
+    function addEvent() {
+        const presentationTime = parseFloat(document.getElementById('presentationTime').value);
+        const duration = parseInt(document.getElementById('duration').value);
+        const returnOffset = parseInt(document.getElementById('returnOffset').value);
+        const maxDuration = parseInt(document.getElementById('maxDuration').value);
+        const clipEnabled = document.getElementById('clipEnabled').checked;
+        const startAtPlayhead = document.getElementById('startAtPlayhead').checked;
+        const alternativeUrl = document.getElementById('alternativeUrl').value;
+
+        const event = {
+            id: eventCounter++,
+            type: currentEventType,
+            presentationTime: presentationTime * 1000, // Convert to milliseconds for consistency with timescale
+            duration: duration,
+            alternativeUrl: alternativeUrl,
+            returnOffset: returnOffset,
+            maxDuration: maxDuration,
+            clip: clipEnabled,
+            startAtPlayhead: startAtPlayhead
+        };
+
+        events.push(event);
+        updateEventsDisplay();
+        updateManifestViewer();
+    }
+
+    function removeEvent(index) {
+        events.splice(index, 1);
+        updateEventsDisplay();
+        updateManifestViewer();
+    }
+
+    function updateEventsDisplay() {
+        const container = document.getElementById('eventsContainer');
+        container.innerHTML = '';
+
+        if (events.length === 0) {
+            container.innerHTML = '<p class="text-muted">No events configured</p>';
+            return;
+        }
+
+        events.forEach((event, index) => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'alert alert-info d-flex justify-content-between align-items-center';
+
+            const eventTypeName = event.type.charAt(0).toUpperCase() + event.type.slice(1);
+            const presentationTimeSec = (event.presentationTime / 1000).toFixed(1);
+
+            eventDiv.innerHTML = `
+                <div>
+                    <strong>${eventTypeName} Event #${event.id + 1}</strong><br>
+                    <small>Presentation Time: ${presentationTimeSec}s<br>
+                    Duration: ${event.duration}ms${event.type === 'replace' ? ` | Return Offset: ${event.returnOffset}ms` : ''}</small>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeEvent(${index})">Remove</button>
+            `;
+
+            container.appendChild(eventDiv);
+        });
+    }
+
+    function updateManifestViewer() {
+        const viewer = document.getElementById('manifestViewer');
+
+        if (events.length === 0) {
+            viewer.textContent = 'No events configured yet...';
+            return;
+        }
+
+        let manifestXml = '';
+        events.forEach(event => {
+            const schemeIdUri = event.type === 'replace'
+                ? 'urn:mpeg:dash:event:alternativeMPD:replace:2025'
+                : 'urn:mpeg:dash:event:alternativeMPD:insert:2025';
+
+            const nodeName = event.type === 'replace' ? 'ReplacePresentation' : 'InsertPresentation';
+
+            manifestXml += `
+<EventStream schemeIdUri="${schemeIdUri}" timescale="1000">
+  <Event presentationTime="${event.presentationTime}" duration="${event.duration}">
+    <${nodeName}
+      url="${event.alternativeUrl}"
+      earliestResolutionTimeOffset="5000"`;
+
+            if (event.type === 'replace') {
+                manifestXml += `
+      returnOffset="${event.returnOffset}"`;
+            }
+
+            manifestXml += `
+      maxDuration="${event.maxDuration}"
+      clip="${event.clip}"
+      startAtPlayhead="${event.startAtPlayhead}" />
+  </Event>
+</EventStream>`;
+        });
+
+        // Format and highlight the XML
+        let highlighted = manifestXml
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, open, tagName, attrs, close) => {
+                let isAltMpd = (tagName === "ReplacePresentation" || tagName === "InsertPresentation");
+                let coloredTag = `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${open}${tagName}</span>`;
+                if (attrs.trim().length > 0) {
+                    attrs = attrs.replace(/(\w+)="(.*?)"/g, `<span class="token.attr-name">$1</span>="<span class="token.attr-value">$2</span>"`);
+                    coloredTag += attrs;
+                }
+                coloredTag += `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${close}</span>`;
+                return coloredTag;
+            });
+
+        viewer.innerHTML = highlighted;
+    }
+
+    function loadPlayer() {
+        const manifestUrl = document.getElementById('manifestUrl').value;
+        const video = document.getElementById('video-element');
+        const alternativeVideo = document.getElementById('alternative-video-element');
+
+        // Clean up existing player
+        if (player) {
+            player.reset();
+        }
+
+        // Set video attributes
+        video.setAttribute('controls', 'true');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('muted', '');
+
+        // Create new player following the correct sequence
+        player = dashjs.MediaPlayer().create();
+        window.player = player;
+
+        // Initialize first (without parameters)
+        player.initialize();
+
+        // Set alternative video element
+        player.setAlternativeVideoElement(alternativeVideo);
+
+        // Attach the main video view
+        player.attachView(video);
+
+        // Configure settings if needed
+        player.updateSettings({
+            streaming: {
+                text: {
+                    dispatchForManualRendering: true
+                }
+            }
+        });
+
+        if (events.length > 0) {
+            // Load manifest and inject events
+            player.retrieveManifest(manifestUrl, (manifest) => {
+                // Clear existing event streams
+                manifest.Period[0].EventStream = [];
+
+                // Add events (both replace and insert)
+                events.forEach(event => {
+                    const schemeIdUri = event.type === 'replace'
+                        ? 'urn:mpeg:dash:event:alternativeMPD:replace:2025'
+                        : 'urn:mpeg:dash:event:alternativeMPD:insert:2025';
+
+                    const presentationNode = event.type === 'replace'
+                        ? 'ReplacePresentation'
+                        : 'InsertPresentation';
+
+                    const eventData = {
+                        id: event.id,
+                        presentationTime: event.presentationTime,
+                        duration: event.duration,
+                        [presentationNode]: {
+                            url: event.alternativeUrl,
+                            earliestResolutionTimeOffset: 5000,
+                            maxDuration: event.maxDuration,
+                            clip: event.clip.toString(),
+                            startAtPlayhead: event.startAtPlayhead.toString()
+                        }
+                    };
+
+                    // Add returnOffset only for replace events
+                    if (event.type === 'replace') {
+                        eventData[presentationNode].returnOffset = event.returnOffset;
+                    }
+
+                    const eventStream = {
+                        schemeIdUri: schemeIdUri,
+                        timescale: 1000,
+                        Event: [eventData]
+                    };
+
+                    manifest.Period[0].EventStream.push(eventStream);
+                });
+
+                // Attach the modified manifest as source
+                player.attachSource(manifest);
+            });
+        } else {
+            // Load without events - use attachSource with the URL
+            player.attachSource(manifestUrl);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function () {
         init();
     });
