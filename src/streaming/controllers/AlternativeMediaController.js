@@ -170,11 +170,6 @@ function AlternativeMediaController() {
                 return;
             }
 
-            if (!alternativeVideoElement) {
-                logger.error('Cannot trigger alternative event. Alternative video element has not been set.');
-                return;
-            }
-
             // Only Alternative MPD replace events can be used for dynamic MPD
             if (manifestInfo.type === DashConstants.DYNAMIC && event.alternativeMpd.mode === Constants.ALTERNATIVE_MPD.MODES.INSERT) {
                 logger.warn('Insert mode not supported for dynamic manifests - ignoring event');
@@ -335,6 +330,10 @@ function AlternativeMediaController() {
     }
 
     function _switchBackToMainContent(altPlayer, event) {
+        if (!event) {
+            return;
+        }
+
         const seekTime = _calculateSeekTime(event, altPlayer);
         mediaManager.switchBackToMainContent(seekTime);
 
@@ -375,9 +374,11 @@ function AlternativeMediaController() {
     }
 
     function reset() {
+
         // Clean up alternative player event handlers before resetting media manager
         const altPlayer = mediaManager && mediaManager.getAlternativePlayer();
         if (altPlayer) {
+            _switchBackToMainContent(altPlayer, currentEvent);
             altPlayer.off(MediaPlayerEvents.PLAYBACK_TIME_UPDATED, _onAlternativePlaybackTimeUpdated, this);
         }
 

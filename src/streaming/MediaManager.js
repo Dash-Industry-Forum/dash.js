@@ -189,7 +189,16 @@ function MediaManager() {
             initializeAlternativePlayer(alternativeMpdUrl);
         }
 
-        if (altPlayer && altVideoElement) {
+        if (!altVideoElement) {
+            altVideoElement = document.createElement('video');
+            const videoElement = videoModel.getElement();
+            const parentNode = videoElement && videoElement.parentNode;
+            if (parentNode) {
+                parentNode.insertBefore(altVideoElement, videoElement.nextSibling);
+            }
+        }
+
+        if (altPlayer) {
             altVideoElement.style.display = 'block';
             altPlayer.attachView(altVideoElement);
         }
