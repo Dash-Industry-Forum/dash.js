@@ -154,8 +154,6 @@ a:hover {
 .dash-video-player {
     background-color: #000000;
     position: relative;
-    margin: 0 auto;
-    line-height: 1.0;
 }
 
 .col-md-9 video {
