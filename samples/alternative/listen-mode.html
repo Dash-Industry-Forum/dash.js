@@ -213,7 +213,7 @@
         showStatus(`Status update sent. Main content will return soon.`, 'warning');
     }
 
-    function addManifestResponseInterceptor(manifestUrl) {
+    function addManifestResponseInterceptor() {
         const interceptor = (response) => {
             // Only intercept MPD manifest requests
             if (response.request?.customData?.request?.type === 'MPD' && replaceEvent) {
