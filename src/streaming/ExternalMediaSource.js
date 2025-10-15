@@ -33,9 +33,7 @@ import ExternalSourceBuffer from './ExternalSourceBuffer.js';
 class ExternalMediaSource {
     constructor(eventBus) {
         this.eventBus = eventBus;
-        this.sourceBuffers = new Map();
-        this._duration = NaN;
-        this._readyState = 'closed';
+        this.reset();
     }
 
     get duration() {
