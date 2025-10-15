@@ -32,6 +32,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 import SwitchRequest from '../SwitchRequest.js';
 import MetricsConstants from '../../constants/MetricsConstants.js';
 import Debug from '../../../core/Debug.js';
+import Settings from '../../../core/Settings.js';
 
 function ThroughputRule(config) {
 
@@ -40,16 +41,19 @@ function ThroughputRule(config) {
     const dashMetrics = config.dashMetrics;
 
     let instance,
+        settings,
         logger;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        settings = Settings(context).getInstance();
     }
 
     function getSwitchRequest(rulesContext) {
         try {
             const switchRequest = SwitchRequest(context).create();
             switchRequest.rule = this.getClassName();
+
             const mediaInfo = rulesContext.getMediaInfo();
             const mediaType = rulesContext.getMediaType();
             const currentBufferState = dashMetrics.getCurrentBufferState(mediaType);
@@ -69,6 +73,7 @@ function ThroughputRule(config) {
             if (abrController.getAbandonmentStateFor(streamId, mediaType) === MetricsConstants.ALLOW_LOAD) {
                 if (currentBufferState.state === MetricsConstants.BUFFER_LOADED || isDynamic) {
                     switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, throughput, true);
+                    switchRequest.priority = settings.get().streaming.abr.rules.throughputRule.priority;
                     switchRequest.reason = {
                         throughput,
                         latency,
