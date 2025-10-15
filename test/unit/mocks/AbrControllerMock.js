@@ -45,7 +45,9 @@ function AbrControllerMock () {
 
     this.setAbandonmentStateFor = function () {};
 
-    this.getAbandonmentStateFor = function () {};
+    this.getAbandonmentStateFor = function () {
+        return 'allowload';
+    };
 
     this.getQualityForBitrate = function () {};
 
