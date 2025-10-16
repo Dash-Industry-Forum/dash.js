@@ -39,6 +39,7 @@ import EventBus from '../../../core/EventBus.js';
 import Events from '../../../core/events/Events.js';
 import Debug from '../../../core/Debug.js';
 import Constants from '../../constants/Constants.js';
+import Settings from '../../../core/Settings.js';
 
 const L2A_STATE_ONE_BITRATE = 'L2A_STATE_ONE_BITRATE'; // If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 const L2A_STATE_STARTUP = 'L2A_STATE_STARTUP'; // Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -53,6 +54,7 @@ function L2ARule(config) {
 
     const dashMetrics = config.dashMetrics;
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
 
     let instance,
         l2AStateDict,
@@ -461,6 +463,8 @@ function L2ARule(config) {
                 default:
                     _handleErrorState(rulesContext, switchRequest, l2AState)
             }
+
+            switchRequest.priority = settings.get().streaming.abr.rules.l2ARule.priority;
             return switchRequest;
         } catch (e) {
             logger.error(e);

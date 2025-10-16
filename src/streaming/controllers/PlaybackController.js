@@ -708,7 +708,9 @@ function PlaybackController() {
     function _onPlaybackSeeked() {
         logger.info('Native video element event: seeked');
         internalSeek = false;
-        eventBus.trigger(Events.PLAYBACK_SEEKED);
+        eventBus.trigger(Events.PLAYBACK_SEEKED, {
+            streamId: streamInfo.id
+        });
     }
 
     function _onPlaybackTimeUpdated() {

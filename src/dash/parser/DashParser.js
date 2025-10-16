@@ -62,6 +62,7 @@ const arrayNodes = [
     DashConstants.METRICS,
     DashConstants.REPORTING,
     DashConstants.PATCH_LOCATION,
+    DashConstants.PRESELECTION,
     DashConstants.REPLACE,
     DashConstants.ADD,
     DashConstants.REMOVE,

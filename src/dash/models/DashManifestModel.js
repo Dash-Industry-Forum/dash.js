@@ -48,6 +48,7 @@ import MpdLocation from '../vo/MpdLocation.js';
 import ObjectUtils from '../../streaming/utils/ObjectUtils.js';
 import PatchLocation from '../vo/PatchLocation.js';
 import Period from '../vo/Period.js';
+import Preselection from '../vo/Preselection.js';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
 import Representation from '../vo/Representation.js';
 import AlternativeMpd from '../vo/AlternativeMpd.js';
@@ -85,7 +86,7 @@ function DashManifestModel() {
 
         // Check for thumbnail images
         if (adaptation.Representation && adaptation.Representation.length) {
-            const essentialProperties = getEssentialPropertiesForRepresentation(adaptation.Representation[0]);
+            const essentialProperties = getEssentialProperties(adaptation.Representation[0]);
             if (essentialProperties && essentialProperties.some(essentialProperty => Constants.THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
                 return (type === Constants.IMAGE);
             }
@@ -127,6 +128,24 @@ function DashManifestModel() {
         }
 
         return false;
+    }
+
+    function getPreselectionIsTypeOf(preselection, adaptations, type) {
+        if (!preselection) {
+            throw new Error('preselection is not defined');
+        }
+
+        if (!adaptations) {
+            throw new Error('adaptations is not defined');
+        }
+
+        if (!type) {
+            throw new Error('type is not defined');
+        }
+
+        const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+
+        return mainAdaptationSet ? getIsTypeOf(mainAdaptationSet, type) : false;
     }
 
     function getIsFragmented(adaptation) {
@@ -402,6 +421,30 @@ function DashManifestModel() {
         return codec;
     }
 
+    function getCodecForPreselection(preselection, adaptations, addResolutionInfo) {
+        let codec = null;
+        
+        if (preselection && adaptations ) {
+            const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+            let mainAsCodec = getCodec(mainAdaptationSet,0, addResolutionInfo);
+            // we just take the subparameters from the first Representation of the main AdaptationSet
+
+            if (preselection.hasOwnProperty(DashConstants.CODECS)) {
+                let sCodecs = preselection.codecs;                
+                
+                // Since Preselection elements don't get the @mimeType attribute assigned, this
+                // copies the media type from the main adaptationSet but takes the codec from
+                // the preselection.
+                codec = mainAsCodec.replace(/(codecs=")[^"]*(")/, `$1${sCodecs}$2`);
+                logger.info('Preselection has own codecs-attribute: replacing in MainAdaptationSet (was: ' + mainAsCodec + '), new Preselection codec is: ' + codec)
+            } else {
+                codec = mainAsCodec;
+            }
+        }
+        
+        return codec;
+    }
+
     function getMimeType(adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
     }
@@ -476,8 +519,8 @@ function DashManifestModel() {
         protectionElements = protectionElements.concat(periodProtectionElements);
 
         if (period.hasOwnProperty(DashConstants.ADAPTATION_SET) && period[DashConstants.ADAPTATION_SET].length > 0) {
-            period[DashConstants.ADAPTATION_SET].forEach((as) => {
-                const curr = _getContentProtectionFromElement(as);
+            period[DashConstants.ADAPTATION_SET].forEach((adaptation) => {
+                const curr = _getContentProtectionFromElement(adaptation);
                 protectionElements = protectionElements.concat(curr);
             })
         }
@@ -661,28 +704,20 @@ function DashManifestModel() {
         });
     }
 
-    function getEssentialPropertiesForAdaptationSet(adaptation) {
-        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, adaptation);
+    function getEssentialProperties(element) {
+        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, element);
     }
 
     function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.ESSENTIAL_PROPERTY, adaptation);
     }
 
-    function getEssentialPropertiesForRepresentation(realRepresentation) {
-        return _getProperties(DashConstants.ESSENTIAL_PROPERTY, realRepresentation);
-    }
-
-    function getSupplementalPropertiesForAdaptationSet(adaptation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
+    function getSupplementalProperties(element) {
+        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, element);
     }
 
     function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
-    }
-
-    function getSupplementalPropertiesForRepresentation(representation) {
-        return _getProperties(DashConstants.SUPPLEMENTAL_PROPERTY, representation);
     }
 
     function getRepresentationFor(index, adaptation) {
@@ -787,8 +822,8 @@ function DashManifestModel() {
                     voRepresentation.segmentInfoType = DashConstants.BASE_URL;
                 }
 
-                voRepresentation.essentialProperties = getEssentialPropertiesForRepresentation(realRepresentation);
-                voRepresentation.supplementalProperties = getSupplementalPropertiesForRepresentation(realRepresentation);
+                voRepresentation.essentialProperties = getEssentialProperties(realRepresentation);
+                voRepresentation.supplementalProperties = getSupplementalProperties(realRepresentation);
 
                 if (segmentInfo) {
                     if (segmentInfo.hasOwnProperty(DashConstants.INITIALIZATION)) {
@@ -886,6 +921,24 @@ function DashManifestModel() {
         return (periodStart - presentationOffset);
     }
 
+    function _convertType(element) {
+        if (getIsMuxed(element)) {
+            return Constants.MUXED;
+        } else if (getIsAudio(element)) {
+            return Constants.AUDIO;
+        } else if (getIsVideo(element)) {
+            return Constants.VIDEO;
+        } else if (getIsText(element)) {
+            return Constants.TEXT;
+        } else if (getIsImage(element)) {
+            return Constants.IMAGE;
+        } else {
+            logger.warn('Unknown Preselection stream type');
+        }
+
+        return null;
+    }
+
     function getAdaptationsForPeriod(voPeriod) {
         const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
         const voAdaptations = [];
@@ -903,24 +956,89 @@ function DashManifestModel() {
                 voAdaptationSet.index = i;
                 voAdaptationSet.period = voPeriod;
 
-                if (getIsMuxed(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.MUXED;
-                } else if (getIsAudio(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.AUDIO;
-                } else if (getIsVideo(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.VIDEO;
-                } else if (getIsText(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.TEXT;
-                } else if (getIsImage(realAdaptationSet)) {
-                    voAdaptationSet.type = Constants.IMAGE;
-                } else {
-                    logger.warn('Unknown Adaptation stream type');
-                }
+                voAdaptationSet.type = _convertType(realAdaptationSet);
+
                 voAdaptations.push(voAdaptationSet);
             }
         }
 
         return voAdaptations;
+    }
+
+    function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
+        const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+        return preselectionComponentIds.map(c => adaptations.find(adaptation => adaptation.id === c));
+    }
+
+    function getMainAdaptationSetForPreselection(preselection, adaptations) {
+        if (!preselection || !preselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
+        const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+        return adaptations.find(adaptation => adaptation.id === preselectionComponentIds[0]);
+    }
+
+    function getCommonRepresentationForPreselection(preselection, adaptations) {
+        if (!preselection || !Array.isArray(adaptations)) {
+            return undefined;
+        }
+        
+        const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
+        return mainAS.Representation[0];
+    }
+
+    function getPreselectionsForPeriod(voPeriod) {
+        const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
+        const voPreselections = [];
+        let voPreselection,
+            realPreselection,
+            i;
+        
+        if (realPeriod && realPeriod.Preselection) {
+            for (i = 0; i < realPeriod.Preselection.length; i++) {
+                realPreselection = realPeriod.Preselection[i];
+                voPreselection = new Preselection();
+                
+                const preselectionAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
+                let allComponentsAvailable = preselectionAdaptationSets.every(adaptation => !!adaptation);
+
+                // up to now, we only support single-representation preselections, not multi-representation
+                if (allComponentsAvailable && preselectionAdaptationSets.length === 1) {
+                    if (realPreselection.hasOwnProperty(DashConstants.ID)) {
+                        voPreselection.id = realPreselection.id;
+                    }
+                    voPreselection.index = i;
+                    voPreselection.period = voPeriod;
+                    
+                    if (realPreselection.hasOwnProperty(DashConstants.TAG)) {
+                        voPreselection.tag = realPreselection.tag;
+                    }
+    
+                    if (realPreselection.hasOwnProperty(DashConstants.PRESELECTION_COMPONENTS)) {
+                        voPreselection.preselectionComponents = preselectionAdaptationSets;
+                    } else {
+                        logger.warn('Preselection (index: ' + voPreselection.index + ') missing component(s)');
+                    }
+                    
+                    if (realPreselection.hasOwnProperty(DashConstants.ORDER)) {
+                        voPreselection.order = realPreselection.order;
+                    }
+
+                    voPreselection.type = _convertType(preselectionAdaptationSets[0]);
+                    
+                    voPreselections.push(voPreselection);
+                } else {
+                    logger.warn('Preselection removed because we don\'t support multi-representation preselections or not all components available.');
+                }
+            }
+        }
+
+        return voPreselections;
     }
 
     function getRegularPeriods(mpd) {
@@ -1581,6 +1699,7 @@ function DashManifestModel() {
         getBaseURLsFromElement,
         getBitrateListForAdaptation,
         getCodec,
+        getCodecForPreselection,
         getCombinedEssentialPropertiesForAdaptationSet,
         getCombinedSupplementalPropertiesForAdaptationSet,
         getContentProtectionByAdaptation,
@@ -1588,8 +1707,7 @@ function DashManifestModel() {
         getContentProtectionByPeriod,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
-        getEssentialPropertiesForRepresentation,
+        getEssentialProperties,
         getEventStreamForAdaptationSet,
         getEventStreamForRepresentation,
         getEventsForPeriod,
@@ -1603,10 +1721,14 @@ function DashManifestModel() {
         getLabelsForAdaptation,
         getLanguageForAdaptation,
         getLocation,
+        getMainAdaptationSetForPreselection,
+        getCommonRepresentationForPreselection,
         getManifestUpdatePeriod,
         getMimeType,
         getMpd,
         getPatchLocation,
+        getPreselectionIsTypeOf,
+        getPreselectionsForPeriod,
         getProducerReferenceTimesForAdaptation,
         getPublishTime,
         getRealPeriodForIndex,
@@ -1622,8 +1744,7 @@ function DashManifestModel() {
         getServiceDescriptions,
         getSubSegmentAlignment,
         getSuggestedPresentationDelay,
-        getSupplementalPropertiesForAdaptationSet,
-        getSupplementalPropertiesForRepresentation,
+        getSupplementalProperties,
         getUTCTimingSources,
         getViewpointForAdaptation,
         hasProfile,

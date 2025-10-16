@@ -41,6 +41,7 @@ import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
 import Constants from '../streaming/constants/Constants.js';
+import Settings from '../core/Settings.js';
 
 /**
  * @module DashAdapter
@@ -51,6 +52,7 @@ function DashAdapter() {
     let instance,
         dashManifestModel,
         patchManifestModel,
+        settings,
         voPeriods,
         constants,
         cea608parser;
@@ -62,6 +64,7 @@ function DashAdapter() {
     function setup() {
         dashManifestModel = DashManifestModel(context).getInstance();
         patchManifestModel = PatchManifestModel(context).getInstance();
+        settings = Settings(context).getInstance();
         reset();
     }
 
@@ -107,7 +110,6 @@ function DashAdapter() {
         }
 
         const voAdaptations = dashManifestModel.getAdaptationsForPeriod(selectedVoPeriod);
-
         let realAdaptation = getMainAdaptationForType(type, streamInfo);
         if (!realAdaptation) {
             return null;
@@ -132,7 +134,6 @@ function DashAdapter() {
 
     /**
      * Returns the AdaptationSet for a given period index and a given mediaType.
-     * @param {number} periodIndex
      * @param {MediaType} type
      * @param {object} streamInfo
      * @returns {null|object} adaptation
@@ -246,6 +247,21 @@ function DashAdapter() {
             } else if (media) {
                 mediaArr.push(media);
             }
+        }
+
+        if (settings.get().streaming.includePreselectionsInMediainfoArray) {
+            const voPreselections = dashManifestModel.getPreselectionsForPeriod(period);
+            
+            for (i = 0, ln = voPreselections.length; i < ln; i++) {
+                const preselection = voPreselections[i];
+    
+                if (preselection.hasOwnProperty('type') && preselection.type === type) {
+                    media = convertPreselectionToMediaInfo(voPreselections[i]);
+                    if (media) {
+                        mediaArr.push(media);
+                    }
+                }
+            }        
         }
 
         return mediaArr;
@@ -388,26 +404,13 @@ function DashAdapter() {
     }
 
     /**
-     * Return all EssentialProperties of an AdaptationSet
-     * @param {object} adaptationSet
+     * Return all EssentialProperties of an AdaptationSet, Representation or Preselection
+     * @param {object} element
      * @return {array}
      */
-    function getEssentialPropertiesForAdaptationSet(adaptationSet) {
+    function getEssentialProperties(element) {
         try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(adaptationSet);
-        } catch (e) {
-            return [];
-        }
-    }
-
-    /**
-     * Return all EssentialProperties of a Representation
-     * @param {object} representation
-     * @return {array}
-     */
-    function getEssentialPropertiesForRepresentation(representation) {
-        try {
-            return dashManifestModel.getEssentialPropertiesForRepresentation(representation);
+            return dashManifestModel.getEssentialProperties(element);
         } catch (e) {
             return [];
         }
@@ -765,6 +768,18 @@ function DashAdapter() {
     }
 
     /**
+     * Returns the codec for a given adaptation set and a given representation id.
+     * @param {object} preselection
+     * @param {object} adaptations
+     * @returns {String} codec
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getCodecForPreselection(preselection, adaptations) {
+        return dashManifestModel.getCodecForPreselection(preselection, adaptations);
+    }
+
+    /**
      * Returns the framerate of a Representation as number
      * @param representation
      * @returns {number}
@@ -840,6 +855,43 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
+    }
+
+    /**
+     * Checks if the given Preselection is from the given media type
+     * @param {object} preselection
+     * @param {array} adaptations
+     * @param {string} type
+     * @return {boolean}
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getPreselectionIsTypeOf(preselection, adaptations, type) {
+        return dashManifestModel.getPreselectionIsTypeOf(preselection, adaptations, type);
+    }
+
+    /**
+     * returns the main AdaptationSet of a given Preselection 
+     * @param {object} preselection
+     * @param {array} adaptations
+     * @return {object}
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getMainAdaptationSetForPreselection(preselection, adaptations) {
+        return dashManifestModel.getMainAdaptationSetForPreselection(preselection, adaptations);
+    }
+
+    /**
+     * returns common properties in form of a Representation of a given Preselection 
+     * @param {object} preselection
+     * @param {array} adaptations
+     * @return {object}
+     * @memberOf module:DashAdapter
+     * @instance
+     */
+    function getCommonRepresentationForPreselection(preselection, adaptations) {
+        return dashManifestModel.getCommonRepresentationForPreselection(preselection, adaptations);
     }
 
     /**
@@ -1057,6 +1109,39 @@ function DashAdapter() {
         return mediaInfo;
     }
 
+    function convertPreselectionToMediaInfo(preselection) {
+        if (!preselection) {
+            return null;
+        }
+
+        let mediaInfo = new MediaInfo();
+        const realPreselection = preselection.period.mpd.manifest.Period[preselection.period.index].Preselection[preselection.index];
+        const realAdaptation = preselection.period.mpd.manifest.Period[preselection.period.index].AdaptationSet;
+
+        // initialize mediaInfo with properties from main adaptation set
+        const adaptation = dashManifestModel.getAdaptationsForPeriod(preselection.period);
+        const mainAdaptation = dashManifestModel.getMainAdaptationSetForPreselection(realPreselection, adaptation);
+        mediaInfo = convertAdaptationToMediaInfo(mainAdaptation);
+
+        if (mediaInfo) {
+            mediaInfo.isPreselection = true;
+            mediaInfo.tag = preselection.tag;
+            mediaInfo.id = preselection.id;
+            mediaInfo.codec = dashManifestModel.getCodecForPreselection(realPreselection, realAdaptation);
+            mediaInfo.selectionPriority = dashManifestModel.getSelectionPriority(realPreselection);
+            mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realPreselection);
+            mediaInfo.lang = dashManifestModel.getLanguageForAdaptation(realPreselection);
+            mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realPreselection);
+            mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realPreselection);
+            mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForAdaptation(realPreselection);
+            mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realPreselection);
+            mediaInfo.essentialProperties = dashManifestModel.getCombinedEssentialPropertiesForAdaptationSet(realPreselection);
+            mediaInfo.supplementalProperties = dashManifestModel.getCombinedSupplementalPropertiesForAdaptationSet(realPreselection);
+        }
+
+        return mediaInfo;
+    }
+
     function _applyDefaultKeyId(contentProtection) {
         const keyIds = contentProtection.map(cp => cp.cencDefaultKid).filter(kid => kid !== null);
         if (keyIds.length) {
@@ -1228,10 +1313,10 @@ function DashAdapter() {
         getBandwidthForRepresentation,
         getBaseURLsFromElement,
         getCodec,
+        getCodecForPreselection,
         getContentSteering,
         getDuration,
-        getEssentialPropertiesForAdaptationSet,
-        getEssentialPropertiesForRepresentation,
+        getEssentialProperties,
         getEvent,
         getEventsFor,
         getFramerate,
@@ -1243,11 +1328,14 @@ function DashAdapter() {
         getIsTypeOf,
         getLocation,
         getMainAdaptationForType,
+        getMainAdaptationSetForPreselection,
+        getCommonRepresentationForPreselection,
         getManifestUpdatePeriod,
         getMediaInfoForType,
         getMpd,
         getPatchLocation,
         getPeriodById,
+        getPreselectionIsTypeOf,
         getProducerReferenceTimes,
         getPublishTime,
         getRealAdaptation,
