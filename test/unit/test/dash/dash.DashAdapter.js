@@ -64,6 +64,23 @@ const manifest_without_properties = {
     mediaPresentationDuration: 10,
     Period: [{ AdaptationSet: [{ id: 0, mimeType: Constants.VIDEO }] }]
 };
+const manifest_with_preselections = {
+    loadedTime: new Date(),
+    mediaPresentationDuration: 10,
+    Period: [{ 
+        AdaptationSet: [
+            { id: '0', mimeType: Constants.VIDEO },
+            { id: '1', mimeType: Constants.AUDIO, [DashConstants.REPRESENTATION]: [{id: 101, mimeType: Constants.AUDIO, codecs: 'codec1', bandwidth: 128000}] },
+            { id: '2', mimeType: Constants.AUDIO, [DashConstants.REPRESENTATION]: [{id: 102, mimeType: Constants.AUDIO, codecs: 'codec2', bandwidth: 128000}] }
+        ],
+        Preselection: [
+            { id: '10', preselectionComponents: '1'},
+            { id: '11', preselectionComponents: '2', codecs: 'codec3', [DashConstants.ROLE]: [{ schemeIdUri: 'test:scheme', value: 'testvalue' }]},
+            { id: '12', preselectionComponents: '1 2'}
+        ]
+    }]
+
+};
 const manifest_with_essential_properties = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
@@ -694,6 +711,26 @@ describe('DashAdapter', function () {
                     expect(mediaInfoArray[0].essentialProperties).to.be.instanceOf(Array);
                     expect(mediaInfoArray[0].essentialProperties.length).equals(0);
                 });
+
+                it('preselections should be filled', function () {
+                    const mediaInfoArray = dashAdapter.getAllMediaInfoForType({
+                        id: 'defaultId_0',
+                        index: 0
+                    }, Constants.AUDIO, manifest_with_preselections);
+
+                    expect(mediaInfoArray).to.be.instanceOf(Array);
+                    expect(mediaInfoArray.length).equals(4);
+
+                    expect(mediaInfoArray[0].isPreselection).to.be.false;
+                    expect(mediaInfoArray[2].isPreselection).to.be.true;
+
+                    expect(mediaInfoArray[2].codec).equals('audio;codecs="codec1"');
+                    expect(mediaInfoArray[3].codec).equals('audio;codecs="codec3"');
+
+                    expect(mediaInfoArray[3].roles).to.be.instanceOf(Array);
+                    expect(mediaInfoArray[3].roles.length).equals(1);
+                    expect(mediaInfoArray[3].roles[0].value).equals('testvalue');
+                })
 
                 it('essential properties should be filled if correctly defined', function () {
                     const mediaInfoArray = dashAdapter.getAllMediaInfoForType({

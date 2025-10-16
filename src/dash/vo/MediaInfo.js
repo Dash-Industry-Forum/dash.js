@@ -45,6 +45,7 @@ class MediaInfo {
         this.index = null;
         this.isEmbedded = null;
         this.isFragmented = null;
+        this.isPreselection = false;
         this.isText = false;
         this.labels = null;
         this.lang = null;

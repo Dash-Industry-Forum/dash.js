@@ -368,7 +368,6 @@ function MediaPlayer() {
             });
 
             adapter.setConfig({
-                settings,
                 constants: Constants,
                 cea608parser: new Cta608Parser(),
                 errHandler: errHandler,

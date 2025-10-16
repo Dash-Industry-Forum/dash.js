@@ -160,6 +160,7 @@ a:hover {
     width: 100%;
     height: auto;
     margin: auto;
+    aspect-ratio: 16 / 9;
 }
 
 .col-md-9 {

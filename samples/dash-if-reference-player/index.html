@@ -360,6 +360,41 @@
                             Add Request-Headers
                         </button>
 
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpTimeout">
+
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                            <input type="checkbox" ng-model="drmPlayready.isCustomRobustness">
+                            Use Custom Robustness
+                        </label>
+
+                        <label class="options-label">Audio Robustness</label>
+                        <select name="playreadyAudioRobustness" id="playreadyAudioRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness"
+                        ng-init="drmPlayready.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness">
+
+                        <label class="options-label">Video Robustness</label>
+                        <select name="playreadyVideoRobustness" id="playreadyVideoRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness"
+                        ng-init="drmPlayready.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness">
+
                         <!-- Header Dialogue Window Content -->
                         <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
                             <div class="requestHeaderDialogueContent">
@@ -423,6 +458,46 @@
                                 ng-click="openDialogue('widevine')">
                             Add Request-Headers
                         </button>
+
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpTimeout">
+
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                            <input type="checkbox" ng-model="drmWidevine.isCustomRobustness">
+                            Use Custom Robustness
+                        </label>
+
+                        <label class="options-label">Audio Robustness</label>
+                        <select name="widevineAudioRobustness" id="widevineAudioRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness"
+                        ng-init="drmWidevine.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness">
+
+                        <label class="options-label">Video Robustness</label>
+                        <select name="widevineVideoRobustness" id="widevineVideoRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness"
+                        ng-init="drmWidevine.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness">
 
                         <!-- Header Dialogue Window Content -->
                         <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
@@ -496,6 +571,12 @@
                                 ng-click="openDialogue('additionalClearkeys')">
                             Add additional clearkeys
                         </button>
+
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.httpTimeout">
 
                         <!-- KID=KEY Dialogue Window Content -->
                         <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">

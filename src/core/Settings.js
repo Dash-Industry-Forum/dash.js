@@ -35,6 +35,7 @@ import Constants from '../streaming/constants/Constants.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
 import Events from './events/Events.js';
+import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -103,6 +104,7 @@ import Events from './events/Events.js';
  *            },
  *            protection: {
  *                keepProtectionMediaKeys: false,
+ *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
  *                ignoreKeyStatuses: false
@@ -188,6 +190,8 @@ import Events from './events/Events.js';
  *                audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
  *                video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  *            },
+ *            includePreselectionsInMediainfoArray: true,
+ *            includePreselectionsForInitialTrackSelection: false,
  *            ignoreSelectionPriority: false,
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
@@ -693,8 +697,11 @@ import Events from './events/Events.js';
  * @typedef {Object} Protection
  * @property {boolean} [keepProtectionMediaKeys=false]
  * Set the value for the ProtectionController and MediaKeys life cycle.
- *
  * If true, the ProtectionController and then created MediaKeys and MediaKeySessions will be preserved during the MediaPlayer lifetime.
+ *
+ * @property {number} [keepProtectionMediaKeysMaximumOpenSessions=-1]
+ * Maximum number of open MediaKeySessions, when keepProtectionMediaKeys is enabled. If set, dash.js will close the oldest sessions when the limit is exceeded. -1 means unlimited.
+ *
  * @property {boolean} [ignoreEmeEncryptedEvent=false]
  * If set to true the player will ignore "encrypted" and "needkey" events thrown by the EME.
  *
@@ -1017,6 +1024,12 @@ import Events from './events/Events.js';
  * - Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
  * Do not replace existing segments in the buffer
  *
+ * @property {} [includePreselectionsInMediainfoArray: true]
+ * provides the option to include Preselections in the MediaInfo object
+ *
+ * @property {} [includePreselectionsForInitialTrackSelection: false]
+ * provides the option to include Preselections for initial track selection
+ *
  * @property {} [ignoreSelectionPriority: false]
  * provides the option to disregard any signalled selectionPriority attribute. If disabled and if no initial media settings are set, track selection is accomplished as defined by selectionModeForInitialTrack.
  *
@@ -1025,7 +1038,7 @@ import Events from './events/Events.js';
  *
  * @property {} [assumeDefaultRoleAsMain: true]
  * when no Role descriptor is present, assume main per default
- * 
+ *
  * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
@@ -1160,6 +1173,7 @@ function Settings() {
             },
             protection: {
                 keepProtectionMediaKeys: false,
+                keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
                 ignoreKeyStatuses: false
@@ -1257,6 +1271,8 @@ function Settings() {
                 audio: Constants.TRACK_SWITCH_MODE_ALWAYS_REPLACE,
                 video: Constants.TRACK_SWITCH_MODE_NEVER_REPLACE
             },
+            includePreselectionsInMediainfoArray: true,
+            includePreselectionsForInitialTrackSelection: false,
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
@@ -1294,13 +1310,16 @@ function Settings() {
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 rules: {
                     throughputRule: {
-                        active: true
+                        active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     bolaRule: {
-                        active: true
+                        active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     insufficientBufferRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             throughputSafetyFactor: 0.7,
                             segmentIgnoreCount: 2
@@ -1308,6 +1327,7 @@ function Settings() {
                     },
                     switchHistoryRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             sampleSize: 8,
                             switchPercentageThreshold: 0.075
@@ -1315,6 +1335,7 @@ function Settings() {
                     },
                     droppedFramesRule: {
                         active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             minimumSampleSize: 375,
                             droppedFramesPercentageThreshold: 0.15
@@ -1322,6 +1343,7 @@ function Settings() {
                     },
                     abandonRequestsRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             abandonDurationMultiplier: 1.8,
                             minSegmentDownloadTimeThresholdInMs: 500,
@@ -1329,10 +1351,12 @@ function Settings() {
                         }
                     },
                     l2ARule: {
-                        active: false
+                        active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     loLPRule: {
-                        active: false
+                        active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     }
                 },
                 throughput: {
