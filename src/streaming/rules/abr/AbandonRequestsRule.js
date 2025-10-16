@@ -118,6 +118,7 @@ function AbandonRequestsRule(config) {
 
             if (remainingBytesToDownload > totalBytesForOptimalRepresentation) {
                 switchRequest.representation = optimalRepresentationForBitrate;
+                switchRequest.priority = settings.get().streaming.abr.abandonRequestsRule.priority;
                 switchRequest.reason = {
                     throughputInKbit,
                     message: `[AbandonRequestRule][${mediaType} is asking to abandon and switch to quality to ${optimalRepresentationForBitrate.absoluteIndex}. The measured bandwidth was ${throughputInKbit} kbit/s`

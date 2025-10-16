@@ -107,6 +107,7 @@ function InsufficientBufferRule(config) {
             }
 
             switchRequest.representation = abrController.getOptimalRepresentationForBitrate(mediaInfo, bitrate, true);
+            switchRequest.priority = settings.get().streaming.abr.rules.insufficientBufferRule.priority;
             switchRequest.reason = {
                 message: '[InsufficientBufferRule]: Limiting maximum bitrate to avoid a buffer underrun.',
                 bitrate
