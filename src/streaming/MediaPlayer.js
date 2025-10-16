@@ -2574,12 +2574,13 @@ function MediaPlayer() {
 
     function _createManifestLoader() {
         return ManifestLoader(context).create({
-            debug: debug,
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModel,
-            mssHandler: mssHandler,
-            settings: settings
+            debug,
+            errHandler,
+            dashMetrics,
+            mediaPlayerModel,
+            mssHandler,
+            manifestModel,
+            settings
         });
     }
 

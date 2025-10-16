@@ -40,6 +40,7 @@ import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
 import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
+import {utf8ArrayToStr} from '@svta/common-media-library/utils/utf8ArrayToStr'
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
 
@@ -508,8 +509,11 @@ function DashAdapter() {
             event.calculatedPresentationTime = calculatedPresentationTime;
             event.messageData = messageData;
             event.presentationTimeDelta = presentationTimeDelta;
-            event.parsedMessageData = (schemeIdUri === Constants.ID3_SCHEME_ID_URI) ? getId3Frames(messageData) : null;
-
+            if (schemeIdUri === Constants.ID3_SCHEME_ID_URI) {
+                event.parsedMessageData = getId3Frames(messageData);
+            } else {
+                event.parsedMessageData = (messageData instanceof Uint8Array) ? utf8ArrayToStr(messageData) : null;
+            }
             return event;
         } catch (e) {
             return null;
