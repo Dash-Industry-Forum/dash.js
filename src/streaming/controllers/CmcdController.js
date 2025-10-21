@@ -480,10 +480,6 @@ function CmcdController() {
             targetSettings.enabledKeys :
             (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
 
-        // if (enabledKeys?.length === 0){
-        //     enabledKeys = Constants.CMCD_KEYS
-        // }
-
         return {
             reportingMode: targetSettings ? Constants.CMCD_REPORTING_MODE.EVENT : Constants.CMCD_REPORTING_MODE.REQUEST,
             version: settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION,
