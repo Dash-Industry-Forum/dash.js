@@ -720,6 +720,13 @@ function AbrController() {
         if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties || currentRepresentation.segmentSequenceProperties.length <= 0) {
             return false;
         }
+
+        // We do not allow quality switches at non segment boundaries in case Adaptation Set Switching is available in the MPD.
+        // This is because we can not control the switching process at this point, and the ABR rules might select a Representation that has a different SAPType + Cadence than the current Representation.
+        if (currentRepresentation && currentRepresentation.mediaInfo && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds.length > 0) {
+            return false;
+        }
+
         const segmentSequencePropertiesWithTargetSapType = currentRepresentation.segmentSequenceProperties.filter((ssp) => {
             return !isNaN(ssp.sapType) && ssp.sapType <= 1;
         })
