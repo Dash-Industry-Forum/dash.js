@@ -8,6 +8,7 @@ import DomStorageMock from '../../mocks/DomStorageMock.js';
 import CustomParametersModel from '../../../../src/streaming/models/CustomParametersModel.js';
 
 import {expect} from 'chai';
+
 const context = {};
 const eventBus = EventBus(context).getInstance();
 const objectUtils = ObjectUtils(context).getInstance();
@@ -421,7 +422,7 @@ describe('MediaController', function () {
             lang: 'en',
             viewpoint: null,
             roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'alternate' }],
-            accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description'}],
+            accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }],
             audioChannelConfiguration: [{ schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6' }],
             selectionPriority: 3
         };
@@ -487,16 +488,16 @@ describe('MediaController', function () {
             mediaController.addTrack(frTrack);
             mediaController.addTrack(enTrack);
             mediaController.addTrack(enADTrack);
-            
+
             let trackList = mediaController.getTracksFor(trackType, streamInfo.id);
             expect(trackList).to.have.lengthOf(5);
-            
+
             mediaController.setInitialSettings(trackType, {
                 id: 'esTrack',
                 lang: 'en'
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
-            
+
             let currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
             expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true;
         });
@@ -643,7 +644,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'en',
-                accessibility: {schemeIdUri:'urn:mpeg:dash:role:2011', value:'description'}
+                accessibility: { schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -670,7 +671,7 @@ describe('MediaController', function () {
             // call to setInitialMediaSettingsForType
             mediaController.setInitialSettings(trackType, {
                 lang: 'es',
-                accessibility: [{schemeIdUri:'urn:mpeg:dash:role:2011',value:'description'}]
+                accessibility: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'description' }]
             });
             mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
 
@@ -820,10 +821,10 @@ describe('MediaController', function () {
             });
         })
 
-        describe('roleMain flag' ,function () {
+        describe('roleMain flag', function () {
             beforeEach(function () {
-                settings.update({ 
-                    streaming: { 
+                settings.update({
+                    streaming: {
                         selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
                         prioritizeRoleMain: true
                     }
@@ -833,15 +834,24 @@ describe('MediaController', function () {
             it('should select track with role set to main if no selectionPriority is provided', function () {
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    }
                 );
             });
 
             it('should select track with role set to main if other tracks have no role', function () {
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] },
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }]
+                    },
                     { bitrateList: [{ bandwidth: 2000 }], roles: [] }
                 );
             });
@@ -849,8 +859,17 @@ describe('MediaController', function () {
             it('should select track with role set to main with multiple role descriptors', function () {
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' },{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        roles: [{
+                            schemeIdUri: 'urn:mpeg:dash:role:2011',
+                            value: 'main'
+                        }, { schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    }
                 );
             });
 
@@ -858,19 +877,25 @@ describe('MediaController', function () {
                 testSelectInitialTrack(
                     'video',
                     { bitrateList: [{ bandwidth: 1000 }], roles: [] },
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] }
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    }
                 );
             });
 
             it('should not select track with no role if other tracks have role not main, when disabled in Settings', function () {
-                settings.update({ 
-                    streaming: { 
+                settings.update({
+                    streaming: {
                         assumeDefaultRoleAsMain: false
                     }
                 });
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    },
                     { bitrateList: [{ bandwidth: 1000 }], roles: [] }
                 );
             });
@@ -878,21 +903,37 @@ describe('MediaController', function () {
             it('should select track based on selectionPriority, if provided, and disregard role main', function () {
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }], selectionPriority: 2 },
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }], selectionPriority: 1 }
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }],
+                        selectionPriority: 2
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }],
+                        selectionPriority: 1
+                    }
                 );
             });
 
             it('should select track based on selectionModeForInitialTrack if roleMain flag is false', function () {
-                settings.update({ streaming: { 
-                    prioritizeRoleMain: false, 
-                    selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE } 
+                settings.update({
+                    streaming: {
+                        prioritizeRoleMain: false,
+                        selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE
+                    }
                 });
-                
+
                 testSelectInitialTrack(
                     'video',
-                    { bitrateList: [{ bandwidth: 2000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }] },
-                    { bitrateList: [{ bandwidth: 1000 }], roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }] }
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'dub' }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        roles: [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'main' }]
+                    }
                 );
             });
         })
@@ -1028,7 +1069,13 @@ describe('MediaController', function () {
             it('should not prioritize audio tracks where audioChannelConfig is absent', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
+                    {
+                        bitrateList: [{ bandwidth: 128 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '2'
+                        }]
+                    },
                     { bitrateList: [{ bandwidth: 96 }] }
                 );
             });
@@ -1036,16 +1083,40 @@ describe('MediaController', function () {
             it('should select audio track with lowest bitrate per full channels (equal channel config)', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { bitrateList: [{ bandwidth: 96 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] },
-                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                    {
+                        bitrateList: [{ bandwidth: 96 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '2'
+                        }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 128 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '2'
+                        }]
+                    }
                 );
             });
 
             it('should select audio track with lowest bitrate per full channels (different channel config)', function () {
                 testSelectInitialTrack(
                     'audio',
-                    { bitrateList: [{ bandwidth: 2000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '6'}] },
-                    { bitrateList: [{ bandwidth: 1000 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                    {
+                        bitrateList: [{ bandwidth: 2000 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '6'
+                        }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 1000 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '2'
+                        }]
+                    }
                 );
             });
 
@@ -1054,10 +1125,22 @@ describe('MediaController', function () {
                     'audio',
                     {
                         bitrateList: [{ bandwidth: 768 }],
-                        audioChannelConfiguration: [{schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011', value: 'F8016'}],
-                        supplementalProperties: [{schemeIdUri: 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018', value: 'JOC'}]
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'tag:dolby.com,2014:dash:audio_channel_configuration:2011',
+                            value: 'F8016'
+                        }],
+                        supplementalProperties: [{
+                            schemeIdUri: 'tag:dolby.com,2018:dash:EC3_ExtensionType:2018',
+                            value: 'JOC'
+                        }]
                     },
-                    { bitrateList: [{ bandwidth: 128 }], audioChannelConfiguration: [{schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration', value: '2'}] }
+                    {
+                        bitrateList: [{ bandwidth: 128 }],
+                        audioChannelConfiguration: [{
+                            schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                            value: '2'
+                        }]
+                    }
                 );
             });
 
@@ -1097,6 +1180,81 @@ describe('MediaController', function () {
                 );
             });
         });
+
+        describe('"lowest startup delay" mode', function () {
+            beforeEach(function () {
+                settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY } });
+            });
+
+            it('should select track with highest priority even if SSP track is present', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }], selectionPriority: 2 },
+                    {
+                        bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }],
+                        selectionPriority: 1,
+                        segmentSequenceProperties: [{
+                            cadence: 1,
+                            sapType: 0
+                        }]
+                    }
+                );
+            });
+
+            it('should select track with SSP track', function () {
+                testSelectInitialTrack(
+                    'video',
+                    {
+                        bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }],
+                        segmentSequenceProperties: [{
+                            cadence: 1,
+                            sapType: 0
+                        }]
+                    },
+                    { bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }] },
+                );
+            });
+
+            it('should select right track if both tracks contain SSP but only one has the right cadence', function () {
+                testSelectInitialTrack(
+                    'video',
+                    {
+                        bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }],
+                        segmentSequenceProperties: [{
+                            cadence: 1,
+                            sapType: 0
+                        }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }],
+                        segmentSequenceProperties: [{
+                            cadence: 4,
+                            sapType: 0
+                        }]
+                    },
+                );
+            });
+
+            it('should select the track with the best compression efficiency if both tracks have the right SSP information', function () {
+                testSelectInitialTrack(
+                    'video',
+                    {
+                        bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }],
+                        segmentSequenceProperties: [{
+                            cadence: 1,
+                            sapType: 0
+                        }]
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 2000, width: 1920, height: 1280 }],
+                        segmentSequenceProperties: [{
+                            cadence: 1,
+                            sapType: 0
+                        }]
+                    },
+                );
+            });
+        })
 
         describe('custom initial track selection function', function () {
             beforeEach(function () {

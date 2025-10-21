@@ -195,7 +195,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            ignoreSelectionPriority: false,
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
- *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
+ *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -1027,7 +1027,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {} [assumeDefaultRoleAsMain: true]
  * when no Role descriptor is present, assume main per default
  *
- * @property {string} [selectionModeForInitialTrack="highestEfficiency"]
+ * @property {string} [selectionModeForInitialTrack="lowestStartupDelay"]
  * Sets the selection mode for the initial track. This mode defines how the initial track will be selected if no initial media settings are set. If initial media settings are set this parameter will be ignored. Available options are:
  *
  * Possible values
@@ -1263,7 +1263,7 @@ function Settings() {
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
-            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_LATENCY,
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,

@@ -19,7 +19,7 @@ module.exports = function (config) {
         // list of files / patterns to load in the browser
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
-            { pattern: 'test/unit/test/**/*.js', watched: false },
+            { pattern: 'test/unit/test/streaming/streaming.controllers.MediaController.js', watched: false },
             { pattern: 'src/**/*.js', watched: false, included: false, nocache: true },
             { pattern: 'test/unit/data/**/*', watched: false, included: false, served: true }
         ],

@@ -188,11 +188,11 @@ export default {
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
 
     /**
-     *  @constant {string} TRACK_SELECTION_MODE_LOWEST_STARTUP_LATENCY makes the player select the track that contains partial segments that start with SAP type 0 or 1.
+     *  @constant {string} TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY makes the player select the track that contains partial segments that start with SAP type 0 or 1.
      *  @memberof Constants#
      *  @static
      */
-    TRACK_SELECTION_MODE_LOWEST_STARTUP_LATENCY: 'lowestStartupLatency',
+    TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY: 'lowestStartupDelay',
 
     /**
      *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.

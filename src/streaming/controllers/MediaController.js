@@ -743,8 +743,8 @@ function MediaController() {
                     case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
                         tmpArr = _trackSelectionModeWidestRange(tmpArr);
                         break;
-                    case Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_LATENCY:
-                        tmpArr = _trackSelectionModeLowestStartupLatency(tmpArr);
+                    case Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY:
+                        tmpArr = _trackSelectionModeLowestStartupDelay(tmpArr);
                         break;
                     default:
                         logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
@@ -921,7 +921,7 @@ function MediaController() {
         return tmpArr;
     }
 
-    function _trackSelectionModeLowestStartupLatency(tracks) {
+    function _trackSelectionModeLowestStartupDelay(tracks) {
         let tmpArr = _getTracksWithPartialIdrSegments(tracks);
         const targetTracks = tmpArr.length > 0 ? tmpArr : tracks;
 
