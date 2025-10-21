@@ -720,12 +720,29 @@ function DashManifestModel() {
         return _getCombinedPropertiesForAdaptationSet(DashConstants.SUPPLEMENTAL_PROPERTY, adaptation);
     }
 
-    function _getSegmentSequenceProperties(realRepresentation) {
-        if (!realRepresentation || !realRepresentation.hasOwnProperty(DashConstants.SEGMENT_SEQUENCE_PROPERTIES) || !realRepresentation[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].length) {
+    function getSegmentSequencePropertiesForAdaptationSet(adaptation) {
+        const segmentSequenceProperties = [];
+
+        if (!adaptation) {
+            return segmentSequenceProperties;
+        }
+
+        segmentSequenceProperties.push(..._getSegmentSequencePropertiesForElement(adaptation));
+        if (adaptation.Representation && adaptation.Representation.length) {
+            adaptation.Representation.forEach((representation) => {
+                segmentSequenceProperties.push(..._getSegmentSequencePropertiesForElement(representation));
+            })
+        }
+
+        return segmentSequenceProperties;
+    }
+
+    function _getSegmentSequencePropertiesForElement(element) {
+        if (!element || !element.hasOwnProperty(DashConstants.SEGMENT_SEQUENCE_PROPERTIES) || !element[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].length) {
             return [];
         }
 
-        return realRepresentation[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].map((property) => {
+        return element[DashConstants.SEGMENT_SEQUENCE_PROPERTIES].map((property) => {
             const segmentSequenceProperties = new SegmentSequenceProperties(property);
             segmentSequenceProperties.init(property);
 
@@ -828,7 +845,7 @@ function DashManifestModel() {
         }
         voRepresentation.essentialProperties = getEssentialProperties(realRepresentation);
         voRepresentation.supplementalProperties = getSupplementalProperties(realRepresentation);
-        voRepresentation.segmentSequenceProperties = _getSegmentSequenceProperties(realRepresentation);
+        voRepresentation.segmentSequenceProperties = _getSegmentSequencePropertiesForElement(realRepresentation);
         voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, index];
     }
 
@@ -1726,6 +1743,7 @@ function DashManifestModel() {
         getRepresentationsForAdaptation,
         getRolesForAdaptation,
         getSegmentAlignment,
+        getSegmentSequencePropertiesForAdaptationSet,
         getSelectionPriority,
         getServiceDescriptions,
         getSubSegmentAlignment,

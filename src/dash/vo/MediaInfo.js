@@ -54,6 +54,7 @@ class MediaInfo {
         this.representationCount = 0;
         this.roles = null;
         this.segmentAlignment = false;
+        this.segmentSequenceProperties = [];
         this.selectionPriority = 1;
         this.streamInfo = null;
         this.subSegmentAlignment = false;

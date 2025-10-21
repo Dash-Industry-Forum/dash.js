@@ -394,10 +394,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * If you experience unexpected seeking triggered by BufferController, you can try setting this value to false.
 
- * @property {boolean} [fastSwitchEnabled=true]
+ * @property {boolean} [fastSwitchEnabled=null]
  * When enabled, after an ABR up-switch in quality, instead of requesting and appending the next fragment at the end of the current buffer range it is requested and appended closer to the current time.
  *
  * When enabled, The maximum time to render a higher quality is current time + (1.5 * fragment duration).
+ *
+ * If this value is set to null we will automatically enable fast switches for non low-latency playback
  *
  * Note, When ABR down-switch is detected, we appended the lower quality at the end of the buffer range to preserve the
  * higher quality media for as long as possible.
@@ -1261,7 +1263,7 @@ function Settings() {
             ignoreSelectionPriority: false,
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
-            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY,
+            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_LATENCY,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,

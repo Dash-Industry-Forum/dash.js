@@ -133,8 +133,8 @@ describe('DashManifestModel', function () {
         it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
             const rolesArray = dashManifestModel.getRolesForAdaptation({
                 Role: [
-                    {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:'Main'},
-                    {schemeIdUri:'my.own.scheme', value:'Main'}]
+                    { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' },
+                    { schemeIdUri: 'my.own.scheme', value: 'Main' }]
             });
 
             expect(rolesArray).to.be.instanceOf(Array);
@@ -1597,13 +1597,90 @@ describe('DashManifestModel', function () {
             })
 
             it('Should parse single integer', () => {
-                const framerate = dashManifestModel.getFramerate({frameRate: '24'});
+                const framerate = dashManifestModel.getFramerate({ frameRate: '24' });
                 expect(framerate).to.be.equal(24);
             })
 
             it('Should parse two separated Integers', () => {
-                const framerate = dashManifestModel.getFramerate({frameRate: '48/2'});
+                const framerate = dashManifestModel.getFramerate({ frameRate: '48/2' });
                 expect(framerate).to.be.equal(24);
+            })
+        })
+
+        describe('getSegmentSequencePropertiesForAdaptationSet()', () => {
+
+            it('should return empty object if no manifest is given', () => {
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet()
+                expect(segmentSequenceProperties).to.be.empty;
+            })
+
+            it('should return SSP for AdaptationSet', () => {
+                const adaptationSet = {
+                    SegmentSequenceProperties: [
+                        {
+                            cadence: 5,
+                            sapType: 3,
+                            event: false,
+                            alignment: 'someAlignment'
+                        }
+                    ]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(1);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
+            })
+
+            it('should return SSP for Representations', () => {
+                const adaptationSet = {
+                    Representation: [{
+                        SegmentSequenceProperties: [
+                            {
+                                cadence: 5,
+                                sapType: 3,
+                                event: false,
+                                alignment: 'someAlignment'
+                            }
+                        ]
+                    }]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(1);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
+            })
+
+            it('should return SSP for Adaptation Set and Representations', () => {
+                const adaptationSet = {
+                    SegmentSequenceProperties: [
+                        {
+                            cadence: 5,
+                            sapType: 3,
+                            event: false,
+                            alignment: 'someAlignment'
+                        }
+                    ],
+                    Representation: [{
+                        SegmentSequenceProperties: [
+                            {
+                                cadence: 5,
+                                sapType: 3,
+                                event: false,
+                                alignment: 'someAlignment'
+                            }
+                        ]
+                    }]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(2);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
             })
         })
     });
