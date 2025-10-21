@@ -1088,6 +1088,14 @@
                         Audio
                     </a>
                     </li>
+                    <li><a href="#playbackStatsTab" role="tab" data-toggle="tab">
+                        Playback
+                    </a>
+                    </li>
+                    <li><a href="#mpdStatsTab" role="tab" data-toggle="tab">
+                        MPD
+                    </a>
+                    </li>
                 </ul>
 
                 <!-- Tab panes -->
@@ -1300,6 +1308,36 @@
                                 <label class="text-primary" for="audioPlaybackRateCB" data-toggle="tooltip"
                                        data-placement="top"
                                        title="Playback Rate">Playback Rate:</label> {{audioPlaybackRate}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="playbackStatsTab">
+                        <div class="panel-body panel-stats">
+                            <!-- Playback STATS ITEMS-->
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Active Period">Active Period ID:</label> {{activePeriod}}
+                            </div>
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Buffering Period">Buffering Period ID:</label> {{bufferingPeriod}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="mpdStatsTab">
+                        <div class="panel-body panel-stats">
+                            <!-- MPD STATS ITEMS-->
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="MPD Type">Type:</label> {{mpdType}}
+                            </div>
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The number of periods signaled in the MPD">Number of periods :</label> {{numberOfPeriods}}
                             </div>
                         </div>
                     </div>

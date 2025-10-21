@@ -294,6 +294,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioLiveLatency = 0;
     $scope.audioPlaybackRate = 1.00;
 
+    $scope.activePeriod = '';
+    $scope.bufferingPeriod = '';
+
+    $scope.mpdType = '';
+    $scope.numberOfPeriods = 0;
+
     // Starting Options
     $scope.autoPlaySelected = true;
     $scope.autoLoadSelected = false;
@@ -434,6 +440,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) {
         $scope.isDynamic = e.data.type === 'dynamic';
+        if (e.data.Period) {
+            $scope.numberOfPeriods = e.data.Period.length;
+        }
+        if (e.data.type) {
+            $scope.mpdType = e.data.type;
+        }
     }, $scope);
 
 
@@ -450,11 +462,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
+
+        if (e.currentRepresentation && e.currentRepresentation.adaptation && e.currentRepresentation.adaptation.period) {
+            $scope.bufferingPeriod = e.currentRepresentation.adaptation.period.id;
+        }
     }, $scope);
 
 
     $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
         $scope.currentStreamInfo = e.toStreamInfo;
+        $scope.activePeriod = e.toStreamInfo.id;
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
@@ -1343,11 +1360,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
 
-                        if(input.audioRobustness){
+                        if (input.audioRobustness) {
                             protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
                         }
 
-                        if(input.videoRobustness){
+                        if (input.videoRobustness) {
                             protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
                         }
                     } else {
@@ -1391,11 +1408,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                     }
 
-                    if(input.audioRobustness){
+                    if (input.audioRobustness) {
                         protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
                     }
 
-                    if(input.videoRobustness){
+                    if (input.videoRobustness) {
                         protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
                     }
                 }
@@ -2039,8 +2056,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if (value === 'null') typedValue = null;
         else if (value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) :
-            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
-                typedValue = value);
+                (floatRegEx.test(value) ? typedValue = parseFloat(value) :
+                    typedValue = value);
 
         return typedValue;
     }
