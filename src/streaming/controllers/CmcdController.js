@@ -235,9 +235,8 @@ function CmcdController() {
         }
 
         let cmcdData = cmcdModel.triggerCmcdEventMode(event);
-
         if (event == 'rr') {
-            cmcdData = {...cmcdData, ...response.request.cmcd}         
+            cmcdData = {...cmcdData, ...response.request.cmcd}
             cmcdData = _addCmcdResponseReceivedData(response, cmcdData);
         }
         
@@ -486,8 +485,7 @@ function CmcdController() {
         // }
 
         return {
-            // reportingMode: targetSettings ? Constants.CMCD_REPORTING_MODE.EVENT : Constants.CMCD_REPORTING_MODE.REQUEST,
-            reportingMode: targetSettings?.cmcdMode,
+            reportingMode: targetSettings ? Constants.CMCD_REPORTING_MODE.EVENT : Constants.CMCD_REPORTING_MODE.REQUEST,
             version: settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION,
             filter: enabledKeys ? (key) => enabledKeys.includes(key) : undefined,
         }
