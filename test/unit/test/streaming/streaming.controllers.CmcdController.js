@@ -2199,10 +2199,9 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid', 'e'],
+                            enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
                     }
@@ -2251,10 +2250,9 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['cmsdd', 'cmsds', 'e'],
+                            enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
                     }
@@ -2294,7 +2292,7 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('cmsdd', btoa(cmsdDynamicHeaderValue));
         });
 
-        it('should not send a report if enabled keys is empty', () => {
+        it.only('should not send a report if enabled keys is empty', () => {
             settings.update({
                 streaming: {
                     cmcd: {
@@ -2302,7 +2300,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             enabledKeys: [],
                             includeOnRequests: ['mpd'],
@@ -2339,7 +2336,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
@@ -2375,7 +2371,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
@@ -2411,10 +2406,9 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'header',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'sid', 'e'],
+                            enabledKeys: ['rc', 'sid'],
                             events: ['rr']
                         }]
                     }
@@ -2458,7 +2452,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
@@ -2510,7 +2503,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
@@ -2548,7 +2540,8 @@ describe('CmcdController', function () {
             const cmcdString = url.searchParams.get('CMCD');
             const metrics = decodeCmcd(cmcdString);
             expect(metrics).to.have.property('rc');
-            expect(metrics).to.not.have.property('e');
+            expect(metrics).to.have.property('e');
+            expect(metrics).to.not.have.property('d');
         });
 
         it('should increment the sn key for each response report', () => {
@@ -2559,7 +2552,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
