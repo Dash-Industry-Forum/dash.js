@@ -783,8 +783,9 @@ describe('MediaController', function () {
     describe('Initial Track Selection', function () {
 
         function testSelectInitialTrack(type, expectedTrack, otherTrack) {
-            const tracks = [expectedTrack, otherTrack].map(function (track) {
+            const tracks = [expectedTrack, otherTrack].map(function (track, index) {
                 return {
+                    id: index,
                     type: type,
                     bitrateList: track.bitrateList,
                     representationCount: track.bitrateList.length,
@@ -796,6 +797,7 @@ describe('MediaController', function () {
             });
             const selection = mediaController.selectInitialTrack(type, tracks);
             expect(objectUtils.areEqual(selection.bitrateList, expectedTrack.bitrateList)).to.be.true;
+            expect(selection.id).to.be.equal(0);
         }
 
         describe('selectionPriority flag', function () {
@@ -1184,6 +1186,14 @@ describe('MediaController', function () {
         describe('"lowest startup delay" mode', function () {
             beforeEach(function () {
                 settings.update({ streaming: { selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY } });
+            });
+
+            it('should select first track if both tracks are identical', function () {
+                testSelectInitialTrack(
+                    'video',
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }] },
+                    { bitrateList: [{ bandwidth: 1000, width: 1920, height: 1280 }] }
+                );
             });
 
             it('should select track with highest priority even if SSP track is present', function () {

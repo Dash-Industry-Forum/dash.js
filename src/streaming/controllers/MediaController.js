@@ -667,6 +667,9 @@ function MediaController() {
 
     function _getTracksWithPartialIdrSegments(trackArr) {
         return trackArr.filter((track) => {
+            if (!track.segmentSequenceProperties || track.segmentSequenceProperties.length === 0) {
+                return false;
+            }
             return track.segmentSequenceProperties.some((ssp) => {
                 return ssp.cadence === 1 && (ssp.sapType === 0 || ssp.sapType === 1);
             })
@@ -915,7 +918,7 @@ function MediaController() {
         let tmpArr = getTracksWithHighestEfficiency(tracks);
 
         if (tmpArr.length > 1) {
-            tmpArr = _trackSelectionModeHighestEfficiency(tmpArr);
+            tmpArr = getTracksWithHighestBitrate(tmpArr);
         }
 
         return tmpArr;
