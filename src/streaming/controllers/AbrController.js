@@ -708,7 +708,7 @@ function AbrController() {
             return true
         }
 
-        // For partial segments without SegmentSequenceProperties we can only switch if we are at the end of a segment sequence
+        // For partial segments we allow switching at the end of a segment sequence
         if (lastSegment.replacementSubNumber === (lastSegment.totalNumberOfPartialSegments - 1)) {
             return true;
         }
