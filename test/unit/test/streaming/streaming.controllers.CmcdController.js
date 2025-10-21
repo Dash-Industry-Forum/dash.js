@@ -2202,7 +2202,8 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid']
+                            enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid', 'e'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2253,7 +2254,8 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['cmsdd', 'cmsds']
+                            enabledKeys: ['cmsdd', 'cmsds', 'e'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2303,7 +2305,8 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'query',
                             enabledKeys: [],
-                            includeOnRequests: ['mpd']
+                            includeOnRequests: ['mpd'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2338,7 +2341,8 @@ describe('CmcdController', function () {
                             enabled: false,
                             cmcdMode: 'response',
                             mode: 'query',
-                            includeOnRequests: ['segment']
+                            includeOnRequests: ['segment'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2373,7 +2377,8 @@ describe('CmcdController', function () {
                             enabled: true,
                             cmcdMode: 'response',
                             mode: 'query',
-                            includeOnRequests: ['segment']
+                            includeOnRequests: ['segment'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2409,7 +2414,8 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'header',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'sid']
+                            enabledKeys: ['rc', 'sid', 'e'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2455,6 +2461,7 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2506,7 +2513,8 @@ describe('CmcdController', function () {
                             cmcdMode: 'response',
                             mode: 'query',
                             includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'e']
+                            enabledKeys: ['rc', 'e', 'd'],
+                            events: ['rr']
                         }]
                     }
                 }
@@ -2553,7 +2561,8 @@ describe('CmcdController', function () {
                             enabled: true,
                             cmcdMode: 'response',
                             mode: 'query',
-                            includeOnRequests: ['segment']
+                            includeOnRequests: ['segment'],
+                            events: ['rr']
                         }]
                     }
                 }

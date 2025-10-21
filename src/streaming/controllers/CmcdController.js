@@ -152,8 +152,7 @@ function CmcdController() {
 
     function _initializeEventModeTimeInterval() {
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.EVENT);
-        eventModeTargets.forEach(({ timeInterval, events }) => {
+        targets.forEach(({ timeInterval, events }) => {
             if (!events || !events.includes(Constants.CMCD_REPORTING_EVENTS.TIME_INTERVAL)) {
                 return;
             }
@@ -176,9 +175,9 @@ function CmcdController() {
         _onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
-    function _onEventChange(state){
+    function _onEventChange(state, response){
         cmcdModel.onEventChange(state);
-        triggerCmcdEventMode(state);
+        triggerCmcdEventMode(state, response);
     }
 
     function _onPeriodSwitchComplete() {
@@ -228,47 +227,50 @@ function CmcdController() {
         }
     }
 
-    function triggerCmcdEventMode(event){
+    function triggerCmcdEventMode(event, response){
         const targets = settings.get().streaming.cmcd.targets;
-        const eventModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.EVENT);
 
-        if (eventModeTargets.length === 0) {
+        if (targets.length === 0) {
             return;
         }
 
-        const cmcdData = cmcdModel.triggerCmcdEventMode(event);
+        let cmcdData = cmcdModel.triggerCmcdEventMode(event);
+
+        if (event == 'rr') {
+            cmcdData = {...cmcdData, ...response.request.cmcd}         
+            cmcdData = _addCmcdResponseReceivedData(response, cmcdData);
+        }
         
-        eventModeTargets.forEach(targetSettings => {
-            if (targetSettings.enabled) {
+        targets.forEach(targetSettings => {
+            if (!isCmcdEnabled(targetSettings)){
+                return;
+            }
 
-                if (targetSettings.events?.length === 0) {
-                    logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
-                }
+            if (targetSettings.events?.length === 0) {
+                logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
+            }
 
-                let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
+            let events = targetSettings.events ? targetSettings.events : Object.values(Constants.CMCD_REPORTING_EVENTS);
 
-                if (!events.includes(event)) {
-                    return;
-                }
+            if (!events.includes(event)) {
+                return;
+            }
 
-                let httpRequest = new CmcdReportRequest();
+            let httpRequest = new CmcdReportRequest();
 
-                httpRequest.url = targetSettings.url;
-                httpRequest.type = HTTPRequest.CMCD_EVENT;
-                httpRequest.method = HTTPRequest.GET;
+            httpRequest.url = targetSettings.url;
+            httpRequest.type = HTTPRequest.CMCD_EVENT;
+            httpRequest.method = HTTPRequest.GET;
 
-                const sequenceNumber = _getNextSequenceNumber(targetSettings);
-                let cmcd = {...cmcdData, sn: sequenceNumber}
-                httpRequest.cmcd = cmcd;
+            const sequenceNumber = _getNextSequenceNumber(targetSettings);
+            let cmcd = {...cmcdData, sn: sequenceNumber}
+            httpRequest.cmcd = cmcd;
 
-                if (isCmcdEnabled(targetSettings)) {
-                    _updateRequestWithCmcd(httpRequest, cmcd, targetSettings)
-                    if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
-                        cmcdBatchController.addReport(targetSettings, httpRequest.body)
-                    } else {
-                        _sendCmcdDataReport(httpRequest);
-                    }
-                }
+            _updateRequestWithCmcd(httpRequest, cmcd, targetSettings)
+            if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
+                cmcdBatchController.addReport(targetSettings, httpRequest.body)
+            } else {
+                _sendCmcdDataReport(httpRequest);
             }
         });
     }
@@ -299,8 +301,8 @@ function CmcdController() {
         if (isIncludedFilters) {
             const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
             const cmcdModeSetting = targetSettings ? targetSettings.mode : settings.get().streaming.cmcd.mode;
-            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
-            switch (cmcdMode) {
+            const mode = cmcdParameters.mode ? cmcdParameters.mode : cmcdModeSetting;
+            switch (mode) {
                 case Constants.CMCD_MODE_QUERY:
                     request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
                     const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, targetSettings);
@@ -475,11 +477,16 @@ function CmcdController() {
 
     function _createCmcdEncodeOptions(targetSettings) {
         const cmcdParametersFromManifest = cmcdModel.getCmcdParametersFromManifest();
-        const enabledKeys = targetSettings ?
+        let enabledKeys = targetSettings ?
             targetSettings.enabledKeys :
             (cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys);
 
+        // if (enabledKeys?.length === 0){
+        //     enabledKeys = Constants.CMCD_KEYS
+        // }
+
         return {
+            // reportingMode: targetSettings ? Constants.CMCD_REPORTING_MODE.EVENT : Constants.CMCD_REPORTING_MODE.REQUEST,
             reportingMode: targetSettings?.cmcdMode,
             version: settings.get().streaming.cmcd.version ?? Constants.CMCD_DEFAULT_VERSION,
             filter: enabledKeys ? (key) => enabledKeys.includes(key) : undefined,
@@ -558,86 +565,56 @@ function CmcdController() {
     }
 
     function getCmcdResponseInterceptors(){
-        return [_cmcdResponseModeInterceptor];
+        return [_cmcdResponseReceivedInterceptor];
     }
 
-    function _cmcdResponseModeInterceptor(response){
-        const requestType = response.request.customData.request.type;
-
-        let cmcdData = {
-            ...response.request.cmcd,
-        };
-
-        cmcdData = _addCmcdResponseModeData(response, cmcdData);
-        const targets = settings.get().streaming.cmcd.targets;
-        const responseModeTargets = targets.filter((target) => target.cmcdMode === Constants.CMCD_REPORTING_MODE.RESPONSE);
-        responseModeTargets.forEach(targetSettings => {
-            if (targetSettings.enabled && cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
-                let httpRequest = new CmcdReportRequest();
-                httpRequest.url = targetSettings.url;
-                httpRequest.type = HTTPRequest.CMCD_RESPONSE;
-                httpRequest.method = HTTPRequest.GET;
-                
-                const sequenceNumber = _getNextSequenceNumber(targetSettings);
-                let cmcd = {...cmcdData, sn: sequenceNumber}
-                httpRequest.cmcd = cmcd;
-                
-                if (isCmcdEnabled(targetSettings)) {
-                    _updateRequestWithCmcd(httpRequest, cmcd, targetSettings)
-                    if ((targetSettings.batchSize || targetSettings.batchTimer) && httpRequest.body){
-                        cmcdBatchController.addReport(targetSettings, httpRequest.body)
-                    } else {
-                        _sendCmcdDataReport(httpRequest);
-                    }
-                }
-            }
-        });
-        
+    function _cmcdResponseReceivedInterceptor(response){
+        _onEventChange('rr', response)
         return response;
     }
 
-    function _addCmcdResponseModeData(response, cmcdData){
-        const responseModeData = {};
+    function _addCmcdResponseReceivedData(response, cmcdData){
+        const responseData = {};
         const request = response.request.customData.request;
         const requestType = request.type;
 
         if (requestType === HTTPRequest.MEDIA_SEGMENT_TYPE){
-            responseModeData.rc = response.status;
+            responseData.rc = response.status;
         }
 
         if (request.startDate && request.firstByteDate){
-            responseModeData.ttfb = request.firstByteDate - request.startDate;
+            responseData.ttfb = request.firstByteDate - request.startDate;
         }
 
         if (request.endDate && request.startDate){
-            responseModeData.ttlb = request.endDate - request.startDate
+            responseData.ttlb = request.endDate - request.startDate
         }
 
         if (request.url) {
-            responseModeData.url = request.url.split('?')[0]
+            responseData.url = request.url.split('?')[0]
         }
     
         if (response.headers){
             try {
                 const cmsdStaticHeader = response.headers['cmsd-static'];
                 if (cmsdStaticHeader) {
-                    responseModeData.cmsds = btoa(cmsdStaticHeader);
+                    responseData.cmsds = btoa(cmsdStaticHeader);
                 }
 
                 const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
                 if (cmsdDynamicHeader) {
-                    responseModeData.cmsdd = btoa(cmsdDynamicHeader);
+                    responseData.cmsdd = btoa(cmsdDynamicHeader);
                 }
             } catch (e) {
                 logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
             }
         }
 
-        return {...cmcdData, ...responseModeData};
+        return {...cmcdData, ...responseData};
     }
 
     function _getTargetKey(target) {
-        return `${target.url}_${target.cmcdMode}_${target.mode}`;
+        return `${target.url}_${target.mode}`;
     }
 
     function _getNextSequenceNumber(target) {
