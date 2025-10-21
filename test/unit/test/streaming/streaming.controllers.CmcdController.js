@@ -2292,7 +2292,7 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('cmsdd', btoa(cmsdDynamicHeaderValue));
         });
 
-        it.only('should not send a report if enabled keys is empty', () => {
+        it('should not send a report if enabled keys is empty', () => {
             settings.update({
                 streaming: {
                     cmcd: {
