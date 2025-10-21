@@ -35,6 +35,7 @@ import Constants from '../streaming/constants/Constants.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
 import Events from './events/Events.js';
+import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 
 /** @module Settings
  * @description Define the configuration parameters of Dash.js MediaPlayer.
@@ -1294,13 +1295,16 @@ function Settings() {
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 rules: {
                     throughputRule: {
-                        active: true
+                        active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     bolaRule: {
-                        active: true
+                        active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     insufficientBufferRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             throughputSafetyFactor: 0.7,
                             segmentIgnoreCount: 2
@@ -1308,6 +1312,7 @@ function Settings() {
                     },
                     switchHistoryRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             sampleSize: 8,
                             switchPercentageThreshold: 0.075
@@ -1315,6 +1320,7 @@ function Settings() {
                     },
                     droppedFramesRule: {
                         active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             minimumSampleSize: 375,
                             droppedFramesPercentageThreshold: 0.15
@@ -1322,6 +1328,7 @@ function Settings() {
                     },
                     abandonRequestsRule: {
                         active: true,
+                        priority: SwitchRequest.PRIORITY.DEFAULT,
                         parameters: {
                             abandonDurationMultiplier: 1.8,
                             minSegmentDownloadTimeThresholdInMs: 500,
@@ -1329,10 +1336,12 @@ function Settings() {
                         }
                     },
                     l2ARule: {
-                        active: false
+                        active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     },
                     loLPRule: {
-                        active: false
+                        active: false,
+                        priority: SwitchRequest.PRIORITY.DEFAULT
                     }
                 },
                 throughput: {
