@@ -2333,7 +2333,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAdditionalAbrOptions() {
         var currentConfig = $scope.player.getSettings();
-        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
+        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled !== null ? currentConfig.streaming.buffer.fastSwitchEnabled : true;
         $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
     }
 
