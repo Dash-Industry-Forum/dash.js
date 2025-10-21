@@ -312,7 +312,7 @@ function CmcdController() {
                     request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, targetSettings));
                     break;
                 case Constants.CMCD_MODE_BODY:
-                    if (request.type === HTTPRequest.CMCD_RESPONSE || request.type === HTTPRequest.CMCD_EVENT) {
+                    if (request.type === HTTPRequest.CMCD_EVENT) {
                         request.body = getJsonParameters(request, cmcdData, targetSettings);
                         request.method = HTTPRequest.POST;
                         request.headers = request.headers || {};
