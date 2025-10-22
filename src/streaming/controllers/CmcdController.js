@@ -245,6 +245,11 @@ function CmcdController() {
                 return;
             }
 
+            const requestType = response?.request.customData.request.type;
+            if (requestType && !cmcdModel.isIncludedInRequestFilter(requestType, targetSettings.includeOnRequests)){
+                return;
+            }
+
             if (targetSettings.events?.length === 0) {
                 logger.warn('CMCD Event Mode is enabled, but the "events" setting is empty. No event-specific CMCD data will be sent.');
             }
