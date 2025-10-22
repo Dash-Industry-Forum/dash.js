@@ -190,14 +190,14 @@ function Stream(config) {
     /**
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @param representationsFromPreviousPeriod
      * @memberof Stream#
      */
-    function activate(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
+    function activate(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod = []) {
         return new Promise((resolve, reject) => {
             if (isActive) {
-                resolve(previousBufferSinks);
+                resolve();
                 return;
             }
 
@@ -206,13 +206,13 @@ function Stream(config) {
                 eventBus.trigger(Events.STREAM_ACTIVATED, {
                     streamInfo
                 });
-                resolve(previousBufferSinks);
+                resolve();
                 return;
             }
 
 
-            _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
-                .then((bufferSinks) => {
+            _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
+                .then(() => {
                     isActive = true;
                     if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
                         startScheduleControllers();
@@ -220,7 +220,7 @@ function Stream(config) {
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
                         streamInfo
                     });
-                    resolve(bufferSinks);
+                    resolve();
                 })
                 .catch((e) => {
                     reject(e);
@@ -257,23 +257,23 @@ function Stream(config) {
     /**
      *
      * @param {object} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @param representationsFromPreviousPeriod
      * @return {Promise<Array>}
      * @private
      */
-    function _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod);
+    function _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod = []) {
+        return _commonMediaInitialization(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod);
     }
 
     /**
      *
      * @param {object} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @return {Promise<array>}
      * @private
      */
-    function _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod) {
+    function _commonMediaInitialization(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve, reject) => {
             checkConfig();
 
@@ -294,7 +294,7 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
-                    return _createBufferSinks(previousBufferSinks)
+                    return _createBufferSinks(previousSourceBufferSinks)
                 })
                 .then((bufferSinks) => {
                     if (streamProcessors.length === 0) {
@@ -522,16 +522,16 @@ function Stream(config) {
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param {array} previousBuffersSinks
+     * @param {array} previousSourceBufferSinks
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousBuffersSinks) {
+    function _createBufferSinks(previousSourceBufferSinks) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
                 const oldRepresentation = sp.getRepresentation();
-                return sp.createBufferSinks(previousBuffersSinks, oldRepresentation);
+                return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
             });
 
             Promise.all(promises)

@@ -265,7 +265,7 @@ function SourceBufferSink(config) {
 
     function getAllBufferRanges() {
         try {
-            return buffer.buffered;
+            return buffer?.buffered;
         } catch (e) {
             logger.error('getAllBufferRanges exception: ' + e.message);
             return null;
@@ -461,7 +461,7 @@ function SourceBufferSink(config) {
         try {
             callbacks.push(callback);
 
-            if (!buffer.updating) {
+            if (buffer && !buffer.updating) {
                 _executeCallback();
             }
         } catch (e) {
