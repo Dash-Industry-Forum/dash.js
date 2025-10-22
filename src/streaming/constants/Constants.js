@@ -48,6 +48,13 @@ export default {
     VIDEO: 'video',
 
     /**
+     *  @constant {string} ENHANCEMENT Enhancement media type
+     *  @memberof Constants#
+     *  @static
+     */
+    ENHANCEMENT: 'enhancement',
+
+    /**
      *  @constant {string} AUDIO Audio media type
      *  @memberof Constants#
      *  @static
@@ -340,6 +347,7 @@ export default {
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
     DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
+
     CODEC_FAMILIES: {
         MP3: 'mp3',
         AAC: 'aac',
