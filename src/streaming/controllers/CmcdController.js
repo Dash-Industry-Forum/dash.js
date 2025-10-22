@@ -235,7 +235,7 @@ function CmcdController() {
         }
 
         let cmcdData = cmcdModel.triggerCmcdEventMode(event);
-        if (event == Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED) {
+        if (event === Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED) {
             cmcdData = {...cmcdData, ...response.request.cmcd}
             cmcdData = _addCmcdResponseReceivedData(response, cmcdData);
         }
