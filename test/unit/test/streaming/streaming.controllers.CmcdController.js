@@ -1916,11 +1916,10 @@ describe('CmcdController', function () {
                     cmcd: {
                         version: 2,
                         targets: [{
-                            url: 'https://cmcd.response.collector/api',
+                            url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             mode: 'query',
                             enabledKeys: [],
-                            includeOnRequests: ['mpd'],
                         }]
                     }
                 }
