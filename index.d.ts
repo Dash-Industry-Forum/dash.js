@@ -984,6 +984,8 @@ export interface Representation {
     bitsPerPixel: number;
     codecPrivateData: string | null;
     codecs: string | null;
+    dependencyId: string | null;
+    dependentRepresentation: object | null;
     fragmentDuration: number | null;
     frameRate: number;
     height: number;
@@ -2868,6 +2870,7 @@ export interface conformanceViolationConstants {
 export interface Constants {
     STREAM: 'stream',
     VIDEO: 'video',
+    ENHANCEMENT: 'enhancement',
     AUDIO: 'audio',
     TEXT: 'text',
     MUXED: 'muxed',
@@ -5907,11 +5910,41 @@ export interface StreamProcessor {
 
     selectMediaInfo(selectionInput: object): Promise<any>;
 
+    setEnhancementStreamProcessor(value: StreamProcessor): void;
+
     setExplicitBufferingTime(value: number): void;
 
     setMediaSource(mediaSource: MediaSource): void;
 
     updateStreamInfo(newStreamInfo: StreamInfo): Promise<any>;
+}
+
+export interface ExternalMediaSource {
+    duration: number | null;
+
+    readyState: string;
+
+    addSourceBuffer(mimeType: string): ExternalSourceBuffer;
+
+    close(): void;
+
+    endOfStream(): void;
+
+    open(): void;
+
+    removeSourceBuffer(sourceBuffer: ExternalSourceBuffer): void;
+
+    reset(): void;
+}
+
+export interface ExternalSourceBuffer {
+    buffered: TimeRanges;
+
+    abort(): void;
+
+    appendBuffer(segmentData: ArrayBuffer, segmentStartTime: number, segmentEndTime: number): void;
+
+    remove(start: number, end: number): void;
 }
 
 export interface XlinkLoader {

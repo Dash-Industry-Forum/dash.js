@@ -64,7 +64,7 @@ function StreamController() {
         protectionData, extUrlQueryInfoController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -435,6 +435,7 @@ function StreamController() {
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
+            let sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
             activeStream = targetStream;
 
             if (previousStream) {
@@ -456,9 +457,15 @@ function StreamController() {
 
             // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
-                _openMediaSource({ seekTime, keepBuffers, streamActivated: false, representationsFromPreviousPeriod });
+                _openMediaSource({
+                    seekTime,
+                    keepBuffers,
+                    sourceBufferSinksFromPreviousPeriod,
+                    streamActivated: false,
+                    representationsFromPreviousPeriod
+                });
             } else {
-                _activateStream({ seekTime, keepBuffers });
+                _activateStream({ seekTime, keepBuffers, sourceBufferSinksFromPreviousPeriod });
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -529,11 +536,8 @@ function StreamController() {
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
-        activeStream.activate(mediaSource, inputParameters.keepBuffers ? bufferSinks : undefined, representationsFromPreviousPeriod)
-            .then((sinks) => {
-                if (sinks) {
-                    bufferSinks = sinks;
-                }
+        activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
+            .then(() => {
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(inputParameters.seekTime)) {
@@ -552,6 +556,25 @@ function StreamController() {
         return previousStreamProcessors.map((streamProcessor) => {
             return streamProcessor.getRepresentation();
         })
+    }
+
+    function _getSourceBufferSinksFromPreviousPeriod(previousStream) {
+        const sourceBufferSinkMap = new Map();
+
+        if (!previousStream) {
+            return sourceBufferSinkMap;
+        }
+
+        const previousStreamProcessors = previousStream ? previousStream.getStreamProcessors() : [];
+
+        previousStreamProcessors.forEach((streamProcessor) => {
+            const sourceBufferSink = streamProcessor.getBuffer();
+            if (sourceBufferSink) {
+                sourceBufferSinkMap.set(sourceBufferSink.getType(), sourceBufferSink);
+            }
+        })
+
+        return sourceBufferSinkMap
     }
 
     /**
@@ -698,17 +721,22 @@ function StreamController() {
      */
     function _onStreamCanLoadNext(nextStream, previousStream = null) {
 
-        if (mediaSource && !nextStream.getPreloaded()) {
-            let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
-
-            if (seamlessPeriodSwitch) {
-                const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
-                nextStream.startPreloading(mediaSource, bufferSinks, representationsFromPreviousPeriod)
-                    .then(() => {
-                        preloadingStreams.push(nextStream);
-                    });
-            }
+        if (!mediaSource || nextStream.getPreloaded()) {
+            return;
         }
+
+        let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
+
+        if (!seamlessPeriodSwitch) {
+            return;
+        }
+
+        const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
+        const previousSourceBufferSinks = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+        nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
+            .then(() => {
+                preloadingStreams.push(nextStream);
+            });
     }
 
     /**
@@ -909,9 +937,7 @@ function StreamController() {
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
-                if (mediaSource) {
-                    _onStreamCanLoadNext(stream, previousStream);
-                }
+                _onStreamCanLoadNext(stream, previousStream);
             }
             i += 1;
         }
@@ -1325,7 +1351,6 @@ function StreamController() {
 
                     let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
-
                     extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 });
         } else {

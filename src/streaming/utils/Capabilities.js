@@ -138,6 +138,11 @@ function Capabilities() {
             return Promise.resolve();
         }
 
+        const enhancementCodecs = settings.get().streaming.enhancement.codecs;
+        if (settings.get().streaming.enhancement.enabled && enhancementCodecs.some(cdc => basicConfiguration.codec.includes(cdc))) {
+            return Promise.resolve(true);
+        }
+
         const configurationsToTest = _getEnhancedConfigurations(basicConfiguration, type);
 
         if (_canUseMediaCapabilitiesApi(basicConfiguration, type)) {

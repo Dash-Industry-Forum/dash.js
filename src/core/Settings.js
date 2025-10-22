@@ -331,6 +331,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                    etpWeightRatio: 0
  *                }
  *            },
+ *            enhancement: {
+ *                enabled: false,
+ *                codecs: ['lvc1']
+ *            },
  *            defaultSchemeIdUri: {
  *                viewpoint: '',
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
@@ -944,6 +948,16 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  */
 
 /**
+ * @typedef {Object} EnhancementSettings
+ * @property {boolean} [enabled=false]
+ * Enable or disable the scalable enhancement playback (e.g. LCEVC).
+ * @property {Array.<string>} [codecs]
+ * Specifies which scalable enhancement codecs are supported by the player.
+ *
+ * If not specified this value defaults to ['lvc1'].
+ */
+
+/**
  * @typedef {Object} Metrics
  * @property {number} [metricsMaxListDepth=100]
  * Maximum number of metrics that are persisted per type.
@@ -1069,6 +1083,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
+ * @property {module:Settings~EnhancementSettings} enhancement
+ * Settings related to scalable enhancement playback (e.g. LCEVC).
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
@@ -1408,6 +1424,10 @@ function Settings() {
                     applyMb: false,
                     etpWeightRatio: 0
                 }
+            },
+            enhancement: {
+                enabled: false,
+                codecs: ['lvc1']
             },
             defaultSchemeIdUri: {
                 viewpoint: '',

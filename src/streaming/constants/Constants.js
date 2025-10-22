@@ -48,6 +48,13 @@ export default {
     VIDEO: 'video',
 
     /**
+     *  @constant {string} ENHANCEMENT Enhancement media type
+     *  @memberof Constants#
+     *  @static
+     */
+    ENHANCEMENT: 'enhancement',
+
+    /**
      *  @constant {string} AUDIO Audio media type
      *  @memberof Constants#
      *  @static
