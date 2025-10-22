@@ -80,12 +80,11 @@
                         includeInRequests: ['segment', 'mpd'],
                         targets: [
                             {
-                                cmcdMode: 'response',
                                 enabled: true,
-                                url: 'http://localhost:3003/response-mode',
-                                enabledKeys: ['ot', 'rc', 'msd'],
+                                url: 'http://localhost:3003/report',
+                                enabledKeys: ['e', 'rc', 'url'],
                                 mode: CMCD_MODE_QUERY,
-                                includeOnRequests: ['mpd', 'segment'],
+                                events: ['rr']
                             },
                         ]
                     }
@@ -97,7 +96,7 @@
 
             /* Callback before report */
             player.addRequestInterceptor((request) => {
-                if (request.customData.request.type == 'CmcdResponse' && request.url.includes('http://localhost:3003/response-mode')) {
+                if (request.customData.request.type == 'CmcdEvent' && request.url.includes('rr') && request.url.includes('http://localhost:3003/report')) {
                     let customKey = 'synchronization-leader-sid';
                     let customKeyValue = '123'
                     let { cmcd } = request;
@@ -115,7 +114,7 @@
             /* Callback after server response */
             player.addResponseInterceptor((response) => {
                 request = response.request.customData.request;
-                if (request.type == 'CmcdResponse' && request.url.includes('http://localhost:3003/response-mode')) {
+                if (request.type == 'CmcdEvent' && request.url.includes('rr') && request.url.includes('http://localhost:3003/report')) {
                     console.log(request.cmcd);
                 }
                 return Promise.resolve(response);
@@ -123,7 +122,7 @@
 
             const originalOpen = XMLHttpRequest.prototype.open;
             XMLHttpRequest.prototype.open = function(method, url, ...rest) {
-                if (url.includes('response-mode')) {
+                if (url.includes('report')) {
                     const queryString = decodeURIComponent(url.split('CMCD=')[1]);
                     const data = getKeysForQueryMode(queryString);
                     var keys = Object.keys(data);

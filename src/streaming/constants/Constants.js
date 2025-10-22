@@ -34,6 +34,7 @@ import { CmcdEventType } from '@svta/common-media-library/cmcd/CmcdEventType';
 import { CMCD_DEFAULT_TIME_INTERVAL } from '@svta/common-media-library/cmcd/CMCD_DEFAULT_TIME_INTERVAL';
 import { CMCD_PARAM } from '@svta/common-media-library/cmcd/CMCD_PARAM';
 import { CMCD_QUERY } from '@svta/common-media-library/cmcd/CMCD_QUERY';
+import { CMCD_KEYS } from '@svta/common-media-library/cmcd/CMCD_KEYS';
 
 /**
  * Constants declaration
@@ -246,6 +247,13 @@ export default {
      *  @static
      */
     CMCD_REPORTING_MODE: CmcdReportingMode,
+
+    /**
+     *  @constant {string} CMCD_KEYS specifies all the available keys for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_KEYS: CMCD_KEYS,
 
     /**
      *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.

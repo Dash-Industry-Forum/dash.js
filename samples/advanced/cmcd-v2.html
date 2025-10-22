@@ -55,16 +55,15 @@
                         enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
                         targets: [
                             {
-                                cmcdMode: 'response',
                                 enabled: true,
-                                url: 'http://localhost:3001/cmcd/response-mode',
-                                enabledKeys: ['ot', 'rc', 'msd'],
+                                url: 'http://localhost:3001/cmcd/response-received',
+                                enabledKeys: ['url', 'rc', 'msd'],
                                 includeOnRequests: ['mpd', 'segment'],
+                                events: ['rr'],
                                 mode: CMCD_MODE_QUERY,
                             },
                             {
                                 enabled: true,
-                                cmcdMode: 'event',
                                 url: 'http://localhost:3002/cmcd/event-mode',
                                 timeInterval: 10,
                                 enabledKeys: ['e', 'msd', 'sta'],
@@ -73,21 +72,18 @@
                             },
                             {
                                 enabled: true,
-                                cmcdMode: 'event',
                                 url: 'http://localhost:3003/cmcd/event-mode',
                                 timeInterval: 6,
                                 mode: CMCD_MODE_HEADER,
                             },
                             {
                                 enabled: true,
-                                cmcdMode: 'response',
-                                url: 'http://localhost:3004/cmcd/response-body-mode',
+                                url: 'http://localhost:3004/cmcd/event-body-mode',
                                 mode: CMCD_MODE_BODY,
                                 batchSize: 3,
                             },
                             {
                                 enabled: true,
-                                cmcdMode: 'event',
                                 url: 'http://localhost:3005/cmcd/event-body-mode',
                                 mode: CMCD_MODE_BODY,
                                 batchTimer: 3,
