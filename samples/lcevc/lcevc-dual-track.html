@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MPEG-5 LCEVC example</title>
+    
+    <!-- LCEVCdecJS -->
+    <script class="code" src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
+
+    <script class="code" src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script class="code" src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+
+
+    <style>
+        video {
+            display: none !important;
+        }
+
+        .dash-video-player {
+            position: relative; /* This position relative is needed to position the menus */
+            margin: 0 auto;
+            line-height: 1.0;
+        }
+    </style>
+
+    <script class="code">
+        /**
+         * MPEG-5 LCEVC Integration for Dash.js Player.
+         *
+         * These are the changes needed for passing the correct
+         * data to lcevc_dec.js and trigger the correct methods
+         * at the correct time.
+         */
+
+        /**
+         * Let the LCEVC Decoder Library make the decision as to when to switch, based on the currently
+         * rendered frame. If disabled, the player needs to signal LCEVC when there is a render change
+         * after an ABR switch happens.
+         *
+         * @readonly
+         * @enum {number}
+         * @public
+         */
+        const AutoRenderMode = {
+            DISABLED: 0,
+            ENABLED: 1
+        };
+
+        dashjs.Extensions = {
+            ...dashjs.Extensions,
+            /**
+             * Attaches LCEVC functionality and methods to the provided Dash.js player instance.
+             *
+             * @param {object} player the Dash.js player instance to attach LCEVC to
+             */
+            useLcevc: function useLcevc(player) {
+                if (!player) {
+                    throw new TypeError('The provided Dash.js player instance was null or undefined.');
+                }
+                const { LCEVCdec } = window;
+                if (!LCEVCdec) {
+                    throw new TypeError('LCEVC Decoder Libraries could not be loaded.');
+                }
+
+                let abrIndex = -1;
+
+                player.attachLcevc = function attachLcevc(media, canvas, LCEVCdecConfig) {
+                    player.LCEVCdec = new LCEVCdec.LCEVCdec(
+                        media,
+                        canvas,
+                        LCEVCdecConfig
+                    );
+
+                    /* Signal profile information and switches to LCEVCdecJS */
+                    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, handleQualityChange);
+                    player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, handleFragmentLoadingCompleted);
+                    player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, handleRepresentationSwitch);
+                    player.on('externalSourceBufferUpdateStart', handleBufferUpdates);
+                };
+
+                function handleFragmentLoadingCompleted(event) {
+                    if (event.mediaType === 'enhancement') {
+                        abrIndex = event.request.representation.absoluteIndex;
+                    }
+                }
+
+                function handleQualityChange(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const index = event.newRepresentation.absoluteIndex;
+                        console.log('>>> requested:', event.mediaType, index);
+                        player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                    }
+                }
+
+                function handleRepresentationSwitch(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const rep = event.currentRepresentation;
+                        const index = rep.absoluteIndex;
+                        // Workaround for very first representation played for which no QUALITY_CHANGE_REQUESTED arrives
+                        if (rep && rep.dependentRepresentation) {
+                            console.log('>>> rep switch:', event.mediaType, index);
+                            player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                        }
+                    }
+                }
+
+                function handleBufferUpdates(event) {
+                    if (event.request === 'appendBuffer') {
+                        player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, /* isMuxed */ false);
+                    }
+                    else if (event.request === 'remove') {
+                        player.LCEVCdec.flushBuffer(event.start, event.end);
+                    }
+                }
+            }
+        };
+
+        /* Initialise */
+        function init() {
+            var video,
+                canvas,
+                player,
+                url = 'https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_no_dR/master.mpd';
+                const defaultSettings = {
+                    debug: {
+                        logLevel: 5,
+                        dispatchEvent: false
+                    },
+                    streaming: {
+                        enhancement: {
+                            enabled: true,
+                        },
+                        abr: {
+                            rules: {
+                                insufficientBufferRule: {
+                                    active: false
+                                }
+                            }
+                        }
+                    }
+                };
+
+            video = document.querySelector('video');
+            canvas = document.querySelector('canvas');
+            player = dashjs.MediaPlayer().create();
+            /* Configuration for LCEVC Decoder */
+            const LCEVCdecConfig = {
+                dynamicPerformanceScaling: false
+            };
+
+            video._getVideoPlaybackQuality = video.getVideoPlaybackQuality;
+            video.getVideoPlaybackQuality = function () {
+                const quality = video._getVideoPlaybackQuality();
+                const { creationTime, totalVideoFrames, droppedVideoFrames, corruptedVideoFrames } = quality;
+                const updatedQuality = {
+                    creationTime,
+                    totalVideoFrames,
+                    droppedVideoFrames: LCEVCdec?.instance?.totalDroppedFrames || 0,
+                    corruptedVideoFrames
+                };
+                return updatedQuality;
+            }
+
+            LCEVCdec.ready.then(() => {
+                /* Attach LCEVC to the Dash.js player instance */
+                dashjs.Extensions.useLcevc(player);
+                player.attachLcevc(video, canvas, LCEVCdecConfig);
+                player.initialize(video, url, false);
+                player.updateSettings(defaultSettings);
+                var controlbar = new ControlBar(player);
+                controlbar.initialize();
+            });
+
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>MPEG-5 Part 2 LCEVC Dual Track Implementation</h3>
+                    <p>This example shows how content with LCEVC Enhancements in a separate track can be played
+                        back by the dash.js
+                        player. dash.js allows a switch between Enhanced and Base profiles.</p>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="dash-video-player code">
+                    <div class="videoContainer" id="videoContainer">
+                        <video preload="auto" autoplay></video>
+                        <canvas preload="auto" autoplay></canvas>
+                        <div id="videoController" class="video-controller unselectable">
+                            <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                                <span id="iconPlayPause" class="icon-play"></span>
+                            </div>
+                            <span id="videoTime" class="time-display">00:00:00</span>
+                            <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                                <span class="icon-fullscreen-enter"></span>
+                            </div>
+                            <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                                <span class="icon-bitrate"></span>
+                            </div>
+                            <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                            <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                                <span id="iconMute" class="icon-mute-off"></span>
+                            </div>
+                            <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                                <span class="icon-tracks"></span>
+                            </div>
+                            <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                                <span class="icon-caption"></span>
+                            </div>
+                            <span id="videoDuration" class="duration-display">00:00:00</span>
+                            <div class="seekContainer">
+                                <div id="seekbar" class="seekbar seekbar-complete">
+                                    <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                    <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>

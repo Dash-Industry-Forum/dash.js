@@ -180,6 +180,7 @@ function MediaController() {
         if (!track) {
             return;
         }
+        logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\'');
 
         const mediaType = track.type;
         if (!_isMultiTrackSupportedByType(mediaType)) {

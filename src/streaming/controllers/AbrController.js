@@ -290,6 +290,8 @@ function AbrController() {
                 voRepresentations = voRepresentations.concat(currentVoRepresentations)
             }
         })
+        // Resolve dependencies
+        voRepresentations = _resolveDependencies(voRepresentations);
 
         // Now sort by quality (usually simply by bitrate)
         voRepresentations = _sortRepresentationsByQuality(voRepresentations);
@@ -513,6 +515,19 @@ function AbrController() {
     }
 
 
+    function _resolveDependencies(voRepresentations) {
+        voRepresentations.forEach(rep => {
+            if (rep.dependentRepresentation && rep.dependentRepresentation.mediaInfo === null) {
+                let dependentId = rep.dependentRepresentation.id;
+                let dependentRep = voRepresentations.find((element) => element.id === dependentId);
+                if (dependentRep) {
+                    rep.dependentRepresentation = dependentRep;
+                }
+            }
+        });
+        return voRepresentations;
+    }
+
     /**
      * While fragment loading is in progress we check if we might need to abort the request
      * @param {object} e
@@ -658,7 +673,7 @@ function AbrController() {
             }
 
             const streamProcessor = streamProcessorDict[streamId][type];
-            const currentRepresentation = streamProcessor.getRepresentation();
+            const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
             const rulesContext = RulesContext(context).create({
                 abrController: instance,
                 throughputController,
@@ -681,7 +696,7 @@ function AbrController() {
             });
 
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
-                _changeQuality(currentRepresentation, newRepresentation, switchRequest.reason);
+                _changeQuality(type, currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
             }
 
@@ -707,11 +722,11 @@ function AbrController() {
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
-        const currentRepresentation = streamProcessor.getRepresentation();
+        const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
 
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
-            _changeQuality(currentRepresentation, representation, reason);
+            _changeQuality(type, currentRepresentation, representation, reason);
         }
     }
 
@@ -738,9 +753,8 @@ function AbrController() {
      * @param {string} reason
      * @private
      */
-    function _changeQuality(oldRepresentation, newRepresentation, reason) {
+    function _changeQuality(type, oldRepresentation, newRepresentation, reason) {
         const streamId = newRepresentation.mediaInfo.streamInfo.id;
-        const type = newRepresentation.mediaInfo.type;
         if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
             const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
             const bufferLevel = dashMetrics.getCurrentBufferLevel(type);

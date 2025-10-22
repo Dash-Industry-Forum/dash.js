@@ -33,9 +33,10 @@ import DashJSError from './vo/DashJSError.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import Errors from '../core/errors/Errors.js';
 import Settings from '../core/Settings.js';
-import constants from './constants/Constants.js';
+import Constants from './constants/Constants.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import Events from '../core/events/Events.js';
+import ExternalSourceBuffer from './ExternalSourceBuffer.js';
 
 const APPEND_WINDOW_START_OFFSET = 0.1;
 const APPEND_WINDOW_END_OFFSET = 0.01;
@@ -130,7 +131,7 @@ function SourceBufferSink(config) {
 
         } catch (e) {
             // Note that in the following, the quotes are open to allow for extra text after stpp and wvtt
-            if ((mediaInfo.type == constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
+            if ((mediaInfo.type == Constants.TEXT && !mediaInfo.isFragmented) || (codec.indexOf('codecs="stpp') !== -1) || (codec.indexOf('codecs="vtt') !== -1) || (codec.indexOf('text/vtt') !== -1)) {
                 return _initializeForText(streamInfo);
             }
             return Promise.reject(e);
@@ -374,7 +375,9 @@ function SourceBufferSink(config) {
                     } catch (e) {
 
                     }
-                    if (buffer.appendBuffer) {
+                    if (buffer instanceof ExternalSourceBuffer) {
+                        buffer.appendBuffer(nextChunk.data.bytes, nextChunk.data.start, nextChunk.data.end);
+                    } else if (buffer.appendBuffer) {
                         buffer.appendBuffer(nextChunk.data.bytes);
                     } else {
                         buffer.append(nextChunk.data.bytes, nextChunk.data);
