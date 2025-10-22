@@ -72,6 +72,35 @@ function RepresentationController(config) {
     }
 
     function getCurrentRepresentation() {
+        // Video RepresentationController should return a representation of type video, and enhancement
+        // RepresentationController should return a representation of type enhancement, i.e. type should match
+        if (currentVoRepresentation?.mediaInfo.type === type) {
+            return currentVoRepresentation;
+        }
+        else {
+            return _getCurrentDependentRepresentation();
+        }
+        
+    }
+
+    function _getCurrentDependentRepresentation() {
+        let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
+        if (currentVoRepDep) {
+            if (!currentVoRepDep.mediaInfo) {
+                throw new Error('dependentRepresentation has no mediaInfo!');
+            }
+            if (currentVoRepDep.mediaInfo.type === type) {
+                return currentVoRepDep;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the combined effective Representation, i.e. the dependent representation plus its declared complementary representation.
+     * @return {object} Representation
+     */
+    function getCurrentCompositeRepresentation() {
         return currentVoRepresentation;
     }
 
@@ -92,8 +121,7 @@ function RepresentationController(config) {
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-
-            if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
                 endDataUpdate();
                 resolve();
                 return;
@@ -305,6 +333,7 @@ function RepresentationController(config) {
     }
 
     instance = {
+        getCurrentCompositeRepresentation,
         getCurrentRepresentation,
         getRepresentationById,
         getStreamId,
