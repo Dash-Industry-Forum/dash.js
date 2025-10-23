@@ -32,7 +32,7 @@
 import MetricSerialiser from '../../utils/MetricSerialiser';
 import RNG from '../../utils/RNG';
 import CustomParametersModel from '../../../models/CustomParametersModel';
-
+import Settings from '../../../../core/Settings';
 function DVBReporting(config) {
     config = config || {};
     let instance;
@@ -44,7 +44,8 @@ function DVBReporting(config) {
         reportingPlayerStatusDecided,
         isReportingPlayer,
         reportingUrl,
-        rangeController;
+        rangeController,
+        settings = Settings(context).getInstance();
 
     let USE_DRAFT_DVB_SPEC = true;
     let allowPendingRequestsToCompleteOnReset = true;
@@ -141,13 +142,13 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = entry.dvb_reportingUrl;
+        reportingUrl = settings.get().streaming.dvbReporting.reportingUrl || entry.dvb_reportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
         if (!reportingUrl) {
             throw new Error(
-                'required parameter missing (dvb:reportingUrl)'
+                'MPD parameter missing "dvb:reportingUrl" or URL not given in settings'
             );
         }
 

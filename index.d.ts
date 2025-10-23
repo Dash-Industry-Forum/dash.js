@@ -1157,6 +1157,9 @@ declare namespace dashjs {
                 mode?: 'query' | 'header',
                 enabledKeys?: Array<string>
             },
+            dvbReporting?: {
+                reportingUrl?: string | null,
+            }
             cmsd?: {
                 enabled?: boolean,
                 abr?: {
