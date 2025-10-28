@@ -37,6 +37,7 @@ import DashJSError from '../../vo/DashJSError.js';
 import LicenseRequest from '../vo/LicenseRequest.js';
 import LicenseResponse from '../vo/LicenseResponse.js';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
+import CertUrlUtils from '../../utils/CertUrlUtils';
 import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -278,36 +279,30 @@ function ProtectionController(config) {
      */
     function _collectCertificateUrlsForSelectedKeySystem(preferredType) {
         const urls = [];
+        // 1. API-provided certUrls (protData) take priority
+        const protData = _getProtDataForKeySystem(selectedKeySystem);
+        if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
+            protData.certUrls.forEach(c => { urls.push(c); });
+        }
+        // 2. Manifest-provided certUrls
         mediaInfoArr.forEach(mediaInfo => {
             if (!mediaInfo || !mediaInfo.contentProtection) { return; }
             mediaInfo.contentProtection.forEach(contentProtection => {
-                // Match by schemeIdUri UUID presence in keySystems metadata later; for now collect all
                 if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
                     contentProtection.certUrls.forEach(c => { urls.push(c); });
                 }
             });
         });
+        // Preferred type filter (try only matching ones first if any)
         if (preferredType) {
-            const filtered = urls.filter(c => c.certType === preferredType);
-            if (filtered.length) { return _dedupeCertUrls(filtered); }
+            const preferred = urls.filter(c => c.certType === preferredType);
+            if (preferred.length) {
+                const others = urls.filter(c => c.certType !== preferredType);
+                // Preferred first, then others for fallback
+                return CertUrlUtils.dedupeCertUrls(preferred.concat(others));
+            }
         }
-        return _dedupeCertUrls(urls);
-    }
-
-    /**
-     * Deduplicate certificate URL list by URL + certType
-     * @param {Array<{url:string, certType:string|null}>} list
-     * @return {Array<{url:string, certType:string|null}>}
-     * @private
-     */
-    function _dedupeCertUrls(list) {
-        const seen = new Set();
-        return list.filter(item => {
-            const key = item.url + '||' + (item.certType || '');
-            if (seen.has(key)) { return false; }
-            seen.add(key);
-            return true;
-        });
+        return CertUrlUtils.dedupeCertUrls(urls);
     }
 
     /**
