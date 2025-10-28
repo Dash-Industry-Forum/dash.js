@@ -342,7 +342,9 @@ function ProtectionController(config) {
                 if (applied) {
                     cacheEntry.applied = true;
                     cacheEntry.inProgress = false;
-                    logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + ' for ' + ksString + '.');
+                    const appliedCandidate = candidates[index];
+                    const appliedTypeSuffix = appliedCandidate && appliedCandidate.certType ? (' certType=' + appliedCandidate.certType) : '';
+                    logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + appliedTypeSuffix + ' for ' + ksString + '.');
                 } else {
                     throw new Error('CDM rejected certificate');
                 }

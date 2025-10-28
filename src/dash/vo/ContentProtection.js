@@ -47,7 +47,10 @@ class ContentProtection extends DescriptorType {
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
-        this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]
+        // Array of certificate URL descriptors: [{url: string, certType: string|null}]
+        // dash.js treats certType as an opaque label used only for optional preference ordering (see Settings: preferredCertType)
+        // and for deduplication. No semantic validation or key-system specific mapping is performed.
+        this.certUrls = [];
     }
 
     init(data) {
@@ -113,6 +116,7 @@ class ContentProtection extends DescriptorType {
                 } else {
                     certType = null;
                 }
+                // We intentionally do not enforce any allowed vocabulary; unknown values are accepted as-is.
                 return url ? { url, certType } : null;
             }
             return null;
