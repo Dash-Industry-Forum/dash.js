@@ -28,86 +28,68 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import ExternalSourceBuffer from './ExternalSourceBuffer.js';
 
-import HandlerHelpers from '../../utils/HandlerHelpers.js';
-import FactoryMaker from '../../../../core/FactoryMaker.js';
+class ExternalMediaSource {
+    constructor(eventBus) {
+        this.eventBus = eventBus;
+        this.reset();
+    }
 
-function HttpListHandler(config) {
+    get duration() {
+        return this._duration;
+    }
 
-    config = config || {};
-    let instance,
-        reportingController,
-        n,
-        type,
-        name,
-        interval;
-
-    let storedVos = [];
-
-    let handlerHelpers = HandlerHelpers(this.context).getInstance();
-
-    const metricsConstants = config.metricsConstants;
-
-    function intervalCallback() {
-        var vos = storedVos;
-
-        if (vos.length) {
-            if (reportingController) {
-                reportingController.report(name, vos);
-            }
+    set duration(value) {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
         }
-
-        storedVos = [];
+        this._duration = value;
     }
 
-    function initialize(basename, rc, n_ms, requestType) {
-        if (rc) {
+    get readyState() {
+        return this._readyState;
+    }
 
-            // this will throw if n is invalid, to be
-            // caught by the initialize caller.
-            n = handlerHelpers.validateN(n_ms);
-
-            reportingController = rc;
-
-            if (requestType && requestType.length) {
-                type = requestType;
-            }
-
-            name = handlerHelpers.reconstructFullMetricName(
-                basename,
-                n_ms,
-                requestType
-            );
-
-            interval = setInterval(intervalCallback, n);
+    addSourceBuffer(mimeType) {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
         }
+        const sourceBuffer = new ExternalSourceBuffer(mimeType, this.eventBus);
+        this.sourceBuffers.set(sourceBuffer, mimeType);
+        return sourceBuffer;
     }
 
-    function reset() {
-        clearInterval(interval);
-        interval = null;
-        n = null;
-        type = null;
-        storedVos = [];
-        reportingController = null;
-    }
-
-    function handleNewMetric(metric, vo) {
-        if (metric === metricsConstants.HTTP_REQUEST) {
-            if (!type || (type === vo.type)) {
-                storedVos.push(vo);
-            }
+    removeSourceBuffer(sourceBuffer) {
+        if (!(this.sourceBuffers.has(sourceBuffer))) {
+            throw new Error('ExternalSourceBuffer not found');
         }
+        this.sourceBuffers.delete(sourceBuffer);
     }
 
-    instance = {
-        initialize,
-        reset,
-        handleNewMetric
-    };
+    open() {
+        this._readyState = 'open';
+        this.eventBus.trigger('externalMediaSourceOpen', { });
+    }
 
-    return instance;
+    endOfStream() {
+        if (this._readyState !== 'open') {
+            throw new Error('ExternalMediaSource is not open');
+        }
+        this._readyState = 'ended';
+        this.eventBus.trigger('externalMediaSourceEnded', { });
+    }
+
+    close() {
+        this._readyState = 'closed';
+        this.eventBus.trigger('externalMediaSourceClosed', { });
+    }
+
+    reset() {
+        this.sourceBuffers = new Map();
+        this._duration = NaN;
+        this._readyState = 'closed';
+    }
 }
 
-HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
-export default FactoryMaker.getClassFactory(HttpListHandler);
+export default ExternalMediaSource;

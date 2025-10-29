@@ -49,6 +49,7 @@ function DroppedFramesRule() {
         }
         if (newRepresentation) {
             switchRequest.representation = newRepresentation;
+            switchRequest.priority = settings.get().streaming.abr.rules.droppedFramesRule.priority;
             switchRequest.reason = {
                 droppedFrames,
                 message: `[DroppedFramesRule]: Switching to index ${newRepresentation.absoluteIndex}. Dropped Frames: ${droppedFrames}, Total Frames: ${totalFrames}`

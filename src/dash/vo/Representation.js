@@ -48,6 +48,8 @@ class Representation {
         this.codecFamily = null;
         this.codecPrivateData = null;
         this.codecs = null;
+        this.dependencyId = null;
+        this.dependentRepresentation = null;
         this.essentialProperties = [];
         this.fragmentDuration = null;
         this.frameRate = null;

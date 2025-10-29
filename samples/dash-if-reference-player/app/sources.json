@@ -93,6 +93,11 @@
             "acronym": "ARTE",
             "name": "ARTE",
             "url": "https://www.arte.tv/en/"
+        },
+        "v-nova": {
+            "acronym": "V-Nova",
+            "name": "V-Nova",
+            "url": "https://v-nova.com/"
         }
     },
     "items": [
@@ -1301,6 +1306,21 @@
                         }
                     },
                     "provider": "microsoft"
+                }
+            ]
+        },
+        {
+            "name": "MPEG-5 Part 2 - LCEVC",
+            "submenu": [
+                {
+                    "url": "https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_no_dR/master.mpd",
+                    "name": "Scalable Carriage",
+                    "provider": "v-nova"
+                },
+                {
+                    "url": "https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_with_dR/master.mpd",
+                    "name": "Scalable with Debug Residuals",
+                    "provider": "v-nova"
                 }
             ]
         }

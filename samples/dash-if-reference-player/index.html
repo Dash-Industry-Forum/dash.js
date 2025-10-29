@@ -34,6 +34,9 @@
     <script src="app/main.js"></script>
     <script src="app/rules/ThroughputRule.js"></script>
 
+    <!-- LCEVC Decoder -->
+    <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
+
     <!-- Google Cast -->
     <script src="https://www.gstatic.com/cv/js/sender/v1/cast_sender.js?loadCastFramework=1"></script>
 
@@ -357,6 +360,41 @@
                             Add Request-Headers
                         </button>
 
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpTimeout">
+
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                            <input type="checkbox" ng-model="drmPlayready.isCustomRobustness">
+                            Use Custom Robustness
+                        </label>
+
+                        <label class="options-label">Audio Robustness</label>
+                        <select name="playreadyAudioRobustness" id="playreadyAudioRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness"
+                        ng-init="drmPlayready.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness">
+
+                        <label class="options-label">Video Robustness</label>
+                        <select name="playreadyVideoRobustness" id="playreadyVideoRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness"
+                        ng-init="drmPlayready.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="3000">SL3000</option>
+                            <option value="2000">SL2000</option>
+                            <option value="150">  SL150</option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness">
+
                         <!-- Header Dialogue Window Content -->
                         <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
                             <div class="requestHeaderDialogueContent">
@@ -420,6 +458,46 @@
                                 ng-click="openDialogue('widevine')">
                             Add Request-Headers
                         </button>
+
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpTimeout">
+
+                        <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                           title="">
+                            <input type="checkbox" ng-model="drmWidevine.isCustomRobustness">
+                            Use Custom Robustness
+                        </label>
+
+                        <label class="options-label">Audio Robustness</label>
+                        <select name="widevineAudioRobustness" id="widevineAudioRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness"
+                        ng-init="drmWidevine.audioRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness">
+
+                        <label class="options-label">Video Robustness</label>
+                        <select name="widevineVideoRobustness" id="widevineVideoRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness"
+                        ng-init="drmWidevine.videoRobustness=''">
+                            <option value="">   Default</option>
+                            <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
+                            <option value="SW_SECURE_DECODE">SW Secure Decode</option>
+                            <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
+                            <option value="HW_SECURE_DECODE">HW Secure Decode</option>
+                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                        </select>
+
+                        <!-- If custom, show textbox -->
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness">
 
                         <!-- Header Dialogue Window Content -->
                         <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
@@ -493,6 +571,12 @@
                                 ng-click="openDialogue('additionalClearkeys')">
                             Add additional clearkeys
                         </button>
+
+                        <label class="options-label">Server Certificate</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.serverCertificate">
+
+                        <label class="options-label">HTTP Timeout</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.httpTimeout">
 
                         <!-- KID=KEY Dialogue Window Content -->
                         <div id="additionalClearkeysDialogue" class="requestHeaderDialogue">
@@ -922,6 +1006,17 @@
                        ng-change="updateCmsdEtpWeightRatio()">
             </div>
         </div>
+        <div class="options-item">
+            <div class="options-item-title">Enhancement Layer</div>
+            <div class="options-item-body">
+                <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
+                       title="Enables enhancement layer. The provided stream should contain two adaptation sets, one containing the base layer and the second containing an enhancement layer. Checkbox selection will be applied the next time a stream is loaded.">
+                    <input type="checkbox" ng-model="enhancementEnabled" ng-change=""
+                           ng-checked="enhancementEnabled">
+                    Enable Enhancement Layer
+                </label>
+            </div>
+        </div>
 
     </div>
 
@@ -930,6 +1025,8 @@
         <div class="dash-video-player col-md-9">
             <div id="videoContainer" class="videoContainer">
                 <video disableRemotePlayback="true"></video>
+                <canvas id="enhacementCanvas" class="enhancementCanvas element-hidden"></canvas>
+                <div style="min-height: 1px;"></div>
                 <div id="video-caption"></div>
                 <div id="cast-msg" ng-if="isCasting">
                     {{ castPlayerState === 'IDLE' ? 'Ready to cast stream' : castPlayerState }}
@@ -1005,6 +1102,14 @@
                     </li>
                     <li><a href="#audioStatsTab" role="tab" data-toggle="tab">
                         Audio
+                    </a>
+                    </li>
+                    <li><a href="#playbackStatsTab" role="tab" data-toggle="tab">
+                        Playback
+                    </a>
+                    </li>
+                    <li><a href="#mpdStatsTab" role="tab" data-toggle="tab">
+                        MPD
                     </a>
                     </li>
                 </ul>
@@ -1219,6 +1324,36 @@
                                 <label class="text-primary" for="audioPlaybackRateCB" data-toggle="tooltip"
                                        data-placement="top"
                                        title="Playback Rate">Playback Rate:</label> {{audioPlaybackRate}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="playbackStatsTab">
+                        <div class="panel-body panel-stats">
+                            <!-- Playback STATS ITEMS-->
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Active Period">Active Period ID:</label> {{activePeriod}}
+                            </div>
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="Buffering Period">Buffering Period ID:</label> {{bufferingPeriod}}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="mpdStatsTab">
+                        <div class="panel-body panel-stats">
+                            <!-- MPD STATS ITEMS-->
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="MPD Type">Type:</label> {{mpdType}}
+                            </div>
+                            <div class="text-success">
+                                <label class="text-primary" data-toggle="tooltip"
+                                       data-placement="top"
+                                       title="The number of periods signaled in the MPD">Number of periods :</label> {{numberOfPeriods}}
                             </div>
                         </div>
                     </div>

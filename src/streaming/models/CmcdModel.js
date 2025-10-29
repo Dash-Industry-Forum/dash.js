@@ -415,6 +415,9 @@ function CmcdModel() {
         if (mediaType === Constants.AUDIO) {
             ot = CmcdObjectType.AUDIO;
         }
+        if (request.mediaType === Constants.ENHANCEMENT) {
+            ot = CmcdObjectType.OTHER;
+        }
         if (mediaType === Constants.TEXT) {
             if (request.representation.mediaInfo.mimeType === 'application/mp4') {
                 ot = CmcdObjectType.TIMED_TEXT;

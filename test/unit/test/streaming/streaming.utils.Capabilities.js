@@ -3,6 +3,7 @@ import Settings from '../../../../src/core/Settings.js';
 import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
+import Constants from '../../../../src/streaming/constants/Constants.js';
 //import {UAParser} from 'ua-parser-js';
 
 let settings;
@@ -14,6 +15,7 @@ let capabilities;
 // The Media Capabilities API seems to return wrong values on Linux with Firefox. Deactivate some tests for now
 //const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
 
+const enhancementCodecs = ['lvc1'];
 
 let EssentialPropertyThumbNail = new DescriptorType;
 EssentialPropertyThumbNail.init({
@@ -545,6 +547,16 @@ describe('Capabilities', function () {
             })
         })
         */
+
+        it('should return true for enhancement codecs', function () {
+            settings.update({ streaming: { enhancement: { enabled: true } } });
+
+            const res = capabilities.runCodecSupportCheck({ codec: `video/${enhancementCodecs[0]}` }, Constants.VIDEO);
+
+            return res.then(function (isSupported) {
+                expect(isSupported).to.be.true;
+            });
+        });
 
 
     })

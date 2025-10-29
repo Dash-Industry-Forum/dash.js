@@ -283,7 +283,7 @@ function DefaultProtectionModel(config) {
     }
 
     function setServerCertificate(serverCertificate) {
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             mediaKeys.setServerCertificate(serverCertificate)
                 .then(function () {
                     logger.info('DRM: License server certificate successfully updated.');
@@ -291,8 +291,8 @@ function DefaultProtectionModel(config) {
                     resolve();
                 })
                 .catch((error) => {
-                    reject(error);
                     eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
+                    resolve()
                 });
         })
     }

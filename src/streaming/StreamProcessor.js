@@ -80,8 +80,10 @@ function StreamProcessor(config) {
 
     let bufferController,
         bufferingTime,
+        containsVideoTrack,
         currentMediaInfo,
         dashHandler,
+        enhancementStreamProcessor,
         instance,
         isDynamic,
         logger,
@@ -191,6 +193,7 @@ function StreamProcessor(config) {
             settings
         });
 
+        containsVideoTrack = hasVideoTrack;
         scheduleController.initialize(hasVideoTrack);
 
         bufferingTime = 0;
@@ -213,6 +216,7 @@ function StreamProcessor(config) {
         shouldUseExplicitTimeForRequest = false;
         shouldRepeatRequest = false;
         qualityChangeInProgress = false;
+        enhancementStreamProcessor = null;
         trackSwitchInProgress = false;
         _resetPendingSwitchToRepresentation();
     }
@@ -268,6 +272,11 @@ function StreamProcessor(config) {
 
     function setMediaInfoArray(value) {
         mediaInfoArr = value;
+    }
+
+    function setEnhancementStreamProcessor(value) {
+        enhancementStreamProcessor = value;
+        logger.info('enhancementStreamProcessor = ' + enhancementStreamProcessor);
     }
 
     /**
@@ -588,7 +597,7 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
-        const currentRepresentation = representationController.getCurrentRepresentation()
+        const currentRepresentation = representationController.getCurrentCompositeRepresentation();
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -691,6 +700,8 @@ function StreamProcessor(config) {
 
             eventBus.trigger()
 
+            _selectMediaInfoForEnhancementStreamProcessor(selectedValues);
+
             // Update Representation Controller with the new data. Note we do not filter any Representations here as the filter values might change over time.
             const voRepresentations = abrController.getPossibleVoRepresentations(currentMediaInfo, false);
             return representationController.updateData(voRepresentations, currentMediaInfo.isFragmented, selectedValues.selectedRepresentation.id)
@@ -752,6 +763,16 @@ function StreamProcessor(config) {
         }
     }
 
+    function _selectMediaInfoForEnhancementStreamProcessor(selectedValues) {
+        if (enhancementStreamProcessor && selectedValues.selectedRepresentation.dependentRepresentation) {
+            logger.info('[' + type + '] selectMediaInfo : call selectMediaInfo on enhancementStreamProcessor for index = ' + selectedValues.selectedRepresentation.absoluteIndex);
+            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({
+                newMediaInfo: selectedValues.selectedRepresentation.mediaInfo,
+                newRepresentation: selectedValues.selectedRepresentation
+            }));
+        }
+    }
+
     /**
      * The quality has changed which means we have switched to a different representation.
      * If we want to aggressively replace existing parts in the buffer we need to make sure that the new quality is higher than the already buffered one.
@@ -762,15 +783,20 @@ function StreamProcessor(config) {
             return;
         }
 
+        const qualityChangeHandled = _prepareQualityChangeForEnhancementStreamProcessor(e);
+        if (qualityChangeHandled) {
+            return;
+        }
+
         if (pendingSwitchToVoRepresentation && pendingSwitchToVoRepresentation.enabled) {
             logger.warn(`Canceling queued representation switch to ${pendingSwitchToVoRepresentation.newRepresentation.id} for ${type}`);
         }
 
         if (e.isAdaptationSetSwitch) {
-            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type}`);
+            logger.debug(`Preparing quality switch to different AdaptationSet for type ${type} from representation id ${e.oldRepresentation.id} to ${e.newRepresentation.id}`);
             _prepareAdaptationSwitchQualityChange(e)
         } else {
-            logger.debug(`Preparing quality within the same AdaptationSet for type ${type}`);
+            logger.debug(`Preparing quality within the same AdaptationSet for type ${type} from representation id ${e.oldRepresentation.id} to ${e.newRepresentation.id}`);
             _prepareNonAdaptationSwitchQualityChange(e)
         }
     }
@@ -967,6 +993,39 @@ function StreamProcessor(config) {
         qualityChangeInProgress = false;
     }
 
+    /**
+     * Prepare quality change for enhancement stream processor. Returns true if the change has been handled, false otherwise.
+     * @param {object} e 
+     * @return {boolean} qualityChangeHandled returns true if the change has been handled, false otherwise
+     */
+    function _prepareQualityChangeForEnhancementStreamProcessor(e) {
+        if (enhancementStreamProcessor) {
+            // Pass quality change to enhancement stream processor
+            enhancementStreamProcessor.prepareQualityChange(e);
+        }
+        else if (type === Constants.ENHANCEMENT) {
+            // This is an enhancement stream processor, handle the quality change
+            const oldRepType = e.oldRepresentation.mediaInfo.type;
+            const newRepType = e.newRepresentation.mediaInfo.type;
+
+            if (oldRepType === Constants.ENHANCEMENT && newRepType === Constants.VIDEO) {
+                // The new representation has no enhancement, stop the enhancement stream processor
+                logger.info('Stop ' + type + ' stream processor');
+                scheduleController.reset();
+                return true;
+            } else if (oldRepType === Constants.VIDEO && newRepType === Constants.ENHANCEMENT) {
+                // The new representation has an enhancement, start the enhancement stream processor
+                logger.info('Start ' + type + ' stream processor');
+                selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: e.newRepresentation.mediaInfo, newRepresentation: e.newRepresentation })).then(() => {
+                    scheduleController.setup();
+                    scheduleController.initialize(containsVideoTrack);
+                    scheduleController.startScheduleTimer();
+                });
+                return true;
+            }
+        }
+        return false;
+    }
 
     /**
      * We have canceled the download of a fragment and need to adjust the buffer time or reload an init segment
@@ -1538,6 +1597,7 @@ function StreamProcessor(config) {
         probeNextRequest,
         reset,
         selectMediaInfo,
+        setEnhancementStreamProcessor,
         setExplicitBufferingTime,
         setMediaInfoArray,
         setMediaSource,

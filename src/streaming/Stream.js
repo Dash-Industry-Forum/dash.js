@@ -42,6 +42,7 @@ import DashJSError from './vo/DashJSError.js';
 import BoxParser from './utils/BoxParser.js';
 import URLUtils from './utils/URLUtils.js';
 import BlacklistController from './controllers/BlacklistController.js';
+import ExternalMediaSource from './ExternalMediaSource.js';
 import MediaInfoSelectionInput from './vo/MediaInfoSelectionInput.js';
 
 
@@ -189,14 +190,14 @@ function Stream(config) {
     /**
      * Activates Stream by re-initializing some of its components
      * @param {MediaSource} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @param representationsFromPreviousPeriod
      * @memberof Stream#
      */
-    function activate(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
+    function activate(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod = []) {
         return new Promise((resolve, reject) => {
             if (isActive) {
-                resolve(previousBufferSinks);
+                resolve();
                 return;
             }
 
@@ -205,13 +206,13 @@ function Stream(config) {
                 eventBus.trigger(Events.STREAM_ACTIVATED, {
                     streamInfo
                 });
-                resolve(previousBufferSinks);
+                resolve();
                 return;
             }
 
 
-            _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod)
-                .then((bufferSinks) => {
+            _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
+                .then(() => {
                     isActive = true;
                     if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
                         startScheduleControllers();
@@ -219,7 +220,7 @@ function Stream(config) {
                     eventBus.trigger(Events.STREAM_ACTIVATED, {
                         streamInfo
                     });
-                    resolve(bufferSinks);
+                    resolve();
                 })
                 .catch((e) => {
                     reject(e);
@@ -256,23 +257,23 @@ function Stream(config) {
     /**
      *
      * @param {object} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @param representationsFromPreviousPeriod
      * @return {Promise<Array>}
      * @private
      */
-    function _initializeMedia(mediaSource, previousBufferSinks, representationsFromPreviousPeriod = []) {
-        return _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod);
+    function _initializeMedia(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod = []) {
+        return _commonMediaInitialization(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod);
     }
 
     /**
      *
      * @param {object} mediaSource
-     * @param {array} previousBufferSinks
+     * @param {array} previousSourceBufferSinks
      * @return {Promise<array>}
      * @private
      */
-    function _commonMediaInitialization(mediaSource, previousBufferSinks, representationsFromPreviousPeriod) {
+    function _commonMediaInitialization(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve, reject) => {
             checkConfig();
 
@@ -293,7 +294,7 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
-                    return _createBufferSinks(previousBufferSinks)
+                    return _createBufferSinks(previousSourceBufferSinks)
                 })
                 .then((bufferSinks) => {
                     if (streamProcessors.length === 0) {
@@ -350,6 +351,7 @@ function Stream(config) {
 
         let mediaInfo = null;
         let initialMediaInfo;
+        let enhancementMediaInfoIndex = -1;
 
         if (!allMediaForType || allMediaForType.length === 0) {
             logger.info('No ' + type + ' data.');
@@ -373,6 +375,10 @@ function Stream(config) {
             }
             if (_isMediaSupported(mediaInfo)) {
                 mediaController.addTrack(mediaInfo);
+            }
+
+            if (mediaInfo.type === Constants.ENHANCEMENT) {
+                enhancementMediaInfoIndex = i;
             }
         }
 
@@ -413,7 +419,18 @@ function Stream(config) {
 
         mediaController.setInitialMediaSettingsForType(type, streamInfo);
 
-        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource);
+        let streamProcessor = _createStreamProcessor(allMediaForType, mediaSource, type);
+
+        if (enhancementMediaInfoIndex >= 0) {
+            // An adaptation set, mapped to mediaInfo, of enhancement type was found so a stream processor shall be created for it
+            // the enhancement stream processor will work in parallel to the media stream processor it enhances
+            let enhancementMediaSource = new ExternalMediaSource(eventBus);
+            enhancementMediaSource.open();
+            enhancementMediaSource.duration = streamInfo.manifestInfo.duration;
+            let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, Constants.ENHANCEMENT);
+            enhancementStreamProcessor.selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: allMediaForType[enhancementMediaInfoIndex] }));
+            streamProcessor.setEnhancementStreamProcessor(enhancementStreamProcessor);
+        }
 
         initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
 
@@ -457,11 +474,12 @@ function Stream(config) {
      * Creates the StreamProcessor for a given media type.
      * @param {array} allMediaForType
      * @param {object} mediaSource
+     * @param {object} streamProcessorMediaType
      * @private
      */
-    function _createStreamProcessor(allMediaForType, mediaSource) {
+    function _createStreamProcessor(allMediaForType, mediaSource, streamProcessorMediaType) {
 
-        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType[0] : null;
+        const mediaInfo = (allMediaForType && allMediaForType.length > 0) ? allMediaForType.filter(m => (m.type === streamProcessorMediaType))[0] : null;
         let fragmentModel = fragmentController.getModel(mediaInfo ? mediaInfo.type : null);
         const type = mediaInfo ? mediaInfo.type : null;
         const mimeType = mediaInfo ? mediaInfo.mimeType : null;
@@ -504,16 +522,16 @@ function Stream(config) {
 
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
-     * @param {array} previousBuffersSinks
+     * @param {array} previousSourceBufferSinks
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousBuffersSinks) {
+    function _createBufferSinks(previousSourceBufferSinks) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
                 const oldRepresentation = sp.getRepresentation();
-                return sp.createBufferSinks(previousBuffersSinks, oldRepresentation);
+                return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
             });
 
             Promise.all(promises)
@@ -927,7 +945,7 @@ function Stream(config) {
             streamProcessor = streamProcessors[i];
             type = streamProcessor.getType();
 
-            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT) {
+            if (type === Constants.AUDIO || type === Constants.VIDEO || type === Constants.TEXT || type === Constants.ENHANCEMENT) {
                 arr.push(streamProcessor);
             }
         }
