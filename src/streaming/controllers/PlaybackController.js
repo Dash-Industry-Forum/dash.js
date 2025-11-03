@@ -43,30 +43,31 @@ function PlaybackController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
-    let instance,
-        logger,
-        streamController,
-        serviceDescriptionController,
+    let adapter,
+        availabilityStartTime,
         dashMetrics,
-        adapter,
-        videoModel,
-        timelineConverter,
-        wallclockTimeIntervalId,
-        liveDelay,
-        originalLiveDelay,
-        streamInfo,
+        initialCatchupModeActivated,
+        instance,
+        internalSeek,
         isDynamic,
-        playOnceInitialized,
         lastLivePlaybackTime,
         lastLiveUpdateTime,
-        availabilityStartTime,
+        liveDelay,
+        logger,
         lowLatencyModeEnabled,
-        seekTarget,
-        internalSeek,
-        playbackStalled,
         manifestUpdateInProgress,
-        initialCatchupModeActivated,
-        settings;
+        originalLiveDelay,
+        playOnceInitialized,
+        playbackStalled,
+        seekTarget,
+        serviceDescriptionController,
+        settings,
+        streamController,
+        streamInfo,
+        timelineConverter,
+        videoModel,
+        wallclockTimeIntervalId;
+
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);

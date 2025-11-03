@@ -852,6 +852,7 @@ function StreamProcessor(config) {
     function _handleDifferentSwitchTypes(e) {
         const newRepresentation = e.newRepresentation;
         const oldRepresentation = e.oldRepresentation;
+        const lastSegment = getLastSegment();
 
         if (!newRepresentation || !oldRepresentation) {
             logger.warn(`_handleDifferentSwitchTypes() is missing the target representations`);
@@ -868,7 +869,7 @@ function StreamProcessor(config) {
         }
 
         // If fast switch is enabled we check if we are supposed to replace existing stuff in the buffer
-        else if (mediaPlayerModel.getFastSwitchEnabled()) {
+        else if (mediaPlayerModel.getFastSwitchEnabled() && (!lastSegment || !lastSegment.isPartialSegment)) {
             _prepareForFastQualitySwitch(newRepresentation, oldRepresentation);
         }
 
@@ -1009,15 +1010,14 @@ function StreamProcessor(config) {
 
     /**
      * Prepare quality change for enhancement stream processor. Returns true if the change has been handled, false otherwise.
-     * @param {object} e 
+     * @param {object} e
      * @return {boolean} qualityChangeHandled returns true if the change has been handled, false otherwise
      */
     function _prepareQualityChangeForEnhancementStreamProcessor(e) {
         if (enhancementStreamProcessor) {
             // Pass quality change to enhancement stream processor
             enhancementStreamProcessor.prepareQualityChange(e);
-        }
-        else if (type === Constants.ENHANCEMENT) {
+        } else if (type === Constants.ENHANCEMENT) {
             // This is an enhancement stream processor, handle the quality change
             const oldRepType = e.oldRepresentation.mediaInfo.type;
             const newRepType = e.newRepresentation.mediaInfo.type;
@@ -1030,7 +1030,10 @@ function StreamProcessor(config) {
             } else if (oldRepType === Constants.VIDEO && newRepType === Constants.ENHANCEMENT) {
                 // The new representation has an enhancement, start the enhancement stream processor
                 logger.info('Start ' + type + ' stream processor');
-                selectMediaInfo(new MediaInfoSelectionInput({ newMediaInfo: e.newRepresentation.mediaInfo, newRepresentation: e.newRepresentation })).then(() => {
+                selectMediaInfo(new MediaInfoSelectionInput({
+                    newMediaInfo: e.newRepresentation.mediaInfo,
+                    newRepresentation: e.newRepresentation
+                })).then(() => {
                     scheduleController.setup();
                     scheduleController.initialize(containsVideoTrack);
                     scheduleController.startScheduleTimer();
