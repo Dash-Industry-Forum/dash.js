@@ -72,14 +72,14 @@ function TemplateSegmentsGetter(config, isDynamic) {
         indexWithoutStartNumber = Math.max(indexWithoutStartNumber, 0);
 
         const seg = getIndexBasedSegment({
-            timelineConverter,
-            isDynamic,
-            representation,
             index: indexWithoutStartNumber,
-            totalNumberOfPartialSegments,
-            subNumberOfPartialSegmentToRequest,
+            isDynamic,
+            mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10),
             mediaUrl: template.media,
-            mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10)
+            representation,
+            subNumberOfPartialSegmentToRequest,
+            timelineConverter,
+            totalNumberOfPartialSegments,
         });
 
         if (seg && representation.endNumber && seg.replacementNumber > representation.endNumber) {

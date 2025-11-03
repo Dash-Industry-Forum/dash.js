@@ -168,12 +168,13 @@ function getIndexBasedSegment(data) {
     const {
         index,
         isDynamic,
+        mediaRange,
         mediaTime,
         mediaUrl,
         representation,
         subNumberOfPartialSegmentToRequest,
         timelineConverter,
-        totalNumberOfPartialSegments,
+        totalNumberOfPartialSegments
     } = data;
     let segmentDurationInSeconds,
         presentationStartTime,
@@ -198,18 +199,19 @@ function getIndexBasedSegment(data) {
 
     const segment = _getSegment(
         {
+            index,
+            isDynamic,
+            mediaRange,
+            mediaTime,
+            mediaTimeInSeconds,
+            mediaUrl,
+            presentationEndTime,
+            presentationStartTime,
             representation,
             segmentDurationInSeconds,
-            presentationStartTime,
-            presentationEndTime,
-            mediaTimeInSeconds,
-            timelineConverter,
-            isDynamic,
-            index,
-            totalNumberOfPartialSegments,
             subNumberOfPartialSegmentToRequest,
-            mediaUrl,
-            mediaTime
+            timelineConverter,
+            totalNumberOfPartialSegments
         });
 
     if (!_isSegmentAvailable(timelineConverter, representation, segment, isDynamic)) {
