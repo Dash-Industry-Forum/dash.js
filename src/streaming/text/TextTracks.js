@@ -547,7 +547,7 @@ function TextTracks(config) {
 
                                 // If disabled, add fragment cues as they'll be downloaded once.
                                 // If you miss them, they won't be downloaded again.
-                                if (track.mode !== Constants.TEXT_DISABLED || (appendFragmentedCuesWhenTrackModeDisabled && isFragmented) || track.kind === 'captions') {
+                                if (track.mode !== Constants.TEXT_DISABLED || (appendFragmentedCuesWhenTrackModeDisabled && (isFragmented || track.kind === 'captions'))) {
                                     track.addCue(cue);
                                 }
                             }
