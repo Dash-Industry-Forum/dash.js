@@ -271,7 +271,7 @@ function getTotalNumberOfPartialSegments(element) {
 
 export {
     getIndexBasedSegment,
-    getTotalNumberOfPartialSegments,
     getTimeBasedSegment,
+    getTotalNumberOfPartialSegments,
     processUriTemplate,
 };

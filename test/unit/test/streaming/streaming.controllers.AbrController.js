@@ -442,7 +442,7 @@ describe('AbrController', function () {
         });
     })
 
-    describe('abrCtrl.canPerformQualitySwitch()', function () {
+    describe('canPerformQualitySwitch()', function () {
 
         it('should return true if lastSegment is undefined', function() {
             expect(abrCtrl.canPerformQualitySwitch(undefined, {})).to.be.true;
@@ -563,6 +563,111 @@ describe('AbrController', function () {
 
     })
 
+    describe('manuallySetPlaybackQuality', function () {
+
+        it('should immediately switch quality when canPerformQualitySwitch returns true', function (done) {
+            // Override streamProcessor to simulate current representation and last segment allowing switch
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            streamProcessor.getRepresentation = () => rep0; // current representation
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            streamProcessor.getLastSegment = () => undefined;
+
+            const onQualityChange = function (e) {
+                expect(e.oldRepresentation.id).to.be.equal(rep0.id);
+                expect(e.newRepresentation.id).to.be.equal(rep1.id);
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            };
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+
+            // First set current quality manually to rep0 so subsequent switch has oldRepresentation
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep0);
+            // Now manually trigger switch to rep1
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'manual-test' });
+        });
+
+
+        it('should queue manual quality switch when canPerformQualitySwitch returns false', function () {
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            // Set current representation
+            streamProcessor.getRepresentation = () => rep0;
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            // Simulate a last segment that blocks switching (partial segment with unsuitable properties)
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            });
+            // Current representation missing segmentSequenceProperties => canPerformQualitySwitch should be false
+            rep0.segmentSequenceProperties = [];
+
+            const spy = sinon.spy();
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'manual-test' });
+
+            // No immediate quality change event emitted
+            expect(spy.notCalled).to.be.true;
+        });
+
+        it('should execute queued manual quality switch when handlePendingManualQualitySwitch is called and conditions allow switching', function (done) {
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            // First block switching so it gets queued
+            streamProcessor.getRepresentation = () => rep0;
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            });
+            rep0.segmentSequenceProperties = [];
+
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'queue-test' });
+
+            // Now allow switching by changing last segment to end of sequence
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 3 // end of sequence -> allows switch
+            });
+            // Provide segmentSequenceProperties so canPerformQualitySwitch returns true; but because replacementSubNumber === totalNumber-1 it already allows
+            rep0.segmentSequenceProperties = [new SegmentSequenceProperties()];
+
+            const onQualityChange = (e) => {
+                expect(e.oldRepresentation.id).to.be.equal(rep0.id);
+                expect(e.newRepresentation.id).to.be.equal(rep1.id);
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            };
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+
+            // Trigger handling of queued switch
+            const handled = abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO);
+            expect(handled).to.be.true;
+        });
+    })
+
     describe('Additional Tests', function () {
         it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
             const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
@@ -595,20 +700,20 @@ describe('AbrController', function () {
         it('should switch to a new enhancement Representation and have the correct dependentRep', function (done) {
             const enhancementRepresentation = dummyRepresentations[2];
             const dependentRepresentation = dummyRepresentations[0];
-    
+
             const onQualityChange = (e) => {
                 expect(e.oldRepresentation).to.not.exist;
-    
+
                 // Representation 2 should have dependentRepresentation with id 0
                 expect(e.newRepresentation.id).to.be.equal(enhancementRepresentation.id);
                 expect(e.newRepresentation.dependentRepresentation.id).to.be.equal(dependentRepresentation.id);
-    
+
                 eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
                 done();
             }
-    
+
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
-    
+
             abrCtrl.setPlaybackQuality(Constants.VIDEO, enhancementMediaInfo.streamInfo, enhancementRepresentation);
         });
 

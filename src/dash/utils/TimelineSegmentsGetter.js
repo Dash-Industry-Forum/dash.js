@@ -51,7 +51,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
         if (!representation) {
             return null;
         }
-        const safetyOffset = 0.05;
+        const safetyOffset = 0.01;
         const requestedPresentationTime = lastSegment && !isNaN(lastSegment.presentationStartTime) ? lastSegment.presentationStartTime + lastSegment.duration + safetyOffset : 0;
 
         return getSegmentByTime(representation, requestedPresentationTime);

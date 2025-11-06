@@ -566,12 +566,12 @@ function AbrController() {
     function _createRulesContext(streamProcessor, currentRequest) {
         return RulesContext(context).create({
             abrController: instance,
-            streamProcessor,
-            currentRequest,
-            switchRequestHistory,
-            droppedFramesHistory,
-            throughputController,
             adapter,
+            currentRequest,
+            droppedFramesHistory,
+            streamProcessor,
+            switchRequestHistory,
+            throughputController,
             videoModel
         });
     }
@@ -880,7 +880,6 @@ function AbrController() {
      */
     function _changeQuality(type, oldRepresentation, newRepresentation, reason) {
         const streamId = newRepresentation.mediaInfo.streamInfo.id;
-
         if (!type || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
             return false
         }
@@ -891,7 +890,7 @@ function AbrController() {
         const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
 
         logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
-        eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
+        eventBus.trigger(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED,
             {
                 isAdaptationSetSwitch,
                 mediaType: type,
