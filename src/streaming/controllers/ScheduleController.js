@@ -53,18 +53,18 @@ function ScheduleController(config) {
     const representationController = config.representationController
     const settings = config.settings;
 
-    let instance,
-        streamInfo,
-        logger,
-        timeToLoadDelay,
-        scheduleTimeout,
+    let shouldCheckPlaybackQuality,
         hasVideoTrack,
+        initSegmentRequired,
+        instance,
         lastFragmentRequest,
         lastInitializedRepresentationId,
-        switchTrack,
-        initSegmentRequired,
+        logger,
         managedMediaSourceAllowsRequest,
-        checkPlaybackQuality;
+        scheduleTimeout,
+        streamInfo,
+        switchTrack,
+        timeToLoadDelay;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -100,7 +100,6 @@ function ScheduleController(config) {
     }
 
     function startScheduleTimer(value) {
-
         //return if both buffering and playback have ended
         if (bufferController.getIsBufferingCompleted()) {
             return;
@@ -108,7 +107,7 @@ function ScheduleController(config) {
 
         clearScheduleTimer();
         const timeoutValue = !isNaN(value) ? value : 0;
-        scheduleTimeout = setTimeout(schedule, timeoutValue);
+        scheduleTimeout = setTimeout(_schedule, timeoutValue);
     }
 
     function clearScheduleTimer() {
@@ -121,30 +120,39 @@ function ScheduleController(config) {
     /**
      * Schedule the request for an init or a media segment
      */
-    function schedule() {
+    function _schedule() {
+        const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
-            // Check if we are supposed to stop scheduling
             if (_shouldClearScheduleTimer()) {
                 clearScheduleTimer();
                 return;
             }
 
             if (_shouldScheduleNextRequest()) {
-                let qualityChange = false;
-                if (checkPlaybackQuality) {
-                    // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
-                    // The StreamProcessor will also start the schedule timer again once the quality switch has beeen prepared. Consequently, we only call _getNextFragment if the quality is not changed.
-                    qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
-                }
-                if (!qualityChange) {
-                    _getNextFragment();
-                }
-
+                _scheduleNextRequest()
             } else {
-                startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+                startScheduleTimer(scheduleTimeout);
             }
         } catch (e) {
-            startScheduleTimer(playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout);
+            startScheduleTimer(scheduleTimeout);
+        }
+    }
+
+    function _scheduleNextRequest() {
+        const hasTriggeredManualQualitySwitch = abrController.handlePendingManualQualitySwitch(streamInfo.id, type);
+
+        if (hasTriggeredManualQualitySwitch) {
+            return
+        }
+
+        let qualityChange = false;
+        if (shouldCheckPlaybackQuality) {
+            // in case the playback quality is supposed to be changed, the corresponding StreamProcessor will update the currentRepresentation.
+            // The StreamProcessor will also start the schedule timer again once the quality switch has been prepared. Consequently, we only call _getNextFragment if the quality is not changed.
+            qualityChange = abrController.checkPlaybackQuality(type, streamInfo.id);
+        }
+        if (!qualityChange) {
+            _getNextFragment();
         }
     }
 
@@ -157,30 +165,34 @@ function ScheduleController(config) {
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
         if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
-            if (switchTrack) {
-                logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
-                switchTrack = false;
-            } else {
-                logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentation.id);
-            }
-            eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
-                { representationId: currentRepresentation.id, sender: instance },
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            checkPlaybackQuality = false;
-            initSegmentRequired = false;
+            _initFragmentNeeded(currentRepresentation)
+        } else {
+            _mediaFragmentNeeded()
         }
+    }
 
-        // Request a media segment instead
-        else {
-            logger.debug(`Media segment needed for ${type} and stream id ${streamInfo.id}`);
-            eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
-                {},
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            checkPlaybackQuality = true;
+    function _initFragmentNeeded(currentRepresentation) {
+        if (switchTrack) {
+            logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
+            switchTrack = false;
+        } else {
+            logger.debug('Quality has changed, get init request for representationid = ' + currentRepresentation.id);
         }
+        eventBus.trigger(Events.INIT_FRAGMENT_NEEDED,
+            { representationId: currentRepresentation.id, sender: instance },
+            { streamId: streamInfo.id, mediaType: type }
+        );
+        shouldCheckPlaybackQuality = false;
+        initSegmentRequired = false;
+    }
 
+    function _mediaFragmentNeeded() {
+        logger.debug(`Media segment needed for ${type} and stream id ${streamInfo.id}`);
+        eventBus.trigger(Events.MEDIA_FRAGMENT_NEEDED,
+            {},
+            { streamId: streamInfo.id, mediaType: type }
+        );
+        shouldCheckPlaybackQuality = true;
     }
 
     /**
@@ -339,7 +351,7 @@ function ScheduleController(config) {
         _completeQualityChange(true);
     }
 
-    function _completeQualityChange(trigger) {
+    function _completeQualityChange(triggerQualityChangeRenderedEvent) {
         if (playbackController && fragmentModel) {
             const item = fragmentModel.getRequests({
                 state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
@@ -348,27 +360,35 @@ function ScheduleController(config) {
             })[0];
 
             if (item && playbackController.getTime() >= item.startTime) {
-                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && trigger) {
-                    logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
-                    eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
-                        mediaType: type,
-                        oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
-                        newMediaInfo: item.representation.mediaInfo,
-                        streamId: streamInfo.id
-                    });
+                if ((!lastFragmentRequest.representation || (item.representation.mediaInfo.type === lastFragmentRequest.representation.mediaInfo.type && item.representation.mediaInfo.index !== lastFragmentRequest.representation.mediaInfo.index)) && triggerQualityChangeRenderedEvent) {
+                    _triggerTrackChangeRendered(item);
                 }
-                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && trigger) {
-                    logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
-                    eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
-                        mediaType: type,
-                        oldRepresentation: lastFragmentRequest.representation ? lastFragmentRequest.representation : null,
-                        newRepresentation: item.representation,
-                        streamId: streamInfo.id
-                    });
+                if ((!lastFragmentRequest.representation || (item.representation.id !== lastFragmentRequest.representation.id)) && triggerQualityChangeRenderedEvent) {
+                    _triggerQualityChangeRendered(item);
                 }
                 lastFragmentRequest.representation = item.representation
             }
         }
+    }
+
+    function _triggerTrackChangeRendered(item) {
+        logger.debug(`Track change rendered for streamId ${streamInfo.id} and type ${type}`);
+        eventBus.trigger(Events.TRACK_CHANGE_RENDERED, {
+            mediaType: type,
+            oldMediaInfo: lastFragmentRequest && lastFragmentRequest.representation && lastFragmentRequest.representation.mediaInfo ? lastFragmentRequest.representation.mediaInfo : null,
+            newMediaInfo: item.representation.mediaInfo,
+            streamId: streamInfo.id
+        });
+    }
+
+    function _triggerQualityChangeRendered(item) {
+        logger.debug(`Quality change rendered for streamId ${streamInfo.id} and type ${type}`);
+        eventBus.trigger(Events.QUALITY_CHANGE_RENDERED, {
+            mediaType: type,
+            oldRepresentation: lastFragmentRequest.representation ? lastFragmentRequest.representation : null,
+            newRepresentation: item.representation,
+            streamId: streamInfo.id
+        });
     }
 
     function _onURLResolutionFailed() {
@@ -394,8 +414,8 @@ function ScheduleController(config) {
         return timeToLoadDelay;
     }
 
-    function setCheckPlaybackQuality(value) {
-        checkPlaybackQuality = value;
+    function setShouldCheckPlaybackQuality(value) {
+        shouldCheckPlaybackQuality = value;
     }
 
     function setInitSegmentRequired(value) {
@@ -407,7 +427,7 @@ function ScheduleController(config) {
     }
 
     function resetInitialSettings() {
-        checkPlaybackQuality = true;
+        shouldCheckPlaybackQuality = true;
         timeToLoadDelay = 0;
         lastInitializedRepresentationId = null;
         lastFragmentRequest = {
@@ -446,7 +466,7 @@ function ScheduleController(config) {
         getType,
         initialize,
         reset,
-        setCheckPlaybackQuality,
+        setShouldCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,
         setup,

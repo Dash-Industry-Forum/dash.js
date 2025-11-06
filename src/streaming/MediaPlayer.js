@@ -1604,7 +1604,7 @@ function MediaPlayer() {
         } else {
             const representation = activeStream.getRepresentationForTypeById(type, id);
             if (representation) {
-                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+                abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
             }
         }
     }
@@ -1641,7 +1641,7 @@ function MediaPlayer() {
         } else {
             const representation = activeStream.getRepresentationForTypeByIndex(type, index);
             if (representation) {
-                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+                abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
             }
         }
     }

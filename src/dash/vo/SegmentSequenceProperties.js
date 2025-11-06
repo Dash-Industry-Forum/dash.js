@@ -28,65 +28,27 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
  * @class
  * @ignore
  */
-
-import DashConstants from '../constants/DashConstants.js';
-
-class Representation {
-
+class SegmentSequenceProperties {
     constructor() {
-        this.absoluteIndex = NaN;
-        this.adaptation = null;
-        this.availabilityTimeComplete = true;
-        this.availabilityTimeOffset = 0;
-        this.bandwidth = NaN;
-        this.bitrateInKbit = NaN;
-        this.bitsPerPixel = NaN;
-        this.codecFamily = null;
-        this.codecPrivateData = null;
-        this.codecs = null;
-        this.dependencyId = null;
-        this.dependentRepresentation = null;
-        this.endNumber = null;
-        this.essentialProperties = [];
-        this.fragmentDuration = null;
-        this.frameRate = null;
-        this.height = NaN;
-        this.id = null;
-        this.indexRange = null;
-        this.initialization = null;
-        this.maxPlayoutRate = NaN;
-        this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
-        this.mediaInfo = null;
-        this.mimeType = null;
-        this.mseTimeOffset = NaN;
-        this.pixelsPerSecond = NaN;
-        this.presentationTimeOffset = 0;
-        this.qualityRanking = NaN;
-        this.range = null;
-        this.scanType = null;
-        this.segments = null;
-        this.segmentDuration = NaN;
-        this.segmentInfoType = null;
-        this.segmentSequenceProperties = [];
-        this.supplementalProperties = [];
-        this.startNumber = 1;
-        this.timescale = 1;
-        this.width = NaN;
+        this.cadence = 1;
+        this.sapType = 0;
+        this.event = true;
+        this.alignment = null;
     }
 
-    hasInitialization() {
-        return (this.initialization !== null || this.range !== null);
-    }
-
-    hasSegments() {
-        return this.segmentInfoType !== DashConstants.BASE_URL &&
-            this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
-            !this.indexRange;
+    init(data) {
+        if (data) {
+            this.cadence = data.cadence !== undefined && !isNaN(data.cadence) ? data.cadence : 1;
+            this.sapType = data.sapType !== undefined && !isNaN(data.sapType) ? data.sapType : 0;
+            this.event = data.event !== undefined ? data.event : true;
+            this.alignment = data.alignment !== undefined ? data.alignment : null;
+        }
     }
 }
 
-export default Representation;
+export default SegmentSequenceProperties;

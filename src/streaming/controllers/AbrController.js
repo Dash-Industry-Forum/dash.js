@@ -52,27 +52,28 @@ function AbrController() {
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
 
-    let instance,
-        logger,
-        abrRulesCollection,
-        streamController,
-        capabilities,
-        streamProcessorDict,
-        abandonmentStateDict,
+    let abandonmentStateDict,
         abandonmentTimeout,
-        windowResizeEventCalled,
+        abrRulesCollection,
         adapter,
-        videoModel,
-        mediaPlayerModel,
-        customParametersModel,
+        capabilities,
         cmsdModel,
-        domStorage,
-        playbackRepresentationId,
-        switchRequestHistory,
-        droppedFramesHistory,
-        throughputController,
+        currentRepresentationId,
+        customParametersModel,
         dashMetrics,
-        settings;
+        domStorage,
+        droppedFramesHistory,
+        instance,
+        logger,
+        mediaPlayerModel,
+        queuedManualQualitySwitches,
+        settings,
+        streamController,
+        streamProcessorDict,
+        switchRequestHistory,
+        throughputController,
+        videoModel,
+        windowResizeEventCalled;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -149,6 +150,7 @@ function AbrController() {
     function resetInitialSettings() {
         abandonmentStateDict = {};
         streamProcessorDict = {};
+        queuedManualQualitySwitches = new Map();
 
         if (windowResizeEventCalled === undefined) {
             windowResizeEventCalled = false;
@@ -161,7 +163,7 @@ function AbrController() {
             switchRequestHistory.reset();
         }
 
-        playbackRepresentationId = undefined;
+        currentRepresentationId = undefined;
         droppedFramesHistory = undefined;
         switchRequestHistory = undefined;
         clearTimeout(abandonmentTimeout);
@@ -546,19 +548,40 @@ function AbrController() {
             return;
         }
 
-        const rulesContext = RulesContext(context).create({
-            abrController: instance,
-            streamProcessor,
-            currentRequest: e.request,
-            throughputController,
-            adapter,
-            videoModel
-        });
+        const lastSegment = streamProcessor.getLastSegment();
+        const canAbandonRequest = _canAbandonRequest(lastSegment);
+
+        if (!canAbandonRequest) {
+            return;
+        }
+
+        const rulesContext = _createRulesContext(streamProcessor, e.request);
         const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
 
         if (switchRequest && switchRequest.representation !== SwitchRequest.NO_CHANGE) {
             _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
         }
+    }
+
+    function _createRulesContext(streamProcessor, currentRequest) {
+        return RulesContext(context).create({
+            abrController: instance,
+            adapter,
+            currentRequest,
+            droppedFramesHistory,
+            streamProcessor,
+            switchRequestHistory,
+            throughputController,
+            videoModel
+        });
+    }
+
+    function _canAbandonRequest(lastSegment) {
+        // For now we only allow abandoning the first partial segment as we are sure there is an IDR at the beginning of the segment
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return true
+        }
+        return lastSegment.replacementSubNumber === 0;
     }
 
     function _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest) {
@@ -596,10 +619,8 @@ function AbrController() {
      */
     function _onQualityChangeRendered(e) {
         if (e.mediaType === Constants.VIDEO) {
-            if (playbackRepresentationId !== undefined) {
-                droppedFramesHistory.push(e.streamId, playbackRepresentationId, videoModel.getPlaybackQuality());
-            }
-            playbackRepresentationId = e.newRepresentation.id;
+            _addDroppedFramesHistoryEntry(e.streamId);
+            currentRepresentationId = e.newRepresentation.id;
         }
     }
 
@@ -661,28 +682,18 @@ function AbrController() {
                 return false;
             }
 
-            if (droppedFramesHistory) {
-                const playbackQuality = videoModel.getPlaybackQuality();
-                if (playbackQuality) {
-                    droppedFramesHistory.push(streamId, playbackRepresentationId, playbackQuality);
-                }
-            }
+            _addDroppedFramesHistoryEntry(streamId)
 
-            if (!settings.get().streaming.abr.autoSwitchBitrate[type]) {
+            const streamProcessor = streamProcessorDict[streamId][type];
+            const lastSegment = streamProcessor.getLastSegment();
+            const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
+            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+
+            if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canSwitchQuality) {
                 return false;
             }
 
-            const streamProcessor = streamProcessorDict[streamId][type];
-            const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
-            const rulesContext = RulesContext(context).create({
-                abrController: instance,
-                throughputController,
-                switchRequestHistory,
-                droppedFramesHistory,
-                streamProcessor,
-                adapter,
-                videoModel
-            });
+            const rulesContext = _createRulesContext(streamProcessor);
             const switchRequest = abrRulesCollection.getBestPossibleSwitchRequest(rulesContext);
 
             if (!switchRequest || !switchRequest.representation) {
@@ -690,11 +701,7 @@ function AbrController() {
             }
 
             let newRepresentation = switchRequest.representation;
-            switchRequestHistory.push({
-                currentRepresentation,
-                newRepresentation
-            });
-
+            _addSwitchHistoryEntry(currentRepresentation, newRepresentation);
             if (newRepresentation.id !== currentRepresentation.id && (abandonmentStateDict[streamId][type].state === MetricsConstants.ALLOW_LOAD || newRepresentation.absoluteIndex < currentRepresentation.absoluteIndex)) {
                 _changeQuality(type, currentRepresentation, newRepresentation, switchRequest.reason);
                 return true;
@@ -708,6 +715,65 @@ function AbrController() {
     }
 
     /**
+     * When playing Segment Sequence Representations we can not simply switch from one partial segment to another partial segment or another full segment.
+     * @private
+     */
+    function canPerformQualitySwitch(lastSegment, currentRepresentation) {
+        if (!lastSegment || !lastSegment.isPartialSegment || isNaN(lastSegment.totalNumberOfPartialSegments) || isNaN(lastSegment.replacementSubNumber)) {
+            return true
+        }
+
+        // For partial segments we allow switching at the end of a segment sequence
+        if (lastSegment.replacementSubNumber === (lastSegment.totalNumberOfPartialSegments - 1)) {
+            return true;
+        }
+
+        return _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation);
+    }
+
+    function _segmentSequencePropertiesAllowsSwitching(lastSegment, currentRepresentation) {
+        if (!currentRepresentation || !currentRepresentation.segmentSequenceProperties || currentRepresentation.segmentSequenceProperties.length <= 0) {
+            return false;
+        }
+
+        // We do not allow quality switches at non segment boundaries in case Adaptation Set Switching is available in the MPD.
+        // This is because we can not control the switching process at this point, and the ABR rules might select a Representation that has a different SAPType + Cadence than the current Representation.
+        if (currentRepresentation && currentRepresentation.mediaInfo && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds && currentRepresentation.mediaInfo.adaptationSetSwitchingCompatibleIds.length > 0) {
+            return false;
+        }
+
+        const segmentSequencePropertiesWithTargetSapType = currentRepresentation.segmentSequenceProperties.filter((ssp) => {
+            return !isNaN(ssp.sapType) && ssp.sapType <= 1;
+        })
+
+        if (segmentSequencePropertiesWithTargetSapType.length === 0) {
+            return false;
+        }
+
+        let nextPartialSubNumber = (lastSegment.replacementSubNumber + 1) % lastSegment.totalNumberOfPartialSegments;
+
+        return segmentSequencePropertiesWithTargetSapType.some((ssp) => {
+            return nextPartialSubNumber % ssp.cadence === 0
+        })
+    }
+
+    function _addDroppedFramesHistoryEntry(streamId) {
+        if (droppedFramesHistory) {
+            const playbackQuality = videoModel.getPlaybackQuality();
+            if (playbackQuality) {
+                droppedFramesHistory.push(streamId, currentRepresentationId, playbackQuality);
+            }
+        }
+    }
+
+    function _addSwitchHistoryEntry(currentRepresentation, newRepresentation) {
+        switchRequestHistory.push({
+            currentRepresentation,
+            newRepresentation
+        })
+    }
+
+    /**
      * Sets the new playback quality. Starts from index 0.
      * If the index of the new quality is the same as the old one changeQuality will not be called.
      * @param {string} type
@@ -718,16 +784,76 @@ function AbrController() {
      */
     function setPlaybackQuality(type, streamInfo, representation, reason = {}) {
         if (!streamInfo || !streamInfo.id || !type || !streamProcessorDict || !streamProcessorDict[streamInfo.id] || !streamProcessorDict[streamInfo.id][type] || !representation) {
-            return;
+            return false;
         }
 
         const streamProcessor = streamProcessorDict[streamInfo.id][type];
         const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
 
-
         if (!currentRepresentation || representation.id !== currentRepresentation.id) {
-            _changeQuality(type, currentRepresentation, representation, reason);
+            return _changeQuality(type, currentRepresentation, representation, reason);
         }
+
+        return false;
+    }
+
+    function manuallySetPlaybackQuality(type, streamInfo, representation, reason = {}) {
+        const streamProcessor = streamProcessorDict[streamInfo.id][type];
+        const lastSegment = streamProcessor.getLastSegment();
+        const currentRepresentation = streamProcessor.getRepresentation();
+        const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+
+        if (!canSwitchQuality) {
+            _queueManualQualitySwitch(type, streamInfo, representation, reason);
+            return;
+        }
+
+        return setPlaybackQuality(type, streamInfo, representation, reason);
+    }
+
+    function _queueManualQualitySwitch(type, streamInfo, representation, reason) {
+        try {
+            logger.debug(`[AbrController] Queuing manual quality switch for stream ${streamInfo.id} and type ${type} to representation ${representation.id}`);
+            const key = _getManualQualitySwitchKey(streamInfo.id, type);
+            queuedManualQualitySwitches.set(key, { type, streamInfo, representation, reason });
+        } catch (e) {
+            logger.error(`Can not queue manual quality switch: ${e}`);
+        }
+    }
+
+    function handlePendingManualQualitySwitch(streamId, mediaType) {
+        try {
+            const manualQualitySwitchKey = _getManualQualitySwitchKey(streamId, mediaType);
+            let switchRequest = null;
+            if (queuedManualQualitySwitches.has(manualQualitySwitchKey)) {
+                switchRequest = queuedManualQualitySwitches.get(manualQualitySwitchKey);
+            }
+
+            if (!switchRequest) {
+                return false
+            }
+
+            const streamProcessor = streamProcessorDict[streamId][mediaType];
+            const lastSegment = streamProcessor.getLastSegment();
+            const currentRepresentation = streamProcessor.getRepresentation();
+            const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
+
+            if (!canSwitchQuality) {
+                return false
+            }
+
+            const { type, streamInfo, representation, reason } = switchRequest;
+
+            queuedManualQualitySwitches.delete(manualQualitySwitchKey);
+            setPlaybackQuality(type, streamInfo, representation, reason);
+            return true;
+        } catch (e) {
+            logger.error(`Can not handle pending manual quality switch: ${e}`);
+        }
+    }
+
+    function _getManualQualitySwitchKey(streamId, mediaType) {
+        return `${streamId}-${mediaType}`
     }
 
     /**
@@ -745,7 +871,6 @@ function AbrController() {
 
     }
 
-
     /**
      * Changes the internal qualityDict values according to the new quality
      * @param {Representation} oldRepresentation
@@ -755,29 +880,36 @@ function AbrController() {
      */
     function _changeQuality(type, oldRepresentation, newRepresentation, reason) {
         const streamId = newRepresentation.mediaInfo.streamInfo.id;
-        if (type && streamProcessorDict[streamId] && streamProcessorDict[streamId][type]) {
-            const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
-            const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
-            const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
+        if (!type || !streamProcessorDict[streamId] || !streamProcessorDict[streamId][type]) {
+            return false
+        }
 
-            const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
-            logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
+        const streamInfo = streamProcessorDict[streamId][type].getStreamInfo();
+        const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
+        const isAdaptationSetSwitch = oldRepresentation !== null && !adapter.areMediaInfosEqual(oldRepresentation.mediaInfo, newRepresentation.mediaInfo);
+        const oldBitrate = oldRepresentation ? oldRepresentation.bitrateInKbit : 0;
 
-            eventBus.trigger(Events.QUALITY_CHANGE_REQUESTED,
-                {
-                    oldRepresentation: oldRepresentation,
-                    newRepresentation: newRepresentation,
-                    reason,
-                    streamInfo,
-                    mediaType: type,
-                    isAdaptationSetSwitch
-                },
-                { streamId: streamInfo.id, mediaType: type }
-            );
-            const bitrate = throughputController.getAverageThroughput(type);
-            if (!isNaN(bitrate)) {
-                domStorage.setSavedBitrateSettings(type, bitrate);
-            }
+        logger.info(`[AbrController]: Switching quality in period ${streamId} for media type ${type}. Switch from bitrate ${oldBitrate} to bitrate ${newRepresentation.bitrateInKbit}. Current buffer level: ${bufferLevel}. Reason:` + (reason ? JSON.stringify(reason) : '/'));
+        eventBus.trigger(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED,
+            {
+                isAdaptationSetSwitch,
+                mediaType: type,
+                newRepresentation: newRepresentation,
+                oldRepresentation: oldRepresentation,
+                reason,
+                streamInfo,
+            },
+            { streamId: streamInfo.id, mediaType: type }
+        );
+
+        _saveBitrateSettings(type)
+        return true
+    }
+
+    function _saveBitrateSettings(type) {
+        const bitrate = throughputController.getAverageThroughput(type);
+        if (!isNaN(bitrate)) {
+            domStorage.setSavedBitrateSettings(type, bitrate);
         }
     }
 
@@ -871,6 +1003,7 @@ function AbrController() {
 
 
     instance = {
+        canPerformQualitySwitch,
         checkPlaybackQuality,
         clearDataForStream,
         getAbandonmentStateFor,
@@ -880,9 +1013,11 @@ function AbrController() {
         getPossibleVoRepresentationsFilteredBySettings,
         getRepresentationByAbsoluteIndex,
         handleNewMediaInfo,
+        handlePendingManualQualitySwitch,
         initialize,
         isPlayingAtLowestQuality,
         isPlayingAtTopQuality,
+        manuallySetPlaybackQuality,
         registerStreamType,
         reset,
         setConfig,
@@ -900,3 +1035,4 @@ AbrController.__dashjs_factory_name = 'AbrController';
 const factory = FactoryMaker.getSingletonFactory(AbrController);
 FactoryMaker.updateSingletonFactory(AbrController.__dashjs_factory_name, factory);
 export default factory;
+

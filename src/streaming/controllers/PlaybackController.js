@@ -43,31 +43,31 @@ function PlaybackController() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
-    let instance,
-        logger,
-        streamController,
-        serviceDescriptionController,
+    let adapter,
+        availabilityStartTime,
         dashMetrics,
-        adapter,
-        videoModel,
-        timelineConverter,
-        wallclockTimeIntervalId,
-        liveDelay,
-        originalLiveDelay,
-        streamInfo,
+        initialCatchupModeActivated,
+        instance,
+        internalSeek,
         isDynamic,
-        playOnceInitialized,
         lastLivePlaybackTime,
         lastLiveUpdateTime,
-        availabilityStartTime,
-        availabilityTimeComplete,
+        liveDelay,
+        logger,
         lowLatencyModeEnabled,
-        seekTarget,
-        internalSeek,
-        playbackStalled,
         manifestUpdateInProgress,
-        initialCatchupModeActivated,
-        settings;
+        originalLiveDelay,
+        playOnceInitialized,
+        playbackStalled,
+        seekTarget,
+        serviceDescriptionController,
+        settings,
+        streamController,
+        streamInfo,
+        timelineConverter,
+        videoModel,
+        wallclockTimeIntervalId;
+
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -85,7 +85,6 @@ function PlaybackController() {
         originalLiveDelay = 0;
         availabilityStartTime = 0;
         manifestUpdateInProgress = false;
-        availabilityTimeComplete = true;
         lowLatencyModeEnabled = false;
         initialCatchupModeActivated = false;
         seekTarget = NaN;
@@ -840,8 +839,7 @@ function PlaybackController() {
             return;
         }
 
-        availabilityTimeComplete = e.currentRepresentation.availabilityTimeComplete;
-        lowLatencyModeEnabled = !availabilityTimeComplete;
+        lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false;
 
         // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
         if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
