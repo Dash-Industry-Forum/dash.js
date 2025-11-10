@@ -28,22 +28,23 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import BlacklistController from './controllers/BlacklistController.js';
+import BoxParser from './utils/BoxParser.js';
 import Constants from './constants/Constants.js';
 import DashConstants from '../dash/constants/DashConstants.js';
-import StreamProcessor from './StreamProcessor.js';
-import FragmentController from './controllers/FragmentController.js';
-import ThumbnailController from './thumbnail/ThumbnailController.js';
-import EventBus from '../core/EventBus.js';
-import Events from '../core/events/Events.js';
+import DashJSError from './vo/DashJSError.js';
 import Debug from '../core/Debug.js';
 import Errors from '../core/errors/Errors.js';
-import FactoryMaker from '../core/FactoryMaker.js';
-import DashJSError from './vo/DashJSError.js';
-import BoxParser from './utils/BoxParser.js';
-import URLUtils from './utils/URLUtils.js';
-import BlacklistController from './controllers/BlacklistController.js';
+import EventBus from '../core/EventBus.js';
+import Events from '../core/events/Events.js';
 import ExternalMediaSource from './ExternalMediaSource.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+import FragmentController from './controllers/FragmentController.js';
 import MediaInfoSelectionInput from './vo/MediaInfoSelectionInput.js';
+import MediaPlayerEvents from './MediaPlayerEvents.js';
+import StreamProcessor from './StreamProcessor.js';
+import ThumbnailController from './thumbnail/ThumbnailController.js';
+import URLUtils from './utils/URLUtils.js';
 
 
 const MEDIA_TYPES = [Constants.VIDEO, Constants.AUDIO, Constants.TEXT, Constants.MUXED, Constants.IMAGE];
@@ -76,22 +77,23 @@ function Stream(config) {
     const settings = config.settings;
 
 
-    let instance,
-        logger,
-        streamProcessors,
-        isInitialized,
-        isActive,
+    let boxParser,
+        debug,
+        fragmentController,
+        hasAudioTrack,
         hasFinishedBuffering,
         hasVideoTrack,
-        hasAudioTrack,
-        fragmentController,
-        thumbnailController,
-        segmentBlacklistController,
-        preloaded,
-        boxParser,
-        debug,
+        instance,
+        isActive,
         isEndedEventSignaled,
+        isInitialized,
+        logger,
+        preloaded,
+        segmentBlacklistController,
+        streamProcessors,
+        thumbnailController,
         trackChangedEvents;
+
 
     /**
      * Setup the stream
@@ -142,6 +144,7 @@ function Stream(config) {
         eventBus.on(Events.BUFFERING_COMPLETED, _onBufferingCompleted, instance);
         eventBus.on(Events.INBAND_EVENTS, _onInbandEvents, instance);
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     /**
@@ -151,6 +154,7 @@ function Stream(config) {
         eventBus.off(Events.BUFFERING_COMPLETED, _onBufferingCompleted, instance);
         eventBus.off(Events.INBAND_EVENTS, _onInbandEvents, instance);
         eventBus.off(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
     }
 
     /**
@@ -913,6 +917,10 @@ function Stream(config) {
 
     function _onDataUpdateCompleted() {
         _initializationCompleted();
+    }
+
+    function _onPlaybackSeeked() {
+        _addInlineEvents();
     }
 
     function getProcessorForMediaInfo(mediaInfo) {
