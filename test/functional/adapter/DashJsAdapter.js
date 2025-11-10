@@ -481,6 +481,33 @@ class DashJsAdapter {
         })
     }
 
+    async replacedSegmentsInBuffer(maxNumberOfSegmentDownloadsToWait, timeoutValue, bufferInformation) {
+        return new Promise((resolve) => {
+            let timeout = null;
+
+            const _onComplete = (replaced = false) => {
+                clearTimeout(timeout);
+                timeout = null;
+                this.player.off(MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted);
+                resolve(replaced);
+            }
+            const _onTimeout = () => {
+                _onComplete(false);
+            }
+            const _onFragmentLoadingCompleted = (e) => {
+                if (e && e.request && e.request.mediaType === Constants.DASH_JS.MEDIA_TYPES.VIDEO && !isNaN(e.request.presentationStartTime)) {
+                    if (e.request.presentationStartTime > bufferInformation.currentTime
+                        && e.request.presentationStartTime < bufferInformation.currentTime + bufferInformation.forwardBuffer
+                        && e.request.representation.id !== bufferInformation.currentRepresentation.id) {
+                        _onComplete(true);
+                    }
+                }
+            }
+            timeout = setTimeout(_onTimeout, timeoutValue);
+            this.player.on(MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted);
+        })
+    }
+
     async isKeepingBackwardsBufferTarget(timeoutValue, target, tolerance) {
         return new Promise((resolve) => {
             let timeout = null;
