@@ -51,6 +51,7 @@ class FragmentRequest {
         this.isPartialSegmentRequest = false;
         this.mediaStartTime = NaN;
         this.mediaType = null;
+        this.presentationStartTime = NaN;
         this.range = null;
         this.representation = null;
         this.responseType = 'arraybuffer';
