@@ -280,6 +280,7 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'audio/mp4',
                                     codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
                                     AudioChannelConfiguration: [
                                         {
                                             schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
@@ -294,6 +295,7 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'audio/mp4',
                                     codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
                                     AudioChannelConfiguration: [
                                         {
                                             schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
@@ -336,6 +338,7 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'audio/mp4',
                                     codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
                                     AudioChannelConfiguration: [
                                         {
                                             schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
@@ -350,6 +353,7 @@ describe('CapabilitiesFilter', function () {
                                 {
                                     mimeType: 'audio/mp4',
                                     codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
                                     AudioChannelConfiguration: [
                                         {
                                             schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
