@@ -266,6 +266,122 @@ describe('CapabilitiesFilter', function () {
                         done(e);
                     });
             });
+
+        });
+
+        describe('filter codecs using codec properties', function () {
+
+            it('should filter AdaptationSets, ignoring channels', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    AudioChannelConfiguration: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
+                                            value: '2'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }, {
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    AudioChannelConfiguration: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
+                                            value: '6'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterAudioChannelConfiguration: false } } });
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.channels === undefined;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(2);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[1].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+            })
+
+            it('should filter AdaptationSets, using channels', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    AudioChannelConfiguration: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
+                                            value: '2'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }, {
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    AudioChannelConfiguration: [
+                                        {
+                                            schemeIdUri: 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011',
+                                            value: '6'
+                                        }
+                                    ]
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterAudioChannelConfiguration: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.channels === 2;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+            })
+
         });
 
         describe('filter codecs using essentialProperties', function () {
