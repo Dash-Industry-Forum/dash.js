@@ -387,7 +387,6 @@ function CapabilitiesFilter() {
         if (settings.get().streaming.capabilities.filterAudioChannelConfiguration) {
             Object.assign(cfg, _convertAudioChannelConfigurationToConfig(rep))
         }
-        }
 
         return cfg;
     }
@@ -406,9 +405,6 @@ function CapabilitiesFilter() {
         return {
             channels
         }
-    }
-
-        };
     }
 
     function _addGenericAttributesToConfig(rep, config) {
