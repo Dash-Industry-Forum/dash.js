@@ -232,7 +232,7 @@
                        title="Use the ContentSteering information from the MPD if enabled">
                     <input type="checkbox" id="applyContentSteering" ng-model="applyContentSteering"
                            ng-change="toggleApplyContentSteering()" ng-checked="applyContentSteering">
-                   Apply ContentSteering
+                    Apply ContentSteering
                 </label>
                 <div class="sub-options-item">
                     <div class="sub-options-item-title">Catchup mechanism</div>
@@ -361,39 +361,44 @@
                         </button>
 
                         <label class="options-label">Server Certificate</label>
-                        <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.serverCertificate">
+                        <input type="text" class="form-control" placeholder=""
+                               ng-model="drmPlayready.serverCertificate">
 
                         <label class="options-label">HTTP Timeout</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpTimeout">
 
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="">
+                               title="">
                             <input type="checkbox" ng-model="drmPlayready.isCustomRobustness">
                             Use Custom Robustness
                         </label>
 
                         <label class="options-label">Audio Robustness</label>
-                        <select name="playreadyAudioRobustness" id="playreadyAudioRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness"
-                        ng-init="drmPlayready.audioRobustness=''">
-                            <option value="">   Default</option>
+                        <select name="playreadyAudioRobustness" id="playreadyAudioRobustness"
+                                ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness"
+                                ng-init="drmPlayready.audioRobustness=''">
+                            <option value=""> Default</option>
                             <option value="3000">SL3000</option>
                             <option value="2000">SL2000</option>
-                            <option value="150">  SL150</option>
+                            <option value="150"> SL150</option>
                         </select>
                         <!-- If custom, show textbox -->
-                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.audioRobustness">
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness"
+                               ng-model="drmPlayready.audioRobustness">
 
                         <label class="options-label">Video Robustness</label>
-                        <select name="playreadyVideoRobustness" id="playreadyVideoRobustness" ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness"
-                        ng-init="drmPlayready.videoRobustness=''">
-                            <option value="">   Default</option>
+                        <select name="playreadyVideoRobustness" id="playreadyVideoRobustness"
+                                ng-show="!drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness"
+                                ng-init="drmPlayready.videoRobustness=''">
+                            <option value=""> Default</option>
                             <option value="3000">SL3000</option>
                             <option value="2000">SL2000</option>
-                            <option value="150">  SL150</option>
+                            <option value="150"> SL150</option>
                         </select>
 
                         <!-- If custom, show textbox -->
-                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness" ng-model="drmPlayready.videoRobustness">
+                        <input type="text" class="form-control" placeholder="" ng-show="drmPlayready.isCustomRobustness"
+                               ng-model="drmPlayready.videoRobustness">
 
                         <!-- Header Dialogue Window Content -->
                         <div id="playreadyRequestHeaderDialogue" class="requestHeaderDialogue">
@@ -466,38 +471,42 @@
                         <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpTimeout">
 
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                           title="">
+                               title="">
                             <input type="checkbox" ng-model="drmWidevine.isCustomRobustness">
                             Use Custom Robustness
                         </label>
 
                         <label class="options-label">Audio Robustness</label>
-                        <select name="widevineAudioRobustness" id="widevineAudioRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness"
-                        ng-init="drmWidevine.audioRobustness=''">
-                            <option value="">   Default</option>
+                        <select name="widevineAudioRobustness" id="widevineAudioRobustness"
+                                ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness"
+                                ng-init="drmWidevine.audioRobustness=''">
+                            <option value=""> Default</option>
                             <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
                             <option value="SW_SECURE_DECODE">SW Secure Decode</option>
                             <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
                             <option value="HW_SECURE_DECODE">HW Secure Decode</option>
-                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                            <option value="HW_SECURE_ALL">HW Secure All</option>
                         </select>
 
                         <!-- If custom, show textbox -->
-                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.audioRobustness">
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness"
+                               ng-model="drmWidevine.audioRobustness">
 
                         <label class="options-label">Video Robustness</label>
-                        <select name="widevineVideoRobustness" id="widevineVideoRobustness" ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness"
-                        ng-init="drmWidevine.videoRobustness=''">
-                            <option value="">   Default</option>
+                        <select name="widevineVideoRobustness" id="widevineVideoRobustness"
+                                ng-show="!drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness"
+                                ng-init="drmWidevine.videoRobustness=''">
+                            <option value=""> Default</option>
                             <option value="SW_SECURE_CRYPTO">SW Secure Crypto</option>
                             <option value="SW_SECURE_DECODE">SW Secure Decode</option>
                             <option value="HW_SECURE_CRYPTO">HW Secure Crypto</option>
                             <option value="HW_SECURE_DECODE">HW Secure Decode</option>
-                            <option value="HW_SECURE_ALL"   >HW Secure All   </option>
+                            <option value="HW_SECURE_ALL">HW Secure All</option>
                         </select>
 
                         <!-- If custom, show textbox -->
-                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness" ng-model="drmWidevine.videoRobustness">
+                        <input type="text" class="form-control" placeholder="" ng-show="drmWidevine.isCustomRobustness"
+                               ng-model="drmWidevine.videoRobustness">
 
                         <!-- Header Dialogue Window Content -->
                         <div id="widevineRequestHeaderDialogue" class="requestHeaderDialogue">
@@ -731,6 +740,11 @@
                            ng-change="toggleUseSuggestedPresentationDelay()" ng-checked="useSuggestedPresentationDelay">
                     Use SuggestedPresentationDelay
                 </label>
+                <label class="options-label"
+                       title="The offset defined in milliseconds that is applied on top of the offset that was derived after the time synchronization">Artificial
+                    UTC Time Sync Offset:</label>
+                <input type="text" class="form-control" placeholder="value number" ng-model="utcTimeSyncOffset"
+                       ng-change="updateUtcTimeSyncOffset()">
             </div>
         </div>
         <div class="options-item">
@@ -741,7 +755,8 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Enable Roll-up mode">
-                            <input type="checkbox" id="imscEnableRollUp" ng-model="imscEnableRollUp" autocomplete="off" ng-checked="imscEnableRollUp"
+                            <input type="checkbox" id="imscEnableRollUp" ng-model="imscEnableRollUp" autocomplete="off"
+                                   ng-checked="imscEnableRollUp"
                                    ng-change="toggleImscEnableRollUp()" name="inputMode">
                             Enable Roll-up
                         </label>
@@ -749,7 +764,8 @@
                     <div class="sub-options-item-body">
                         <label data-toggle="tooltip" data-placement="right"
                                title="Forced Only Mode">
-                            <input type="checkbox" id="imscdisplayForcedOnlyMode" ng-model="imscdisplayForcedOnlyMode" ng-checked="imscdisplayForcedOnlyMode" autocomplete="off"
+                            <input type="checkbox" id="imscdisplayForcedOnlyMode" ng-model="imscdisplayForcedOnlyMode"
+                                   ng-checked="imscdisplayForcedOnlyMode" autocomplete="off"
                                    ng-change="toggleImscdisplayForcedOnlyMode()" name="inputMode">
                             Forced Only
                         </label>
@@ -763,10 +779,11 @@
                 <div class="sub-options-item-body">
                     <label class="options-label">Stall Threshold:</label>
                     <input type="text" class="form-control" placeholder="value in seconds" ng-model="stallThreshold"
-                        ng-change="updateStallThreshold()">
+                           ng-change="updateStallThreshold()">
                     <label class="options-label">Low Latency Stall Threshold:</label>
-                    <input type="text" class="form-control" placeholder="value in seconds" ng-model="lowLatencyStallThreshold"
-                        ng-change="updateLowLatencyStallThreshold()">
+                    <input type="text" class="form-control" placeholder="value in seconds"
+                           ng-model="lowLatencyStallThreshold"
+                           ng-change="updateLowLatencyStallThreshold()">
                 </div>
             </div>
         </div>
@@ -777,17 +794,18 @@
                     <div class="sub-options-item-title">Video</div>
                     <div class="sub-options-item-body">
                         <label class="options-label">Initial bitrate Video:</label>
-                        <input type="text" class="form-control" placeholder="value in kbps" ng-model="initialVideoBitrate"
-                            ng-change="updateInitialBitrateVideo()">
+                        <input type="text" class="form-control" placeholder="value in kbps"
+                               ng-model="initialVideoBitrate"
+                               ng-change="updateInitialBitrateVideo()">
                         <label class="options-label">Minimum bitrate Video:</label>
                         <input type="text" class="form-control" placeholder="value in kbps" ng-model="minVideoBitrate"
-                            ng-change="updateMinimumBitrateVideo()">
+                               ng-change="updateMinimumBitrateVideo()">
                         <label class="options-label">Maximum bitrate Video:</label>
                         <input type="text" class="form-control" placeholder="value in kbps" ng-model="maxVideoBitrate"
-                            ng-change="updateMaximumBitrateVideo()">
+                               ng-change="updateMaximumBitrateVideo()">
                         <label class="options-label">Role:</label>
                         <input type="text" class="form-control" placeholder="initial role, e.g. 'alternate'"
-                            ng-model="initialSettings.video" ng-change="updateInitialRoleVideo()">
+                               ng-model="initialSettings.video" ng-change="updateInitialRoleVideo()">
                     </div>
                 </div>
                 <div class="sub-options-item">
@@ -795,39 +813,43 @@
                     <div class="sub-options-item-body">
                         <label class="options-label">Language:</label>
                         <input type="text" class="form-control" placeholder="initial lang, e.g. 'en'"
-                            ng-model="initialSettings.audioLang" ng-change="updateInitialLanguageAudio()">
+                               ng-model="initialSettings.audioLang" ng-change="updateInitialLanguageAudio()">
                         <label class="options-label">Role:</label>
                         <label data-toggle="tooltip" data-placement="right"
-                            title="Specify the Role@value for the MPEG-defined role scheme">
+                               title="Specify the Role@value for the MPEG-defined role scheme">
                             <input type="text" class="form-control" placeholder="initial role, e.g. 'caption'"
-                                ng-model="initialSettings.audioRole" ng-change="updateInitialRoleAudio()">
+                                   ng-model="initialSettings.audioRole" ng-change="updateInitialRoleAudio()">
                         </label>
                         <label class="options-label">Accessibility</label>
                         <label data-toggle="tooltip" data-placement="right"
-                            title="unsets audio accessibility setting">
-                            <input type="radio" id="audio-accessibility-off" autocomplete="off" name="audio-accessibility-scheme"
-                                ng-model="initialSettings.audioAccessibilityScheme" value="off"
-                                ng-click="updateInitialAccessibilitySchemeAudio('off')"
-                                checked="checked">
-                                <i>no Accessibility</i>
+                               title="unsets audio accessibility setting">
+                            <input type="radio" id="audio-accessibility-off" autocomplete="off"
+                                   name="audio-accessibility-scheme"
+                                   ng-model="initialSettings.audioAccessibilityScheme" value="off"
+                                   ng-click="updateInitialAccessibilitySchemeAudio('off')"
+                                   checked="checked">
+                            <i>no Accessibility</i>
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
-                            title="Sets the schemeIdUri used for Accessibility to 'urn:mpeg:dash:role:2011'">
-                            <input type="radio" id="audio-accessibility-MPEG" autocomplete="off" name="audio-accessibility-scheme"
-                                ng-model="initialSettings.audioAccessibilityScheme" value="MPEG"
-                                ng-click="updateInitialAccessibilitySchemeAudio('MPEG')">
-                                MPEG scheme
+                               title="Sets the schemeIdUri used for Accessibility to 'urn:mpeg:dash:role:2011'">
+                            <input type="radio" id="audio-accessibility-MPEG" autocomplete="off"
+                                   name="audio-accessibility-scheme"
+                                   ng-model="initialSettings.audioAccessibilityScheme" value="MPEG"
+                                   ng-click="updateInitialAccessibilitySchemeAudio('MPEG')">
+                            MPEG scheme
                         </label>
                         <label data-toggle="tooltip" data-placement="right"
-                            title="Sets the schemeIdUri used for Accessibility to 'urn:tva:metadata:cs:AudioPurposeCS:2007'">
-                            <input type="radio" id="audio-accessibility-DVB" autocomplete="off" name="audio-accessibility-scheme"
-                                ng-model="initialSettings.audioAccessibilityScheme" value="DVB"
-                                ng-click="updateInitialAccessibilitySchemeAudio('DVB')">
-                                DVB scheme
+                               title="Sets the schemeIdUri used for Accessibility to 'urn:tva:metadata:cs:AudioPurposeCS:2007'">
+                            <input type="radio" id="audio-accessibility-DVB" autocomplete="off"
+                                   name="audio-accessibility-scheme"
+                                   ng-model="initialSettings.audioAccessibilityScheme" value="DVB"
+                                   ng-click="updateInitialAccessibilitySchemeAudio('DVB')">
+                            DVB scheme
                         </label>
                         <label class="options-label">value:</label>
                         <input type="text" class="form-control" placeholder="initial accessibility, e.g. 'description'"
-                            ng-model="initialSettings.audioAccessibility" ng-change="updateInitialAccessibilityAudio()">
+                               ng-model="initialSettings.audioAccessibility"
+                               ng-change="updateInitialAccessibilityAudio()">
                     </div>
                 </div>
                 <div class="sub-options-item">
@@ -835,20 +857,21 @@
                     <div class="sub-options-item-body">
                         <label class="options-label">Language:</label>
                         <input type="text" class="form-control" placeholder="text initial lang, e.g. 'en'"
-                            ng-model="initialSettings.text" ng-change="updateInitialLanguageText()">
+                               ng-model="initialSettings.text" ng-change="updateInitialLanguageText()">
                         <label class="options-label">Role:</label>
                         <input type="text" class="form-control" placeholder="text initial role, e.g. 'caption'"
-                            ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
+                               ng-model="initialSettings.textRole" ng-change="updateInitialRoleText()">
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                            title="Enable subtitle on loading text">
+                               title="Enable subtitle on loading text">
                             <input type="checkbox" id="enableTextAtLoading" ng-model="initialSettings.textEnabled"
-                                ng-change="toggleText()">
+                                   ng-change="toggleText()">
                             Enable Text At Loading
                         </label>
                         <label class="topcoat-checkbox" data-toggle="tooltip" data-placement="right"
-                            title="Force text streaming">
-                            <input type="checkbox" id="enableForceTextStreaming" ng-model="initialSettings.forceTextStreaming"
-                                ng-change="toggleForcedTextStreaming()">
+                               title="Force text streaming">
+                            <input type="checkbox" id="enableForceTextStreaming"
+                                   ng-model="initialSettings.forceTextStreaming"
+                                   ng-change="toggleForcedTextStreaming()">
                             Force Text Streaming
                         </label>
                     </div>
@@ -1086,12 +1109,13 @@
                 <h5><span class="label label-warning" style="margin-right:3px">Updated</span>Export settings</h5>
                 Our export settings feature creates shorter URLs now.
                 Click on "Copy Settings URL" on the top right and paste the URL in the address bar of your browser. The
-                current settings are compared to the default settings and the difference is stored using query parameters.
+                current settings are compared to the default settings and the difference is stored using query
+                parameters.
             </div>
             <div class="bs-callout bs-callout-information">
                 <span class="glyphicon glyphicon-info-sign" aria-hidden="true"></span>
                 Additional samples can be found in the <a
-                href="../index.html" target="_blank">Sample Section</a>.
+                    href="../index.html" target="_blank">Sample Section</a>.
             </div>
             <div>
                 <ul class="nav nav-tabs" role="tablist">
@@ -1124,7 +1148,8 @@
                                        ng-change="enableChartByName('buffer', 'video')">
                                 <label class="text-primary" for="videoBufferCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The length of the forward buffer, in seconds">Buffer Length : </label> {{videoBufferLength}}
+                                       title="The length of the forward buffer, in seconds">Buffer Length : </label>
+                                {{videoBufferLength}}
                             </div>
 
                             <div class="text-success">
@@ -1193,7 +1218,8 @@
                                        ng-change="enableChartByName('mtp', 'video')">
                                 <label class="text-primary" for="mtpCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured
+                                    throughput:</label> {{videoMtp}} Mbps
                             </div>
                             <div class="text-success" ng-show="isCMSDEnabled()">
                                 <input id="etpCB" type="checkbox"
@@ -1201,7 +1227,8 @@
                                        ng-change="enableChartByName('etp', 'video')">
                                 <label class="text-primary" for="etpCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{videoEtp}} Mbps
+                                       title="The estimated throughput return by CMSD response headers">Estimated
+                                    throughput:</label> {{videoEtp}} Mbps
                             </div>
                             <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
@@ -1231,7 +1258,8 @@
                                        ng-change="enableChartByName('buffer', 'audio')">
                                 <label class="text-primary" for="audioBufferLengthCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The length of the forward buffer, in seconds">Buffer Length :</label> {{audioBufferLength}}
+                                       title="The length of the forward buffer, in seconds">Buffer Length :</label>
+                                {{audioBufferLength}}
                             </div>
                             <div class="text-success">
                                 <input id="audioBitrateCB" type="checkbox" ng-model="chartState.audio.bitrate.selected"
@@ -1298,7 +1326,8 @@
                                        ng-change="enableChartByName('mtp', 'audio')">
                                 <label class="text-primary" for="mtpCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The measured (averaged) throughput computed in the ABR logic">Measured throughput:</label> {{videoMtp}} Mbps
+                                       title="The measured (averaged) throughput computed in the ABR logic">Measured
+                                    throughput:</label> {{videoMtp}} Mbps
                             </div>
                             <div class="text-success" ng-show="isCMSDEnabled()">
                                 <input id="etpCB" type="checkbox"
@@ -1306,7 +1335,8 @@
                                        ng-change="enableChartByName('etp', 'audio')">
                                 <label class="text-primary" for="etpCB" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The estimated throughput return by CMSD response headers">Estimated throughput:</label> {{audioEtp}} Mbps
+                                       title="The estimated throughput return by CMSD response headers">Estimated
+                                    throughput:</label> {{audioEtp}} Mbps
                             </div>
                             <div class="text-success" ng-show="isDynamic">
                                 <input id="liveLatencyCB" type="checkbox"
@@ -1353,7 +1383,8 @@
                             <div class="text-success">
                                 <label class="text-primary" data-toggle="tooltip"
                                        data-placement="top"
-                                       title="The number of periods signaled in the MPD">Number of periods :</label> {{numberOfPeriods}}
+                                       title="The number of periods signaled in the MPD">Number of periods :</label>
+                                {{numberOfPeriods}}
                             </div>
                         </div>
                     </div>

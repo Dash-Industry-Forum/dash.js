@@ -759,6 +759,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateUtcTimeSyncOffset = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                utcSynchronization: {
+                    artificialTimeOffsetToApply: parseInt($scope.utcTimeSyncOffset)
+                }
+            }
+        });
+    };
+
     $scope.updateInitialBitrateVideo = function () {
         $scope.player.updateSettings({
             streaming: {
@@ -2511,6 +2521,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
     }
 
+    function setUtcTimeSyncOptions() {
+        var currentConfig = $scope.player.getSettings();;
+        $scope.utcTimeSyncOffset = currentConfig.streaming.utcSynchronization.artificialTimeOffsetToApply;
+    }
+
     function setStallThresholdOptions() {
         var currentConfig = $scope.player.getSettings();
         $scope.stallThreshold = currentConfig.streaming.buffer.stallThreshold;
@@ -2677,6 +2692,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setDrmOptions();
             setTextOptions();
             setLiveDelayOptions();
+            setUtcTimeSyncOptions();
             setStallThresholdOptions()
             setInitialSettings();
             setTrackSwitchModeSettings();
