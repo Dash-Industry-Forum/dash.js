@@ -137,7 +137,7 @@ function CapabilitiesFilter() {
                 if (codec) {
                     let repr = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
 
-                    isPrslCodecSupported = _isCodecSupported(type, repr, codec);
+                    isPrslCodecSupported = _isCodecSupported(type, prsl, codec, repr);
                 }
 
                 if (!isPrslCodecSupported) {
