@@ -385,21 +385,26 @@ function CapabilitiesFilter() {
         }
 
         if (settings.get().streaming.capabilities.filterAudioChannelConfiguration) {
-            Object.assign(cfg, _convertAudioChannelConfigurationToConfig(rep))
+            Object.assign(cfg, _convertAudioChannelConfigurationToConfig(rep, prslRep))
         }
 
         return cfg;
     }
 
-    function _convertAudioChannelConfigurationToConfig(representation) {
+    function _convertAudioChannelConfigurationToConfig(representation, prsl) {
 
+        let audioChannelConfigs = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || [];
         let channels = null;
 
-        const channelCounts = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION].map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true))
+        if (!audioChannelConfigs && prsl) {
+            audioChannelConfigs = prsl[DashConstants.AUDIO_CHANNEL_CONFIGURATION];
+        }
+
+        const channelCounts = audioChannelConfigs.map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true));
 
         // ensure that all AudioChannelConfiguration elements are the same value, otherwise ignore
         if (channelCounts.every(e => e == channelCounts[0])) {
-            channels = channelCounts[0]
+            channels = channelCounts[0];
         }
 
         return {
