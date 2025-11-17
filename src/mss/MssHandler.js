@@ -37,6 +37,7 @@ import MssParser from './parser/MssParser.js';
 import MssErrors from './errors/MssErrors.js';
 import DashJSError from '../streaming/vo/DashJSError.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function MssHandler(config) {
 
@@ -206,10 +207,10 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: dashjs.FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
         eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 
@@ -247,7 +248,7 @@ function MssHandler(config) {
 }
 
 MssHandler.__dashjs_factory_name = 'MssHandler';
-const factory = dashjs.FactoryMaker.getClassFactory(MssHandler);
+const factory = FactoryMaker.getClassFactory(MssHandler);
 factory.errors = MssErrors;
-dashjs.FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory);
+FactoryMaker.updateClassFactory(MssHandler.__dashjs_factory_name, factory);
 export default factory;
