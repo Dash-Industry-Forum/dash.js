@@ -3,6 +3,7 @@ import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import DashConstants from '../../dash/constants/DashConstants.js';
 
 function CapabilitiesFilter() {
 
@@ -14,6 +15,7 @@ function CapabilitiesFilter() {
         capabilities,
         settings,
         customParametersModel,
+        protectionController,
         logger;
 
 
@@ -36,6 +38,10 @@ function CapabilitiesFilter() {
 
         if (config.settings) {
             settings = config.settings;
+        }
+
+        if (config.protectionController) {
+            protectionController = config.protectionController;
         }
 
         if (config.customParametersModel) {
@@ -103,11 +109,15 @@ function CapabilitiesFilter() {
                             eventBus.trigger(Events.ADAPTATION_SET_REMOVED_NO_CAPABILITIES, {
                                 adaptationSet: as
                             });
-                            logger.warn(`AdaptationSet has been removed because of no supported Representation`);
+                            logger.info(`AdaptationSet has been removed because of no supported Representation`);
                         }
 
                         return supported;
                     });
+
+                    if (period.AdaptationSet_asArray.length === 0) {
+                        logger.error(`All AdaptationSets have been removed from the period`);
+                    }
 
                     resolve();
                 })
@@ -163,15 +173,19 @@ function CapabilitiesFilter() {
     }
 
     function _createConfiguration(type, rep, codec) {
+        let config = null;
         switch (type) {
             case Constants.VIDEO:
-                return _createVideoConfiguration(rep, codec);
+                config = _createVideoConfiguration(rep, codec);
+                break;
             case Constants.AUDIO:
-                return _createAudioConfiguration(rep, codec);
+                config = _createAudioConfiguration(rep, codec);
+                break;
             default:
-                return null;
-
+                return config;
         }
+
+        return _addGenericAttributesToConfig(rep, config);
     }
 
     function _createVideoConfiguration(rep, codec) {
@@ -198,6 +212,13 @@ function CapabilitiesFilter() {
             bitrate,
             samplerate
         };
+    }
+
+    function _addGenericAttributesToConfig(rep, config) {
+        if (rep && rep[DashConstants.CONTENT_PROTECTION+'_asArray'] && rep[DashConstants.CONTENT_PROTECTION+'_asArray'].length > 0) {
+            config.keySystemsMetadata = protectionController.getSupportedKeySystemMetadataFromContentProtection(rep[DashConstants.CONTENT_PROTECTION+'_asArray'])
+        }
+        return config
     }
 
     function _filterUnsupportedEssentialProperties(manifest) {

@@ -205,7 +205,7 @@ function ProtectionKeyController() {
      * @memberof module:ProtectionKeyController
      * @instance
      */
-    function getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType) {
+    function getSupportedKeySystemMetadataFromContentProtection(cps, protDataSet, sessionType) {
         let cp, ks, ksIdx, cpIdx;
         let supportedKS = [];
 
@@ -385,7 +385,7 @@ function ProtectionKeyController() {
         getKeySystems,
         setKeySystems,
         getKeySystemBySystemString,
-        getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystemMetadataFromContentProtection,
         getSupportedKeySystemsFromSegmentPssh,
         getLicenseServerModelInstance,
         processClearKeyLicenseRequest,

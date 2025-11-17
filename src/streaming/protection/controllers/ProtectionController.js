@@ -104,7 +104,7 @@ function ProtectionController(config) {
     }
 
     function checkConfig() {
-        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemsFromContentProtection')) {
+        if (!eventBus || !eventBus.hasOwnProperty('on') || !protectionKeyController || !protectionKeyController.hasOwnProperty('getSupportedKeySystemMetadataFromContentProtection')) {
             throw new Error('Missing config parameter(s)');
         }
     }
@@ -142,7 +142,7 @@ function ProtectionController(config) {
 
         let supportedKeySystems = [];
         mediaInfoArr.forEach((mInfo) => {
-            const currentKs = protectionKeyController.getSupportedKeySystemsFromContentProtection(mInfo.contentProtection, protDataSet, sessionType);
+            const currentKs = protectionKeyController.getSupportedKeySystemMetadataFromContentProtection(mInfo.contentProtection, protDataSet, sessionType);
             // We assume that the same key systems are signaled for each AS. We can use the first entry we found
             if (currentKs.length > 0) {
                 if (supportedKeySystems.length === 0) {
@@ -453,9 +453,9 @@ function ProtectionController(config) {
      * @instance
      * @ignore
      */
-    function getSupportedKeySystemsFromContentProtection(cps) {
+    function getSupportedKeySystemMetadataFromContentProtection(cps) {
         checkConfig();
-        return protectionKeyController.getSupportedKeySystemsFromContentProtection(cps, protDataSet, sessionType);
+        return protectionKeyController.getSupportedKeySystemMetadataFromContentProtection(cps, protDataSet, sessionType);
     }
 
     /**
@@ -1177,7 +1177,7 @@ function ProtectionController(config) {
         setSessionType,
         setRobustnessLevel,
         setProtectionData,
-        getSupportedKeySystemsFromContentProtection,
+        getSupportedKeySystemMetadataFromContentProtection,
         getKeySystems,
         setKeySystems,
         stop,

@@ -48,12 +48,23 @@ function ObjectIron(mappers) {
                 if (child[property.name]) {
                     // check to see if we should merge
                     if (property.merge) {
-                        const parentValue = parent[property.name];
-                        const childValue = child[property.name];
+                        let parentValue = parent[property.name];
+                        let childValue = child[property.name];
 
                         // complex objects; merge properties
                         if (typeof parentValue === 'object' && typeof childValue === 'object') {
-                            mergeValues(parentValue, childValue);
+                            // TODO: This can be removed in dashjs@5
+                            // Cover and edge-case where AdaptationSet@ContentProtection is an array,
+                            // and RepresentationSet@ContentProtection is an object.
+                            const isParentArray = Array.isArray(parentValue);
+                            const isChildArray = Array.isArray(childValue);
+                            if (isParentArray || isChildArray) {
+                                child[property.name] =
+                                    (isChildArray ? childValue : [childValue])
+                                        .concat(isParentArray ? parentValue : [parentValue])
+                            } else {
+                                mergeValues(parentValue, childValue);
+                            }
                         }
                         // simple objects; merge them together
                         else {

@@ -2189,6 +2189,7 @@ function MediaPlayer() {
             customParametersModel,
             adapter,
             settings,
+            protectionController,
             manifestModel,
             errHandler
         });
@@ -2304,6 +2305,9 @@ function MediaPlayer() {
             Errors.extend(Protection.errors);
             if (!capabilities) {
                 capabilities = Capabilities(context).getInstance();
+                capabilities.setConfig({
+                    settings
+                })
             }
             protectionController = protection.createProtectionSystem({
                 debug,
