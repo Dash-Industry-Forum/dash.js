@@ -107,7 +107,7 @@ function ThroughputModel(config) {
                 }
             }
 
-            const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.trequest.getTime());
+            const cacheReferenceTime = (httpRequest._tfinish.getTime() - httpRequest.trequest.getTime()) * httpRequest._bandwidthRatio;
 
             if (_isCachedResponse(mediaType, cacheReferenceTime, httpRequest)) {
                 logger.debug(`${mediaType} Assuming segment ${httpRequest.url} came from cache, ignoring it for throughput calculation`);
