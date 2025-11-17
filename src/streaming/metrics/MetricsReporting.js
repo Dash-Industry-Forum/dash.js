@@ -34,6 +34,7 @@ import MetricsReportingEvents from './MetricsReportingEvents.js';
 import MetricsCollectionController from './controllers/MetricsCollectionController.js';
 import MetricsHandlerFactory from './metrics/MetricsHandlerFactory.js';
 import ReportingFactory from './reporting/ReportingFactory.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function MetricsReporting() {
 
@@ -83,7 +84,7 @@ function MetricsReporting() {
 }
 
 MetricsReporting.__dashjs_factory_name = 'MetricsReporting';
-const factory = dashjs.FactoryMaker.getClassFactory(MetricsReporting); 
+const factory = FactoryMaker.getClassFactory(MetricsReporting);
 factory.events = MetricsReportingEvents;
-dashjs.FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory); 
+FactoryMaker.updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
 export default factory;

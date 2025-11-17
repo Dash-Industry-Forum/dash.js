@@ -34,6 +34,7 @@ import FragmentModel from '../streaming/models/FragmentModel.js';
 import FragmentLoader from '../streaming/FragmentLoader.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
 import SegmentsController from '../dash/controllers/SegmentsController.js';
+import FactoryMaker from '../core/FactoryMaker.js';
 
 function OfflineStreamProcessor(config) {
 
@@ -379,5 +380,5 @@ function OfflineStreamProcessor(config) {
 }
 
 OfflineStreamProcessor.__dashjs_factory_name = 'OfflineStreamProcessor';
-const factory = dashjs.FactoryMaker.getClassFactory(OfflineStreamProcessor); 
+const factory = FactoryMaker.getClassFactory(OfflineStreamProcessor);
 export default factory;
