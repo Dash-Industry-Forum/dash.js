@@ -38,6 +38,7 @@ import MssErrors from './errors/MssErrors.js';
 import DashJSError from '../streaming/vo/DashJSError.js';
 import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
 import FactoryMaker from '../core/FactoryMaker.js';
+import EventBus from '../core/EventBus.js';
 
 function MssHandler(config) {
 
@@ -207,10 +208,10 @@ function MssHandler(config) {
     }
 
     function registerEvents() {
-        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
-        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: FactoryMaker.getSingletonFactoryByName(eventBus.getClassName()).EVENT_PRIORITY_HIGH });
+        eventBus.on(events.INIT_FRAGMENT_NEEDED, onInitFragmentNeeded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_PAUSED, onPlaybackPaused, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(events.PLAYBACK_SEEKING, onPlaybackSeeking, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        eventBus.on(events.FRAGMENT_LOADING_COMPLETED, onSegmentMediaLoaded, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
         eventBus.on(events.TTML_TO_PARSE, onTTMLPreProcess, instance);
     }
 

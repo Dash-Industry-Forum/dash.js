@@ -75,9 +75,9 @@ function MetricsReporting() {
     }
 
     instance = {
-        createMetricsReporting:     createMetricsReporting,
-        getReportingFactory:        getReportingFactory,
-        getMetricsHandlerFactory:   getMetricsHandlerFactory
+        createMetricsReporting,
+        getReportingFactory,
+        getMetricsHandlerFactory
     };
 
     return instance;
