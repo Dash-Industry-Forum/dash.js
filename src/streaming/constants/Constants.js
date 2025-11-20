@@ -195,6 +195,13 @@ export default {
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
 
     /**
+     *  @constant {string} TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY makes the player select the track that contains partial segments that start with SAP type 0 or 1.
+     *  @memberof Constants#
+     *  @static
+     */
+    TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY: 'lowestStartupDelay',
+
+    /**
      *  @constant {string} TRACK_SELECTION_MODE_WIDEST_RANGE makes the player select the track with a widest range of bitrates.
      *  @memberof Constants#
      *  @static
@@ -263,6 +270,7 @@ export default {
     EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
+    SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',
     HDR_METADATA_FORMAT_SCHEME_ID_URI: 'urn:dvb:dash:hdr-dmi',
     HDR_METADATA_FORMAT_VALUES: {
         ST2094_10: 'ST2094-10',
@@ -346,8 +354,7 @@ export default {
      */
     ID3_SCHEME_ID_URI: 'https://aomedia.org/emsg/ID3',
     COMMON_ACCESS_TOKEN_HEADER: 'common-access-token',
-    DASH_ROLE_SCHEME_ID : 'urn:mpeg:dash:role:2011',
-
+    DASH_ROLE_SCHEME_ID: 'urn:mpeg:dash:role:2011',
     CODEC_FAMILIES: {
         MP3: 'mp3',
         AAC: 'aac',

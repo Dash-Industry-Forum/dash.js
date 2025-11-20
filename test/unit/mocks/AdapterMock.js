@@ -221,6 +221,10 @@ function AdapterMock() {
         }];
     };
 
+    this.areMediaInfosEqual = function () {
+        return true
+    }
+
 }
 
 export default AdapterMock;

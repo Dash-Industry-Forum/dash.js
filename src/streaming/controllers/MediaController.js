@@ -138,7 +138,7 @@ function MediaController() {
         }
 
         if (!settings.get().streaming.includePreselectionsForInitialTrackSelection) {
-            // Removing all preselections 
+            // Removing all preselections
             filteredTracks = possibleTracks.filter(track => !track.isPreselection);
             // Since each preselection always refers at least one AdaptationSet,
             // filteredTracks.length will always be > 0
@@ -160,8 +160,8 @@ function MediaController() {
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsAudioChannelConfig, localSettings);
             filteredTracks = filterTracksBySettings(filteredTracks, matchSettingsCodec, localSettings);
             logger.info('Filtering ' + type + ' tracks ended, found ' + filteredTracks.length + ' matching track(s).');
-        } 
-        
+        }
+
         // More than one possibility
         if (filteredTracks.length > 1) {
             setTrack(selectInitialTrack(type, filteredTracks));
@@ -415,13 +415,16 @@ function MediaController() {
             return tracksAfterMatcher;
         }
 
-        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} )) {
+        if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {
+            schemeIdUri: Constants.DASH_ROLE_SCHEME_ID,
+            value: DashConstants.MAIN
+        })) {
             logger.info('no track with Role set to main - assuming main as default and searching again');
             tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
             if (tracksAfterMatcher.length !== 0) {
                 return tracksAfterMatcher;
             }
-        } 
+        }
 
         logger.info('Filter-Function (' + filterFn.name + ') resulted in no tracks; setting ignored');
         return tracks;
@@ -454,7 +457,7 @@ function MediaController() {
     }
 
     function matchSettingsRole(settings, track, isTrackActive = false) {
-        if ( !track.roles) {
+        if (!track.roles) {
             return false;
         }
         const matchRole = !settings.role || !!track.roles.filter(function (item) {
@@ -663,6 +666,17 @@ function MediaController() {
         return trackArr;
     }
 
+    function _getTracksWithPartialIdrSegments(trackArr) {
+        return trackArr.filter((track) => {
+            if (!track.segmentSequenceProperties || track.segmentSequenceProperties.length === 0) {
+                return false;
+            }
+            return track.segmentSequenceProperties.some((ssp) => {
+                return ssp.cadence === 1 && (ssp.sapType === 0 || ssp.sapType === 1);
+            })
+        });
+    }
+
     function getTracksWithWidestRange(trackArr) {
         let max = 0;
         let result = [];
@@ -710,7 +724,12 @@ function MediaController() {
             }
             if (tmpArr.length > 1 && settings.get().streaming.prioritizeRoleMain) {
                 logger.info('Trying to find a main track');
-                tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {role: {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:DashConstants.MAIN} });
+                tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {
+                    role: {
+                        schemeIdUri: Constants.DASH_ROLE_SCHEME_ID,
+                        value: DashConstants.MAIN
+                    }
+                });
             }
             if (tmpArr.length > 1) {
                 logger.info('Selecting track based on selectionModeForInitialTrack');
@@ -727,6 +746,9 @@ function MediaController() {
                         break;
                     case Constants.TRACK_SELECTION_MODE_WIDEST_RANGE:
                         tmpArr = _trackSelectionModeWidestRange(tmpArr);
+                        break;
+                    case Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY:
+                        tmpArr = _trackSelectionModeLowestStartupDelay(tmpArr);
                         break;
                     default:
                         logger.warn(`Track selection mode ${mode} is not supported. Falling back to TRACK_SELECTION_MODE_FIRST_TRACK`);
@@ -901,6 +923,13 @@ function MediaController() {
         }
 
         return tmpArr;
+    }
+
+    function _trackSelectionModeLowestStartupDelay(tracks) {
+        let tmpArr = _getTracksWithPartialIdrSegments(tracks);
+        const targetTracks = tmpArr.length > 0 ? tmpArr : tracks;
+
+        return _trackSelectionModeHighestEfficiency(targetTracks);
     }
 
     function _trackSelectionModeWidestRange(tracks) {

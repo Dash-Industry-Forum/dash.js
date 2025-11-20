@@ -251,17 +251,17 @@ function DashAdapter() {
 
         if (settings.get().streaming.includePreselectionsInMediainfoArray) {
             const voPreselections = dashManifestModel.getPreselectionsForPeriod(period);
-            
+
             for (i = 0, ln = voPreselections.length; i < ln; i++) {
                 const preselection = voPreselections[i];
-    
+
                 if (preselection.hasOwnProperty('type') && preselection.type === type) {
                     media = convertPreselectionToMediaInfo(voPreselections[i]);
                     if (media) {
                         mediaArr.push(media);
                     }
                 }
-            }        
+            }
         }
 
         return mediaArr;
@@ -871,7 +871,7 @@ function DashAdapter() {
     }
 
     /**
-     * returns the main AdaptationSet of a given Preselection 
+     * returns the main AdaptationSet of a given Preselection
      * @param {object} preselection
      * @param {array} adaptations
      * @return {object}
@@ -883,7 +883,7 @@ function DashAdapter() {
     }
 
     /**
-     * returns common properties in form of a Representation of a given Preselection 
+     * returns common properties in form of a Representation of a given Preselection
      * @param {object} preselection
      * @param {array} adaptations
      * @return {object}
@@ -1106,6 +1106,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
+        mediaInfo.segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(realAdaptation);
 
         return mediaInfo;
     }

@@ -768,6 +768,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateUtcTimeSyncOffset = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                utcSynchronization: {
+                    artificialTimeOffsetToApply: parseInt($scope.utcTimeSyncOffset)
+                }
+            }
+        });
+    };
+
     $scope.updateInitialBitrateVideo = function () {
         $scope.player.updateSettings({
             streaming: {
@@ -2509,7 +2519,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAdditionalAbrOptions() {
         var currentConfig = $scope.player.getSettings();
-        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
+        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled !== null ? currentConfig.streaming.buffer.fastSwitchEnabled : true;
         $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
     }
 
@@ -2530,6 +2540,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
         $scope.liveDelayFragmentCount = currentConfig.streaming.delay.liveDelayFragmentCount;
         $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
+    }
+
+    function setUtcTimeSyncOptions() {
+        var currentConfig = $scope.player.getSettings();;
+        $scope.utcTimeSyncOffset = currentConfig.streaming.utcSynchronization.artificialTimeOffsetToApply;
     }
 
     function setStallThresholdOptions() {
@@ -2698,6 +2713,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setDrmOptions();
             setTextOptions();
             setLiveDelayOptions();
+            setUtcTimeSyncOptions();
             setStallThresholdOptions()
             setInitialSettings();
             setTrackSwitchModeSettings();

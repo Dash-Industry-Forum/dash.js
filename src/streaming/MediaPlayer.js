@@ -1605,7 +1605,7 @@ function MediaPlayer() {
         } else {
             const representation = activeStream.getRepresentationForTypeById(type, id);
             if (representation) {
-                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+                abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
             }
         }
     }
@@ -1642,7 +1642,7 @@ function MediaPlayer() {
         } else {
             const representation = activeStream.getRepresentationForTypeByIndex(type, index);
             if (representation) {
-                abrController.setPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
+                abrController.manuallySetPlaybackQuality(type, streamController.getActiveStreamInfo(), representation, { forceReplace });
             }
         }
     }
@@ -2813,7 +2813,7 @@ function MediaPlayer() {
         if (value.audioChannelConfiguration !== undefined) {
             output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
         }
-        if (value.role !== undefined) {
+        if (value.role !== undefined && value.role !== null) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
 
             // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
