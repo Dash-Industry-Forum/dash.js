@@ -28,7 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-import CertUrlUtils from '../../streaming/utils/CertUrlUtils';
+import CertUrlUtils from '../../streaming/utils/CertUrlUtils.js';
 import DescriptorType from './DescriptorType.js'
 import DashConstants from '../constants/DashConstants.js';
 

@@ -185,6 +185,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         licenseServerUrl: '',
         httpRequestHeaders: {},
         serverCertificate: '',
+        serverCertificateURLs: [],
         httpTimeout: 5000,
         priority: 1,
         audioRobustness: '',
@@ -198,6 +199,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         licenseServerUrl: '',
         httpRequestHeaders: {},
         serverCertificate: '',
+        serverCertificateURLs: [],
         httpTimeout: 5000,
         priority: 0,
         audioRobustness: '',
@@ -211,6 +213,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         licenseServerUrl: '',
         httpRequestHeaders: {},
         serverCertificate: '',
+        serverCertificateURLs: [],
         httpTimeout: 5000,
         kid: '',
         key: '',
@@ -224,6 +227,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.widevineRequestHeaders = [];
 
     $scope.clearkeyRequestHeaders = [];
+
+    $scope.playreadyServerCertificateURLs = '';
+
+    $scope.widevineServerCertificateURLs = '';
+
+    $scope.clearkeyServerCertificateURLs = '';
 
     $scope.additionalClearkeyPairs = [];
 
@@ -1026,6 +1035,9 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.playreadyRequestHeaders = [];
         $scope.widevineRequestHeaders = [];
         $scope.clearkeyRequestHeaders = [];
+        $scope.playreadyServerCertificateURLs = '';
+        $scope.widevineServerCertificateURLs = '';
+        $scope.clearkeyServerCertificateURLs = '';
         $scope.clearkeys = [];
         $scope.additionalClearkeyPairs = [];
     }
@@ -1489,7 +1501,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                 key !== 'priority' &&
                                 key !== 'kid' &&
                                 key !== 'key' &&
-                                key !== 'inputMode') {
+                                key !== 'inputMode'&&
+                                key !== 'isCustomRobustness') {
                                 protectionData[input.drmKeySystem][key] = input[key];
                             }
                         }
@@ -1536,7 +1549,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             key !== 'drmKeySystem' &&
                             key !== 'licenseServerUrl' &&
                             key !== 'httpRequestHeaders' &&
-                            key !== 'priority') {
+                            key !== 'priority' &&
+                            key !== 'isCustomRobustness') {
                             protectionData[input.drmKeySystem][key] = input[key];
                         }
                     }
@@ -1592,6 +1606,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     kid: '',
                     key: ''
                 })
+                break;
         }
     }
 
@@ -1629,6 +1644,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         for (let header of $scope.clearkeyRequestHeaders) {
             $scope.drmClearkey.httpRequestHeaders[header.key] = header.value;
         }
+    }
+
+    $scope.handleServerCertificateURLs = function () {
+        $scope.drmPlayready.serverCertificateURLs = $scope.playreadyServerCertificateURLs.split(/\s+/);
+        $scope.drmWidevine.serverCertificateURLs  = $scope.widevineServerCertificateURLs.split(/\s+/);
+        $scope.drmClearkey.serverCertificateURLs  = $scope.clearkeyServerCertificateURLs.split(/\s+/);
     }
 
     /** Handle multiple clearkeys */

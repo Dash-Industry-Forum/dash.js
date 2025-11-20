@@ -37,7 +37,7 @@ import DashJSError from '../../vo/DashJSError.js';
 import LicenseRequest from '../vo/LicenseRequest.js';
 import LicenseResponse from '../vo/LicenseResponse.js';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
-import CertUrlUtils from '../../utils/CertUrlUtils';
+import CertUrlUtils from '../../utils/CertUrlUtils.js';
 import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
