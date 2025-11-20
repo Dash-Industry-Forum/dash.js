@@ -2781,7 +2781,7 @@ function MediaPlayer() {
         if (value.audioChannelConfiguration !== undefined) {
             output.audioChannelConfiguration = __sanitizeDescriptorType('audioChannelConfiguration', value.audioChannelConfiguration, defaults.audioChannelConfiguration);
         }
-        if (value.role !== undefined) {
+        if (value.role !== undefined && value.role !== null) {
             output.role = __sanitizeDescriptorType('role', value.role, defaults.role);
 
             // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
