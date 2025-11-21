@@ -68,6 +68,11 @@
             "name": "Broadpeak",
             "logo": "app/img/broadpeak.png",
             "link": "https://broadpeak.tv/"
+        },
+        {
+            "name": "V-Nova",
+            "logo": "app/img/v-nova.png",
+            "link": "https://v-nova.com/"
         }
     ]
 }

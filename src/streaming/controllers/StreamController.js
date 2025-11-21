@@ -64,7 +64,7 @@ function StreamController() {
         protectionData, extUrlQueryInfoController,
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
-        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams, settings,
+        initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -342,18 +342,9 @@ function StreamController() {
             // If the start is in the future we need to wait
             const dvrRange = dashMetrics.getCurrentDVRInfo().range;
             if (dvrRange.end < dvrRange.start) {
-                if (waitForPlaybackStartTimeout) {
-                    clearTimeout(waitForPlaybackStartTimeout);
-                }
-                const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
-                logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
-                eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
-                waitForPlaybackStartTimeout = setTimeout(() => {
-                    _initializeForFirstStream(streamsInfo, resolve, reject);
-                }, waitingTime);
+                _handleStartTimeInFuture(dvrRange, streamsInfo, resolve, reject);
                 return;
             }
-
 
             // Calculate the producer reference time offsets if given
             if (settings.get().streaming.applyProducerReferenceTime) {
@@ -392,6 +383,18 @@ function StreamController() {
         }
     }
 
+    function _handleStartTimeInFuture(dvrRange, streamsInfo, resolve, reject) {
+        if (waitForPlaybackStartTimeout) {
+            clearTimeout(waitForPlaybackStartTimeout);
+        }
+        const waitingTime = Math.min((((dvrRange.end - dvrRange.start) * -1) + DVR_WAITING_OFFSET) * 1000, 2147483647);
+        logger.debug(`Waiting for ${waitingTime} ms before playback can start`);
+        eventBus.trigger(Events.AST_IN_FUTURE, { delay: waitingTime });
+        waitForPlaybackStartTimeout = setTimeout(() => {
+            _initializeForFirstStream(streamsInfo, resolve, reject);
+        }, waitingTime);
+    }
+
     function _applyContentSteeringBeforeStart() {
         if (settings.get().streaming.applyContentSteering && contentSteeringController.shouldQueryBeforeStart()) {
             return contentSteeringController.loadSteeringData();
@@ -402,38 +405,41 @@ function StreamController() {
     function _calculateStartTimeAndSwitchStream() {
         // Figure out the correct start time and the correct start period
         const startTime = _getInitialStartTime();
-        let initialStream = getStreamForTime(startTime);
-        const startStream = initialStream !== null ? initialStream : streams[0];
+        let streamForTime = getStreamForTime(startTime);
+        const initialStream = streamForTime !== null ? streamForTime : streams[0];
+
         eventBus.trigger(Events.INITIAL_STREAM_SWITCH, { startTime });
-        _switchStream(startStream, null, startTime);
+
+        _switchStream(initialStream, null, startTime);
         _startPlaybackEndedTimerInterval();
     }
 
     /**
      * Switch from the current stream (period) to the next stream (period).
-     * @param {object} stream
+     * @param {object} targetStream
      * @param {object} previousStream
      * @param {number} seekTime
      * @private
      */
-    function _switchStream(stream, previousStream, seekTime) {
+    function _switchStream(targetStream, previousStream, seekTime) {
         try {
-            if (isStreamSwitchingInProgress || !stream || (previousStream === stream && stream.getIsActive())) {
+            if (isStreamSwitchingInProgress || !targetStream || (previousStream === targetStream && targetStream.getIsActive())) {
                 return;
             }
 
             isStreamSwitchingInProgress = true;
             eventBus.trigger(Events.PERIOD_SWITCH_STARTED, {
                 fromStreamInfo: previousStream ? previousStream.getStreamInfo() : null,
-                toStreamInfo: stream.getStreamInfo()
+                toStreamInfo: targetStream.getStreamInfo()
             });
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
-            activeStream = stream;
+            let sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+            activeStream = targetStream;
 
             if (previousStream) {
-                keepBuffers = _canSourceBuffersBeKept(stream, previousStream);
+                keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
@@ -441,8 +447,8 @@ function StreamController() {
             // Determine seek time when switching to new period
             // - seek at given seek time
             // - or seek at period start if upcoming period is not prebuffered
-            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? stream.getStreamInfo().start : NaN);
-            logger.info(`Switch to stream ${stream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
+            seekTime = !isNaN(seekTime) ? seekTime : (!keepBuffers && previousStream ? targetStream.getStreamInfo().start : NaN);
+            logger.info(`Switch to stream ${targetStream.getId()}. Seektime is ${seekTime}, current playback time is ${playbackController.getTime()}. Seamless period switch is set to ${keepBuffers}`);
 
             preloadingStreams = preloadingStreams.filter((s) => {
                 return s.getId() !== activeStream.getId();
@@ -451,9 +457,15 @@ function StreamController() {
 
             // If we have a video element we are not preloading into a virtual buffer
             if (videoModel.getElement()) {
-                _openMediaSource({ seekTime, keepBuffers, streamActivated: false, representationsFromPreviousPeriod });
+                _openMediaSource({
+                    seekTime,
+                    keepBuffers,
+                    sourceBufferSinksFromPreviousPeriod,
+                    streamActivated: false,
+                    representationsFromPreviousPeriod
+                });
             } else {
-                _activateStream({ seekTime, keepBuffers });
+                _activateStream({ seekTime, keepBuffers, sourceBufferSinksFromPreviousPeriod });
             }
         } catch (e) {
             isStreamSwitchingInProgress = false;
@@ -524,11 +536,8 @@ function StreamController() {
      */
     function _activateStream(inputParameters) {
         const representationsFromPreviousPeriod = inputParameters.representationsFromPreviousPeriod || [];
-        activeStream.activate(mediaSource, inputParameters.keepBuffers ? bufferSinks : undefined, representationsFromPreviousPeriod)
-            .then((sinks) => {
-                if (sinks) {
-                    bufferSinks = sinks;
-                }
+        activeStream.activate(mediaSource, inputParameters.sourceBufferSinksFromPreviousPeriod, representationsFromPreviousPeriod)
+            .then(() => {
 
                 // Set the initial time for this stream in the StreamProcessor
                 if (!isNaN(inputParameters.seekTime)) {
@@ -547,6 +556,25 @@ function StreamController() {
         return previousStreamProcessors.map((streamProcessor) => {
             return streamProcessor.getRepresentation();
         })
+    }
+
+    function _getSourceBufferSinksFromPreviousPeriod(previousStream) {
+        const sourceBufferSinkMap = new Map();
+
+        if (!previousStream) {
+            return sourceBufferSinkMap;
+        }
+
+        const previousStreamProcessors = previousStream ? previousStream.getStreamProcessors() : [];
+
+        previousStreamProcessors.forEach((streamProcessor) => {
+            const sourceBufferSink = streamProcessor.getBuffer();
+            if (sourceBufferSink) {
+                sourceBufferSinkMap.set(sourceBufferSink.getType(), sourceBufferSink);
+            }
+        })
+
+        return sourceBufferSinkMap
     }
 
     /**
@@ -693,17 +721,22 @@ function StreamController() {
      */
     function _onStreamCanLoadNext(nextStream, previousStream = null) {
 
-        if (mediaSource && !nextStream.getPreloaded()) {
-            let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
-
-            if (seamlessPeriodSwitch) {
-                const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
-                nextStream.startPreloading(mediaSource, bufferSinks, representationsFromPreviousPeriod)
-                    .then(() => {
-                        preloadingStreams.push(nextStream);
-                    });
-            }
+        if (!mediaSource || nextStream.getPreloaded()) {
+            return;
         }
+
+        let seamlessPeriodSwitch = _canSourceBuffersBeKept(nextStream, previousStream);
+
+        if (!seamlessPeriodSwitch) {
+            return;
+        }
+
+        const representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
+        const previousSourceBufferSinks = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+        nextStream.startPreloading(mediaSource, previousSourceBufferSinks, representationsFromPreviousPeriod)
+            .then(() => {
+                preloadingStreams.push(nextStream);
+            });
     }
 
     /**
@@ -904,9 +937,7 @@ function StreamController() {
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
-                if (mediaSource) {
-                    _onStreamCanLoadNext(stream, previousStream);
-                }
+                _onStreamCanLoadNext(stream, previousStream);
             }
             i += 1;
         }
@@ -1112,57 +1143,70 @@ function StreamController() {
         let startTime;
         const isDynamic = adapter.getIsDynamic();
         if (isDynamic) {
-            // For dynamic stream, start by default at (live edge - live delay)
-            const dvrInfo = dashMetrics.getCurrentDVRInfo();
-            const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
-            // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
-            startTime = liveEdge - playbackController.getOriginalLiveDelay();
-            // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
-            const dvrWindow = dvrInfo ? dvrInfo.range : null;
-            if (dvrWindow) {
-                // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
-                if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
-                    logger.info(`Start time provided by the app: ${providedStartTime}`);
-                    const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
-                    if (!isNaN(providedStartTimeAsPresentationTime)) {
-                        // Do not move closer to the live edge as defined by live delay
-                        startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
-                    }
-                } else {
-                    // #t shall be relative to period start
-                    const startTimeFromUri = _getStartTimeFromUriParameters(true);
-                    if (!isNaN(startTimeFromUri)) {
-                        logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
-                        // Do not move closer to the live edge as defined by live delay
-                        startTime = Math.min(startTime, startTimeFromUri);
-                    }
-                }
-                // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
-                const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
-                startTime = Math.max(startTime, dvrWindow.start + offset);
-            }
+            startTime = _getInitialStartTimeForDynamicStream();
         } else {
-            // For static stream, start by default at period start
-            const streams = getStreams();
-            const streamInfo = streams[0].getStreamInfo();
-            startTime = streamInfo.start;
+            startTime = _getInitialStartTimeForStaticStream();
+        }
 
+        return startTime;
+    }
+
+    function _getInitialStartTimeForDynamicStream() {
+        let startTime;
+        // For dynamic stream, start by default at (live edge - live delay)
+        const dvrInfo = dashMetrics.getCurrentDVRInfo();
+        const liveEdge = dvrInfo && dvrInfo.range ? dvrInfo.range.end : 0;
+        // we are already in the right start period. so time should not be smaller than period@start and should not be larger than period@end
+        startTime = liveEdge - playbackController.getOriginalLiveDelay();
+        // If start time in URI, take min value between live edge time and time from URI (capped by DVR window range)
+        const dvrWindow = dvrInfo ? dvrInfo.range : null;
+        if (dvrWindow) {
             // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
-            if (!isNaN(providedStartTime)) {
+            if (!isNaN(providedStartTime) || providedStartTime.toString().indexOf('posix:') !== -1) {
                 logger.info(`Start time provided by the app: ${providedStartTime}`);
-                const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
+                const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(true, providedStartTime)
                 if (!isNaN(providedStartTimeAsPresentationTime)) {
-                    // Do not play earlier than the start of the first period
-                    startTime = Math.max(startTime, providedStartTimeAsPresentationTime);
+                    // Do not move closer to the live edge as defined by live delay
+                    startTime = Math.min(startTime, providedStartTimeAsPresentationTime);
                 }
             } else {
-                // If start time in URI, take max value between period start and time from URI (if in period range)
-                const startTimeFromUri = _getStartTimeFromUriParameters(false);
+                // #t shall be relative to period start
+                const startTimeFromUri = _getStartTimeFromUriParameters(true);
                 if (!isNaN(startTimeFromUri)) {
                     logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
-                    // Do not play earlier than the start of the first period
-                    startTime = Math.max(startTime, startTimeFromUri);
+                    // Do not move closer to the live edge as defined by live delay
+                    startTime = Math.min(startTime, startTimeFromUri);
                 }
+            }
+            // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
+            const offset = settings.get().streaming.timeShiftBuffer.calcFromSegmentTimeline ? 0.1 : 0;
+            startTime = Math.max(startTime, dvrWindow.start + offset);
+        }
+
+        return startTime;
+    }
+
+    function _getInitialStartTimeForStaticStream() {
+        // For static stream, start by default at period start
+        const streams = getStreams();
+        const streamInfo = streams[0].getStreamInfo();
+        let startTime = streamInfo.start;
+
+        // If start time was provided by the application as part of the call to initialize() or attachSource() use this value
+        if (!isNaN(providedStartTime)) {
+            logger.info(`Start time provided by the app: ${providedStartTime}`);
+            const providedStartTimeAsPresentationTime = _getStartTimeFromProvidedData(false, providedStartTime)
+            if (!isNaN(providedStartTimeAsPresentationTime)) {
+                // Do not play earlier than the start of the first period
+                startTime = Math.max(startTime, providedStartTimeAsPresentationTime);
+            }
+        } else {
+            // If start time in URI, take max value between period start and time from URI (if in period range)
+            const startTimeFromUri = _getStartTimeFromUriParameters(false);
+            if (!isNaN(startTimeFromUri)) {
+                logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
+                // Do not play earlier than the start of the first period
+                startTime = Math.max(startTime, startTimeFromUri);
             }
         }
 
@@ -1307,7 +1351,6 @@ function StreamController() {
 
                     let allUTCTimingSources = (!adapter.getIsDynamic()) ? manifestUTCTimingSources : manifestUTCTimingSources.concat(customParametersModel.getUTCTimingSources());
                     timeSyncController.attemptSync(allUTCTimingSources, adapter.getIsDynamic());
-
                     extUrlQueryInfoController.createFinalQueryStrings(manifest);
                 });
         } else {

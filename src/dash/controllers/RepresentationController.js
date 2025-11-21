@@ -72,6 +72,35 @@ function RepresentationController(config) {
     }
 
     function getCurrentRepresentation() {
+        // Video RepresentationController should return a representation of type video, and enhancement
+        // RepresentationController should return a representation of type enhancement, i.e. type should match
+        if (currentVoRepresentation?.mediaInfo.type === type) {
+            return currentVoRepresentation;
+        }
+        else {
+            return _getCurrentDependentRepresentation();
+        }
+
+    }
+
+    function _getCurrentDependentRepresentation() {
+        let currentVoRepDep = currentVoRepresentation?.dependentRepresentation;
+        if (currentVoRepDep) {
+            if (!currentVoRepDep.mediaInfo) {
+                throw new Error('dependentRepresentation has no mediaInfo!');
+            }
+            if (currentVoRepDep.mediaInfo.type === type) {
+                return currentVoRepDep;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns the combined effective Representation, i.e. the dependent representation plus its declared complementary representation.
+     * @return {object} Representation
+     */
+    function getCurrentCompositeRepresentation() {
         return currentVoRepresentation;
     }
 
@@ -92,9 +121,8 @@ function RepresentationController(config) {
             const selectedRepresentation = getRepresentationById(selectedRepresentationId);
             _setCurrentVoRepresentation(selectedRepresentation);
 
-
-            if (type !== Constants.VIDEO && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
-                endDataUpdate();
+            if (type !== Constants.VIDEO && type !== Constants.ENHANCEMENT && type !== Constants.AUDIO && (type !== Constants.TEXT || !isFragmented)) {
+                _endDataUpdate();
                 resolve();
                 return;
             }
@@ -123,7 +151,7 @@ function RepresentationController(config) {
             dashMetrics.updateManifestUpdateInfo({ latency: dvrInfo.range.end - playbackController.getTime() });
         }
 
-        endDataUpdate();
+        _endDataUpdate();
     }
 
     function _updateRepresentation(currentRep) {
@@ -141,10 +169,10 @@ function RepresentationController(config) {
             Promise.all(promises)
                 .then((data) => {
                     if (data[0] && !data[0].error) {
-                        currentRep = _onInitLoaded(currentRep, data[0]);
+                        currentRep = _onInitDataUpdated(currentRep, data[0]);
                     }
                     if (data[1] && !data[1].error) {
-                        currentRep = _onSegmentsLoaded(currentRep, data[1]);
+                        currentRep = _onSegmentDataUpdated(currentRep, data[1]);
                     }
                     currentRep.fragmentDuration = currentRep.segmentDuration ? currentRep.segmentDuration : currentRep.segments && currentRep.segments.length > 0 ? currentRep.segments[0].duration : NaN;
                     _setMediaFinishedInformation(currentRep);
@@ -161,14 +189,14 @@ function RepresentationController(config) {
         representation.mediaFinishedInformation = segmentsController.getMediaFinishedInformation(representation);
     }
 
-    function _onInitLoaded(representation, e) {
+    function _onInitDataUpdated(representation, e) {
         if (!e || e.error || !e.representation) {
             return representation;
         }
         return e.representation;
     }
 
-    function _onSegmentsLoaded(representation, e) {
+    function _onSegmentDataUpdated(representation, e) {
         if (!e || e.error) {
             return;
         }
@@ -185,16 +213,17 @@ function RepresentationController(config) {
         for (i = 0, len = fragments ? fragments.length : 0; i < len; i++) {
             s = fragments[i];
 
-            seg = getTimeBasedSegment(
-                timelineConverter,
+            seg = getTimeBasedSegment({
+                durationInTimescale: s.duration,
+                fTimescale: s.timescale,
+                index: count,
                 isDynamic,
+                mediaRange: s.mediaRange,
+                mediaTime: s.startTime,
+                mediaUrl: s.media,
                 representation,
-                s.startTime,
-                s.duration,
-                s.timescale,
-                s.media,
-                s.mediaRange,
-                count);
+                timelineConverter,
+            });
 
             if (seg) {
                 segments.push(seg);
@@ -241,7 +270,7 @@ function RepresentationController(config) {
         return null;
     }
 
-    function endDataUpdate(error) {
+    function _endDataUpdate(error) {
         eventBus.trigger(events.DATA_UPDATE_COMPLETED,
             {
                 currentRepresentation: currentVoRepresentation,
@@ -305,6 +334,7 @@ function RepresentationController(config) {
     }
 
     instance = {
+        getCurrentCompositeRepresentation,
         getCurrentRepresentation,
         getRepresentationById,
         getStreamId,

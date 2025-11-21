@@ -41,6 +41,7 @@ import Debug from '../../../core/Debug.js';
 import MediaPlayerEvents from '../../MediaPlayerEvents.js';
 import Constants from '../../constants/Constants.js';
 import AbrController from '../../controllers/AbrController.js';
+import Settings from '../../../core/Settings.js';
 
 // BOLA_STATE_ONE_BITRATE   : If there is only one bitrate (or initialization failed), always return NO_CHANGE.
 // BOLA_STATE_STARTUP       : Set placeholder buffer such that we download fragments at most recently measured throughput.
@@ -69,10 +70,12 @@ function BolaRule(config) {
 
     let instance,
         logger,
+        settings,
         bolaStateDict;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
+        settings = Settings(context).getInstance();
         resetInitialSettings();
         eventBus.on(MediaPlayerEvents.BUFFER_EMPTY, _onBufferEmpty, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
@@ -588,6 +591,7 @@ function BolaRule(config) {
                     break;
             }
 
+            switchRequest.priority = settings.get().streaming.abr.rules.bolaRule.priority;
             return switchRequest;
         } catch (e) {
             logger.error(e);

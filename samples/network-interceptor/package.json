@@ -3,7 +3,7 @@
     "build": "webpack --mode development"
   },
   "devDependencies": {
-    "@svta/common-media-library": "^0.12.4",
+    "@svta/common-media-library": "^0.17.1",
     "@types/node": "^18.14.0",
     "copy-webpack-plugin": "^12.0.2",
     "dashjs": "file:../..",

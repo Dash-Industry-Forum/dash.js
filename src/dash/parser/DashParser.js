@@ -37,38 +37,40 @@ import NumericMatcher from './matchers/NumericMatcher.js';
 import LangMatcher from './matchers/LangMatcher.js';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
 import SegmentValuesMap from './maps/SegmentValuesMap.js';
-import * as tXml from '../../../externals/tXml.js';
+import { parseXml as cmlParseXml } from '@svta/common-media-library/xml/parseXml.js';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [
-    DashConstants.PERIOD,
-    DashConstants.BASE_URL,
-    DashConstants.ADAPTATION_SET,
-    DashConstants.REPRESENTATION,
-    DashConstants.CONTENT_PROTECTION,
-    DashConstants.ROLE,
     DashConstants.ACCESSIBILITY,
+    DashConstants.ADAPTATION_SET,
+    DashConstants.ADD,
     DashConstants.AUDIO_CHANNEL_CONFIGURATION,
+    DashConstants.BASE_URL,
     DashConstants.CONTENT_COMPONENT,
+    DashConstants.CONTENT_PROTECTION,
+    DashConstants.CONTENT_STEERING,
     DashConstants.ESSENTIAL_PROPERTY,
-    DashConstants.LABEL,
-    DashConstants.S,
-    DashConstants.SEGMENT_URL,
     DashConstants.EVENT,
     DashConstants.EVENT_STREAM,
+    DashConstants.INBAND_EVENT_STREAM,
+    DashConstants.LABEL,
     DashConstants.LOCATION,
+    DashConstants.METRICS,
+    DashConstants.PATCH_LOCATION,
+    DashConstants.PERIOD,
+    DashConstants.PRESELECTION,
+    DashConstants.PRODUCER_REFERENCE_TIME,
+    DashConstants.REMOVE,
+    DashConstants.REPLACE,
+    DashConstants.REPORTING,
+    DashConstants.REPRESENTATION,
+    DashConstants.ROLE,
+    DashConstants.S,
+    DashConstants.SEGMENT_SEQUENCE_PROPERTIES,
+    DashConstants.SEGMENT_URL,
     DashConstants.SERVICE_DESCRIPTION,
     DashConstants.SUPPLEMENTAL_PROPERTY,
-    DashConstants.METRICS,
-    DashConstants.REPORTING,
-    DashConstants.PATCH_LOCATION,
-    DashConstants.REPLACE,
-    DashConstants.ADD,
-    DashConstants.REMOVE,
     DashConstants.UTC_TIMING,
-    DashConstants.INBAND_EVENT_STREAM,
-    DashConstants.PRODUCER_REFERENCE_TIME,
-    DashConstants.CONTENT_STEERING
 ];
 
 function DashParser(config) {
@@ -135,31 +137,84 @@ function DashParser(config) {
         return manifest;
     }
 
+    function processXml(data) {
+        const xml = cmlParseXml(data);
+        const root = xml.childNodes.find(child => child.nodeName === 'MPD' || child.nodeName === 'Patch') || xml.childNodes[0];
+
+        function processNode(node) {
+            // Convert tag name
+            let p = node.nodeName.indexOf(':');
+            if (p !== -1) {
+                node.__prefix = node.prefix;
+                node.nodeName = node.localName;
+            }
+
+            const { childNodes, attributes, nodeName } = node;
+            node.tagName = nodeName;
+
+            // Convert attributes
+            for (let k in attributes) {
+                let value = attributes[k];
+
+                if (nodeName === 'S') {
+                    value = parseInt(value);
+                }
+                else {
+                    for (let i = 0, len = matchers.length; i < len; i++) {
+                        const matcher = matchers[i];
+                        if (matcher.test(nodeName, k, value)) {
+                            value = matcher.converter(value);
+                            break;
+                        }
+                    }
+                }
+
+                node[k] = value;
+            }
+
+            // Convert children
+            const len = childNodes?.length;
+
+            for (let i = 0; i < len; i++) {
+                const child = childNodes[i];
+
+                if (child.nodeName === '#text') {
+                    node.__text = child.nodeValue;
+                    continue;
+                }
+
+                processNode(child);
+
+                const { nodeName } = child;
+
+                if (Array.isArray(node[nodeName])) {
+                    node[nodeName].push(child);
+                }
+                else if (arrayNodes.indexOf(nodeName) !== -1) {
+                    if (!node[nodeName]) {
+                        node[nodeName] = [];
+                    }
+                    node[nodeName].push(child);
+                } else {
+                    node[nodeName] = child;
+                }
+            }
+
+            node.__children = childNodes;
+        }
+
+        processNode(root);
+
+        return root;
+    }
 
     function parseXml(data) {
         try {
-            let root = tXml.parse(data, {
-                parseNode: true,
-                attrMatchers: matchers,
-                nodesAsArray: arrayNodes
-            });
-            let ret = {};
-            // If root element is xml node, then get first child node as root
-            if (root.tagName.toLowerCase().indexOf('xml') !== -1) {
-                for (let key in root) {
-                    if (Array.isArray(root[key])) {
-                        ret[key] = root[key][0];
-                        break;
-                    } else if (typeof root[key] === 'object') {
-                        ret[key] = root[key];
-                        break;
-                    }
-                }
-            } else {
-                ret[root.tagName] = root;
-                delete root.tagName;
-            }
-            return ret;
+            const root = processXml(data);
+
+            return {
+                [root.tagName]: root
+            };
         } catch (e) {
             return null;
         }

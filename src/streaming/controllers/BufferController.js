@@ -161,10 +161,10 @@ function BufferController(config) {
     /**
      * Creates a SourceBufferSink object
      * @param {object} mediaInfo
-     * @param {array} oldBufferSinks
+     * @param {Map<any, any>} previousBufferSinks
      * @return {Promise<Object>} SourceBufferSink
      */
-    function createBufferSink(mediaInfo, oldBufferSinks = [], oldRepresentation) {
+    function createBufferSink(mediaInfo, previousBufferSinks = new Map(), oldRepresentation) {
         return new Promise((resolve, reject) => {
             if (!initCache || !mediaInfo) {
                 resolve(null);
@@ -172,7 +172,7 @@ function BufferController(config) {
             }
             if (mediaSource) {
                 isPrebuffering = false;
-                _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks, oldRepresentation)
+                _initializeSinkForMseBuffering(mediaInfo, previousBufferSinks, oldRepresentation)
                     .then((sink) => {
                         resolve(sink);
                     })
@@ -205,14 +205,14 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSinkForMseBuffering(mediaInfo, oldBufferSinks, oldRepresentation) {
+    function _initializeSinkForMseBuffering(mediaInfo, previousBufferSinks, oldRepresentation) {
         return new Promise((resolve) => {
             sourceBufferSink = SourceBufferSink(context).create({
                 mediaSource,
                 textController,
                 eventBus
             });
-            _initializeSink(mediaInfo, oldBufferSinks, oldRepresentation)
+            _initializeSink(mediaInfo, previousBufferSinks, oldRepresentation)
                 .then(() => {
                     return updateBufferTimestampOffset(representationController.getCurrentRepresentation());
                 })
@@ -226,18 +226,23 @@ function BufferController(config) {
         })
     }
 
-    function _initializeSink(mediaInfo, oldBufferSinks, oldRepresentation) {
+    function _initializeSink(mediaInfo, previousBufferSinks, oldRepresentation) {
         const newRepresentation = representationController.getCurrentRepresentation();
+        let previousBufferSink = null;
 
-        if (oldBufferSinks && oldBufferSinks[type] && (type === Constants.VIDEO || type === Constants.AUDIO)) {
-            return _initializeSinkForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks, oldRepresentation)
+        if (type === Constants.VIDEO || type === Constants.AUDIO) {
+            previousBufferSink = previousBufferSinks.get(type);
+        }
+
+        if (previousBufferSink) {
+            return _initializeSinkForBufferReuse(mediaInfo, newRepresentation, previousBufferSink, oldRepresentation)
         } else {
             return _initializeSinkForFirstUse(mediaInfo, newRepresentation);
         }
     }
 
-    function _initializeSinkForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks, oldRepresentation) {
-        sourceBufferSink.initializeForStreamSwitch(mediaInfo, newRepresentation, oldBufferSinks[type]);
+    function _initializeSinkForBufferReuse(mediaInfo, newRepresentation, previousBufferSink, oldRepresentation) {
+        sourceBufferSink.initializeForStreamSwitch(mediaInfo, newRepresentation, previousBufferSink);
 
         const promises = [];
         promises.push(sourceBufferSink.abortBeforeAppend());
@@ -603,7 +608,14 @@ function BufferController(config) {
         }
 
         logger.debug(`Using changeType() to switch from codec ${oldRepresentation.codecs} to ${newRepresentation.codecs}`);
-        return sourceBufferSink.changeType(newRepresentation);
+
+        // SourceBufferSink's changeType will be invoked with the AbrRepresentation, ie.
+        // representation from the manifest. However, MSE SourceBuffer doesn't understand
+        // enhancement codecs. In the case an enhancement representation is selected, resolve
+        // the dependent (base) representation before passing the codecs to MSE's changeType
+        const representation = newRepresentation.dependentRepresentation ?
+            newRepresentation.dependentRepresentation : newRepresentation;
+        return sourceBufferSink.changeType(representation);
     }
 
     function pruneAllSafely() {

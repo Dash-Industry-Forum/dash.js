@@ -34,6 +34,7 @@ function SwitchHistoryRule() {
 
                 if (drops + noDrops >= settings.get().streaming.abr.rules.switchHistoryRule.parameters.sampleSize && (drops / noDrops > settings.get().streaming.abr.rules.switchHistoryRule.parameters.switchPercentageThreshold)) {
                     switchRequest.representation = (i > 0 && switchRequests[currentPossibleRepresentation.id].drops > 0) ? representations[i - 1] : currentPossibleRepresentation;
+                    switchRequest.priority = settings.get().streaming.abr.rules.switchHistoryRule.priority;
                     switchRequest.reason = {
                         drops: drops,
                         noDrops: noDrops,

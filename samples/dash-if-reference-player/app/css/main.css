@@ -153,12 +153,14 @@ a:hover {
 
 .dash-video-player {
     background-color: #000000;
+    position: relative;
 }
 
 .col-md-9 video {
     width: 100%;
     height: auto;
     margin: auto;
+    aspect-ratio: 16 / 9;
 }
 
 .col-md-9 {
@@ -176,6 +178,10 @@ a:hover {
 
 .video-controller {
     margin-top: -5px !important;
+}
+
+.element-hidden {
+    display: none !important;
 }
 
 .btn-play-pause,

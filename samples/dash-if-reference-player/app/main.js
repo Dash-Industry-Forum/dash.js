@@ -1,6 +1,6 @@
 'use strict';
 
-var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'DashIFTestVectorsService', 'angular-flot']);
+var app = angular.module('DashPlayer', ['DashSourcesService', 'DashContributorsService', 'angular-flot']);
 
 $(document).ready(function () {
     $('[data-toggle="tooltip"]').tooltip();
@@ -24,16 +24,7 @@ angular.module('DashContributorsService', ['ngResource']).factory('contributors'
     });
 });
 
-angular.module('DashIFTestVectorsService', ['ngResource']).factory('dashifTestVectors', function ($resource) {
-    return $resource('https://testassets.dashif.org/dashjs.json', {}, {
-        query: {
-            method: 'GET',
-            isArray: false
-        }
-    });
-});
-
-app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', 'dashifTestVectors', function ($scope, $window, sources, contributors, dashifTestVectors) {
+app.controller('DashController', ['$scope', '$window', 'sources', 'contributors', function ($scope, $window, sources, contributors) {
     $scope.selectedItem = {
         url: 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'
     };
@@ -49,14 +40,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         }
-
-        // DASH Industry Forum Test Vectors
-        dashifTestVectors.query(function (data) {
-            $scope.availableStreams.splice(7, 0, {
-                name: 'DASH Industry Forum Test Vectors',
-                submenu: data.items
-            });
-        });
 
         // Add provider to beginning of each Vector
         var provider = data.provider;
@@ -201,7 +184,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.microsoft.playready',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 1
+        serverCertificate: '',
+        httpTimeout: 5000,
+        priority: 1,
+        audioRobustness: '',
+        videoRobustness: '',
+        isCustomRobustness: false
     }
 
     $scope.drmWidevine = {
@@ -209,7 +197,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'com.widevine.alpha',
         licenseServerUrl: '',
         httpRequestHeaders: {},
-        priority: 0
+        serverCertificate: '',
+        httpTimeout: 5000,
+        priority: 0,
+        audioRobustness: '',
+        videoRobustness: '',
+        isCustomRobustness: false
     }
 
     $scope.drmClearkey = {
@@ -217,6 +210,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         drmKeySystem: 'org.w3.clearkey',
         licenseServerUrl: '',
         httpRequestHeaders: {},
+        serverCertificate: '',
+        httpTimeout: 5000,
         kid: '',
         key: '',
         clearkeys: {},
@@ -242,6 +237,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.isDynamic = false;
 
     $scope.conformanceViolations = [];
+
+    $scope.enhancementDecoder = null;
 
     var defaultExternalSettings = {
         mpd: encodeURIComponent('https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd'),
@@ -298,6 +295,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     $scope.audioEtp = 0;
     $scope.audioLiveLatency = 0;
     $scope.audioPlaybackRate = 1.00;
+
+    $scope.activePeriod = '';
+    $scope.bufferingPeriod = '';
+
+    $scope.mpdType = '';
+    $scope.numberOfPeriods = 0;
 
     // Starting Options
     $scope.autoPlaySelected = true;
@@ -439,6 +442,12 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.player.on(dashjs.MediaPlayer.events.MANIFEST_LOADED, function (e) {
         $scope.isDynamic = e.data.type === 'dynamic';
+        if (e.data.Period) {
+            $scope.numberOfPeriods = e.data.Period.length;
+        }
+        if (e.data.type) {
+            $scope.mpdType = e.data.type;
+        }
     }, $scope);
 
 
@@ -455,11 +464,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope[e.mediaType + 'Bitrate'] = bitrate;
         $scope.plotPoint('pendingIndex', e.mediaType, e.newQuality + 1, getTimeForPlot());
         $scope.safeApply();
+
+        if (e.currentRepresentation && e.currentRepresentation.adaptation && e.currentRepresentation.adaptation.period) {
+            $scope.bufferingPeriod = e.currentRepresentation.adaptation.period.id;
+        }
     }, $scope);
 
 
     $scope.player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function (e) {
         $scope.currentStreamInfo = e.toStreamInfo;
+        $scope.activePeriod = e.toStreamInfo.id;
     }, $scope);
 
     $scope.player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function (e) {
@@ -740,6 +754,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             streaming: {
                 delay: {
                     liveDelayFragmentCount: parseInt($scope.liveDelayFragmentCount)
+                }
+            }
+        });
+    };
+
+    $scope.updateUtcTimeSyncOffset = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                utcSynchronization: {
+                    artificialTimeOffsetToApply: parseInt($scope.utcTimeSyncOffset)
                 }
             }
         });
@@ -1040,6 +1064,126 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.toggleEnhancementEnabled = function () {
+        const video = document.querySelector('video');
+        const canvas = document.querySelector('canvas');
+
+        if ($scope.enhancementEnabled) {
+            canvas.classList.remove('element-hidden');
+            video.classList.add('element-hidden');
+        } else {
+            canvas.classList.add('element-hidden');
+            video.classList.remove('element-hidden');
+        }
+    };
+
+    $scope.setupEnhancementDecoder = function () {
+        /**
+         * MPEG-5 LCEVC Integration for Dash.js Player.
+         *
+         * These are the changes needed for passing the correct
+         * data to lcevc_dec.js and trigger the correct methods
+         * at the correct time.
+         */
+
+        /**
+         * Let the LCEVC Decoder Library make the decision as to when to switch, based on the currently
+         * rendered frame. If disabled, the player needs to signal LCEVC when there is a render change
+         * after an ABR switch happens.
+         *
+         * @readonly
+         * @enum {number}
+         * @public
+         */
+        const AutoRenderMode = {
+            DISABLED: 0,
+            ENABLED: 1
+        };
+
+        dashjs.Extensions = {
+            ...dashjs.Extensions,
+            /**
+             * Attaches LCEVC functionality and methods to the provided Dash.js player instance.
+             *
+             * @param {object} player the Dash.js player instance to attach LCEVC to
+             */
+            useLcevc: function useLcevc(player) {
+                if (!player) {
+                    throw new TypeError('The provided Dash.js player instance was null or undefined.');
+                }
+                const { LCEVCdec } = window;
+                if (!LCEVCdec) {
+                    throw new TypeError('LCEVC Decoder Libraries could not be loaded.');
+                }
+
+                let abrIndex = -1;
+
+                player.attachLcevc = function attachLcevc(media, canvas, LCEVCdecConfig) {
+                    player.LCEVCdec = new LCEVCdec.LCEVCdec(
+                        media,
+                        canvas,
+                        LCEVCdecConfig
+                    );
+
+                    /* Signal profile information and switches to LCEVCdecJS */
+                    player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, handleQualityChange);
+                    player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, handleFragmentLoadingCompleted);
+                    player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, handleRepresentationSwitch);
+                    player.on('externalSourceBufferUpdateStart', handleBufferUpdates);
+                };
+
+                function handleFragmentLoadingCompleted(event) {
+                    if (event.mediaType === 'enhancement') {
+                        abrIndex = event.request.representation.absoluteIndex;
+                    }
+                }
+
+                function handleQualityChange(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const index = event.newRepresentation.absoluteIndex;
+                        console.log('>>> requested:', event.mediaType, index);
+                        player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                    }
+                }
+
+                function handleRepresentationSwitch(event) {
+                    if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                        const rep = event.currentRepresentation;
+                        const index = rep.absoluteIndex;
+                        // Workaround for very first representation played for which no QUALITY_CHANGE_REQUESTED arrives
+                        if (rep && rep.dependentRepresentation) {
+                            console.log('>>> rep switch:', event.mediaType, index);
+                            player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                        }
+                    }
+                }
+
+                function handleBufferUpdates(event) {
+                    if (event.request === 'appendBuffer') {
+                        player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, /* isMuxed */ false);
+                    }
+                    else if (event.request === 'remove') {
+                        player.LCEVCdec.flushBuffer(event.start, event.end);
+                    }
+                }
+            }
+        };
+
+        const video = document.querySelector('video');
+        const canvas = document.querySelector('canvas');
+        const LCEVCdecConfig = {
+            dynamicPerformanceScaling: false
+        };
+
+        window.LCEVCdec.ready.then(() => {
+            /* Attach LCEVC to the Dash.js player instance */
+            const player = $scope.player;
+            dashjs.Extensions.useLcevc(player);
+            player.attachLcevc(video, canvas, LCEVCdecConfig);
+            $scope.enhancementDecoder = player.LCEVCdec;
+        });
+    };
+
     $scope.toggleCmsdApplyMb = function () {
         $scope.player.updateSettings({
             streaming: {
@@ -1109,7 +1253,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     liveDelay: $scope.defaultLiveDelay
                 },
                 abr: {},
-                cmcd: {}
+                cmcd: {},
+                enhancement: {}
             }
         };
 
@@ -1175,6 +1320,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         config.streaming.cmcd.rtpSafetyFactor = $scope.cmcdRtpSafetyFactor ? $scope.cmcdRtpSafetyFactor : null;
         config.streaming.cmcd.enabledKeys = $scope.cmcdEnabledKeys ? $scope._getFormatedCmcdEnabledKeys() : [];
 
+        // Cleanup enhancement decoder if it exists from previous playback
+        if ($scope.enhancementDecoder) {
+            $scope.enhancementDecoder.close();
+            $scope.enhancementDecoder = null;
+        }
+
+        // Setup enhancement decoder if checkbox is checked or if stream is from V-Nova
+        if ($scope.enhancementEnabled || $scope.selectedItem.provider === 'v-nova') {
+            config.streaming.enhancement.enabled = true;
+            $scope.enhancementEnabled = true;
+            $scope.setupEnhancementDecoder();
+        }
+
+        $scope.toggleEnhancementEnabled();
+
         $scope.player.updateSettings(config);
 
         $scope.controlbar.reset();
@@ -1222,6 +1382,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     };
 
     $scope.doStop = function () {
+        $scope.controlbar.disable();
         $scope.player.attachSource(null);
         $scope.controlbar.reset();
         $scope.conformanceViolations = [];
@@ -1346,6 +1507,14 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         if (!angular.equals(input.httpRequestHeaders, {})) {
                             protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                         }
+
+                        if (input.audioRobustness) {
+                            protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                        }
+
+                        if (input.videoRobustness) {
+                            protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                        }
                     } else {
                         alert('Kid and Key must be specified!');
                     }
@@ -1386,12 +1555,21 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     if (!angular.equals(input.httpRequestHeaders, {})) {
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
                     }
+
+                    if (input.audioRobustness) {
+                        protectionData[input.drmKeySystem]['audioRobustness'] = input.audioRobustness;
+                    }
+
+                    if (input.videoRobustness) {
+                        protectionData[input.drmKeySystem]['videoRobustness'] = input.videoRobustness;
+                    }
                 }
             }
         }
 
         $scope.protectionData = protectionData;
         $scope.player.setProtectionData(protectionData);
+        console.log(protectionData);
     }
 
     $scope.addPopupInput = function (keySystem) {
@@ -1859,7 +2037,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             key !== 'priority' &&
                             key !== 'kid' &&
                             key !== 'key' &&
-                            key !== 'inputMode') {
+                            key !== 'inputMode' &&
+                            key !== 'isCustomRobustness') {
                             queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                         }
                     }
@@ -1892,7 +2071,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         key !== 'drmKeySystem' &&
                         key !== 'licenseServerUrl' &&
                         key !== 'httpRequestHeaders' &&
-                        key !== 'priority') {
+                        key !== 'priority' &&
+                        key !== 'isCustomRobustness') {
                         queryProtectionData[drmObject[drm].drmKeySystem][key] = drmObject[drm][key];
                     }
                 }
@@ -2024,8 +2204,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if (value === 'null') typedValue = null;
         else if (value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) :
-            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
-                typedValue = value);
+                (floatRegEx.test(value) ? typedValue = parseFloat(value) :
+                    typedValue = value);
 
         return typedValue;
     }
@@ -2318,7 +2498,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     function setAdditionalAbrOptions() {
         var currentConfig = $scope.player.getSettings();
-        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled;
+        $scope.fastSwitchSelected = currentConfig.streaming.buffer.fastSwitchEnabled !== null ? currentConfig.streaming.buffer.fastSwitchEnabled : true;
         $scope.videoAutoSwitchSelected = currentConfig.streaming.abr.autoSwitchBitrate.video;
     }
 
@@ -2339,6 +2519,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.initialLiveDelay = currentConfig.streaming.delay.liveDelay;
         $scope.liveDelayFragmentCount = currentConfig.streaming.delay.liveDelayFragmentCount;
         $scope.useSuggestedPresentationDelay = currentConfig.streaming.delay.useSuggestedPresentationDelay;
+    }
+
+    function setUtcTimeSyncOptions() {
+        var currentConfig = $scope.player.getSettings();;
+        $scope.utcTimeSyncOffset = currentConfig.streaming.utcSynchronization.artificialTimeOffsetToApply;
     }
 
     function setStallThresholdOptions() {
@@ -2507,6 +2692,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             setDrmOptions();
             setTextOptions();
             setLiveDelayOptions();
+            setUtcTimeSyncOptions();
             setStallThresholdOptions()
             setInitialSettings();
             setTrackSwitchModeSettings();

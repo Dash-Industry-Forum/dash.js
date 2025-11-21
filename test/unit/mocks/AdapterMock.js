@@ -179,25 +179,12 @@ function AdapterMock() {
         return supplementalCodecs.split(' ').map((codec) => representation.mimeType + ';codecs="' + codec + '"');
     }
 
-    this.getEssentialPropertiesForRepresentation = function (realRepresentation) {
-        if (!realRepresentation || !realRepresentation.EssentialProperty || !realRepresentation.EssentialProperty.length) {
+    this.getEssentialProperties = function (element) {
+        if (!element || !element.EssentialProperty || !element.EssentialProperty.length) {
             return null;
         }
 
-        return realRepresentation.EssentialProperty.map((prop) => {
-            return {
-                schemeIdUri: prop.schemeIdUri,
-                value: prop.value
-            };
-        });
-    };
-
-    this.getEssentialPropertiesForAdaptationSet = function (adaptationSet) {
-        if (!adaptationSet || !adaptationSet.EssentialProperty || !adaptationSet.EssentialProperty.length) {
-            return null;
-        }
-
-        return adaptationSet.EssentialProperty.map((prop) => {
+        return element.EssentialProperty.map((prop) => {
             return {
                 schemeIdUri: prop.schemeIdUri,
                 value: prop.value
@@ -233,6 +220,10 @@ function AdapterMock() {
             wallClockTime: '1970-01-01T00:00:04Z'
         }];
     };
+
+    this.areMediaInfosEqual = function () {
+        return true
+    }
 
 }
 

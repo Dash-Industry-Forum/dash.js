@@ -45,6 +45,7 @@ class MediaInfo {
         this.index = null;
         this.isEmbedded = null;
         this.isFragmented = null;
+        this.isPreselection = false;
         this.isText = false;
         this.labels = null;
         this.lang = null;
@@ -53,6 +54,7 @@ class MediaInfo {
         this.representationCount = 0;
         this.roles = null;
         this.segmentAlignment = false;
+        this.segmentSequenceProperties = [];
         this.selectionPriority = 1;
         this.streamInfo = null;
         this.subSegmentAlignment = false;

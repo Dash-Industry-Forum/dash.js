@@ -133,8 +133,8 @@ describe('DashManifestModel', function () {
         it('should return DescriptorTypes with sanitized value for Role-value set to Main only for MPEG-Role scheme', () => {
             const rolesArray = dashManifestModel.getRolesForAdaptation({
                 Role: [
-                    {schemeIdUri:Constants.DASH_ROLE_SCHEME_ID, value:'Main'},
-                    {schemeIdUri:'my.own.scheme', value:'Main'}]
+                    { schemeIdUri: Constants.DASH_ROLE_SCHEME_ID, value: 'Main' },
+                    { schemeIdUri: 'my.own.scheme', value: 'Main' }]
             });
 
             expect(rolesArray).to.be.instanceOf(Array);
@@ -144,22 +144,22 @@ describe('DashManifestModel', function () {
             expect(rolesArray[1].value).equals('Main');
         });
 
-        it('should return an empty array when getEssentialPropertiesForAdaptationSet', () => {
-            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptationSet();
+        it('should return an empty array when getEssentialProperties', () => {
+            const suppPropArray = dashManifestModel.getEssentialProperties();
 
             expect(suppPropArray).to.be.instanceOf(Object);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getEssentialPropertiesForAdaptationSet', () => {
-            const suppPropArray = dashManifestModel.getEssentialPropertiesForAdaptationSet();
+        it('should return an empty array when getEssentialProperties', () => {
+            const suppPropArray = dashManifestModel.getEssentialProperties();
 
             expect(suppPropArray).to.be.instanceOf(Array);
             expect(suppPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getEssentialPropertiesForAdaptationSet is called', () => {
-            const essPropArray = dashManifestModel.getEssentialPropertiesForAdaptationSet({
+        it('should return correct array of DescriptorType when getEssentialProperties is called', () => {
+            const essPropArray = dashManifestModel.getEssentialProperties({
                 EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
                     schemeIdUri: 'test.scheme',
                     value: 'test2Val'
@@ -175,22 +175,22 @@ describe('DashManifestModel', function () {
             expect(essPropArray[1].value).equals('test2Val');
         });
 
-        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
-            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+        it('should return an empty array when getEssentialProperties', () => {
+            const essPropArray = dashManifestModel.getEssentialProperties();
 
             expect(essPropArray).to.be.instanceOf(Object);
             expect(essPropArray).to.be.empty;
         });
 
-        it('should return an empty array when getEssentialPropertiesForRepresentation', () => {
-            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation();
+        it('should return an empty array when getEssentialProperties', () => {
+            const essPropArray = dashManifestModel.getEssentialProperties();
 
             expect(essPropArray).to.be.instanceOf(Array);
             expect(essPropArray).to.be.empty;
         });
 
-        it('should return correct array of DescriptorType when getEssentialPropertiesForRepresentation is called', () => {
-            const essPropArray = dashManifestModel.getEssentialPropertiesForRepresentation({
+        it('should return correct array of DescriptorType when getEssentialProperties is called', () => {
+            const essPropArray = dashManifestModel.getEssentialProperties({
                 EssentialProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
             });
 
@@ -198,61 +198,6 @@ describe('DashManifestModel', function () {
             expect(essPropArray[0]).to.be.instanceOf(DescriptorType);
             expect(essPropArray[0].schemeIdUri).equals('test.scheme');
             expect(essPropArray[0].value).equals('testVal');
-        });
-
-        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
-
-            expect(suppPropArray).to.be.instanceOf(Object);
-            expect(suppPropArray).to.be.empty;
-        });
-
-        it('should return an empty array when getSupplementalPropertiesForAdaptationSet', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet();
-
-            expect(suppPropArray).to.be.instanceOf(Array);
-            expect(suppPropArray).to.be.empty;
-        });
-
-        it('should return correct array of DescriptorType when getSupplementalPropertiesForAdaptationSet is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForAdaptationSet({
-                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }, {
-                    schemeIdUri: 'test.scheme',
-                    value: 'test2Val'
-                }]
-            });
-
-            expect(suppPropArray).to.be.instanceOf(Array);
-            expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);
-            expect(suppPropArray[0].schemeIdUri).equals('test.scheme');
-            expect(suppPropArray[0].value).equals('testVal');
-            expect(suppPropArray[1].schemeIdUri).equals('test.scheme');
-            expect(suppPropArray[1].value).equals('test2Val');
-        });
-
-        it('should return an empty array when getSupplementalPropertiesForRepresentation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation();
-
-            expect(suppPropArray).to.be.instanceOf(Object);
-            expect(suppPropArray).to.be.empty;
-        });
-
-        it('should return an empty array when getSupplementalPropertiesForRepresentation', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation();
-
-            expect(suppPropArray).to.be.instanceOf(Array);
-            expect(suppPropArray).to.be.empty;
-        });
-
-        it('should return correct array of DescriptorType when getSupplementalPropertiesForRepresentation is called', () => {
-            const suppPropArray = dashManifestModel.getSupplementalPropertiesForRepresentation({
-                SupplementalProperty: [{ schemeIdUri: 'test.scheme', value: 'testVal' }]
-            });
-
-            expect(suppPropArray).to.be.instanceOf(Array);
-            expect(suppPropArray[0]).to.be.instanceOf(DescriptorType);
-            expect(suppPropArray[0].schemeIdUri).equals('test.scheme');
-            expect(suppPropArray[0].value).equals('testVal');
         });
 
         it('should return null when getAdaptationForId is called and id, manifest and periodIndex are undefined', () => {
@@ -961,44 +906,6 @@ describe('DashManifestModel', function () {
             expect(adaptationArray[0].index).to.equals(0);
         });
 
-        it('should return an empty array when getRepresentationsForAdaptation is called and adaptation is undefined', () => {
-            const representationArray = dashManifestModel.getRepresentationsForAdaptation();
-
-            expect(representationArray).to.be.instanceOf(Array);
-            expect(representationArray).to.be.empty;
-        });
-
-        it('should not return an empty array when getRepresentationsForAdaptation is called and adaptation is defined', () => {
-            const voAdaptation = {
-                period: {
-                    index: 0,
-                    mpd: {
-                        manifest: {
-                            Period: [{
-                                AdaptationSet: [{
-                                    Representation: [{
-                                        SegmentTemplate: {
-                                            SegmentTimeline: {
-                                                S: [{
-                                                    d: 2,
-                                                    r: 2
-                                                }]
-                                            }
-                                        }
-                                    }]
-                                }]
-                            }]
-                        }
-                    }
-                }, index: 0, type: 'video'
-            };
-            const representationArray = dashManifestModel.getRepresentationsForAdaptation(voAdaptation);
-
-            expect(representationArray).to.be.instanceOf(Array);
-            expect(representationArray).not.to.be.empty;
-            expect(representationArray[0].index).to.equals(0);
-        });
-
         it('should return null when getId is called and manifest undefined', () => {
             const id = dashManifestModel.getId();
 
@@ -1690,13 +1597,90 @@ describe('DashManifestModel', function () {
             })
 
             it('Should parse single integer', () => {
-                const framerate = dashManifestModel.getFramerate({frameRate: '24'});
+                const framerate = dashManifestModel.getFramerate({ frameRate: '24' });
                 expect(framerate).to.be.equal(24);
             })
 
             it('Should parse two separated Integers', () => {
-                const framerate = dashManifestModel.getFramerate({frameRate: '48/2'});
+                const framerate = dashManifestModel.getFramerate({ frameRate: '48/2' });
                 expect(framerate).to.be.equal(24);
+            })
+        })
+
+        describe('getSegmentSequencePropertiesForAdaptationSet()', () => {
+
+            it('should return empty object if no manifest is given', () => {
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet()
+                expect(segmentSequenceProperties).to.be.empty;
+            })
+
+            it('should return SSP for AdaptationSet', () => {
+                const adaptationSet = {
+                    SegmentSequenceProperties: [
+                        {
+                            cadence: 5,
+                            sapType: 3,
+                            event: false,
+                            alignment: 'someAlignment'
+                        }
+                    ]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(1);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
+            })
+
+            it('should return SSP for Representations', () => {
+                const adaptationSet = {
+                    Representation: [{
+                        SegmentSequenceProperties: [
+                            {
+                                cadence: 5,
+                                sapType: 3,
+                                event: false,
+                                alignment: 'someAlignment'
+                            }
+                        ]
+                    }]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(1);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
+            })
+
+            it('should return SSP for Adaptation Set and Representations', () => {
+                const adaptationSet = {
+                    SegmentSequenceProperties: [
+                        {
+                            cadence: 5,
+                            sapType: 3,
+                            event: false,
+                            alignment: 'someAlignment'
+                        }
+                    ],
+                    Representation: [{
+                        SegmentSequenceProperties: [
+                            {
+                                cadence: 5,
+                                sapType: 3,
+                                event: false,
+                                alignment: 'someAlignment'
+                            }
+                        ]
+                    }]
+                }
+                const segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(adaptationSet)
+                expect(segmentSequenceProperties).to.have.length(2);
+                expect(segmentSequenceProperties[0].cadence).to.equal(5);
+                expect(segmentSequenceProperties[0].sapType).to.equal(3);
+                expect(segmentSequenceProperties[0].event).to.be.false;
+                expect(segmentSequenceProperties[0].alignment).to.equal('someAlignment');
             })
         })
     });

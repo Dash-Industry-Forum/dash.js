@@ -501,7 +501,7 @@ function HTTPLoader(cfg) {
         }
 
         // Get a list of "resource" performance entries
-        const resources = performance.getEntriesByType('resource');
+        const resources = performance.getEntriesByType?.('resource');
         if (resources === undefined || resources.length <= 0) {
             return;
         }
@@ -557,7 +557,7 @@ function HTTPLoader(cfg) {
         let loader;
         let fileLoaderType;
 
-        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        if (!request.isPartialSegmentRequest && request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             if (!fetchLoader) {
                 fetchLoader = FetchLoader(context).create();
                 fetchLoader.setConfig({

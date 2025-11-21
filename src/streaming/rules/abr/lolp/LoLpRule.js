@@ -44,6 +44,7 @@ import SwitchRequest from '../../SwitchRequest.js';
 import MetricsConstants from '../../../constants/MetricsConstants.js';
 import LoLpWeightSelector from './LoLpWeightSelector.js';
 import Constants from '../../../constants/Constants.js';
+import Settings from '../../../../core/Settings.js';
 
 const DWS_TARGET_LATENCY = 1.5;
 const DWS_BUFFER_MIN = 0.3;
@@ -56,6 +57,7 @@ function LoLPRule(config) {
     let context = this.context;
 
     let logger,
+        settings,
         instance,
         learningController,
         qoeEvaluator;
@@ -64,6 +66,7 @@ function LoLPRule(config) {
         logger = Debug(context).getInstance().getLogger(instance);
         learningController = LearningAbrController(context).create();
         qoeEvaluator = LoLpQoeEvaluator(context).create();
+        settings = Settings(context).getInstance();
     }
 
     function getSwitchRequest(rulesContext) {
@@ -142,7 +145,7 @@ function LoLPRule(config) {
                 dynamicWeightsSelector
             );
             switchRequest.reason = { throughput: throughput, latency: latency };
-            switchRequest.priority = SwitchRequest.PRIORITY.STRONG;
+            switchRequest.priority = settings.get().streaming.abr.rules.loLPRule.priority;
 
             scheduleController.setTimeToLoadDelay(0);
 
