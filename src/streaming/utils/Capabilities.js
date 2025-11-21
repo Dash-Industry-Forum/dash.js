@@ -428,6 +428,9 @@ function Capabilities() {
         if (inputConfig.samplerate) {
             configuration.audio.samplerate = inputConfig.samplerate;
         }
+        if (inputConfig.channels) {
+            configuration.audio.channels = inputConfig.channels;
+        }
 
         return configuration
     }

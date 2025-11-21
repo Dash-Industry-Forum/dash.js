@@ -84,7 +84,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -732,6 +733,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -1161,7 +1164,8 @@ function Settings() {
                 ],
                 useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
-                filterHDRMetadataFormatEssentialProperties: false
+                filterHDRMetadataFormatEssentialProperties: false,
+                filterAudioChannelConfiguration: false
             },
             events: {
                 eventControllerRefreshDelay: 100,
