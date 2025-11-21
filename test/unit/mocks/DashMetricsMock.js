@@ -42,6 +42,9 @@ function DashMetricsMock() {
     this.addDroppedFrames = function () {
     };
 
+    this.getCurrentDroppedFrames = function () {
+    };
+
     this.addPlayList = function () {
     };
 

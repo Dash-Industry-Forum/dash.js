@@ -56,4 +56,8 @@ StreamMock.prototype.getCurrentRepresentationForType = function () {
     return null;
 }
 
+StreamMock.prototype.getRepresentationsByType = function () {
+    return null;
+}
+
 export default StreamMock;

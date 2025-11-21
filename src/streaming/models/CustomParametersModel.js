@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';
 import Constants from '../constants/Constants.js';
+import CmcdController from '../controllers/CmcdController.js';
 import ExternalSubtitle from '../vo/ExternalSubtitle.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
@@ -49,7 +50,8 @@ function CustomParametersModel() {
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
         externalSubtitles,
-        customAbrRules;
+        customAbrRules,
+        cmcdController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
@@ -62,14 +64,18 @@ function CustomParametersModel() {
     }
 
     function _resetInitialSettings() {
-        requestInterceptors = [];
-        responseInterceptors = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
         customCapabilitiesFilters = [];
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
+        
+        // Initialize request interceptors with default CMCD interceptors 
+        cmcdController = CmcdController(context).getInstance();
+        requestInterceptors = cmcdController.getCmcdRequestInterceptors();
+        responseInterceptors = cmcdController.getCmcdResponseInterceptors();
+        
         externalSubtitles = new Set();
     }
 

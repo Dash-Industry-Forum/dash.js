@@ -28,6 +28,13 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import { CmcdPlayerState } from '@svta/common-media-library/cmcd/CmcdPlayerState';
+import { CmcdReportingMode } from '@svta/common-media-library/cmcd/CmcdReportingMode';
+import { CmcdEventType } from '@svta/common-media-library/cmcd/CmcdEventType';
+import { CMCD_DEFAULT_TIME_INTERVAL } from '@svta/common-media-library/cmcd/CMCD_DEFAULT_TIME_INTERVAL';
+import { CMCD_PARAM } from '@svta/common-media-library/cmcd/CMCD_PARAM';
+import { CMCD_QUERY } from '@svta/common-media-library/cmcd/CMCD_QUERY';
+import { CMCD_KEYS } from '@svta/common-media-library/cmcd/CMCD_KEYS';
 
 /**
  * Constants declaration
@@ -213,14 +220,14 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_QUERY_KEY: 'CMCD',
+    CMCD_QUERY_KEY: CMCD_PARAM,
 
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_QUERY: 'query',
+    CMCD_MODE_QUERY: CMCD_QUERY,
 
     /**
      *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
@@ -230,17 +237,11 @@ export default {
     CMCD_MODE_HEADER: 'header',
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
+     *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
-    /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
-     *  @memberof Constants#
-     *  @static
-     */
-    CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
+    CMCD_MODE_BODY: 'body',
 
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
@@ -248,7 +249,67 @@ export default {
      *  @static
      */
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+    /**
+     *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_TIME_INTERVAL: CMCD_DEFAULT_TIME_INTERVAL,
+    /**
+     *  @constant {string} CMCD_REPORTING_MODE specifies all the available modes for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_REPORTING_MODE: CmcdReportingMode,
 
+    /**
+     *  @constant {string} CMCD_KEYS specifies all the available keys for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_KEYS: CMCD_KEYS,
+
+    /**
+     *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_REPORTING_EVENTS: CmcdEventType,
+
+    /**
+     *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_PLAYER_STATES: CmcdPlayerState,
+    /**
+     *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_VERSION: 1,
+    /**
+     *  @constant {string} CMCD_DEFAULT_INCLUDE_IN_REQUESTS specifies default requests type to include CMCD data.
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
+
+    /**
+     *  @constant {string} CMCD_CONTENT_TYPE_HEADER specifies content type for cmcd batching
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_CONTENT_TYPE_HEADER: {
+        'Content-Type': 'application/cmcd+text'
+    },
+
+    /**
+     *  @constant {Array.<number>} CMCD_DEFAULT_BATCH_RETRY_DELAYS specifies default retry delays in milliseconds for batched CMCD reporting failures
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_DEFAULT_BATCH_RETRY_DELAYS: [100, 500, 1000, 3000, 5000],
 
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
