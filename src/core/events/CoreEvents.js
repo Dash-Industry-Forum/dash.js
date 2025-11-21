@@ -40,7 +40,9 @@ import EventsBase from './EventsBase.js';
 class CoreEvents extends EventsBase {
     constructor () {
         super();
+        this.ALTERNATIVE_EVENT_RECEIVED = 'alternativeEventReceived';
         this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
+        this.EVENT_READY_TO_RESOLVE = 'eventReadyToResolve';
         this.BUFFERING_COMPLETED = 'bufferingCompleted';
         this.BUFFER_CLEARED = 'bufferCleared';
         this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
@@ -54,6 +56,7 @@ class CoreEvents extends EventsBase {
         this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
         this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
         this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
+        this.ORIGINAL_ALTERNATIVE_MANIFEST_LOADED = 'originalAlternativeManifestLoaded'
         this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
         this.LOADING_COMPLETED = 'loadingCompleted';
         this.LOADING_PROGRESS = 'loadingProgress';

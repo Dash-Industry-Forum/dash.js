@@ -107,7 +107,7 @@ function ManifestLoader(config) {
         }
     }
 
-    function load(url, serviceLocation = null, queryParams = null) {
+    function load(url, serviceLocation = null, queryParams = null, alternative = false) {
 
         const requestStartDate = new Date();
         const request = new TextRequest(url, HTTPRequest.MPD_TYPE);
@@ -226,7 +226,12 @@ function ManifestLoader(config) {
                     manifest.loadedTime = new Date();
                     xlinkController.resolveManifestOnLoad(manifest);
 
-                    eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
+                    if (alternative) {
+                        eventBus.trigger(Events.ORIGINAL_ALTERNATIVE_MANIFEST_LOADED, { manifest: data });
+                    } else {
+                        eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
+                    }
+
                 } else {
                     eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, {
                         manifest: null,

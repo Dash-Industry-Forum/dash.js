@@ -1,0 +1,372 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Listen Mode - Alternative Media Presentations</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #alternative-video-element {
+            display: none;
+        }
+
+        #manifestViewer {
+            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+            background: #1e1e1e;
+            color: #dcdcdc;
+            padding: 1em;
+            white-space: pre;
+            overflow: auto;
+            border: 1px solid #444;
+            font-size: 10px;
+            border-radius: 4px;
+            max-height: 400px;
+        }
+        #manifestViewer .token\.tag { color: #569CD6; }
+        #manifestViewer .token\.attr-name { color: #9CDCFE; }
+        #manifestViewer .token\.attr-value { color: #CE9178; }
+        #manifestViewer .token\.text { color: #D4D4D4; }
+        #manifestViewer .token\.altmpd { color: #06ff06; }
+        #manifestViewer .token\.altmpd-bg { background-color: rgb(36, 179, 36); }
+
+        .event-config {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .form-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        #statusMessage {
+            margin-top: 15px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Listen Mode - Alternative Media Presentations</h3>
+                    <p>A sample demonstrating listen mode where an alternative content can be replaced without maxDuration, and then a status update can add maxDuration to return to original content.</p>
+
+                    <div class="event-config">
+                        <h5>Stream Configuration</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Main Live Stream URL:</label>
+                            <input type="text" id="manifestUrl" class="form-control" value="https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Alternative Live Stream URL:</label>
+                            <input type="text" id="alternativeUrl" class="form-control" value="https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Time Offset (seconds):</label>
+                            <input type="number" id="timeOffset" class="form-control" value="10" min="5" max="300" />
+                            <small class="text-muted">Time from now to trigger replace event</small>
+                        </div>
+
+                        <div class="mt-3">
+                            <button id="loadPlayer" class="btn btn-success">Load Player</button>
+                            <button id="returnButton" class="btn btn-warning ms-2" disabled>End Alternative</button>
+                        </div>
+
+                        <div id="statusMessage" class="alert alert-info mt-3" style="display: none;"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <video id="video-element" controls="true"></video>
+                <video id="alternative-video-element" controls="true"></video>
+
+                <div class="mt-3">
+                    <h6>Generated Manifest Events:</h6>
+                    <div id="manifestViewer">No events configured yet...</div>
+                </div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+<script class="code">
+    let player;
+    let replaceEvent = null;
+    let eventId = 0;
+    const DEFAULT_DURATION = 10000; // 10 seconds
+    const DEFAULT_RETURN_OFFSET = 10000; // 10 seconds
+    const DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET = 3000; // 3 seconds
+
+    function init() {
+        setupEventListeners();
+    }
+
+    function setupEventListeners() {
+        const returnBtn = document.getElementById('returnButton');
+        const loadPlayerBtn = document.getElementById('loadPlayer');
+
+        returnBtn.addEventListener('click', returnToOriginal);
+        loadPlayerBtn.addEventListener('click', loadPlayer);
+    }
+
+    function showStatus(message, type = 'info') {
+        const statusDiv = document.getElementById('statusMessage');
+        statusDiv.textContent = message;
+        statusDiv.className = `alert alert-${type} mt-3`;
+        statusDiv.style.display = 'block';
+    }
+
+    function updateManifestViewer() {
+        const viewer = document.getElementById('manifestViewer');
+
+        if (!replaceEvent) {
+            viewer.textContent = 'No events configured yet...';
+            return;
+        }
+
+        let statusAttr = replaceEvent.hasMaxDuration ? ' status="update"' : '';
+        let maxDurationAttr = replaceEvent.hasMaxDuration ? `\n      maxDuration="0"` : '';
+
+        let manifestXml = `
+<EventStream schemeIdUri="urn:mpeg:dash:event:alternativeMPD:replace:2025" timescale="1000">
+  <Event presentationTime="${replaceEvent.presentationTime}" duration="${DEFAULT_DURATION}" id="${replaceEvent.id}"${statusAttr}>
+    <ReplacePresentation
+      url="${replaceEvent.alternativeUrl}"
+      earliestResolutionTimeOffset="${DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET}"
+      returnOffset="${DEFAULT_RETURN_OFFSET}"${maxDurationAttr}
+      clip="false"
+      startAtPlayhead="true" />
+  </Event>
+</EventStream>`;
+
+        // Format and highlight the XML
+        let highlighted = manifestXml
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, open, tagName, attrs, close) => {
+                let isAltMpd = (tagName === "ReplacePresentation");
+                let coloredTag = `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${open}${tagName}</span>`;
+                if (attrs.trim().length > 0) {
+                    attrs = attrs.replace(/(\w+)="(.*?)"/g, `<span class="token.attr-name">$1</span>="<span class="token.attr-value">$2</span>"`);
+                    coloredTag += attrs;
+                }
+                coloredTag += `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${close}</span>`;
+                return coloredTag;
+            });
+
+        viewer.innerHTML = highlighted;
+    }
+
+
+    function returnToOriginal() {
+        if (!player) {
+            showStatus('Please load the player first', 'danger');
+            return;
+        }
+
+        if (!replaceEvent) {
+            showStatus('No replace event to update', 'danger');
+            return;
+        }
+
+        // Apply the maxDuration status update
+        applyMaxDurationUpdate(replaceEvent);
+
+        // Disable return button
+        document.getElementById('returnButton').disabled = true;
+    }
+
+    function applyMaxDurationUpdate(eventToUpdate) {
+        // Mark the event as having maxDuration in our tracking object
+        // The response interceptor will include this in subsequent manifest requests
+        eventToUpdate.hasMaxDuration = true;
+        updateManifestViewer();
+
+        showStatus(`Status update sent. Main content will return soon.`, 'warning');
+    }
+
+    function addManifestResponseInterceptor() {
+        const interceptor = (response) => {
+            // Only intercept MPD manifest requests
+            if (response.request?.customData?.request?.type === 'MPD' && replaceEvent) {
+                try {
+                    let xmlString = response.data;
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(xmlString, 'text/xml');
+
+                    // Get the Period element
+                    const period = xmlDoc.querySelector('Period');
+                    if (!period) {
+                        return Promise.resolve(response);
+                    }
+
+                    // Remove existing alternative MPD event streams
+                    const existingEventStreams = period.querySelectorAll('EventStream[schemeIdUri="urn:mpeg:dash:event:alternativeMPD:replace:2025"]');
+                    existingEventStreams.forEach(es => es.remove());
+
+                    // Create the EventStream element
+                    const eventStream = xmlDoc.createElement('EventStream');
+                    eventStream.setAttribute('schemeIdUri', 'urn:mpeg:dash:event:alternativeMPD:replace:2025');
+                    eventStream.setAttribute('timescale', '1000');
+
+                    // Create the Event element
+                    const event = xmlDoc.createElement('Event');
+                    event.setAttribute('id', replaceEvent.id);
+                    event.setAttribute('presentationTime', replaceEvent.presentationTime);
+                    event.setAttribute('duration', DEFAULT_DURATION);
+
+                    // Add status if maxDuration is set
+                    if (replaceEvent.hasMaxDuration) {
+                        event.setAttribute('status', 'update');
+                    }
+
+                    // Create the ReplacePresentation element
+                    const replacePresentation = xmlDoc.createElement('ReplacePresentation');
+                    replacePresentation.setAttribute('url', replaceEvent.alternativeUrl);
+                    replacePresentation.setAttribute('earliestResolutionTimeOffset', DEFAULT_EARLIEST_RESOLUTION_TIME_OFFSET);
+                    replacePresentation.setAttribute('returnOffset', DEFAULT_RETURN_OFFSET);
+                    replacePresentation.setAttribute('clip', 'false');
+                    replacePresentation.setAttribute('startAtPlayhead', 'true');
+
+                    // Add maxDuration if the event has been updated
+                    if (replaceEvent.hasMaxDuration) {
+                        replacePresentation.setAttribute('maxDuration', '0');
+                    }
+
+                    // Assemble the elements
+                    event.appendChild(replacePresentation);
+                    eventStream.appendChild(event);
+                    period.appendChild(eventStream);
+
+                    // Serialize back to XML string
+                    const serializer = new XMLSerializer();
+                    response.data = serializer.serializeToString(xmlDoc);
+
+                } catch (error) {
+                    console.error('Error modifying manifest:', error);
+                }
+            }
+
+            return Promise.resolve(response);
+        };
+
+        player.addResponseInterceptor(interceptor);
+    }
+
+    function loadPlayer() {
+        const manifestUrl = document.getElementById('manifestUrl').value;
+        const alternativeUrl = document.getElementById('alternativeUrl').value;
+        const timeOffset = parseInt(document.getElementById('timeOffset').value);
+        const video = document.getElementById('video-element');
+        const alternativeVideo = document.getElementById('alternative-video-element');
+        const returnButton = document.getElementById('returnButton');
+        const loadButton = document.getElementById('loadPlayer');
+
+        // Clean up existing player
+        if (player) {
+            player.reset();
+        }
+
+        // Reset button states during load
+        returnButton.disabled = true;
+
+        // Create the replace event automatically
+        const presentationTime = Date.now() + (timeOffset * 1000);
+
+        replaceEvent = {
+            id: eventId,
+            presentationTime: presentationTime,
+            alternativeUrl: alternativeUrl,
+            hasMaxDuration: false,
+            timeOffset: timeOffset
+        };
+
+        updateManifestViewer();
+
+        // Set video attributes
+        video.setAttribute('controls', 'true');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('muted', '');
+
+        // Create new player following the correct sequence
+        player = dashjs.MediaPlayer().create();
+        window.player = player;
+
+        // Initialize first (without parameters)
+        player.initialize();
+
+        // Set alternative video element
+        player.setAlternativeVideoElement(alternativeVideo);
+
+        // Attach the main video view
+        player.attachView(video);
+
+        // Configure settings
+        player.updateSettings({
+            streaming: {
+                text: {
+                    dispatchForManualRendering: true
+                }
+            }
+        });
+
+        // Add response interceptor to modify manifest dynamically
+        addManifestResponseInterceptor(manifestUrl);
+
+        // Set up event listeners
+        player.on('alternativeMpdContentStart', (data) => {
+            showStatus('Alternative content started!', 'info');
+        });
+
+        player.on('alternativeMpdContentEnd', (data) => {
+            showStatus('Returned to original content', 'success');
+        });
+
+        player.on('error', (e) => {
+            showStatus(`Player error: ${e.error}`, 'danger');
+        });
+
+        // Attach source directly with URL
+        player.attachSource(manifestUrl);
+
+        // Enable End Alternative button after player is loaded
+        returnButton.disabled = false;
+        loadButton.textContent = 'Reload Player';
+        showStatus(`Player loaded. Replace event will trigger in ${timeOffset} seconds (no maxDuration).`, 'success');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

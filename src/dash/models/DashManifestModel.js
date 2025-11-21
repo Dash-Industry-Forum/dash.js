@@ -51,6 +51,7 @@ import Period from '../vo/Period.js';
 import Preselection from '../vo/Preselection.js';
 import ProducerReferenceTime from '../vo/ProducerReferenceTime.js';
 import Representation from '../vo/Representation.js';
+import AlternativeMpd from '../vo/AlternativeMpd.js';
 import URLUtils from '../../streaming/utils/URLUtils.js';
 import UTCTiming from '../vo/UTCTiming.js';
 import Utils from '../../core/Utils.js';
@@ -1316,6 +1317,21 @@ function DashManifestModel() {
                     } else {
                         event.id = null;
                     }
+                    if (currentMpdEvent.hasOwnProperty(DashConstants.STATUS)) {
+                        event.status = currentMpdEvent.status;
+                    } else {
+                        event.status = null;
+                    }
+
+                    const alternativeMpdKey = Object.keys(DashConstants.ALTERNATIVE_MPD).find(key =>
+                        currentMpdEvent.hasOwnProperty(DashConstants.ALTERNATIVE_MPD[key])
+                    );
+
+                    if (alternativeMpdKey) {
+                        event.alternativeMpd = getAlternativeMpd(currentMpdEvent[DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]], DashConstants.ALTERNATIVE_MPD[alternativeMpdKey]);
+                    } else {
+                        event.alternativeMpd = null;
+                    }
 
                     if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
                         // toString is used to manage both regular and namespaced tags
@@ -1337,6 +1353,41 @@ function DashManifestModel() {
         }
 
         return events;
+    }
+
+    function getAlternativeMpd(event, mode) {
+        if (!mode) {
+            return
+        }
+        const alternativeMpd = new AlternativeMpd();
+
+        getAlternativeMpdCommonData(alternativeMpd, event);
+
+        // Keep to avoid errors with the old signaling
+        alternativeMpd.disableJumpTimeOffest = event.disableJumpTimeOffest ?? null;
+        alternativeMpd.playTimes = event.playTimes ?? null;
+
+        if (mode === DashConstants.ALTERNATIVE_MPD.INSERT) {
+            alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.INSERT;
+            return alternativeMpd;
+        }
+
+        if (mode === DashConstants.ALTERNATIVE_MPD.REPLACE) {
+            alternativeMpd.mode = Constants.ALTERNATIVE_MPD.MODES.REPLACE;
+            alternativeMpd.returnOffset = event.returnOffset ?? null;
+            alternativeMpd.clip = event.clip ? !(event.clip === 'false') : true;
+            alternativeMpd.startWithOffset = event.startWithOffset ? event.startWithOffset === 'true' : false;
+            return alternativeMpd;
+        }
+    }
+
+    function getAlternativeMpdCommonData(alternativeMpd, event) {
+        alternativeMpd.url = event.url ?? null;
+        alternativeMpd.earliestResolutionTimeOffset = event.earliestResolutionTimeOffset / 1000 ?? null;
+        alternativeMpd.serviceDescriptionId = event.serviceDescriptionId;
+        alternativeMpd.maxDuration = event.maxDuration;
+        alternativeMpd.noJump = event.noJump;
+        alternativeMpd.executeOnce = event.executeOnce ? event.executeOnce === 'true' : false;
     }
 
     function getEventStreams(inbandStreams, representation, period) {

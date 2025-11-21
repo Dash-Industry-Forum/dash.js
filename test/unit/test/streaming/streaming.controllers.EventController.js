@@ -4,6 +4,8 @@ import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ManifestUpdaterMock from '../../mocks/ManifestUpdaterMock.js';
 import Settings from '../../../../src/core/Settings.js';
+import Events from '../../../../src/core/events/Events.js';
+import Constants from '../../../../src/streaming/constants/Constants.js';
 
 import {expect} from 'chai';
 const context = {};
@@ -57,6 +59,7 @@ describe('EventController', function () {
 
     describe('if configured', function () {
         beforeEach(function () {
+            playbackControllerMock.setTime(0);
             eventController.reset();
             eventController.setConfig({
                 manifestUpdater: manifestUpdaterMock,
@@ -574,6 +577,241 @@ describe('EventController', function () {
             expect(triggerCount).to.equal(1);
 
             eventBus.off(MediaPlayerEvents.MANIFEST_VALIDITY_CHANGED, manifestValidityExpiredHandler, this);
+        });
+
+        describe('noJump event handling', function () {
+            it('should trigger noJump=1 (first event) when skipping ahead', function (done) {
+                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
+                const periodId = 'periodId';
+                let events = [
+                    {
+                        eventStream: {
+                            timescale: 1,
+                            schemeIdUri: schemeIdUri,
+                            period: {
+                                id: periodId
+                            }
+                        },
+                        id: 'event1',
+                        alternativeMpd: {
+                            noJump: 1
+                        },
+                        calculatedPresentationTime: 10
+                    },
+                    {
+                        eventStream: {
+                            timescale: 1,
+                            schemeIdUri: schemeIdUri,
+                            period: {
+                                id: periodId
+                            }
+                        },
+                        id: 'event2',
+                        alternativeMpd: {
+                            noJump: 1
+                        },
+                        calculatedPresentationTime: 15
+                    }
+                ];
+
+                let triggerCount = 0;
+                let triggeredEventIds = [];
+                let onStartEvent = function (e) {
+                    triggerCount++;
+                    triggeredEventIds.push(e.event.id);
+                    expect(triggerCount).to.equal(1);
+                    expect(triggeredEventIds[0]).to.equal('event1');
+                    eventBus.off(schemeIdUri, onStartEvent);
+                    done();
+
+                };
+                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(20);
+            });
+
+            it('should trigger noJump=2 (last event) when skipping ahead', function (done) {
+                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
+                const periodId = 'periodId';
+                let events = [
+                    {
+                        eventStream: {
+                            timescale: 1,
+                            schemeIdUri: schemeIdUri,
+                            period: {
+                                id: periodId
+                            }
+                        },
+                        id: 'event1',
+                        alternativeMpd: {
+                            noJump: 2
+                        },
+                        calculatedPresentationTime: 10
+                    },
+                    {
+                        eventStream: {
+                            timescale: 1,
+                            schemeIdUri: schemeIdUri,
+                            period: {
+                                id: periodId
+                            }
+                        },
+                        id: 'event2',
+                        alternativeMpd: {
+                            noJump: 2
+                        },
+                        calculatedPresentationTime: 15
+                    }
+                ];
+
+                let triggerCount = 0;
+                let triggeredEventIds = [];
+                let onStartEvent = function (e) {
+                    triggerCount++;
+                    triggeredEventIds.push(e.event.id);
+                    expect(triggerCount).to.equal(1);
+                    expect(triggeredEventIds[0]).to.equal('event2');
+                    eventBus.off(schemeIdUri, onStartEvent);
+                    done();
+                };
+
+                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(20);
+            });
+
+            it('should not trigger noJump events if already triggered', function () {
+                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
+                const periodId = 'periodId';
+                let events = [{
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
+                    },
+                    id: 'event1',
+                    alternativeMpd: {
+                        noJump: 1
+                    },
+                    calculatedPresentationTime: 10,
+                    triggeredNoJumpEvent: true
+                }];
+
+                let triggerCount = 0;
+                let onStartEvent = function () {
+                    triggerCount++;
+                };
+
+                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(20);
+                
+                expect(triggerCount).to.equal(0);
+                eventBus.off(schemeIdUri, onStartEvent);
+            });
+
+            it('should not trigger noJump events if current time is before presentation time', function () {
+                const schemeIdUri = Constants.ALTERNATIVE_MPD.URIS.REPLACE;
+                const periodId = 'periodId';
+                let events = [{
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
+                    },
+                    id: 'event1',
+                    alternativeMpd: {
+                        noJump: 1
+                    },
+                    calculatedPresentationTime: 10
+                }];
+
+                let triggerCount = 0;
+                let onStartEvent = function () {
+                    triggerCount++;
+                };
+
+                eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(5);
+                
+                expect(triggerCount).to.equal(0);
+                eventBus.off(schemeIdUri, onStartEvent);
+            });
+        });
+
+        describe('earliestResolutionTimeOffset handling', function () {
+            it('should trigger EVENT_READY_TO_RESOLVE when resolution time is reached', function (done) {
+                const schemeIdUri = 'resolutionTestScheme';
+                const periodId = 'periodId';
+                let events = [{
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 20,
+                    alternativeMpd: {
+                        earliestResolutionTimeOffset: 10
+                    }
+                }];
+
+                let onEventReadyToResolve = function (e) {
+                    expect(e.schemeIdUri).to.equal(schemeIdUri);
+                    expect(e.eventId).to.equal('event0');
+                    expect(e.event).to.be.an('object');
+                    eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve);
+                    done();
+                };
+
+                eventBus.on(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve, this);
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(10);
+            });
+
+            it('should not trigger EVENT_READY_TO_RESOLVE before resolution time', function () {
+                const schemeIdUri = 'resolutionTestScheme';
+                const periodId = 'periodId';
+                let events = [{
+                    eventStream: {
+                        timescale: 1,
+                        schemeIdUri: schemeIdUri,
+                        period: {
+                            id: periodId
+                        }
+                    },
+                    id: 'event0',
+                    calculatedPresentationTime: 20,
+                    alternativeMpd: {
+                        earliestResolutionTimeOffset: 10
+                    }
+                }];
+
+                let triggerCount = 0;
+                let onEventReadyToResolve = function () {
+                    triggerCount++;
+                };
+
+                eventBus.on(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve, this);
+                eventController.addInlineEvents(events, periodId);
+                eventController.start();
+                playbackControllerMock.setTime(5);
+
+                expect(triggerCount).to.equal(0);
+                eventBus.off(Events.EVENT_READY_TO_RESOLVE, onEventReadyToResolve);
+            });
         });
     });
 });

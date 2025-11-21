@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import AbrController from './controllers/AbrController.js';
+import AlternativeMediaController from './controllers/AlternativeMediaController.js';
 import BASE64 from '../../externals/base64.js';
 import BaseURLController from './controllers/BaseURLController.js';
 import BoxParser from './utils/BoxParser.js';
@@ -41,11 +42,11 @@ import CmsdModel from './models/CmsdModel.js';
 import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
-import DOMStorage from './utils/DOMStorage.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import DashJSError from './vo/DashJSError.js';
 import DashMetrics from '../dash/DashMetrics.js';
+import DOMStorage from './utils/DOMStorage.js';
 import Debug from './../core/Debug.js';
 import ErrorHandler from './utils/ErrorHandler.js';
 import Errors from './../core/errors/Errors.js';
@@ -140,6 +141,7 @@ function MediaPlayer() {
         throughputController,
         schemeLoaderFactory,
         timelineConverter,
+        alternativeMediaController,
         mediaController,
         protectionController,
         metricsReportingController,
@@ -220,6 +222,9 @@ function MediaPlayer() {
         }
         if (config.gapController) {
             gapController = config.gapController;
+        }
+        if (config.alternativeMediaController) {
+            alternativeMediaController = config.alternativeMediaController;
         }
         if (config.throughputController) {
             throughputController = config.throughputController
@@ -317,6 +322,10 @@ function MediaPlayer() {
                 schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
             }
 
+            if (!alternativeMediaController) {
+                alternativeMediaController = AlternativeMediaController(context).getInstance();
+            }
+
             if (!playbackController) {
                 playbackController = PlaybackController(context).getInstance();
             }
@@ -387,6 +396,15 @@ function MediaPlayer() {
                 adapter
             });
 
+            alternativeMediaController.setConfig({
+                videoModel,
+                DashConstants,
+                mediaPlayerFactory: FactoryMaker.getClassFactory(MediaPlayer)(),
+                playbackController,
+                alternativeContext: context,
+                logger
+            });
+
             if (!segmentBaseController) {
                 segmentBaseController = SegmentBaseController(context).getInstance({
                     dashMetrics: dashMetrics,
@@ -454,8 +472,12 @@ function MediaPlayer() {
      * @memberof module:MediaPlayer
      * @instance
      */
-    function reset() {
-        attachSource(null);
+    function reset(onlyControllers) {
+
+        if (!onlyControllers) {
+            attachSource(null);
+        }
+
         attachView(null);
         protectionData = null;
         if (protectionController) {
@@ -582,12 +604,13 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~SOURCE_NOT_ATTACHED_ERROR SOURCE_NOT_ATTACHED_ERROR} if called before attachSource function
      * @instance
      */
-    function preload() {
-        if (videoModel.getElement() || streamingInitialized) {
+    function preload(time) {
+        if (videoModel.getElement() || (streamingInitialized && !time)) {
             return;
         }
         if (source) {
-            _initializePlayback(providedStartTime);
+            const playbackTime = time ? time : providedStartTime;
+            _initializePlayback(playbackTime);
         } else {
             throw SOURCE_NOT_ATTACHED_ERROR;
         }
@@ -2126,6 +2149,16 @@ function MediaPlayer() {
         streamController.load(source);
     }
 
+    function setAlternativeVideoElement(element) {
+        if (!mediaPlayerInitialized) {
+            throw MEDIA_PLAYER_NOT_INITIALIZED_ERROR;
+        }
+
+        if (alternativeMediaController) {
+            alternativeMediaController.setAlternativeVideoElement(element);
+        }
+    }
+
     /**
      * Use this method to set a source URL to a valid MPD manifest file OR
      * a previously downloaded and parsed manifest object.  Optionally, can
@@ -2434,6 +2467,7 @@ function MediaPlayer() {
             }
         }
         textController.reset();
+        alternativeMediaController.reset();
         cmcdModel.reset();
         cmsdModel.reset();
     }
@@ -2566,6 +2600,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
+        alternativeMediaController.initialize();
         cmcdModel.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
@@ -2925,6 +2960,7 @@ function MediaPlayer() {
         setProtectionData,
         setRepresentationForTypeById,
         setRepresentationForTypeByIndex,
+        setAlternativeVideoElement,
         setTextTrack,
         setVolume,
         setXHRWithCredentialsForType,

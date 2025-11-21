@@ -8,6 +8,7 @@ class DashJsAdapter {
     constructor() {
         this.player = null;
         this.videoElement = document.getElementById('video-element');
+        this.alternativeVideoElement = document.getElementById('alternative-video-element');
         this.ttmlRenderingDiv = document.getElementById('ttml-rendering-div');
         this.startedFragmentDownloads = [];
         this.logEvents = {};
@@ -42,6 +43,15 @@ class DashJsAdapter {
                 cacheInitSegments: true
             }
         })
+    }
+
+    initForAlternativeMedia(mpd) {
+        this._initLogEvents();
+        this._createPlayerInstance();
+
+        this.player.initialize(this.videoElement, mpd, true);
+        this.player.setAlternativeVideoElement(this.alternativeVideoElement);
+        this._registerInternalEvents();
     }
 
     _initLogEvents() {
