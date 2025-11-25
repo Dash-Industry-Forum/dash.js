@@ -37,6 +37,7 @@ import OfflineUrlUtils from '../utils/OfflineUrlUtils.js';
 import OfflineEvents from '../events/OfflineEvents.js';
 import OfflineErrors from '../errors/OfflineErrors.js';
 import OfflineRecord from '../vo/OfflineDownloadVo.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 /**
  * @module OfflineController
@@ -383,8 +384,8 @@ function OfflineController(config) {
 }
 
 OfflineController.__dashjs_factory_name = 'OfflineController';
-const factory = dashjs.FactoryMaker.getClassFactory(OfflineController); 
+const factory = FactoryMaker.getClassFactory(OfflineController);
 factory.events = OfflineEvents;
 factory.errors = OfflineErrors;
-dashjs.FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory); 
+FactoryMaker.updateClassFactory(OfflineController.__dashjs_factory_name, factory);
 export default factory;
