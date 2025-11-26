@@ -52,6 +52,7 @@ function VideoModel() {
         instance,
         logger,
         previousPlaybackRate,
+        resizeObserver,
         resumeReadyStateFunction,
         setCurrentTimeReadyStateFunction,
         settings,
@@ -68,6 +69,9 @@ function VideoModel() {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         settings = Settings(context).getInstance();
+        resizeObserver = new ResizeObserver(() => {
+            eventBus.trigger(Events.VIDEO_ELEMENT_RESIZED);
+        });
         _currentTime = NaN;
     }
 
@@ -79,6 +83,15 @@ function VideoModel() {
         clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
         stalledStreams.length = 0;
+        _disposeResizeObserver();
+    }
+
+    function _disposeResizeObserver() {
+        if (resizeObserver && element) {
+            resizeObserver.unobserve(element);
+            resizeObserver.disconnect();
+            resizeObserver = null;
+        }
     }
 
     function setConfig(config) {
@@ -186,9 +199,14 @@ function VideoModel() {
         //add check of value type
         if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
             element = value;
+            _registerResizeObserver(element);
         } else {
             throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
         }
+    }
+
+    function _registerResizeObserver(element) {
+        resizeObserver.observe(element);
     }
 
     function setSource(source) {
