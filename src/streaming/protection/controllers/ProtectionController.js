@@ -264,8 +264,7 @@ function ProtectionController(config) {
         const cacheEntry = certificateCache.get(ksString);
         if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) { return; }
         // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
-        const preferredType = settings.get().streaming.protection.preferredCertType;
-        const certCandidates = _collectCertificateUrlsForSelectedKeySystem(preferredType);
+        const certCandidates = _collectCertificateUrlsForSelectedKeySystem();
         if (!certCandidates.length) { return; }
         logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
         const protData = _getProtDataForKeySystem(selectedKeySystem) || {};
@@ -281,7 +280,7 @@ function ProtectionController(config) {
      * @return {Array<{url:string, certType:string|null}>}
      * @private
      */
-    function _collectCertificateUrlsForSelectedKeySystem(preferredType) {
+    function _collectCertificateUrlsForSelectedKeySystem() {
         const urls = [];
         // 1. API-provided certUrls (protData) take priority
         const protData = _getProtDataForKeySystem(selectedKeySystem);
@@ -297,15 +296,6 @@ function ProtectionController(config) {
                 }
             });
         });
-        // Preferred type filter (try only matching ones first if any)
-        if (preferredType) {
-            const preferred = urls.filter(c => c.certType === preferredType);
-            if (preferred.length) {
-                const others = urls.filter(c => c.certType !== preferredType);
-                // Preferred first, then others for fallback
-                return CertUrlUtils.dedupeCertUrls(preferred.concat(others));
-            }
-        }
         return CertUrlUtils.dedupeCertUrls(urls);
     }
 

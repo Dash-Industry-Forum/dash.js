@@ -108,8 +108,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
  *                ignoreKeyStatuses: false,
- *                certificateRetryAttempts: 2,
- *                preferredCertType: null
+ *                certificateRetryAttempts: 2
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -722,9 +721,6 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * @property {number} [certificateRetryAttempts=2]
  * Number of retry attempts per certificate URL before moving to the next candidate when fetching DRM server certificates via Certurl elements.
- *
- * @property {string|null} [preferredCertType=null]
- * Optional certificate type preference. If multiple <Certurl> elements are present with differing '@certType' attributes, those matching this value are tried first.
  */
 
 /**
@@ -1193,8 +1189,7 @@ function Settings() {
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
                 ignoreKeyStatuses: false,
-                certificateRetryAttempts: 2,
-                preferredCertType: null
+                certificateRetryAttempts: 2
             },
             buffer: {
                 enableSeekDecorrelationFix: false,

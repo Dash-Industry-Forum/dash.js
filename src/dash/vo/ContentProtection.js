@@ -49,7 +49,7 @@ class ContentProtection extends DescriptorType {
         this.pro = null;
         this.laUrl = null;
         // Array of certificate URL descriptors: [{url: string, certType: string|null}]
-        // dash.js treats certType as an opaque label used only for optional preference ordering (see Settings: preferredCertType)
+        // dash.js treats certType as an opaque label.
         // and for deduplication. No semantic validation or key-system specific mapping is performed.
         this.certUrls = [];
     }
