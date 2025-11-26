@@ -2020,44 +2020,15 @@ function MediaPlayer() {
      * @instance
      */
     function setProtectionData(value) {
-        protectionData = value;
-
+        const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
+        protectionData = sanitizedValue;
+        
         // Propagate changes in case StreamController is already created
         if (streamController) {
             streamController.setProtectionData(protectionData);
         }
     }
 
-    /**
-     * Adds one or multiple certificate URLs (Certurl) for a given key system. These URLs
-     * override (i.e. take priority over) manifest-provided Certurl entries when acquiring
-     * the server certificate. They are tried before manifest entries and in the provided order.
-     * Input may be a single string, an object {url, certType}, or an array of those.
-     * @param {string} keySystemString EME key system identifier e.g. 'com.widevine.alpha'
-     * @param {string|object|Array<string|object>} certUrls One or many certificate URL descriptors
-     * @example
-     * // Single URL
-     * player.addCertUrls('com.widevine.alpha', 'https://example.com/wv_cert');
-     * // Multiple with certType labels
-     * player.addCertUrls('com.widevine.alpha', [
-     *   { url: 'https://example.com/wv_cert_primary', certType: 'primary' },
-     *   { url: 'https://backup.example.com/wv_cert_backup', certType: 'backup' }
-     * ]);
-     */
-    function addCertUrls(keySystemString, certUrls) {
-        if (!keySystemString || !certUrls) { return; }
-        const normalized = CertUrlUtils.normalizeCertUrls(certUrls);
-        if (!normalized.length) { return; }
-        // Ensure protectionData structure
-        protectionData = protectionData || {};
-        const existing = protectionData[keySystemString] || {};
-        const existingList = Array.isArray(existing.certUrls) ? existing.certUrls : [];
-        // Merge and dedupe via shared utility (existing first order preserved)
-        const merged = existingList.concat(normalized);
-        existing.certUrls = CertUrlUtils.dedupeCertUrls(merged);
-        protectionData[keySystemString] = existing;
-        setProtectionData(protectionData);
-    }
 
     /*
     ---------------------------------------------------------------------------
@@ -2955,7 +2926,6 @@ function MediaPlayer() {
         setMute,
         setPlaybackRate,
         setProtectionData,
-        addCertUrls,
         setRepresentationForTypeById,
         setRepresentationForTypeByIndex,
         setTextTrack,
