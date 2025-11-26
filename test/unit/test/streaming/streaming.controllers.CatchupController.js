@@ -117,8 +117,16 @@ describe('CatchupController', function () {
             playbackControllerMock.isPaused = sinon.stub().returns(false);
             playbackControllerMock.isSeeking = sinon.stub().returns(false);
             playbackControllerMock.getTime = sinon.stub().returns(10);
+            playbackControllerMock.getCurrentLiveLatency = sinon.stub().returns(5);
+            playbackControllerMock.getLiveDelay = sinon.stub().returns(3);
+            playbackControllerMock.getBufferLevel = sinon.stub().returns(2);
+            playbackControllerMock.getPlaybackStalled = sinon.stub().returns(false);
+            videoModelMock.getPlaybackRate = sinon.stub().returns(1.0);
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PROGRESS);
+
+            expect(setPlaybackRateSpy.called).to.be.true;
         });
 
         it('should handle PLAYBACK_TIME_UPDATED event', function () {
@@ -128,8 +136,16 @@ describe('CatchupController', function () {
             playbackControllerMock.isPaused = sinon.stub().returns(false);
             playbackControllerMock.isSeeking = sinon.stub().returns(false);
             playbackControllerMock.getTime = sinon.stub().returns(10);
+            playbackControllerMock.getCurrentLiveLatency = sinon.stub().returns(5);
+            playbackControllerMock.getLiveDelay = sinon.stub().returns(3);
+            playbackControllerMock.getBufferLevel = sinon.stub().returns(2);
+            playbackControllerMock.getPlaybackStalled = sinon.stub().returns(false);
+            videoModelMock.getPlaybackRate = sinon.stub().returns(1.0);
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_TIME_UPDATED);
+
+            expect(setPlaybackRateSpy.called).to.be.true;
         });
 
         it('should handle PLAYBACK_SEEKED event', function () {
@@ -186,8 +202,17 @@ describe('CatchupController', function () {
             playbackControllerMock.getIsDynamic = sinon.stub().returns(true);
             mediaPlayerModelMock.getCatchupModeEnabled = sinon.stub().returns(false);
             mediaPlayerModelMock.getCatchupPlaybackRates = sinon.stub().returns({ min: -0.5, max: 0.5 });
+            playbackControllerMock.isPaused = sinon.stub().returns(false);
+            playbackControllerMock.isSeeking = sinon.stub().returns(false);
+            playbackControllerMock.getTime = sinon.stub().returns(10);
+
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
+            const seekToCurrentLiveSpy = sinon.spy(playbackControllerMock, 'seekToCurrentLive');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PROGRESS);
+
+            expect(setPlaybackRateSpy.notCalled).to.be.true;
+            expect(seekToCurrentLiveSpy.notCalled).to.be.true;
         });
 
         it('should not apply catchup when paused', function () {
@@ -195,8 +220,16 @@ describe('CatchupController', function () {
             mediaPlayerModelMock.getCatchupModeEnabled = sinon.stub().returns(true);
             mediaPlayerModelMock.getCatchupPlaybackRates = sinon.stub().returns({ min: -0.5, max: 0.5 });
             playbackControllerMock.isPaused = sinon.stub().returns(true);
+            playbackControllerMock.isSeeking = sinon.stub().returns(false);
+            playbackControllerMock.getTime = sinon.stub().returns(10);
+
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
+            const seekToCurrentLiveSpy = sinon.spy(playbackControllerMock, 'seekToCurrentLive');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PROGRESS);
+
+            expect(setPlaybackRateSpy.notCalled).to.be.true;
+            expect(seekToCurrentLiveSpy.notCalled).to.be.true;
         });
 
         it('should not apply catchup when seeking', function () {
@@ -205,8 +238,15 @@ describe('CatchupController', function () {
             mediaPlayerModelMock.getCatchupPlaybackRates = sinon.stub().returns({ min: -0.5, max: 0.5 });
             playbackControllerMock.isPaused = sinon.stub().returns(false);
             playbackControllerMock.isSeeking = sinon.stub().returns(true);
+            playbackControllerMock.getTime = sinon.stub().returns(10);
+
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
+            const seekToCurrentLiveSpy = sinon.spy(playbackControllerMock, 'seekToCurrentLive');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PROGRESS);
+
+            expect(setPlaybackRateSpy.notCalled).to.be.true;
+            expect(seekToCurrentLiveSpy.notCalled).to.be.true;
         });
 
         it('should apply catchup in default mode when latency drift exists', function () {
@@ -221,8 +261,11 @@ describe('CatchupController', function () {
             playbackControllerMock.getBufferLevel = sinon.stub().returns(2);
             playbackControllerMock.getPlaybackStalled = sinon.stub().returns(false);
             videoModelMock.getPlaybackRate = sinon.stub().returns(1.0);
+            const setPlaybackRateSpy = sinon.spy(videoModelMock, 'setPlaybackRate');
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PROGRESS);
+
+            expect(setPlaybackRateSpy.called).to.be.true;
         });
 
         it('should seek to live when max drift is exceeded', function () {

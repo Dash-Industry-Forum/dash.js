@@ -423,7 +423,42 @@ describe('ContentSteeringController', function () {
             contentSteeringController.initialize();
         });
 
-        it('should track service locations from fragment loading', function () {
+        it('should track service locations from fragment loading', async function () {
+            let capturedUrl;
+
+            const mockLoaderInstance = {
+                load: ({ request, success, complete }) => {
+                    capturedUrl = request.url;
+
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
             eventBus.trigger(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, {
                 request: {
                     serviceLocation: 'cdn1'
@@ -435,9 +470,57 @@ describe('ContentSteeringController', function () {
                     serviceLocation: 'cdn2'
                 }
             });
+
+            try {
+                await contentSteeringController.loadSteeringData();
+
+                expect(capturedUrl).to.be.a('string');
+                const queryString = capturedUrl.split('?')[1];
+                const params = new URLSearchParams(queryString);
+                const pathway = params.get('_DASH_pathway');
+
+                expect(pathway).to.equal('"cdn1,cdn2"');
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
         });
 
-        it('should track service locations from manifest loading', function () {
+        it('should track service locations from manifest loading', async function () {
+            let capturedUrl;
+
+            const mockLoaderInstance = {
+                load: ({ request, success, complete }) => {
+                    capturedUrl = request.url;
+
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
             eventBus.trigger(MediaPlayerEvents.MANIFEST_LOADING_STARTED, {
                 request: {
                     serviceLocation: 'cdn1'
@@ -449,9 +532,57 @@ describe('ContentSteeringController', function () {
                     serviceLocation: 'cdn2'
                 }
             });
+
+            try {
+                await contentSteeringController.loadSteeringData();
+
+                expect(capturedUrl).to.be.a('string');
+                const queryString = capturedUrl.split('?')[1];
+                const params = new URLSearchParams(queryString);
+                const pathway = params.get('_DASH_pathway');
+
+                expect(pathway).to.equal('"cdn1,cdn2"');
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
         });
 
-        it('should not duplicate service locations', function () {
+        it('should not duplicate service locations', async function () {
+            let capturedUrl;
+
+            const mockLoaderInstance = {
+                load: ({ request, success, complete }) => {
+                    capturedUrl = request.url;
+
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
             eventBus.trigger(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, {
                 request: {
                     serviceLocation: 'cdn1'
@@ -463,6 +594,19 @@ describe('ContentSteeringController', function () {
                     serviceLocation: 'cdn1'
                 }
             });
+
+            try {
+                await contentSteeringController.loadSteeringData();
+
+                expect(capturedUrl).to.be.a('string');
+                const queryString = capturedUrl.split('?')[1];
+                const params = new URLSearchParams(queryString);
+                const pathway = params.get('_DASH_pathway');
+
+                expect(pathway).to.equal('"cdn1"');
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
         });
     });
 
@@ -471,7 +615,49 @@ describe('ContentSteeringController', function () {
             contentSteeringController.initialize();
         });
 
-        it('should store throughput measurements for service locations', function () {
+        it('should store throughput measurements for service locations', async function () {
+            let capturedUrl;
+
+            const mockLoaderInstance = {
+                load: ({ request, success, complete }) => {
+                    capturedUrl = request.url;
+
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
+            // Add service location so throughput is included in the request URL
+            eventBus.trigger(MediaPlayerEvents.FRAGMENT_LOADING_STARTED, {
+                request: {
+                    serviceLocation: 'cdn1'
+                }
+            });
+
             eventBus.trigger(MediaPlayerEvents.THROUGHPUT_MEASUREMENT_STORED, {
                 throughputValues: {
                     serviceLocation: 'cdn1',
@@ -485,6 +671,15 @@ describe('ContentSteeringController', function () {
                     value: 6000
                 }
             });
+
+            try {
+                await contentSteeringController.loadSteeringData();
+
+                expect(capturedUrl).to.be.a('string');
+                expect(capturedUrl).to.contain('_DASH_throughput=5500000');
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
         });
 
         it('should store throughput for multiple service locations', function () {

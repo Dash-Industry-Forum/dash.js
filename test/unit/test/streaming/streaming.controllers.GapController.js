@@ -156,9 +156,15 @@ describe('GapController', function () {
 
         it('should not check for gaps when no active stream', function () {
             streamControllerMock.getActiveStream = sinon.stub().returns(null);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const getTimeSpy = sinon.spy(playbackControllerMock, 'getTime');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            // Trigger enough wallclock updates that, if gap checks were enabled,
+            // we would reach the THRESHOLD_TO_STALLS branch and call getTime().
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(getTimeSpy.notCalled).to.be.true;
         });
 
         it('should not check for gaps when paused', function () {
@@ -168,9 +174,13 @@ describe('GapController', function () {
             });
             streamControllerMock.getActiveStreamProcessors = sinon.stub().returns([{}]);
             playbackControllerMock.isPaused = sinon.stub().returns(true);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(seekSpy.notCalled).to.be.true;
         });
 
         it('should not check for gaps when seeking', function () {
@@ -181,9 +191,13 @@ describe('GapController', function () {
             streamControllerMock.getActiveStreamProcessors = sinon.stub().returns([{}]);
             playbackControllerMock.isSeeking = sinon.stub().returns(true);
             playbackControllerMock.isPaused = sinon.stub().returns(false);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(seekSpy.notCalled).to.be.true;
         });
 
         it('should not check for gaps during stream switch', function () {
@@ -195,9 +209,13 @@ describe('GapController', function () {
             streamControllerMock.getIsStreamSwitchInProgress = sinon.stub().returns(true);
             playbackControllerMock.isSeeking = sinon.stub().returns(false);
             playbackControllerMock.isPaused = sinon.stub().returns(false);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(seekSpy.notCalled).to.be.true;
         });
 
         it('should not check for gaps when media error occurred', function () {
@@ -209,9 +227,13 @@ describe('GapController', function () {
             streamControllerMock.getHasMediaOrInitialisationError = sinon.stub().returns(true);
             playbackControllerMock.isSeeking = sinon.stub().returns(false);
             playbackControllerMock.isPaused = sinon.stub().returns(false);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(seekSpy.notCalled).to.be.true;
         });
 
         it('should not check for gaps when jumpGaps is disabled', function () {
@@ -230,9 +252,13 @@ describe('GapController', function () {
             streamControllerMock.getActiveStreamProcessors = sinon.stub().returns([{}]);
             playbackControllerMock.isSeeking = sinon.stub().returns(false);
             playbackControllerMock.isPaused = sinon.stub().returns(false);
-            playbackControllerMock.getTime = sinon.stub().returns(10);
+            const seekSpy = sinon.spy(playbackControllerMock, 'seek');
 
-            eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            for (let i = 0; i < 15; i++) {
+                eventBus.trigger(Events.WALLCLOCK_TIME_UPDATED);
+            }
+
+            expect(seekSpy.notCalled).to.be.true;
         });
     });
 
