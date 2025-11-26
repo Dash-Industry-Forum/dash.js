@@ -1,6 +1,8 @@
 import ContentSteeringController from '../../../../src/dash/controllers/ContentSteeringController.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
+import DashConstants from '../../../../src/dash/constants/DashConstants.js';
+import SchemeLoaderFactory from '../../../../src/streaming/net/SchemeLoaderFactory.js';
 
 import AdapterMock from '../../mocks/AdapterMock.js';
 import DashMetricsMock from '../../mocks/DashMetricsMock.js';
@@ -183,6 +185,80 @@ describe('ContentSteeringController', function () {
             const result = contentSteeringController.getSynthesizedBaseUrlElements(referenceElements);
 
             expect(result).to.be.an('array').that.is.empty;
+        });
+
+        it('should return synthesized elements when steering response data is present', async function () {
+            const referenceElements = [
+                {
+                    url: 'https://example.com/path',
+                    serviceLocation: 'cdn1',
+                    dvbPriority: 1,
+                    dvbWeight: 2,
+                    availabilityTimeOffset: 0,
+                    availabilityTimeComplete: true
+                }
+            ];
+
+            const mockLoaderInstance = {
+                load: ({ success, complete }) => {
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES] = [
+                        {
+                            [DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]: 'cdn1',
+                            [DashConstants.CONTENT_STEERING_RESPONSE.ID]: 'clone1',
+                            [DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT]: {
+                                [DashConstants.CONTENT_STEERING_RESPONSE.HOST]: 'clone.example.com',
+                                [DashConstants.CONTENT_STEERING_RESPONSE.PARAMS]: { foo: 'bar' }
+                            }
+                        }
+                    ];
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
+            contentSteeringController.initialize();
+
+            try {
+                await contentSteeringController.loadSteeringData();
+                const result = contentSteeringController.getSynthesizedBaseUrlElements(referenceElements);
+
+                expect(result).to.be.an('array').that.is.not.empty;
+                const synthesized = result[0];
+
+                expect(synthesized.url).to.equal('https://clone.example.com/path');
+                expect(synthesized.serviceLocation).to.equal('clone1');
+                expect(synthesized.queryParams).to.deep.equal({ foo: 'bar' });
+                expect(synthesized.dvbPriority).to.equal(1);
+                expect(synthesized.dvbWeight).to.equal(2);
+                expect(synthesized.availabilityTimeOffset).to.equal(0);
+                expect(synthesized.availabilityTimeComplete).to.be.true;
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
         });
     });
 
