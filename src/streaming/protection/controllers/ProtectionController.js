@@ -259,13 +259,19 @@ function ProtectionController(config) {
      * @private
      */
     function _acquireCertificateFromManifest() {
-        if (!selectedKeySystem) { return; }
+        if (!selectedKeySystem) { 
+            return; 
+        }
         const ksString = selectedKeySystem.systemString;
         const cacheEntry = certificateCache.get(ksString);
-        if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) { return; }
+        if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) { 
+            return; 
+        }
         // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
         const certCandidates = _collectCertificateUrlsForSelectedKeySystem();
-        if (!certCandidates.length) { return; }
+        if (!certCandidates.length) { 
+            return; 
+        }
         logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
         const protData = _getProtDataForKeySystem(selectedKeySystem) || {};
         const entry = cacheEntry || { applied: false, inProgress: true, attempts: 0 };
