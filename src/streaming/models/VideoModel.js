@@ -69,10 +69,18 @@ function VideoModel() {
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         settings = Settings(context).getInstance();
-        resizeObserver = new ResizeObserver(() => {
-            eventBus.trigger(Events.VIDEO_ELEMENT_RESIZED);
-        });
         _currentTime = NaN;
+        _createResizeObserver();
+    }
+
+    function _createResizeObserver() {
+        try {
+            resizeObserver = new ResizeObserver(() => {
+                eventBus.trigger(Events.VIDEO_ELEMENT_RESIZED);
+            });
+        } catch (e) {
+
+        }
     }
 
     function initialize() {
@@ -87,10 +95,14 @@ function VideoModel() {
     }
 
     function _disposeResizeObserver() {
-        if (resizeObserver && element) {
-            resizeObserver.unobserve(element);
-            resizeObserver.disconnect();
-            resizeObserver = null;
+        try {
+            if (resizeObserver && element) {
+                resizeObserver.unobserve(element);
+                resizeObserver.disconnect();
+                resizeObserver = null;
+            }
+        } catch (e) {
+
         }
     }
 
@@ -206,7 +218,14 @@ function VideoModel() {
     }
 
     function _registerResizeObserver(element) {
-        resizeObserver.observe(element);
+        try {
+            if (!resizeObserver || !element) {
+                return;
+            }
+            resizeObserver.observe(element);
+        } catch (e) {
+
+        }
     }
 
     function setSource(source) {
