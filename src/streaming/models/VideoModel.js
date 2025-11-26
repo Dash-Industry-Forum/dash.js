@@ -46,17 +46,18 @@ const READY_STATES_TO_EVENT_NAMES = new Map([
 
 function VideoModel() {
 
-    let instance,
-        logger,
-        settings,
-        element,
+    let TTMLRenderingDiv,
         _currentTime,
-        setCurrentTimeReadyStateFunction,
-        resumeReadyStateFunction,
-        TTMLRenderingDiv,
-        vttRenderingDiv,
+        element,
+        instance,
+        logger,
         previousPlaybackRate,
-        timeout;
+        resumeReadyStateFunction,
+        setCurrentTimeReadyStateFunction,
+        settings,
+        timeout,
+        vttRenderingDiv;
+
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
 

@@ -878,41 +878,41 @@ function PlaybackController() {
     function addAllListeners() {
         videoModel.addEventListener('canplay', _onCanPlay);
         videoModel.addEventListener('canplaythrough', _onCanPlayThrough);
-        videoModel.addEventListener('play', _onPlaybackStart);
-        videoModel.addEventListener('waiting', _onPlaybackWaiting);
-        videoModel.addEventListener('playing', _onPlaybackPlaying);
-        videoModel.addEventListener('pause', _onPlaybackPaused);
+        videoModel.addEventListener('ended', _onNativePlaybackEnded);
         videoModel.addEventListener('error', _onPlaybackError);
-        videoModel.addEventListener('seeking', _onPlaybackSeeking);
-        videoModel.addEventListener('seeked', _onPlaybackSeeked);
-        videoModel.addEventListener('timeupdate', _onPlaybackTimeUpdated);
+        videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
+        videoModel.addEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
+        videoModel.addEventListener('pause', _onPlaybackPaused);
+        videoModel.addEventListener('play', _onPlaybackStart);
+        videoModel.addEventListener('playing', _onPlaybackPlaying);
         videoModel.addEventListener('progress', _onPlaybackProgress);
         videoModel.addEventListener('ratechange', _onPlaybackRateChanged);
-        videoModel.addEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
-        videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
+        videoModel.addEventListener('seeked', _onPlaybackSeeked);
+        videoModel.addEventListener('seeking', _onPlaybackSeeking);
         videoModel.addEventListener('stalled', onPlaybackStalled);
-        videoModel.addEventListener('ended', _onNativePlaybackEnded);
+        videoModel.addEventListener('timeupdate', _onPlaybackTimeUpdated);
         videoModel.addEventListener('volumechange', _onVolumeChanged);
+        videoModel.addEventListener('waiting', _onPlaybackWaiting);
     }
 
     function removeAllListeners() {
         videoModel.removeEventListener('canplay', _onCanPlay);
         videoModel.removeEventListener('canplaythrough', _onCanPlayThrough);
-        videoModel.removeEventListener('play', _onPlaybackStart);
-        videoModel.removeEventListener('waiting', _onPlaybackWaiting);
-        videoModel.removeEventListener('playing', _onPlaybackPlaying);
-        videoModel.removeEventListener('pause', _onPlaybackPaused);
+        videoModel.removeEventListener('ended', _onNativePlaybackEnded);
         videoModel.removeEventListener('error', _onPlaybackError);
-        videoModel.removeEventListener('seeking', _onPlaybackSeeking);
-        videoModel.removeEventListener('seeked', _onPlaybackSeeked);
-        videoModel.removeEventListener('timeupdate', _onPlaybackTimeUpdated);
+        videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
+        videoModel.removeEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
+        videoModel.removeEventListener('pause', _onPlaybackPaused);
+        videoModel.removeEventListener('play', _onPlaybackStart);
+        videoModel.removeEventListener('playing', _onPlaybackPlaying);
         videoModel.removeEventListener('progress', _onPlaybackProgress);
         videoModel.removeEventListener('ratechange', _onPlaybackRateChanged);
-        videoModel.removeEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
-        videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
+        videoModel.removeEventListener('seeked', _onPlaybackSeeked);
+        videoModel.removeEventListener('seeking', _onPlaybackSeeking);
         videoModel.removeEventListener('stalled', onPlaybackStalled);
-        videoModel.removeEventListener('ended', _onNativePlaybackEnded);
+        videoModel.removeEventListener('timeupdate', _onPlaybackTimeUpdated);
         videoModel.removeEventListener('volumechange', _onVolumeChanged);
+        videoModel.removeEventListener('waiting', _onPlaybackWaiting);
     }
 
     instance = {
