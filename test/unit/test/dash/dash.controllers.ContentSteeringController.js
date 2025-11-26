@@ -278,6 +278,72 @@ describe('ContentSteeringController', function () {
 
             expect(result).to.be.an('array').that.is.empty;
         });
+
+        it('should return synthesized location elements when steering response data is present', async function () {
+            const referenceElements = [
+                {
+                    url: 'https://example.com/manifest.mpd',
+                    serviceLocation: 'cdn1'
+                }
+            ];
+
+            const mockLoaderInstance = {
+                load: ({ success, complete }) => {
+                    const responseData = {};
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.VERSION] = '1';
+                    responseData[DashConstants.CONTENT_STEERING_RESPONSE.PATHWAY_CLONES] = [
+                        {
+                            [DashConstants.CONTENT_STEERING_RESPONSE.BASE_ID]: 'cdn1',
+                            [DashConstants.CONTENT_STEERING_RESPONSE.ID]: 'clone1',
+                            [DashConstants.CONTENT_STEERING_RESPONSE.URI_REPLACEMENT]: {
+                                [DashConstants.CONTENT_STEERING_RESPONSE.HOST]: 'clone.example.com',
+                                [DashConstants.CONTENT_STEERING_RESPONSE.PARAMS]: { foo: 'bar' }
+                            }
+                        }
+                    ];
+
+                    success(responseData);
+                    if (typeof complete === 'function') {
+                        complete();
+                    }
+                },
+                abort: () => {},
+                reset: () => {},
+                resetInitialSettings: () => {}
+            };
+
+            function MockLoader() {
+                return {
+                    create: () => mockLoaderInstance
+                };
+            }
+
+            const schemeLoaderFactory = SchemeLoaderFactory(context).getInstance();
+
+            schemeLoaderFactory.registerLoader('https://', MockLoader);
+
+            manifestModelMock.getValue = sinon.stub().returns({});
+            adapterMock.getContentSteering = sinon.stub().returns({
+                serverUrl: 'https://steering.example.com',
+                queryBeforeStart: true
+            });
+
+            contentSteeringController.initialize();
+
+            try {
+                await contentSteeringController.loadSteeringData();
+                const result = contentSteeringController.getSynthesizedLocationElements(referenceElements);
+
+                expect(result).to.be.an('array').that.is.not.empty;
+                const synthesized = result[0];
+
+                expect(synthesized.url).to.equal('https://clone.example.com/manifest.mpd');
+                expect(synthesized.serviceLocation).to.equal('clone1');
+                expect(synthesized.queryParams).to.deep.equal({ foo: 'bar' });
+            } finally {
+                schemeLoaderFactory.unregisterLoader('https://');
+            }
+        });
     });
 
     describe('Event handling', function () {
