@@ -48,10 +48,7 @@ class ContentProtection extends DescriptorType {
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
-        // Array of certificate URL descriptors: [{url: string, certType: string|null}]
-        // dash.js treats certType as an opaque label.
-        // and for deduplication. No semantic validation or key-system specific mapping is performed.
-        this.certUrls = [];
+        this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]. dash.js treats certType as an opaque label.
     }
 
     init(data) {
@@ -65,7 +62,7 @@ class ContentProtection extends DescriptorType {
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
             this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
-            const rawCert = data[DashConstants.CERT_URL] || data[DashConstants.CERT_URL_LOWER_CASE];
+            const rawCert = data.hasOwnProperty(DashConstants.CERT_URL) ? data[DashConstants.CERT_URL] : data.hasOwnProperty(DashConstants.CERT_URL_LOWER_CASE) ? data[DashConstants.CERT_URL_LOWER_CASE] : null;
             this.certUrls = CertUrlUtils.normalizeCertUrls(rawCert);
         }
     }
