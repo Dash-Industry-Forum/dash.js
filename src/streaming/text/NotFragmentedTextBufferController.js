@@ -132,13 +132,11 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function setIsBufferingCompleted(value) {
-        if (isBufferingCompleted === value) {
+        if (!isInitFragmentLoaded || isBufferingCompleted === value) {
             return;
         }
 
-        if (isInitFragmentLoaded) {
-            isBufferingCompleted = value;
-        }
+        isBufferingCompleted = value;
 
         if (isBufferingCompleted) {
             triggerEvent(Events.BUFFERING_COMPLETED);
