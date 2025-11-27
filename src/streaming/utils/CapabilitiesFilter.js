@@ -263,6 +263,15 @@ function CapabilitiesFilter() {
         return _addGenericAttributesToConfig(primaryElement, config);
     }
 
+    function _assignMissing(target, enhancement) {
+        for (const key in enhancement) {
+            if (Object.prototype.hasOwnProperty.call(enhancement, key) && !(key in target)) {
+                target[key] = enhancement[key];
+            }
+        }
+        return target;
+    }
+
     function _createVideoConfiguration(primaryElement, codec, prslCommonRep) {
         let config = {
             codec: codec,
@@ -290,11 +299,35 @@ function CapabilitiesFilter() {
 
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
             Object.assign(config, _convertHDRColorimetryToConfig(primaryElement));
+
+            if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
+                let prslCommonRepresentationHDRColorimetryConfig = _convertHDRColorimetryToConfig(prslCommonRep);
+                
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                let isCommonRepCfgSupported = prslCommonRepresentationHDRColorimetryConfig.isSupported;
+                delete prslCommonRepresentationHDRColorimetryConfig.isSupported;
+                config.isSupported = config.isSupported && isCommonRepCfgSupported;
+                
+                // asign only those attributes that are not present in config
+                _assignMissing(config, prslCommonRepresentationHDRColorimetryConfig);
+            }
         }
         let colorimetrySupported = config.isSupported;
 
         if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
             Object.assign(config, _convertHDRMetadataFormatToConfig(primaryElement));
+
+            if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
+                let prslCommonRepresentationHDRMetadataFormatConfig = _convertHDRMetadataFormatToConfig(prslCommonRep);
+                
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                let isCommonRepCfgSupported = prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+                delete prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+                config.isSupported = config.isSupported && isCommonRepCfgSupported;
+
+                // asign only those attributes that are not present in config
+                _assignMissing(config, prslCommonRepresentationHDRMetadataFormatConfig);
+            }
         }
         let metadataFormatSupported = config.isSupported;
 
