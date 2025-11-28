@@ -157,7 +157,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                defaultTimingSource: {
  *                    scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
  *                    value: 'http://time.akamai.com/?iso&ms'
- *                }
+ *                },
+ *                artificialTimeOffsetToApply: 0
  *            },
  *            scheduling: {
  *                defaultTimeout: 500,
@@ -596,7 +597,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * @property {object} [defaultTimingSource={scheme:'urn:mpeg:dash:utc:http-xsdate:2014',value: 'http://time.akamai.com/?iso&ms'}]
  * The default timing source to be used. The timing sources in the MPD take precedence over this one.
- */
+ *
+ * @property {number} [artificialTimeOffsetToApply=0]
+ * The offset defined in milliseconds that is applied on top of the offset that was derived after the time synchronization.
+ *
+ * /
 
 /**
  * @typedef {Object} Scheduling
@@ -1232,7 +1237,8 @@ function Settings() {
                 defaultTimingSource: {
                     scheme: 'urn:mpeg:dash:utc:http-xsdate:2014',
                     value: 'https://time.akamai.com/?iso&ms'
-                }
+                },
+                artificialTimeOffsetToApply: 0,
             },
             scheduling: {
                 defaultTimeout: 500,

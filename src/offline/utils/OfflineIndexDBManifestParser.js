@@ -32,7 +32,7 @@
 /**
  * @ignore
  */
-import {XmlEntities as Entities} from 'html-entities';
+import {encode} from 'html-entities';
 import FactoryMaker from '../../core/FactoryMaker.js';
 const OFFLINE_BASE_URL = 'offline_indexeddb://';
 
@@ -91,7 +91,7 @@ function OfflineIndexDBManifestParser(config) {
     */
     function encodeManifest(DOM) {
         logger.info('encodedManifest ' + new XMLSerializer().serializeToString(DOM));
-        return new Entities().encode(new XMLSerializer().serializeToString(DOM));
+        return encode(new XMLSerializer().serializeToString(DOM));
     }
 
     /**

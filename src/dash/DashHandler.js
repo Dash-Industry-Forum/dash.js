@@ -235,6 +235,7 @@ function DashHandler(config) {
         request.isPartialSegmentRequest = segment.isPartialSegment;
         request.mediaStartTime = segment.mediaStartTime;
         request.mediaType = getType();
+        request.presentationStartTime = segment.presentationStartTime;
         request.range = segment.mediaRange;
         request.representation = representation;
         request.startTime = segment.presentationStartTime;

@@ -132,16 +132,16 @@ function CapabilitiesFilter() {
 
         period.Preselection = period.Preselection.filter((prsl) => {
             if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
-                const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
                 let isPrslCodecSupported = true;
-                if (codec) {
-                    let repr = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+                if (prslCodec) {
+                    let commonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
 
-                    isPrslCodecSupported = _isCodecSupported(type, prsl, codec, repr);
+                    isPrslCodecSupported = _isCodecSupported(type, prsl, prslCodec, commonRepresentation);
                 }
 
                 if (!isPrslCodecSupported) {
-                    logger.warn(`[CapabilitiesFilter] Preselection@codecs ${codec} not supported. Removing Preselection with ID ${prsl.id}`);
+                    logger.warn(`[CapabilitiesFilter] Preselection@codecs ${prslCodec} not supported. Removing Preselection with ID ${prsl.id}`);
                 }
 
                 return isPrslCodecSupported;
@@ -189,8 +189,8 @@ function CapabilitiesFilter() {
         return isSupplementalCodecSupported
     }
 
-    function _isCodecSupported(type, rep, codec, prslRep) {
-        const config = _createConfiguration(type, rep, codec, prslRep);
+    function _isCodecSupported(type, primaryElement, codec, prslCommonRepresentation = undefined) {
+        const config = _createConfiguration(type, primaryElement, codec, prslCommonRepresentation);
 
         return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
     }
@@ -220,10 +220,10 @@ function CapabilitiesFilter() {
             if (period.Preselection && period.Preselection.length) {
                 period.Preselection.forEach((prsl) => {
                     if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
-                        const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-                        const prslRep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+                        const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+                        const prslCommonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
 
-                        _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prslRep);
+                        _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, prslCommonRepresentation);
                     }
                 });
             }
@@ -232,8 +232,9 @@ function CapabilitiesFilter() {
         return configurations;
     }
 
-    function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prslRep) {
-        const config = _createConfiguration(type, rep, codec, prslRep);
+    function _processCodecToCheck(type, element, codec, configurationsSet, configurations, prslCommonRepresentation = undefined) {
+        /* el is either a Representation or Preselection element */
+        const config = _createConfiguration(type, element, codec, prslCommonRepresentation);
         const configString = JSON.stringify(config);
 
         if (!configurationsSet.has(configString)) {
@@ -242,58 +243,93 @@ function CapabilitiesFilter() {
         }
     }
 
-    function _createConfiguration(type, rep, codec, prslRep) {
+    /* Build the configuration object for capability requests based on primary element (Representation or Preselection) */
+    /* In case Preselection elements are present, attributes of this element override their counterparts from the Representation element */
+    function _createConfiguration(type, primaryElement, codec, prslCommonRepresentation) {
         let config = null;
         switch (type) {
             case Constants.VIDEO:
-                config = _createVideoConfiguration(rep, codec, prslRep);
+                config = _createVideoConfiguration(primaryElement, codec, prslCommonRepresentation);
                 break;
             case Constants.AUDIO:
-                config = _createAudioConfiguration(rep, codec, prslRep);
+                config = _createAudioConfiguration(primaryElement, codec, prslCommonRepresentation);
                 break;
             default:
                 return config;
         }
 
-        if (prslRep) {
-            config = _addGenericAttributesToConfig(prslRep, config);
+        if (prslCommonRepresentation) {
+            config = _addGenericAttributesToConfig(prslCommonRepresentation, config);
         }
 
-        return _addGenericAttributesToConfig(rep, config);
+        return _addGenericAttributesToConfig(primaryElement, config);
     }
 
-    function _createVideoConfiguration(rep, codec, prslRep) {
+    function _assignMissing(target, enhancement) {
+        for (const key in enhancement) {
+            if (Object.prototype.hasOwnProperty.call(enhancement, key) && !(key in target)) {
+                target[key] = enhancement[key];
+            }
+        }
+        return target;
+    }
+
+    function _createVideoConfiguration(primaryElement, codec, prslCommonRep) {
         let config = {
             codec: codec,
-            width: rep ? rep.width || null : null,
-            height: rep ? rep.height || null : null,
-            framerate: adapter.getFramerate(rep) || null,
-            bitrate: rep ? rep.bandwidth || null : null,
+            width: primaryElement ? primaryElement.width || null : null,
+            height: primaryElement ? primaryElement.height || null : null,
+            framerate: adapter.getFramerate(primaryElement) || null,
+            bitrate: primaryElement ? primaryElement.bandwidth || null : null,
             isSupported: true
         }
 
-        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+        if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
             if (!config.width) {
-                config.width = prslRep.width || null;
+                config.width = prslCommonRep.width || null;
             }
             if (!config.height) {
-                config.height = prslRep.height || null;
+                config.height = prslCommonRep.height || null;
             }
             if (!config.bitrate) {
-                config.bitrate = prslRep.bandwidth || null;
+                config.bitrate = prslCommonRep.bandwidth || null;
             }
             if (!config.framerate) {
-                config.framerate = adapter.getFramerate(prslRep) || null;
+                config.framerate = adapter.getFramerate(prslCommonRep) || null;
             }
         }
 
         if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
-            Object.assign(config, _convertHDRColorimetryToConfig(rep));
+            Object.assign(config, _convertHDRColorimetryToConfig(primaryElement));
+
+            if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
+                let prslCommonRepresentationHDRColorimetryConfig = _convertHDRColorimetryToConfig(prslCommonRep);
+                
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                let isCommonRepCfgSupported = prslCommonRepresentationHDRColorimetryConfig.isSupported;
+                delete prslCommonRepresentationHDRColorimetryConfig.isSupported;
+                config.isSupported = config.isSupported && isCommonRepCfgSupported;
+                
+                // asign only those attributes that are not present in config
+                _assignMissing(config, prslCommonRepresentationHDRColorimetryConfig);
+            }
         }
         let colorimetrySupported = config.isSupported;
 
         if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-            Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+            Object.assign(config, _convertHDRMetadataFormatToConfig(primaryElement));
+
+            if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
+                let prslCommonRepresentationHDRMetadataFormatConfig = _convertHDRMetadataFormatToConfig(prslCommonRep);
+                
+                // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+                let isCommonRepCfgSupported = prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+                delete prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+                config.isSupported = config.isSupported && isCommonRepCfgSupported;
+
+                // asign only those attributes that are not present in config
+                _assignMissing(config, prslCommonRepresentationHDRMetadataFormatConfig);
+            }
         }
         let metadataFormatSupported = config.isSupported;
 
@@ -367,6 +403,7 @@ function CapabilitiesFilter() {
         return cfg;
     }
 
+    function _createAudioConfiguration(primaryElement, codec, prslCommonRep) {
     function _createAudioConfiguration(rep, codec, prslRep) {
         let cfg = {
             codec,

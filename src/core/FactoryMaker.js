@@ -247,16 +247,16 @@ const FactoryMaker = (function () {
     }
 
     instance = {
-        extend: extend,
-        getSingletonInstance: getSingletonInstance,
-        setSingletonInstance: setSingletonInstance,
-        deleteSingletonInstances: deleteSingletonInstances,
-        getSingletonFactory: getSingletonFactory,
-        getSingletonFactoryByName: getSingletonFactoryByName,
-        updateSingletonFactory: updateSingletonFactory,
-        getClassFactory: getClassFactory,
-        getClassFactoryByName: getClassFactoryByName,
-        updateClassFactory: updateClassFactory
+        deleteSingletonInstances,
+        extend,
+        getClassFactory,
+        getClassFactoryByName,
+        getSingletonFactory,
+        getSingletonFactoryByName,
+        getSingletonInstance,
+        setSingletonInstance,
+        updateClassFactory,
+        updateSingletonFactory,
     };
 
     return instance;
