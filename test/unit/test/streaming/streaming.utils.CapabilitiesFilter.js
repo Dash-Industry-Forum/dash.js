@@ -671,7 +671,7 @@ describe('CapabilitiesFilter', function () {
 
             });
 
-            it.only('should filter AdaptationSets, channels with preselection override - 1', function (done) {
+            it('should filter AdaptationSets, channels with preselection override', function (done) {
                 const manifest = {
                     Period: [{
                         Preselection: [
@@ -754,7 +754,7 @@ describe('CapabilitiesFilter', function () {
 
             });
 
-            it.only('should filter AdaptationSets, channels with preselection override - 2', function (done) {
+            it('should filter AdaptationSets and Preselections, channels with preselection override', function (done) {
                 const manifest = {
                     Period: [{
                         Preselection: [
@@ -828,9 +828,8 @@ describe('CapabilitiesFilter', function () {
 
                 capabilitiesFilter.filterUnsupportedFeatures(manifest)
                     .then(() => {
-                        expect(manifest.Period[0].Preselection).to.have.lengthOf(2);
-                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('10');
-                        expect(manifest.Period[0].Preselection[1].id).to.be.equal('11');
+                        expect(manifest.Period[0].Preselection).to.have.lengthOf(1);
+                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('11');
                         expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
                         expect(manifest.Period[0].AdaptationSet[0].id).to.be.equal('2');
                         done();

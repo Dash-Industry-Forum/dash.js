@@ -78,6 +78,7 @@ function CapabilitiesFilter() {
                     }
 
                     _removeMultiRepresentationPreselections(manifest);
+                    _removePreselectionWithNoAdaptationSet(manifest);
                     
                     return _applyCustomFilters(manifest);
                 })
@@ -529,6 +530,22 @@ function CapabilitiesFilter() {
                         logger.warn(`Multi-Representation Preselection (id: ${prsl.id}) removed as not supported.`);
                     }
                     return len === 1;
+                });
+            }
+        });
+    }
+
+    function _removePreselectionWithNoAdaptationSet(manifest) {
+        if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+            return;
+        }
+
+        manifest.Period.forEach((period) => {
+            if (period.Preselection) {
+                period.Preselection = period.Preselection.filter((prsl) => {
+                    const prslComponents = String(prsl.preselectionComponents).split(' ');
+                    const adaptationSetIds = period.AdaptationSet.map(as => {return as.id});
+                    return prslComponents.every(c => {return adaptationSetIds.includes(c)});
                 });
             }
         });
