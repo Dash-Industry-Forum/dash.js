@@ -404,37 +404,36 @@ function CapabilitiesFilter() {
     }
 
     function _createAudioConfiguration(primaryElement, codec, prslCommonRep) {
-    function _createAudioConfiguration(rep, codec, prslRep) {
         let cfg = {
             codec,
-            samplerate: rep ? rep.audioSamplingRate || null : null,
-            bitrate: rep ? rep.bandwidth || null : null,
+            samplerate: primaryElement ? primaryElement.audioSamplingRate || null : null,
+            bitrate: primaryElement ? primaryElement.bandwidth || null : null,
             isSupported: true,
         };
 
-        if (rep.tagName === DashConstants.PRESELECTION && prslRep) {
+        if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
             if (!cfg.samplerate) {
-                cfg.samplerate = prslRep.audioSamplingRate || null;
+                cfg.samplerate = prslCommonRep.audioSamplingRate || null;
             }
             if (!cfg.bitrate) {
-                cfg.bitrate = prslRep.bandwidth || null;
+                cfg.bitrate = prslCommonRep.bandwidth || null;
             }
         }
 
         if (settings.get().streaming.capabilities.filterAudioChannelConfiguration) {
-            Object.assign(cfg, _convertAudioChannelConfigurationToConfig(rep, prslRep))
+            Object.assign(cfg, _convertAudioChannelConfigurationToConfig(primaryElement, prslCommonRep))
         }
 
         return cfg;
     }
 
-    function _convertAudioChannelConfigurationToConfig(representation, prsl) {
+    function _convertAudioChannelConfigurationToConfig(primaryElement, prslCommonRep) {
 
-        let audioChannelConfigs = representation[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || [];
+        let audioChannelConfigs = primaryElement[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || [];
         let channels = null;
 
-        if (!audioChannelConfigs && prsl) {
-            audioChannelConfigs = prsl[DashConstants.AUDIO_CHANNEL_CONFIGURATION];
+        if (!audioChannelConfigs && prslCommonRep) {
+            audioChannelConfigs = prslCommonRep[DashConstants.AUDIO_CHANNEL_CONFIGURATION];
         }
 
         const channelCounts = audioChannelConfigs.map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true));
