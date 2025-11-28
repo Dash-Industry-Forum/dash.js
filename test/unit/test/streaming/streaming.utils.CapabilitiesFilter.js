@@ -267,6 +267,88 @@ describe('CapabilitiesFilter', function () {
                     });
             });
 
+            it('should filter AdaptationSets with preselection override', function (done) {
+                const manifest = {
+                    Period: [{
+                        Preselection: [
+                            {
+                                id: '10',
+                                codecs: 'iamf.000.000.mp4a.40.2',
+                                preselectionComponents: '1',
+                                tagName: 'Preselection',
+                            },
+                            {
+                                id: '11',
+                                codecs: 'iamf.000.001.mp4a.40.2',
+                                preselectionComponents: '2',
+                                tagName: 'Preselection',
+                            },
+                        ],
+                        AdaptationSet: [
+                            {
+                                id: '1',
+                                mimeType: 'audio/mp4',
+                                Representation: [
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        AudioChannelConfiguration: [
+                                            {
+                                                schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                                value: 6
+                                            }
+                                        ],
+                                    }
+                                ],
+                                EssentialProperty: [ { schemeIdUri: 'urn:mpeg:dash:preselection:2016' } ],
+                            },
+                            {
+                                id: '2',
+                                mimeType: 'audio/mp4',
+                                Representation: [
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        AudioChannelConfiguration: [
+                                            {
+                                                schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                                value: 6
+                                            }
+                                        ],
+                                    }
+                                ],
+                                EssentialProperty: [ { schemeIdUri: 'urn:mpeg:dash:preselection:2016' } ],
+                            }
+                        ]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterAudioChannelConfiguration: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        console.log('CONFIG', JSON.stringify(config))
+                        return config.contentType == 'audio/mp4;codecs="iamf.000.000.mp4a.40.2"';
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].Preselection).to.have.lengthOf(2);
+                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('10');
+                        expect(manifest.Period[0].Preselection[1].id).to.be.equal('11');
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSetp[0].id).to.be.equal(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+            });
+
         });
 
         describe('filter codecs using codec properties', function () {
@@ -371,6 +453,42 @@ describe('CapabilitiesFilter', function () {
                 prepareCapabilitiesMock({
                     name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         return config.channels === 2;
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+            });
+
+            it('should filter AdaptationSets, using channels but missing AudioChannelConfiguration', function (done) {
+                const manifest = {
+                    Period: [{
+                        AdaptationSet: [{
+                            mimeType: 'audio/mp4',
+                            Representation: [
+                                {
+                                    mimeType: 'audio/mp4',
+                                    codecs: 'mp4a.40.2',
+                                    audioSamplingRate: '48000',
+                                }
+                            ]
+                        }]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterAudioChannelConfiguration: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        return config.channel === undefined;
                     }
                 });
 
