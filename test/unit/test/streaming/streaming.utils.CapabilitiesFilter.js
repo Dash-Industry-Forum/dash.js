@@ -671,7 +671,7 @@ describe('CapabilitiesFilter', function () {
 
             });
 
-            it.only('should filter AdaptationSets, channels with preselection override', function (done) {
+            it.only('should filter AdaptationSets, channels with preselection override - 1', function (done) {
                 const manifest = {
                     Period: [{
                         Preselection: [
@@ -746,6 +746,93 @@ describe('CapabilitiesFilter', function () {
                         expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(2);
                         expect(manifest.Period[0].AdaptationSet[0].id).to.be.equal('1');
                         expect(manifest.Period[0].AdaptationSet[1].id).to.be.equal('2');
+                        done();
+                    })
+                    .catch((e) => {
+                        done(e);
+                    });
+
+            });
+
+            it.only('should filter AdaptationSets, channels with preselection override - 2', function (done) {
+                const manifest = {
+                    Period: [{
+                        Preselection: [
+                            {
+                                id: '10',
+                                preselectionComponents: '1',
+                                AudioChannelConfiguration: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                    value: 6
+                                }],
+                                tagName: 'Preselection',
+                            },
+                            {
+                                id: '11',
+                                preselectionComponents: '2',
+                                AudioChannelConfiguration: [{
+                                    schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                    value: 6
+                                }],
+                                tagName: 'Preselection',
+                            },
+                        ],
+                        AdaptationSet: [
+                            {
+                                id: '1',
+                                mimeType: 'audio/mp4',
+                                Representation: [
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        AudioChannelConfiguration: [
+                                            {
+                                                schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                                value: 7
+                                            }
+                                        ],
+                                    }
+                                ],
+                                EssentialProperty: [ { schemeIdUri: 'urn:mpeg:dash:preselection:2016' } ],
+                            }, {
+                                id: '2',
+                                mimeType: 'audio/mp4',
+                                Representation: [
+                                    {
+                                        mimeType: 'audio/mp4',
+                                        codecs: 'mp4a.40.2',
+                                        audioSamplingRate: '48000',
+                                        AudioChannelConfiguration: [
+                                            {
+                                                schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
+                                                value: 2
+                                            }
+                                        ],
+                                    }
+                                ],
+                                EssentialProperty: [ { schemeIdUri: 'urn:mpeg:dash:preselection:2016' } ],
+                            }
+                        ]
+                    }]
+                };
+
+                settings.update({ streaming: { capabilities: { filterAudioChannelConfiguration: true } } });
+
+                prepareCapabilitiesMock({
+                    name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
+                        // the Each AdapationSet and Preselection is checked
+                        return [2, 6].includes(config.channels);
+                    }
+                });
+
+                capabilitiesFilter.filterUnsupportedFeatures(manifest)
+                    .then(() => {
+                        expect(manifest.Period[0].Preselection).to.have.lengthOf(2);
+                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('10');
+                        expect(manifest.Period[0].Preselection[1].id).to.be.equal('11');
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSet[0].id).to.be.equal('2');
                         done();
                     })
                     .catch((e) => {
