@@ -495,7 +495,7 @@ describe('CapabilitiesFilter', function () {
                             },
                             {
                                 id: '11',
-                                preselectionComponents: '1 2',
+                                preselectionComponents: '2',
                                 AudioChannelConfiguration: [{
                                     schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                                     value: 7
@@ -565,7 +565,7 @@ describe('CapabilitiesFilter', function () {
                             },
                             {
                                 id: '11',
-                                preselectionComponents: '1 2',
+                                preselectionComponents: '2',
                                 AudioChannelConfiguration: [{
                                     schemeIdUri: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                                     value: 7
@@ -617,16 +617,19 @@ describe('CapabilitiesFilter', function () {
 
                 prepareCapabilitiesMock({
                     name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
-                        return [2,6,8].includes(config.channels);
+                        // the Each AdapationSet and Preselection is checked
+                        return [8].includes(config.channels)
                     }
                 });
 
                 capabilitiesFilter.filterUnsupportedFeatures(manifest)
                     .then(() => {
-                        expect(manifest.Period[0].Preselection).to.have.lengthOf(1);
-                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('11');
-                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(2);
-                        expect(manifest.Period[0].AdaptationSet[0].Representation).to.have.lengthOf(1);
+                        console.log('after manifest', JSON.stringify(manifest))
+                        expect(manifest.Period[0].Preselection).to.have.lengthOf(2);
+                        expect(manifest.Period[0].Preselection[0].id).to.be.equal('10');
+                        expect(manifest.Period[0].Preselection[1].id).to.be.equal('11');
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
+                        expect(manifest.Period[0].AdaptationSetp[0].id).to.be.equal(2);
                         done();
                     })
                     .catch((e) => {
