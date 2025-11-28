@@ -1053,7 +1053,7 @@ function DashManifestModel() {
         }
 
         const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
-        return mainAS.Representation[0];
+        return (mainAS ? mainAS.Representation[0] : undefined);
     }
 
     function getPreselectionsForPeriod(voPeriod) {

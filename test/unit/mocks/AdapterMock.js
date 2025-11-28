@@ -246,8 +246,9 @@ function AdapterMock() {
     }
 
     this.getCommonRepresentationForPreselection = function (preselection, adaptations) {
-        const id = preselection.preselectionComponents.split(' ')[0]
-        return adaptations.find((as) => as.id == id).Representation[0]
+        const id = preselection.preselectionComponents.split(' ')[0];
+        const as = adaptations.find((as) => as.id == id);
+        return (as ? as.Representation[0] : undefined);
     }
 
 }
