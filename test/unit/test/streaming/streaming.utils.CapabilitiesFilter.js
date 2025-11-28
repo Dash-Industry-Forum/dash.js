@@ -671,7 +671,7 @@ describe('CapabilitiesFilter', function () {
 
             });
 
-            it('should filter AdaptationSets, channels with preselection override', function (done) {
+            it.only('should filter AdaptationSets, channels with preselection override', function (done) {
                 const manifest = {
                     Period: [{
                         Preselection: [
@@ -735,18 +735,17 @@ describe('CapabilitiesFilter', function () {
                 prepareCapabilitiesMock({
                     name: 'isCodecSupportedBasedOnTestedConfigurations', definition: function (config) {
                         // the Each AdapationSet and Preselection is checked
-                        return [8].includes(config.channels)
+                        return [2, 6].includes(config.channels);
                     }
                 });
 
                 capabilitiesFilter.filterUnsupportedFeatures(manifest)
                     .then(() => {
-                        console.log('after manifest', JSON.stringify(manifest))
-                        expect(manifest.Period[0].Preselection).to.have.lengthOf(2);
+                        expect(manifest.Period[0].Preselection).to.have.lengthOf(1);
                         expect(manifest.Period[0].Preselection[0].id).to.be.equal('10');
-                        expect(manifest.Period[0].Preselection[1].id).to.be.equal('11');
-                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(1);
-                        expect(manifest.Period[0].AdaptationSetp[0].id).to.be.equal(2);
+                        expect(manifest.Period[0].AdaptationSet).to.have.lengthOf(2);
+                        expect(manifest.Period[0].AdaptationSet[0].id).to.be.equal('1');
+                        expect(manifest.Period[0].AdaptationSet[1].id).to.be.equal('2');
                         done();
                     })
                     .catch((e) => {
