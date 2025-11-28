@@ -432,8 +432,8 @@ function CapabilitiesFilter() {
         let audioChannelConfigs = primaryElement[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || [];
         let channels = null;
 
-        if (!audioChannelConfigs && prslCommonRep) {
-            audioChannelConfigs = prslCommonRep[DashConstants.AUDIO_CHANNEL_CONFIGURATION];
+        if (audioChannelConfigs.length == 0 && prslCommonRep) {
+            audioChannelConfigs = prslCommonRep[DashConstants.AUDIO_CHANNEL_CONFIGURATION] || []
         }
 
         const channelCounts = audioChannelConfigs.map(channelConfig => getNChanFromAudioChannelConfig(channelConfig, true));
