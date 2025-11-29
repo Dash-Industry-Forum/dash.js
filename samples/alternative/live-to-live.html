@@ -1,0 +1,354 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live-to-Live Alternative Media Presentations</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #alternative-video-element {
+            display: none;
+        }
+
+        #manifestViewer {
+            font-family: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+            background: #1e1e1e;
+            color: #dcdcdc;
+            padding: 1em;
+            white-space: pre;
+            overflow: auto;
+            border: 1px solid #444;
+            font-size: 10px;
+            border-radius: 4px;
+            max-height: 400px;
+        }
+        #manifestViewer .token\.tag { color: #569CD6; }
+        #manifestViewer .token\.attr-name { color: #9CDCFE; }
+        #manifestViewer .token\.attr-value { color: #CE9178; }
+        #manifestViewer .token\.text { color: #D4D4D4; }
+        #manifestViewer .token\.altmpd { color: #06ff06; }
+        #manifestViewer .token\.altmpd-bg { background-color: rgb(36, 179, 36); }
+
+        .event-config {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #dee2e6;
+        }
+
+        .form-label {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Live-to-Live Alternative Media Presentations</h3>
+                    <p>A sample showing live-to-live alternative media presentations where both original and alternative content are live streams. Configure replace events with dynamic presentation times.</p>
+
+                    <div class="event-config">
+                        <h5>Live Stream Configuration</h5>
+                        <div class="mb-3">
+                            <label class="form-label">Main Live Stream URL:</label>
+                            <input type="text" id="manifestUrl" class="form-control" value="https://livesim.dashif.org/livesim/testpic_2s/Manifest.mpd" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Alternative Live Stream URL:</label>
+                            <input type="text" id="alternativeUrl" class="form-control" value="https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd" />
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <label class="form-label">Time Offset (seconds):</label>
+                                <input type="number" id="timeOffset" class="form-control" value="10" min="5" max="300" />
+                                <small class="text-muted">Time from now to trigger replace event</small>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Duration (ms):</label>
+                                <input type="number" id="duration" class="form-control" value="15000" min="1000" max="120000" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <label class="form-label">Return Offset (ms):</label>
+                                <input type="number" id="returnOffset" class="form-control" value="15000" min="0" />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Max Duration (ms):</label>
+                                <input type="number" id="maxDuration" class="form-control" value="20000" min="1000" />
+                            </div>
+                        </div>
+
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="clipEnabled">
+                                    <label class="form-check-label" for="clipEnabled">Enable Clip</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="startAtPlayhead" checked>
+                                    <label class="form-check-label" for="startAtPlayhead">Start at Playhead</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3">
+                            <button id="addReplaceEvent" class="btn btn-primary me-2">Add Replace Event</button>
+                            <button id="loadPlayer" class="btn btn-success">Load Player</button>
+                        </div>
+
+                        <div id="eventsContainer" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <video id="video-element" controls="true"></video>
+                <video id="alternative-video-element" controls="true"></video>
+
+                <div class="mt-3">
+                    <h6>Generated Manifest Events:</h6>
+                    <div id="manifestViewer">No events configured yet...</div>
+                </div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+<script class="code">
+    let player;
+    let replaceEvents = [];
+    let eventCounter = 0;
+
+    function init() {
+        var video = document.getElementById('video-element');
+        var alternativeVideo = document.getElementById('alternative-video-element');
+
+        // Initialize with basic setup, player will be created when loading
+        setupEventListeners();
+    }
+
+    function setupEventListeners() {
+        const addReplaceBtn = document.getElementById('addReplaceEvent');
+        const loadPlayerBtn = document.getElementById('loadPlayer');
+
+        addReplaceBtn.addEventListener('click', addReplaceEvent);
+        loadPlayerBtn.addEventListener('click', loadPlayer);
+    }
+
+    function addReplaceEvent() {
+        const timeOffset = parseInt(document.getElementById('timeOffset').value);
+        const duration = parseInt(document.getElementById('duration').value);
+        const returnOffset = parseInt(document.getElementById('returnOffset').value);
+        const maxDuration = parseInt(document.getElementById('maxDuration').value);
+        const clipEnabled = document.getElementById('clipEnabled').checked;
+        const startAtPlayhead = document.getElementById('startAtPlayhead').checked;
+        const alternativeUrl = document.getElementById('alternativeUrl').value;
+
+        // Calculate presentation time as current time + offset
+        const presentationTime = Date.now() + (timeOffset * 1000);
+
+        const event = {
+            id: eventCounter++,
+            presentationTime: presentationTime,
+            duration: duration,
+            alternativeUrl: alternativeUrl,
+            returnOffset: returnOffset,
+            maxDuration: maxDuration,
+            clip: clipEnabled,
+            startAtPlayhead: startAtPlayhead,
+            timeOffset: timeOffset
+        };
+
+        replaceEvents.push(event);
+        updateEventsDisplay();
+        updateManifestViewer();
+    }
+
+    function removeEvent(index) {
+        replaceEvents.splice(index, 1);
+        updateEventsDisplay();
+        updateManifestViewer();
+    }
+
+    function updateEventsDisplay() {
+        const container = document.getElementById('eventsContainer');
+        container.innerHTML = '';
+
+        if (replaceEvents.length === 0) {
+            container.innerHTML = '<p class="text-muted">No events configured</p>';
+            return;
+        }
+
+        replaceEvents.forEach((event, index) => {
+            const eventDiv = document.createElement('div');
+            eventDiv.className = 'alert alert-info d-flex justify-content-between align-items-center';
+
+            const eventTime = new Date(event.presentationTime);
+            const timeString = eventTime.toLocaleTimeString();
+
+            eventDiv.innerHTML = `
+                <div>
+                    <strong>Replace Event #${event.id + 1}</strong><br>
+                    <small>Time: ${timeString} (${event.timeOffset}s from now)<br>
+                    Duration: ${event.duration}ms | Return Offset: ${event.returnOffset}ms</small>
+                </div>
+                <button class="btn btn-sm btn-danger" onclick="removeEvent(${index})">Remove</button>
+            `;
+
+            container.appendChild(eventDiv);
+        });
+    }
+
+    function updateManifestViewer() {
+        const viewer = document.getElementById('manifestViewer');
+
+        if (replaceEvents.length === 0) {
+            viewer.textContent = 'No events configured yet...';
+            return;
+        }
+
+        let manifestXml = '';
+        replaceEvents.forEach(event => {
+            manifestXml += `
+<EventStream schemeIdUri="urn:mpeg:dash:event:alternativeMPD:replace:2025" timescale="1000">
+  <Event presentationTime="${event.presentationTime}" duration="${event.duration}">
+    <ReplacePresentation
+      url="${event.alternativeUrl}"
+      earliestResolutionTimeOffset="5000"
+      returnOffset="${event.returnOffset}"
+      maxDuration="${event.maxDuration}"
+      clip="${event.clip}"
+      startAtPlayhead="${event.startAtPlayhead}" />
+  </Event>
+</EventStream>`;
+        });
+
+        // Format and highlight the XML
+        let highlighted = manifestXml
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/(&lt;\/?)(\w+)(.*?)(\/?&gt;)/g, (match, open, tagName, attrs, close) => {
+                let isAltMpd = (tagName === "ReplacePresentation");
+                let coloredTag = `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${open}${tagName}</span>`;
+                if (attrs.trim().length > 0) {
+                    attrs = attrs.replace(/(\w+)="(.*?)"/g, `<span class="token.attr-name">$1</span>="<span class="token.attr-value">$2</span>"`);
+                    coloredTag += attrs;
+                }
+                coloredTag += `<span class="token.tag${isAltMpd ? ' token.altmpd' : ''}">${close}</span>`;
+                return coloredTag;
+            });
+
+        viewer.innerHTML = highlighted;
+    }
+
+    function loadPlayer() {
+        const manifestUrl = document.getElementById('manifestUrl').value;
+        const video = document.getElementById('video-element');
+        const alternativeVideo = document.getElementById('alternative-video-element');
+
+        // Clean up existing player
+        if (player) {
+            player.reset();
+        }
+
+        // Set video attributes
+        video.setAttribute('controls', 'true');
+        video.setAttribute('autoplay', '');
+        video.setAttribute('muted', '');
+
+        // Create new player following the correct sequence
+        player = dashjs.MediaPlayer().create();
+        window.player = player;
+
+        // Initialize first (without parameters)
+        player.initialize();
+
+        // Set alternative video element
+        player.setAlternativeVideoElement(alternativeVideo);
+
+        // Attach the main video view
+        player.attachView(video);
+
+        // Configure settings if needed
+        player.updateSettings({
+            streaming: {
+                text: {
+                    dispatchForManualRendering: true
+                }
+            }
+        });
+
+        if (replaceEvents.length > 0) {
+            // Load manifest and inject events
+            player.retrieveManifest(manifestUrl, (manifest) => {
+                // Clear existing event streams
+                manifest.Period[0].EventStream = [];
+
+                // Add replace events
+                replaceEvents.forEach(event => {
+                    const eventStream = {
+                        schemeIdUri: 'urn:mpeg:dash:event:alternativeMPD:replace:2025',
+                        timescale: 1000,
+                        Event: [{
+                            id: event.id,
+                            presentationTime: event.presentationTime,
+                            duration: event.duration,
+                            ReplacePresentation: {
+                                url: event.alternativeUrl,
+                                earliestResolutionTimeOffset: 5000,
+                                returnOffset: event.returnOffset,
+                                maxDuration: event.maxDuration,
+                                clip: event.clip.toString(),
+                                startAtPlayhead: event.startAtPlayhead.toString()
+                            }
+                        }]
+                    };
+                    manifest.Period[0].EventStream.push(eventStream);
+                });
+
+                // Attach the modified manifest as source
+                player.attachSource(manifest);
+            });
+        } else {
+            // Load without events - use attachSource with the URL
+            player.attachSource(manifestUrl);
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

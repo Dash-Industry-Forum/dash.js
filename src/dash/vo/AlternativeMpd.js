@@ -32,18 +32,26 @@
  * @class
  * @ignore
  */
-class Event {
+
+class AlternativeMpd {
     constructor() {
-        this.type = '';
-        this.duration = NaN;
-        this.presentationTime = NaN;
-        this.id = NaN;
-        this.messageData = '';
-        this.eventStream = null;
-        this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
-        this.parsedMessageData = null; // Parsed value of the event message
-        this.alternativeMpd = null;
+        this.url = '';
+        this.earliestResolutionTimeOffset = NaN;
+        this.mode = '';
+        this.maxDuration = '';
+        this.serviceDescriptionId = NaN;
+        this.executeOnce = false;
+
+        // Replace
+        this.returnOffset = NaN;
+        this.returnOffset = NaN;
+        this.clip = true;
+        this.startWithOffset = false;
+
+        // Old attributes
+        this.disableJumpTimeOffest = NaN;
+        this.playTimes = '';
     }
 }
 
-export default Event;
+export default AlternativeMpd;

@@ -346,6 +346,28 @@ export default {
     ABANDON_FRAGMENT_RULES: {
         ABANDON_REQUEST_RULE: 'AbandonRequestsRule'
     },
+    ALTERNATIVE_MPD: {
+        MODES: {
+            REPLACE: 'replace',
+            INSERT: 'insert'
+        },
+        STATUS: {
+            UPDATE: 'update',
+            REPEAT: 'repeat'
+        },
+        URIS: {
+            REPLACE: 'urn:mpeg:dash:event:alternativeMPD:replace:2025',
+            INSERT: 'urn:mpeg:dash:event:alternativeMPD:insert:2025'
+        },
+        ATTRIBUTES: {
+            NO_JUMP_DEFAULT: 1,
+            NO_JUMP_PRIORITY: 2
+        },
+        CONTENT_START: 'alternativeContentStart',
+        CONTENT_END: 'alternativeContentEnd',
+        EVENT_UPDATED: 'alternativeEventUpdated'
+
+    },
 
     /**
      *  @constant {string} ID3_SCHEME_ID_URI specifies scheme ID URI for ID3 timed metadata
