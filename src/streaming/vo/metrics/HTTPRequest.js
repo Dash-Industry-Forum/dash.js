@@ -136,6 +136,10 @@ class HTTPRequest {
          * The values derived from the ResourceTimingAPI.
          */
         this._resourceTimingValues = null;
+        /**
+         * The ratio of the current representation bandwidth to the top representation bandwidth - used for adjusting cachedetection to bitrate ladder.
+         */
+        this._bandwidthRatio = 1;
     }
 }
 
