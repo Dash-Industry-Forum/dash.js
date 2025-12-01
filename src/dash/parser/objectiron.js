@@ -62,6 +62,27 @@ function ObjectIron(mappers) {
                 }
             }
         }
+
+        // apply mapping
+        if (allowMapping) {
+            if (child[parentName]) {
+                // property already exists
+                // check to see if we should merge
+                if (mergeFlag) {
+                    if (parentIsArray) {
+                        child[parentName].push(parentEl);
+                    }
+                }
+            } else {
+                // just add the property
+                if (parentIsArray) {
+                    child[parentName] = [parentEl];
+                } else {
+                    child[parentName] = parentEl;
+                }
+            }
+        }
+
     }
 
     function mapProperties(properties, exceptions, parent, child) {
