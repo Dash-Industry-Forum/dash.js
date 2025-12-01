@@ -676,7 +676,7 @@ function DashManifestModel() {
         }
 
         // now, only return properties present on all Representations
-        // repr.legth is always >= 2
+        // repr.length is always >= 2
         return propertiesOfFirstRepresentation.filter(prop => {
             return repr.slice(1).every(currRep => {
                 return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some(e => {
@@ -692,10 +692,18 @@ function DashManifestModel() {
         }
 
         let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
+
+        // now, only take those Properties from AdaptationSet which we didn't already get from Representations
         if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
-            allProperties.push(...adaptation[propertyType])
+            adaptation[propertyType].forEach( adaptationProp => {
+                const alreadyPresent = allProperties.some(d => { 
+                    return d.schemeIdUri === adaptationProp.schemeIdUri && d.value === adaptationProp.value
+                });
+                if (!alreadyPresent) {
+                    allProperties.push(adaptationProp);
+                }
+            })
         }
-        // we don't check whether there are duplicates on AdaptationSets and Representations
 
         return allProperties.map(essentialProperty => {
             const s = new DescriptorType();

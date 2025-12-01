@@ -34,9 +34,10 @@
 import CommonProperty from './CommonProperty.js';
 
 class MapNode {
-    constructor(name, properties, children) {
+    constructor(name, properties, exceptions, children) {
         this._name = name || '';
         this._properties = [];
+        this._exceptions = exceptions || {};
         this._children = children || [];
 
         if (Array.isArray(properties)) {
@@ -56,6 +57,10 @@ class MapNode {
 
     get properties() {
         return this._properties;
+    }
+
+    get exceptions() {
+        return this._exceptions;
     }
 }
 

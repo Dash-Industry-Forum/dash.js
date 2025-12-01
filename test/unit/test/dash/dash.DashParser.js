@@ -56,6 +56,41 @@ describe('DashParser', function () {
             expect(labelArray[1].lang).to.equal('fr');
         });
     });
+
+    describe('DashParser - ObjectIron', async () => {
+        beforeEach(function () {
+            dashManifestModel.setConfig({
+                errHandler: errorHandlerMock
+            });
+        });
+
+        let manifest_prop = await FileLoader.loadTextFile('/data/dash/manifest_properties.xml');
+
+        it('should map AudioChannelConfig even if another instance is present on Representation', async () => {
+            let parsedMpd = dashParser.parse(manifest_prop);
+            let audioAdaptationsArray = dashManifestModel.getAdaptationsForType(parsedMpd, 0, 'audio');
+            let audiorepresentation = dashManifestModel.getRepresentationFor(0, audioAdaptationsArray[0]);
+
+            let acc = dashManifestModel.getAudioChannelConfigurationForRepresentation(audiorepresentation);
+
+            expect(acc).to.be.instanceOf(Array);
+            expect(acc.length).to.equal(2);
+        });
+
+        it('should map allowed SupplementalProperties from AdaptationSet to Representation', async () => {
+            let parsedMpd = dashParser.parse(manifest_prop);
+            let rawAdaptationSet = parsedMpd.Period[0].AdaptationSet[0];
+
+            expect(rawAdaptationSet.SupplementalProperty).to.be.instanceOf(Array);
+            expect(rawAdaptationSet.SupplementalProperty.length).to.equal(3);
+
+            let rawRepresentation = rawAdaptationSet.Representation[0];
+            
+            expect(rawRepresentation.SupplementalProperty).to.be.instanceOf(Array);
+            expect(rawRepresentation.SupplementalProperty.length).to.equal(4);
+        });
+
+    });
 })
 
 

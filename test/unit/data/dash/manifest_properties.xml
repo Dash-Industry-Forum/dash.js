@@ -1,0 +1,21 @@
+<MPD mediaPresentationDuration="PT634.566S" minBufferTime="PT2.00S" profiles="urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011" type="static" xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd">
+    <BaseURL>./</BaseURL>
+    <Period>
+        <AdaptationSet mimeType="audio/mp4" contentType="audio" subsegmentAlignment="true" subsegmentStartsWithSAP="1" lang="es">
+            <Label lang="en">English Label</Label>
+            <Label lang="fre">French Label</Label>
+            <AudioChannelConfiguration schemeIdUri="urn:mpeg:mpegB:cicp:ChannelConfiguration" value="6"/>
+            <Accessibility schemeIdUri="urn:tva:metadata:cs:AudioPurposeCS:2007" value="6"/>
+            <SupplementalProperty schemeIdUri="urn:ABC" value="Instance1" />
+            <SupplementalProperty schemeIdUri="urn:XYZ" value="OK" />
+            <SupplementalProperty schemeIdUri="urn:mpeg:dash:state:lang#audio" />
+            <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
+            <SegmentTemplate duration="192512" timescale="48000" media="$RepresentationID$/$RepresentationID$_$Number$.m4a" startNumber="1" initialization="$RepresentationID$/$RepresentationID$_0.m4a"/>
+            <Representation id="bbb_a64k" codecs="mp4a.40.5" bandwidth="67071" audioSamplingRate="48000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+                <SupplementalProperty schemeIdUri="urn:ABC" value="Instance2" />
+                <SupplementalProperty schemeIdUri="urn:ABC" value="Instance3" />
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>
