@@ -54,12 +54,14 @@ function NotFragmentedTextBufferController(config) {
         initialized,
         mediaSource,
         sourceBufferSink,
-        initCache;
+        initCache,
+        isInitFragmentLoaded;
 
     function setup() {
         initialized = false;
         mediaSource = null;
         isBufferingCompleted = false;
+        isInitFragmentLoaded = false;
 
         initCache = InitCache(context).getInstance();
 
@@ -130,7 +132,7 @@ function NotFragmentedTextBufferController(config) {
     }
 
     function setIsBufferingCompleted(value) {
-        if (isBufferingCompleted === value) {
+        if (!isInitFragmentLoaded || isBufferingCompleted === value) {
             return;
         }
 
@@ -143,6 +145,7 @@ function NotFragmentedTextBufferController(config) {
 
     function reset(errored) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+        isInitFragmentLoaded = false;
 
         if (!errored && sourceBufferSink) {
             sourceBufferSink.abort();
@@ -162,6 +165,8 @@ function NotFragmentedTextBufferController(config) {
         initCache.save(e.chunk);
 
         sourceBufferSink.append(e.chunk);
+
+        isInitFragmentLoaded = true;
 
         setIsBufferingCompleted(true);
     }
