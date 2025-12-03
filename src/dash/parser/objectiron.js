@@ -32,21 +32,22 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ObjectIron(mappers) {
 
-    function _conditionallyMapProperty(exception, parentName, parentIsArray, parentEl, child, mergeFlag) {
+    function _mappingAllowed (element, exception) {
         let allowMapping = true;
-
-        // check, if element matches an exception
         if (exception) {
             for (const [key, values] of Object.entries(exception)) {
-                let attr = parentEl[key];
+                let attr = element[key];
                 if (values.some(v => attr.match(v))) {
                     allowMapping = false;
                 }
             }
         }
 
-        // apply mapping
-        if (allowMapping) {
+        return allowMapping;
+    }
+    
+    function _conditionallyMapProperty(exception, parentName, parentIsArray, parentEl, child, mergeFlag) {
+        if (_mappingAllowed(parentEl, exception)) {
             if (child[parentName]) {
                 // property already exists
                 // check to see if we should merge
@@ -64,7 +65,6 @@ function ObjectIron(mappers) {
                 }
             }
         }
-
     }
 
     function mapProperties(properties, exceptions, parent, child) {
