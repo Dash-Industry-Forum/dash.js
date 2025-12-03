@@ -70,15 +70,15 @@ function ObjectIron(mappers) {
                 // check to see if we should merge
                 if (mergeFlag) {
                     if (parentIsArray) {
-                        child[parentName].push(parentEl);
+                        child[propertyParentElement].push(parentEl);
                     }
                 }
             } else {
                 // just add the property
                 if (parentIsArray) {
-                    child[parentName] = [parentEl];
+                    child[propertyParentElement] = [parentEl];
                 } else {
-                    child[parentName] = parentEl;
+                    child[propertyParentElement] = parentEl;
                 }
             }
         }
