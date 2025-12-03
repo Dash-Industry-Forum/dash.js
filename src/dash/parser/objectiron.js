@@ -82,7 +82,6 @@ function ObjectIron(mappers) {
                 }
             }
         }
-
     }
 
     function mapProperties(properties, exceptions, parent, child) {
