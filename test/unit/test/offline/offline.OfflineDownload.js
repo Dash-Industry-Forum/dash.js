@@ -1,8 +1,6 @@
 import OfflineDownload from '../../../../src/offline/OfflineDownload.js';
 import OfflineConstants from '../../../../src/offline/constants/OfflineConstants.js';
-import OfflineErrors from '../../../../src/offline/errors/OfflineErrors.js';
 import Events from '../../../../src/core/events/Events.js';
-import OfflineEvents from '../../../../src/offline/events/OfflineEvents.js';
 
 import {expect} from 'chai';
 import sinon from 'sinon';

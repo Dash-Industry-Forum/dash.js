@@ -1,5 +1,4 @@
 import OfflineStream from '../../../../src/offline/OfflineStream.js';
-import OfflineConstants from '../../../../src/offline/constants/OfflineConstants.js';
 import Events from '../../../../src/core/events/Events.js';
 
 import {expect} from 'chai';
