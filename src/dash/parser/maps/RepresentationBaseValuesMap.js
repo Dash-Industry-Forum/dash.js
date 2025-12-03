@@ -65,10 +65,20 @@ class RepresentationBaseValuesMap extends MapNode {
         // RegEx are supported
         const exceptions = {
             [DashConstants.SUPPLEMENTAL_PROPERTY]: {
-                schemeIdUri: [ Constants.URL_QUERY_INFO_SCHEME, Constants.EXT_URL_QUERY_INFO_SCHEME, Constants.ADV_URL_QUERY_INFO_SCHEME, /urn:mpeg:dash:state:/ ]
+                schemeIdUri: [
+                    Constants.URL_QUERY_INFO_SCHEME,
+                    Constants.EXT_URL_QUERY_INFO_SCHEME,
+                    Constants.ADV_URL_QUERY_INFO_SCHEME,
+                    Constants.URL_QUERY_STATE_PREFIX
+                ]
             },
             [DashConstants.ESSENTIAL_PROPERTY]: {
-                schemeIdUri: [ Constants.URL_QUERY_INFO_SCHEME, Constants.EXT_URL_QUERY_INFO_SCHEME, Constants.ADV_URL_QUERY_INFO_SCHEME, /urn:mpeg:dash:state:/ ]
+                schemeIdUri: [
+                    Constants.URL_QUERY_INFO_SCHEME,
+                    Constants.EXT_URL_QUERY_INFO_SCHEME,
+                    Constants.ADV_URL_QUERY_INFO_SCHEME,
+                    Constants.URL_QUERY_STATE_PREFIX
+                ]
             }
         };
 
