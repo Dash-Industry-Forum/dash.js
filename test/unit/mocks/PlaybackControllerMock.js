@@ -137,6 +137,22 @@ class PlaybackControllerMock {
         return 15;
     }
 
+    seekToCurrentLive() {
+        // Mock implementation
+    }
+
+    getBufferLevel() {
+        return 5;
+    }
+
+    getPlaybackStalled() {
+        return false;
+    }
+
+    getStreamEndTime() {
+        return 100;
+    }
+
 }
 
 
