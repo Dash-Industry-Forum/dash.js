@@ -46,22 +46,22 @@ function ObjectIron(mappers) {
         return allowMapping;
     }
     
-    function _conditionallyMapProperty(exception, parentName, parentIsArray, parentEl, child, mergeFlag) {
+    function _conditionallyMapProperty(exception, propertyParentElement, parentIsArray, parentEl, child, mergeFlag) {
         if (_mappingAllowed(parentEl, exception)) {
-            if (child[parentName]) {
+            if (child[propertyParentElement]) {
                 // property already exists
                 // check to see if we should merge
                 if (mergeFlag) {
                     if (parentIsArray) {
-                        child[parentName].push(parentEl);
+                        child[propertyParentElement].push(parentEl);
                     }
                 }
             } else {
                 // just add the property
                 if (parentIsArray) {
-                    child[parentName] = [parentEl];
+                    child[propertyParentElement] = [parentEl];
                 } else {
-                    child[parentName] = parentEl;
+                    child[propertyParentElement] = parentEl;
                 }
             }
         }
@@ -72,14 +72,14 @@ function ObjectIron(mappers) {
             const property = properties[i];
 
             if (parent[property.name]) {
-                const propertyParentElementArray = parent[property.name];
+                const propertyParentElement = parent[property.name];
 
-                if (Array.isArray(propertyParentElementArray)) {
-                    propertyParentElementArray.forEach(propParentEl => {
+                if (Array.isArray(propertyParentElement)) {
+                    propertyParentElement.forEach(propParentEl => {
                         _conditionallyMapProperty(exceptions[property.name], property.name, true, propParentEl, child, property.merge);
                     });
                 } else {
-                    _conditionallyMapProperty(exceptions[property.name], property.name, false, propertyParentElementArray, child, property.merge);
+                    _conditionallyMapProperty(exceptions[property.name], property.name, false, propertyParentElement, child, property.merge);
                 }
             }
         }
