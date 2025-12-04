@@ -1,6 +1,7 @@
 import XHRLoader from '../../../../src/streaming/net/XHRLoader.js';
 
 import {expect} from 'chai';
+import {fakeXhr} from 'nise';
 import sinon from 'sinon';
 
 const context = {};
@@ -10,7 +11,7 @@ let xhrLoader;
 describe('XHRLoader', function () {
 
     beforeEach(function () {
-        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
         this.requests = [];
         window.XMLHttpRequest.onCreate = function (xhr) {
@@ -35,7 +36,7 @@ describe('XHRLoader', function () {
             request: {},
             customData: {
                 onloadend: callbackLoadend,
-                onabort: callbackAbort    
+                onabort: callbackAbort
             }
         };
         xhrLoader.load(request, {});
@@ -53,7 +54,7 @@ describe('XHRLoader', function () {
         const request = {
             customData: {
                 onloadend: callbackLoadend,
-                onabort: callbackAbort    
+                onabort: callbackAbort
             }
         };
         xhrLoader.load(request, {});
@@ -72,7 +73,7 @@ describe('XHRLoader', function () {
         const request = {
             customData: {
                 onloadend: callbackLoadend,
-                onabort: callbackAbort    
+                onabort: callbackAbort
             }
         };
         xhrLoader.load(request, {});
@@ -91,7 +92,7 @@ describe('XHRLoader', function () {
         const request = {
             customData: {
                 onloadend: callbackLoadend,
-                onabort: callbackAbort    
+                onabort: callbackAbort
             }
         };
         xhrLoader.load(request, {});
