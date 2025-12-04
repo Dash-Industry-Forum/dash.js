@@ -3113,8 +3113,6 @@ export interface AbrController {
 
     setPlaybackQuality(type: string, streamInfo: StreamInfo, representation: Representation, reason: object): void;
 
-    setWindowResizeEventCalled(value: any): void;
-
     unRegisterStreamType(streamId: string, type: string): void;
 }
 

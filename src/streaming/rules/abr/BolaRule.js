@@ -85,6 +85,7 @@ function BolaRule(config) {
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.on(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
         eventBus.on(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.on(Events.VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
     }
 
     /**
@@ -393,7 +394,17 @@ function BolaRule(config) {
      * @private
      */
     function _onMinMaxBitrateUpdated() {
-        resetInitialSettings()
+        resetInitialSettings();
+    }
+
+    /**
+     * We need to reset to initial settings because the number of available Representations might have changed
+     * @private
+     */
+    function _onVideoElementResized() {
+        if (settings.get().streaming.abr.limitBitrateByPortal) {
+            resetInitialSettings();
+        }
     }
 
 
@@ -631,6 +642,7 @@ function BolaRule(config) {
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
         eventBus.off(Events.SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
         eventBus.off(Events.SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
+        eventBus.off(Events.VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
     }
 
     instance = {

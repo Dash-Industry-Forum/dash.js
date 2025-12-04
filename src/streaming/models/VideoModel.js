@@ -46,17 +46,19 @@ const READY_STATES_TO_EVENT_NAMES = new Map([
 
 function VideoModel() {
 
-    let instance,
-        logger,
-        settings,
-        element,
+    let TTMLRenderingDiv,
         _currentTime,
-        setCurrentTimeReadyStateFunction,
-        resumeReadyStateFunction,
-        TTMLRenderingDiv,
-        vttRenderingDiv,
+        element,
+        instance,
+        logger,
         previousPlaybackRate,
-        timeout;
+        resizeObserver,
+        resumeReadyStateFunction,
+        setCurrentTimeReadyStateFunction,
+        settings,
+        timeout,
+        vttRenderingDiv;
+
 
     const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
 
@@ -68,6 +70,17 @@ function VideoModel() {
         logger = Debug(context).getInstance().getLogger(instance);
         settings = Settings(context).getInstance();
         _currentTime = NaN;
+        _createResizeObserver();
+    }
+
+    function _createResizeObserver() {
+        try {
+            resizeObserver = new ResizeObserver(() => {
+                eventBus.trigger(Events.VIDEO_ELEMENT_RESIZED);
+            });
+        } catch (e) {
+
+        }
     }
 
     function initialize() {
@@ -78,6 +91,19 @@ function VideoModel() {
         clearTimeout(timeout);
         eventBus.off(Events.PLAYBACK_PLAYING, onPlaying, this);
         stalledStreams.length = 0;
+        _disposeResizeObserver();
+    }
+
+    function _disposeResizeObserver() {
+        try {
+            if (resizeObserver && element) {
+                resizeObserver.unobserve(element);
+                resizeObserver.disconnect();
+                resizeObserver = null;
+            }
+        } catch (e) {
+
+        }
     }
 
     function setConfig(config) {
@@ -185,8 +211,20 @@ function VideoModel() {
         //add check of value type
         if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
             element = value;
+            _registerResizeObserver(element);
         } else {
             throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
+        }
+    }
+
+    function _registerResizeObserver(element) {
+        try {
+            if (!resizeObserver || !element) {
+                return;
+            }
+            resizeObserver.observe(element);
+        } catch (e) {
+
         }
     }
 
