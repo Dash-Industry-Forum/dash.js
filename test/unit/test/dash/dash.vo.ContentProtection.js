@@ -17,6 +17,7 @@ describe('Content Protection', () => {
             pssh: null,
             pro: null,
             laUrl: null,
+            certUrls: [],
         });
     });
 
@@ -37,7 +38,8 @@ describe('Content Protection', () => {
             cencDefaultKid: null,
             pssh: null,
             pro: null,
-            laUrl: null
+            laUrl: null,
+            certUrls: [],
         });
     });
 
@@ -66,7 +68,8 @@ describe('Content Protection', () => {
             cencDefaultKid: 'keyId',
             pssh: 'pssh',
             pro: 'pro',
-            laUrl: 'laUrl'
+            laUrl: 'laUrl',
+            certUrls: [],
         });
     });
 
@@ -94,8 +97,55 @@ describe('Content Protection', () => {
             cencDefaultKid: 'keyId',
             pssh: 'pssh',
             pro: 'pro',
-            laUrl: 'laUrl'
+            laUrl: 'laUrl',
+            certUrls: [],
         });
+    });
+
+    it('should normalize Certurl values regardless of casing and shape', () => {
+        const contentProtection = new ContentProtection();
+        contentProtection.init({
+            schemeIdUri: 'testScheme',
+            Certurl: [
+                ' https://c1 ',
+                { __text: 'https://c2', '@certType': ' primary ' },
+                { url: 'https://c3', certType: '' }
+            ]
+        });
+        expect(contentProtection.certUrls).to.deep.equal([
+            { url: 'https://c1', certType: null },
+            { url: 'https://c2', certType: 'primary' },
+            { url: 'https://c3', certType: null }
+        ]);
+    });
+
+    it('should parse lowercase certurl fallback', () => {
+        const contentProtection = new ContentProtection();
+        contentProtection.init({
+            certurl: { __text: 'https://c4', '@certType': 'backup' }
+        });
+        expect(contentProtection.certUrls).to.deep.equal([
+            { url: 'https://c4', certType: 'backup' }
+        ]);
+    });
+
+    it('should keep existing certUrls and only append new ones when merging', () => {
+        const contentProtection = new ContentProtection();
+        contentProtection.init({
+            Certurl: ['https://c1']
+        });
+
+        contentProtection.mergeAttributesFromReference({
+            certUrls: [
+                { url: 'https://c1', certType: null },
+                { url: 'https://c2', certType: 'primary' }
+            ]
+        });
+
+        expect(contentProtection.certUrls).to.deep.equal([
+            { url: 'https://c1', certType: null },
+            { url: 'https://c2', certType: 'primary' }
+        ]);
     });
 
     it('merge attributes from reference', () => {
@@ -117,9 +167,12 @@ describe('Content Protection', () => {
             pssh: 'pssh-new',
             pro: 'pro-new',
             laUrl: 'laUrl-new',
-            ref: 'ref-new'
+            ref: 'ref-new',
+            certUrls: [
+                { url: 'https://c1', certType: null },
+                { url: 'https://c2', certType: 'primary' }
+            ]
         })
-        console.log(contentProtection)
         expect(contentProtection).to.deep.equal({
             schemeIdUri: 'testScheme',
             value: 'value-new',
@@ -132,6 +185,10 @@ describe('Content Protection', () => {
             laUrl: 'laUrl',
             ref: 'ref',
             refId: 'refId',
+            certUrls: [
+                { url: 'https://c1', certType: null },
+                { url: 'https://c2', certType: 'primary' }
+            ]
         });
     });
 
