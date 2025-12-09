@@ -185,6 +185,17 @@ const ProtectionModel = function () { };
  */
 
 /**
+ * Generates a server certificate challenge, if supported by the underlying EME implementation.
+ * Resolves with the challenge bytes to be sent to the certificate endpoint.
+ *
+ * @function
+ * @instance
+ * @name generateServerCertificateRequest
+ * @memberof ProtectionModel
+ * @returns {Promise<ArrayBuffer>} challenge bytes
+ */
+
+/**
  * Currently selected key system.  Will be null or undefined if no key
  * system has yet been selected
  *

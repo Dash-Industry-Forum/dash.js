@@ -324,7 +324,18 @@ function ProtectionController(config) {
         const candidate = candidates[index];
         const retryAttempts = settings.get().streaming.protection.certificateRetryAttempts;
         logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
-        _downloadCertificate(candidate.url, protData, retryAttempts)
+        let downloadPromise;
+        if (ksString === 'com.widevine.alpha') {
+            downloadPromise = _downloadWidevineCertificate(candidate.url, protData, retryAttempts);
+        } else if (ksString === 'com.microsoft.playready') {
+            downloadPromise = _downloadPlayReadyCertificate(candidate.url, protData, retryAttempts);
+        } else if (ksString === 'com.apple.fps.1_0') {
+            downloadPromise = _downloadFairPlayCertificate(candidate.url, protData, retryAttempts);
+        } else {
+            downloadPromise = _downloadCertificate(candidate.url, protData, retryAttempts);
+        }
+
+        downloadPromise
             .then((arrayBuffer) => {
                 if (!arrayBuffer || !arrayBuffer.byteLength) {
                     throw new Error('Empty certificate response');
@@ -361,16 +372,19 @@ function ProtectionController(config) {
      * @return {Promise<ArrayBuffer>}
      * @private
      */
-    function _downloadCertificate(url, protData, retries) {
+    function _sendCertificateRequest(url, body, protData, retries, method, contentType) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open('GET', url, true);
+            xhr.open(method || 'GET', url, true);
             xhr.responseType = 'arraybuffer';
             const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
             if (timeout > 0) { xhr.timeout = timeout; }
             let withCredentials = false;
             if (protData && typeof protData.withCredentials === 'boolean') { withCredentials = protData.withCredentials; }
             xhr.withCredentials = withCredentials;
+            if (contentType) {
+                xhr.setRequestHeader('Content-Type', contentType);
+            }
             if (protData && protData.httpRequestHeaders) {
                 Object.keys(protData.httpRequestHeaders).forEach(h => {
                     xhr.setRequestHeader(h, protData.httpRequestHeaders[h]);
@@ -381,7 +395,7 @@ function ProtectionController(config) {
                     const remaining = retries - 1;
                     logger.debug('DRM: Certificate request failed (' + reason + '). Retrying... remaining=' + remaining);
                     setTimeout(() => {
-                        _downloadCertificate(url, protData, remaining).then(resolve).catch(reject);
+                        _sendCertificateRequest(url, body, protData, remaining, method, contentType).then(resolve).catch(reject);
                     }, CERTIFICATE_REQUEST_RETRY_INTERVAL);
                 } else {
                     reject(new Error(reason));
@@ -397,8 +411,31 @@ function ProtectionController(config) {
             xhr.onerror = function () { attemptFail('network error'); };
             xhr.ontimeout = function () { attemptFail('timeout'); };
             xhr.onabort = function () { attemptFail('aborted'); };
-            try { xhr.send(); } catch (e) { reject(e); }
+            try { xhr.send(body || null); } catch (e) { reject(e); }
         });
+    }
+
+    function _downloadCertificate(url, protData, retries) {
+        return _sendCertificateRequest(url, null, protData, retries, 'GET');
+    }
+
+    function _downloadWidevineCertificate(url, protData, retries) {
+        return protectionModel.generateServerCertificateRequest()
+            .then((challenge) => {
+                if (!challenge || !challenge.byteLength) {
+                    throw new Error('Widevine certificate challenge not available');
+                }
+                logger.debug('DRM: Widevine certificate challenge generated, sending POST.');
+                return _sendCertificateRequest(url, challenge, protData, retries, 'POST', 'application/octet-stream');
+            });
+    }
+
+    function _downloadPlayReadyCertificate(url, protData, retries) {
+        return _sendCertificateRequest(url, null, protData, retries, 'GET');
+    }
+
+    function _downloadFairPlayCertificate(url, protData, retries) {
+        return _sendCertificateRequest(url, null, protData, retries, 'GET');
     }
 
     /**

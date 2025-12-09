@@ -256,6 +256,10 @@ function ProtectionModel_3Feb2014(config) {
         eventBus.trigger(events.KEY_SESSION_UPDATED);
     }
 
+    function generateServerCertificateRequest() {
+        return Promise.reject(new Error('Server certificate challenge is not supported by this EME version'));
+    }
+
     /**
      * Close the given session and release all associated keys.  Following
      * this call, the sessionToken becomes invalid
@@ -404,6 +408,7 @@ function ProtectionModel_3Feb2014(config) {
         setMediaElement,
         createKeySession,
         updateKeySession,
+        generateServerCertificateRequest,
         closeKeySession,
         setServerCertificate,
         loadKeySession,
