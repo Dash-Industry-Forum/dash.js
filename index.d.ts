@@ -725,6 +725,11 @@ export class CMCDParameters extends DescriptorType {
     version: number;
 }
 
+export interface CertUrlDescriptor {
+    url: string;
+    certType: string | null;
+}
+
 export class ContentProtection extends DescriptorType {
     cencDefaultKid: any;
     keyId: any;
@@ -734,6 +739,7 @@ export class ContentProtection extends DescriptorType {
     ref: any;
     refId: any;
     robustness: any;
+    certUrls: CertUrlDescriptor[];
 
     init(data: any): void;
 
@@ -868,6 +874,7 @@ export interface IContentProtection {
     "cenc:default_KID"?: string;
     value?: string;
     pssh?: IPssh | IPssh[];
+    certUrls?: CertUrlDescriptor[];
 }
 
 export interface IPssh {
@@ -4655,6 +4662,9 @@ export interface ProtectionData {
 
     /** Priority level of the key system to be selected (0 is the highest prority, -1 for undefined priority) */
     priority?: number;
+
+    /** Optional certificate URLs; entries may be raw strings or manifest-parsed objects */
+    certUrls?: Array<string | CertUrlDescriptor | { __text?: string; '@certType'?: string; certType?: string; url?: string }>;
 }
 
 export interface SessionToken {
