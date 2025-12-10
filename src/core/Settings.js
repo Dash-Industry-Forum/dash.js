@@ -356,7 +356,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @typedef {Object} TimeShiftBuffer
  * @property {boolean} [calcFromSegmentTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
- *  * @property {boolean} [fallbackToSegmentTimeline=true]
+ * @property {boolean} [fallbackToSegmentTimeline=true]
  * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
  */
 
