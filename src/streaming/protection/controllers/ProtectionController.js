@@ -324,18 +324,8 @@ function ProtectionController(config) {
         const candidate = candidates[index];
         const retryAttempts = settings.get().streaming.protection.certificateRetryAttempts;
         logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
-        let downloadPromise;
-        if (ksString === 'com.widevine.alpha') {
-            downloadPromise = _downloadWidevineCertificate(candidate.url, protData, retryAttempts);
-        } else if (ksString === 'com.microsoft.playready') {
-            downloadPromise = _downloadPlayReadyCertificate(candidate.url, protData, retryAttempts);
-        } else if (ksString === 'com.apple.fps.1_0') {
-            downloadPromise = _downloadFairPlayCertificate(candidate.url, protData, retryAttempts);
-        } else {
-            downloadPromise = _downloadCertificate(candidate.url, protData, retryAttempts);
-        }
 
-        downloadPromise
+        _sendCertificateRequest(candidate.url, null, protData, retryAttempts, 'GET')
             .then((arrayBuffer) => {
                 if (!arrayBuffer || !arrayBuffer.byteLength) {
                     throw new Error('Empty certificate response');
@@ -413,29 +403,6 @@ function ProtectionController(config) {
             xhr.onabort = function () { attemptFail('aborted'); };
             try { xhr.send(body || null); } catch (e) { reject(e); }
         });
-    }
-
-    function _downloadCertificate(url, protData, retries) {
-        return _sendCertificateRequest(url, null, protData, retries, 'GET');
-    }
-
-    function _downloadWidevineCertificate(url, protData, retries) {
-        return protectionModel.generateServerCertificateRequest()
-            .then((challenge) => {
-                if (!challenge || !challenge.byteLength) {
-                    throw new Error('Widevine certificate challenge not available');
-                }
-                logger.debug('DRM: Widevine certificate challenge generated, sending POST.');
-                return _sendCertificateRequest(url, challenge, protData, retries, 'POST', 'application/octet-stream');
-            });
-    }
-
-    function _downloadPlayReadyCertificate(url, protData, retries) {
-        return _sendCertificateRequest(url, null, protData, retries, 'GET');
-    }
-
-    function _downloadFairPlayCertificate(url, protData, retries) {
-        return _sendCertificateRequest(url, null, protData, retries, 'GET');
     }
 
     /**

@@ -267,10 +267,6 @@ function ProtectionModel_01b(config) {
 
     }
 
-    function generateServerCertificateRequest() {
-        return Promise.reject(new Error('Server certificate challenge is not supported by this EME version'));
-    }
-
     function updateKeySession(sessionToken, message) {
         const sessionId = sessionToken.sessionId;
         if (!protectionKeyController.isClearKey(keySystem)) {
@@ -300,7 +296,6 @@ function ProtectionModel_01b(config) {
     }
 
     function setServerCertificate(/*serverCertificate*/) { /* Not supported */
-        return Promise.resolve();
     }
 
     function loadKeySession(/*ksInfo*/) { /* Not supported */
@@ -460,7 +455,6 @@ function ProtectionModel_01b(config) {
         setMediaElement,
         createKeySession,
         updateKeySession,
-        generateServerCertificateRequest,
         closeKeySession,
         setServerCertificate,
         loadKeySession,

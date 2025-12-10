@@ -115,65 +115,10 @@ function DefaultProtectionModel(config) {
         for (let i = 0; i < sessionTokens.length; i++) {
             session = sessionTokens[i];
             if (!session.getUsable()) {
-                reset,
-                generateServerCertificateRequest
+                _closeKeySessionInternal(session)
                 removeSession(session);
             }
         }
-    }
-
-    function generateServerCertificateRequest() {
-        return new Promise((resolve, reject) => {
-            if (!mediaKeys || typeof mediaKeys.createSession !== 'function') {
-                reject(new Error('MediaKeys not initialized'));
-                return;
-            }
-            let session;
-            try {
-                session = mediaKeys.createSession('temporary');
-            } catch (e) {
-                reject(e);
-                return;
-            }
-
-            const onMessage = (event) => {
-                try {
-                    const message = ArrayBuffer.isView(event.message) ? event.message.buffer : event.message;
-                    session.removeEventListener('message', onMessage);
-                    // Best-effort cleanup
-                    session.close().catch(() => {});
-                    resolve(message);
-                } catch (err) {
-                    session.removeEventListener('message', onMessage);
-                    session.close().catch(() => {});
-                    reject(err);
-                }
-            };
-
-            const onError = (event) => {
-                session.removeEventListener('message', onMessage);
-                session.removeEventListener('error', onError);
-                session.close().catch(() => {});
-                reject(event && event.error ? event.error : new Error('Certificate challenge failed'));
-            };
-
-            session.addEventListener('message', onMessage);
-            session.addEventListener('error', onError);
-
-            try {
-                session.generateRequest('certificate', new Uint8Array([])).catch((e) => {
-                    session.removeEventListener('message', onMessage);
-                    session.removeEventListener('error', onError);
-                    session.close().catch(() => {});
-                    reject(e);
-                });
-            } catch (e) {
-                session.removeEventListener('message', onMessage);
-                session.removeEventListener('error', onError);
-                session.close().catch(() => {});
-                reject(e);
-            }
-        });
     }
 
     function getAllInitData() {
@@ -338,7 +283,7 @@ function DefaultProtectionModel(config) {
     }
 
     function setServerCertificate(serverCertificate) {
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             mediaKeys.setServerCertificate(serverCertificate)
                 .then(function () {
                     logger.info('DRM: License server certificate successfully updated.');
@@ -346,8 +291,8 @@ function DefaultProtectionModel(config) {
                     resolve();
                 })
                 .catch((error) => {
+                    reject(error);
                     eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, { error: new DashJSError(ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_CODE, ProtectionErrors.SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name) });
-                    resolve()
                 });
         })
     }

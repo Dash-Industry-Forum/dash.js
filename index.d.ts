@@ -4366,8 +4366,6 @@ export interface DefaultProtectionModel {
 
     setServerCertificate(serverCertificate: ArrayBuffer): void;
 
-    generateServerCertificateRequest(): Promise<ArrayBuffer>;
-
     stop(): void;
 
     updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
@@ -4395,8 +4393,6 @@ export interface ProtectionModel_01b {
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
     setServerCertificate(): void;
-
-    generateServerCertificateRequest(): Promise<ArrayBuffer>;
 
     stop(): void;
 
@@ -4426,8 +4422,6 @@ export interface ProtectionModel_3Fe2014 {
 
     setServerCertificate(): void;
 
-    generateServerCertificateRequest(): Promise<ArrayBuffer>;
-
     stop(): void;
 
     updateKeySession(sessionToken: SessionToken, message: ArrayBuffer): void;
@@ -4453,8 +4447,6 @@ export interface ProtectionModel {
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
     setServerCertificate(serverCertificate: ArrayBuffer): void;
-
-    generateServerCertificateRequest(): Promise<ArrayBuffer>;
 
     stop(): void;
 
