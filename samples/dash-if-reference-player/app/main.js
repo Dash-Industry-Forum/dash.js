@@ -1231,7 +1231,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.protData = $scope.protectionData;
         }
         // Execute if setDrm() has been called with manually entered values
-        else if ($scope.protectionData !== {}) {
+        else if ($scope.protectionData && Object.keys($scope.protectionData).length) {
             $scope.setDrm();
             $scope.protData = $scope.protectionData;
         } else if ($scope.drmLicenseURL !== '' && $scope.drmKeySystem !== '') {
@@ -1478,6 +1478,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         let protectionData = {};
 
         $scope.handleRequestHeaders();
+        $scope.handleServerCertificateURLs();
         $scope.handleClearkeys();
 
         for (let input of drmInputs) {
@@ -1486,7 +1487,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 // Check if the provided DRM is Clearkey and whether KID=KEY or LicenseServer + Header is selected; Default is KID=KEY
                 if (input.hasOwnProperty('inputMode') && input.inputMode === 'kidKey') {
                     //Check clearkeys has at least one entry
-                    if (input.clearkeys !== {}) {
+                    if (input.clearkeys && Object.keys(input.clearkeys).length) {
                         // Check if priority is enabled
                         protectionData[input.drmKeySystem] = {
                             'clearkeys': {},
@@ -1511,10 +1512,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                 key !== 'priority' &&
                                 key !== 'kid' &&
                                 key !== 'key' &&
+                                key !== 'serverCertificateURLs' &&
                                 key !== 'inputMode'&&
                                 key !== 'isCustomRobustness') {
                                 protectionData[input.drmKeySystem][key] = input[key];
                             }
+                        }
+
+                        const certUrls = Array.isArray(input.serverCertificateURLs) ? input.serverCertificateURLs.filter(Boolean) : [];
+                        if (certUrls.length) {
+                            protectionData[input.drmKeySystem].certUrls = certUrls;
                         }
 
                         if (!angular.equals(input.httpRequestHeaders, {})) {
@@ -1560,6 +1567,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             key !== 'licenseServerUrl' &&
                             key !== 'httpRequestHeaders' &&
                             key !== 'priority' &&
+                            key !== 'serverCertificateURLs' &&
                             key !== 'isCustomRobustness') {
                             protectionData[input.drmKeySystem][key] = input[key];
                         }
@@ -1568,6 +1576,11 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     // Only set request header if any have been specified
                     if (!angular.equals(input.httpRequestHeaders, {})) {
                         protectionData[input.drmKeySystem]['httpRequestHeaders'] = input.httpRequestHeaders;
+                    }
+
+                    const certUrls = Array.isArray(input.serverCertificateURLs) ? input.serverCertificateURLs.filter(Boolean) : [];
+                    if (certUrls.length) {
+                        protectionData[input.drmKeySystem].certUrls = certUrls;
                     }
 
                     if (input.audioRobustness) {
@@ -1676,7 +1689,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.drmClearkey.clearkeys[clearkey.kid] = clearkey.key;
         }
         // if clearkey property is empty, alert
-        if ($scope.additionalClearkeyPairs === {}) {
+        if (!Object.keys($scope.drmClearkey.clearkeys).length) {
             alert('You must specify at least one KID=KEY pair!');
         }
     }
@@ -1698,10 +1711,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             value: protectionData[data]['httpRequestHeaders'][header]
                         });
                     }
+                    const playreadyCertUrls = protectionData[data].certUrls || protectionData[data].serverCertificateURLs;
+                    if (Array.isArray(playreadyCertUrls) && playreadyCertUrls.length) {
+                        $scope.drmPlayready.serverCertificateURLs = playreadyCertUrls;
+                        $scope.playreadyServerCertificateURLs = playreadyCertUrls.join(' ');
+                    }
                     // Add any additional parameters
                     for (let parameter in protectionData[data]) {
                         if (parameter !== 'serverURL' &&
-                            parameter !== 'httpRequestHeaders') {
+                            parameter !== 'httpRequestHeaders' &&
+                            parameter !== 'certUrls' &&
+                            parameter !== 'serverCertificateURLs') {
                             $scope.drmPlayready[parameter] = protectionData[data][parameter];
                         }
                     }
@@ -1720,10 +1740,17 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             value: protectionData[data]['httpRequestHeaders'][header]
                         });
                     }
+                    const widevineCertUrls = protectionData[data].certUrls || protectionData[data].serverCertificateURLs;
+                    if (Array.isArray(widevineCertUrls) && widevineCertUrls.length) {
+                        $scope.drmWidevine.serverCertificateURLs = widevineCertUrls;
+                        $scope.widevineServerCertificateURLs = widevineCertUrls.join(' ');
+                    }
                     // Add any additional parameters
                     for (let parameter in protectionData[data]) {
                         if (parameter !== 'serverURL' &&
-                            parameter !== 'httpRequestHeaders') {
+                            parameter !== 'httpRequestHeaders' &&
+                            parameter !== 'certUrls' &&
+                            parameter !== 'serverCertificateURLs') {
                             $scope.drmWidevine[parameter] = protectionData[data][parameter];
                         }
                     }
@@ -1752,7 +1779,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                     // Handle clearkey data if specified using KID=KEY.
                     else {
                         let first = true;
-                        if (protectionData[data]['clearkeys'] !== {}) {
+                        if (protectionData[data]['clearkeys'] && Object.keys(protectionData[data]['clearkeys']).length) {
                             for (let kid in protectionData[data]['clearkeys']) {
                                 // For the first KID=Key pair, set drmClearkey properties so that it shows in the main text boxes
                                 if (first === true) {
@@ -1760,7 +1787,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                     $scope.drmClearkey.key = protectionData[data]['clearkeys'][kid];
                                     delete protectionData[data]['clearkeys'][kid];
                                     first = false;
-                                } else if (protectionData[data]['clearkeys'] !== {}) {
+                                } else if (protectionData[data]['clearkeys'] && Object.keys(protectionData[data]['clearkeys']).length) {
                                     $scope.additionalClearkeyPairs.push({
                                         id: $scope.additionalClearkeyPairs.length + 1,
                                         kid: kid,
@@ -1770,11 +1797,18 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                             }
                         }
                     }
+                    const clearkeyCertUrls = protectionData[data].certUrls || protectionData[data].serverCertificateURLs;
+                    if (Array.isArray(clearkeyCertUrls) && clearkeyCertUrls.length) {
+                        $scope.drmClearkey.serverCertificateURLs = clearkeyCertUrls;
+                        $scope.clearkeyServerCertificateURLs = clearkeyCertUrls.join(' ');
+                    }
                     // Add any additional parameters
                     for (let parameter in protectionData[data]) {
                         if (parameter !== 'serverURL' &&
                             parameter !== 'httpRequestHeaders' &&
-                            parameter !== 'clearkeys') {
+                            parameter !== 'clearkeys' &&
+                            parameter !== 'certUrls' &&
+                            parameter !== 'serverCertificateURLs') {
                             $scope.drmClearkey[parameter] = protectionData[data][parameter];
                         }
                     }
@@ -2011,7 +2045,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         }
 
         for (var settingCategory of Object.keys(settingsObject)) {
-            if (settingsObject !== {} &&
+            if (settingsObject[settingCategory] &&
                 (settingCategory === 'playready' ||
                     settingCategory === 'widevine' ||
                     settingCategory === 'clearkey') &&
@@ -2034,7 +2068,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
         for (var drm in drmObject) {
             if (drmObject[drm].hasOwnProperty('inputMode') && drmObject[drm].inputMode === 'kidKey') {
-                if (drmObject[drm].clearkeys !== {}) {
+                if (drmObject[drm].clearkeys && Object.keys(drmObject[drm].clearkeys).length) {
                     queryProtectionData[drmObject[drm].drmKeySystem] = {
                         'clearkeys': {},
                         'priority': 0
@@ -2064,7 +2098,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         }
                     }
 
-                    if (drmObject[drm].httpRequestHeaders !== {}) {
+                    if (drmObject[drm].httpRequestHeaders && Object.keys(drmObject[drm].httpRequestHeaders).length) {
                         queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
                     }
                 } else {
@@ -2078,7 +2112,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                         'serverURL': decodeURIComponent(drmObject[drm].licenseServerUrl),
                         'priority': parseInt(drmObject[drm].priority)
                     }
-                    if (drmObject[drm].httpRequestHeaders !== {})
+                    if (drmObject[drm].httpRequestHeaders && Object.keys(drmObject[drm].httpRequestHeaders).length)
                         queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
 
                 } else {
@@ -2099,7 +2133,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
 
                 // Only set request header if any have been specified
-                if (drmObject[drm].httpRequestHeaders !== {}) {
+                if (drmObject[drm].httpRequestHeaders && Object.keys(drmObject[drm].httpRequestHeaders).length) {
                     queryProtectionData[drmObject[drm].drmKeySystem]['httpRequestHeaders'] = drmObject[drm].httpRequestHeaders;
                 }
             }
