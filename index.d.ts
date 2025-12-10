@@ -1682,7 +1682,8 @@ export class MediaPlayerSettingClass {
             ],
             useMediaCapabilitiesApi?: boolean,
             filterHDRMetadataFormatEssentialProperties?: boolean,
-            filterVideoColorimetryEssentialProperties?: boolean
+            filterVideoColorimetryEssentialProperties?: boolean,
+            filterAudioChannelConfiguration?: boolean
         },
         events?: {
             eventControllerRefreshDelay?: number,
