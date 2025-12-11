@@ -95,6 +95,18 @@ class StreamControllerMock {
         return true;
     }
 
+    getIsStreamSwitchInProgress() {
+        return false;
+    }
+
+    getHasMediaOrInitialisationError() {
+        return false;
+    }
+
+    getStreamForTime() {
+        return null;
+    }
+
 }
 
 export default StreamControllerMock;

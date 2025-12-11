@@ -29,20 +29,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import FactoryMaker from '../../core/FactoryMaker.js';
-import Constants from '../../streaming/constants/Constants.js';
-import {getIndexBasedSegment, processUriTemplate} from './SegmentsUtils.js';
+import {
+    getIndexBasedSegment,
+    getTotalNumberOfPartialSegments,
+} from './SegmentsUtils.js';
 
 function TemplateSegmentsGetter(config, isDynamic) {
     config = config || {};
     const timelineConverter = config.timelineConverter;
 
     let instance;
-
-    function checkConfig() {
-        if (!timelineConverter || !timelineConverter.hasOwnProperty('calcPeriodRelativeTimeFromMpdRelativeTime')) {
-            throw new Error(Constants.MISSING_CONFIG_ERROR);
-        }
-    }
 
     function getMediaFinishedInformation(representation) {
         const mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN }
@@ -60,43 +56,40 @@ function TemplateSegmentsGetter(config, isDynamic) {
         return mediaFinishedInformation;
     }
 
-    function getSegmentByIndex(representation, index) {
-        checkConfig();
-
+    function getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest) {
         if (!representation) {
             return null;
         }
 
-        const template = representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].
-            AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
+        const template = _getSegmentTemplateElement(representation);
+        const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(template);
+
+        if (totalNumberOfPartialSegments !== undefined && totalNumberOfPartialSegments >= 0) {
+            subNumberOfPartialSegmentToRequest = subNumberOfPartialSegmentToRequest !== undefined && subNumberOfPartialSegmentToRequest < totalNumberOfPartialSegments ? subNumberOfPartialSegmentToRequest : 0;
+        }
 
         // This is the index without @startNumber
-        index = Math.max(index, 0);
+        indexWithoutStartNumber = Math.max(indexWithoutStartNumber, 0);
 
-        const seg = getIndexBasedSegment(timelineConverter, isDynamic, representation, index);
+        const seg = getIndexBasedSegment({
+            index: indexWithoutStartNumber,
+            isDynamic,
+            mediaTime: Math.round(indexWithoutStartNumber * representation.segmentDuration * representation.timescale, 10),
+            mediaUrl: template.media,
+            representation,
+            subNumberOfPartialSegmentToRequest,
+            timelineConverter,
+            totalNumberOfPartialSegments,
+        });
 
-        if (seg) {
-            if (representation.endNumber && seg.replacementNumber > representation.endNumber) {
-                return null;
-            }
-
-            seg.replacementTime = Math.round(index * representation.segmentDuration * representation.timescale, 10);
-            seg.media = processUriTemplate(
-                template.media,
-                undefined,
-                seg.replacementNumber,
-                undefined,
-                undefined,
-                seg.replacementTime,
-            );
+        if (seg && representation.endNumber && seg.replacementNumber > representation.endNumber) {
+            return null;
         }
 
         return seg;
     }
 
     function getSegmentByTime(representation, requestedTime) {
-        checkConfig();
-
         if (!representation) {
             return null;
         }
@@ -108,16 +101,53 @@ function TemplateSegmentsGetter(config, isDynamic) {
         }
 
         // Calculate the relative time for the requested time in this period
-        let periodTime = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
-        const index = Math.floor(periodTime / duration);
+        let requestedTimeRelativeToPeriodStart = timelineConverter.calcPeriodRelativeTimeFromMpdRelativeTime(representation, requestedTime);
 
-        return getSegmentByIndex(representation, index);
+        const template = _getSegmentTemplateElement(representation);
+        const indexWithoutStartNumber = Math.floor(requestedTimeRelativeToPeriodStart / duration);
+        const totalNumberOfPartialSegments = getTotalNumberOfPartialSegments(template);
+        const subNumberOfPartialSegmentToRequest = _getSubNumberOfPartialSegmentToRequestByTime({
+            totalNumberOfPartialSegments,
+            representation,
+            requestedTimeRelativeToPeriodStart,
+            indexWithoutStartNumber
+        })
+
+        return getSegmentByIndex(representation, indexWithoutStartNumber, subNumberOfPartialSegmentToRequest);
     }
 
+    function _getSegmentTemplateElement(representation) {
+        return representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index].AdaptationSet[representation.adaptation.index].Representation[representation.index].SegmentTemplate;
+
+    }
+
+    function _getSubNumberOfPartialSegmentToRequestByTime(data) {
+        if (!data || data.totalNumberOfPartialSegments === undefined || isNaN(data.totalNumberOfPartialSegments) || data.totalNumberOfPartialSegments < 1) {
+            return undefined;
+        }
+        const {
+            totalNumberOfPartialSegments,
+            representation,
+            requestedTimeRelativeToPeriodStart,
+            indexWithoutStartNumber
+        } = data;
+
+        const startTimeOfSegment = indexWithoutStartNumber * representation.segmentDuration;
+        const partialSegmentDuration = representation.segmentDuration / totalNumberOfPartialSegments;
+
+        const offset = requestedTimeRelativeToPeriodStart - startTimeOfSegment;
+        let subNumberOfPartialSegmentToRequest = Math.floor(offset / partialSegmentDuration);
+
+        subNumberOfPartialSegmentToRequest = Math.max(0, Math.min(subNumberOfPartialSegmentToRequest, totalNumberOfPartialSegments - 1));
+
+        return subNumberOfPartialSegmentToRequest;
+    }
+
+
     instance = {
+        getMediaFinishedInformation,
         getSegmentByIndex,
         getSegmentByTime,
-        getMediaFinishedInformation
     };
 
     return instance;

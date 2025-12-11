@@ -557,7 +557,7 @@ function HTTPLoader(cfg) {
         let loader;
         let fileLoaderType;
 
-        if (request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+        if (!request.isPartialSegmentRequest && request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === HTTPRequest.MEDIA_SEGMENT_TYPE) {
             if (!fetchLoader) {
                 fetchLoader = FetchLoader(context).create();
                 fetchLoader.setConfig({

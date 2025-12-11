@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 import IndexDBStore from '../storage/IndexDBStore.js';
+import FactoryMaker from '../../core/FactoryMaker.js';
 
 function IndexDBOfflineLoader(config) {
     config = config || {};
@@ -100,5 +101,5 @@ function IndexDBOfflineLoader(config) {
 }
 
 IndexDBOfflineLoader.__dashjs_factory_name = 'IndexDBOfflineLoader';
-const factory = dashjs.FactoryMaker.getClassFactory(IndexDBOfflineLoader); 
+const factory = FactoryMaker.getClassFactory(IndexDBOfflineLoader);
 export default factory;

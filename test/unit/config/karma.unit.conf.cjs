@@ -90,6 +90,7 @@ module.exports = function (config) {
                     timers: require.resolve('timers-browserify'),
                 },
             },
+            devtool: 'inline-source-map', // Enable source maps for debugging
         },
 
         // web server port

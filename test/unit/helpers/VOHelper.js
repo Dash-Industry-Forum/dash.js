@@ -79,6 +79,7 @@ class VoHelper {
         rep.segmentAvailabilityWindow = null;
         rep.availableSegmentsNumber = 0;
         rep.mediaInfo = this.getDummyMediaInfo(type);
+        rep.dependentRepresentation = null;
 
         return rep;
     }

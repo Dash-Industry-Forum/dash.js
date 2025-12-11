@@ -164,7 +164,7 @@ describe('DashHandler', function () {
             dashHandler.getNextSegmentRequest({}, representation);
             dashHandler.getNextSegmentRequest({}, representation);
             const mediaSegment = dashHandler.getNextSegmentRequest({}, representation);
-            expect(mediaSegment).to.be.null; // jshint ignore:line
+            expect(mediaSegment).to.be.null;
         })
 
         it('returns null if representation is null', () => {

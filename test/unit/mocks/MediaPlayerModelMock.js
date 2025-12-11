@@ -141,6 +141,14 @@ class MediaPlayerModelMock {
         return { min: -0.5, max: 0.5 };
     }
 
+    getCatchupModeEnabled() {
+        return false;
+    }
+
+    getCatchupMaxDrift() {
+        return 10;
+    }
+
     getBufferTimeDefault() {
         return this.bufferTimeDefault > -1 ? this.bufferTimeDefault : this.fastSwitchEnabled ? DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH : DEFAULT_MIN_BUFFER_TIME;
     }

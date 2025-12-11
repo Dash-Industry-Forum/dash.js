@@ -20,16 +20,6 @@ describe('TemplateSegmentsGetter', () => {
     });
 
     describe('initialization', () => {
-        it('should throw an error if config object is not defined', function () {
-            const getter = TemplateSegmentsGetter(context).create();
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
-        it('should throw an error if config object has not been properly passed', function () {
-            const getter = TemplateSegmentsGetter(context).create({});
-            expect(getter.getSegmentByIndex.bind(getter)).to.be.throw(Constants.MISSING_CONFIG_ERROR);
-        });
-
         it('should throw an error if representation parameter has not been properly set', function () {
             const getter = TemplateSegmentsGetter(context).create({timelineConverter: timelineConverter});
             const segment = getter.getSegmentByIndex();
@@ -185,6 +175,64 @@ describe('TemplateSegmentsGetter', () => {
             representation.segmentDuration = 5;
 
             let seg = templateSegmentsGetter.getSegmentByTime(representation, 110);
+            expect(seg).to.be.null; // jshint ignore:line
+        });
+    });
+
+    describe('partial segments', () => {
+        function attachSegmentTemplate(representation, overrides = {}) {
+            const template = Object.assign({
+                media: 'video-$RepresentationID$-$Number$-$SubNumber$.m4s',
+                k: 3 // three partial segments
+            }, overrides);
+            representation.SegmentTemplate = template;
+            representation.adaptation.period.mpd.manifest.Period[representation.adaptation.period.index]
+                .AdaptationSet[representation.adaptation.index]
+                .Representation[representation.index]
+                .SegmentTemplate = template;
+            return template;
+        }
+
+        it('should return partial segment starting at provided sub-number (getSegmentByIndex)', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 6;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByIndex(representation, 2, 1); // segment index 2, start with partial 1
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.isPartialSegment).to.be.true;
+            expect(seg.index).to.equal(2);
+            expect(seg.replacementSubNumber).to.equal(1);
+        });
+
+        it('should clamp negative indexWithoutStartNumber to 0', () => {
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.segmentAvailabilityWindow = { start: 0, end: 50 };
+            representation.segmentDuration = 5;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation);
+
+            const seg = templateSegmentsGetter.getSegmentByIndex(representation, -3, 0);
+            expect(seg.index).to.equal(0);
+        });
+
+        it('should return null for dynamic unavailable segment (future availabilityStartTime)', () => {
+            const dynamicContext = {};
+            const dynamicTimelineConverter = TimelineConverter(dynamicContext).getInstance();
+            dynamicTimelineConverter.initialize();
+            const dynamicGetter = TemplateSegmentsGetter(dynamicContext).create({ timelineConverter: dynamicTimelineConverter }, true);
+
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            const future = new Date(Date.now() + 60000); // 60s in future
+            representation.adaptation.period.mpd.availabilityStartTime = future;
+            representation.segmentAvailabilityWindow = { start: 0, end: 100 };
+            representation.segmentDuration = 4;
+            representation.timescale = 1;
+            attachSegmentTemplate(representation, { k: 0, media: 'f-$Number$.m4s' });
+
+            const seg = dynamicGetter.getSegmentByIndex(representation, 0);
             expect(seg).to.be.null; // jshint ignore:line
         });
     });

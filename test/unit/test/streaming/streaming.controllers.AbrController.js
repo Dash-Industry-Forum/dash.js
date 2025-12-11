@@ -19,6 +19,7 @@ import EventBus from '../../../../src/core/EventBus.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
+import SegmentSequenceProperties from '../../../../src/dash/vo/SegmentSequenceProperties.js';
 
 describe('AbrController', function () {
     const context = {};
@@ -29,7 +30,13 @@ describe('AbrController', function () {
     const settings = Settings(context).getInstance();
     const abrCtrl = AbrController(context).getInstance();
     const dummyMediaInfo = voHelper.getDummyMediaInfo(Constants.VIDEO);
-    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1)];
+    const enhancementMediaInfo = voHelper.getDummyMediaInfo(Constants.ENHANCEMENT);
+    const dummyRepresentations = [voHelper.getDummyRepresentation(Constants.VIDEO, 0), voHelper.getDummyRepresentation(Constants.VIDEO, 1),
+        voHelper.getDummyRepresentation(Constants.ENHANCEMENT, 2)];
+
+    // Representation 2 has a dependentRepresentation with id 0
+    dummyRepresentations[2].dependentRepresentation = dummyRepresentations[0];
+
     const domStorageMock = new DomStorageMock();
     const dashMetricsMock = new DashMetricsMock();
     const streamControllerMock = new StreamControllerMock();
@@ -435,6 +442,232 @@ describe('AbrController', function () {
         });
     })
 
+    describe('canPerformQualitySwitch()', function () {
+
+        it('should return true if lastSegment is undefined', function() {
+            expect(abrCtrl.canPerformQualitySwitch(undefined, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment is not a partial segment', function() {
+            expect(abrCtrl.canPerformQualitySwitch({ isPartialSegment: false }, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment has no information about total number of segments', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: NaN,
+                replacementSubNumber: 0
+            }, {})).to.be.true;
+        });
+
+        it('should return true if lastSegment has no information about replacementSubNumber', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 2,
+                replacementSubNumber: NaN
+            }, {})).to.be.true;
+        });
+
+        it('should return true if replacementSubNumber is at the end of the sequence', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 3,
+                replacementSubNumber: 2
+            }, {})).to.be.true;
+        });
+
+        it('should return false if no segmentSequenceProperties are defined', function() {
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 3,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: []
+            })).to.be.false;
+        });
+
+        it('should return false if segmentSequenceProperties are defined but no segmentSequenceProperties with SAP type 0 or 1 are available', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 2
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return false if next partial segment number does not have the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 10
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 0
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return true if all partial segments have the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 2
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
+        it('should return true if next partial segment number has the right SAP type', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 2;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
+        it('should return false if next partial segment number has not the right SAP type for high number of partial segments', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 16;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 16,
+                replacementSubNumber: 14
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.false;
+        });
+
+        it('should return true if next partial segment number has the right SAP type for high number of partial segments', function() {
+            const ssp = new SegmentSequenceProperties();
+            ssp.sapType = 1;
+            ssp.cadence = 16;
+            expect(abrCtrl.canPerformQualitySwitch({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 32,
+                replacementSubNumber: 15
+            }, {
+                segmentSequenceProperties: [ssp]
+            })).to.be.true;
+        });
+
+    })
+
+    describe('manuallySetPlaybackQuality', function () {
+
+        it('should immediately switch quality when canPerformQualitySwitch returns true', function (done) {
+            // Override streamProcessor to simulate current representation and last segment allowing switch
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            streamProcessor.getRepresentation = () => rep0; // current representation
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            streamProcessor.getLastSegment = () => undefined;
+
+            const onQualityChange = function (e) {
+                expect(e.oldRepresentation.id).to.be.equal(rep0.id);
+                expect(e.newRepresentation.id).to.be.equal(rep1.id);
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            };
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+
+            // First set current quality manually to rep0 so subsequent switch has oldRepresentation
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, streamInfo, rep0);
+            // Now manually trigger switch to rep1
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'manual-test' });
+        });
+
+
+        it('should queue manual quality switch when canPerformQualitySwitch returns false', function () {
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            // Set current representation
+            streamProcessor.getRepresentation = () => rep0;
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            // Simulate a last segment that blocks switching (partial segment with unsuitable properties)
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            });
+            // Current representation missing segmentSequenceProperties => canPerformQualitySwitch should be false
+            rep0.segmentSequenceProperties = [];
+
+            const spy = sinon.spy();
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, spy, this);
+
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'manual-test' });
+
+            // No immediate quality change event emitted
+            expect(spy.notCalled).to.be.true;
+        });
+
+        it('should execute queued manual quality switch when handlePendingManualQualitySwitch is called and conditions allow switching', function (done) {
+            const rep0 = dummyRepresentations[0];
+            const rep1 = dummyRepresentations[1];
+            const streamInfo = dummyMediaInfo.streamInfo;
+
+            // First block switching so it gets queued
+            streamProcessor.getRepresentation = () => rep0;
+            streamProcessor.getRepresentationController = () => {
+                return {
+                    getCurrentCompositeRepresentation: () => rep0
+                }
+            }
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 1
+            });
+            rep0.segmentSequenceProperties = [];
+
+            abrCtrl.manuallySetPlaybackQuality(Constants.VIDEO, streamInfo, rep1, { reason: 'queue-test' });
+
+            // Now allow switching by changing last segment to end of sequence
+            streamProcessor.getLastSegment = () => ({
+                isPartialSegment: true,
+                totalNumberOfPartialSegments: 4,
+                replacementSubNumber: 3 // end of sequence -> allows switch
+            });
+            // Provide segmentSequenceProperties so canPerformQualitySwitch returns true; but because replacementSubNumber === totalNumber-1 it already allows
+            rep0.segmentSequenceProperties = [new SegmentSequenceProperties()];
+
+            const onQualityChange = (e) => {
+                expect(e.oldRepresentation.id).to.be.equal(rep0.id);
+                expect(e.newRepresentation.id).to.be.equal(rep1.id);
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            };
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+
+            // Trigger handling of queued switch
+            const handled = abrCtrl.handlePendingManualQualitySwitch(streamInfo.id, Constants.VIDEO);
+            expect(handled).to.be.true;
+        });
+    })
+
     describe('Additional Tests', function () {
         it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
             const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
@@ -462,6 +695,26 @@ describe('AbrController', function () {
             eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
 
             abrCtrl.setPlaybackQuality(Constants.VIDEO, dummyMediaInfo.streamInfo, dummyRepresentations[0]);
+        });
+
+        it('should switch to a new enhancement Representation and have the correct dependentRep', function (done) {
+            const enhancementRepresentation = dummyRepresentations[2];
+            const dependentRepresentation = dummyRepresentations[0];
+
+            const onQualityChange = (e) => {
+                expect(e.oldRepresentation).to.not.exist;
+
+                // Representation 2 should have dependentRepresentation with id 0
+                expect(e.newRepresentation.id).to.be.equal(enhancementRepresentation.id);
+                expect(e.newRepresentation.dependentRepresentation.id).to.be.equal(dependentRepresentation.id);
+
+                eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange);
+                done();
+            }
+
+            eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, onQualityChange, this);
+
+            abrCtrl.setPlaybackQuality(Constants.VIDEO, enhancementMediaInfo.streamInfo, enhancementRepresentation);
         });
 
         it('should ignore an attempt to set a quality value if no streamInfo is provided', function () {

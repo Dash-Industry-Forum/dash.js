@@ -4,7 +4,6 @@ function AbrControllerMock () {
     this.qualityDict = {};
     this.elementWidth = undefined;
     this.elementHeight = undefined;
-    this.windowResizeEventCalled = false;
     this.currentStreamId = undefined;
     this.topBitrateInfo = null;
     let self = this;
@@ -63,14 +62,6 @@ function AbrControllerMock () {
         this.currentStreamId = id;
         this.qualityDict[id] = this.qualityDict[id] || {};
         this.qualityDict[id][type] = value;
-    };
-
-    this.setWindowResizeEventCalled = function (value) {
-        this.windowResizeEventCalled = value;
-    };
-
-    this.getWindowResizeEventCalled = function () {
-        return this.windowResizeEventCalled;
     };
 
     this.setElementSize = function () {

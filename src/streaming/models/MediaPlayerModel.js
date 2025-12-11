@@ -272,22 +272,27 @@ function MediaPlayerModel() {
         return !playbackController.getLowLatencyModeEnabled();
     }
 
+    function getScheduleTimeout() {
+        return playbackController.getLowLatencyModeEnabled() ? settings.get().streaming.scheduling.lowLatencyTimeout : settings.get().streaming.scheduling.defaultTimeout
+    }
+
     function reset() {
     }
 
     instance = {
-        getCatchupMaxDrift,
-        getCatchupModeEnabled,
+        getAbrBitrateParameter,
         getBufferTimeDefault,
         getBufferTimeDefaultUnadjusted,
+        getCatchupMaxDrift,
+        getCatchupModeEnabled,
+        getCatchupPlaybackRates,
         getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,
         getRetryIntervalsForType,
-        getCatchupPlaybackRates,
-        getAbrBitrateParameter,
+        getScheduleTimeout,
+        reset,
         setConfig,
-        reset
     };
 
     setup();

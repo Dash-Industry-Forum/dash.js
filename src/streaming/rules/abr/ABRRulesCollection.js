@@ -260,7 +260,7 @@ function ABRRulesCollection(config) {
         const activeRules = _getRulesWithChange(abandonRequestArray);
         const shouldAbandon = getMinSwitchRequest(activeRules);
 
-        if (shouldAbandon) {
+        if (shouldAbandon && shouldAbandon.reason) {
             shouldAbandon.reason.forceAbandon = true
         }
 

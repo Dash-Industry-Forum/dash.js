@@ -1,10 +1,10 @@
 import EBMLParser from '../streaming/utils/EBMLParser.js';
 import Constants from '../streaming/constants/Constants.js';
 import FactoryMaker from '../core/FactoryMaker.js';
-import Segment from './vo/Segment.js';
 import FragmentRequest from '../streaming/vo/FragmentRequest.js';
 import URLLoader from '../streaming/net/URLLoader.js';
 import DashJSError from '../streaming/vo/DashJSError.js';
+import FullSegment from '../dash/vo/FullSegment.js';
 
 function WebmSegmentBaseLoader() {
 
@@ -173,7 +173,7 @@ function WebmSegmentBaseLoader() {
         // both duration and media range require the i + 1 segment
         // the final segment has to use global segment parameters
         for (i = 0, len = parsed.length; i < len; i += 1) {
-            segment = new Segment();
+            segment = new FullSegment();
             duration = 0;
 
             if (i < parsed.length - 1) {

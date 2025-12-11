@@ -251,17 +251,17 @@ function DashAdapter() {
 
         if (settings.get().streaming.includePreselectionsInMediainfoArray) {
             const voPreselections = dashManifestModel.getPreselectionsForPeriod(period);
-            
+
             for (i = 0, ln = voPreselections.length; i < ln; i++) {
                 const preselection = voPreselections[i];
-    
+
                 if (preselection.hasOwnProperty('type') && preselection.type === type) {
                     media = convertPreselectionToMediaInfo(voPreselections[i]);
                     if (media) {
                         mediaArr.push(media);
                     }
                 }
-            }        
+            }
         }
 
         return mediaArr;
@@ -871,7 +871,7 @@ function DashAdapter() {
     }
 
     /**
-     * returns the main AdaptationSet of a given Preselection 
+     * returns the main AdaptationSet of a given Preselection
      * @param {object} preselection
      * @param {array} adaptations
      * @return {object}
@@ -883,7 +883,7 @@ function DashAdapter() {
     }
 
     /**
-     * returns common properties in form of a Representation of a given Preselection 
+     * returns common properties in form of a Representation of a given Preselection
      * @param {object} preselection
      * @param {array} adaptations
      * @return {object}
@@ -1066,7 +1066,9 @@ function DashAdapter() {
 
         mediaInfo.id = adaptation.id;
         mediaInfo.index = adaptation.index;
-        mediaInfo.type = adaptation.type;
+        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
+        const enhancementCodecs = settings.get().streaming.enhancement.codecs;
+        mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec)) ? Constants.ENHANCEMENT : adaptation.type;
         mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
         mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
         mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
@@ -1087,7 +1089,6 @@ function DashAdapter() {
             mediaInfo.audioChannelConfiguration = dashManifestModel.getAudioChannelConfigurationForRepresentation(realAdaptation.Representation[0]);
         }
         mediaInfo.roles = dashManifestModel.getRolesForAdaptation(realAdaptation);
-        mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
         mediaInfo.mimeType = dashManifestModel.getMimeType(realAdaptation);
         mediaInfo.contentProtection = dashManifestModel.getContentProtectionByAdaptation(realAdaptation);
         mediaInfo.bitrateList = dashManifestModel.getBitrateListForAdaptation(realAdaptation);
@@ -1105,6 +1106,7 @@ function DashAdapter() {
         mediaInfo.isFragmented = dashManifestModel.getIsFragmented(realAdaptation);
         mediaInfo.isEmbedded = false;
         mediaInfo.adaptationSetSwitchingCompatibleIds = _getAdaptationSetSwitchingCompatibleIds(mediaInfo);
+        mediaInfo.segmentSequenceProperties = dashManifestModel.getSegmentSequencePropertiesForAdaptationSet(realAdaptation);
 
         return mediaInfo;
     }

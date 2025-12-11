@@ -54,6 +54,16 @@ function TimelineConverter() {
         reset();
     }
 
+    function setConfig(config) {
+        if (!config) {
+            return;
+        }
+
+        if (config.dashManifestModel) {
+            dashManifestModel = config.dashManifestModel;
+        }
+    }
+
     function initialize() {
         resetInitialSettings();
         eventBus.on(Events.UPDATE_TIME_SYNC_OFFSET, _onUpdateTimeSyncOffset, this);
@@ -132,15 +142,15 @@ function TimelineConverter() {
         return presentationTime - periodStart + presentationOffset;
     }
 
-    function calcWallTimeForSegment(segment, isDynamic) {
+    function calcWallTimeForSegment(segmentData, isDynamic) {
         let suggestedPresentationDelay,
             displayStartTime,
             wallTime;
 
         if (isDynamic) {
-            suggestedPresentationDelay = segment.representation.adaptation.period.mpd.suggestedPresentationDelay;
-            displayStartTime = segment.presentationStartTime + suggestedPresentationDelay;
-            wallTime = new Date(segment.availabilityStartTime.getTime() + (displayStartTime * 1000));
+            suggestedPresentationDelay = segmentData.representation.adaptation.period.mpd.suggestedPresentationDelay;
+            displayStartTime = segmentData.presentationStartTime + suggestedPresentationDelay;
+            wallTime = new Date(segmentData.availabilityStartTime.getTime() + (displayStartTime * 1000));
         }
 
         return wallTime;
@@ -376,19 +386,20 @@ function TimelineConverter() {
     }
 
     instance = {
-        initialize,
-        getClientTimeOffset,
-        setClientTimeOffset,
-        getClientReferenceTime,
-        calcAvailabilityStartTimeFromPresentationTime,
         calcAvailabilityEndTimeFromPresentationTime,
-        calcPresentationTimeFromWallTime,
-        calcPresentationTimeFromMediaTime,
-        calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcAvailabilityStartTimeFromPresentationTime,
         calcMediaTimeFromPresentationTime,
-        calcWallTimeForSegment,
+        calcPeriodRelativeTimeFromMpdRelativeTime,
+        calcPresentationTimeFromMediaTime,
+        calcPresentationTimeFromWallTime,
         calcTimeShiftBufferWindow,
-        reset
+        calcWallTimeForSegment,
+        getClientReferenceTime,
+        getClientTimeOffset,
+        initialize,
+        reset,
+        setClientTimeOffset,
+        setConfig,
     };
 
     setup();

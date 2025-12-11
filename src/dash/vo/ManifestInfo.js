@@ -34,15 +34,15 @@
  */
 class ManifestInfo {
     constructor() {
-        this.dvrWindowSize = NaN;
-        this.loadedTime = null;
         this.availableFrom = null;
-        this.minBufferTime = NaN;
         this.duration = NaN;
+        this.dvrWindowSize = NaN;
         this.isDynamic = false;
+        this.loadedTime = null;
         this.maxFragmentDuration = null;
-        this.serviceDescriptions = [];
+        this.minBufferTime = NaN;
         this.protocol = null;
+        this.serviceDescriptions = [];
     }
 }
 

@@ -554,8 +554,9 @@ function TimeSyncController() {
         }
 
         // Notify other classes
+        const artificialTimeOffsetToApply = settings.get().streaming.utcSynchronization.artificialTimeOffsetToApply;
         eventBus.trigger(Events.UPDATE_TIME_SYNC_OFFSET, {
-            offset: offset,
+            offset: offset + artificialTimeOffsetToApply,
         });
         eventBus.trigger(Events.TIME_SYNCHRONIZATION_COMPLETED);
     }

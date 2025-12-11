@@ -25,12 +25,16 @@ describe('RepresentationController', function () {
     // Arrange
     const context = {};
     const testType = 'video';
+    const enhancementType = 'enhancement';
     const specHelper = new SpecHelper();
     const voRepresentations = [];
-    voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2));
+    voRepresentations.push(voHelper.getDummyRepresentation(testType, 0), voHelper.getDummyRepresentation(testType, 1), voHelper.getDummyRepresentation(testType, 2), voHelper.getDummyRepresentation(enhancementType, 3));
     const streamProcessor = objectsHelper.getDummyStreamProcessor(testType);
     const eventBus = EventBus(context).getInstance();
     const timelineConverter = objectsHelper.getDummyTimelineConverter();
+
+    // Representation 3 is an enhancement representation that has a dependent representation 1.
+    voRepresentations[3].dependentRepresentation = voRepresentations[1];
 
     Events.extend(MediaPlayerEvents);
 
@@ -102,6 +106,18 @@ describe('RepresentationController', function () {
                 eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: {}, newDuration: 150 });
 
                 expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
+            });
+
+            it('should switch correctly when prepareQualityChange is called with an enhancement representation', function () {
+                let representation = representationController.getCurrentRepresentation();
+
+                expect(representation.id).to.equal(voRepresentations[0].id)
+                
+                // switch to an enchancement representation 3 with dependentRepresentation 1.
+                representationController.prepareQualityChange(voRepresentations[3]);
+                representation = representationController.getCurrentRepresentation();
+
+                expect(representation.id).to.equal(voRepresentations[1].id);
             });
 
         });

@@ -48,6 +48,9 @@ class Representation {
         this.codecFamily = null;
         this.codecPrivateData = null;
         this.codecs = null;
+        this.dependencyId = null;
+        this.dependentRepresentation = null;
+        this.endNumber = null;
         this.essentialProperties = [];
         this.fragmentDuration = null;
         this.frameRate = null;
@@ -68,11 +71,11 @@ class Representation {
         this.segments = null;
         this.segmentDuration = NaN;
         this.segmentInfoType = null;
+        this.segmentSequenceProperties = [];
         this.supplementalProperties = [];
         this.startNumber = 1;
         this.timescale = 1;
         this.width = NaN;
-        this.endNumber = null;
     }
 
     hasInitialization() {
