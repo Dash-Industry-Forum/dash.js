@@ -1741,6 +1741,7 @@ export class MediaPlayerSettingClass {
             enableSeekFix?: boolean,
             enableStallFix?: boolean,
             stallSeek?: number
+            seekOffset?: number
         },
         utcSynchronization?: {
             enabled?: boolean,
