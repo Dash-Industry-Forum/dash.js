@@ -364,6 +364,10 @@
                         <input type="text" class="form-control" placeholder=""
                                ng-model="drmPlayready.serverCertificate">
 
+                        <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="Enter one or more server certificate URLs separated by a white space.">Server Certifacte URLs</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="playreadyServerCertificateURLs" ng-change="handleServerCertificateURLs()">
+
                         <label class="options-label">HTTP Timeout</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmPlayready.httpTimeout">
 
@@ -466,6 +470,10 @@
 
                         <label class="options-label">Server Certificate</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.serverCertificate">
+
+                        <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="Enter one or more server certificate URLs separated by a white space.">Server Certifacte URLs</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="widevineServerCertificateURLs" ng-change="handleServerCertificateURLs()">
 
                         <label class="options-label">HTTP Timeout</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmWidevine.httpTimeout">
@@ -583,6 +591,10 @@
 
                         <label class="options-label">Server Certificate</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.serverCertificate">
+
+                        <label class="options-label" data-toggle="tooltip" data-placement="right"
+                       title="Enter one or more server certificate URLs separated by a white space.">Server Certifacte URLs</label>
+                        <input type="text" class="form-control" placeholder="" ng-model="clearkeyServerCertificateURLs" ng-change="handleServerCertificateURLs()">
 
                         <label class="options-label">HTTP Timeout</label>
                         <input type="text" class="form-control" placeholder="" ng-model="drmClearkey.httpTimeout">

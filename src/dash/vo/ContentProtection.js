@@ -28,6 +28,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import CertUrlUtils from '../../streaming/utils/CertUrlUtils.js';
 import DescriptorType from './DescriptorType.js'
 import DashConstants from '../constants/DashConstants.js';
 
@@ -47,6 +48,7 @@ class ContentProtection extends DescriptorType {
         this.pssh = null;
         this.pro = null;
         this.laUrl = null;
+        this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]. dash.js treats certType as an opaque label.
     }
 
     init(data) {
@@ -60,6 +62,8 @@ class ContentProtection extends DescriptorType {
             this.pssh = data.hasOwnProperty(DashConstants.PSSH) ? data[DashConstants.PSSH] : null;
             this.pro = data.hasOwnProperty(DashConstants.PRO) ? data[DashConstants.PRO] : null;
             this.laUrl = data.hasOwnProperty(DashConstants.LA_URL) ? data[DashConstants.LA_URL] : data.hasOwnProperty(DashConstants.LA_URL_LOWER_CASE) ? data[DashConstants.LA_URL_LOWER_CASE] : null;
+            const rawCert = data.hasOwnProperty(DashConstants.CERT_URL) ? data[DashConstants.CERT_URL] : data.hasOwnProperty(DashConstants.CERT_URL_LOWER_CASE) ? data[DashConstants.CERT_URL_LOWER_CASE] : null;
+            this.certUrls = CertUrlUtils.normalizeCertUrls(rawCert);
         }
     }
 
@@ -70,6 +74,16 @@ class ContentProtection extends DescriptorType {
                 this[attribute] = reference[attribute]
             }
         })
+        // Merge certUrls: append any from reference that we don't already have (by URL + certType)
+        if (reference.certUrls && reference.certUrls.length) {
+            const existing = new Set(this.certUrls.map(c => `${c.url}||${c.certType || ''}`));
+            reference.certUrls.forEach(c => {
+                const key = `${c.url}||${c.certType || ''}`;
+                if (!existing.has(key)) {
+                    this.certUrls.push({ url: c.url, certType: c.certType || null });
+                }
+            });
+        }
     }
 }
 
