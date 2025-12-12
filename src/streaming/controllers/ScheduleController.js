@@ -326,7 +326,7 @@ function ScheduleController(config) {
      */
     function _getGenericBufferTarget() {
         try {
-            const currentRepresentation = representationController.getCurrentRepresentation();
+            const currentRepresentation = representationController.getCurrentCompositeRepresentation();
             const streamInfo = currentRepresentation.mediaInfo.streamInfo;
             if (abrController.isPlayingAtTopQuality(currentRepresentation)) {
                 const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
