@@ -142,7 +142,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -558,6 +559,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -1222,7 +1225,8 @@ function Settings() {
                 threshold: 0.3,
                 enableSeekFix: true,
                 enableStallFix: false,
-                stallSeek: 0.1
+                stallSeek: 0.1,
+                seekOffset: 0
             },
             utcSynchronization: {
                 enabled: true,
