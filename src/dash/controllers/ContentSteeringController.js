@@ -53,21 +53,22 @@ function ContentSteeringController() {
     const context = this.context;
     const urlUtils = URLUtils(context).getInstance();
 
-    let instance,
-        logger,
+    let adapter,
+        currentMpdContentSteeringInformation,
         currentSteeringResponseData,
-        serviceLocationList,
-        throughputList,
-        nextRequestTimer,
-        urlLoader,
-        errHandler,
         dashMetrics,
-        mediaPlayerModel,
-        manifestModel,
-        serviceDescriptionController,
-        throughputController,
+        errHandler,
         eventBus,
-        adapter;
+        logger,
+        manifestModel,
+        mediaPlayerModel,
+        nextRequestTimer,
+        serviceDescriptionController,
+        serviceLocationList,
+        throughputController,
+        throughputList,
+        urlLoader,
+        instance;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -195,6 +196,12 @@ function ContentSteeringController() {
         if (!contentSteeringData) {
             contentSteeringData = serviceDescriptionController.getServiceDescriptionSettings().contentSteering;
         }
+
+        if (!contentSteeringData && currentMpdContentSteeringInformation) {
+            contentSteeringData = currentMpdContentSteeringInformation
+        }
+
+        currentMpdContentSteeringInformation = contentSteeringData;
 
         return contentSteeringData;
     }
@@ -514,8 +521,10 @@ function ContentSteeringController() {
             const statusCode = response.status;
 
             switch (statusCode) {
+                case 404:
                 // 410 response code. Stop steering
                 case 410:
+                    currentMpdContentSteeringInformation = null;
                     break;
                 // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
                 case 429:
@@ -554,6 +563,7 @@ function ContentSteeringController() {
 
     function _resetInitialSettings() {
         currentSteeringResponseData = null;
+        currentMpdContentSteeringInformation = null;
         throughputList = {};
         serviceLocationList = {
             baseUrl: {
