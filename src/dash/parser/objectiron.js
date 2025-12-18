@@ -32,37 +32,54 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ObjectIron(mappers) {
 
-    function mergeValues(parentItem, childItem) {
-        for (let name in parentItem) {
-            if (!childItem.hasOwnProperty(name)) {
-                childItem[name] = parentItem[name];
+    function _mappingAllowed (element, exception) {
+        let allowMapping = true;
+        if (exception) {
+            for (const [key, values] of Object.entries(exception)) {
+                let attr = element[key];
+                if (values.some(v => attr.match(v))) {
+                    allowMapping = false;
+                }
+            }
+        }
+
+        return allowMapping;
+    }
+    
+    function _conditionallyMapProperty(exception, propertyParentElement, parentIsArray, parentEl, child, mergeFlag) {
+        if (_mappingAllowed(parentEl, exception)) {
+            if (child[propertyParentElement]) {
+                // property already exists
+                // check to see if we should merge
+                if (mergeFlag) {
+                    if (parentIsArray) {
+                        child[propertyParentElement].push(parentEl);
+                    }
+                }
+            } else {
+                // just add the property
+                if (parentIsArray) {
+                    child[propertyParentElement] = [parentEl];
+                } else {
+                    child[propertyParentElement] = parentEl;
+                }
             }
         }
     }
 
-    function mapProperties(properties, parent, child) {
+    function mapProperties(properties, exceptions, parent, child) {
         for (let i = 0, len = properties.length; i < len; ++i) {
             const property = properties[i];
 
             if (parent[property.name]) {
-                if (child[property.name]) {
-                    // check to see if we should merge
-                    if (property.merge) {
-                        const parentValue = parent[property.name];
-                        const childValue = child[property.name];
+                const propertyParentElement = parent[property.name];
 
-                        // complex objects; merge properties
-                        if (typeof parentValue === 'object' && typeof childValue === 'object') {
-                            mergeValues(parentValue, childValue);
-                        }
-                        // simple objects; merge them together
-                        else {
-                            child[property.name] = parentValue + childValue;
-                        }
-                    }
+                if (Array.isArray(propertyParentElement)) {
+                    propertyParentElement.forEach(propParentEl => {
+                        _conditionallyMapProperty(exceptions[property.name], property.name, true, propParentEl, child, property.merge);
+                    });
                 } else {
-                    // just add the property
-                    child[property.name] = parent[property.name];
+                    _conditionallyMapProperty(exceptions[property.name], property.name, false, propertyParentElement, child, property.merge);
                 }
             }
         }
@@ -76,7 +93,7 @@ function ObjectIron(mappers) {
             if (array) {
                 for (let v = 0, len2 = array.length; v < len2; ++v) {
                     const childNode = array[v];
-                    mapProperties(item.properties, node, childNode);
+                    mapProperties(item.properties, item.exceptions, node, childNode);
                     mapItem(childItem, childNode);
                 }
             }

@@ -33,6 +33,7 @@
  */
 import MapNode from './MapNode.js';
 import DashConstants from '../../constants/DashConstants.js';
+import Constants from '../../../streaming/constants/Constants.js';
 
 class RepresentationBaseValuesMap extends MapNode {
     constructor() {
@@ -42,6 +43,7 @@ class RepresentationBaseValuesMap extends MapNode {
             DashConstants.CODECS,
             DashConstants.CODING_DEPENDENCY,
             DashConstants.CONTENT_PROTECTION,
+            DashConstants.ESSENTIAL_PROPERTY,
             DashConstants.FRAMERATE,
             DashConstants.FRAME_PACKING,
             DashConstants.HEIGHT,
@@ -55,12 +57,34 @@ class RepresentationBaseValuesMap extends MapNode {
             DashConstants.SEGMENT_PROFILES,
             DashConstants.SEGMENT_SEQUENCE_PROPERTIES,
             DashConstants.START_WITH_SAP,
+            DashConstants.SUPPLEMENTAL_CODECS,
+            DashConstants.SUPPLEMENTAL_PROPERTY,
             DashConstants.WIDTH,
         ];
 
-        super(DashConstants.ADAPTATION_SET, commonProperties, [
-            new MapNode(DashConstants.REPRESENTATION, commonProperties, [
-                new MapNode(DashConstants.SUB_REPRESENTATION, commonProperties)
+        // RegEx are supported
+        const exceptions = {
+            [DashConstants.SUPPLEMENTAL_PROPERTY]: {
+                schemeIdUri: [
+                    Constants.URL_QUERY_INFO_SCHEME,
+                    Constants.EXT_URL_QUERY_INFO_SCHEME,
+                    Constants.ADV_URL_QUERY_INFO_SCHEME,
+                    Constants.URL_QUERY_STATE_PREFIX
+                ]
+            },
+            [DashConstants.ESSENTIAL_PROPERTY]: {
+                schemeIdUri: [
+                    Constants.URL_QUERY_INFO_SCHEME,
+                    Constants.EXT_URL_QUERY_INFO_SCHEME,
+                    Constants.ADV_URL_QUERY_INFO_SCHEME,
+                    Constants.URL_QUERY_STATE_PREFIX
+                ]
+            }
+        };
+
+        super(DashConstants.ADAPTATION_SET, commonProperties, exceptions, [
+            new MapNode(DashConstants.REPRESENTATION, commonProperties, exceptions, [
+                new MapNode(DashConstants.SUB_REPRESENTATION, commonProperties, exceptions)
             ])
         ]);
     }

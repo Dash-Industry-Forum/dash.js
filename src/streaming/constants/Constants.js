@@ -268,6 +268,8 @@ export default {
     COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
     URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
     EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
+    ADV_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2025',
+    URL_QUERY_STATE_PREFIX: /urn:mpeg:dash:state:/,
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',
