@@ -940,7 +940,31 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdTarget>} [targets]
+ * List of CMCD reporting targets.
  */
+
+/**
+ * @typedef {Object} CmcdTarget
+ * @property {string} [mode]
+ * Mode of the CMCD reporting.
+ * @property {boolean} [enabled]
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} [url]
+ * The reporting endpoint URL.
+ * @property {string} [events]
+ * The events that should trigger the CMCD reporting.
+ * @property {string} [timeInterval]
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * @property {Array.<string>} [enabledKeys]
+ * CMCD keys to include in the report.
+ * @property {Array.<string>} [includeOnRequests]
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<number>} [batchRetryDelays]
+ * Array of retry delay values in milliseconds for batched CMCD reporting failures.
+ * Each value represents the delay before the next retry attempt.
+ * If not specified, defaults to Constants.CMCD_DEFAULT_BATCH_RETRY_DELAYS.
+*/
 
 /**
  * @typedef {Object} module:Settings~CmsdSettings
@@ -1428,9 +1452,10 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
+                enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
-                version: 1
+                version: 1,
+                targets: []
             },
             cmsd: {
                 enabled: false,

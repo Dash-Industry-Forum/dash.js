@@ -80,9 +80,8 @@ function XHRLoader() {
             xhr.onabort = commonMediaRequest.customData.onabort;
             xhr.ontimeout = commonMediaRequest.customData.ontimeout;
         }
-
-        xhr.send();
-
+        let body = commonMediaRequest.body || null;
+        xhr.send(body);
         commonMediaRequest.customData.abort = abort.bind(this);
         return true;
     }
