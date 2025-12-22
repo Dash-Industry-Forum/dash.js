@@ -1,12 +1,12 @@
 {
-	"include": [
-		"index.d.ts"
-	],
-	"compilerOptions": {
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"noImplicitAny": true,
-		"strict": true, /* Enable all strict type-checking options. */
-		"skipLibCheck": true
-	}
+  "include": [
+    "index.d.ts"
+  ],
+  "compilerOptions": {
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "noImplicitAny": true,
+    "strict": true, /* Enable all strict type-checking options. */
+    "skipLibCheck": true
+  }
 }
