@@ -3,7 +3,7 @@ import {
     CommonMediaResponse,
     RequestInterceptor,
     ResponseInterceptor
-} from '@svta/common-media-library/request'
+} from '@svta/cml-request'
 
 export as namespace dashjs;
 
