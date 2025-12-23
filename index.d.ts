@@ -3,7 +3,7 @@ import {
     CommonMediaResponse,
     RequestInterceptor,
     ResponseInterceptor
-} from '@svta/common-media-library/request'
+} from '@svta/cml-request'
 
 export as namespace dashjs;
 
@@ -1682,7 +1682,8 @@ export class MediaPlayerSettingClass {
             ],
             useMediaCapabilitiesApi?: boolean,
             filterHDRMetadataFormatEssentialProperties?: boolean,
-            filterVideoColorimetryEssentialProperties?: boolean
+            filterVideoColorimetryEssentialProperties?: boolean,
+            filterAudioChannelConfiguration?: boolean
         },
         events?: {
             eventControllerRefreshDelay?: number,
@@ -1740,6 +1741,7 @@ export class MediaPlayerSettingClass {
             enableSeekFix?: boolean,
             enableStallFix?: boolean,
             stallSeek?: number
+            seekOffset?: number
         },
         utcSynchronization?: {
             enabled?: boolean,
@@ -3112,8 +3114,6 @@ export interface AbrController {
     setConfig(config: object): void;
 
     setPlaybackQuality(type: string, streamInfo: StreamInfo, representation: Representation, reason: object): void;
-
-    setWindowResizeEventCalled(value: any): void;
 
     unRegisterStreamType(streamId: string, type: string): void;
 }

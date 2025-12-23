@@ -72,8 +72,7 @@ function AbrController() {
         streamProcessorDict,
         switchRequestHistory,
         throughputController,
-        videoModel,
-        windowResizeEventCalled;
+        videoModel
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -97,6 +96,7 @@ function AbrController() {
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.on(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.on(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+        eventBus.on(Events.VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
     }
 
     /**
@@ -152,9 +152,6 @@ function AbrController() {
         streamProcessorDict = {};
         queuedManualQualitySwitches = new Map();
 
-        if (windowResizeEventCalled === undefined) {
-            windowResizeEventCalled = false;
-        }
         if (droppedFramesHistory) {
             droppedFramesHistory.reset();
         }
@@ -177,6 +174,7 @@ function AbrController() {
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
         eventBus.off(MediaPlayerEvents.METRIC_ADDED, _onMetricAdded, instance);
         eventBus.off(Events.LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+        eventBus.off(Events.VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
 
         if (abrRulesCollection) {
             abrRulesCollection.reset();
@@ -560,6 +558,16 @@ function AbrController() {
 
         if (switchRequest && switchRequest.representation !== SwitchRequest.NO_CHANGE) {
             _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
+        }
+    }
+
+    function _onVideoElementResized() {
+        if (settings.get().streaming.abr.limitBitrateByPortal) {
+            Object.keys(streamProcessorDict).forEach(streamId => {
+                Object.keys(streamProcessorDict[streamId]).forEach(mediaType => {
+                    checkPlaybackQuality(mediaType, streamId);
+                });
+            });
         }
     }
 
@@ -976,10 +984,6 @@ function AbrController() {
         return voRepresentations[voRepresentations.length - 1].id === representation.id;
     }
 
-    function setWindowResizeEventCalled(value) {
-        windowResizeEventCalled = value;
-    }
-
     function clearDataForStream(streamId) {
         if (droppedFramesHistory) {
             droppedFramesHistory.clearForStream(streamId);
@@ -1022,7 +1026,6 @@ function AbrController() {
         reset,
         setConfig,
         setPlaybackQuality,
-        setWindowResizeEventCalled,
         unRegisterStreamType,
     };
 

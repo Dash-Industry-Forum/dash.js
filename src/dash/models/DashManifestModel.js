@@ -1053,7 +1053,7 @@ function DashManifestModel() {
         }
 
         const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
-        return mainAS.Representation[0];
+        return (mainAS ? mainAS.Representation[0] : undefined);
     }
 
     function getPreselectionsForPeriod(voPeriod) {
@@ -1317,9 +1317,9 @@ function DashManifestModel() {
                         event.id = null;
                     }
 
-                    if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
+                    if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
                         // toString is used to manage both regular and namespaced tags
-                        event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
+                        event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
                     } else {
                         // From Cor.1: 'NOTE: this attribute is an alternative
                         // to specifying a complete XML element(s) in the Event.

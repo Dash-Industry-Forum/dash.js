@@ -273,7 +273,7 @@ class MediaPlayerEvents extends EventsBase {
 
         /**
          * Triggered when a text track should be hidden
-         * @event MediaPlayerEvents#CUE_ENTER
+         * @event MediaPlayerEvents#CUE_EXIT
          */
         this.CUE_EXIT = 'cueExit'
 

@@ -138,8 +138,11 @@ function Capabilities() {
             return Promise.resolve();
         }
 
-        const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-        if (settings.get().streaming.enhancement.enabled && enhancementCodecs.some(cdc => basicConfiguration.codec.includes(cdc))) {
+        if (settings.get().streaming.enhancement.enabled && _isEnhancementCodec(basicConfiguration.codec)) {
+            // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement settings change
+            testedCodecConfigurations = testedCodecConfigurations.filter((configuration) => {
+                return !_isEnhancementCodec(configuration.mediaSourceCodecString);
+            });
             return Promise.resolve(true);
         }
 
@@ -355,6 +358,18 @@ function Capabilities() {
         })
     }
 
+    /**
+     * Check if codec is an enhancement layer codec, e.g. LCEVC
+     * Enhancement layer codecs can be configured via settings.
+     * @param {string} codec
+     * @return {boolean} true if enhancement codec
+     * @private
+     */
+    function _isEnhancementCodec(codec) {
+        const enhancementCodecs = settings.get().streaming.enhancement.codecs;
+        return enhancementCodecs.some((c) => codec.includes(c));
+    }
+
     function _isConfigSupported(testedConfigurations) {
         return testedConfigurations.some((testedConfiguration) => {
             return testedConfiguration && testedConfiguration.decodingInfo && testedConfiguration.decodingInfo.supported
@@ -427,6 +442,9 @@ function Capabilities() {
 
         if (inputConfig.samplerate) {
             configuration.audio.samplerate = inputConfig.samplerate;
+        }
+        if (inputConfig.channels) {
+            configuration.audio.channels = inputConfig.channels;
         }
 
         return configuration

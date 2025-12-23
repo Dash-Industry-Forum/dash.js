@@ -39,7 +39,7 @@ import DashManifestModel from './models/DashManifestModel.js';
 import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
-import {getId3Frames} from '@svta/common-media-library/id3/getId3Frames.js';
+import { getId3Frames } from '@svta/cml-id3';
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
 
