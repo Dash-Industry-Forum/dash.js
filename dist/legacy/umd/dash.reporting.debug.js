@@ -15770,7 +15770,8 @@ __webpack_require__.r(__webpack_exports__);
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -15827,7 +15828,8 @@ __webpack_require__.r(__webpack_exports__);
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -16243,6 +16245,8 @@ __webpack_require__.r(__webpack_exports__);
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -16417,6 +16421,8 @@ __webpack_require__.r(__webpack_exports__);
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -16855,7 +16861,8 @@ function Settings() {
         }))),
         useMediaCapabilitiesApi: true,
         filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false
+        filterHDRMetadataFormatEssentialProperties: false,
+        filterAudioChannelConfiguration: false
       },
       events: {
         eventControllerRefreshDelay: 100,
@@ -16912,7 +16919,8 @@ function Settings() {
         threshold: 0.3,
         enableSeekFix: true,
         enableStallFix: false,
-        stallSeek: 0.1
+        stallSeek: 0.1,
+        seekOffset: 0
       },
       utcSynchronization: {
         enabled: true,
@@ -17823,8 +17831,8 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     _this.BUFFERING_COMPLETED = 'bufferingCompleted';
     _this.BUFFER_CLEARED = 'bufferCleared';
-    _this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     _this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
+    _this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     _this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
     _this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
     _this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -17834,22 +17842,31 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
     _this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
     _this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    _this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-    _this.LOADING_COMPLETED = 'loadingCompleted';
-    _this.LOADING_PROGRESS = 'loadingProgress';
-    _this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
     _this.LOADING_ABANDONED = 'loadingAborted';
+    _this.LOADING_COMPLETED = 'loadingCompleted';
+    _this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
+    _this.LOADING_PROGRESS = 'loadingProgress';
     _this.MANIFEST_UPDATED = 'manifestUpdated';
+    _this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
     _this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     _this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
-    _this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
+    _this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
     _this.QUOTA_EXCEEDED = 'quotaExceeded';
+    _this.SEEK_TARGET = 'seekTarget';
     _this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     _this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     _this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
     _this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
+    _this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+    _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+    _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+    _this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+    _this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
     _this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     _this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     _this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -17861,18 +17878,10 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
     _this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
     _this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+    _this.VIDEO_ELEMENT_RESIZED = 'videoElementResized';
     _this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
     _this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
     _this.XLINK_READY = 'xlinkReady';
-    _this.SEEK_TARGET = 'seekTarget';
-    _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
-    _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
-    _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
-    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
-    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
-    _this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
-    _this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
-    _this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
     return _this;
   }
   (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(CoreEvents, _EventsBase);
@@ -18595,7 +18604,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     _this.CUE_EXIT = 'cueExit';
 

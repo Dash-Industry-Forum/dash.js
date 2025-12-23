@@ -15199,7 +15199,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     _this.CUE_EXIT = 'cueExit';
 

@@ -1960,7 +1960,8 @@ __webpack_require__.r(__webpack_exports__);
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -2017,7 +2018,8 @@ __webpack_require__.r(__webpack_exports__);
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -2433,6 +2435,8 @@ __webpack_require__.r(__webpack_exports__);
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -2607,6 +2611,8 @@ __webpack_require__.r(__webpack_exports__);
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -3045,7 +3051,8 @@ function Settings() {
         })],
         useMediaCapabilitiesApi: true,
         filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false
+        filterHDRMetadataFormatEssentialProperties: false,
+        filterAudioChannelConfiguration: false
       },
       events: {
         eventControllerRefreshDelay: 100,
@@ -3102,7 +3109,8 @@ function Settings() {
         threshold: 0.3,
         enableSeekFix: true,
         enableStallFix: false,
-        stallSeek: 0.1
+        stallSeek: 0.1,
+        seekOffset: 0
       },
       utcSynchronization: {
         enabled: true,
@@ -3799,8 +3807,8 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     this.BUFFERING_COMPLETED = 'bufferingCompleted';
     this.BUFFER_CLEARED = 'bufferCleared';
-    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
+    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
     this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
     this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -3810,22 +3818,31 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
     this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
     this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-    this.LOADING_COMPLETED = 'loadingCompleted';
-    this.LOADING_PROGRESS = 'loadingProgress';
-    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
     this.LOADING_ABANDONED = 'loadingAborted';
+    this.LOADING_COMPLETED = 'loadingCompleted';
+    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
+    this.LOADING_PROGRESS = 'loadingProgress';
     this.MANIFEST_UPDATED = 'manifestUpdated';
+    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
     this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
-    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
+    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
     this.QUOTA_EXCEEDED = 'quotaExceeded';
+    this.SEEK_TARGET = 'seekTarget';
     this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
+    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
     this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -3837,18 +3854,10 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
     this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
     this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+    this.VIDEO_ELEMENT_RESIZED = 'videoElementResized';
     this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
     this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
     this.XLINK_READY = 'xlinkReady';
-    this.SEEK_TARGET = 'seekTarget';
-    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
-    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
-    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
-    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
-    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
-    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (CoreEvents);
@@ -4513,7 +4522,7 @@ class MediaPlayerEvents extends _core_events_EventsBase_js__WEBPACK_IMPORTED_MOD
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     this.CUE_EXIT = 'cueExit';
 

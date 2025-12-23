@@ -11,6694 +11,6 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; }
-/* harmony export */ });
-/**
- * Defines the common keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_COMMON_KEYS = ['ab', 'bg', 'bl', 'br', 'bs', 'bsd', 'cdn', 'cid', 'cs', 'df', 'ec', 'lab', 'lb', 'ltc', 'msd', 'mtp', 'pb', 'pr', 'pt', 'sf', 'sid', 'sn', 'st', 'sta', 'tab', 'tb', 'tbl', 'tpb', 'ts', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; }
-/* harmony export */ });
-/**
- * Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_EVENT_KEYS = ['e'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; }
-/* harmony export */ });
-/**
- * CMCD event mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_EVENT_MODE = 'event';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/urlToRelativePath.js */ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js");
-
-
-const toRounded = value => Math.round(value);
-const toUrlSafe = (value, options) => {
-  if (Array.isArray(value)) {
-    return value.map(item => toUrlSafe(item, options));
-  }
-  if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === 'string') {
-    return new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);
-  } else {
-    if (options.baseUrl) {
-      value = (0,_utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, options.baseUrl);
-    }
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-const toHundred = value => toRounded(value / 100) * 100;
-const nor = (value, options) => {
-  let norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === 'string') {
-      norValue = new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);
-    } else if (typeof value === 'string') {
-      norValue = [value];
-    }
-  }
-  return toUrlSafe(norValue, options);
-};
-/**
- * The default formatters for CMCD values.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_FORMATTER_MAP = {
-  /**
-   * Bitrate (kbps) rounded integer
-   */
-  br: toRounded,
-  /**
-   * Duration (milliseconds) rounded integer
-   */
-  d: toRounded,
-  /**
-   * Buffer Length (milliseconds) rounded nearest 100ms
-   */
-  bl: toHundred,
-  /**
-   * Deadline (milliseconds) rounded nearest 100ms
-   */
-  dl: toHundred,
-  /**
-   * Measured Throughput (kbps) rounded nearest 100kbps
-   */
-  mtp: toHundred,
-  /**
-   * Next Object Request URL encoded
-   */
-  nor,
-  /**
-   * Requested maximum throughput (kbps) rounded nearest 100kbps
-   */
-  rtp: toHundred,
-  /**
-   * Top Bitrate (kbps) rounded integer
-   */
-  tb: toRounded
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_HEADER_MAP: function() { return /* binding */ CMCD_HEADER_MAP; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * The map of CMCD keys to their appropriate header shard.
- *
- * @group CMCD
- *
- * @internal
- */
-const CMCD_HEADER_MAP = {
-  // Object
-  br: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  d: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ot: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tpb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  url: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  // Request
-  pb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  bl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  tbl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  dl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ltc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  mtp: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nor: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nrr: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  rc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sn: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sta: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  su: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfbb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttlb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsdd: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsds: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  smrt: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  df: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cs: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // TODO: Which header to put the `ts` field is not defined yet.
-  ts: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // Session
-  cid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  pr: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sf: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  st: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  v: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  msd: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  // Status
-  bs: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bsd: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  cdn: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  rtp: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bg: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  pt: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  ec: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  e: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; }
-/* harmony export */ });
-/**
- * CMCD object header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_OBJECT = 'CMCD-Object';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; }
-/* harmony export */ });
-/**
- * CMCD parameter name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_PARAM = 'CMCD';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; }
-/* harmony export */ });
-/**
- * CMCD request header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST = 'CMCD-Request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; }
-/* harmony export */ });
-/**
- * Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST_KEYS = ['d', 'dl', 'nor', 'ot', 'rtp', 'su'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; }
-/* harmony export */ });
-/**
- * CMCD request mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST_MODE = 'request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; }
-/* harmony export */ });
-/**
- * CMCD v2 - Response-only and timing keys.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_RESPONSE_KEYS = ['cmsdd', 'cmsds', 'rc', 'smrt', 'ttfb', 'ttfbb', 'ttlb', 'url'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; }
-/* harmony export */ });
-/**
- * CMCD response mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_RESPONSE_MODE = 'response';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; }
-/* harmony export */ });
-/**
- * CMCD session header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_SESSION = 'CMCD-Session';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; }
-/* harmony export */ });
-/**
- * CMCD status header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_STATUS = 'CMCD-Status';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; }
-/* harmony export */ });
-/**
- * Defines the keys for CMCD (Common Media Client Data) version 1.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_V1_KEYS = ['bl', 'br', 'bs', 'cid', 'd', 'dl', 'mtp', 'nor', 'nrr', 'ot', 'pr', 'rtp', 'sf', 'sid', 'st', 'su', 'tb', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * CMCD header fields.
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdHeaderField = {
-  /**
-   * keys whose values vary with the object being requested.
-   */
-  OBJECT: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  /**
-   * keys whose values vary with each request.
-   */
-  REQUEST: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  /**
-   * keys whose values are expected to be invariant over the life of the session.
-   */
-  SESSION: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  /**
-   * keys whose values do not vary with every request or object.
-   */
-  STATUS: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Client Data Object Type
- *
- * @group CMCD
- *
- * @beta
- *
- * @enum
- */
-const CmcdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js");
-
-/**
- * Common Media Client Data Stream Type
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdStreamType = _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamingFormat.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js");
-
-/**
- * Common Media Client Data Streaming Format
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdStreamingFormat = _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-/**
- * Encode a CMCD object to a string.
- *
- * @param cmcd - The CMCD object to encode.
- * @param options - Options for encoding.
- *
- * @returns The encoded CMCD string.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/encodeCmcd.test.ts#example}
- */
-function encodeCmcd(cmcd, options = {}) {
-  if (!cmcd) {
-    return '';
-  }
-  return (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)((0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__.prepareCmcdData)(cmcd, options), {
-    whitespace: false
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_HEADER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js");
-/* harmony import */ var _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CmcdHeaderField.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
-
-
-function createHeaderMap(headerMap) {
-  return Object.keys(headerMap).reduce((acc, field) => {
-    var _a;
-    (_a = headerMap[field]) === null || _a === void 0 ? void 0 : _a.forEach(key => acc[key] = field);
-    return acc;
-  }, {});
-}
-/**
- * Group a CMCD data object into header shards
- *
- * @param cmcd - The CMCD data object to convert.
- * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- */
-function groupCmcdHeaders(cmcd, customHeaderMap) {
-  const result = {};
-  if (!cmcd) {
-    return result;
-  }
-  const keys = Object.keys(cmcd);
-  const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
-  return keys.reduce((acc, key) => {
-    var _a;
-    const field = _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_HEADER_MAP[key] || custom[key] || _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_1__.CmcdHeaderField.REQUEST;
-    const data = (_a = acc[field]) !== null && _a !== void 0 ? _a : acc[field] = {};
-    data[key] = cmcd[key];
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; }
-/* harmony export */ });
-const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
- * Check if a key is a custom key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a custom key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- */
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_EVENT_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-/**
- * Check if a key is a valid CMCD event key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD event key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdEventKey.test.ts#example}
- */
-function isCmcdEventKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_EVENT_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-/**
- * Check if a key is a valid CMCD request key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdRequestKey.test.ts#example}
- */
-function isCmcdRequestKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdResponseKey: function() { return /* binding */ isCmcdResponseKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_RESPONSE_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-/**
- * Check if a key is a valid CMCD response key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdResponseKey.test.ts#example}
- */
-function isCmcdResponseKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST_KEYS.includes(key) || _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_RESPONSE_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_V1_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-/**
- * Filter function for CMCD v1 keys.
- *
- * @param key - The CMCD key to filter.
- *
- * @returns `true` if the key should be included, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdV1Key.test.ts#example}
- */
-function isCmcdV1Key(key) {
-  return _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_V1_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_1__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/utils/isTokenField.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js");
-/* harmony import */ var _cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cta/utils/isValid.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js");
-/* harmony import */ var _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../structuredfield/SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_EVENT_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js");
-/* harmony import */ var _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./CMCD_FORMATTER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js");
-/* harmony import */ var _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./CMCD_REQUEST_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js");
-/* harmony import */ var _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./CMCD_RESPONSE_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js");
-/* harmony import */ var _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./isCmcdEventKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js");
-/* harmony import */ var _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./isCmcdRequestKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js");
-/* harmony import */ var _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./isCmcdResponseKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js");
-/* harmony import */ var _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./isCmcdV1Key.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js");
-
-
-
-
-
-
-
-
-
-
-
-const filterMap = {
-  [_CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__.CMCD_RESPONSE_MODE]: _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_9__.isCmcdResponseKey,
-  [_CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_EVENT_MODE]: _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_7__.isCmcdEventKey,
-  [_CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__.CMCD_REQUEST_MODE]: _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_8__.isCmcdRequestKey
-};
-/**
- * Convert a generic object to CMCD data.
- *
- * @param obj - The CMCD object to process.
- * @param options - Options for encoding.
- *
- * @group CMCD
- *
- * @beta
- */
-function prepareCmcdData(obj, options = {}) {
-  const results = {};
-  if (obj == null || typeof obj !== 'object') {
-    return results;
-  }
-  const version = options.version || obj['v'] || 1;
-  const reportingMode = options.reportingMode || _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__.CMCD_REQUEST_MODE;
-  const keyFilter = version === 1 ? _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_10__.isCmcdV1Key : filterMap[reportingMode];
-  // Filter keys based on the version, reporting mode and options
-  let keys = Object.keys(obj).filter(keyFilter);
-  const filter = options.filter;
-  if (typeof filter === 'function') {
-    keys = keys.filter(filter);
-  }
-  // Ensure all required keys are present before sorting
-  const needsTimestamp = reportingMode === _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__.CMCD_RESPONSE_MODE || reportingMode === _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_EVENT_MODE;
-  if (needsTimestamp && !keys.includes('ts')) {
-    keys.push('ts');
-  }
-  if (version > 1 && !keys.includes('v')) {
-    keys.push('v');
-  }
-  const formatters = Object.assign({}, _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_4__.CMCD_FORMATTER_MAP, options.formatters);
-  const formatterOptions = {
-    version,
-    reportingMode,
-    baseUrl: options.baseUrl
-  };
-  keys.sort().forEach(key => {
-    let value = obj[key];
-    const formatter = formatters[key];
-    if (typeof formatter === 'function') {
-      value = formatter(value, formatterOptions);
-    }
-    // Version should only be reported if not equal to 1.
-    if (key === 'v') {
-      if (version === 1) {
-        return;
-      } else {
-        value = version;
-      }
-    }
-    // Playback rate should only be sent if not equal to 1.
-    if (key == 'pr' && value === 1) {
-      return;
-    }
-    // Ensure a timestamp is set for response and event modes
-    if (needsTimestamp && key === 'ts' && !Number.isFinite(value)) {
-      value = Date.now();
-    }
-    // ignore invalid values
-    if (!(0,_cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_1__.isValid)(value)) {
-      return;
-    }
-    if ((0,_cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_0__.isTokenField)(key) && typeof value === 'string') {
-      value = new _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_2__.SfToken(value);
-    }
-    results[key] = value;
-  });
-  return results;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./groupCmcdHeaders.js */ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-
-/**
- * Convert a CMCD data object to request headers
- *
- * @param cmcd - The CMCD data object to convert.
- * @param options - Options for encoding the CMCD object.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/toCmcdHeaders.test.ts#example}
- */
-function toCmcdHeaders(cmcd, options = {}) {
-  const result = {};
-  if (!cmcd) {
-    return result;
-  }
-  const data = (0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_2__.prepareCmcdData)(cmcd, options);
-  const shards = (0,_groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_1__.groupCmcdHeaders)(data, options === null || options === void 0 ? void 0 : options.customHeaderMap);
-  return Object.entries(shards).reduce((acc, [field, value]) => {
-    const shard = (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
-      whitespace: false
-    });
-    if (shard) {
-      acc[field] = shard;
-    }
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; }
-/* harmony export */ });
-/**
- * CMSD dynamic header name.
- *
- * @group CMSD
- *
- * @beta
- */
-const CMSD_DYNAMIC = 'CMSD-Dynamic';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; }
-/* harmony export */ });
-/**
- * CMSD static header name.
- *
- * @group CMSD
- *
- * @beta
- */
-const CMSD_STATIC = 'CMSD-Static';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Server Data Object Type
- *
- * @group CMSD
- *
- * @enum
- *
- * @beta
- */
-const CmsdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/decodeSfList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js");
-
-/**
- * Decode a CMSD dynamic string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdDynamic(cmsd) {
-  if (!cmsd) {
-    return [];
-  }
-  const sfDict = (0,_structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__.decodeSfList)(cmsd);
-  return sfDict;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../structuredfield/decodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js");
-
-
-/**
- * Decode a CMSD Static dict string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdStatic(cmsd) {
-  if (!cmsd) {
-    return {};
-  }
-  return Object.entries((0,_structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_1__.decodeSfDict)(cmsd)).reduce((acc, [key, item]) => {
-    const {
-      value
-    } = item;
-    acc[key] = typeof value === 'symbol' ? (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value;
-    return acc;
-  }, {});
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionScreen.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/CaptionScreen.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CaptionScreen: function() { return /* binding */ CaptionScreen; }
-/* harmony export */ });
-/* harmony import */ var _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CaptionsLogger.js */ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js");
-/* harmony import */ var _Row_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Row.js */ "./node_modules/@svta/common-media-library/dist/cta/608/Row.js");
-/* harmony import */ var _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/NR_ROWS.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_ROWS.js");
-/* harmony import */ var _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./VerboseLevel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-
-
-/**
- * Keep a CTA-608 screen of 32x15 styled characters
- *
- * @group CTA-608
- * @beta
- */
-class CaptionScreen {
-  constructor(logger = new _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__.CaptionsLogger()) {
-    this.rows = [];
-    this.currRow = _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS - 1;
-    this.nrRollUpRows = null;
-    this.lastOutputScreen = null;
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      this.rows.push(new _Row_js__WEBPACK_IMPORTED_MODULE_1__.Row(logger));
-    }
-    this.logger = logger;
-  }
-  reset() {
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      this.rows[i].clear();
-    }
-    this.currRow = _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS - 1;
-  }
-  equals(other) {
-    let equal = true;
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      if (!this.rows[i].equals(other.rows[i])) {
-        equal = false;
-        break;
-      }
-    }
-    return equal;
-  }
-  copy(other) {
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      this.rows[i].copy(other.rows[i]);
-    }
-  }
-  isEmpty() {
-    let empty = true;
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      if (!this.rows[i].isEmpty()) {
-        empty = false;
-        break;
-      }
-    }
-    return empty;
-  }
-  backSpace() {
-    const row = this.rows[this.currRow];
-    row.backSpace();
-  }
-  clearToEndOfRow() {
-    const row = this.rows[this.currRow];
-    row.clearToEndOfRow();
-  }
-  /**
-   * Insert a character (without styling) in the current row.
-   */
-  insertChar(char) {
-    const row = this.rows[this.currRow];
-    row.insertChar(char);
-  }
-  setPen(styles) {
-    const row = this.rows[this.currRow];
-    row.setPenStyles(styles);
-  }
-  moveCursor(relPos) {
-    const row = this.rows[this.currRow];
-    row.moveCursor(relPos);
-  }
-  setCursor(absPos) {
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.INFO, 'setCursor: ' + absPos);
-    const row = this.rows[this.currRow];
-    row.setCursor(absPos);
-  }
-  setPAC(pacData) {
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.INFO, () => 'pacData = ' + JSON.stringify(pacData));
-    let newRow = pacData.row - 1;
-    if (this.nrRollUpRows && newRow < this.nrRollUpRows - 1) {
-      newRow = this.nrRollUpRows - 1;
-    }
-    // Make sure this only affects Roll-up Captions by checking this.nrRollUpRows
-    if (this.nrRollUpRows && this.currRow !== newRow) {
-      // clear all rows first
-      for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-        this.rows[i].clear();
-      }
-      // Copy this.nrRollUpRows rows from lastOutputScreen and place it in the newRow location
-      // topRowIndex - the start of rows to copy (inclusive index)
-      const topRowIndex = this.currRow + 1 - this.nrRollUpRows;
-      // We only copy if the last position was already shown.
-      // We use the cueStartTime value to check this.
-      const lastOutputScreen = this.lastOutputScreen;
-      if (lastOutputScreen) {
-        const prevLineTime = lastOutputScreen.rows[topRowIndex].cueStartTime;
-        const time = this.logger.time;
-        if (prevLineTime !== null && time !== null && prevLineTime < time) {
-          for (let i = 0; i < this.nrRollUpRows; i++) {
-            this.rows[newRow - this.nrRollUpRows + i + 1].copy(lastOutputScreen.rows[topRowIndex + i]);
-          }
-        }
-      }
-    }
-    this.currRow = newRow;
-    const row = this.rows[this.currRow];
-    if (pacData.indent !== null) {
-      const indent = pacData.indent;
-      const prevPos = Math.max(indent - 1, 0);
-      row.setCursor(pacData.indent);
-      pacData.color = row.chars[prevPos].penState.foreground;
-    }
-    const styles = {
-      foreground: pacData.color,
-      underline: pacData.underline,
-      italics: pacData.italics,
-      background: 'black',
-      flash: false
-    };
-    this.setPen(styles);
-  }
-  /**
-   * Set background/extra foreground, but first do back_space, and then insert space (backwards compatibility).
-   */
-  setBkgData(bkgData) {
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.INFO, () => 'bkgData = ' + JSON.stringify(bkgData));
-    this.backSpace();
-    this.setPen(bkgData);
-    this.insertChar(0x20); // Space
-  }
-  setRollUpRows(nrRows) {
-    this.nrRollUpRows = nrRows;
-  }
-  rollUp() {
-    if (this.nrRollUpRows === null) {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.DEBUG, 'roll_up but nrRollUpRows not set yet');
-      return; // Not properly setup
-    }
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.TEXT, () => this.getDisplayText());
-    const topRowIndex = this.currRow + 1 - this.nrRollUpRows;
-    const topRow = this.rows.splice(topRowIndex, 1)[0];
-    topRow.clear();
-    this.rows.splice(this.currRow, 0, topRow);
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.INFO, 'Rolling up');
-  }
-  /**
-   * Get all non-empty rows with as unicode text.
-   */
-  getDisplayText(asOneRow) {
-    asOneRow = asOneRow || false;
-    const displayText = [];
-    let text = '';
-    let rowNr = -1;
-    for (let i = 0; i < _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_2__.NR_ROWS; i++) {
-      const rowText = this.rows[i].getTextString();
-      if (rowText) {
-        rowNr = i + 1;
-        if (asOneRow) {
-          displayText.push('Row ' + rowNr + ": '" + rowText + "'");
-        } else {
-          displayText.push(rowText.trim());
-        }
-      }
-    }
-    if (displayText.length > 0) {
-      if (asOneRow) {
-        text = '[' + displayText.join(' | ') + ']';
-      } else {
-        text = displayText.join('\n');
-      }
-    }
-    return text;
-  }
-  getTextAndFormat() {
-    return this.rows;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CaptionsLogger: function() { return /* binding */ CaptionsLogger; }
-/* harmony export */ });
-/* harmony import */ var _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./VerboseLevel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * CaptionsLogger. To be removed in the future.
- *
- * @group CTA-608
- * @beta
- */
-class CaptionsLogger {
-  constructor() {
-    this.time = null;
-    this.verboseLevel = _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_0__.VerboseLevel.ERROR;
-  }
-  log(severity, msg) {
-    if (this.verboseLevel >= severity) {
-      const m = typeof msg === 'function' ? msg() : msg;
-      console.log(`${this.time} [${severity}] ${m}`);
-    }
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/Cta608Channel.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/Cta608Channel.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Cta608Channel: function() { return /* binding */ Cta608Channel; }
-/* harmony export */ });
-/* harmony import */ var _CaptionScreen_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CaptionScreen.js */ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionScreen.js");
-/* harmony import */ var _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CaptionsLogger.js */ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js");
-/* harmony import */ var _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VerboseLevel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js");
-/* harmony import */ var _utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/NR_ROWS.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_ROWS.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-
-
-/**
- * CTA-608 Channel
- *
- * @group CTA-608
- * @beta
- */
-class Cta608Channel {
-  constructor(channelNumber, outputFilter, logger = new _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_1__.CaptionsLogger()) {
-    this.chNr = channelNumber;
-    this.outputFilter = outputFilter;
-    this.mode = null;
-    this.displayedMemory = new _CaptionScreen_js__WEBPACK_IMPORTED_MODULE_0__.CaptionScreen(logger);
-    this.nonDisplayedMemory = new _CaptionScreen_js__WEBPACK_IMPORTED_MODULE_0__.CaptionScreen(logger);
-    this.lastOutputScreen = new _CaptionScreen_js__WEBPACK_IMPORTED_MODULE_0__.CaptionScreen(logger);
-    this.currRollUpRow = this.displayedMemory.rows[_utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_3__.NR_ROWS - 1];
-    this.writeScreen = this.displayedMemory;
-    this.mode = null;
-    this.cueStartTime = null; // Keeps track of where a cue started.
-    this.logger = logger;
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'new Cea608Channel(' + this.chNr + ')');
-  }
-  reset() {
-    var _a, _b;
-    this.mode = null;
-    this.displayedMemory.reset();
-    this.nonDisplayedMemory.reset();
-    this.lastOutputScreen.reset();
-    (_b = (_a = this.outputFilter) === null || _a === void 0 ? void 0 : _a.reset) === null || _b === void 0 ? void 0 : _b.call(_a);
-    this.currRollUpRow = this.displayedMemory.rows[_utils_NR_ROWS_js__WEBPACK_IMPORTED_MODULE_3__.NR_ROWS - 1];
-    this.writeScreen = this.displayedMemory;
-    this.mode = null;
-    this.cueStartTime = null;
-  }
-  getHandler() {
-    return this.outputFilter;
-  }
-  setHandler(outputFilter) {
-    this.outputFilter = outputFilter;
-  }
-  setPAC(pacData) {
-    this.writeScreen.setPAC(pacData);
-  }
-  setBkgData(bkgData) {
-    this.writeScreen.setBkgData(bkgData);
-  }
-  setMode(newMode) {
-    if (newMode === this.mode) {
-      return;
-    }
-    this.mode = newMode;
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, () => 'MODE=' + newMode);
-    if (this.mode === 'MODE_POP-ON') {
-      this.writeScreen = this.nonDisplayedMemory;
-    } else {
-      this.writeScreen = this.displayedMemory;
-      this.writeScreen.reset();
-    }
-    if (this.mode !== 'MODE_ROLL-UP') {
-      this.displayedMemory.setRollUpRows(null);
-      this.nonDisplayedMemory.setRollUpRows(null);
-    }
-    this.mode = newMode;
-  }
-  insertChars(chars) {
-    for (let i = 0; i < chars.length; i++) {
-      this.writeScreen.insertChar(chars[i]);
-    }
-    const screen = this.writeScreen === this.displayedMemory ? 'DISP' : 'NON_DISP';
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, () => screen + ': ' + this.writeScreen.getDisplayText(true));
-    if (this.mode === 'MODE_PAINT-ON' || this.mode === 'MODE_ROLL-UP') {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.TEXT, () => 'DISPLAYED: ' + this.displayedMemory.getDisplayText(true));
-      this.outputDataUpdate();
-    }
-  }
-  ccRCL() {
-    // Resume Caption Loading (switch mode to Pop On)
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'RCL - Resume Caption Loading');
-    this.setMode('MODE_POP-ON');
-  }
-  ccBS() {
-    // BackSpace
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'BS - BackSpace');
-    if (this.mode === 'MODE_TEXT') {
-      return;
-    }
-    this.writeScreen.backSpace();
-    if (this.writeScreen === this.displayedMemory) {
-      this.outputDataUpdate();
-    }
-  }
-  ccAOF() {
-    // Reserved (formerly Alarm Off)
-  }
-  ccAON() {
-    // Reserved (formerly Alarm On)
-  }
-  ccDER() {
-    // Delete to End of Row
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'DER- Delete to End of Row');
-    this.writeScreen.clearToEndOfRow();
-    this.outputDataUpdate();
-  }
-  ccRU(nrRows) {
-    // Roll-Up Captions-2,3,or 4 Rows
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'RU(' + nrRows + ') - Roll Up');
-    this.writeScreen = this.displayedMemory;
-    this.setMode('MODE_ROLL-UP');
-    this.writeScreen.setRollUpRows(nrRows);
-  }
-  ccFON() {
-    // Flash On
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'FON - Flash On');
-    this.writeScreen.setPen({
-      flash: true
-    });
-  }
-  ccRDC() {
-    // Resume Direct Captioning (switch mode to PaintOn)
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'RDC - Resume Direct Captioning');
-    this.setMode('MODE_PAINT-ON');
-  }
-  ccTR() {
-    // Text Restart in text mode (not supported, however)
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'TR');
-    this.setMode('MODE_TEXT');
-  }
-  ccRTD() {
-    // Resume Text Display in Text mode (not supported, however)
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'RTD');
-    this.setMode('MODE_TEXT');
-  }
-  ccEDM() {
-    // Erase Displayed Memory
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'EDM - Erase Displayed Memory');
-    this.displayedMemory.reset();
-    this.outputDataUpdate(true);
-  }
-  ccCR() {
-    // Carriage Return
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'CR - Carriage Return');
-    this.writeScreen.rollUp();
-    this.outputDataUpdate(true);
-  }
-  ccENM() {
-    // Erase Non-Displayed Memory
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'ENM - Erase Non-displayed Memory');
-    this.nonDisplayedMemory.reset();
-  }
-  ccEOC() {
-    // End of Caption (Flip Memories)
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'EOC - End Of Caption');
-    if (this.mode === 'MODE_POP-ON') {
-      const tmp = this.displayedMemory;
-      this.displayedMemory = this.nonDisplayedMemory;
-      this.nonDisplayedMemory = tmp;
-      this.writeScreen = this.nonDisplayedMemory;
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.TEXT, () => 'DISP: ' + this.displayedMemory.getDisplayText());
-    }
-    this.outputDataUpdate(true);
-  }
-  ccTO(nrCols) {
-    // Tab Offset 1,2, or 3 columns
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'TO(' + nrCols + ') - Tab Offset');
-    this.writeScreen.moveCursor(nrCols);
-  }
-  ccMIDROW(secondByte) {
-    // Parse MIDROW command
-    const styles = {
-      flash: false
-    };
-    styles.underline = secondByte % 2 === 1;
-    styles.italics = secondByte >= 0x2e;
-    if (!styles.italics) {
-      const colorIndex = Math.floor(secondByte / 2) - 0x10;
-      const colors = ['white', 'green', 'blue', 'cyan', 'red', 'yellow', 'magenta'];
-      styles.foreground = colors[colorIndex];
-    } else {
-      styles.foreground = 'white';
-    }
-    this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, 'MIDROW: ' + JSON.stringify(styles));
-    this.writeScreen.setPen(styles);
-  }
-  outputDataUpdate(dispatch = false) {
-    const time = this.logger.time;
-    if (time === null) {
-      return;
-    }
-    if (this.outputFilter) {
-      if (this.cueStartTime === null && !this.displayedMemory.isEmpty()) {
-        // Start of a new cue
-        this.cueStartTime = time;
-      } else {
-        if (!this.displayedMemory.equals(this.lastOutputScreen)) {
-          this.outputFilter.newCue(this.cueStartTime, time, this.lastOutputScreen);
-          if (dispatch && this.outputFilter.dispatchCue) {
-            this.outputFilter.dispatchCue();
-          }
-          this.cueStartTime = this.displayedMemory.isEmpty() ? null : time;
-        }
-      }
-      this.lastOutputScreen.copy(this.displayedMemory);
-    }
-  }
-  cueSplitAtTime(t) {
-    if (this.outputFilter) {
-      if (!this.displayedMemory.isEmpty()) {
-        if (this.outputFilter.newCue) {
-          this.outputFilter.newCue(this.cueStartTime, t, this.displayedMemory);
-        }
-        this.cueStartTime = t;
-      }
-    }
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/Cta608Parser.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/Cta608Parser.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Cta608Parser: function() { return /* binding */ Cta608Parser; }
-/* harmony export */ });
-/* harmony import */ var _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CaptionsLogger.js */ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js");
-/* harmony import */ var _Cta608Channel_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Cta608Channel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/Cta608Channel.js");
-/* harmony import */ var _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./VerboseLevel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js");
-/* harmony import */ var _utils_backgroundColors_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/backgroundColors.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/backgroundColors.js");
-/* harmony import */ var _utils_createCmdHistory_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/createCmdHistory.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/createCmdHistory.js");
-/* harmony import */ var _utils_getCharForByte_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/getCharForByte.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/getCharForByte.js");
-/* harmony import */ var _utils_hasCmdRepeated_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./utils/hasCmdRepeated.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/hasCmdRepeated.js");
-/* harmony import */ var _utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./utils/numArrayToHexArray.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/numArrayToHexArray.js");
-/* harmony import */ var _utils_rowsHighCh1_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./utils/rowsHighCh1.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh1.js");
-/* harmony import */ var _utils_rowsHighCh2_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./utils/rowsHighCh2.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh2.js");
-/* harmony import */ var _utils_rowsLowCh1_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./utils/rowsLowCh1.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh1.js");
-/* harmony import */ var _utils_rowsLowCh2_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./utils/rowsLowCh2.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh2.js");
-/* harmony import */ var _utils_setLastCmd_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./utils/setLastCmd.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/setLastCmd.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * CEA-608 caption parser.
- *
- * @group CTA-608
- * @beta
- */
-class Cta608Parser {
-  constructor(field, out1, out2) {
-    this.currentChannel = 0;
-    this.cmdHistory = (0,_utils_createCmdHistory_js__WEBPACK_IMPORTED_MODULE_4__.createCmdHistory)();
-    this.lastTime = null;
-    const logger = this.logger = new _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__.CaptionsLogger();
-    this.channels = [null, new _Cta608Channel_js__WEBPACK_IMPORTED_MODULE_1__.Cta608Channel(field, out1, logger), new _Cta608Channel_js__WEBPACK_IMPORTED_MODULE_1__.Cta608Channel(field + 1, out2, logger)];
-  }
-  /**
-   * Add data for time t in forms of list of bytes (unsigned ints). The bytes are treated as pairs.
-   *
-   * @param time - The time in milliseconds
-   * @param byteList - The list of bytes
-   */
-  addData(time, byteList) {
-    this.lastTime = time;
-    this.logger.time = time;
-    for (let i = 0; i < byteList.length; i += 2) {
-      const a = byteList[i] & 0x7f;
-      const b = byteList[i + 1] & 0x7f;
-      let cmdFound = false;
-      let charsFound = null;
-      if (this.lastTime !== null) {
-        time = this.lastTime + 0.5 * i * 1001 / 30000;
-        this.logger.time = time;
-      }
-      if (a === 0 && b === 0) {
-        continue;
-      } else {
-        this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.DATA, () => '[' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([byteList[i], byteList[i + 1]]) + '] -> (' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([a, b]) + ')');
-      }
-      const cmdHistory = this.cmdHistory;
-      const isControlCode = a >= 0x10 && a <= 0x1f;
-      if (isControlCode) {
-        // Skip redundant control codes
-        if ((0,_utils_hasCmdRepeated_js__WEBPACK_IMPORTED_MODULE_6__.hasCmdRepeated)(a, b, cmdHistory)) {
-          (0,_utils_setLastCmd_js__WEBPACK_IMPORTED_MODULE_12__.setLastCmd)(null, null, cmdHistory);
-          this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.DEBUG, () => 'Repeated command (' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([a, b]) + ') is dropped');
-          continue;
-        }
-        (0,_utils_setLastCmd_js__WEBPACK_IMPORTED_MODULE_12__.setLastCmd)(a, b, this.cmdHistory);
-        cmdFound = this.parseCmd(a, b);
-        if (!cmdFound) {
-          cmdFound = this.parseMidrow(a, b);
-        }
-        if (!cmdFound) {
-          cmdFound = this.parsePAC(a, b);
-        }
-        if (!cmdFound) {
-          cmdFound = this.parseBackgroundAttributes(a, b);
-        }
-      } else {
-        (0,_utils_setLastCmd_js__WEBPACK_IMPORTED_MODULE_12__.setLastCmd)(null, null, cmdHistory);
-      }
-      if (!cmdFound) {
-        charsFound = this.parseChars(a, b);
-        if (charsFound.length) {
-          const currChNr = this.currentChannel;
-          if (currChNr && currChNr > 0) {
-            const channel = this.channels[currChNr];
-            channel.insertChars(charsFound);
-          } else {
-            this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.WARNING, 'No channel found yet. TEXT-MODE?');
-          }
-        }
-      }
-      if (!cmdFound && !charsFound) {
-        this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.WARNING, () => "Couldn't parse cleaned data " + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([a, b]) + ' orig: ' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([byteList[i], byteList[i + 1]]));
-      }
-    }
-  }
-  /**
-   * Parse Command.
-   *
-   * @param a - The first byte
-   * @param b - The second byte
-   * @returns True if a command was found
-   */
-  parseCmd(a, b) {
-    const cond1 = (a === 0x14 || a === 0x1c || a === 0x15 || a === 0x1d) && b >= 0x20 && b <= 0x2f;
-    const cond2 = (a === 0x17 || a === 0x1f) && b >= 0x21 && b <= 0x23;
-    if (!(cond1 || cond2)) {
-      return false;
-    }
-    const chNr = a === 0x14 || a === 0x15 || a === 0x17 ? 1 : 2;
-    const channel = this.channels[chNr];
-    if (a === 0x14 || a === 0x15 || a === 0x1c || a === 0x1d) {
-      if (b === 0x20) {
-        channel.ccRCL();
-      } else if (b === 0x21) {
-        channel.ccBS();
-      } else if (b === 0x22) {
-        channel.ccAOF();
-      } else if (b === 0x23) {
-        channel.ccAON();
-      } else if (b === 0x24) {
-        channel.ccDER();
-      } else if (b === 0x25) {
-        channel.ccRU(2);
-      } else if (b === 0x26) {
-        channel.ccRU(3);
-      } else if (b === 0x27) {
-        channel.ccRU(4);
-      } else if (b === 0x28) {
-        channel.ccFON();
-      } else if (b === 0x29) {
-        channel.ccRDC();
-      } else if (b === 0x2a) {
-        channel.ccTR();
-      } else if (b === 0x2b) {
-        channel.ccRTD();
-      } else if (b === 0x2c) {
-        channel.ccEDM();
-      } else if (b === 0x2d) {
-        channel.ccCR();
-      } else if (b === 0x2e) {
-        channel.ccENM();
-      } else if (b === 0x2f) {
-        channel.ccEOC();
-      }
-    } else {
-      // a == 0x17 || a == 0x1F
-      channel.ccTO(b - 0x20);
-    }
-    this.currentChannel = chNr;
-    return true;
-  }
-  /**
-   * Parse midrow styling command
-   *
-   * @param a - The first byte
-   * @param b - The second byte
-   * @returns `true` if midrow styling command was found
-   */
-  parseMidrow(a, b) {
-    let chNr = 0;
-    if ((a === 0x11 || a === 0x19) && b >= 0x20 && b <= 0x2f) {
-      if (a === 0x11) {
-        chNr = 1;
-      } else {
-        chNr = 2;
-      }
-      if (chNr !== this.currentChannel) {
-        this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.ERROR, 'Mismatch channel in midrow parsing');
-        return false;
-      }
-      const channel = this.channels[chNr];
-      if (!channel) {
-        return false;
-      }
-      channel.ccMIDROW(b);
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.DEBUG, () => 'MIDROW (' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)([a, b]) + ')');
-      return true;
-    }
-    return false;
-  }
-  /**
-   * Parse Preable Access Codes (Table 53).
-   *
-   * @param a - The first byte
-   * @param b - The second byte
-   * @returns A Boolean that tells if PAC found
-   */
-  parsePAC(a, b) {
-    let row;
-    const case1 = (a >= 0x11 && a <= 0x17 || a >= 0x19 && a <= 0x1f) && b >= 0x40 && b <= 0x7f;
-    const case2 = (a === 0x10 || a === 0x18) && b >= 0x40 && b <= 0x5f;
-    if (!(case1 || case2)) {
-      return false;
-    }
-    const chNr = a <= 0x17 ? 1 : 2;
-    if (b >= 0x40 && b <= 0x5f) {
-      row = chNr === 1 ? _utils_rowsLowCh1_js__WEBPACK_IMPORTED_MODULE_10__.rowsLowCh1[a] : _utils_rowsLowCh2_js__WEBPACK_IMPORTED_MODULE_11__.rowsLowCh2[a];
-    } else {
-      // 0x60 <= b <= 0x7F
-      row = chNr === 1 ? _utils_rowsHighCh1_js__WEBPACK_IMPORTED_MODULE_8__.rowsHighCh1[a] : _utils_rowsHighCh2_js__WEBPACK_IMPORTED_MODULE_9__.rowsHighCh2[a];
-    }
-    const channel = this.channels[chNr];
-    if (!channel) {
-      return false;
-    }
-    channel.setPAC(this.interpretPAC(row, b));
-    this.currentChannel = chNr;
-    return true;
-  }
-  /**
-   * Interpret the second byte of the pac, and return the information.
-   *
-   * @param row - The row number
-   * @param byte - The second byte
-   * @returns pacData with style parameters
-   */
-  interpretPAC(row, byte) {
-    let pacIndex;
-    const pacData = {
-      color: null,
-      italics: false,
-      indent: null,
-      underline: false,
-      row: row
-    };
-    if (byte > 0x5f) {
-      pacIndex = byte - 0x60;
-    } else {
-      pacIndex = byte - 0x40;
-    }
-    pacData.underline = (pacIndex & 1) === 1;
-    if (pacIndex <= 0xd) {
-      pacData.color = ['white', 'green', 'blue', 'cyan', 'red', 'yellow', 'magenta', 'white'][Math.floor(pacIndex / 2)];
-    } else if (pacIndex <= 0xf) {
-      pacData.italics = true;
-      pacData.color = 'white';
-    } else {
-      pacData.indent = Math.floor((pacIndex - 0x10) / 2) * 4;
-    }
-    return pacData; // Note that row has zero offset. The spec uses 1.
-  }
-  /**
-   * Parse characters.
-   *
-   * @param a - The first byte
-   * @param b - The second byte
-   * @returns An array with 1 to 2 codes corresponding to chars, if found. null otherwise.
-   */
-  parseChars(a, b) {
-    let channelNr;
-    let charCodes = [];
-    let charCode1 = null;
-    if (a >= 0x19) {
-      channelNr = 2;
-      charCode1 = a - 8;
-    } else {
-      channelNr = 1;
-      charCode1 = a;
-    }
-    if (charCode1 >= 0x11 && charCode1 <= 0x13) {
-      // Special character
-      let oneCode;
-      if (charCode1 === 0x11) {
-        oneCode = b + 0x50;
-      } else if (charCode1 === 0x12) {
-        oneCode = b + 0x70;
-      } else {
-        oneCode = b + 0x90;
-      }
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.INFO, () => "Special char '" + (0,_utils_getCharForByte_js__WEBPACK_IMPORTED_MODULE_5__.getCharForByte)(oneCode) + "' in channel " + channelNr);
-      charCodes = [oneCode];
-    } else if (a >= 0x20 && a <= 0x7f) {
-      charCodes = b === 0 ? [a] : [a, b];
-    }
-    if (charCodes) {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_2__.VerboseLevel.DEBUG, () => 'Char codes =  ' + (0,_utils_numArrayToHexArray_js__WEBPACK_IMPORTED_MODULE_7__.numArrayToHexArray)(charCodes).join(','));
-    }
-    return charCodes;
-  }
-  /**
-   * Parse extended background attributes as well as new foreground color black.
-   *
-   * @param a - The first byte
-   * @param b - The second byte
-   * @returns True if background attributes are found
-   */
-  parseBackgroundAttributes(a, b) {
-    const case1 = (a === 0x10 || a === 0x18) && b >= 0x20 && b <= 0x2f;
-    const case2 = (a === 0x17 || a === 0x1f) && b >= 0x2d && b <= 0x2f;
-    if (!(case1 || case2)) {
-      return false;
-    }
-    let index;
-    const bkgData = {};
-    if (a === 0x10 || a === 0x18) {
-      index = Math.floor((b - 0x20) / 2);
-      bkgData.background = _utils_backgroundColors_js__WEBPACK_IMPORTED_MODULE_3__.backgroundColors[index];
-      if (b % 2 === 1) {
-        bkgData.background = bkgData.background + '_semi';
-      }
-    } else if (b === 0x2d) {
-      bkgData.background = 'transparent';
-    } else {
-      bkgData.foreground = 'black';
-      if (b === 0x2f) {
-        bkgData.underline = true;
-      }
-    }
-    const chNr = a <= 0x17 ? 1 : 2;
-    const channel = this.channels[chNr];
-    channel.setBkgData(bkgData);
-    return true;
-  }
-  /**
-   * Reset state of parser and its channels.
-   */
-  reset() {
-    for (let i = 0; i < Object.keys(this.channels).length; i++) {
-      const channel = this.channels[i];
-      if (channel) {
-        channel.reset();
-      }
-    }
-    (0,_utils_setLastCmd_js__WEBPACK_IMPORTED_MODULE_12__.setLastCmd)(null, null, this.cmdHistory);
-  }
-  /**
-   * Trigger the generation of a cue, and the start of a new one if displayScreens are not empty.
-   */
-  cueSplitAtTime(t) {
-    for (let i = 0; i < this.channels.length; i++) {
-      const channel = this.channels[i];
-      if (channel) {
-        channel.cueSplitAtTime(t);
-      }
-    }
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/PenState.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/PenState.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   PenState: function() { return /* binding */ PenState; }
-/* harmony export */ });
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * Pen state.
- *
- * @group CTA-608
- * @beta
- */
-class PenState {
-  constructor() {
-    this.foreground = 'white';
-    this.underline = false;
-    this.italics = false;
-    this.background = 'black';
-    this.flash = false;
-  }
-  reset() {
-    this.foreground = 'white';
-    this.underline = false;
-    this.italics = false;
-    this.background = 'black';
-    this.flash = false;
-  }
-  setStyles(styles) {
-    const attribs = ['foreground', 'underline', 'italics', 'background', 'flash'];
-    for (let i = 0; i < attribs.length; i++) {
-      const style = attribs[i];
-      if (Object.prototype.hasOwnProperty.call(styles, style)) {
-        this[style] = styles[style];
-      }
-    }
-  }
-  isDefault() {
-    return this.foreground === 'white' && !this.underline && !this.italics && this.background === 'black' && !this.flash;
-  }
-  equals(other) {
-    return this.foreground === other.foreground && this.underline === other.underline && this.italics === other.italics && this.background === other.background && this.flash === other.flash;
-  }
-  copy(newPenState) {
-    this.foreground = newPenState.foreground;
-    this.underline = newPenState.underline;
-    this.italics = newPenState.italics;
-    this.background = newPenState.background;
-    this.flash = newPenState.flash;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/Row.js":
-/*!*********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/Row.js ***!
-  \*********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   Row: function() { return /* binding */ Row; }
-/* harmony export */ });
-/* harmony import */ var _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CaptionsLogger.js */ "./node_modules/@svta/common-media-library/dist/cta/608/CaptionsLogger.js");
-/* harmony import */ var _PenState_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./PenState.js */ "./node_modules/@svta/common-media-library/dist/cta/608/PenState.js");
-/* harmony import */ var _StyledUnicodeChar_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./StyledUnicodeChar.js */ "./node_modules/@svta/common-media-library/dist/cta/608/StyledUnicodeChar.js");
-/* harmony import */ var _VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./VerboseLevel.js */ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js");
-/* harmony import */ var _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/NR_COLS.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_COLS.js");
-/* harmony import */ var _utils_getCharForByte_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/getCharForByte.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/getCharForByte.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-
-
-
-
-
-/**
- * CTA-608 row consisting of NR_COLS instances of StyledUnicodeChar.
- *
- * @group CTA-608
- * @beta
- */
-class Row {
-  constructor(logger = new _CaptionsLogger_js__WEBPACK_IMPORTED_MODULE_0__.CaptionsLogger()) {
-    this.chars = [];
-    this.cueStartTime = null;
-    this.pos = 0;
-    this.currPenState = new _PenState_js__WEBPACK_IMPORTED_MODULE_1__.PenState();
-    for (let i = 0; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      this.chars.push(new _StyledUnicodeChar_js__WEBPACK_IMPORTED_MODULE_2__.StyledUnicodeChar());
-    }
-    this.logger = logger;
-  }
-  equals(other) {
-    for (let i = 0; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      if (!this.chars[i].equals(other.chars[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-  copy(other) {
-    for (let i = 0; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      this.chars[i].copy(other.chars[i]);
-    }
-  }
-  isEmpty() {
-    let empty = true;
-    for (let i = 0; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      if (!this.chars[i].isEmpty()) {
-        empty = false;
-        break;
-      }
-    }
-    return empty;
-  }
-  /**
-   *  Set the cursor to a valid column.
-   */
-  setCursor(absPos) {
-    if (this.pos !== absPos) {
-      this.pos = absPos;
-    }
-    if (this.pos < 0) {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.DEBUG, 'Negative cursor position ' + this.pos);
-      this.pos = 0;
-    } else if (this.pos > _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS) {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.DEBUG, 'Too large cursor position ' + this.pos);
-      this.pos = _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS;
-    }
-  }
-  /**
-   * Move the cursor relative to current position.
-   */
-  moveCursor(relPos) {
-    const newPos = this.pos + relPos;
-    if (relPos > 1) {
-      for (let i = this.pos + 1; i < newPos + 1; i++) {
-        this.chars[i].setPenState(this.currPenState);
-      }
-    }
-    this.setCursor(newPos);
-  }
-  /**
-   * Backspace, move one step back and clear character.
-   */
-  backSpace() {
-    this.moveCursor(-1);
-    this.chars[this.pos].setChar(' ', this.currPenState);
-  }
-  insertChar(byte) {
-    if (byte >= 0x90) {
-      // Extended char
-      this.backSpace();
-    }
-    const char = (0,_utils_getCharForByte_js__WEBPACK_IMPORTED_MODULE_5__.getCharForByte)(byte);
-    if (this.pos >= _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS) {
-      this.logger.log(_VerboseLevel_js__WEBPACK_IMPORTED_MODULE_3__.VerboseLevel.ERROR, () => 'Cannot insert ' + byte.toString(16) + ' (' + char + ') at position ' + this.pos + '. Skipping it!');
-      return;
-    }
-    this.chars[this.pos].setChar(char, this.currPenState);
-    this.moveCursor(1);
-  }
-  clearFromPos(startPos) {
-    let i;
-    for (i = startPos; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      this.chars[i].reset();
-    }
-  }
-  clear() {
-    this.clearFromPos(0);
-    this.pos = 0;
-    this.currPenState.reset();
-  }
-  clearToEndOfRow() {
-    this.clearFromPos(this.pos);
-  }
-  getTextString() {
-    const chars = [];
-    let empty = true;
-    for (let i = 0; i < _utils_NR_COLS_js__WEBPACK_IMPORTED_MODULE_4__.NR_COLS; i++) {
-      const char = this.chars[i].uchar;
-      if (char !== ' ') {
-        empty = false;
-      }
-      chars.push(char);
-    }
-    if (empty) {
-      return '';
-    } else {
-      return chars.join('');
-    }
-  }
-  setPenStyles(styles) {
-    this.currPenState.setStyles(styles);
-    const currChar = this.chars[this.pos];
-    currChar.setPenState(this.currPenState);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/StyledUnicodeChar.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/StyledUnicodeChar.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   StyledUnicodeChar: function() { return /* binding */ StyledUnicodeChar; }
-/* harmony export */ });
-/* harmony import */ var _PenState_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./PenState.js */ "./node_modules/@svta/common-media-library/dist/cta/608/PenState.js");
-/**
- *
- * This code was ported from the dash.js project at:
- *   https://github.com/Dash-Industry-Forum/dash.js/blob/development/externals/cea608-parser.js
- *   https://github.com/Dash-Industry-Forum/dash.js/commit/8269b26a761e0853bb21d78780ed945144ecdd4d#diff-71bc295a2d6b6b7093a1d3290d53a4b2
- *
- * The original copyright appears below:
- *
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2015-2016, DASH Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  1. Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  2. Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-
-/**
- * Unicode character with styling and background.
- *
- * @group CTA-608
- * @beta
- */
-class StyledUnicodeChar {
-  constructor() {
-    this.uchar = ' ';
-    this.penState = new _PenState_js__WEBPACK_IMPORTED_MODULE_0__.PenState();
-  }
-  reset() {
-    this.uchar = ' ';
-    this.penState.reset();
-  }
-  setChar(uchar, newPenState) {
-    this.uchar = uchar;
-    this.penState.copy(newPenState);
-  }
-  setPenState(newPenState) {
-    this.penState.copy(newPenState);
-  }
-  equals(other) {
-    return this.uchar === other.uchar && this.penState.equals(other.penState);
-  }
-  copy(newChar) {
-    this.uchar = newChar.uchar;
-    this.penState.copy(newChar.penState);
-  }
-  isEmpty() {
-    return this.uchar === ' ' && this.penState.isDefault();
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/VerboseLevel.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   VerboseLevel: function() { return /* binding */ VerboseLevel; }
-/* harmony export */ });
-/**
- * Logging levels for the CTA-608 parser.
- *
- * @group CTA-608
- *
- * @enum
- *
- * @beta
- */
-const VerboseLevel = {
-  ERROR: 0,
-  TEXT: 1,
-  WARNING: 2,
-  INFO: 2,
-  DEBUG: 3,
-  DATA: 3
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/extractCta608DataFromSample.js":
-/*!*********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/extractCta608DataFromSample.js ***!
-  \*********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   extractCta608DataFromSample: function() { return /* binding */ extractCta608DataFromSample; }
-/* harmony export */ });
-/* harmony import */ var _utils_seiHelpers_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./utils/seiHelpers.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/seiHelpers.js");
-
-/**
- * Extracts CEA-608 data from a given sample.
- *
- * @param raw - The DataView with media data
- * @param startPos - The start position within the DataView
- * @param sampleSize - The size of the sample in bytes
- * @returns fieldData array containing field 1 and field 2 data arrays
- *
- * @group CTA-608
- * @beta
- */
-function extractCta608DataFromSample(raw, startPos, sampleSize) {
-  let nalSize = 0;
-  let nalType = 0;
-  const fieldData = [[], []];
-  for (let cursor = startPos; cursor < startPos + sampleSize - 5; cursor++) {
-    nalSize = raw.getUint32(cursor);
-    nalType = raw.getUint8(cursor + 4) & 0x1F;
-    // Make sure that we don't go out of bounds
-    if (cursor + 5 + nalSize > startPos + sampleSize) {
-      break;
-    }
-    // Only process Supplemental Enhancement Information (SEI) NAL units
-    if ((0,_utils_seiHelpers_js__WEBPACK_IMPORTED_MODULE_0__.isSeiNalUnitType)(nalType)) {
-      if (cursor + 5 + nalSize <= raw.byteLength) {
-        const seiData = (0,_utils_seiHelpers_js__WEBPACK_IMPORTED_MODULE_0__.getSeiData)(raw, cursor + 5, cursor + 5 + nalSize);
-        (0,_utils_seiHelpers_js__WEBPACK_IMPORTED_MODULE_0__.parseCta608DataFromSei)(seiData, fieldData);
-      }
-    }
-    // Jump to the next NAL unit
-    cursor += nalSize + 3;
-  }
-  return fieldData;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_COLS.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_COLS.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   NR_COLS: function() { return /* binding */ NR_COLS; }
-/* harmony export */ });
-const NR_COLS = 100;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_ROWS.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/NR_ROWS.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   NR_ROWS: function() { return /* binding */ NR_ROWS; }
-/* harmony export */ });
-const NR_ROWS = 15;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/backgroundColors.js":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/backgroundColors.js ***!
-  \****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   backgroundColors: function() { return /* binding */ backgroundColors; }
-/* harmony export */ });
-const backgroundColors = ['white', 'green', 'blue', 'cyan', 'red', 'yellow', 'magenta', 'black', 'transparent'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/createCmdHistory.js":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/createCmdHistory.js ***!
-  \****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   createCmdHistory: function() { return /* binding */ createCmdHistory; }
-/* harmony export */ });
-function createCmdHistory() {
-  return {
-    a: null,
-    b: null
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/getCharForByte.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/getCharForByte.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   getCharForByte: function() { return /* binding */ getCharForByte; }
-/* harmony export */ });
-/* harmony import */ var _specialCea608CharsCodes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./specialCea608CharsCodes.js */ "./node_modules/@svta/common-media-library/dist/cta/608/utils/specialCea608CharsCodes.js");
-
-function getCharForByte(byte) {
-  return String.fromCharCode(_specialCea608CharsCodes_js__WEBPACK_IMPORTED_MODULE_0__.specialCea608CharsCodes[byte] || byte);
-}
-;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/hasCmdRepeated.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/hasCmdRepeated.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   hasCmdRepeated: function() { return /* binding */ hasCmdRepeated; }
-/* harmony export */ });
-function hasCmdRepeated(a, b, cmdHistory) {
-  return cmdHistory.a === a && cmdHistory.b === b;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/numArrayToHexArray.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/numArrayToHexArray.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   numArrayToHexArray: function() { return /* binding */ numArrayToHexArray; }
-/* harmony export */ });
-function numArrayToHexArray(numArray) {
-  const hexArray = [];
-  for (let j = 0; j < numArray.length; j++) {
-    hexArray.push(numArray[j].toString(16));
-  }
-  return hexArray;
-}
-;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh1.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh1.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   rowsHighCh1: function() { return /* binding */ rowsHighCh1; }
-/* harmony export */ });
-const rowsHighCh1 = {
-  17: 2,
-  18: 4,
-  21: 6,
-  22: 8,
-  23: 10,
-  19: 13,
-  20: 15
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh2.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsHighCh2.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   rowsHighCh2: function() { return /* binding */ rowsHighCh2; }
-/* harmony export */ });
-const rowsHighCh2 = {
-  25: 2,
-  26: 4,
-  29: 6,
-  30: 8,
-  31: 10,
-  27: 13,
-  28: 15
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh1.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh1.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   rowsLowCh1: function() { return /* binding */ rowsLowCh1; }
-/* harmony export */ });
-// Tables to look up row from PAC data
-const rowsLowCh1 = {
-  17: 1,
-  18: 3,
-  21: 5,
-  22: 7,
-  23: 9,
-  16: 11,
-  19: 12,
-  20: 14
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh2.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/rowsLowCh2.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   rowsLowCh2: function() { return /* binding */ rowsLowCh2; }
-/* harmony export */ });
-const rowsLowCh2 = {
-  25: 1,
-  26: 3,
-  29: 5,
-  30: 7,
-  31: 9,
-  24: 11,
-  27: 12,
-  28: 14
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/seiHelpers.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/seiHelpers.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   getSeiData: function() { return /* binding */ getSeiData; },
-/* harmony export */   isCCType: function() { return /* binding */ isCCType; },
-/* harmony export */   isCea608Sei: function() { return /* binding */ isCea608Sei; },
-/* harmony export */   isNonEmptyCCData: function() { return /* binding */ isNonEmptyCCData; },
-/* harmony export */   isSeiNalUnitType: function() { return /* binding */ isSeiNalUnitType; },
-/* harmony export */   parseCta608DataFromSei: function() { return /* binding */ parseCta608DataFromSei; }
-/* harmony export */ });
-function getSeiData(raw, startPos, endPos) {
-  const data = [];
-  for (let cursor = startPos; cursor < endPos; cursor++) {
-    if (cursor + 2 < endPos && raw.getUint8(cursor) === 0x00 && raw.getUint8(cursor + 1) === 0x00 && raw.getUint8(cursor + 2) === 0x03) {
-      data.push(0x00);
-      data.push(0x00);
-      cursor += 2;
-    } else {
-      data.push(raw.getUint8(cursor));
-    }
-  }
-  return new DataView(new Uint8Array(data).buffer);
-}
-function isCea608Sei(payloadType, payloadSize, sei, pos) {
-  if (payloadType !== 4 || payloadSize < 8) {
-    return false;
-  }
-  const countryCode = sei.getUint8(pos);
-  if (countryCode !== 0xB5) {
-    return false;
-  }
-  const providerCode = sei.getUint16(pos + 1);
-  if (providerCode !== 0x0031) {
-    return false;
-  }
-  const userIdentifier = sei.getUint32(pos + 3);
-  if (userIdentifier !== 0x47413934) {
-    return false;
-  }
-  const userDataTypeCode = sei.getUint8(pos + 7);
-  if (userDataTypeCode !== 0x03) {
-    return false;
-  }
-  return true;
-}
-function isCCType(type) {
-  return type === 0 || type === 1;
-}
-function isNonEmptyCCData(ccData1, ccData2) {
-  return (ccData1 & 0x7F) > 0 || (ccData2 & 0x7F) > 0;
-}
-function isSeiNalUnitType(unitType) {
-  return unitType === 0x06;
-}
-function parseCta608DataFromSei(sei, fieldData) {
-  let cursor = 0;
-  while (cursor < sei.byteLength) {
-    let payloadType = 0;
-    let payloadSize = 0;
-    let now;
-    do {
-      payloadType += now = sei.getUint8(cursor++);
-    } while (now === 0xFF);
-    do {
-      payloadSize += now = sei.getUint8(cursor++);
-    } while (now === 0xFF);
-    if (isCea608Sei(payloadType, payloadSize, sei, cursor)) {
-      const pos = cursor + 10;
-      const ccCount = pos + (sei.getUint8(pos - 2) & 0x1F) * 3;
-      for (let i = pos; i < ccCount; i += 3) {
-        const byte = sei.getUint8(i);
-        if (byte & 0x04) {
-          const ccType = byte & 0x03;
-          if (isCCType(ccType)) {
-            const ccData1 = sei.getUint8(i + 1);
-            const ccData2 = sei.getUint8(i + 2);
-            if (isNonEmptyCCData(ccData1, ccData2)) {
-              fieldData[ccType].push(ccData1, ccData2);
-            }
-          }
-        }
-      }
-    }
-    cursor += payloadSize;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/setLastCmd.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/setLastCmd.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   setLastCmd: function() { return /* binding */ setLastCmd; }
-/* harmony export */ });
-function setLastCmd(a, b, cmdHistory) {
-  cmdHistory.a = a;
-  cmdHistory.b = b;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/608/utils/specialCea608CharsCodes.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/608/utils/specialCea608CharsCodes.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   specialCea608CharsCodes: function() { return /* binding */ specialCea608CharsCodes; }
-/* harmony export */ });
-/**
- *  Exceptions from regular ASCII. CodePoints are mapped to UTF-16 codes
- */
-const specialCea608CharsCodes = {
-  42: 225,
-  // lowercase a, acute accent
-  92: 233,
-  // lowercase e, acute accent
-  94: 237,
-  // lowercase i, acute accent
-  95: 243,
-  // lowercase o, acute accent
-  96: 250,
-  // lowercase u, acute accent
-  123: 231,
-  // lowercase c with cedilla
-  124: 247,
-  // division symbol
-  125: 209,
-  // uppercase N tilde
-  126: 241,
-  // lowercase n tilde
-  127: 9608,
-  // Full block
-  // THIS BLOCK INCLUDES THE 16 EXTENDED (TWO-BYTE) LINE 21 CHARACTERS
-  // THAT COME FROM HI BYTE=0x11 AND LOW BETWEEN 0x30 AND 0x3F
-  // THIS MEANS THAT \x50 MUST BE ADDED TO THE VALUES
-  128: 174,
-  // Registered symbol (R)
-  129: 176,
-  // degree sign
-  130: 189,
-  // 1/2 symbolOutputFilter
-  131: 191,
-  // Inverted (open) question mark
-  132: 8482,
-  // Trademark symbol (TM)
-  133: 162,
-  // Cents symbol
-  134: 163,
-  // Pounds sterling
-  135: 9834,
-  // Music 8'th note
-  136: 224,
-  // lowercase a, grave accent
-  137: 32,
-  // transparent space (regular)
-  138: 232,
-  // lowercase e, grave accent
-  139: 226,
-  // lowercase a, circumflex accent
-  140: 234,
-  // lowercase e, circumflex accent
-  141: 238,
-  // lowercase i, circumflex accent
-  142: 244,
-  // lowercase o, circumflex accent
-  143: 251,
-  // lowercase u, circumflex accent
-  // THIS BLOCK INCLUDES THE 32 EXTENDED (TWO-BYTE) LINE 21 CHARACTERS
-  // THAT COME FROM HI BYTE=0x12 AND LOW BETWEEN 0x20 AND 0x3F
-  144: 193,
-  // capital letter A with acute
-  145: 201,
-  // capital letter E with acute
-  146: 211,
-  // capital letter O with acute
-  147: 218,
-  // capital letter U with acute
-  148: 220,
-  // capital letter U with diaresis
-  149: 252,
-  // lowercase letter U with diaeresis
-  150: 8216,
-  // opening single quote
-  151: 161,
-  // inverted exclamation mark
-  152: 42,
-  // asterisk
-  153: 8217,
-  // closing single quote
-  154: 9473,
-  // box drawings heavy horizontal
-  155: 169,
-  // copyright sign
-  156: 8480,
-  // Service mark
-  157: 8226,
-  // (round) bullet
-  158: 8220,
-  // Left double quotation mark
-  159: 8221,
-  // Right double quotation mark
-  160: 192,
-  // uppercase A, grave accent
-  161: 194,
-  // uppercase A, circumflex
-  162: 199,
-  // uppercase C with cedilla
-  163: 200,
-  // uppercase E, grave accent
-  164: 202,
-  // uppercase E, circumflex
-  165: 203,
-  // capital letter E with diaresis
-  166: 235,
-  // lowercase letter e with diaresis
-  167: 206,
-  // uppercase I, circumflex
-  168: 207,
-  // uppercase I, with diaresis
-  169: 239,
-  // lowercase i, with diaresis
-  170: 212,
-  // uppercase O, circumflex
-  171: 217,
-  // uppercase U, grave accent
-  172: 249,
-  // lowercase u, grave accent
-  173: 219,
-  // uppercase U, circumflex
-  174: 171,
-  // left-pointing double angle quotation mark
-  175: 187,
-  // right-pointing double angle quotation mark
-  // THIS BLOCK INCLUDES THE 32 EXTENDED (TWO-BYTE) LINE 21 CHARACTERS
-  // THAT COME FROM HI BYTE=0x13 AND LOW BETWEEN 0x20 AND 0x3F
-  176: 195,
-  // Uppercase A, tilde
-  177: 227,
-  // Lowercase a, tilde
-  178: 205,
-  // Uppercase I, acute accent
-  179: 204,
-  // Uppercase I, grave accent
-  180: 236,
-  // Lowercase i, grave accent
-  181: 210,
-  // Uppercase O, grave accent
-  182: 242,
-  // Lowercase o, grave accent
-  183: 213,
-  // Uppercase O, tilde
-  184: 245,
-  // Lowercase o, tilde
-  185: 123,
-  // Open curly brace
-  186: 125,
-  // Closing curly brace
-  187: 92,
-  // Backslash
-  188: 94,
-  // Caret
-  189: 95,
-  // Underscore
-  190: 124,
-  // Pipe (vertical line)
-  191: 8764,
-  // Tilde operator
-  192: 196,
-  // Uppercase A, umlaut
-  193: 228,
-  // Lowercase A, umlaut
-  194: 214,
-  // Uppercase O, umlaut
-  195: 246,
-  // Lowercase o, umlaut
-  196: 223,
-  // Esszett (sharp S)
-  197: 165,
-  // Yen symbolOutputFilter
-  198: 164,
-  // Generic currency sign
-  199: 9475,
-  // Box drawings heavy vertical
-  200: 197,
-  // Uppercase A, ring
-  201: 229,
-  // Lowercase A, ring
-  202: 216,
-  // Uppercase O, stroke
-  203: 248,
-  // Lowercase o, strok
-  204: 9487,
-  // Box drawings heavy down and right
-  205: 9491,
-  // Box drawings heavy down and left
-  206: 9495,
-  // Box drawings heavy up and right
-  207: 9499 // Box drawings heavy up and left
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; }
-/* harmony export */ });
-/**
- * Common Media Object Type
- *
- * @internal
- */
-const CmObjectType = {
-  /**
-   * text file, such as a manifest or playlist
-   */
-  MANIFEST: 'm',
-  /**
-   * audio only
-   */
-  AUDIO: 'a',
-  /**
-   * video only
-   */
-  VIDEO: 'v',
-  /**
-   * muxed audio and video
-   */
-  MUXED: 'av',
-  /**
-   * init segment
-   */
-  INIT: 'i',
-  /**
-   * caption or subtitle
-   */
-  CAPTION: 'c',
-  /**
-   * ISOBMFF timed text track
-   */
-  TIMED_TEXT: 'tt',
-  /**
-   * cryptographic key, license or certificate.
-   */
-  KEY: 'k',
-  /**
-   * other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; }
-/* harmony export */ });
-/**
- * Common Media Stream Type
- *
- * @internal
- */
-const CmStreamType = {
-  /**
-   *  All segments are available – e.g., VOD
-   */
-  VOD: 'v',
-  /**
-   * Segments become available over time – e.g., LIVE
-   */
-  LIVE: 'l'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; }
-/* harmony export */ });
-/**
- * Common Media Streaming Format
- *
- * @internal
- */
-const CmStreamingFormat = {
-  /**
-   * MPEG DASH
-   */
-  DASH: 'd',
-  /**
-   * HTTP Live Streaming (HLS)
-   */
-  HLS: 'h',
-  /**
-   * Smooth Streaming
-   */
-  SMOOTH: 's',
-  /**
-   * Other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; }
-/* harmony export */ });
-/**
- * Checks if the given key is a token field.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a token field.
- *
- * @internal
- */
-function isTokenField(key) {
-  return ['ot', 'sf', 'st', 'e', 'sta'].includes(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isValid: function() { return /* binding */ isValid; }
-/* harmony export */ });
-/**
- * Checks if the given value is valid
- *
- * @param value - The value to check.
- *
- * @returns `true` if the key is a value is valid.
- *
- * @internal
- */
-function isValid(value) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value);
-  }
-  return value != null && value !== '' && value !== false;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
-/* harmony export */ });
-/**
- * Converts a symbol to a string.
- *
- * @param symbol - The symbol to convert.
- *
- * @returns The string representation of the symbol.
- *
- * @internal
- */
-function symbolToStr(symbol) {
-  return symbol.description || symbol.toString().slice(7, -1);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
-/* harmony export */ });
-const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
-/**
- * Process a URI template used in `SegmentTemplate` nodes.
- *
- * @param uriTemplate - URI template to process.
- * @param representationId - Representation ID.
- * @param number - Number.
- * @param subNumber - Sub-number.
- * @param bandwidth - Bandwidth.
- * @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
- *
- * @returns Processed URI template.
- *
- * @group DASH
- * @beta
- *
- * @example
- * {@includeCode ../../test/dash/processUriTemplate.test.ts#example}
- */
-function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
-  const uri = uriTemplate.replace(TOKENS, (match, name, widthStr, format) => {
-    let value;
-    switch (name) {
-      case undefined:
-        // $$ case
-        return '$';
-      case 'RepresentationID':
-        value = representationId;
-        break;
-      case 'Number':
-        value = number;
-        break;
-      case 'SubNumber':
-        value = subNumber;
-        break;
-      case 'Bandwidth':
-        value = bandwidth;
-        break;
-      case 'Time':
-        if (typeof time === 'string') {
-          return time;
-        }
-        value = time ? Math.round(time) : time;
-        break;
-      default:
-        value = null;
-    }
-    if (value == null) {
-      return match;
-    }
-    let valueString;
-    switch (format) {
-      case undefined: // Happens if there is no format specifier.
-      case 'd':
-      case 'i':
-      case 'u':
-        valueString = value.toString();
-        break;
-      case 'o':
-        valueString = value.toString(8);
-        break;
-      case 'x':
-        valueString = value.toString(16);
-        break;
-      case 'X':
-        valueString = value.toString(16).toUpperCase();
-        break;
-      default:
-        valueString = value.toString();
-        break;
-    }
-    const width = parseInt(widthStr, 10) || 1;
-    return valueString.padStart(width, '0');
-  });
-  return uri;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/getId3Frames.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/getId3Frames.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   getId3Frames: function() { return /* binding */ getId3Frames; }
-/* harmony export */ });
-/* harmony import */ var _util_decodeId3Frame_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./util/decodeId3Frame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3Frame.js");
-/* harmony import */ var _util_getId3FrameData_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./util/getId3FrameData.js */ "./node_modules/@svta/common-media-library/dist/id3/util/getId3FrameData.js");
-/* harmony import */ var _util_isId3Footer_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./util/isId3Footer.js */ "./node_modules/@svta/common-media-library/dist/id3/util/isId3Footer.js");
-/* harmony import */ var _util_isId3Header_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./util/isId3Header.js */ "./node_modules/@svta/common-media-library/dist/id3/util/isId3Header.js");
-/* harmony import */ var _util_readId3Size_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./util/readId3Size.js */ "./node_modules/@svta/common-media-library/dist/id3/util/readId3Size.js");
-
-
-
-
-
-const HEADER_FOOTER_SIZE = 10;
-const FRAME_SIZE = 10;
-/**
- * Returns an array of ID3 frames found in all the ID3 tags in the id3Data
- *
- * @param id3Data - The ID3 data containing one or more ID3 tags
- *
- * @returns Array of ID3 frame objects
- *
- * @group ID3
- *
- * @beta
- */
-function getId3Frames(id3Data) {
-  let offset = 0;
-  const frames = [];
-  while ((0,_util_isId3Header_js__WEBPACK_IMPORTED_MODULE_3__.isId3Header)(id3Data, offset)) {
-    const size = (0,_util_readId3Size_js__WEBPACK_IMPORTED_MODULE_4__.readId3Size)(id3Data, offset + 6);
-    if (id3Data[offset + 5] >> 6 & 1) {
-      // skip extended header
-      offset += HEADER_FOOTER_SIZE;
-    }
-    // skip past ID3 header
-    offset += HEADER_FOOTER_SIZE;
-    const end = offset + size;
-    // loop through frames in the ID3 tag
-    while (offset + FRAME_SIZE < end) {
-      const frameData = (0,_util_getId3FrameData_js__WEBPACK_IMPORTED_MODULE_1__.getId3FrameData)(id3Data.subarray(offset));
-      const frame = (0,_util_decodeId3Frame_js__WEBPACK_IMPORTED_MODULE_0__.decodeId3Frame)(frameData);
-      if (frame) {
-        frames.push(frame);
-      }
-      // skip frame header and frame data
-      offset += frameData.size + HEADER_FOOTER_SIZE;
-    }
-    if ((0,_util_isId3Footer_js__WEBPACK_IMPORTED_MODULE_2__.isId3Footer)(id3Data, offset)) {
-      offset += HEADER_FOOTER_SIZE;
-    }
-  }
-  return frames;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3Frame.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/decodeId3Frame.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeId3Frame: function() { return /* binding */ decodeId3Frame; }
-/* harmony export */ });
-/* harmony import */ var _decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./decodeId3ImageFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3ImageFrame.js");
-/* harmony import */ var _decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./decodeId3PrivFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3PrivFrame.js");
-/* harmony import */ var _decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./decodeId3TextFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3TextFrame.js");
-/* harmony import */ var _decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./decodeId3UrlFrame.js */ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3UrlFrame.js");
-
-
-
-
-/**
- * Decode an ID3 frame.
- *
- * @param frame - the ID3 frame
- *
- * @returns The decoded ID3 frame
- *
- * @internal
- *
- * @group ID3
- */
-function decodeId3Frame(frame) {
-  if (frame.type === 'PRIV') {
-    return (0,_decodeId3PrivFrame_js__WEBPACK_IMPORTED_MODULE_1__.decodeId3PrivFrame)(frame);
-  } else if (frame.type[0] === 'W') {
-    return (0,_decodeId3UrlFrame_js__WEBPACK_IMPORTED_MODULE_3__.decodeId3UrlFrame)(frame);
-  } else if (frame.type === 'APIC') {
-    return (0,_decodeId3ImageFrame_js__WEBPACK_IMPORTED_MODULE_0__.decodeId3ImageFrame)(frame);
-  }
-  return (0,_decodeId3TextFrame_js__WEBPACK_IMPORTED_MODULE_2__.decodeId3TextFrame)(frame);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3ImageFrame.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/decodeId3ImageFrame.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeId3ImageFrame: function() { return /* binding */ decodeId3ImageFrame; }
-/* harmony export */ });
-/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
-/* harmony import */ var _toArrayBuffer_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./toArrayBuffer.js */ "./node_modules/@svta/common-media-library/dist/id3/util/toArrayBuffer.js");
-/* harmony import */ var _utf8_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utf8.js */ "./node_modules/@svta/common-media-library/dist/id3/util/utf8.js");
-
-
-
-function decodeId3ImageFrame(frame) {
-  const metadataFrame = {
-    key: frame.type,
-    description: '',
-    data: '',
-    mimeType: null,
-    pictureType: null
-  };
-  const utf8Encoding = 0x03;
-  if (frame.size < 2) {
-    return undefined;
-  }
-  if (frame.data[0] !== utf8Encoding) {
-    console.log('Ignore frame with unrecognized character ' + 'encoding');
-    return undefined;
-  }
-  const mimeTypeEndIndex = frame.data.subarray(1).indexOf(0);
-  if (mimeTypeEndIndex === -1) {
-    return undefined;
-  }
-  const mimeType = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 1, mimeTypeEndIndex));
-  const pictureType = frame.data[2 + mimeTypeEndIndex];
-  const descriptionEndIndex = frame.data.subarray(3 + mimeTypeEndIndex).indexOf(0);
-  if (descriptionEndIndex === -1) {
-    return undefined;
-  }
-  const description = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 3 + mimeTypeEndIndex, descriptionEndIndex));
-  let data;
-  if (mimeType === '-->') {
-    data = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)((0,_utf8_js__WEBPACK_IMPORTED_MODULE_2__.toUint8)(frame.data, 4 + mimeTypeEndIndex + descriptionEndIndex));
-  } else {
-    data = (0,_toArrayBuffer_js__WEBPACK_IMPORTED_MODULE_1__.toArrayBuffer)(frame.data.subarray(4 + mimeTypeEndIndex + descriptionEndIndex));
-  }
-  metadataFrame.mimeType = mimeType;
-  metadataFrame.pictureType = pictureType;
-  metadataFrame.description = description;
-  metadataFrame.data = data;
-  return metadataFrame;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3PrivFrame.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/decodeId3PrivFrame.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeId3PrivFrame: function() { return /* binding */ decodeId3PrivFrame; }
-/* harmony export */ });
-/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
-
-/**
- * Decode an ID3 PRIV frame.
- *
- * @param frame - the ID3 PRIV frame
- *
- * @returns The decoded ID3 PRIV frame
- *
- * @internal
- *
- * @group ID3
- */
-function decodeId3PrivFrame(frame) {
-  /*
-  Format: <text string>\0<binary data>
-  */
-  if (frame.size < 2) {
-    return undefined;
-  }
-  const owner = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data, true);
-  const privateData = new Uint8Array(frame.data.subarray(owner.length + 1));
-  return {
-    key: frame.type,
-    info: owner,
-    data: privateData.buffer
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3TextFrame.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/decodeId3TextFrame.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeId3TextFrame: function() { return /* binding */ decodeId3TextFrame; }
-/* harmony export */ });
-/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
-
-/**
- * Decodes an ID3 text frame
- *
- * @param frame - the ID3 text frame
- *
- * @returns The decoded ID3 text frame
- *
- * @internal
- *
- * @group ID3
- */
-function decodeId3TextFrame(frame) {
-  if (frame.size < 2) {
-    return undefined;
-  }
-  if (frame.type === 'TXXX') {
-    /*
-    Format:
-    [0]   = {Text Encoding}
-    [1-?] = {Description}\0{Value}
-    */
-    let index = 1;
-    const description = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data.subarray(index), true);
-    index += description.length + 1;
-    const value = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data.subarray(index));
-    return {
-      key: frame.type,
-      info: description,
-      data: value
-    };
-  }
-  /*
-  Format:
-  [0]   = {Text Encoding}
-  [1-?] = {Value}
-  */
-  const text = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data.subarray(1));
-  return {
-    key: frame.type,
-    info: '',
-    data: text
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/decodeId3UrlFrame.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/decodeId3UrlFrame.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeId3UrlFrame: function() { return /* binding */ decodeId3UrlFrame; }
-/* harmony export */ });
-/* harmony import */ var _utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/utf8ArrayToStr.js */ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js");
-
-/**
- * Decode a URL frame
- *
- * @param frame - the ID3 URL frame
- *
- * @returns The decoded ID3 URL frame
- *
- * @internal
- *
- * @group ID3
- */
-function decodeId3UrlFrame(frame) {
-  if (frame.type === 'WXXX') {
-    /*
-    Format:
-    [0]   = {Text Encoding}
-    [1-?] = {Description}\0{URL}
-    */
-    if (frame.size < 2) {
-      return undefined;
-    }
-    let index = 1;
-    const description = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data.subarray(index), true);
-    index += description.length + 1;
-    const value = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data.subarray(index));
-    return {
-      key: frame.type,
-      info: description,
-      data: value
-    };
-  }
-  /*
-  Format:
-  [0-?] = {URL}
-  */
-  const url = (0,_utils_utf8ArrayToStr_js__WEBPACK_IMPORTED_MODULE_0__.utf8ArrayToStr)(frame.data);
-  return {
-    key: frame.type,
-    info: '',
-    data: url
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/getId3FrameData.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/getId3FrameData.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   getId3FrameData: function() { return /* binding */ getId3FrameData; }
-/* harmony export */ });
-/* harmony import */ var _readId3Size_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./readId3Size.js */ "./node_modules/@svta/common-media-library/dist/id3/util/readId3Size.js");
-
-/**
- * Returns the data of an ID3 frame.
- *
- * @param data - The data to read from
- *
- * @returns The data of the ID3 frame
- *
- * @internal
- *
- * @group ID3
- */
-function getId3FrameData(data) {
-  /*
-  Frame ID       $xx xx xx xx (four characters)
-  Size           $xx xx xx xx
-  Flags          $xx xx
-  */
-  const type = String.fromCharCode(data[0], data[1], data[2], data[3]);
-  const size = (0,_readId3Size_js__WEBPACK_IMPORTED_MODULE_0__.readId3Size)(data, 4);
-  // skip frame id, size, and flags
-  const offset = 10;
-  return {
-    type,
-    size,
-    data: data.subarray(offset, offset + size)
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/isId3Footer.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/isId3Footer.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isId3Footer: function() { return /* binding */ isId3Footer; }
-/* harmony export */ });
-/**
- * Returns true if an ID3 footer can be found at offset in data
- *
- * @param data - The data to search in
- * @param offset - The offset at which to start searching
- *
- * @returns `true` if an ID3 footer is found
- *
- * @internal
- *
- * @group ID3
- */
-function isId3Footer(data, offset) {
-  /*
-   * The footer is a copy of the header, but with a different identifier
-   */
-  if (offset + 10 <= data.length) {
-    // look for '3DI' identifier
-    if (data[offset] === 0x33 && data[offset + 1] === 0x44 && data[offset + 2] === 0x49) {
-      // check version is within range
-      if (data[offset + 3] < 0xff && data[offset + 4] < 0xff) {
-        // check size is within range
-        if (data[offset + 6] < 0x80 && data[offset + 7] < 0x80 && data[offset + 8] < 0x80 && data[offset + 9] < 0x80) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/isId3Header.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/isId3Header.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isId3Header: function() { return /* binding */ isId3Header; }
-/* harmony export */ });
-/**
- * Returns true if an ID3 header can be found at offset in data
- *
- * @param data - The data to search in
- * @param offset - The offset at which to start searching
- *
- * @returns `true` if an ID3 header is found
- *
- * @internal
- *
- * @group ID3
- */
-function isId3Header(data, offset) {
-  /*
-   * http://id3.org/id3v2.3.0
-   * [0]     = 'I'
-   * [1]     = 'D'
-   * [2]     = '3'
-   * [3,4]   = {Version}
-   * [5]     = {Flags}
-   * [6-9]   = {ID3 Size}
-   *
-   * An ID3v2 tag can be detected with the following pattern:
-   *  $49 44 33 yy yy xx zz zz zz zz
-   * Where yy is less than $FF, xx is the 'flags' byte and zz is less than $80
-   */
-  if (offset + 10 <= data.length) {
-    // look for 'ID3' identifier
-    if (data[offset] === 0x49 && data[offset + 1] === 0x44 && data[offset + 2] === 0x33) {
-      // check version is within range
-      if (data[offset + 3] < 0xff && data[offset + 4] < 0xff) {
-        // check size is within range
-        if (data[offset + 6] < 0x80 && data[offset + 7] < 0x80 && data[offset + 8] < 0x80 && data[offset + 9] < 0x80) {
-          return true;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/readId3Size.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/readId3Size.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   readId3Size: function() { return /* binding */ readId3Size; }
-/* harmony export */ });
-/**
- * Read ID3 size
- *
- * @param data - The data to read from
- * @param offset - The offset at which to start reading
- *
- * @returns The size
- *
- * @internal
- *
- * @group ID3
- */
-function readId3Size(data, offset) {
-  let size = 0;
-  size = (data[offset] & 0x7f) << 21;
-  size |= (data[offset + 1] & 0x7f) << 14;
-  size |= (data[offset + 2] & 0x7f) << 7;
-  size |= data[offset + 3] & 0x7f;
-  return size;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/toArrayBuffer.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/toArrayBuffer.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   toArrayBuffer: function() { return /* binding */ toArrayBuffer; }
-/* harmony export */ });
-function toArrayBuffer(view) {
-  if (view instanceof ArrayBuffer) {
-    return view;
-  } else {
-    if (view.byteOffset == 0 && view.byteLength == view.buffer.byteLength) {
-      // This is a TypedArray over the whole buffer.
-      return view.buffer;
-    }
-    // This is a 'view' on the buffer.  Create a new buffer that only contains
-    // the data.  Note that since this isn't an ArrayBuffer, the 'new' call
-    // will allocate a new buffer to hold the copy.
-    return new Uint8Array(view).buffer;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/id3/util/utf8.js":
-/*!***********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/id3/util/utf8.js ***!
-  \***********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   toUint8: function() { return /* binding */ toUint8; }
-/* harmony export */ });
-function toUint8(data, offset = 0, length = Infinity) {
-  return view(data, offset, length, Uint8Array);
-}
-function view(data, offset, length, Type) {
-  const buffer = unsafeGetArrayBuffer(data);
-  let bytesPerElement = 1;
-  if ('BYTES_PER_ELEMENT' in Type) {
-    bytesPerElement = Type.BYTES_PER_ELEMENT;
-  }
-  // Absolute end of the |data| view within |buffer|.
-  const dataOffset = isArrayBufferView(data) ? data.byteOffset : 0;
-  const dataEnd = (dataOffset + data.byteLength) / bytesPerElement;
-  // Absolute start of the result within |buffer|.
-  const rawStart = (dataOffset + offset) / bytesPerElement;
-  const start = Math.floor(Math.max(0, Math.min(rawStart, dataEnd)));
-  // Absolute end of the result within |buffer|.
-  const end = Math.floor(Math.min(start + Math.max(length, 0), dataEnd));
-  return new Type(buffer, start, end - start);
-}
-function unsafeGetArrayBuffer(view) {
-  if (view instanceof ArrayBuffer) {
-    return view;
-  } else {
-    return view.buffer;
-  }
-}
-function isArrayBufferView(obj) {
-  return obj && obj.buffer instanceof ArrayBuffer && obj.byteLength !== undefined && obj.byteOffset !== undefined;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfItem: function() { return /* binding */ SfItem; }
-/* harmony export */ });
-/**
- * Structured Field Item
- *
- * @group Structured Field
- *
- * @beta
- */
-class SfItem {
-  constructor(value, params) {
-    if (Array.isArray(value)) {
-      value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
-    }
-    this.value = value;
-    this.params = params;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfToken: function() { return /* binding */ SfToken; }
-/* harmony export */ });
-/**
- * A class to represent structured field tokens when `Symbol` is not available.
- *
- * @group Structured Field
- *
- * @beta
- */
-class SfToken {
-  constructor(description) {
-    this.description = description;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var _parse_parseDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parse/parseDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js");
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-
-
-
-/**
- * Decode a structured field string into a structured field dictionary
- *
- * @param input - The structured field string to decode
- * @returns The structured field dictionary
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfDict(input, options) {
-  try {
-    const {
-      src,
-      value
-    } = (0,_parse_parseDict_js__WEBPACK_IMPORTED_MODULE_0__.parseDict)(input.trim(), options);
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(input, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; }
-/* harmony export */ });
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parse_parseList_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js");
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-
-
-
-/**
- * Decode a structured field string into a structured field list
- *
- * @param input - The structured field string to decode
- * @returns The structured field list
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfList(input, options) {
-  try {
-    const {
-      src,
-      value
-    } = (0,_parse_parseList_js__WEBPACK_IMPORTED_MODULE_1__.parseList)(input.trim(), options);
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__.parseError)(input, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var _serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serialize/serializeDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js");
-
-/**
- * Encode an object into a structured field dictionary
- *
- * @param value - The structured field dictionary to encode
- * @param options - Encoding options
- *
- * @returns The structured field string
- *
- * @group Structured Field
- *
- * @beta
- */
-function encodeSfDict(value, options) {
-  return (0,_serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__.serializeDict)(value, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parsedValue: function() { return /* binding */ parsedValue; }
-/* harmony export */ });
-function parsedValue(value, src) {
-  return {
-    value,
-    src
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js":
-/*!*********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js ***!
-  \*********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; }
-/* harmony export */ });
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _parseBoolean_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js");
-/* harmony import */ var _parseByteSequence_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js");
-/* harmony import */ var _parseDate_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-/* harmony import */ var _parseString_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js");
-/* harmony import */ var _parseToken_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./parseToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js");
-
-
-
-
-
-
-
-
-// 4.2.3.1.  Parsing a Bare Item
-//
-// Given an ASCII string as input_string, return a bare Item.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is a "-" or a DIGIT,
-//     return the result of running Parsing an Integer or Decimal
-//     (Section 4.2.4) with input_string.
-//
-// 2.  If the first character of input_string is a DQUOTE, return the
-//     result of running Parsing a String (Section 4.2.5) with
-//     input_string.
-//
-// 3.  If the first character of input_string is ":", return the result
-//     of running Parsing a Byte Sequence (Section 4.2.7) with
-//     input_string.
-//
-// 4.  If the first character of input_string is "?", return the result
-//     of running Parsing a Boolean (Section 4.2.8) with input_string.
-//
-// 5.  If the first character of input_string is an ALPHA or "*", return
-//     the result of running Parsing a Token (Section 4.2.6) with
-//     input_string.
-//
-// 6.  If the first character of input_string is "@", return the result
-//     of running Parsing a Date (Section 4.2.9) with input_string.
-//
-// 7.  Otherwise, the item type is unrecognized; fail parsing.
-function parseBareItem(src, options) {
-  const first = src[0];
-  if (first === `"`) {
-    return (0,_parseString_js__WEBPACK_IMPORTED_MODULE_6__.parseString)(src);
-  }
-  if (/^[-0-9]/.test(first)) {
-    return (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_5__.parseIntegerOrDecimal)(src);
-  }
-  if (first === `?`) {
-    return (0,_parseBoolean_js__WEBPACK_IMPORTED_MODULE_1__.parseBoolean)(src);
-  }
-  if (first === `:`) {
-    return (0,_parseByteSequence_js__WEBPACK_IMPORTED_MODULE_2__.parseByteSequence)(src);
-  }
-  if (/^[a-zA-Z*]/.test(first)) {
-    return (0,_parseToken_js__WEBPACK_IMPORTED_MODULE_7__.parseToken)(src, options);
-  }
-  if (first === `@`) {
-    return (0,_parseDate_js__WEBPACK_IMPORTED_MODULE_3__.parseDate)(src);
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_0__.BARE_ITEM);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-// 4.2.8.  Parsing a Boolean
-//
-// Given an ASCII string as input_string, return a Boolean. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "?", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If the first character of input_string matches "1", discard the
-//     first character, and return true.
-//
-// 4.  If the first character of input_string matches "0", discard the
-//     first character, and return false.
-//
-// 5.  No value has matched; fail parsing.
-function parseBoolean(src) {
-  let i = 0;
-  if (src[i] !== '?') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  i++;
-  if (src[i] === '1') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(true, src.substring(++i));
-  }
-  if (src[i] === '0') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(false, src.substring(++i));
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; }
-/* harmony export */ });
-/* harmony import */ var _utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/decodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.7.  Parsing a Byte Sequence
-//
-// Given an ASCII string as input_string, return a Byte Sequence.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ":", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If there is not a ":" character before the end of input_string,
-//     fail parsing.
-//
-// 4.  Let b64_content be the result of consuming content of
-//     input_string up to but not including the first instance of the
-//     character ":".
-//
-// 5.  Consume the ":" character at the beginning of input_string.
-//
-// 6.  If b64_content contains a character not included in ALPHA, DIGIT,
-//     "+", "/" and "=", fail parsing.
-//
-// 7.  Let binary_content be the result of Base 64 Decoding [RFC4648]
-//     b64_content, synthesizing padding if necessary (note the
-//     requirements about recipient behavior below).
-//
-// 8.  Return binary_content.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that is not properly "=" padded (see [RFC4648],
-// Section 3.2), parsers SHOULD NOT fail when "=" padding is not
-// present, unless they cannot be configured to do so.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that has non-zero pad bits (see [RFC4648], Section 3.5),
-// parsers SHOULD NOT fail when non-zero pad bits are present, unless
-// they cannot be configured to do so.
-//
-// This specification does not relax the requirements in [RFC4648],
-// Section 3.1 and 3.3; therefore, parsers MUST fail on characters
-// outside the base64 alphabet, and on line feeds in encoded data.
-function parseByteSequence(src) {
-  if (src[0] !== ':') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  src = src.substring(1);
-  if (src.includes(':') === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  const re = /(^.*?)(:)/g;
-  const b64_content = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  // pass b64_content char check step 6
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)((0,_utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_0__.decodeBase64)(b64_content), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDate: function() { return /* binding */ parseDate; }
-/* harmony export */ });
-/* harmony import */ var _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/DATE.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-
-
-
-
-// 4.2.9.  Parsing a Date
-//
-// Given an ASCII string as input_string, return a Date. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "@", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  Let output_date be the result of running Parsing an Integer or
-//     Decimal (Section 4.2.4) with input_string.
-//
-// 4.  If output_date is a Decimal, fail parsing.
-//
-// 5.  Return output_date.
-function parseDate(src) {
-  let i = 0;
-  if (src[i] !== '@') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__.DATE);
-  }
-  i++;
-  const date = (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_3__.parseIntegerOrDecimal)(src.substring(i));
-  if (Number.isInteger(date.value) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__.DATE);
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(new Date(date.value * 1000), date.src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDict: function() { return /* binding */ parseDict; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-
-// 4.2.2.  Parsing a Dictionary
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are (item_or_inner_list, parameters) tuples. input_string is
-// modified to remove the parsed value.
-//
-// 1.  Let dictionary be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Let this_key be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     2.  If the first character of input_string is "=":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let member be the result of running Parsing an Item or
-//             Inner List (Section 4.2.1.1) with input_string.
-//
-//     3.  Otherwise:
-//
-//         1.  Let value be Boolean true.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters Section 4.2.3.2 with input_string.
-//
-//         3.  Let member be the tuple (value, parameters).
-//
-//     4.  Add name this_key with value member to dictionary.  If
-//         dictionary already contains a name this_key (comparing
-//         character-for-character), overwrite its value.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, return dictionary.
-//
-//     7.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     8.  Discard any leading OWS characters from input_string.
-//
-//     9.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return dictionary (which is
-//     empty).
-//
-// Note that when duplicate Dictionary keys are encountered, this has
-// the effect of ignoring all but the last instance.
-function parseDict(src, options) {
-  const value = {};
-  while (src.length > 0) {
-    let member;
-    const parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_5__.parseKey)(src);
-    const key = parsedKey.value;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      const parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_4__.parseItemOrInnerList)(src.substring(1), options);
-      member = parsedItemOrInnerList.value;
-      src = parsedItemOrInnerList.src;
-    } else {
-      const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_6__.parseParameters)(src, options);
-      member = new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(true, parsedParameters.value);
-      src = parsedParameters.src;
-    }
-    value[key] = member;
-    src = src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseError: function() { return /* binding */ parseError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function parseError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('parse', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js":
-/*!**********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js ***!
-  \**********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/INNER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-// 4.2.1.2.  Parsing an Inner List
-//
-// Given an ASCII string as input_string, return the tuple (inner_list,
-// parameters), where inner_list is an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  Consume the first character of input_string; if it is not "(",
-//     fail parsing.
-//
-// 2.  Let inner_list be an empty array.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  Discard any leading SP characters from input_string.
-//
-//     2.  If the first character of input_string is ")":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters (Section 4.2.3.2) with input_string.
-//
-//         3.  Return the tuple (inner_list, parameters).
-//
-//     3.  Let item be the result of running Parsing an Item
-//         (Section 4.2.3) with input_string.
-//
-//     4.  Append item to inner_list.
-//
-//     5.  If the first character of input_string is not SP or ")", fail
-//         parsing.
-//
-// 4.  The end of the inner list was not found; fail parsing.
-function parseInnerList(src, options) {
-  if (src[0] !== '(') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-  }
-  src = src.substring(1);
-  const innerList = [];
-  while (src.length > 0) {
-    src = src.trim();
-    if (src[0] === ')') {
-      src = src.substring(1);
-      const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_5__.parseParameters)(src, options);
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(innerList, parsedParameters.value), parsedParameters.src);
-    }
-    const parsedItem = (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_4__.parseItem)(src, options);
-    innerList.push(parsedItem.value);
-    src = parsedItem.src;
-    if (src[0] !== ' ' && src[0] !== ')') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-    }
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; }
-/* harmony export */ });
-/* harmony import */ var _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/INTEGER_DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.4.  Parsing an Integer or Decimal
-//
-// Given an ASCII string as input_string, return an Integer or Decimal.
-// input_string is modified to remove the parsed value.
-//
-// NOTE: This algorithm parses both Integers (Section 3.3.1) and
-// Decimals (Section 3.3.2), and returns the corresponding structure.
-//
-// 1.   Let type be "integer".
-//
-// 2.   Let sign be 1.
-//
-// 3.   Let input_number be an empty string.
-//
-// 4.   If the first character of input_string is "-", consume it and
-//      set sign to -1.
-//
-// 5.   If input_string is empty, there is an empty integer; fail
-//      parsing.
-//
-// 6.   If the first character of input_string is not a DIGIT, fail
-//      parsing.
-//
-// 7.   While input_string is not empty:
-//
-//      1.  Let char be the result of consuming the first character of
-//          input_string.
-//
-//      2.  If char is a DIGIT, append it to input_number.
-//
-//      3.  Else, if type is "integer" and char is ".":
-//
-//          1.  If input_number contains more than 12 characters, fail
-//              parsing.
-//
-//          2.  Otherwise, append char to input_number and set type to
-//              "decimal".
-//
-//      4.  Otherwise, prepend char to input_string, and exit the loop.
-//
-//      5.  If type is "integer" and input_number contains more than 15
-//          characters, fail parsing.
-//
-//      6.  If type is "decimal" and input_number contains more than 16
-//          characters, fail parsing.
-//
-// 8.   If type is "integer":
-//
-//      1.  Parse input_number as an integer and let output_number be
-//          the product of the result and sign.
-//
-//      2.  If output_number is outside the range -999,999,999,999,999
-//          to 999,999,999,999,999 inclusive, fail parsing.
-//
-// 9.   Otherwise:
-//
-//      1.  If the final character of input_number is ".", fail parsing.
-//
-//      2.  If the number of characters after "." in input_number is
-//          greater than three, fail parsing.
-//
-//      3.  Parse input_number as a decimal number and let output_number
-//          be the product of the result and sign.
-//
-// 10.  Return output_number.
-function parseIntegerOrDecimal(src) {
-  const orig = src;
-  let sign = 1;
-  let num = '';
-  let value;
-  const i = 0;
-  const error = (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(orig, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER_DECIMAL);
-  if (src[i] === '-') {
-    sign = -1;
-    src = src.substring(1);
-  }
-  if (src.length <= 0) {
-    throw error;
-  }
-  const re_integer = /^(\d+)?/g;
-  const result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) {
-    throw error;
-  }
-  num += result_integer[1];
-  src = src.substring(re_integer.lastIndex);
-  if (src[0] === '.') {
-    // decimal
-    if (num.length > 12) {
-      throw error;
-    }
-    const re_decimal = /^(\.\d+)?/g;
-    const result_decimal = re_decimal.exec(src);
-    src = src.substring(re_decimal.lastIndex);
-    // 9.2.  If the number of characters after "." in input_number is greater than three, fail parsing.
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) {
-      throw error;
-    }
-    num += result_decimal[1];
-    // 7.6.  If type is "decimal" and input_number contains more than 16 characters, fail parsing.
-    if (num.length > 16) {
-      throw error;
-    }
-    value = parseFloat(num) * sign;
-  } else {
-    // integer
-    // 7.5.  If type is "integer" and input_number contains more than 15 characters, fail parsing.
-    if (num.length > 15) {
-      throw error;
-    }
-    value = parseInt(num) * sign;
-    if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__.isInvalidInt)(value)) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(num, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER_DECIMAL);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItem: function() { return /* binding */ parseItem; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-// 4.2.3.  Parsing an Item
-//
-// Given an ASCII string as input_string, return a (bare_item,
-// parameters) tuple. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let bare_item be the result of running Parsing a Bare Item
-//     (Section 4.2.3.1) with input_string.
-//
-// 2.  Let parameters be the result of running Parsing Parameters
-//     (Section 4.2.3.2) with input_string.
-//
-// 3.  Return the tuple (bare_item, parameters).
-function parseItem(src, options) {
-  const parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__.parseBareItem)(src, options);
-  src = parsedBareItem.src;
-  const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_3__.parseParameters)(src, options);
-  src = parsedParameters.src;
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(parsedBareItem.value, parsedParameters.value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; }
-/* harmony export */ });
-/* harmony import */ var _parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parseInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-
-
-// 4.2.1.1.  Parsing an Item or Inner List
-//
-// Given an ASCII string as input_string, return the tuple
-// (item_or_inner_list, parameters), where item_or_inner_list can be
-// either a single bare item, or an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is "(", return the result
-//     of running Parsing an Inner List (Section 4.2.1.2) with
-//     input_string.
-//
-// 2.  Return the result of running Parsing an Item (Section 4.2.3) with
-//     input_string.
-function parseItemOrInnerList(src, options) {
-  if (src[0] === '(') {
-    return (0,_parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__.parseInnerList)(src, options);
-  }
-  return (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_1__.parseItem)(src, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js ***!
-  \****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseKey: function() { return /* binding */ parseKey; }
-/* harmony export */ });
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-// 4.2.3.3.  Parsing a Key
-//
-// Given an ASCII string as input_string, return a key. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not lcalpha or "*",
-//     fail parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not one of lcalpha,
-//         DIGIT, "_", "-", ".", or "*", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseKey(src) {
-  let i = 0;
-  if (/^[a-z*]$/.test(src[i]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__.KEY);
-  }
-  let value = '';
-  while (src.length > i) {
-    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src.substring(i));
-    }
-    value += src[i];
-    i++;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src.substring(i));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseList: function() { return /* binding */ parseList; }
-/* harmony export */ });
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-
-
-
-
-// 4.2.1.  Parsing a List
-//
-// Given an ASCII string as input_string, return an array of
-// (item_or_inner_list, parameters) tuples. input_string is modified to
-// remove the parsed value.
-//
-// 1.  Let members be an empty array.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Append the result of running Parsing an Item or Inner List
-//         (Section 4.2.1.1) with input_string to members.
-//
-//     2.  Discard any leading OWS characters from input_string.
-//
-//     3.  If input_string is empty, return members.
-//
-//     4.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return members (which is
-//     empty).
-function parseList(src, options) {
-  const value = [];
-  while (src.length > 0) {
-    const parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_3__.parseItemOrInnerList)(src, options);
-    value.push(parsedItemOrInnerList.value);
-    src = parsedItemOrInnerList.src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__.LIST);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__.LIST);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; }
-/* harmony export */ });
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-
-
-
-// 4.2.3.2.  Parsing Parameters
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are bare Items. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let parameters be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not ";", exit the
-//         loop.
-//
-//     2.  Consume a ";" character from the beginning of input_string.
-//
-//     3.  Discard any leading SP characters from input_string.
-//
-//     4.  let param_name be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     5.  Let param_value be Boolean true.
-//
-//     6.  If the first character of input_string is "=":
-//
-//         1.  Consume the "=" character at the beginning of
-//             input_string.
-//
-//         2.  Let param_value be the result of running Parsing a Bare
-//             Item (Section 4.2.3.1) with input_string.
-//
-//     7.  Append key param_name with value param_value to parameters.
-//         If parameters already contains a name param_name (comparing
-//         character-for-character), overwrite its value.
-//
-// 3.  Return parameters.
-//
-// Note that when duplicate Parameter keys are encountered, this has the
-// effect of ignoring all but the last instance.
-function parseParameters(src, options) {
-  let parameters = undefined;
-  while (src.length > 0) {
-    if (src[0] !== ';') {
-      break;
-    }
-    src = src.substring(1).trim();
-    const parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_2__.parseKey)(src);
-    const key = parsedKey.value;
-    let value = true;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      src = src.substring(1);
-      const parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_1__.parseBareItem)(src, options);
-      value = parsedBareItem.value;
-      src = parsedBareItem.src;
-    }
-    // initialize as object when params exists
-    if (parameters == null) {
-      parameters = {};
-    }
-    // override if param_name exists
-    parameters[key] = value;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_0__.parsedValue)(parameters, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseString: function() { return /* binding */ parseString; }
-/* harmony export */ });
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.5.  Parsing a String
-//
-// Given an ASCII string as input_string, return an unquoted String.
-// input_string is modified to remove the parsed value.
-//
-// 1.  Let output_string be an empty string.
-//
-// 2.  If the first character of input_string is not DQUOTE, fail
-//     parsing.
-//
-// 3.  Discard the first character of input_string.
-//
-// 4.  While input_string is not empty:
-//
-//     1.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     2.  If char is a backslash ("\"):
-//
-//         1.  If input_string is now empty, fail parsing.
-//
-//         2.  Let next_char be the result of consuming the first
-//             character of input_string.
-//
-//         3.  If next_char is not DQUOTE or "\", fail parsing.
-//
-//         4.  Append next_char to output_string.
-//
-//     3.  Else, if char is DQUOTE, return output_string.
-//
-//     4.  Else, if char is in the range %x00-1f or %x7f (i.e., is not
-//         in VCHAR or SP), fail parsing.
-//
-//     5.  Else, append char to output_string.
-//
-// 5.  Reached the end of input_string without finding a closing DQUOTE;
-//     fail parsing.
-function parseString(src) {
-  let output = '';
-  let i = 0;
-  if (src[i] !== `"`) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-  }
-  i++;
-  while (src.length > i) {
-    if (src[i] === `\\`) {
-      if (src.length <= i + 1) {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-      }
-      i++;
-      if (src[i] !== `"` && src[i] !== `\\`) {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-      }
-      output += src[i];
-    } else if (src[i] === `"`) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(output, src.substring(++i));
-    } else if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__.STRING_REGEX.test(src[i])) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-    } else {
-      output += src[i];
-    }
-    i++;
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseToken: function() { return /* binding */ parseToken; }
-/* harmony export */ });
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.6.  Parsing a Token
-//
-// Given an ASCII string as input_string, return a Token. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ALPHA or "*", fail
-//     parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not in tchar, ":"
-//         or "/", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseToken(src, options) {
-  if (/^[a-zA-Z*]$/.test(src[0]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__.TOKEN);
-  }
-  const re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
-  const value = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)((options === null || options === void 0 ? void 0 : options.useSymbol) === false ? new _SfToken_js__WEBPACK_IMPORTED_MODULE_0__.SfToken(value) : Symbol.for(value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; }
-/* harmony export */ });
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _serializeBoolean_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js");
-/* harmony import */ var _serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js");
-/* harmony import */ var _serializeDate_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js");
-/* harmony import */ var _serializeDecimal_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-/* harmony import */ var _serializeString_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./serializeString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js");
-/* harmony import */ var _serializeToken_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./serializeToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js");
-
-
-
-
-
-
-
-
-
-
-// 4.1.3.1.  Serializing a Bare Item
-//
-// Given an Item as input_item, return an ASCII string suitable for use
-// in a HTTP field value.
-//
-// 1.  If input_item is an Integer, return the result of running
-//     Serializing an Integer (Section 4.1.4) with input_item.
-//
-// 2.  If input_item is a Decimal, return the result of running
-//     Serializing a Decimal (Section 4.1.5) with input_item.
-//
-// 3.  If input_item is a String, return the result of running
-//     Serializing a String (Section 4.1.6) with input_item.
-//
-// 4.  If input_item is a Token, return the result of running
-//     Serializing a Token (Section 4.1.7) with input_item.
-//
-// 5.  If input_item is a Boolean, return the result of running
-//     Serializing a Boolean (Section 4.1.9) with input_item.
-//
-// 6.  If input_item is a Byte Sequence, return the result of running
-//     Serializing a Byte Sequence (Section 4.1.8) with input_item.
-//
-// 7.  If input_item is a Date, return the result of running Serializing
-//     a Date (Section 4.1.10) with input_item.
-//
-// 8.  Otherwise, fail serialization.
-function serializeBareItem(value) {
-  switch (typeof value) {
-    case 'number':
-      if (!Number.isFinite(value)) {
-        throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_6__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__.BARE_ITEM);
-      }
-      if (Number.isInteger(value)) {
-        return (0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_7__.serializeInteger)(value);
-      }
-      return (0,_serializeDecimal_js__WEBPACK_IMPORTED_MODULE_5__.serializeDecimal)(value);
-    case 'string':
-      return (0,_serializeString_js__WEBPACK_IMPORTED_MODULE_8__.serializeString)(value);
-    case 'symbol':
-      return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_9__.serializeToken)(value);
-    case 'boolean':
-      return (0,_serializeBoolean_js__WEBPACK_IMPORTED_MODULE_2__.serializeBoolean)(value);
-    case 'object':
-      if (value instanceof Date) {
-        return (0,_serializeDate_js__WEBPACK_IMPORTED_MODULE_4__.serializeDate)(value);
-      }
-      if (value instanceof Uint8Array) {
-        return (0,_serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_3__.serializeByteSequence)(value);
-      }
-      if (value instanceof _SfToken_js__WEBPACK_IMPORTED_MODULE_0__.SfToken) {
-        return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_9__.serializeToken)(value);
-      }
-    default:
-      // fail
-      throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_6__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__.BARE_ITEM);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-// 4.1.9.  Serializing a Boolean
-//
-// Given a Boolean as input_boolean, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  If input_boolean is not a boolean, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append "?" to output.
-//
-// 4.  If input_boolean is true, append "1" to output.
-//
-// 5.  If input_boolean is false, append "0" to output.
-//
-// 6.  Return output.
-function serializeBoolean(value) {
-  if (typeof value !== 'boolean') {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_1__.serializeError)(value, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  return value ? '?1' : '?0';
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js":
-/*!*********************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js ***!
-  \*********************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; }
-/* harmony export */ });
-/* harmony import */ var _utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/encodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.8.  Serializing a Byte Sequence
-//
-// Given a Byte Sequence as input_bytes, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_bytes is not a sequence of bytes, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append ":" to output.
-//
-// 4.  Append the result of base64-encoding input_bytes as per
-//     [RFC4648], Section 4, taking account of the requirements below.
-//
-// 5.  Append ":" to output.
-//
-// 6.  Return output.
-//
-// The encoded data is required to be padded with "=", as per [RFC4648],
-// Section 3.2.
-//
-// Likewise, encoded data SHOULD have pad bits set to zero, as per
-// [RFC4648], Section 3.5, unless it is not possible to do so due to
-// implementation constraints.
-function serializeByteSequence(value) {
-  if (ArrayBuffer.isView(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  return `:${(0,_utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value)}:`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; }
-/* harmony export */ });
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-
-// 4.1.10.  Serializing a Date
-//
-// Given a Date as input_integer, return an ASCII string suitable for
-// use in an HTTP field value.
-// 1.  Let output be "@".
-// 2.  Append to output the result of running Serializing an Integer
-//     with input_date (Section 4.1.4).
-// 3.  Return output.
-function serializeDate(value) {
-  return `@${(0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__.serializeInteger)(value.getTime() / 1000)}`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; }
-/* harmony export */ });
-/* harmony import */ var _utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/roundToEven.js */ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js");
-/* harmony import */ var _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.5.  Serializing a Decimal
-//
-// Given a decimal number as input_decimal, return an ASCII string
-// suitable for use in a HTTP field value.
-//
-// 1.   If input_decimal is not a decimal number, fail serialization.
-//
-// 2.   If input_decimal has more than three significant digits to the
-//      right of the decimal point, round it to three decimal places,
-//      rounding the final digit to the nearest value, or to the even
-//      value if it is equidistant.
-//
-// 3.   If input_decimal has more than 12 significant digits to the left
-//      of the decimal point after rounding, fail serialization.
-//
-// 4.   Let output be an empty string.
-//
-// 5.   If input_decimal is less than (but not equal to) 0, append "-"
-//      to output.
-//
-// 6.   Append input_decimal's integer component represented in base 10
-//      (using only decimal digits) to output; if it is zero, append
-//      "0".
-//
-// 7.   Append "." to output.
-//
-// 8.   If input_decimal's fractional component is zero, append "0" to
-//      output.
-//
-// 9.   Otherwise, append the significant digits of input_decimal's
-//      fractional component represented in base 10 (using only decimal
-//      digits) to output.
-//
-// 10.  Return output.
-function serializeDecimal(value) {
-  const roundedValue = (0,_utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3); // round to 3 decimal places
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__.DECIMAL);
-  }
-  const stringValue = roundedValue.toString();
-  return stringValue.includes('.') ? stringValue : `${stringValue}.0`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInnerList_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js");
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-
-
-
-
-// 4.1.2.  Serializing a Dictionary
-//
-// Given an ordered Dictionary as input_dictionary (each member having a
-// member_name and a tuple value of (member_value, parameters)), return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each member_name with a value of (member_value, parameters)
-//     in input_dictionary:
-//
-//     1.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with member's member_name to output.
-//
-//     2.  If member_value is Boolean true:
-//
-//         1.  Append the result of running Serializing Parameters
-//             (Section 4.1.1.2) with parameters to output.
-//
-//     3.  Otherwise:
-//
-//         1.  Append "=" to output.
-//
-//         2.  If member_value is an array, append the result of running
-//             Serializing an Inner List (Section 4.1.1.1) with
-//             (member_value, parameters) to output.
-//
-//         3.  Otherwise, append the result of running Serializing an
-//             Item (Section 4.1.3) with (member_value, parameters) to
-//             output.
-//
-//     4.  If more members remain in input_dictionary:
-//
-//         1.  Append "," to output.
-//
-//         2.  Append a single SP to output.
-//
-// 3.  Return output.
-function serializeDict(dict, options = {
-  whitespace: true
-}) {
-  if (typeof dict !== 'object' || dict == null) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(dict, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-  }
-  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  const optionalWhiteSpace = (options === null || options === void 0 ? void 0 : options.whitespace) ? ' ' : '';
-  return Array.from(entries).map(([key, item]) => {
-    if (item instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem === false) {
-      item = new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(item);
-    }
-    let output = (0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_5__.serializeKey)(key);
-    if (item.value === true) {
-      output += (0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_6__.serializeParams)(item.params);
-    } else {
-      output += '=';
-      if (Array.isArray(item.value)) {
-        output += (0,_serializeInnerList_js__WEBPACK_IMPORTED_MODULE_3__.serializeInnerList)(item);
-      } else {
-        output += (0,_serializeItem_js__WEBPACK_IMPORTED_MODULE_4__.serializeItem)(item);
-      }
-    }
-    return output;
-  }).join(`,${optionalWhiteSpace}`);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeError: function() { return /* binding */ serializeError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function serializeError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('serialize', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js":
-/*!******************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js ***!
-  \******************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; }
-/* harmony export */ });
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-// 4.1.1.1.  Serializing an Inner List
-//
-// Given an array of (member_value, parameters) tuples as inner_list,
-// and parameters as list_parameters, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  Let output be the string "(".
-//
-// 2.  For each (member_value, parameters) of inner_list:
-//
-//     1.  Append the result of running Serializing an Item
-//         (Section 4.1.3) with (member_value, parameters) to output.
-//
-//     2.  If more values remain in inner_list, append a single SP to
-//         output.
-//
-// 3.  Append ")" to output.
-//
-// 4.  Append the result of running Serializing Parameters
-//     (Section 4.1.1.2) with list_parameters to output.
-//
-// 5.  Return output.
-function serializeInnerList(value) {
-  return `(${value.value.map(_serializeItem_js__WEBPACK_IMPORTED_MODULE_0__.serializeItem).join(' ')})${(0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_1__.serializeParams)(value.params)}`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; }
-/* harmony export */ });
-/* harmony import */ var _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.4.  Serializing an Integer
-//
-// Given an Integer as input_integer, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_integer is not an integer in the range of
-//     -999,999,999,999,999 to 999,999,999,999,999 inclusive, fail
-//     serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  If input_integer is less than (but not equal to) 0, append "-" to
-//     output.
-//
-// 4.  Append input_integer's numeric value represented in base 10 using
-//     only decimal digits to output.
-//
-// 5.  Return output.
-function serializeInteger(value) {
-  if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__.isInvalidInt)(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER);
-  }
-  return value.toString();
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-// 4.1.3.  Serializing an Item
-//
-// Given an Item as bare_item and Parameters as item_parameters, return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  Append the result of running Serializing a Bare Item
-//     Section 4.1.3.1 with bare_item to output.
-//
-// 3.  Append the result of running Serializing Parameters
-//     Section 4.1.1.2 with item_parameters to output.
-//
-// 4.  Return output.
-function serializeItem(value) {
-  if (value instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-    return `${(0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__.serializeBareItem)(value.value)}${(0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_2__.serializeParams)(value.params)}`;
-  } else {
-    return (0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__.serializeBareItem)(value);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js":
-/*!************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js ***!
-  \************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; }
-/* harmony export */ });
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-// 4.1.1.3.  Serializing a Key
-//
-// Given a key as input_key, return an ASCII string suitable for use in
-// a HTTP field value.
-//
-// 1.  Convert input_key into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_key contains characters not in lcalpha, DIGIT, "_", "-",
-//     ".", or "*" fail serialization.
-//
-// 3.  If the first character of input_key is not lcalpha or "*", fail
-//     serialization.
-//
-// 4.  Let output be an empty string.
-//
-// 5.  Append input_key to output.
-//
-// 6.  Return output.
-function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_1__.serializeError)(value, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__.KEY);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; }
-/* harmony export */ });
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-
-
-// 4.1.1.2.  Serializing Parameters
-//
-// Given an ordered Dictionary as input_parameters (each member having a
-// param_name and a param_value), return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each param_name with a value of param_value in
-//     input_parameters:
-//
-//     1.  Append ";" to output.
-//
-//     2.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with param_name to output.
-//
-//     3.  If param_value is not Boolean true:
-//
-//         1.  Append "=" to output.
-//
-//         2.  Append the result of running Serializing a bare Item
-//             (Section 4.1.3.1) with param_value to output.
-//
-// 3.  Return output.
-function serializeParams(params) {
-  if (params == null) {
-    return '';
-  }
-  return Object.entries(params).map(([key, value]) => {
-    if (value === true) {
-      return `;${(0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_1__.serializeKey)(key)}`; // omit true
-    }
-    return `;${(0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_1__.serializeKey)(key)}=${(0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_0__.serializeBareItem)(value)}`;
-  }).join('');
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeString: function() { return /* binding */ serializeString; }
-/* harmony export */ });
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.6.  Serializing a String
-//
-// Given a String as input_string, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Convert input_string into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_string contains characters in the range %x00-1f or %x7f
-//     (i.e., not in VCHAR or SP), fail serialization.
-//
-// 3.  Let output be the string DQUOTE.
-//
-// 4.  For each character char in input_string:
-//
-//     1.  If char is "\" or DQUOTE:
-//
-//         1.  Append "\" to output.
-//
-//     2.  Append char to output.
-//
-// 5.  Append DQUOTE to output.
-//
-// 6.  Return output.
-function serializeString(value) {
-  if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__.STRING_REGEX.test(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-  }
-  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-function serializeToken(token) {
-  const value = (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__.TOKEN);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BARE_ITEM: function() { return /* binding */ BARE_ITEM; }
-/* harmony export */ });
-const BARE_ITEM = 'Bare Item';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BOOLEAN: function() { return /* binding */ BOOLEAN; }
-/* harmony export */ });
-const BOOLEAN = 'Boolean';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BYTES: function() { return /* binding */ BYTES; }
-/* harmony export */ });
-const BYTES = 'Byte Sequence';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DATE: function() { return /* binding */ DATE; }
-/* harmony export */ });
-const DATE = 'Date';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DECIMAL: function() { return /* binding */ DECIMAL; }
-/* harmony export */ });
-const DECIMAL = 'Decimal';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DICT: function() { return /* binding */ DICT; }
-/* harmony export */ });
-const DICT = 'Dict';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INNER: function() { return /* binding */ INNER; }
-/* harmony export */ });
-const INNER = 'Inner List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER: function() { return /* binding */ INTEGER; }
-/* harmony export */ });
-const INTEGER = 'Integer';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER_DECIMAL: function() { return /* binding */ INTEGER_DECIMAL; }
-/* harmony export */ });
-/* harmony import */ var _DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _INTEGER_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-
-
-const INTEGER_DECIMAL = `${_INTEGER_js__WEBPACK_IMPORTED_MODULE_1__.INTEGER} or ${_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.DECIMAL}`;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   KEY: function() { return /* binding */ KEY; }
-/* harmony export */ });
-const KEY = 'Key';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LIST: function() { return /* binding */ LIST; }
-/* harmony export */ });
-const LIST = 'List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING: function() { return /* binding */ STRING; }
-/* harmony export */ });
-const STRING = 'String';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING_REGEX: function() { return /* binding */ STRING_REGEX; }
-/* harmony export */ });
-const STRING_REGEX = /[\x00-\x1f\x7f]+/;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   TOKEN: function() { return /* binding */ TOKEN; }
-/* harmony export */ });
-const TOKEN = 'Token';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isInvalidInt: function() { return /* binding */ isInvalidInt; }
-/* harmony export */ });
-function isInvalidInt(value) {
-  return value < -999999999999999 || 999999999999999 < value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   throwError: function() { return /* binding */ throwError; }
-/* harmony export */ });
-function format(value) {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value);
-  }
-  if (value instanceof Map) {
-    return 'Map{}';
-  }
-  if (value instanceof Set) {
-    return 'Set{}';
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
-function throwError(action, src, type, cause) {
-  return new Error(`failed to ${action} "${format(src)}" as ${type}`, {
-    cause
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; }
-/* harmony export */ });
-/**
- * Decodes a base64 encoded string into binary data
- *
- * @param str - The base64 encoded string to decode
- * @returns The decoded binary data
- *
- * @group Utils
- *
- * @beta
- */
-function decodeBase64(str) {
-  return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; }
-/* harmony export */ });
-/**
- * Encodes binary data to base64
- *
- * @param binary - The binary data to encode
- * @returns The base64 encoded string
- *
- * @group Utils
- *
- * @beta
- */
-function encodeBase64(binary) {
-  return btoa(String.fromCharCode(...binary));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/roundToEven.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; }
-/* harmony export */ });
-/**
- * This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
- * This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
- *
- * @param value - The value to round
- * @param precision - The number of decimal places to round to
- * @returns The rounded value
- *
- * @group Utils
- *
- * @beta
- */
-function roundToEven(value, precision) {
-  if (value < 0) {
-    return -roundToEven(-value, precision);
-  }
-  const decimalShift = Math.pow(10, precision);
-  const isEquidistant = Math.abs(value * decimalShift % 1 - 0.5) < Number.EPSILON;
-  if (isEquidistant) {
-    // If the tail of the decimal place is 'equidistant' we round to the nearest even value
-    const flooredValue = Math.floor(value * decimalShift);
-    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
-  } else {
-    // Otherwise, proceed as normal
-    return Math.round(value * decimalShift) / decimalShift;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; }
-/* harmony export */ });
-const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
-/**
- * Unescapes HTML entities
- *
- * @param text - The text to unescape
- * @returns The unescaped text
- *
- * @group Utils
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/utils/unescapeHtml.test.ts#example}
- */
-function unescapeHtml(text) {
-  if (text.indexOf('&') === -1) {
-    return text;
-  }
-  return text.replace(escapedHtml, match => {
-    switch (match) {
-      case '&amp;':
-        return '&';
-      case '&lt;':
-        return '<';
-      case '&gt;':
-        return '>';
-      case '&quot;':
-        return '"';
-      case '&apos;':
-        return '\'';
-      case '&nbsp;':
-        return '\u{a0}';
-      case '&lrm;':
-        return '\u{200e}';
-      case '&rlm;':
-        return '\u{200f}';
-      default:
-        {
-          if (match[1] === '#') {
-            const code = match[2] === 'x' || match[2] === 'X' ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
-            return String.fromCodePoint(code);
-          }
-          return match;
-        }
-    }
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; }
-/* harmony export */ });
-/**
- * Constructs a relative path from a URL.
- *
- * @param url - The destination URL
- * @param base - The base URL
- * @returns The relative path
- *
- * @group Utils
- *
- * @beta
- */
-function urlToRelativePath(url, base) {
-  const to = new URL(url);
-  const from = new URL(base);
-  if (to.origin !== from.origin) {
-    return url;
-  }
-  const toPath = to.pathname.split('/').slice(1);
-  const fromPath = from.pathname.split('/').slice(1, -1);
-  // remove common parents
-  while (toPath[0] === fromPath[0]) {
-    toPath.shift();
-    fromPath.shift();
-  }
-  // add back paths
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift('..');
-  }
-  const relativePath = toPath.join('/');
-  // preserve query parameters and hash of the destination url
-  return relativePath + to.search + to.hash;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/utf8ArrayToStr.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   utf8ArrayToStr: function() { return /* binding */ utf8ArrayToStr; }
-/* harmony export */ });
-// http://stackoverflow.com/questions/8936984/uint8array-to-string-in-javascript/22373197
-// http://www.onicos.com/staff/iz/amuse/javascript/expert/utf.txt
-/* utf.js - UTF-8 <=> UTF-16 convertion
- *
- * Copyright (C) 1999 Masanao Izumo <iz@onicos.co.jp>
- * Version: 1.0
- * LastModified: Dec 25 1999
- * This library is free.  You can redistribute it and/or modify it.
- */
-/**
- * Converts a UTF-8 array to a string.
- *
- * @param array - The UTF-8 array to convert
- *
- * @returns The string
- *
- * @group Utils
- *
- * @beta
- */
-function utf8ArrayToStr(array, exitOnNull = false) {
-  if (typeof TextDecoder !== 'undefined') {
-    const decoder = new TextDecoder('utf-8');
-    const decoded = decoder.decode(array);
-    if (exitOnNull) {
-      // grab up to the first null
-      const idx = decoded.indexOf('\0');
-      return idx !== -1 ? decoded.substring(0, idx) : decoded;
-    }
-    // remove any null characters
-    return decoded.replace(/\0/g, '');
-  }
-  const len = array.length;
-  let c;
-  let char2;
-  let char3;
-  let out = '';
-  let i = 0;
-  while (i < len) {
-    c = array[i++];
-    if (c === 0x00 && exitOnNull) {
-      return out;
-    } else if (c === 0x00 || c === 0x03) {
-      // If the character is 3 (END_OF_TEXT) or 0 (NULL) then skip it
-      continue;
-    }
-    switch (c >> 4) {
-      case 0:
-      case 1:
-      case 2:
-      case 3:
-      case 4:
-      case 5:
-      case 6:
-      case 7:
-        // 0xxxxxxx
-        out += String.fromCharCode(c);
-        break;
-      case 12:
-      case 13:
-        // 110x xxxx   10xx xxxx
-        char2 = array[i++];
-        out += String.fromCharCode((c & 0x1f) << 6 | char2 & 0x3f);
-        break;
-      case 14:
-        // 1110 xxxx  10xx xxxx  10xx xxxx
-        char2 = array[i++];
-        char3 = array[i++];
-        out += String.fromCharCode((c & 0x0f) << 12 | (char2 & 0x3f) << 6 | (char3 & 0x3f) << 0);
-        break;
-      default:
-    }
-  }
-  return out;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/xml/parseXml.js ***!
-  \**********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseXml: function() { return /* binding */ parseXml; }
-/* harmony export */ });
-/* harmony import */ var _utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/unescapeHtml.js */ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js");
-
-/**
- * Parse XML into a JS object with no validation and some failure tolerance
- *
- * @param input - The input XML string
- * @param options - Optional parsing options
- * @returns The parsed XML
- *
- * @group XML
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/xml/parseXml.test.ts#example}
- */
-function parseXml(input, options = {}) {
-  let pos = options.pos || 0;
-  const length = input.length;
-  const keepComments = !!options.keepComments;
-  const keepWhitespace = !!options.keepWhitespace;
-  const openBracket = '<';
-  const openBracketCC = '<'.charCodeAt(0);
-  const closeBracket = '>';
-  const closeBracketCC = '>'.charCodeAt(0);
-  const minusCC = '-'.charCodeAt(0);
-  const slashCC = '/'.charCodeAt(0);
-  const questionCC = '?'.charCodeAt(0);
-  const exclamationCC = '!'.charCodeAt(0);
-  const singleQuoteCC = "'".charCodeAt(0);
-  const doubleQuoteCC = '"'.charCodeAt(0);
-  const openCornerBracketCC = '['.charCodeAt(0);
-  const closeCornerBracketCC = ']'.charCodeAt(0);
-  const nameSpacer = '\r\n\t>/= ';
-  function createTextNode(value, nodeName = '#text') {
-    return {
-      nodeName,
-      nodeValue: value,
-      attributes: {},
-      childNodes: []
-    };
-  }
-  /**
-   * parsing a list of entries
-   */
-  function parseChildren(tagName = '') {
-    const children = [];
-    while (input[pos]) {
-      if (input.charCodeAt(pos) == openBracketCC) {
-        if (input.charCodeAt(pos + 1) === slashCC) {
-          const closeStart = pos + 2;
-          pos = input.indexOf(closeBracket, pos);
-          if (!input.startsWith(tagName, closeStart)) {
-            const parsedText = input.substring(0, pos).split('\n');
-            throw new Error('Unexpected close tag\nLine: ' + (parsedText.length - 1) + '\nColumn: ' + (parsedText[parsedText.length - 1].length + 1) + '\nChar: ' + input[pos]);
-          }
-          if (pos + 1) {
-            pos += 1;
-          }
-          return children;
-        } else if (input.charCodeAt(pos + 1) === questionCC) {
-          // xml declaration
-          pos = input.indexOf(closeBracket, pos);
-          pos++;
-          continue;
-        } else if (input.charCodeAt(pos + 1) === exclamationCC) {
-          if (input.charCodeAt(pos + 2) == minusCC) {
-            // comment support
-            const startCommentPos = pos;
-            while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) {
-              pos = input.indexOf(closeBracket, pos + 1);
-            }
-            if (pos === -1) {
-              pos = length;
-            }
-            if (keepComments) {
-              children.push(createTextNode(input.substring(startCommentPos, pos + 1), '#comment'));
-            }
-          } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith('CDATA', pos + 3)) {
-            // cdata
-            const cdataEndIndex = input.indexOf(']]>', pos);
-            if (cdataEndIndex == -1) {
-              children.push(createTextNode(input.substr(pos + 9), '#cdata'));
-              pos = length;
-            } else {
-              children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), '#cdata'));
-              pos = cdataEndIndex + 3;
-            }
-            continue;
-          } else {
-            // doctypesupport
-            const startDoctype = pos + 1;
-            pos += 2;
-            let encapsuled = false;
-            while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
-              if (input.charCodeAt(pos) === openCornerBracketCC) {
-                encapsuled = true;
-              } else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) {
-                encapsuled = false;
-              }
-              pos++;
-            }
-            children.push(createTextNode(input.substring(startDoctype, pos), '#doctype'));
-          }
-          pos++;
-          continue;
-        }
-        const node = parseNode();
-        children.push(node);
-      } else {
-        const text = parseText();
-        if (keepWhitespace) {
-          if (text.length > 0) {
-            children.push(createTextNode(text));
-          }
-        } else {
-          const trimmed = text.trim();
-          if (trimmed.length > 0) {
-            children.push(createTextNode(trimmed));
-          }
-        }
-        pos++;
-      }
-    }
-    return children;
-  }
-  /**
-   * returns the text outside of texts until the first '&lt;'
-   */
-  function parseText() {
-    const start = pos;
-    pos = input.indexOf(openBracket, pos) - 1;
-    if (pos === -2) {
-      pos = length;
-    }
-    return (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
-  }
-  /**
-   * returns text until the first nonAlphabetic letter
-   */
-  function parseName() {
-    const start = pos;
-    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) {
-      pos++;
-    }
-    return input.slice(start, pos);
-  }
-  /**
-   * parses the attributes of a node
-   */
-  function parseAttributes() {
-    const attributes = {};
-    // parsing attributes
-    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
-      const c = input.charCodeAt(pos);
-      if (c > 64 && c < 91 || c > 96 && c < 123) {
-        const name = parseName();
-        let value = '';
-        // search beginning of the string
-        let code = input.charCodeAt(pos);
-        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
-          pos++;
-          code = input.charCodeAt(pos);
-        }
-        if (code === singleQuoteCC || code === doubleQuoteCC) {
-          value = parseString();
-          if (pos === -1) {
-            throw new Error('Missing closing quote');
-          }
-        } else {
-          pos--;
-        }
-        attributes[name] = (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
-      }
-      pos++;
-    }
-    return attributes;
-  }
-  /**
-   * parses a node
-   */
-  function parseNode() {
-    pos++;
-    const nodeName = parseName();
-    let localName = nodeName;
-    let prefix = null;
-    const nsIndex = nodeName.indexOf(':');
-    if (nsIndex !== -1) {
-      prefix = nodeName.slice(0, nsIndex);
-      localName = nodeName.slice(nsIndex + 1);
-    }
-    const attributes = parseAttributes();
-    let childNodes = [];
-    // optional parsing of children
-    const prev = input.charCodeAt(pos - 1);
-    pos++;
-    if (prev !== slashCC) {
-      childNodes = parseChildren(nodeName);
-    }
-    return {
-      nodeName,
-      nodeValue: null,
-      attributes,
-      childNodes,
-      prefix,
-      localName
-    };
-  }
-  /**
-   * is parsing a string, that starts with a char and with the same usually ' or "
-   */
-  function parseString() {
-    const startChar = input[pos];
-    const startpos = pos + 1;
-    pos = input.indexOf(startChar, startpos);
-    return input.slice(startpos, pos);
-  }
-  return {
-    nodeName: '#document',
-    nodeValue: null,
-    childNodes: parseChildren(''),
-    attributes: {}
-  };
-}
-
-/***/ }),
-
 /***/ "./node_modules/base64-js/index.js":
 /*!*****************************************!*\
   !*** ./node_modules/base64-js/index.js ***!
@@ -20495,6 +13807,4664 @@ dashjs.FactoryMaker = _src_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__["de
 dashjs.Debug = _src_core_Debug_js__WEBPACK_IMPORTED_MODULE_2__["default"];
 dashjs.Version = (0,_src_core_Version_js__WEBPACK_IMPORTED_MODULE_3__.getVersionString)();
 /* harmony default export */ __webpack_exports__["default"] = (dashjs);
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-608/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-608/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CaptionScreen: function() { return /* binding */ CaptionScreen; },
+/* harmony export */   CaptionsLogger: function() { return /* binding */ CaptionsLogger; },
+/* harmony export */   Cta608Channel: function() { return /* binding */ Cta608Channel; },
+/* harmony export */   Cta608Parser: function() { return /* binding */ Cta608Parser; },
+/* harmony export */   PenState: function() { return /* binding */ PenState; },
+/* harmony export */   Row: function() { return /* binding */ Row; },
+/* harmony export */   SccParser: function() { return /* binding */ SccParser; },
+/* harmony export */   StyledUnicodeChar: function() { return /* binding */ StyledUnicodeChar; },
+/* harmony export */   VerboseLevel: function() { return /* binding */ VerboseLevel; },
+/* harmony export */   extractCta608Data: function() { return /* binding */ extractCta608Data; },
+/* harmony export */   extractCta608DataFromSample: function() { return /* binding */ extractCta608DataFromSample; },
+/* harmony export */   findCta608Nalus: function() { return /* binding */ findCta608Nalus; }
+/* harmony export */ });
+//#region src/VerboseLevel.ts
+/**
+* Logging levels for the CTA-608 parser.
+*
+*
+* @enum
+*
+* @beta
+*/
+const VerboseLevel = {
+  ERROR: 0,
+  TEXT: 1,
+  WARNING: 2,
+  INFO: 2,
+  DEBUG: 3,
+  DATA: 3
+};
+
+//#endregion
+//#region src/CaptionsLogger.ts
+/**
+* CaptionsLogger. To be removed in the future.
+*
+* @beta
+*/
+var CaptionsLogger = class {
+  constructor() {
+    this.time = null;
+    this.verboseLevel = VerboseLevel.ERROR;
+  }
+  log(severity, msg) {
+    if (this.verboseLevel >= severity) {
+      const m = typeof msg === "function" ? msg() : msg;
+      console.log(`${this.time} [${severity}] ${m}`);
+    }
+  }
+};
+
+//#endregion
+//#region src/PenState.ts
+/**
+* Pen state.
+*
+* @beta
+*/
+var PenState = class {
+  constructor() {
+    this.foreground = "white";
+    this.underline = false;
+    this.italics = false;
+    this.background = "black";
+    this.flash = false;
+  }
+  reset() {
+    this.foreground = "white";
+    this.underline = false;
+    this.italics = false;
+    this.background = "black";
+    this.flash = false;
+  }
+  setStyles(styles) {
+    for (const style of ["foreground", "underline", "italics", "background", "flash"]) if (Object.prototype.hasOwnProperty.call(styles, style)) this[style] = styles[style];
+  }
+  isDefault() {
+    return this.foreground === "white" && !this.underline && !this.italics && this.background === "black" && !this.flash;
+  }
+  equals(other) {
+    return this.foreground === other.foreground && this.underline === other.underline && this.italics === other.italics && this.background === other.background && this.flash === other.flash;
+  }
+  copy(newPenState) {
+    this.foreground = newPenState.foreground;
+    this.underline = newPenState.underline;
+    this.italics = newPenState.italics;
+    this.background = newPenState.background;
+    this.flash = newPenState.flash;
+  }
+};
+
+//#endregion
+//#region src/StyledUnicodeChar.ts
+/**
+* Unicode character with styling and background.
+*
+* @beta
+*/
+var StyledUnicodeChar = class {
+  constructor() {
+    this.uchar = " ";
+    this.penState = new PenState();
+  }
+  reset() {
+    this.uchar = " ";
+    this.penState.reset();
+  }
+  setChar(uchar, newPenState) {
+    this.uchar = uchar;
+    this.penState.copy(newPenState);
+  }
+  setPenState(newPenState) {
+    this.penState.copy(newPenState);
+  }
+  equals(other) {
+    return this.uchar === other.uchar && this.penState.equals(other.penState);
+  }
+  copy(newChar) {
+    this.uchar = newChar.uchar;
+    this.penState.copy(newChar.penState);
+  }
+  isEmpty() {
+    return this.uchar === " " && this.penState.isDefault();
+  }
+};
+
+//#endregion
+//#region src/utils/NR_COLS.ts
+const NR_COLS = 100;
+
+//#endregion
+//#region src/utils/specialCea608CharsCodes.ts
+/**
+*  Exceptions from regular ASCII. CodePoints are mapped to UTF-16 codes
+*/
+const specialCea608CharsCodes = {
+  42: 225,
+  92: 233,
+  94: 237,
+  95: 243,
+  96: 250,
+  123: 231,
+  124: 247,
+  125: 209,
+  126: 241,
+  127: 9608,
+  128: 174,
+  129: 176,
+  130: 189,
+  131: 191,
+  132: 8482,
+  133: 162,
+  134: 163,
+  135: 9834,
+  136: 224,
+  137: 32,
+  138: 232,
+  139: 226,
+  140: 234,
+  141: 238,
+  142: 244,
+  143: 251,
+  144: 193,
+  145: 201,
+  146: 211,
+  147: 218,
+  148: 220,
+  149: 252,
+  150: 8216,
+  151: 161,
+  152: 42,
+  153: 8217,
+  154: 9473,
+  155: 169,
+  156: 8480,
+  157: 8226,
+  158: 8220,
+  159: 8221,
+  160: 192,
+  161: 194,
+  162: 199,
+  163: 200,
+  164: 202,
+  165: 203,
+  166: 235,
+  167: 206,
+  168: 207,
+  169: 239,
+  170: 212,
+  171: 217,
+  172: 249,
+  173: 219,
+  174: 171,
+  175: 187,
+  176: 195,
+  177: 227,
+  178: 205,
+  179: 204,
+  180: 236,
+  181: 210,
+  182: 242,
+  183: 213,
+  184: 245,
+  185: 123,
+  186: 125,
+  187: 92,
+  188: 94,
+  189: 95,
+  190: 124,
+  191: 8764,
+  192: 196,
+  193: 228,
+  194: 214,
+  195: 246,
+  196: 223,
+  197: 165,
+  198: 164,
+  199: 9475,
+  200: 197,
+  201: 229,
+  202: 216,
+  203: 248,
+  204: 9487,
+  205: 9491,
+  206: 9495,
+  207: 9499
+};
+
+//#endregion
+//#region src/utils/getCharForByte.ts
+function getCharForByte(byte) {
+  return String.fromCharCode(specialCea608CharsCodes[byte] || byte);
+}
+
+//#endregion
+//#region src/Row.ts
+/**
+* CTA-608 row consisting of NR_COLS instances of StyledUnicodeChar.
+*
+* @beta
+*/
+var Row = class {
+  constructor(logger = new CaptionsLogger()) {
+    this.chars = [];
+    this.cueStartTime = null;
+    this.pos = 0;
+    this.currPenState = new PenState();
+    for (let i = 0; i < NR_COLS; i++) this.chars.push(new StyledUnicodeChar());
+    this.logger = logger;
+  }
+  equals(other) {
+    for (let i = 0; i < NR_COLS; i++) if (!this.chars[i].equals(other.chars[i])) return false;
+    return true;
+  }
+  copy(other) {
+    for (let i = 0; i < NR_COLS; i++) this.chars[i].copy(other.chars[i]);
+  }
+  isEmpty() {
+    let empty = true;
+    for (let i = 0; i < NR_COLS; i++) if (!this.chars[i].isEmpty()) {
+      empty = false;
+      break;
+    }
+    return empty;
+  }
+  /**
+  *  Set the cursor to a valid column.
+  */
+  setCursor(absPos) {
+    if (this.pos !== absPos) this.pos = absPos;
+    if (this.pos < 0) {
+      this.logger.log(VerboseLevel.DEBUG, "Negative cursor position " + this.pos);
+      this.pos = 0;
+    } else if (this.pos > NR_COLS) {
+      this.logger.log(VerboseLevel.DEBUG, "Too large cursor position " + this.pos);
+      this.pos = NR_COLS;
+    }
+  }
+  /**
+  * Move the cursor relative to current position.
+  */
+  moveCursor(relPos) {
+    const newPos = this.pos + relPos;
+    if (relPos > 1) for (let i = this.pos + 1; i < newPos + 1; i++) this.chars[i].setPenState(this.currPenState);
+    this.setCursor(newPos);
+  }
+  /**
+  * Backspace, move one step back and clear character.
+  */
+  backSpace() {
+    this.moveCursor(-1);
+    this.chars[this.pos].setChar(" ", this.currPenState);
+  }
+  insertChar(byte) {
+    if (byte >= 144) this.backSpace();
+    const char = getCharForByte(byte);
+    if (this.pos >= NR_COLS) {
+      this.logger.log(VerboseLevel.ERROR, () => "Cannot insert " + byte.toString(16) + " (" + char + ") at position " + this.pos + ". Skipping it!");
+      return;
+    }
+    this.chars[this.pos].setChar(char, this.currPenState);
+    this.moveCursor(1);
+  }
+  clearFromPos(startPos) {
+    let i;
+    for (i = startPos; i < NR_COLS; i++) this.chars[i].reset();
+  }
+  clear() {
+    this.clearFromPos(0);
+    this.pos = 0;
+    this.currPenState.reset();
+  }
+  clearToEndOfRow() {
+    this.clearFromPos(this.pos);
+  }
+  getTextString() {
+    const chars = [];
+    let empty = true;
+    for (let i = 0; i < NR_COLS; i++) {
+      const char = this.chars[i].uchar;
+      if (char !== " ") empty = false;
+      chars.push(char);
+    }
+    if (empty) return "";else return chars.join("");
+  }
+  setPenStyles(styles) {
+    this.currPenState.setStyles(styles);
+    this.chars[this.pos].setPenState(this.currPenState);
+  }
+};
+
+//#endregion
+//#region src/utils/NR_ROWS.ts
+const NR_ROWS = 15;
+
+//#endregion
+//#region src/CaptionScreen.ts
+/**
+* Keep a CTA-608 screen of 32x15 styled characters
+*
+* @beta
+*/
+var CaptionScreen = class {
+  constructor(logger = new CaptionsLogger()) {
+    this.rows = [];
+    this.currRow = NR_ROWS - 1;
+    this.nrRollUpRows = null;
+    this.lastOutputScreen = null;
+    for (let i = 0; i < NR_ROWS; i++) this.rows.push(new Row(logger));
+    this.logger = logger;
+  }
+  reset() {
+    for (let i = 0; i < NR_ROWS; i++) this.rows[i].clear();
+    this.currRow = NR_ROWS - 1;
+  }
+  equals(other) {
+    let equal = true;
+    for (let i = 0; i < NR_ROWS; i++) if (!this.rows[i].equals(other.rows[i])) {
+      equal = false;
+      break;
+    }
+    return equal;
+  }
+  copy(other) {
+    for (let i = 0; i < NR_ROWS; i++) this.rows[i].copy(other.rows[i]);
+  }
+  isEmpty() {
+    let empty = true;
+    for (let i = 0; i < NR_ROWS; i++) if (!this.rows[i].isEmpty()) {
+      empty = false;
+      break;
+    }
+    return empty;
+  }
+  backSpace() {
+    this.rows[this.currRow].backSpace();
+  }
+  clearToEndOfRow() {
+    this.rows[this.currRow].clearToEndOfRow();
+  }
+  /**
+  * Insert a character (without styling) in the current row.
+  */
+  insertChar(char) {
+    this.rows[this.currRow].insertChar(char);
+  }
+  setPen(styles) {
+    this.rows[this.currRow].setPenStyles(styles);
+  }
+  moveCursor(relPos) {
+    this.rows[this.currRow].moveCursor(relPos);
+  }
+  setCursor(absPos) {
+    this.logger.log(VerboseLevel.INFO, "setCursor: " + absPos);
+    this.rows[this.currRow].setCursor(absPos);
+  }
+  setPAC(pacData) {
+    this.logger.log(VerboseLevel.INFO, () => "pacData = " + JSON.stringify(pacData));
+    let newRow = pacData.row - 1;
+    if (this.nrRollUpRows && newRow < this.nrRollUpRows - 1) newRow = this.nrRollUpRows - 1;
+    if (this.nrRollUpRows && this.currRow !== newRow) {
+      for (let i = 0; i < NR_ROWS; i++) this.rows[i].clear();
+      const topRowIndex = this.currRow + 1 - this.nrRollUpRows;
+      const lastOutputScreen = this.lastOutputScreen;
+      if (lastOutputScreen) {
+        const prevLineTime = lastOutputScreen.rows[topRowIndex].cueStartTime;
+        const time = this.logger.time;
+        if (prevLineTime !== null && time !== null && prevLineTime < time) for (let i = 0; i < this.nrRollUpRows; i++) this.rows[newRow - this.nrRollUpRows + i + 1].copy(lastOutputScreen.rows[topRowIndex + i]);
+      }
+    }
+    this.currRow = newRow;
+    const row = this.rows[this.currRow];
+    if (pacData.indent !== null) {
+      const indent = pacData.indent;
+      const prevPos = Math.max(indent - 1, 0);
+      row.setCursor(pacData.indent);
+      pacData.color = row.chars[prevPos].penState.foreground;
+    }
+    const styles = {
+      foreground: pacData.color,
+      underline: pacData.underline,
+      italics: pacData.italics,
+      background: "black",
+      flash: false
+    };
+    this.setPen(styles);
+  }
+  /**
+  * Set background/extra foreground, but first do back_space, and then insert space (backwards compatibility).
+  */
+  setBkgData(bkgData) {
+    this.logger.log(VerboseLevel.INFO, () => "bkgData = " + JSON.stringify(bkgData));
+    this.backSpace();
+    this.setPen(bkgData);
+    this.insertChar(32);
+  }
+  setRollUpRows(nrRows) {
+    this.nrRollUpRows = nrRows;
+  }
+  rollUp() {
+    if (this.nrRollUpRows === null) {
+      this.logger.log(VerboseLevel.DEBUG, "roll_up but nrRollUpRows not set yet");
+      return;
+    }
+    this.logger.log(VerboseLevel.TEXT, () => this.getDisplayText());
+    const topRowIndex = this.currRow + 1 - this.nrRollUpRows;
+    const topRow = this.rows.splice(topRowIndex, 1)[0];
+    topRow.clear();
+    this.rows.splice(this.currRow, 0, topRow);
+    this.logger.log(VerboseLevel.INFO, "Rolling up");
+  }
+  /**
+  * Get all non-empty rows with as unicode text.
+  */
+  getDisplayText(asOneRow) {
+    asOneRow = asOneRow || false;
+    const displayText = [];
+    let text = "";
+    let rowNr = -1;
+    for (let i = 0; i < NR_ROWS; i++) {
+      const rowText = this.rows[i].getTextString();
+      if (rowText) {
+        rowNr = i + 1;
+        if (asOneRow) displayText.push("Row " + rowNr + ": '" + rowText + "'");else displayText.push(rowText.trim());
+      }
+    }
+    if (displayText.length > 0) if (asOneRow) text = "[" + displayText.join(" | ") + "]";else text = displayText.join("\n");
+    return text;
+  }
+  getTextAndFormat() {
+    return this.rows;
+  }
+};
+
+//#endregion
+//#region src/Cta608Channel.ts
+/**
+* CTA-608 Channel
+*
+* @beta
+*/
+var Cta608Channel = class {
+  constructor(channelNumber, outputFilter, logger = new CaptionsLogger()) {
+    this.chNr = channelNumber;
+    this.outputFilter = outputFilter;
+    this.mode = null;
+    this.displayedMemory = new CaptionScreen(logger);
+    this.nonDisplayedMemory = new CaptionScreen(logger);
+    this.lastOutputScreen = new CaptionScreen(logger);
+    this.currRollUpRow = this.displayedMemory.rows[NR_ROWS - 1];
+    this.writeScreen = this.displayedMemory;
+    this.mode = null;
+    this.cueStartTime = null;
+    this.logger = logger;
+    this.logger.log(VerboseLevel.INFO, "new Cea608Channel(" + this.chNr + ")");
+  }
+  reset() {
+    this.mode = null;
+    this.displayedMemory.reset();
+    this.nonDisplayedMemory.reset();
+    this.lastOutputScreen.reset();
+    this.outputFilter?.reset?.();
+    this.currRollUpRow = this.displayedMemory.rows[NR_ROWS - 1];
+    this.writeScreen = this.displayedMemory;
+    this.mode = null;
+    this.cueStartTime = null;
+  }
+  getHandler() {
+    return this.outputFilter;
+  }
+  setHandler(outputFilter) {
+    this.outputFilter = outputFilter;
+  }
+  setPAC(pacData) {
+    this.writeScreen.setPAC(pacData);
+  }
+  setBkgData(bkgData) {
+    this.writeScreen.setBkgData(bkgData);
+  }
+  setMode(newMode) {
+    if (newMode === this.mode) return;
+    this.mode = newMode;
+    this.logger.log(VerboseLevel.INFO, () => "MODE=" + newMode);
+    if (this.mode === "MODE_POP-ON") this.writeScreen = this.nonDisplayedMemory;else {
+      this.writeScreen = this.displayedMemory;
+      this.writeScreen.reset();
+    }
+    if (this.mode !== "MODE_ROLL-UP") {
+      this.displayedMemory.setRollUpRows(null);
+      this.nonDisplayedMemory.setRollUpRows(null);
+    }
+    this.mode = newMode;
+  }
+  insertChars(chars) {
+    for (const char of chars) this.writeScreen.insertChar(char);
+    const screen = this.writeScreen === this.displayedMemory ? "DISP" : "NON_DISP";
+    this.logger.log(VerboseLevel.INFO, () => screen + ": " + this.writeScreen.getDisplayText(true));
+    if (this.mode === "MODE_PAINT-ON" || this.mode === "MODE_ROLL-UP") {
+      this.logger.log(VerboseLevel.TEXT, () => "DISPLAYED: " + this.displayedMemory.getDisplayText(true));
+      this.outputDataUpdate();
+    }
+  }
+  ccRCL() {
+    this.logger.log(VerboseLevel.INFO, "RCL - Resume Caption Loading");
+    this.setMode("MODE_POP-ON");
+  }
+  ccBS() {
+    this.logger.log(VerboseLevel.INFO, "BS - BackSpace");
+    if (this.mode === "MODE_TEXT") return;
+    this.writeScreen.backSpace();
+    if (this.writeScreen === this.displayedMemory) this.outputDataUpdate();
+  }
+  ccAOF() {}
+  ccAON() {}
+  ccDER() {
+    this.logger.log(VerboseLevel.INFO, "DER- Delete to End of Row");
+    this.writeScreen.clearToEndOfRow();
+    this.outputDataUpdate();
+  }
+  ccRU(nrRows) {
+    this.logger.log(VerboseLevel.INFO, "RU(" + nrRows + ") - Roll Up");
+    this.writeScreen = this.displayedMemory;
+    this.setMode("MODE_ROLL-UP");
+    this.writeScreen.setRollUpRows(nrRows);
+  }
+  ccFON() {
+    this.logger.log(VerboseLevel.INFO, "FON - Flash On");
+    this.writeScreen.setPen({
+      flash: true
+    });
+  }
+  ccRDC() {
+    this.logger.log(VerboseLevel.INFO, "RDC - Resume Direct Captioning");
+    this.setMode("MODE_PAINT-ON");
+  }
+  ccTR() {
+    this.logger.log(VerboseLevel.INFO, "TR");
+    this.setMode("MODE_TEXT");
+  }
+  ccRTD() {
+    this.logger.log(VerboseLevel.INFO, "RTD");
+    this.setMode("MODE_TEXT");
+  }
+  ccEDM() {
+    this.logger.log(VerboseLevel.INFO, "EDM - Erase Displayed Memory");
+    this.displayedMemory.reset();
+    this.outputDataUpdate(true);
+  }
+  ccCR() {
+    this.logger.log(VerboseLevel.INFO, "CR - Carriage Return");
+    this.writeScreen.rollUp();
+    this.outputDataUpdate(true);
+  }
+  ccENM() {
+    this.logger.log(VerboseLevel.INFO, "ENM - Erase Non-displayed Memory");
+    this.nonDisplayedMemory.reset();
+  }
+  ccEOC() {
+    this.logger.log(VerboseLevel.INFO, "EOC - End Of Caption");
+    if (this.mode === "MODE_POP-ON") {
+      const tmp = this.displayedMemory;
+      this.displayedMemory = this.nonDisplayedMemory;
+      this.nonDisplayedMemory = tmp;
+      this.writeScreen = this.nonDisplayedMemory;
+      this.logger.log(VerboseLevel.TEXT, () => "DISP: " + this.displayedMemory.getDisplayText());
+    }
+    this.outputDataUpdate(true);
+  }
+  ccTO(nrCols) {
+    this.logger.log(VerboseLevel.INFO, "TO(" + nrCols + ") - Tab Offset");
+    this.writeScreen.moveCursor(nrCols);
+  }
+  ccMIDROW(secondByte) {
+    const styles = {
+      flash: false
+    };
+    styles.underline = secondByte % 2 === 1;
+    styles.italics = secondByte >= 46;
+    if (!styles.italics) styles.foreground = ["white", "green", "blue", "cyan", "red", "yellow", "magenta"][Math.floor(secondByte / 2) - 16];else styles.foreground = "white";
+    this.logger.log(VerboseLevel.INFO, "MIDROW: " + JSON.stringify(styles));
+    this.writeScreen.setPen(styles);
+  }
+  outputDataUpdate(dispatch = false) {
+    const time = this.logger.time;
+    if (time === null) return;
+    if (this.outputFilter) {
+      if (this.cueStartTime === null && !this.displayedMemory.isEmpty()) this.cueStartTime = time;else if (!this.displayedMemory.equals(this.lastOutputScreen)) {
+        this.outputFilter.newCue(this.cueStartTime, time, this.lastOutputScreen);
+        if (dispatch && this.outputFilter.dispatchCue) this.outputFilter.dispatchCue();
+        this.cueStartTime = this.displayedMemory.isEmpty() ? null : time;
+      }
+      this.lastOutputScreen.copy(this.displayedMemory);
+    }
+  }
+  cueSplitAtTime(t) {
+    if (this.outputFilter) {
+      if (!this.displayedMemory.isEmpty()) {
+        if (this.outputFilter.newCue) this.outputFilter.newCue(this.cueStartTime, t, this.displayedMemory);
+        this.cueStartTime = t;
+      }
+    }
+  }
+};
+
+//#endregion
+//#region src/utils/backgroundColors.ts
+const backgroundColors = ["white", "green", "blue", "cyan", "red", "yellow", "magenta", "black", "transparent"];
+
+//#endregion
+//#region src/utils/createCmdHistory.ts
+function createCmdHistory() {
+  return {
+    a: null,
+    b: null
+  };
+}
+
+//#endregion
+//#region src/utils/hasCmdRepeated.ts
+function hasCmdRepeated(a, b, cmdHistory) {
+  return cmdHistory.a === a && cmdHistory.b === b;
+}
+
+//#endregion
+//#region src/utils/numArrayToHexArray.ts
+function numArrayToHexArray(numArray) {
+  const hexArray = [];
+  for (const num of numArray) hexArray.push(num.toString(16));
+  return hexArray;
+}
+
+//#endregion
+//#region src/utils/rowsHighCh1.ts
+const rowsHighCh1 = {
+  17: 2,
+  18: 4,
+  21: 6,
+  22: 8,
+  23: 10,
+  19: 13,
+  20: 15
+};
+
+//#endregion
+//#region src/utils/rowsHighCh2.ts
+const rowsHighCh2 = {
+  25: 2,
+  26: 4,
+  29: 6,
+  30: 8,
+  31: 10,
+  27: 13,
+  28: 15
+};
+
+//#endregion
+//#region src/utils/rowsLowCh1.ts
+const rowsLowCh1 = {
+  17: 1,
+  18: 3,
+  21: 5,
+  22: 7,
+  23: 9,
+  16: 11,
+  19: 12,
+  20: 14
+};
+
+//#endregion
+//#region src/utils/rowsLowCh2.ts
+const rowsLowCh2 = {
+  25: 1,
+  26: 3,
+  29: 5,
+  30: 7,
+  31: 9,
+  24: 11,
+  27: 12,
+  28: 14
+};
+
+//#endregion
+//#region src/utils/setLastCmd.ts
+function setLastCmd(a, b, cmdHistory) {
+  cmdHistory.a = a;
+  cmdHistory.b = b;
+}
+
+//#endregion
+//#region src/Cta608Parser.ts
+/**
+* CEA-608 caption parser.
+*
+* @beta
+*/
+var Cta608Parser = class {
+  constructor(field, out1, out2) {
+    this.currentChannel = 0;
+    this.cmdHistory = createCmdHistory();
+    this.lastTime = null;
+    const logger = this.logger = new CaptionsLogger();
+    this.channels = [null, new Cta608Channel(field, out1, logger), new Cta608Channel(field + 1, out2, logger)];
+  }
+  /**
+  * Add data for time t in forms of list of bytes (unsigned ints). The bytes are treated as pairs.
+  *
+  * @param time - The time in milliseconds
+  * @param byteList - The list of bytes
+  */
+  addData(time, byteList) {
+    this.lastTime = time;
+    this.logger.time = time;
+    for (let i = 0; i < byteList.length; i += 2) {
+      const a = byteList[i] & 127;
+      const b = byteList[i + 1] & 127;
+      let cmdFound = false;
+      let charsFound = null;
+      if (this.lastTime !== null) {
+        time = this.lastTime + .5 * i * 1001 / 3e4;
+        this.logger.time = time;
+      }
+      if (a === 0 && b === 0) continue;else this.logger.log(VerboseLevel.DATA, () => "[" + numArrayToHexArray([byteList[i], byteList[i + 1]]) + "] -> (" + numArrayToHexArray([a, b]) + ")");
+      const cmdHistory = this.cmdHistory;
+      if (a >= 16 && a <= 31) {
+        if (hasCmdRepeated(a, b, cmdHistory)) {
+          setLastCmd(null, null, cmdHistory);
+          this.logger.log(VerboseLevel.DEBUG, () => "Repeated command (" + numArrayToHexArray([a, b]) + ") is dropped");
+          continue;
+        }
+        setLastCmd(a, b, this.cmdHistory);
+        cmdFound = this.parseCmd(a, b);
+        if (!cmdFound) cmdFound = this.parseMidrow(a, b);
+        if (!cmdFound) cmdFound = this.parsePAC(a, b);
+        if (!cmdFound) cmdFound = this.parseBackgroundAttributes(a, b);
+      } else setLastCmd(null, null, cmdHistory);
+      if (!cmdFound) {
+        charsFound = this.parseChars(a, b);
+        if (charsFound.length) {
+          const currChNr = this.currentChannel;
+          if (currChNr && currChNr > 0) this.channels[currChNr].insertChars(charsFound);else this.logger.log(VerboseLevel.WARNING, "No channel found yet. TEXT-MODE?");
+        }
+      }
+      if (!cmdFound && !charsFound) this.logger.log(VerboseLevel.WARNING, () => "Couldn't parse cleaned data " + numArrayToHexArray([a, b]) + " orig: " + numArrayToHexArray([byteList[i], byteList[i + 1]]));
+    }
+  }
+  /**
+  * Parse Command.
+  *
+  * @param a - The first byte
+  * @param b - The second byte
+  * @returns True if a command was found
+  */
+  parseCmd(a, b) {
+    if (!((a === 20 || a === 28 || a === 21 || a === 29) && b >= 32 && b <= 47 || (a === 23 || a === 31) && b >= 33 && b <= 35)) return false;
+    const chNr = a === 20 || a === 21 || a === 23 ? 1 : 2;
+    const channel = this.channels[chNr];
+    if (a === 20 || a === 21 || a === 28 || a === 29) {
+      if (b === 32) channel.ccRCL();else if (b === 33) channel.ccBS();else if (b === 34) channel.ccAOF();else if (b === 35) channel.ccAON();else if (b === 36) channel.ccDER();else if (b === 37) channel.ccRU(2);else if (b === 38) channel.ccRU(3);else if (b === 39) channel.ccRU(4);else if (b === 40) channel.ccFON();else if (b === 41) channel.ccRDC();else if (b === 42) channel.ccTR();else if (b === 43) channel.ccRTD();else if (b === 44) channel.ccEDM();else if (b === 45) channel.ccCR();else if (b === 46) channel.ccENM();else if (b === 47) channel.ccEOC();
+    } else channel.ccTO(b - 32);
+    this.currentChannel = chNr;
+    return true;
+  }
+  /**
+  * Parse midrow styling command
+  *
+  * @param a - The first byte
+  * @param b - The second byte
+  * @returns `true` if midrow styling command was found
+  */
+  parseMidrow(a, b) {
+    let chNr = 0;
+    if ((a === 17 || a === 25) && b >= 32 && b <= 47) {
+      if (a === 17) chNr = 1;else chNr = 2;
+      if (chNr !== this.currentChannel) {
+        this.logger.log(VerboseLevel.ERROR, "Mismatch channel in midrow parsing");
+        return false;
+      }
+      const channel = this.channels[chNr];
+      if (!channel) return false;
+      channel.ccMIDROW(b);
+      this.logger.log(VerboseLevel.DEBUG, () => "MIDROW (" + numArrayToHexArray([a, b]) + ")");
+      return true;
+    }
+    return false;
+  }
+  /**
+  * Parse Preable Access Codes (Table 53).
+  *
+  * @param a - The first byte
+  * @param b - The second byte
+  * @returns A Boolean that tells if PAC found
+  */
+  parsePAC(a, b) {
+    let row;
+    if (!((a >= 17 && a <= 23 || a >= 25 && a <= 31) && b >= 64 && b <= 127 || (a === 16 || a === 24) && b >= 64 && b <= 95)) return false;
+    const chNr = a <= 23 ? 1 : 2;
+    if (b >= 64 && b <= 95) row = chNr === 1 ? rowsLowCh1[a] : rowsLowCh2[a];else row = chNr === 1 ? rowsHighCh1[a] : rowsHighCh2[a];
+    const channel = this.channels[chNr];
+    if (!channel) return false;
+    channel.setPAC(this.interpretPAC(row, b));
+    this.currentChannel = chNr;
+    return true;
+  }
+  /**
+  * Interpret the second byte of the pac, and return the information.
+  *
+  * @param row - The row number
+  * @param byte - The second byte
+  * @returns pacData with style parameters
+  */
+  interpretPAC(row, byte) {
+    let pacIndex;
+    const pacData = {
+      color: null,
+      italics: false,
+      indent: null,
+      underline: false,
+      row
+    };
+    if (byte > 95) pacIndex = byte - 96;else pacIndex = byte - 64;
+    pacData.underline = (pacIndex & 1) === 1;
+    if (pacIndex <= 13) pacData.color = ["white", "green", "blue", "cyan", "red", "yellow", "magenta", "white"][Math.floor(pacIndex / 2)];else if (pacIndex <= 15) {
+      pacData.italics = true;
+      pacData.color = "white";
+    } else pacData.indent = Math.floor((pacIndex - 16) / 2) * 4;
+    return pacData;
+  }
+  /**
+  * Parse characters.
+  *
+  * @param a - The first byte
+  * @param b - The second byte
+  * @returns An array with 1 to 2 codes corresponding to chars, if found. null otherwise.
+  */
+  parseChars(a, b) {
+    let channelNr;
+    let charCodes = [];
+    let charCode1 = null;
+    if (a >= 25) {
+      channelNr = 2;
+      charCode1 = a - 8;
+    } else {
+      channelNr = 1;
+      charCode1 = a;
+    }
+    if (charCode1 >= 17 && charCode1 <= 19) {
+      let oneCode;
+      if (charCode1 === 17) oneCode = b + 80;else if (charCode1 === 18) oneCode = b + 112;else oneCode = b + 144;
+      this.logger.log(VerboseLevel.INFO, () => "Special char '" + getCharForByte(oneCode) + "' in channel " + channelNr);
+      charCodes = [oneCode];
+    } else if (a >= 32 && a <= 127) charCodes = b === 0 ? [a] : [a, b];
+    if (charCodes) this.logger.log(VerboseLevel.DEBUG, () => "Char codes =  " + numArrayToHexArray(charCodes).join(","));
+    return charCodes;
+  }
+  /**
+  * Parse extended background attributes as well as new foreground color black.
+  *
+  * @param a - The first byte
+  * @param b - The second byte
+  * @returns True if background attributes are found
+  */
+  parseBackgroundAttributes(a, b) {
+    if (!((a === 16 || a === 24) && b >= 32 && b <= 47 || (a === 23 || a === 31) && b >= 45 && b <= 47)) return false;
+    let index;
+    const bkgData = {};
+    if (a === 16 || a === 24) {
+      index = Math.floor((b - 32) / 2);
+      bkgData.background = backgroundColors[index];
+      if (b % 2 === 1) bkgData.background = bkgData.background + "_semi";
+    } else if (b === 45) bkgData.background = "transparent";else {
+      bkgData.foreground = "black";
+      if (b === 47) bkgData.underline = true;
+    }
+    const chNr = a <= 23 ? 1 : 2;
+    this.channels[chNr].setBkgData(bkgData);
+    return true;
+  }
+  /**
+  * Reset state of parser and its channels.
+  */
+  reset() {
+    for (let i = 0; i < Object.keys(this.channels).length; i++) {
+      const channel = this.channels[i];
+      if (channel) channel.reset();
+    }
+    setLastCmd(null, null, this.cmdHistory);
+  }
+  /**
+  * Trigger the generation of a cue, and the start of a new one if displayScreens are not empty.
+  */
+  cueSplitAtTime(t) {
+    for (const channel of this.channels) if (channel) channel.cueSplitAtTime(t);
+  }
+};
+
+//#endregion
+//#region src/extractCta608Data.ts
+/**
+* Extract CTA-608 data from a DataView
+*
+* @param raw - The DataView to extract the data from
+* @param cta608Range - The range of the CTA-608 data
+* @returns The extracted CTA-608 data
+*
+* @beta
+*/
+function extractCta608Data(raw, cta608Range) {
+  let pos = cta608Range[0];
+  const fieldData = [[], []];
+  pos += 8;
+  const ccCount = raw.getUint8(pos) & 31;
+  pos += 2;
+  for (let i = 0; i < ccCount; i++) {
+    const byte = raw.getUint8(pos);
+    const ccValid = byte & 4;
+    const ccType = byte & 3;
+    pos++;
+    const ccData1 = raw.getUint8(pos);
+    pos++;
+    const ccData2 = raw.getUint8(pos);
+    pos++;
+    if (ccValid && (ccData1 & 127) + (ccData2 & 127) !== 0) {
+      if (ccType === 0) {
+        fieldData[0].push(ccData1);
+        fieldData[0].push(ccData2);
+      } else if (ccType === 1) {
+        fieldData[1].push(ccData1);
+        fieldData[1].push(ccData2);
+      }
+    }
+  }
+  return fieldData;
+}
+
+//#endregion
+//#region src/utils/seiHelpers.ts
+function getSeiData(raw, startPos, endPos) {
+  const data = [];
+  for (let cursor = startPos; cursor < endPos; cursor++) if (cursor + 2 < endPos && raw.getUint8(cursor) === 0 && raw.getUint8(cursor + 1) === 0 && raw.getUint8(cursor + 2) === 3) {
+    data.push(0);
+    data.push(0);
+    cursor += 2;
+  } else data.push(raw.getUint8(cursor));
+  return new DataView(new Uint8Array(data).buffer);
+}
+function isCea608Sei(payloadType, payloadSize, sei, pos) {
+  if (payloadType !== 4 || payloadSize < 8) return false;
+  if (sei.getUint8(pos) !== 181) return false;
+  if (sei.getUint16(pos + 1) !== 49) return false;
+  if (sei.getUint32(pos + 3) !== 1195456820) return false;
+  if (sei.getUint8(pos + 7) !== 3) return false;
+  return true;
+}
+function isCCType(type) {
+  return type === 0 || type === 1;
+}
+function isNonEmptyCCData(ccData1, ccData2) {
+  return (ccData1 & 127) > 0 || (ccData2 & 127) > 0;
+}
+function isSeiNalUnitType(unitType) {
+  return unitType === 6;
+}
+function parseCta608DataFromSei(sei, fieldData) {
+  let cursor = 0;
+  while (cursor < sei.byteLength) {
+    let payloadType = 0;
+    let payloadSize = 0;
+    let now;
+    do payloadType += now = sei.getUint8(cursor++); while (now === 255);
+    do payloadSize += now = sei.getUint8(cursor++); while (now === 255);
+    if (isCea608Sei(payloadType, payloadSize, sei, cursor)) {
+      const pos = cursor + 10;
+      const ccCount = pos + (sei.getUint8(pos - 2) & 31) * 3;
+      for (let i = pos; i < ccCount; i += 3) {
+        const byte = sei.getUint8(i);
+        if (byte & 4) {
+          const ccType = byte & 3;
+          if (isCCType(ccType)) {
+            const ccData1 = sei.getUint8(i + 1);
+            const ccData2 = sei.getUint8(i + 2);
+            if (isNonEmptyCCData(ccData1, ccData2)) fieldData[ccType].push(ccData1, ccData2);
+          }
+        }
+      }
+    }
+    cursor += payloadSize;
+  }
+}
+
+//#endregion
+//#region src/extractCta608DataFromSample.ts
+/**
+* Extracts CEA-608 data from a given sample.
+*
+* @param raw - The DataView with media data
+* @param startPos - The start position within the DataView
+* @param sampleSize - The size of the sample in bytes
+* @returns fieldData array containing field 1 and field 2 data arrays
+*
+* @beta
+*/
+function extractCta608DataFromSample(raw, startPos, sampleSize) {
+  let nalSize = 0;
+  let nalType = 0;
+  const fieldData = [[], []];
+  for (let cursor = startPos; cursor < startPos + sampleSize - 5; cursor++) {
+    nalSize = raw.getUint32(cursor);
+    nalType = raw.getUint8(cursor + 4) & 31;
+    if (cursor + 5 + nalSize > startPos + sampleSize) break;
+    if (isSeiNalUnitType(nalType)) {
+      if (cursor + 5 + nalSize <= raw.byteLength) parseCta608DataFromSei(getSeiData(raw, cursor + 5, cursor + 5 + nalSize), fieldData);
+    }
+    cursor += nalSize + 3;
+  }
+  return fieldData;
+}
+
+//#endregion
+//#region src/findCta608Nalus.ts
+/**
+* Find CTA-608 NAL units in a video stream
+*
+* @param raw - The DataView to extract the data from
+* @param startPos - The start position of the data
+* @param size - The size of the data
+* @returns The extracted CTA-608 NAL units
+*
+* @beta
+*/
+function findCta608Nalus(raw, startPos, size) {
+  let nalSize = 0,
+    cursor = startPos,
+    nalType = 0;
+  const cta608NaluRanges = [];
+  const isCTA608SEI = (payloadType, payloadSize, raw$1, pos) => {
+    if (payloadType !== 4 || payloadSize < 8) return null;
+    const countryCode = raw$1.getUint8(pos);
+    const providerCode = raw$1.getUint16(pos + 1);
+    const userIdentifier = raw$1.getUint32(pos + 3);
+    const userDataTypeCode = raw$1.getUint8(pos + 7);
+    return countryCode == 181 && providerCode == 49 && userIdentifier == 1195456820 && userDataTypeCode == 3;
+  };
+  while (cursor < startPos + size) {
+    nalSize = raw.getUint32(cursor);
+    nalType = raw.getUint8(cursor + 4) & 31;
+    if (nalType === 6) {
+      let pos = cursor + 5;
+      let payloadType = -1;
+      while (pos < cursor + 4 + nalSize - 1) {
+        payloadType = 0;
+        let b = 255;
+        while (b === 255) {
+          b = raw.getUint8(pos);
+          payloadType += b;
+          pos++;
+        }
+        let payloadSize = 0;
+        b = 255;
+        while (b === 255) {
+          b = raw.getUint8(pos);
+          payloadSize += b;
+          pos++;
+        }
+        if (isCTA608SEI(payloadType, payloadSize, raw, pos)) cta608NaluRanges.push([pos, payloadSize]);
+        pos += payloadSize;
+      }
+    }
+    cursor += nalSize + 4;
+  }
+  return cta608NaluRanges;
+}
+
+//#endregion
+//#region src/SccParser.ts
+/**
+* The copyright in this software is being made available under the BSD License,
+* included below. This software may be subject to other third party and contributor
+* rights, including patent rights, and no such rights are granted under this license.
+*
+* Copyright (c) 2015-2016, DASH Industry Forum.
+* All rights reserved.
+*
+* Redistribution and use in source and binary forms, with or without modification,
+* are permitted provided that the following conditions are met:
+*  1. Redistributions of source code must retain the above copyright notice, this
+*  list of conditions and the following disclaimer.
+*  * Redistributions in binary form must reproduce the above copyright notice,
+*  this list of conditions and the following disclaimer in the documentation and/or
+*  other materials provided with the distribution.
+*  2. Neither the name of Dash Industry Forum nor the names of its
+*  contributors may be used to endorse or promote products derived from this software
+*  without specific prior written permission.
+*
+*  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+*  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+*  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+*  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+*  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+*  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+*  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+*  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+*  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+*  POSSIBILITY OF SUCH DAMAGE.
+*/
+/**
+* SCC Parser
+*
+* @beta
+*/
+var SccParser = class {
+  constructor(processor, field = 1) {
+    this.hasHeader = false;
+    this.nrLinesParsed = 0;
+    this.processor = processor;
+    this.field = field;
+  }
+  parse(text) {
+    const lines = text.split(/\r?\n/);
+    this.nrLinesParsed = 0;
+    if (lines[0] === "Scenarist_SCC V1.0") {
+      this.hasHeader = true;
+      this.nrLinesParsed++;
+    }
+    for (let l = 1; l < lines.length; l += 2) {
+      if (lines[l] !== "") break;
+      this.nrLinesParsed++;
+      const lineData = this.parseDataLine(lines[l + 1]);
+      if (lineData === null) break;
+      this.nrLinesParsed++;
+      this.processor.addData(lineData[0], lineData[1]);
+    }
+  }
+  parseDataLine(line) {
+    if (!line) return null;
+    const lineParts = line.split(/\s+/);
+    const timeData = lineParts[0];
+    const ceaData = [];
+    for (let i = 1; i < lineParts.length; i++) {
+      const fourHexChars = lineParts[i];
+      const a = parseInt(fourHexChars.substring(0, 2), 16);
+      const b = parseInt(fourHexChars.substring(2, 4), 16);
+      ceaData.push(a, b);
+    }
+    return [this.timeConverter(timeData), ceaData];
+  }
+  timeConverter(smpteTs) {
+    const parts = smpteTs.split(":");
+    if (parts.length === 3) {
+      const lastParts = parts[2].split(";");
+      parts[2] = lastParts[0];
+      const frames = parseInt(lastParts[1], 10);
+      return (30 * (60 * (60 * parseInt(parts[0], 10) + parseInt(parts[1], 10)) + parseInt(parts[2], 10)) + frames) * 1001 / 3e4;
+    }
+    return 0;
+  }
+  getHeaderStatus() {
+    return this.hasHeader;
+  }
+  getField() {
+    return this.field;
+  }
+  getLinesParsed() {
+    return this.nrLinesParsed;
+  }
+};
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmcd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmcd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; },
+/* harmony export */   CMCD_DEFAULT_TIME_INTERVAL: function() { return /* binding */ CMCD_DEFAULT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
+/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
+/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; },
+/* harmony export */   CMCD_HEADERS: function() { return /* binding */ CMCD_HEADERS; },
+/* harmony export */   CMCD_JSON: function() { return /* binding */ CMCD_JSON; },
+/* harmony export */   CMCD_KEYS: function() { return /* binding */ CMCD_KEYS; },
+/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
+/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
+/* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
+/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
+/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
+/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; },
+/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
+/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
+/* harmony export */   CMCD_V1: function() { return /* binding */ CMCD_V1; },
+/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; },
+/* harmony export */   CMCD_V2: function() { return /* binding */ CMCD_V2; },
+/* harmony export */   CmcdEncoding: function() { return /* binding */ CmcdEncoding; },
+/* harmony export */   CmcdEventType: function() { return /* binding */ CmcdEventType; },
+/* harmony export */   CmcdFormatters: function() { return /* binding */ CmcdFormatters; },
+/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
+/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
+/* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
+/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
+/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; },
+/* harmony export */   CmcdTransmissionMode: function() { return /* binding */ CmcdTransmissionMode; },
+/* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
+/* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
+/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
+/* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
+/* harmony export */   fromCmcdQuery: function() { return /* binding */ fromCmcdQuery; },
+/* harmony export */   fromCmcdUrl: function() { return /* binding */ fromCmcdUrl; },
+/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; },
+/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; },
+/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; },
+/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; },
+/* harmony export */   isCmcdResponseReceivedKey: function() { return /* binding */ isCmcdResponseReceivedKey; },
+/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; },
+/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; },
+/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; },
+/* harmony export */   toCmcdJson: function() { return /* binding */ toCmcdJson; },
+/* harmony export */   toCmcdQuery: function() { return /* binding */ toCmcdQuery; },
+/* harmony export */   toCmcdReport: function() { return /* binding */ toCmcdReport; },
+/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+
+
+//#region src/CMCD_OBJECT.ts
+/**
+* CMCD object header name.
+*
+*
+* @beta
+*/
+const CMCD_OBJECT = "CMCD-Object";
+
+//#endregion
+//#region src/CMCD_REQUEST.ts
+/**
+* CMCD request header name.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST = "CMCD-Request";
+
+//#endregion
+//#region src/CMCD_SESSION.ts
+/**
+* CMCD session header name.
+*
+*
+* @beta
+*/
+const CMCD_SESSION = "CMCD-Session";
+
+//#endregion
+//#region src/CMCD_STATUS.ts
+/**
+* CMCD status header name.
+*
+*
+* @beta
+*/
+const CMCD_STATUS = "CMCD-Status";
+
+//#endregion
+//#region src/CMCD_HEADER_MAP.ts
+/**
+* The map of CMCD keys to their appropriate header shard.
+*
+*
+* @internal
+*/
+const CMCD_HEADER_MAP = {
+  br: CMCD_OBJECT,
+  ab: CMCD_OBJECT,
+  d: CMCD_OBJECT,
+  ot: CMCD_OBJECT,
+  tb: CMCD_OBJECT,
+  tpb: CMCD_OBJECT,
+  lb: CMCD_OBJECT,
+  tab: CMCD_OBJECT,
+  lab: CMCD_OBJECT,
+  url: CMCD_OBJECT,
+  pb: CMCD_REQUEST,
+  bl: CMCD_REQUEST,
+  tbl: CMCD_REQUEST,
+  dl: CMCD_REQUEST,
+  ltc: CMCD_REQUEST,
+  mtp: CMCD_REQUEST,
+  nor: CMCD_REQUEST,
+  nrr: CMCD_REQUEST,
+  rc: CMCD_REQUEST,
+  sn: CMCD_REQUEST,
+  sta: CMCD_REQUEST,
+  su: CMCD_REQUEST,
+  ttfb: CMCD_REQUEST,
+  ttfbb: CMCD_REQUEST,
+  ttlb: CMCD_REQUEST,
+  cmsdd: CMCD_REQUEST,
+  cmsds: CMCD_REQUEST,
+  smrt: CMCD_REQUEST,
+  df: CMCD_REQUEST,
+  cs: CMCD_REQUEST,
+  ts: CMCD_REQUEST,
+  cid: CMCD_SESSION,
+  pr: CMCD_SESSION,
+  sf: CMCD_SESSION,
+  sid: CMCD_SESSION,
+  st: CMCD_SESSION,
+  v: CMCD_SESSION,
+  msd: CMCD_SESSION,
+  bs: CMCD_STATUS,
+  bsd: CMCD_STATUS,
+  cdn: CMCD_STATUS,
+  rtp: CMCD_STATUS,
+  bg: CMCD_STATUS,
+  pt: CMCD_STATUS,
+  ec: CMCD_STATUS,
+  e: CMCD_STATUS
+};
+
+//#endregion
+//#region src/CmcdHeaderField.ts
+/**
+* CMCD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdHeaderField = {
+  OBJECT: CMCD_OBJECT,
+  REQUEST: CMCD_REQUEST,
+  SESSION: CMCD_SESSION,
+  STATUS: CMCD_STATUS
+};
+
+//#endregion
+//#region src/groupCmcdHeaders.ts
+function createHeaderMap(headerMap) {
+  return Object.keys(headerMap).reduce((acc, field) => {
+    headerMap[field]?.forEach(key => acc[key] = field);
+    return acc;
+  }, {});
+}
+/**
+* Group a CMCD data object into header shards
+*
+* @param cmcd - The CMCD data object to convert.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*/
+function groupCmcdHeaders(cmcd, customHeaderMap) {
+  const result = {};
+  if (!cmcd) return result;
+  const keys$1 = Object.keys(cmcd);
+  const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
+  return keys$1.reduce((acc, key) => {
+    const field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
+    const data = acc[field] ??= {};
+    data[key] = cmcd[key];
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/CMCD_EVENT_MODE.ts
+/**
+* CMCD event mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_EVENT_MODE = "event";
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+const toRounded = value => Math.round(value);
+const toUrlSafe = (value, options) => {
+  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
+    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__.urlToRelativePath)(value, options.baseUrl);
+    return options.version === 1 ? encodeURIComponent(value) : value;
+  }
+};
+const toHundred = value => toRounded(value / 100) * 100;
+const nor = (value, options) => {
+  let norValue = value;
+  if (options.version >= 2) {
+    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  }
+  return toUrlSafe(norValue, options);
+};
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*/
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor,
+  rtp: toHundred,
+  tb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_MODE.ts
+/**
+* CMCD request mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST_MODE = "request";
+
+//#endregion
+//#region src/CMCD_COMMON_KEYS.ts
+/**
+* Defines the common keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_COMMON_KEYS = ["ab", "bg", "bl", "br", "bs", "bsd", "cdn", "cid", "cs", "df", "ec", "lab", "lb", "ltc", "msd", "mtp", "pb", "pr", "pt", "sf", "sid", "sn", "st", "sta", "tab", "tb", "tbl", "tpb", "ts", "v"];
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_EVENT_KEYS = ["e"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* CMCD v2 - Response-only and timing keys.
+*
+*
+* @beta
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
+/**
+* Check if a key is a custom key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+*
+* @beta
+*/
+function isCmcdCustomKey(key) {
+  return CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_EVENT_KEYS.includes(key) || CMCD_RESPONSE_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST_KEYS = ["d", "dl", "nor", "ot", "rtp", "su"];
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_REQUEST_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @group CMCD
+*
+* @beta
+*
+* @example
+* {@includeCode ../../test/cmcd/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEYS.includes(key);
+}
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+*
+* @beta
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
+
+//#endregion
+//#region src/isCmcdV1Key.ts
+/**
+* Filter function for CMCD v1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+const filterMap = {
+  [CMCD_EVENT_MODE]: isCmcdEventKey,
+  [CMCD_REQUEST_MODE]: isCmcdRequestKey
+};
+/**
+* Convert a generic object to CMCD data.
+*
+* @param obj - The CMCD object to process.
+* @param options - Options for encoding.
+*
+*
+* @beta
+*/
+function prepareCmcdData(obj, options = {}) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const version = options.version || obj["v"] || 1;
+  const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
+  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
+  let keys$1 = Object.keys(obj).filter(keyFilter);
+  if (obj["e"] && obj["e"] !== "rr") keys$1 = keys$1.filter(key => !isCmcdResponseReceivedKey(key));
+  const filter = options.filter;
+  if (typeof filter === "function") keys$1 = keys$1.filter(filter);
+  const needsTimestamp = reportingMode === CMCD_EVENT_MODE;
+  if (needsTimestamp && !keys$1.includes("ts")) keys$1.push("ts");
+  if (version > 1 && !keys$1.includes("v")) keys$1.push("v");
+  const formatters = Object.assign({}, CMCD_FORMATTER_MAP, options.formatters);
+  const formatterOptions = {
+    version,
+    reportingMode,
+    baseUrl: options.baseUrl
+  };
+  keys$1.sort().forEach(key => {
+    let value = obj[key];
+    const formatter = formatters[key];
+    if (typeof formatter === "function") value = formatter(value, formatterOptions);
+    if (key === "v") if (version === 1) return;else value = version;
+    if (key == "pr" && value === 1) return;
+    if (needsTimestamp && key === "ts" && !Number.isFinite(value)) value = Date.now();
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isTokenField)(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/toCmcdHeaders.ts
+/**
+* Convert a CMCD data object to request headers
+*
+* @param cmcd - The CMCD data object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdHeaders.test.ts#example}
+*/
+function toCmcdHeaders(cmcd, options = {}) {
+  const result = {};
+  if (!cmcd) return result;
+  const shards = groupCmcdHeaders(prepareCmcdData(cmcd, options), options?.customHeaderMap);
+  return Object.entries(shards).reduce((acc, [field, value]) => {
+    const shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
+      whitespace: false
+    });
+    if (shard) acc[field] = shard;
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/appendCmcdHeaders.ts
+/**
+* Append CMCD query args to a header object.
+*
+* @param headers - The headers to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Encode options.
+*
+* @returns The headers with the CMCD header shards appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdHeaders.test.ts#example}
+*/
+function appendCmcdHeaders(headers, cmcd, options) {
+  return Object.assign(headers, toCmcdHeaders(cmcd, options));
+}
+
+//#endregion
+//#region src/CMCD_PARAM.ts
+/**
+* CMCD parameter name.
+*
+*
+* @beta
+*/
+const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/encodeCmcd.ts
+/**
+* Encode a CMCD object to a string.
+*
+* @param cmcd - The CMCD object to encode.
+* @param options - Options for encoding.
+*
+* @returns The encoded CMCD string.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/encodeCmcd.test.ts#example}
+*/
+function encodeCmcd(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(prepareCmcdData(cmcd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD data object to a URL encoded string.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL encoded CMCD data.
+*
+*
+* @beta
+*/
+function toCmcdUrl(cmcd, options = {}) {
+  if (!cmcd) return "";
+  const params = encodeCmcd(cmcd, options);
+  return encodeURIComponent(params);
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD data object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD query arg.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+}
+
+//#endregion
+//#region src/appendCmcdQuery.ts
+const REGEX = /CMCD=[^&#]+/;
+/**
+* Append CMCD query args to a URL.
+*
+* @param url - The URL to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL with the CMCD query args appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdQuery.test.ts#example}
+*/
+function appendCmcdQuery(url, cmcd, options) {
+  const query = toCmcdQuery(cmcd, options);
+  if (!query) return url;
+  if (REGEX.test(url)) return url.replace(REGEX, query);
+  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+}
+
+//#endregion
+//#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
+/**
+* The default time interval in secondswhen using using event mode
+*
+*
+* @beta
+*/
+const CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_HEADERS.ts
+/**
+* CMCD `headers` transmission mode.
+*
+*
+* @beta
+*/
+const CMCD_HEADERS = "headers";
+
+//#endregion
+//#region src/CMCD_JSON.ts
+/**
+* CMCD `json` transmission mode.
+*
+*
+* @beta
+*
+* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
+*/
+const CMCD_JSON = "json";
+
+//#endregion
+//#region src/CMCD_KEYS.ts
+const keySet = new Set([...CMCD_V1_KEYS, ...CMCD_COMMON_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS]);
+/**
+* A list of all CMCD keys.
+*
+*
+* @beta
+*/
+const CMCD_KEYS = Array.from(keySet);
+
+//#endregion
+//#region src/CMCD_QUERY.ts
+/**
+* CMCD `query` transmission mode.
+*
+*
+* @beta
+*/
+const CMCD_QUERY = "query";
+
+//#endregion
+//#region src/CMCD_RESPONSE_MODE.ts
+/**
+* CMCD response mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_RESPONSE_MODE = "response";
+
+//#endregion
+//#region src/CMCD_V1.ts
+/**
+* CMCD Version 1
+*
+*
+* @beta
+*/
+const CMCD_V1 = 1;
+
+//#endregion
+//#region src/CMCD_V2.ts
+/**
+* CMCD Version 2
+*
+*
+* @beta
+*/
+const CMCD_V2 = 2;
+
+//#endregion
+//#region src/CmcdTransmissionMode.ts
+/**
+* CMCD transmission modes.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdTransmissionMode = {
+  JSON: CMCD_JSON,
+  QUERY: CMCD_QUERY,
+  HEADERS: CMCD_HEADERS
+};
+
+//#endregion
+//#region src/CmcdEncoding.ts
+/**
+* CMCD encoding types.
+*
+*
+* @enum
+*
+* @beta
+*
+* @deprecated Use {@link CmcdTransmissionMode} instead.
+*
+* @see {@link CmcdTransmissionMode}
+*/
+const CmcdEncoding = CmcdTransmissionMode;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdEventType = {
+  PLAY_STATE: "ps",
+  ERROR: "e",
+  TIME_INTERVAL: "t",
+  CONTENT_ID: "c",
+  BACKGROUNDED_MODE: "b",
+  MUTE: "m",
+  UNMUTE: "um",
+  PLAYER_EXPAND: "pe",
+  PLAYER_COLLAPSE: "pc",
+  RESPONSE_RECEIVED: "rr"
+};
+
+//#endregion
+//#region src/CmcdFormatters.ts
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*
+* @deprecated Use `CMCD_FORMATTER_MAP` instead.
+*/
+const CmcdFormatters = CMCD_FORMATTER_MAP;
+
+//#endregion
+//#region src/CmcdObjectType.ts
+/**
+* Common Media Client Data Object Type
+*
+*
+* @beta
+*
+* @enum
+*/
+const CmcdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmObjectType;
+
+//#endregion
+//#region src/CmcdPlayerState.ts
+/**
+* CMCD v2 player states for the 'sta' key.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdPlayerState = {
+  STARTING: "s",
+  PLAYING: "p",
+  SEEKING: "k",
+  REBUFFERING: "r",
+  PAUSED: "a",
+  WAITING: "w",
+  ENDED: "e",
+  FATAL_ERROR: "f",
+  QUIT: "q",
+  PRELOADING: "d"
+};
+
+//#endregion
+//#region src/CmcdReportingMode.ts
+/**
+* CMCD reporting mode types.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdReportingMode = {
+  REQUEST: CMCD_REQUEST_MODE,
+  EVENT: CMCD_EVENT_MODE
+};
+
+//#endregion
+//#region src/CmcdStreamingFormat.ts
+/**
+* Common Media Client Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmcdStreamType.ts
+/**
+* Common Media Client Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value) {
+  if (Array.isArray(value)) return value.map(reduceValue);
+  if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
+  if (typeof value === "string") return decodeURIComponent(value);
+  return value;
+}
+/**
+* Decode a CMCD string to an object.
+*
+* @param cmcd - The CMCD string to decode.
+*
+* @returns The decoded CMCD object.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeCmcd.test.ts#example}
+*/
+function decodeCmcd(cmcd) {
+  if (!cmcd) return {};
+  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
+  return Object.entries(sfDict).reduce((acc, [key, item]) => {
+    acc[key] = reduceValue(item.value);
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdHeaders.ts
+const keys = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
+/**
+* Decode CMCD data from request headers.
+*
+* @param headers - The request headers to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdHeaders.test.ts#example}
+*/
+function fromCmcdHeaders(headers) {
+  if (!(headers instanceof Headers)) headers = new Headers(headers);
+  return keys.reduce((acc, key) => {
+    const value = headers.get(key);
+    return Object.assign(acc, decodeCmcd(value));
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdQuery.ts
+/**
+* Decode CMCD data from a query string.
+*
+* @param query - The query string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdQuery.test.ts#example}
+*/
+function fromCmcdQuery(query) {
+  if (typeof query === "string") query = new URLSearchParams(query);
+  return decodeCmcd(query.get(CMCD_PARAM));
+}
+
+//#endregion
+//#region src/fromCmcdUrl.ts
+/**
+* Decode CMCD data from a url encoded string.
+*
+* @param url - The url encoded string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdUrl.test.ts#example}
+*/
+function fromCmcdUrl(url) {
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")));
+}
+
+//#endregion
+//#region src/toCmcdJson.ts
+/**
+* Convert a CMCD data object to JSON.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD JSON.
+*
+*
+* @beta
+*
+* @deprecated Sending CMCD as JSON objects is deprecated. Use `toCmcdUrl` to create an array of url strings instead.
+*/
+function toCmcdJson(cmcd, options) {
+  const data = prepareCmcdData(cmcd, options);
+  return JSON.stringify(data, (_, value) => typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value);
+}
+
+//#endregion
+//#region src/toCmcdReport.ts
+/**
+* Converts CMCD data into a report format.
+*
+* @param data - The CMCD data to be transformed into a report
+* @param target - The target configuration for the CMCD report
+*
+* @return A CMCD report object
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdReport.test.ts#example}
+*/
+function toCmcdReport(data, target) {
+  if (!target || !target.url) return null;
+  const url = new URL(target.url);
+  const method = target.method || "GET";
+  const headers = {};
+  const transimissionMode = target.transmissionMode || CMCD_QUERY;
+  const options = {
+    version: target.version,
+    reportingMode: target.reportingMode
+  };
+  const {
+    enabledKeys
+  } = target;
+  if (enabledKeys) options.filter = key => enabledKeys.includes(key);
+  switch (transimissionMode) {
+    case CMCD_QUERY:
+      const param = encodeCmcd(data, options);
+      if (param) url.searchParams.set(CMCD_PARAM, param);
+      break;
+    case CMCD_HEADERS:
+      Object.assign(headers, toCmcdHeaders(data, options));
+      break;
+  }
+  return {
+    url: url.toString(),
+    method,
+    headers
+  };
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmsd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmsd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; },
+/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; },
+/* harmony export */   CMSD_V1: function() { return /* binding */ CMSD_V1; },
+/* harmony export */   CmsdHeaderField: function() { return /* binding */ CmsdHeaderField; },
+/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; },
+/* harmony export */   CmsdStreamType: function() { return /* binding */ CmsdStreamType; },
+/* harmony export */   CmsdStreamingFormat: function() { return /* binding */ CmsdStreamingFormat; },
+/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
+/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
+/* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+
+
+
+//#region src/CMSD_DYNAMIC.ts
+/**
+* CMSD dynamic header name.
+*
+*
+* @beta
+*/
+const CMSD_DYNAMIC = "CMSD-Dynamic";
+
+//#endregion
+//#region src/CMSD_STATIC.ts
+/**
+* CMSD static header name.
+*
+*
+* @beta
+*/
+const CMSD_STATIC = "CMSD-Static";
+
+//#endregion
+//#region src/CMSD_V1.ts
+/**
+* CMSD Version 1
+*
+*
+* @beta
+*/
+const CMSD_V1 = 1;
+
+//#endregion
+//#region src/CmsdHeaderField.ts
+/**
+* CMSD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdHeaderField = {
+  STATIC: CMSD_STATIC,
+  DYNAMIC: CMSD_DYNAMIC
+};
+
+//#endregion
+//#region src/CmsdObjectType.ts
+/**
+* Common Media Server Data Object Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
+
+//#endregion
+//#region src/CmsdStreamingFormat.ts
+/**
+* Common Media Server Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmsdStreamType.ts
+/**
+* Common Media Server Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmsdDynamic.ts
+/**
+* Decode a CMSD dynamic string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdDynamic(cmsd) {
+  if (!cmsd) return [];
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfList)(cmsd);
+}
+
+//#endregion
+//#region src/decodeCmsdStatic.ts
+/**
+* Decode a CMSD Static dict string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdStatic(cmsd) {
+  if (!cmsd) return {};
+  return Object.entries((0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfDict)(cmsd)).reduce((acc, [key, item]) => {
+    const {
+      value
+    } = item;
+    acc[key] = typeof value === "symbol" ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.symbolToStr)(value) : value;
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/encodeCmsdDynamic.ts
+function encodeCmsdDynamic(value, cmsd) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    if (!cmsd) return "";
+    value = [new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfItem(value, cmsd)];
+  }
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfList)(value, {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/utils/processCmsd.ts
+function processCmsd(obj, options) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const keys = Object.keys(obj);
+  const useSymbol = options?.useSymbol !== false;
+  keys.forEach(key => {
+    let value = obj[key];
+    if (key === "v" && value === 1) return;
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isTokenField)(key) && typeof value === "string") value = useSymbol ? Symbol.for(value) : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/encodeCmsdStatic.ts
+/**
+* Encode a CMSD Static object.
+*
+* @param cmsd - The CMSD object to encode.
+* @param options - Encoding options
+*
+* @returns The encoded CMSD string.
+*
+*
+* @beta
+*/
+function encodeCmsdStatic(cmsd, options) {
+  if (!cmsd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfDict)(processCmsd(cmsd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cta/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-cta/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; },
+/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; },
+/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; },
+/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; },
+/* harmony export */   isValid: function() { return /* binding */ isValid; }
+/* harmony export */ });
+//#region src/CmObjectType.ts
+/**
+* Common Media Object Type
+*
+* @internal
+*/
+const CmObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamingFormat.ts
+/**
+* Common Media Streaming Format
+*
+* @internal
+*/
+const CmStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamType.ts
+/**
+* Common Media Stream Type
+*
+* @internal
+*/
+const CmStreamType = {
+  VOD: "v",
+  LIVE: "l"
+};
+
+//#endregion
+//#region src/isTokenField.ts
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return ["ot", "sf", "st", "e", "sta"].includes(key);
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-dash/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-dash/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   THUMBNAIL_TILE_SCHEME_ID_URI: function() { return /* binding */ THUMBNAIL_TILE_SCHEME_ID_URI; },
+/* harmony export */   parseFrameRate: function() { return /* binding */ parseFrameRate; },
+/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
+/* harmony export */ });
+//#region src/parseFrameRate.ts
+/**
+* Parses a DASH framerate string into a number.
+*
+* @param frameRate - The frame rate string to parse.
+* @returns The frame rate as a number.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/parseFrameRate.test.ts#example}
+*/
+function parseFrameRate(frameRate) {
+  const [numerator, denominator] = frameRate.split("/").map(value => parseInt(value, 10));
+  if (denominator === void 0) return numerator;
+  if (isNaN(numerator) || isNaN(denominator) || denominator === 0) return NaN;
+  return numerator / denominator;
+}
+
+//#endregion
+//#region src/processUriTemplate.ts
+const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
+/**
+* Process a URI template used in `SegmentTemplate` nodes.
+*
+* @param uriTemplate - URI template to process.
+* @param representationId - Representation ID.
+* @param number - Number.
+* @param subNumber - Sub-number.
+* @param bandwidth - Bandwidth.
+* @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
+*
+* @returns Processed URI template.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/processUriTemplate.test.ts#example}
+*/
+function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
+  return uriTemplate.replace(TOKENS, (match, name, widthStr, format) => {
+    let value;
+    switch (name) {
+      case void 0:
+        return "$";
+      case "RepresentationID":
+        value = representationId;
+        break;
+      case "Number":
+        value = number;
+        break;
+      case "SubNumber":
+        value = subNumber;
+        break;
+      case "Bandwidth":
+        value = bandwidth;
+        break;
+      case "Time":
+        if (typeof time === "string") return time;
+        value = time ? Math.round(time) : time;
+        break;
+      default:
+        value = null;
+    }
+    if (value == null) return match;
+    let valueString;
+    switch (format) {
+      case void 0:
+      case "d":
+      case "i":
+      case "u":
+        valueString = value.toString();
+        break;
+      case "o":
+        valueString = value.toString(8);
+        break;
+      case "x":
+        valueString = value.toString(16);
+        break;
+      case "X":
+        valueString = value.toString(16).toUpperCase();
+        break;
+      default:
+        valueString = value.toString();
+        break;
+    }
+    const width = parseInt(widthStr, 10) || 1;
+    return valueString.padStart(width, "0");
+  });
+}
+
+//#endregion
+//#region src/THUMBNAIL_TILE_SCHEME_ID_URI.ts
+/**
+* The scheme ID URI for thumbnail tiles in DASH.
+*
+*
+* @beta
+*/
+const THUMBNAIL_TILE_SCHEME_ID_URI = "http://dashif.org/guidelines/thumbnail_tile";
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-id3/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-id3/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ID3_SCHEME_ID_URI: function() { return /* binding */ ID3_SCHEME_ID_URI; },
+/* harmony export */   canParseId3: function() { return /* binding */ canParseId3; },
+/* harmony export */   decodeId3Frame: function() { return /* binding */ decodeId3Frame; },
+/* harmony export */   decodeId3TextFrame: function() { return /* binding */ decodeId3TextFrame; },
+/* harmony export */   getId3Data: function() { return /* binding */ getId3Data; },
+/* harmony export */   getId3Frames: function() { return /* binding */ getId3Frames; },
+/* harmony export */   getId3Timestamp: function() { return /* binding */ getId3Timestamp; },
+/* harmony export */   isId3Footer: function() { return /* binding */ isId3Footer; },
+/* harmony export */   isId3Header: function() { return /* binding */ isId3Header; },
+/* harmony export */   isId3TimestampFrame: function() { return /* binding */ isId3TimestampFrame; },
+/* harmony export */   readId3Size: function() { return /* binding */ readId3Size; },
+/* harmony export */   toArrayBuffer: function() { return /* binding */ toArrayBuffer; },
+/* harmony export */   toUint8: function() { return /* binding */ toUint8; },
+/* harmony export */   utf8ArrayToStr: function() { return /* binding */ utf8ArrayToStr; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/util/isId3Header.ts
+/**
+* Returns true if an ID3 header can be found at offset in data
+*
+* @param data - The data to search in
+* @param offset - The offset at which to start searching
+*
+* @returns `true` if an ID3 header is found
+*
+* @internal
+*
+*/
+function isId3Header(data, offset) {
+  if (offset + 10 <= data.length) {
+    if (data[offset] === 73 && data[offset + 1] === 68 && data[offset + 2] === 51) {
+      if (data[offset + 3] < 255 && data[offset + 4] < 255) {
+        if (data[offset + 6] < 128 && data[offset + 7] < 128 && data[offset + 8] < 128 && data[offset + 9] < 128) return true;
+      }
+    }
+  }
+  return false;
+}
+
+//#endregion
+//#region src/util/readId3Size.ts
+/**
+* Read ID3 size
+*
+* @param data - The data to read from
+* @param offset - The offset at which to start reading
+*
+* @returns The size
+*
+* @internal
+*
+*/
+function readId3Size(data, offset) {
+  let size = 0;
+  size = (data[offset] & 127) << 21;
+  size |= (data[offset + 1] & 127) << 14;
+  size |= (data[offset + 2] & 127) << 7;
+  size |= data[offset + 3] & 127;
+  return size;
+}
+
+//#endregion
+//#region src/canParseId3.ts
+/**
+* Checks if the given data contains an ID3 tag.
+*
+* @param data - The data to check
+* @param offset - The offset at which to start checking
+*
+* @returns `true` if an ID3 tag is found
+*
+*
+* @beta
+*/
+function canParseId3(data, offset) {
+  return isId3Header(data, offset) && readId3Size(data, offset + 6) + 10 <= data.length - offset;
+}
+
+//#endregion
+//#region src/util/isId3Footer.ts
+/**
+* Returns true if an ID3 footer can be found at offset in data
+*
+* @param data - The data to search in
+* @param offset - The offset at which to start searching
+*
+* @returns `true` if an ID3 footer is found
+*
+* @internal
+*
+*/
+function isId3Footer(data, offset) {
+  if (offset + 10 <= data.length) {
+    if (data[offset] === 51 && data[offset + 1] === 68 && data[offset + 2] === 73) {
+      if (data[offset + 3] < 255 && data[offset + 4] < 255) {
+        if (data[offset + 6] < 128 && data[offset + 7] < 128 && data[offset + 8] < 128 && data[offset + 9] < 128) return true;
+      }
+    }
+  }
+  return false;
+}
+
+//#endregion
+//#region src/getId3Data.ts
+/**
+* Returns any adjacent ID3 tags found in data starting at offset, as one block of data
+*
+* @param data - The data to search in
+* @param offset - The offset at which to start searching
+*
+* @returns The block of data containing any ID3 tags found
+* or `undefined` if no header is found at the starting offset
+*
+* @internal
+*
+*/
+function getId3Data(data, offset) {
+  const front = offset;
+  let length = 0;
+  while (isId3Header(data, offset)) {
+    length += 10;
+    const size = readId3Size(data, offset + 6);
+    length += size;
+    if (isId3Footer(data, offset + 10)) length += 10;
+    offset += length;
+  }
+  if (length > 0) return data.subarray(front, front + length);
+}
+
+//#endregion
+//#region src/util/toArrayBuffer.ts
+/**
+* @internal
+*/
+function toArrayBuffer(view$1) {
+  if (view$1 instanceof ArrayBuffer) return view$1;else {
+    if (view$1.byteOffset == 0 && view$1.byteLength == view$1.buffer.byteLength) return view$1.buffer;
+    return new Uint8Array(view$1).buffer;
+  }
+}
+
+//#endregion
+//#region src/util/utf8.ts
+/**
+* @internal
+*/
+function toUint8(data, offset = 0, length = Infinity) {
+  return view(data, offset, length, Uint8Array);
+}
+function view(data, offset, length, Type) {
+  const buffer = unsafeGetArrayBuffer(data);
+  let bytesPerElement = 1;
+  if ("BYTES_PER_ELEMENT" in Type) bytesPerElement = Type.BYTES_PER_ELEMENT;
+  const dataOffset = isArrayBufferView(data) ? data.byteOffset : 0;
+  const dataEnd = (dataOffset + data.byteLength) / bytesPerElement;
+  const rawStart = (dataOffset + offset) / bytesPerElement;
+  const start = Math.floor(Math.max(0, Math.min(rawStart, dataEnd)));
+  return new Type(buffer, start, Math.floor(Math.min(start + Math.max(length, 0), dataEnd)) - start);
+}
+function unsafeGetArrayBuffer(view$1) {
+  if (view$1 instanceof ArrayBuffer) return view$1;else return view$1.buffer;
+}
+function isArrayBufferView(obj) {
+  return obj && obj.buffer instanceof ArrayBuffer && obj.byteLength !== void 0 && obj.byteOffset !== void 0;
+}
+
+//#endregion
+//#region src/util/utf8ArrayToStr.ts
+/**
+* Converts a UTF-8 array to a string.
+*
+* @param array - The UTF-8 array to convert
+* @param exitOnNull - Whether to exit on the first null byte
+*
+* @returns The string
+*
+* @internal
+*/
+function utf8ArrayToStr(array, exitOnNull = false) {
+  const byteLength = exitOnNull ? array.indexOf(0) : array.length;
+  const result = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.decodeText)(new DataView(array.buffer, array.byteOffset, byteLength), {
+    encoding: _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.UTF_8
+  });
+  return exitOnNull ? result : result.replace(/\0/g, "");
+}
+
+//#endregion
+//#region src/util/decodeId3ImageFrame.ts
+function decodeId3ImageFrame(frame) {
+  const metadataFrame = {
+    key: frame.type,
+    description: "",
+    data: "",
+    mimeType: null,
+    pictureType: null
+  };
+  const utf8Encoding = 3;
+  if (frame.size < 2) return;
+  if (frame.data[0] !== utf8Encoding) {
+    console.log("Ignore frame with unrecognized character encoding");
+    return;
+  }
+  const mimeTypeEndIndex = frame.data.subarray(1).indexOf(0);
+  if (mimeTypeEndIndex === -1) return;
+  const mimeType = utf8ArrayToStr(toUint8(frame.data, 1, mimeTypeEndIndex));
+  const pictureType = frame.data[2 + mimeTypeEndIndex];
+  const descriptionEndIndex = frame.data.subarray(3 + mimeTypeEndIndex).indexOf(0);
+  if (descriptionEndIndex === -1) return;
+  const description = utf8ArrayToStr(toUint8(frame.data, 3 + mimeTypeEndIndex, descriptionEndIndex));
+  let data;
+  if (mimeType === "-->") data = utf8ArrayToStr(toUint8(frame.data, 4 + mimeTypeEndIndex + descriptionEndIndex));else data = toArrayBuffer(frame.data.subarray(4 + mimeTypeEndIndex + descriptionEndIndex));
+  metadataFrame.mimeType = mimeType;
+  metadataFrame.pictureType = pictureType;
+  metadataFrame.description = description;
+  metadataFrame.data = data;
+  return metadataFrame;
+}
+
+//#endregion
+//#region src/util/decodeId3PrivFrame.ts
+/**
+* Decode an ID3 PRIV frame.
+*
+* @param frame - the ID3 PRIV frame
+*
+* @returns The decoded ID3 PRIV frame
+*
+* @internal
+*
+*/
+function decodeId3PrivFrame(frame) {
+  if (frame.size < 2) return;
+  const owner = utf8ArrayToStr(frame.data, true);
+  const privateData = new Uint8Array(frame.data.subarray(owner.length + 1));
+  return {
+    key: frame.type,
+    info: owner,
+    data: privateData.buffer
+  };
+}
+
+//#endregion
+//#region src/util/decodeId3TextFrame.ts
+/**
+* Decodes an ID3 text frame
+*
+* @param frame - the ID3 text frame
+*
+* @returns The decoded ID3 text frame
+*
+* @internal
+*
+*/
+function decodeId3TextFrame(frame) {
+  if (frame.size < 2) return;
+  if (frame.type === "TXXX") {
+    let index = 1;
+    const {
+      data
+    } = frame;
+    const description = utf8ArrayToStr(data.subarray(index), true);
+    index += description.length + 1;
+    const value = utf8ArrayToStr(data.subarray(index));
+    return {
+      key: frame.type,
+      info: description,
+      data: value
+    };
+  }
+  const text = utf8ArrayToStr(frame.data.subarray(1));
+  return {
+    key: frame.type,
+    info: "",
+    data: text
+  };
+}
+
+//#endregion
+//#region src/util/decodeId3UrlFrame.ts
+/**
+* Decode a URL frame
+*
+* @param frame - the ID3 URL frame
+*
+* @returns The decoded ID3 URL frame
+*
+* @internal
+*
+*/
+function decodeId3UrlFrame(frame) {
+  if (frame.type === "WXXX") {
+    if (frame.size < 2) return;
+    let index = 1;
+    const description = utf8ArrayToStr(frame.data.subarray(index), true);
+    index += description.length + 1;
+    const value = utf8ArrayToStr(frame.data.subarray(index));
+    return {
+      key: frame.type,
+      info: description,
+      data: value
+    };
+  }
+  const url = utf8ArrayToStr(frame.data);
+  return {
+    key: frame.type,
+    info: "",
+    data: url
+  };
+}
+
+//#endregion
+//#region src/util/decodeId3Frame.ts
+/**
+* Decode an ID3 frame.
+*
+* @param frame - the ID3 frame
+*
+* @returns The decoded ID3 frame
+*
+* @internal
+*
+*/
+function decodeId3Frame(frame) {
+  if (frame.type === "PRIV") return decodeId3PrivFrame(frame);else if (frame.type[0] === "W") return decodeId3UrlFrame(frame);else if (frame.type === "APIC") return decodeId3ImageFrame(frame);
+  return decodeId3TextFrame(frame);
+}
+
+//#endregion
+//#region src/util/getId3FrameData.ts
+/**
+* Returns the data of an ID3 frame.
+*
+* @param data - The data to read from
+*
+* @returns The data of the ID3 frame
+*
+* @internal
+*
+*/
+function getId3FrameData(data) {
+  const type = String.fromCharCode(data[0], data[1], data[2], data[3]);
+  const size = readId3Size(data, 4);
+  const offset = 10;
+  return {
+    type,
+    size,
+    data: data.subarray(offset, offset + size)
+  };
+}
+
+//#endregion
+//#region src/getId3Frames.ts
+const HEADER_FOOTER_SIZE = 10;
+const FRAME_SIZE = 10;
+/**
+* Returns an array of ID3 frames found in all the ID3 tags in the id3Data
+*
+* @param id3Data - The ID3 data containing one or more ID3 tags
+*
+* @returns Array of ID3 frame objects
+*
+*
+* @beta
+*/
+function getId3Frames(id3Data) {
+  let offset = 0;
+  const frames = [];
+  while (isId3Header(id3Data, offset)) {
+    const size = readId3Size(id3Data, offset + 6);
+    if (id3Data[offset + 5] >> 6 & 1) offset += HEADER_FOOTER_SIZE;
+    offset += HEADER_FOOTER_SIZE;
+    const end = offset + size;
+    while (offset + FRAME_SIZE < end) {
+      const frameData = getId3FrameData(id3Data.subarray(offset));
+      const frame = decodeId3Frame(frameData);
+      if (frame) frames.push(frame);
+      offset += frameData.size + HEADER_FOOTER_SIZE;
+    }
+    if (isId3Footer(id3Data, offset)) offset += HEADER_FOOTER_SIZE;
+  }
+  return frames;
+}
+
+//#endregion
+//#region src/isId3TimestampFrame.ts
+/**
+* Returns true if the ID3 frame is an Elementary Stream timestamp frame
+*
+* @param frame - the ID3 frame
+*
+* @returns `true` if the ID3 frame is an Elementary Stream timestamp frame
+*
+* @internal
+*
+*/
+function isId3TimestampFrame(frame) {
+  return frame && frame.key === "PRIV" && frame.info === "com.apple.streaming.transportStreamTimestamp";
+}
+
+//#endregion
+//#region src/util/readId3Timestamp.ts
+/**
+* Read a 33 bit timestamp from an ID3 frame.
+*
+* @param timeStampFrame - the ID3 frame
+*
+* @returns The timestamp
+*
+* @internal
+*
+*/
+function readId3Timestamp(timeStampFrame) {
+  if (timeStampFrame.data.byteLength === 8) {
+    const data = new Uint8Array(timeStampFrame.data);
+    const pts33Bit = data[3] & 1;
+    let timestamp = (data[4] << 23) + (data[5] << 15) + (data[6] << 7) + data[7];
+    timestamp /= 45;
+    if (pts33Bit) timestamp += 47721858.84;
+    return Math.round(timestamp);
+  }
+}
+
+//#endregion
+//#region src/getId3Timestamp.ts
+/**
+* Searches for the Elementary Stream timestamp found in the ID3 data chunk
+*
+* @param data - Block of data containing one or more ID3 tags
+*
+* @returns The timestamp
+*
+*
+* @beta
+*/
+function getId3Timestamp(data) {
+  const frames = getId3Frames(data);
+  for (const frame of frames) if (isId3TimestampFrame(frame)) return readId3Timestamp(frame);
+}
+
+//#endregion
+//#region src/ID3_SCHEME_ID_URI.ts
+/**
+* The scheme ID URI for ID3 tags.
+*
+*
+* @beta
+*
+* @see {@link https://aomediacodec.github.io/id3-emsg/ | Carriage of ID3 Timed Metadata in the Common Media Application Format (CMAF)}
+* @see {@link https://developer.apple.com/documentation/http-live-streaming/about-the-common-media-application-format-with-http-live-streaming-hls#CMAF-Tracks-Segments-Headers-and-Fragments | CMAF Tracks, Segments, Headers, and Fragments}
+*/
+const ID3_SCHEME_ID_URI = "https://aomedia.org/emsg/ID3";
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-structured-field-values/dist/index.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@svta/cml-structured-field-values/dist/index.js ***!
+  \**********************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SfItem: function() { return /* binding */ SfItem; },
+/* harmony export */   SfToken: function() { return /* binding */ SfToken; },
+/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; },
+/* harmony export */   decodeSfItem: function() { return /* binding */ decodeSfItem; },
+/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; },
+/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; },
+/* harmony export */   encodeSfItem: function() { return /* binding */ encodeSfItem; },
+/* harmony export */   encodeSfList: function() { return /* binding */ encodeSfList; },
+/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; },
+/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; },
+/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; },
+/* harmony export */   parseDate: function() { return /* binding */ parseDate; },
+/* harmony export */   parseDict: function() { return /* binding */ parseDict; },
+/* harmony export */   parseError: function() { return /* binding */ parseError; },
+/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; },
+/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; },
+/* harmony export */   parseItem: function() { return /* binding */ parseItem; },
+/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; },
+/* harmony export */   parseKey: function() { return /* binding */ parseKey; },
+/* harmony export */   parseList: function() { return /* binding */ parseList; },
+/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; },
+/* harmony export */   parseString: function() { return /* binding */ parseString; },
+/* harmony export */   parseToken: function() { return /* binding */ parseToken; },
+/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; },
+/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; },
+/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; },
+/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; },
+/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; },
+/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; },
+/* harmony export */   serializeError: function() { return /* binding */ serializeError; },
+/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; },
+/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; },
+/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; },
+/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; },
+/* harmony export */   serializeList: function() { return /* binding */ serializeList; },
+/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; },
+/* harmony export */   serializeString: function() { return /* binding */ serializeString; },
+/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; },
+/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/SfItem.ts
+/**
+* Structured Field Item
+*
+*
+* @beta
+*/
+var SfItem = class SfItem {
+  constructor(value, params) {
+    if (Array.isArray(value)) value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
+    this.value = value;
+    this.params = params;
+  }
+};
+
+//#endregion
+//#region src/utils/DICT.ts
+const DICT = "Dict";
+
+//#endregion
+//#region src/parse/ParsedValue.ts
+/**
+* @internal
+*/
+function parsedValue(value, src) {
+  return {
+    value,
+    src
+  };
+}
+
+//#endregion
+//#region src/utils/throwError.ts
+function format(value) {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (value instanceof Map) return "Map{}";
+  if (value instanceof Set) return "Set{}";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+function throwError(action, src, type, cause) {
+  return new Error(`failed to ${action} "${format(src)}" as ${type}`, {
+    cause
+  });
+}
+
+//#endregion
+//#region src/parse/parseError.ts
+/**
+* @internal
+*/
+function parseError(src, type, cause) {
+  return throwError("parse", src, type, cause);
+}
+
+//#endregion
+//#region src/utils/INNER.ts
+const INNER = "Inner List";
+
+//#endregion
+//#region src/utils/BARE_ITEM.ts
+const BARE_ITEM = "Bare Item";
+
+//#endregion
+//#region src/utils/BOOLEAN.ts
+const BOOLEAN = "Boolean";
+
+//#endregion
+//#region src/parse/parseBoolean.ts
+/**
+* @internal
+*/
+function parseBoolean(src) {
+  let i = 0;
+  if (src[i] !== "?") throw parseError(src, BOOLEAN);
+  i++;
+  if (src[i] === "1") return parsedValue(true, src.substring(++i));
+  if (src[i] === "0") return parsedValue(false, src.substring(++i));
+  throw parseError(src, BOOLEAN);
+}
+
+//#endregion
+//#region src/utils/BYTES.ts
+const BYTES = "Byte Sequence";
+
+//#endregion
+//#region src/parse/parseByteSequence.ts
+/**
+* @internal
+*/
+function parseByteSequence(src) {
+  if (src[0] !== ":") throw parseError(src, BYTES);
+  src = src.substring(1);
+  if (src.includes(":") === false) throw parseError(src, BYTES);
+  const re = /(^.*?)(:)/g;
+  const b64_content = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.decodeBase64)(b64_content), src);
+}
+
+//#endregion
+//#region src/utils/DATE.ts
+const DATE = "Date";
+
+//#endregion
+//#region src/utils/DECIMAL.ts
+const DECIMAL = "Decimal";
+
+//#endregion
+//#region src/utils/INTEGER.ts
+const INTEGER = "Integer";
+
+//#endregion
+//#region src/utils/INTEGER_DECIMAL.ts
+const INTEGER_DECIMAL = `${INTEGER} or ${DECIMAL}`;
+
+//#endregion
+//#region src/utils/isInvalidInt.ts
+function isInvalidInt(value) {
+  return value < -999999999999999 || 999999999999999 < value;
+}
+
+//#endregion
+//#region src/parse/parseIntegerOrDecimal.ts
+/**
+* @internal
+*/
+function parseIntegerOrDecimal(src) {
+  const orig = src;
+  let sign = 1;
+  let num = "";
+  let value;
+  const i = 0;
+  const error = parseError(orig, INTEGER_DECIMAL);
+  if (src[i] === "-") {
+    sign = -1;
+    src = src.substring(1);
+  }
+  if (src.length <= 0) throw error;
+  const re_integer = /^(\d+)?/g;
+  const result_integer = re_integer.exec(src);
+  if (result_integer[0].length === 0) throw error;
+  num += result_integer[1];
+  src = src.substring(re_integer.lastIndex);
+  if (src[0] === ".") {
+    if (num.length > 12) throw error;
+    const re_decimal = /^(\.\d+)?/g;
+    const result_decimal = re_decimal.exec(src);
+    src = src.substring(re_decimal.lastIndex);
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    num += result_decimal[1];
+    if (num.length > 16) throw error;
+    value = parseFloat(num) * sign;
+  } else {
+    if (num.length > 15) throw error;
+    value = parseInt(num) * sign;
+    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/parse/parseDate.ts
+/**
+* @internal
+*/
+function parseDate(src) {
+  let i = 0;
+  if (src[i] !== "@") throw parseError(src, DATE);
+  i++;
+  const date = parseIntegerOrDecimal(src.substring(i));
+  if (Number.isInteger(date.value) === false) throw parseError(src, DATE);
+  return parsedValue(/* @__PURE__ */new Date(date.value * 1e3), date.src);
+}
+
+//#endregion
+//#region src/utils/STRING.ts
+const STRING = "String";
+
+//#endregion
+//#region src/utils/STRING_REGEX.ts
+const STRING_REGEX = /[\x00-\x1f\x7f]+/;
+
+//#endregion
+//#region src/parse/parseString.ts
+/**
+* @internal
+*/
+function parseString(src) {
+  let output = "";
+  let i = 0;
+  if (src[i] !== `"`) throw parseError(src, STRING);
+  i++;
+  while (src.length > i) {
+    if (src[i] === `\\`) {
+      if (src.length <= i + 1) throw parseError(src, STRING);
+      i++;
+      if (src[i] !== `"` && src[i] !== `\\`) throw parseError(src, STRING);
+      output += src[i];
+    } else if (src[i] === `"`) return parsedValue(output, src.substring(++i));else if (STRING_REGEX.test(src[i])) throw parseError(src, STRING);else output += src[i];
+    i++;
+  }
+  throw parseError(src, STRING);
+}
+
+//#endregion
+//#region src/SfToken.ts
+/**
+* A class to represent structured field tokens when `Symbol` is not available.
+*
+*
+* @beta
+*/
+var SfToken = class {
+  constructor(description) {
+    this.description = description;
+  }
+};
+
+//#endregion
+//#region src/utils/TOKEN.ts
+const TOKEN = "Token";
+
+//#endregion
+//#region src/parse/parseToken.ts
+/**
+* @internal
+*/
+function parseToken(src, options) {
+  if (/^[a-zA-Z*]$/.test(src[0]) === false) throw parseError(src, TOKEN);
+  const re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
+  const value = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue(options?.useSymbol === false ? new SfToken(value) : Symbol.for(value), src);
+}
+
+//#endregion
+//#region src/parse/parseBareItem.ts
+/**
+* @internal
+*/
+function parseBareItem(src, options) {
+  const first = src[0];
+  if (first === `"`) return parseString(src);
+  if (/^[-0-9]/.test(first)) return parseIntegerOrDecimal(src);
+  if (first === `?`) return parseBoolean(src);
+  if (first === `:`) return parseByteSequence(src);
+  if (/^[a-zA-Z*]/.test(first)) return parseToken(src, options);
+  if (first === `@`) return parseDate(src);
+  throw parseError(src, BARE_ITEM);
+}
+
+//#endregion
+//#region src/utils/KEY.ts
+const KEY = "Key";
+
+//#endregion
+//#region src/parse/parseKey.ts
+/**
+* @internal
+*/
+function parseKey(src) {
+  let i = 0;
+  if (/^[a-z*]$/.test(src[i]) === false) throw parseError(src, KEY);
+  let value = "";
+  while (src.length > i) {
+    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) return parsedValue(value, src.substring(i));
+    value += src[i];
+    i++;
+  }
+  return parsedValue(value, src.substring(i));
+}
+
+//#endregion
+//#region src/parse/parseParameters.ts
+/**
+* @internal
+*/
+function parseParameters(src, options) {
+  let parameters = void 0;
+  while (src.length > 0) {
+    if (src[0] !== ";") break;
+    src = src.substring(1).trim();
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    let value = true;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      src = src.substring(1);
+      const parsedBareItem = parseBareItem(src, options);
+      value = parsedBareItem.value;
+      src = parsedBareItem.src;
+    }
+    if (parameters == null) parameters = {};
+    parameters[key] = value;
+  }
+  return parsedValue(parameters, src);
+}
+
+//#endregion
+//#region src/parse/parseItem.ts
+/**
+* @internal
+*/
+function parseItem(src, options) {
+  const parsedBareItem = parseBareItem(src, options);
+  src = parsedBareItem.src;
+  const parsedParameters = parseParameters(src, options);
+  src = parsedParameters.src;
+  return parsedValue(new SfItem(parsedBareItem.value, parsedParameters.value), src);
+}
+
+//#endregion
+//#region src/parse/parseInnerList.ts
+/**
+* @internal
+*/
+function parseInnerList(src, options) {
+  if (src[0] !== "(") throw parseError(src, INNER);
+  src = src.substring(1);
+  const innerList = [];
+  while (src.length > 0) {
+    src = src.trim();
+    if (src[0] === ")") {
+      src = src.substring(1);
+      const parsedParameters = parseParameters(src, options);
+      return parsedValue(new SfItem(innerList, parsedParameters.value), parsedParameters.src);
+    }
+    const parsedItem = parseItem(src, options);
+    innerList.push(parsedItem.value);
+    src = parsedItem.src;
+    if (src[0] !== " " && src[0] !== ")") throw parseError(src, INNER);
+  }
+  throw parseError(src, INNER);
+}
+
+//#endregion
+//#region src/parse/parseItemOrInnerList.ts
+/**
+* @internal
+*/
+function parseItemOrInnerList(src, options) {
+  if (src[0] === "(") return parseInnerList(src, options);
+  return parseItem(src, options);
+}
+
+//#endregion
+//#region src/parse/parseDict.ts
+/**
+* @internal
+*/
+function parseDict(src, options) {
+  const value = {};
+  while (src.length > 0) {
+    let member;
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      const parsedItemOrInnerList = parseItemOrInnerList(src.substring(1), options);
+      member = parsedItemOrInnerList.value;
+      src = parsedItemOrInnerList.src;
+    } else {
+      const parsedParameters = parseParameters(src, options);
+      member = new SfItem(true, parsedParameters.value);
+      src = parsedParameters.src;
+    }
+    value[key] = member;
+    src = src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, DICT);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, DICT);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfDict.ts
+/**
+* Decode a structured field string into a structured field dictionary
+*
+* @param input - The structured field string to decode
+* @returns The structured field dictionary
+*
+*
+* @beta
+*/
+function decodeSfDict(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseDict(input.trim(), options);
+    if (src !== "") throw parseError(src, DICT);
+    return value;
+  } catch (cause) {
+    throw parseError(input, DICT, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/ITEM.ts
+const ITEM = "Item";
+
+//#endregion
+//#region src/decodeSfItem.ts
+/**
+* Decode a structured field string into a structured field item
+*
+* @param input - The structured field string to decode
+* @returns The structured field item
+*
+*
+* @beta
+*/
+function decodeSfItem(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseItem(input.trim(), options);
+    if (src !== "") throw parseError(src, ITEM);
+    return value;
+  } catch (cause) {
+    throw parseError(input, ITEM, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/LIST.ts
+const LIST = "List";
+
+//#endregion
+//#region src/parse/parseList.ts
+/**
+* @internal
+*/
+function parseList(src, options) {
+  const value = [];
+  while (src.length > 0) {
+    const parsedItemOrInnerList = parseItemOrInnerList(src, options);
+    value.push(parsedItemOrInnerList.value);
+    src = parsedItemOrInnerList.src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, LIST);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, LIST);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfList.ts
+/**
+* Decode a structured field string into a structured field list
+*
+* @param input - The structured field string to decode
+* @returns The structured field list
+*
+*
+* @beta
+*/
+function decodeSfList(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseList(input.trim(), options);
+    if (src !== "") throw parseError(src, LIST);
+    return value;
+  } catch (cause) {
+    throw parseError(input, LIST, cause);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeError.ts
+/**
+* @internal
+*/
+function serializeError(src, type, cause) {
+  return throwError("serialize", src, type, cause);
+}
+
+//#endregion
+//#region src/serialize/serializeBoolean.ts
+/**
+* @internal
+*/
+function serializeBoolean(value) {
+  if (typeof value !== "boolean") throw serializeError(value, BOOLEAN);
+  return value ? "?1" : "?0";
+}
+
+//#endregion
+//#region src/serialize/serializeByteSequence.ts
+/**
+* @internal
+*/
+function serializeByteSequence(value) {
+  if (ArrayBuffer.isView(value) === false) throw serializeError(value, BYTES);
+  return `:${(0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value)}:`;
+}
+
+//#endregion
+//#region src/serialize/serializeInteger.ts
+/**
+* @internal
+*/
+function serializeInteger(value) {
+  if (isInvalidInt(value)) throw serializeError(value, INTEGER);
+  return value.toString();
+}
+
+//#endregion
+//#region src/serialize/serializeDate.ts
+/**
+* @internal
+*/
+function serializeDate(value) {
+  return `@${serializeInteger(value.getTime() / 1e3)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDecimal.ts
+/**
+* @internal
+*/
+function serializeDecimal(value) {
+  const roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3);
+  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  const stringValue = roundedValue.toString();
+  return stringValue.includes(".") ? stringValue : `${stringValue}.0`;
+}
+
+//#endregion
+//#region src/serialize/serializeString.ts
+/**
+* @internal
+*/
+function serializeString(value) {
+  if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
+  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
+}
+
+//#endregion
+//#region src/utils/symbolToStr.ts
+/**
+* Converts a symbol to a string.
+*
+* @param symbol - The symbol to convert.
+*
+* @returns The string representation of the symbol.
+*
+*
+* @beta
+*/
+function symbolToStr(symbol) {
+  return symbol.description || symbol.toString().slice(7, -1);
+}
+
+//#endregion
+//#region src/serialize/serializeToken.ts
+/**
+* @internal
+*/
+function serializeToken(token) {
+  const value = symbolToStr(token);
+  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeBareItem.ts
+/**
+* @internal
+*/
+function serializeBareItem(value) {
+  switch (typeof value) {
+    case "number":
+      if (!Number.isFinite(value)) throw serializeError(value, BARE_ITEM);
+      if (Number.isInteger(value)) return serializeInteger(value);
+      return serializeDecimal(value);
+    case "string":
+      return serializeString(value);
+    case "symbol":
+      return serializeToken(value);
+    case "boolean":
+      return serializeBoolean(value);
+    case "object":
+      if (value instanceof Date) return serializeDate(value);
+      if (value instanceof Uint8Array) return serializeByteSequence(value);
+      if (value instanceof SfToken) return serializeToken(value);
+    default:
+      throw serializeError(value, BARE_ITEM);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeKey.ts
+/**
+* @internal
+*/
+function serializeKey(value) {
+  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeParams.ts
+/**
+* @internal
+*/
+function serializeParams(params) {
+  if (params == null) return "";
+  return Object.entries(params).map(([key, value]) => {
+    if (value === true) return `;${serializeKey(key)}`;
+    return `;${serializeKey(key)}=${serializeBareItem(value)}`;
+  }).join("");
+}
+
+//#endregion
+//#region src/serialize/serializeItem.ts
+/**
+* @internal
+*/
+function serializeItem(value) {
+  if (value instanceof SfItem) return `${serializeBareItem(value.value)}${serializeParams(value.params)}`;else return serializeBareItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeInnerList.ts
+/**
+* @internal
+*/
+function serializeInnerList(value) {
+  return `(${value.value.map(serializeItem).join(" ")})${serializeParams(value.params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDict.ts
+/**
+* @internal
+*/
+function serializeDict(dict, options = {
+  whitespace: true
+}) {
+  if (typeof dict !== "object" || dict == null) throw serializeError(dict, DICT);
+  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return Array.from(entries).map(([key, item]) => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    let output = serializeKey(key);
+    if (item.value === true) output += serializeParams(item.params);else {
+      output += "=";
+      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
+    }
+    return output;
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfDict.ts
+/**
+* Encode an object into a structured field dictionary
+*
+* @param value - The structured field dictionary to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfDict(value, options) {
+  return serializeDict(value, options);
+}
+
+//#endregion
+//#region src/encodeSfItem.ts
+function encodeSfItem(value, params) {
+  if (!(value instanceof SfItem)) value = new SfItem(value, params);
+  return serializeItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeList.ts
+/**
+* @internal
+*/
+function serializeList(list, options = {
+  whitespace: true
+}) {
+  if (Array.isArray(list) === false) throw serializeError(list, LIST);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return list.map(item => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    const i = item;
+    if (Array.isArray(i.value)) return serializeInnerList(i);
+    return serializeItem(i);
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfList.ts
+/**
+* Encode a list into a structured field dictionary
+*
+* @param value - The structured field list to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfList(value, options) {
+  return serializeList(value, options);
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-utils/dist/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/@svta/cml-utils/dist/index.js ***!
+  \****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Encoding: function() { return /* binding */ Encoding; },
+/* harmony export */   RequestType: function() { return /* binding */ RequestType; },
+/* harmony export */   UTF_16: function() { return /* binding */ UTF_16; },
+/* harmony export */   UTF_16_BE: function() { return /* binding */ UTF_16_BE; },
+/* harmony export */   UTF_16_LE: function() { return /* binding */ UTF_16_LE; },
+/* harmony export */   UTF_8: function() { return /* binding */ UTF_8; },
+/* harmony export */   arrayBufferToHex: function() { return /* binding */ arrayBufferToHex; },
+/* harmony export */   arrayBufferToUuid: function() { return /* binding */ arrayBufferToUuid; },
+/* harmony export */   base64decode: function() { return /* binding */ base64decode; },
+/* harmony export */   base64encode: function() { return /* binding */ base64encode; },
+/* harmony export */   convertUint8ToUint16: function() { return /* binding */ convertUint8ToUint16; },
+/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; },
+/* harmony export */   decodeText: function() { return /* binding */ decodeText; },
+/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; },
+/* harmony export */   getBandwidthBps: function() { return /* binding */ getBandwidthBps; },
+/* harmony export */   hexToArrayBuffer: function() { return /* binding */ hexToArrayBuffer; },
+/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; },
+/* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; },
+/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; },
+/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; },
+/* harmony export */   uuid: function() { return /* binding */ uuid; },
+/* harmony export */   uuidToArrayBuffer: function() { return /* binding */ uuidToArrayBuffer; }
+/* harmony export */ });
+//#region src/arrayBufferToHex.ts
+/**
+* Encodes an ArrayBuffer as a hexadecimal string.
+*
+* @param buffer - The ArrayBuffer to encode.
+* @returns The hexadecimal string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToHex.test.ts#example}
+*/
+function arrayBufferToHex(buffer) {
+  return new Uint8Array(buffer).reduce((result, byte) => result + byte.toString(16).padStart(2, "0"), "");
+}
+
+//#endregion
+//#region src/arrayBufferToUuid.ts
+/**
+* Converts an ArrayBuffer to a UUID string.
+*
+* @param buffer - The ArrayBuffer to convert.
+* @returns The UUID string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToUuid.test.ts#example}
+*/
+function arrayBufferToUuid(buffer) {
+  return arrayBufferToHex(buffer).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
+}
+
+//#endregion
+//#region src/decodeBase64.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*/
+function decodeBase64(str) {
+  return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
+}
+
+//#endregion
+//#region src/base64decode.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*
+* @deprecated Use {@link decodeBase64} instead.
+*
+* @see {@link decodeBase64}
+*/
+const base64decode = decodeBase64;
+
+//#endregion
+//#region src/encodeBase64.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*/
+function encodeBase64(binary) {
+  return btoa(String.fromCharCode(...binary));
+}
+
+//#endregion
+//#region src/base64encode.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*
+* @deprecated Use {@link encodeBase64} instead.
+*
+* @see {@link encodeBase64}
+*/
+const base64encode = encodeBase64;
+
+//#endregion
+//#region src/convertUint8ToUint16.ts
+/**
+* Converts a Uint8Array to a Uint16Array by aligning its buffer.
+*
+* @param input - The Uint8Array to convert
+* @returns A properly aligned Uint16Array
+*
+* @beta
+*/
+function convertUint8ToUint16(input) {
+  if (input.length % 2 !== 0) {
+    const padded = new Uint8Array(input.length + 1);
+    padded.set(input);
+    return new Uint16Array(padded.buffer);
+  }
+  return new Uint16Array(input.buffer);
+}
+
+//#endregion
+//#region src/UTF_16.ts
+/**
+* UTF-16 Encoding.
+*
+*
+* @beta
+*/
+const UTF_16 = "utf-16";
+
+//#endregion
+//#region src/UTF_16_BE.ts
+/**
+* UTF-16 Big Endian Encoding.
+*
+*
+* @beta
+*/
+const UTF_16_BE = "utf-16be";
+
+//#endregion
+//#region src/UTF_16_LE.ts
+/**
+* UTF-16 Little Endian Encoding.
+*
+*
+* @beta
+*/
+const UTF_16_LE = "utf-16le";
+
+//#endregion
+//#region src/UTF_8.ts
+/**
+* UTF-8 Encoding.
+*
+*
+* @beta
+*/
+const UTF_8 = "utf-8";
+
+//#endregion
+//#region src/decodeText.ts
+/**
+* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
+* but with a fallback for environments that don't support `TextDecoder`.
+*
+* @param data - The data to decode.
+* @param options - The options for the decoding.
+* @returns The string representation of the ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeText.test.ts#example}
+*/
+function decodeText(data, options = {}) {
+  let view;
+  if (data instanceof ArrayBuffer) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  let byteOffset = 0;
+  let {
+    encoding
+  } = options;
+  if (!encoding) {
+    const first = view.getUint8(0);
+    const second = view.getUint8(1);
+    if (first == 239 && second == 187 && view.getUint8(2) == 191) {
+      encoding = UTF_8;
+      byteOffset = 3;
+    } else if (first == 254 && second == 255) {
+      encoding = UTF_16_BE;
+      byteOffset = 2;
+    } else if (first == 255 && second == 254) {
+      encoding = UTF_16_LE;
+      byteOffset = 2;
+    } else encoding = UTF_8;
+  }
+  if (typeof TextDecoder !== "undefined") return new TextDecoder(encoding).decode(view);
+  const {
+    byteLength
+  } = view;
+  const endian = encoding !== UTF_16_BE;
+  let str = "";
+  let char;
+  while (byteOffset < byteLength) {
+    switch (encoding) {
+      case UTF_8:
+        char = view.getUint8(byteOffset);
+        if (char < 128) byteOffset++;else if (char >= 194 && char <= 223) {
+          if (byteOffset + 1 < byteLength) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            if (byte2 >= 128 && byte2 <= 191) {
+              char = (char & 31) << 6 | byte2 & 63;
+              byteOffset += 2;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 224 && char <= 239) {
+          if (byteOffset + 2 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191) {
+              char = (char & 15) << 12 | (byte2 & 63) << 6 | byte3 & 63;
+              byteOffset += 3;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 240 && char <= 244) {
+          if (byteOffset + 3 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            const byte4 = view.getUint8(byteOffset + 3);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191 && byte4 >= 128 && byte4 <= 191) {
+              char = (char & 7) << 18 | (byte2 & 63) << 12 | (byte3 & 63) << 6 | byte4 & 63;
+              byteOffset += 4;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else byteOffset++;
+        break;
+      case UTF_16_BE:
+      case UTF_16:
+      case UTF_16_LE:
+        char = view.getUint16(byteOffset, endian);
+        byteOffset += 2;
+        break;
+    }
+    str += String.fromCodePoint(char);
+  }
+  return str;
+}
+
+//#endregion
+//#region src/Encoding.ts
+/**
+* Text encoding types.
+*
+*
+* @beta
+*/
+const Encoding = {
+  UTF8: UTF_8,
+  UTF16: UTF_16,
+  UTF16BE: UTF_16_BE,
+  UTF16LE: UTF_16_LE
+};
+
+//#endregion
+//#region src/getBandwidthBps.ts
+/**
+* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+*
+* @param sample - A ResourceTiming sample
+* @returns
+*
+*
+* @beta
+*/
+function getBandwidthBps(sample) {
+  const durationSeconds = sample.duration / 1e3;
+  return sample.encodedBodySize * 8 / durationSeconds;
+}
+
+//#endregion
+//#region src/hexToArrayBuffer.ts
+/**
+* Decodes a hexadecimal string into an ArrayBuffer.
+*
+* @param hex - The hexadecimal string to decode.
+* @returns The decoded ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/hexToArrayBuffer.test.ts#example}
+*/
+function hexToArrayBuffer(hex) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(hex.length / 2);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < hex.length; i += 2) view[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return buffer;
+}
+
+//#endregion
+//#region src/RequestType.ts
+/**
+* The content type of the request.
+*
+*
+* @enum
+*
+* @beta
+*/
+const RequestType = {
+  TEXT: "text",
+  JSON: "json",
+  BLOB: "blob",
+  ARRAY_BUFFER: "arrayBuffer",
+  DOCUMENT: "document"
+};
+
+//#endregion
+//#region src/roundToEven.ts
+/**
+* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
+* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+*
+* @param value - The value to round
+* @param precision - The number of decimal places to round to
+* @returns The rounded value
+*
+*
+* @beta
+*/
+function roundToEven(value, precision) {
+  if (value < 0) return -roundToEven(-value, precision);
+  const decimalShift = Math.pow(10, precision);
+  if (Math.abs(value * decimalShift % 1 - .5) < Number.EPSILON) {
+    const flooredValue = Math.floor(value * decimalShift);
+    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
+  } else return Math.round(value * decimalShift) / decimalShift;
+}
+
+//#endregion
+//#region src/stringToUint16.ts
+/**
+* Converts a string to a Uint16Array.
+*
+* @param str - The string to convert
+* @returns A Uint16Array representation of the string
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/stringToUint16.test.ts#example}
+*/
+function stringToUint16(str) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(str.length * 2);
+  const view = new DataView(buffer);
+  for (let i = 0; i < str.length; i++) view.setUint16(i * 2, str.charCodeAt(i), true);
+  return new Uint16Array(buffer);
+}
+
+//#endregion
+//#region src/unescapeHtml.ts
+const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
+/**
+* Unescapes HTML entities
+*
+* @param text - The text to unescape
+* @returns The unescaped text
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/unescapeHtml.test.ts#example}
+*/
+function unescapeHtml(text) {
+  if (text.indexOf("&") === -1) return text;
+  return text.replace(escapedHtml, match => {
+    switch (match) {
+      case "&amp;":
+        return "&";
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
+      case "&quot;":
+        return "\"";
+      case "&apos;":
+        return "'";
+      case "&nbsp;":
+        return "\xA0";
+      case "&lrm;":
+        return "‎";
+      case "&rlm;":
+        return "‏";
+      default:
+        if (match[1] === "#") {
+          const code = match[2] === "x" || match[2] === "X" ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
+          return String.fromCodePoint(code);
+        }
+        return match;
+    }
+  });
+}
+
+//#endregion
+//#region src/urlToRelativePath.ts
+/**
+* Constructs a relative path from a URL.
+*
+* @param url - The destination URL
+* @param base - The base URL
+* @returns The relative path
+*
+*
+* @beta
+*/
+function urlToRelativePath(url, base) {
+  const to = new URL(url);
+  const from = new URL(base);
+  if (to.origin !== from.origin) return url;
+  const toPath = to.pathname.split("/").slice(1);
+  const fromPath = from.pathname.split("/").slice(1, -1);
+  const length = Math.min(toPath.length, fromPath.length);
+  for (let i = 0; i < length; i++) {
+    if (toPath[i] !== fromPath[i]) break;
+    toPath.shift();
+    fromPath.shift();
+  }
+  while (fromPath.length) {
+    fromPath.shift();
+    toPath.unshift("..");
+  }
+  return toPath.join("/") + to.search + to.hash;
+}
+
+//#endregion
+//#region src/uuid.ts
+/**
+* Generate a random v4 UUID
+*
+* @returns A random v4 UUID
+*
+*
+* @beta
+*/
+function uuid() {
+  try {
+    return crypto.randomUUID();
+  } catch (error) {
+    try {
+      const url = URL.createObjectURL(new Blob());
+      const uuid$1 = url.toString();
+      URL.revokeObjectURL(url);
+      return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
+    } catch (error$1) {
+      let dt = (/* @__PURE__ */new Date()).getTime();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = (dt + Math.random() * 16) % 16 | 0;
+        dt = Math.floor(dt / 16);
+        return (c == "x" ? r : r & 3 | 8).toString(16);
+      });
+    }
+  }
+}
+
+//#endregion
+//#region src/uuidToArrayBuffer.ts
+/**
+* Converts a UUID string to an ArrayBuffer.
+*
+* @param uuid - The UUID string to convert.
+* @returns The ArrayBuffer representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/uuidToArrayBuffer.test.ts#example}
+*/
+function uuidToArrayBuffer(uuid$1) {
+  return hexToArrayBuffer(uuid$1.replace(/-/g, ""));
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-xml/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-xml/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getElementsByName: function() { return /* binding */ getElementsByName; },
+/* harmony export */   parseXml: function() { return /* binding */ parseXml; },
+/* harmony export */   serializeXml: function() { return /* binding */ serializeXml; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/getElementsByName.ts
+/**
+* Recursively finds all elements by name within an XML structure.
+*
+* @param node - The current XML node to search within.
+* @param name - The name of the target nodes to find.
+* @param found - An array to collect matching nodes.
+* @returns An array of all matching XmlNodes.
+*
+*
+* @beta
+*
+*/
+function getElementsByName(node, name, found = []) {
+  if (!node) return found;
+  if (node.nodeName === name) found.push(node);
+  if (node.childNodes) for (const child of node.childNodes) getElementsByName(child, name, found);
+  return found;
+}
+
+//#endregion
+//#region src/parseXml.ts
+/**
+* Parse XML into a JS object with no validation and some failure tolerance
+*
+* @param input - The input XML string
+* @param options - Optional parsing options
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeXml.test.ts#example}
+*/
+function parseXml(input, options = {}) {
+  let pos = options.pos || 0;
+  const length = input.length;
+  const keepComments = !!options.keepComments;
+  const keepWhitespace = !!options.keepWhitespace;
+  const openBracket = "<";
+  const openBracketCC = "<".charCodeAt(0);
+  const closeBracket = ">";
+  const closeBracketCC = ">".charCodeAt(0);
+  const minusCC = "-".charCodeAt(0);
+  const slashCC = "/".charCodeAt(0);
+  const questionCC = "?".charCodeAt(0);
+  const exclamationCC = "!".charCodeAt(0);
+  const singleQuoteCC = "'".charCodeAt(0);
+  const doubleQuoteCC = "\"".charCodeAt(0);
+  const openCornerBracketCC = "[".charCodeAt(0);
+  const closeCornerBracketCC = "]".charCodeAt(0);
+  const nameSpacer = "\r\n	>/= ";
+  function createTextNode(value, nodeName = "#text") {
+    return {
+      nodeName,
+      nodeValue: value,
+      attributes: {},
+      childNodes: []
+    };
+  }
+  /**
+  * parsing a list of entries
+  */
+  function parseChildren(tagName = "") {
+    const children = [];
+    while (input[pos]) if (input.charCodeAt(pos) == openBracketCC) {
+      if (input.charCodeAt(pos + 1) === slashCC) {
+        const closeStart = pos + 2;
+        pos = input.indexOf(closeBracket, pos);
+        if (!input.startsWith(tagName, closeStart)) {
+          const parsedText = input.substring(0, pos).split("\n");
+          throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
+        }
+        if (pos + 1) pos += 1;
+        return children;
+      } else if (input.charCodeAt(pos + 1) === questionCC) {
+        pos = input.indexOf(closeBracket, pos);
+        pos++;
+        continue;
+      } else if (input.charCodeAt(pos + 1) === exclamationCC) {
+        if (input.charCodeAt(pos + 2) == minusCC) {
+          const startCommentPos = pos;
+          while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) pos = input.indexOf(closeBracket, pos + 1);
+          if (pos === -1) pos = length;
+          if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
+        } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith("CDATA", pos + 3)) {
+          const cdataEndIndex = input.indexOf("]]>", pos);
+          if (cdataEndIndex == -1) {
+            children.push(createTextNode(input.substr(pos + 9), "#cdata"));
+            pos = length;
+          } else {
+            children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), "#cdata"));
+            pos = cdataEndIndex + 3;
+          }
+          continue;
+        } else {
+          const startDoctype = pos + 1;
+          pos += 2;
+          let encapsuled = false;
+          while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
+            if (input.charCodeAt(pos) === openCornerBracketCC) encapsuled = true;else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) encapsuled = false;
+            pos++;
+          }
+          children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
+        }
+        pos++;
+        continue;
+      }
+      const node = parseNode();
+      children.push(node);
+    } else {
+      const text = parseText();
+      if (keepWhitespace) {
+        if (text.length > 0) children.push(createTextNode(text));
+      } else {
+        const trimmed = text.trim();
+        if (trimmed.length > 0) children.push(createTextNode(trimmed));
+      }
+      pos++;
+    }
+    return children;
+  }
+  /**
+  * returns the text outside of texts until the first '&lt;'
+  */
+  function parseText() {
+    const start = pos;
+    pos = input.indexOf(openBracket, pos) - 1;
+    if (pos === -2) pos = length;
+    return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
+  }
+  /**
+  * returns text until the first nonAlphabetic letter
+  */
+  function parseName() {
+    const start = pos;
+    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) pos++;
+    return input.slice(start, pos);
+  }
+  /**
+  * parses the attributes of a node
+  */
+  function parseAttributes() {
+    const attributes = {};
+    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
+      const c = input.charCodeAt(pos);
+      if (c > 64 && c < 91 || c > 96 && c < 123) {
+        const name = parseName();
+        let value = "";
+        let code = input.charCodeAt(pos);
+        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
+          pos++;
+          code = input.charCodeAt(pos);
+        }
+        if (code === singleQuoteCC || code === doubleQuoteCC) {
+          value = parseString();
+          if (pos === -1) throw new Error("Missing closing quote");
+        } else pos--;
+        attributes[name] = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
+      }
+      pos++;
+    }
+    return attributes;
+  }
+  /**
+  * parses a node
+  */
+  function parseNode() {
+    pos++;
+    const nodeName = parseName();
+    let localName = nodeName;
+    let prefix = null;
+    const nsIndex = nodeName.indexOf(":");
+    if (nsIndex !== -1) {
+      prefix = nodeName.slice(0, nsIndex);
+      localName = nodeName.slice(nsIndex + 1);
+    }
+    const attributes = parseAttributes();
+    let childNodes = [];
+    const prev = input.charCodeAt(pos - 1);
+    pos++;
+    if (prev !== slashCC) childNodes = parseChildren(nodeName);
+    return {
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes,
+      prefix,
+      localName
+    };
+  }
+  /**
+  * is parsing a string, that starts with a char and with the same usually ' or "
+  */
+  function parseString() {
+    const startChar = input[pos];
+    const startpos = pos + 1;
+    pos = input.indexOf(startChar, startpos);
+    return input.slice(startpos, pos);
+  }
+  return {
+    nodeName: "#document",
+    nodeValue: null,
+    childNodes: parseChildren(""),
+    attributes: {}
+  };
+}
+
+//#endregion
+//#region src/serializeXml.ts
+/**
+* Basic xml encoding utility. Encodes XML into a string.
+*
+* @param xml - The XML node to encode
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/serializeXml.test.ts#example}
+*/
+function serializeXml(xml) {
+  const {
+    nodeName,
+    attributes,
+    childNodes
+  } = xml;
+  if (nodeName === "#document") return `<?xml version="1.0" encoding="UTF-8"?>${serializeXml(childNodes[0])}`;
+  if (nodeName === "#text") return xml.nodeValue || "";
+  let result = `<${nodeName}`;
+  if (attributes) for (const key in attributes) result += ` ${key}=${JSON.stringify(attributes[key])}`;
+  let children = "";
+  const childCount = childNodes?.length;
+  if (childCount) for (let i = 0; i < childCount; i++) children += serializeXml(childNodes[i]);
+  const close = !children ? " />" : `>${children}</${nodeName}>`;
+  result += close;
+  return result;
+}
+
+//#endregion
 
 
 /***/ }),
@@ -34638,7 +32608,8 @@ __webpack_require__.r(__webpack_exports__);
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -34695,7 +32666,8 @@ __webpack_require__.r(__webpack_exports__);
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -35111,6 +33083,8 @@ __webpack_require__.r(__webpack_exports__);
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -35285,6 +33259,8 @@ __webpack_require__.r(__webpack_exports__);
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -35723,7 +33699,8 @@ function Settings() {
         })],
         useMediaCapabilitiesApi: true,
         filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false
+        filterHDRMetadataFormatEssentialProperties: false,
+        filterAudioChannelConfiguration: false
       },
       events: {
         eventControllerRefreshDelay: 100,
@@ -35780,7 +33757,8 @@ function Settings() {
         threshold: 0.3,
         enableSeekFix: true,
         enableStallFix: false,
-        stallSeek: 0.1
+        stallSeek: 0.1,
+        seekOffset: 0
       },
       utcSynchronization: {
         enabled: true,
@@ -36436,7 +34414,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getVersionString: function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-const VERSION = '5.1.0';
+const VERSION = '5.1.1';
 function getVersionString() {
   return VERSION;
 }
@@ -36755,8 +34733,8 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     this.BUFFERING_COMPLETED = 'bufferingCompleted';
     this.BUFFER_CLEARED = 'bufferCleared';
-    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
+    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
     this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
     this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -36766,22 +34744,31 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
     this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
     this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-    this.LOADING_COMPLETED = 'loadingCompleted';
-    this.LOADING_PROGRESS = 'loadingProgress';
-    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
     this.LOADING_ABANDONED = 'loadingAborted';
+    this.LOADING_COMPLETED = 'loadingCompleted';
+    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
+    this.LOADING_PROGRESS = 'loadingProgress';
     this.MANIFEST_UPDATED = 'manifestUpdated';
+    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
     this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
-    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
+    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
     this.QUOTA_EXCEEDED = 'quotaExceeded';
+    this.SEEK_TARGET = 'seekTarget';
     this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
+    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
     this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -36793,18 +34780,10 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
     this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
     this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+    this.VIDEO_ELEMENT_RESIZED = 'videoElementResized';
     this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
     this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
     this.XLINK_READY = 'xlinkReady';
-    this.SEEK_TARGET = 'seekTarget';
-    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
-    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
-    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
-    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
-    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
-    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (CoreEvents);
@@ -36943,7 +34922,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _models_PatchManifestModel_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./models/PatchManifestModel.js */ "./src/dash/models/PatchManifestModel.js");
 /* harmony import */ var _vo_Representation_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./vo/Representation.js */ "./src/dash/vo/Representation.js");
 /* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/lib/index.js");
-/* harmony import */ var _svta_common_media_library_id3_getId3Frames_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/common-media-library/id3/getId3Frames.js */ "./node_modules/@svta/common-media-library/dist/id3/getId3Frames.js");
+/* harmony import */ var _svta_cml_id3__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/cml-id3 */ "./node_modules/@svta/cml-id3/dist/index.js");
 /* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
 /**
@@ -37402,7 +35381,7 @@ function DashAdapter() {
       event.calculatedPresentationTime = calculatedPresentationTime;
       event.messageData = messageData;
       event.presentationTimeDelta = presentationTimeDelta;
-      event.parsedMessageData = schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].ID3_SCHEME_ID_URI ? (0,_svta_common_media_library_id3_getId3Frames_js__WEBPACK_IMPORTED_MODULE_9__.getId3Frames)(messageData) : null;
+      event.parsedMessageData = schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].ID3_SCHEME_ID_URI ? (0,_svta_cml_id3__WEBPACK_IMPORTED_MODULE_9__.getId3Frames)(messageData) : null;
       return event;
     } catch (e) {
       return null;
@@ -40121,7 +38100,7 @@ const THROUGHPUT_SAMPLES = 4;
 function ContentSteeringController() {
   const context = this.context;
   const urlUtils = (0,_streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
-  let instance, logger, currentSteeringResponseData, serviceLocationList, throughputList, nextRequestTimer, urlLoader, errHandler, dashMetrics, mediaPlayerModel, manifestModel, serviceDescriptionController, throughputController, eventBus, adapter;
+  let adapter, currentMpdContentSteeringInformation, currentSteeringResponseData, dashMetrics, errHandler, eventBus, logger, manifestModel, mediaPlayerModel, nextRequestTimer, serviceDescriptionController, serviceLocationList, throughputController, throughputList, urlLoader, instance;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance().getLogger(instance);
     _resetInitialSettings();
@@ -40243,6 +38222,10 @@ function ContentSteeringController() {
     if (!contentSteeringData) {
       contentSteeringData = serviceDescriptionController.getServiceDescriptionSettings().contentSteering;
     }
+    if (!contentSteeringData && currentMpdContentSteeringInformation) {
+      contentSteeringData = currentMpdContentSteeringInformation;
+    }
+    currentMpdContentSteeringInformation = contentSteeringData;
     return contentSteeringData;
   }
 
@@ -40533,8 +38516,10 @@ function ContentSteeringController() {
       logger.warn(`Error fetching data from content steering server`, e);
       const statusCode = response.status;
       switch (statusCode) {
+        case 404:
         // 410 response code. Stop steering
         case 410:
+          currentMpdContentSteeringInformation = null;
           break;
         // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
         case 429:
@@ -40571,6 +38556,7 @@ function ContentSteeringController() {
   }
   function _resetInitialSettings() {
     currentSteeringResponseData = null;
+    currentMpdContentSteeringInformation = null;
     throughputList = {};
     serviceLocationList = {
       baseUrl: {
@@ -42478,7 +40464,7 @@ function DashManifestModel() {
       return undefined;
     }
     const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
-    return mainAS.Representation[0];
+    return mainAS ? mainAS.Representation[0] : undefined;
   }
   function getPreselectionsForPeriod(voPeriod) {
     const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
@@ -42695,9 +40681,9 @@ function DashManifestModel() {
           } else {
             event.id = null;
           }
-          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
+          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
             // toString is used to manage both regular and namespaced tags
-            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
+            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
           } else {
             // From Cor.1: 'NOTE: this attribute is an alternative
             // to specifying a complete XML element(s) in the Event.
@@ -43239,7 +41225,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _matchers_LangMatcher_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./matchers/LangMatcher.js */ "./src/dash/parser/matchers/LangMatcher.js");
 /* harmony import */ var _maps_RepresentationBaseValuesMap_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./maps/RepresentationBaseValuesMap.js */ "./src/dash/parser/maps/RepresentationBaseValuesMap.js");
 /* harmony import */ var _maps_SegmentValuesMap_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./maps/SegmentValuesMap.js */ "./src/dash/parser/maps/SegmentValuesMap.js");
-/* harmony import */ var _svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/common-media-library/xml/parseXml.js */ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js");
+/* harmony import */ var _svta_cml_xml__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/cml-xml */ "./node_modules/@svta/cml-xml/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -43328,7 +41314,7 @@ function DashParser(config) {
     return manifest;
   }
   function processXml(data) {
-    const xml = (0,_svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_9__.parseXml)(data);
+    const xml = (0,_svta_cml_xml__WEBPACK_IMPORTED_MODULE_9__.parseXml)(data);
     const root = xml.childNodes.find(child => child.nodeName === 'MPD' || child.nodeName === 'Patch') || xml.childNodes[0];
     function processNode(node) {
       // Convert tag name
@@ -44477,7 +42463,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   getTotalNumberOfPartialSegments: function() { return /* binding */ getTotalNumberOfPartialSegments; },
 /* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
 /* harmony export */ });
-/* harmony import */ var _svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/common-media-library/dash/processUriTemplate.js */ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js");
+/* harmony import */ var _svta_cml_dash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-dash */ "./node_modules/@svta/cml-dash/dist/index.js");
 /* harmony import */ var _vo_FullSegment_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../vo/FullSegment.js */ "./src/dash/vo/FullSegment.js");
 /* harmony import */ var _vo_PartialSegment_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/PartialSegment.js */ "./src/dash/vo/PartialSegment.js");
 /**
@@ -44626,7 +42612,7 @@ function processUriTemplate(url, representationId, number, subNumber, bandwidth,
   if (!url) {
     return url;
   }
-  return (0,_svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
+  return (0,_svta_cml_dash__WEBPACK_IMPORTED_MODULE_0__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
 }
 function getIndexBasedSegment(data) {
   const {
@@ -48494,10 +46480,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
 /* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
 /* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
-/* harmony import */ var _svta_common_media_library_cta_608_Cta608Parser__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! @svta/common-media-library/cta/608/Cta608Parser */ "./node_modules/@svta/common-media-library/dist/cta/608/Cta608Parser.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
+/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -48806,7 +46792,7 @@ function MediaPlayer() {
       });
       adapter.setConfig({
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cea608parser: new _svta_common_media_library_cta_608_Cta608Parser__WEBPACK_IMPORTED_MODULE_46__.Cta608Parser(),
+        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_49__.Cta608Parser(),
         errHandler: errHandler,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"]
       });
@@ -48974,7 +46960,7 @@ function MediaPlayer() {
    * @instance
    */
   function getVersion() {
-    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_49__.getVersionString)();
+    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_48__.getVersionString)();
   }
 
   /**
@@ -49078,7 +47064,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'number');
     if (isNaN(value)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -49108,7 +47094,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(seektime, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(seektime, 'number');
     if (isNaN(seektime)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -49216,7 +47202,7 @@ function MediaPlayer() {
    * @instance
    */
   function setMute(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'boolean');
     getVideoElement().muted = value;
   }
 
@@ -49463,7 +47449,7 @@ function MediaPlayer() {
    *
    */
   function setAutoPlay(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_48__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'boolean');
     autoPlay = value;
   }
 
@@ -50965,7 +48951,7 @@ function MediaPlayer() {
         events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
         debug: debug,
-        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_47__.HTTPRequest.INIT_SEGMENT_TYPE,
+        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_46__.HTTPRequest.INIT_SEGMENT_TYPE,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
         ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_26__,
         settings: settings
@@ -51511,7 +49497,7 @@ class MediaPlayerEvents extends _core_events_EventsBase_js__WEBPACK_IMPORTED_MOD
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     this.CUE_EXIT = 'cueExit';
 
@@ -52518,22 +50504,23 @@ const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].ge
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
-/* harmony import */ var _StreamProcessor_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./StreamProcessor.js */ "./src/streaming/StreamProcessor.js");
-/* harmony import */ var _controllers_FragmentController_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./controllers/FragmentController.js */ "./src/streaming/controllers/FragmentController.js");
-/* harmony import */ var _thumbnail_ThumbnailController_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./thumbnail/ThumbnailController.js */ "./src/streaming/thumbnail/ThumbnailController.js");
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/EventBus.js */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/events/Events.js */ "./src/core/events/Events.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/errors/Errors.js */ "./src/core/errors/Errors.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./utils/BoxParser.js */ "./src/streaming/utils/BoxParser.js");
-/* harmony import */ var _utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./controllers/BlacklistController.js */ "./src/streaming/controllers/BlacklistController.js");
-/* harmony import */ var _ExternalMediaSource_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./ExternalMediaSource.js */ "./src/streaming/ExternalMediaSource.js");
-/* harmony import */ var _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./vo/MediaInfoSelectionInput.js */ "./src/streaming/vo/MediaInfoSelectionInput.js");
+/* harmony import */ var _controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./controllers/BlacklistController.js */ "./src/streaming/controllers/BlacklistController.js");
+/* harmony import */ var _utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./utils/BoxParser.js */ "./src/streaming/utils/BoxParser.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _ExternalMediaSource_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./ExternalMediaSource.js */ "./src/streaming/ExternalMediaSource.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _controllers_FragmentController_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ./controllers/FragmentController.js */ "./src/streaming/controllers/FragmentController.js");
+/* harmony import */ var _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./vo/MediaInfoSelectionInput.js */ "./src/streaming/vo/MediaInfoSelectionInput.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _StreamProcessor_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./StreamProcessor.js */ "./src/streaming/StreamProcessor.js");
+/* harmony import */ var _thumbnail_ThumbnailController_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./thumbnail/ThumbnailController.js */ "./src/streaming/thumbnail/ThumbnailController.js");
+/* harmony import */ var _utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -52580,12 +50567,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const MEDIA_TYPES = [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MUXED, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE];
+
+const MEDIA_TYPES = [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MUXED, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE];
 function Stream(config) {
   config = config || {};
   const context = this.context;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
-  const urlUtils = (0,_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+  const urlUtils = (0,_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance();
   const manifestModel = config.manifestModel;
   const mediaPlayerModel = config.mediaPlayerModel;
   const dashMetrics = config.dashMetrics;
@@ -52604,29 +50592,29 @@ function Stream(config) {
   const videoModel = config.videoModel;
   let streamInfo = config.streamInfo;
   const settings = config.settings;
-  let instance, logger, streamProcessors, isInitialized, isActive, hasFinishedBuffering, hasVideoTrack, hasAudioTrack, fragmentController, thumbnailController, segmentBlacklistController, preloaded, boxParser, debug, isEndedEventSignaled, trackChangedEvents;
+  let boxParser, debug, fragmentController, hasAudioTrack, hasFinishedBuffering, hasVideoTrack, instance, isActive, isEndedEventSignaled, isInitialized, logger, preloaded, segmentBlacklistController, streamProcessors, thumbnailController, trackChangedEvents;
 
   /**
    * Setup the stream
    */
   function setup() {
     try {
-      debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+      debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
       logger = debug.getLogger(instance);
       resetInitialSettings();
-      boxParser = (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
-      segmentBlacklistController = (0,_controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).create({
-        updateEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SEGMENT_LOCATION_BLACKLIST_CHANGED,
-        addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SEGMENT_LOCATION_BLACKLIST_ADD
+      boxParser = (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+      segmentBlacklistController = (0,_controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
+        updateEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SEGMENT_LOCATION_BLACKLIST_CHANGED,
+        addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SEGMENT_LOCATION_BLACKLIST_ADD
       });
-      fragmentController = (0,_controllers_FragmentController_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create({
+      fragmentController = (0,_controllers_FragmentController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).create({
         streamInfo: streamInfo,
         mediaPlayerModel: mediaPlayerModel,
         dashMetrics: dashMetrics,
         errHandler: errHandler,
         settings: settings,
         boxParser: boxParser,
-        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"],
+        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_3__["default"],
         urlUtils: urlUtils
       });
     } catch (e) {
@@ -52641,7 +50629,7 @@ function Stream(config) {
     registerEvents();
     registerProtectionEvents();
     textController.initializeForStream(streamInfo);
-    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_UPDATED, {
+    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_UPDATED, {
       streamInfo: streamInfo
     });
   }
@@ -52650,18 +50638,20 @@ function Stream(config) {
    * Register the streaming events
    */
   function registerEvents() {
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFERING_COMPLETED, _onBufferingCompleted, instance);
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].INBAND_EVENTS, _onInbandEvents, instance);
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].BUFFERING_COMPLETED, _onBufferingCompleted, instance);
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].INBAND_EVENTS, _onInbandEvents, instance);
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_13__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
   }
 
   /**
    * Unregister the streaming events
    */
   function unRegisterEvents() {
-    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFERING_COMPLETED, _onBufferingCompleted, instance);
-    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].INBAND_EVENTS, _onInbandEvents, instance);
-    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].BUFFERING_COMPLETED, _onBufferingCompleted, instance);
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].INBAND_EVENTS, _onInbandEvents, instance);
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_13__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
   }
 
   /**
@@ -52669,11 +50659,11 @@ function Stream(config) {
    */
   function registerProtectionEvents() {
     if (protectionController) {
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_ERROR, _onProtectionError, instance);
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_SYSTEM_SELECTED, _onProtectionError, instance);
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_SESSION_CREATED, _onProtectionError, instance);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_ERROR, _onProtectionError, instance);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_SESSION_CREATED, _onProtectionError, instance);
     }
   }
 
@@ -52682,11 +50672,11 @@ function Stream(config) {
    */
   function unRegisterProtectionEvents() {
     if (protectionController) {
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_ERROR, _onProtectionError, instance);
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_SYSTEM_SELECTED, _onProtectionError, instance);
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].KEY_SESSION_CREATED, _onProtectionError, instance);
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_ERROR, _onProtectionError, instance);
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SERVER_CERTIFICATE_UPDATED, _onProtectionError, instance);
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].LICENSE_REQUEST_COMPLETE, _onProtectionError, instance);
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_SYSTEM_SELECTED, _onProtectionError, instance);
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].KEY_SESSION_CREATED, _onProtectionError, instance);
     }
   }
 
@@ -52713,7 +50703,7 @@ function Stream(config) {
       }
       if (getPreloaded()) {
         isActive = true;
-        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_ACTIVATED, {
+        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_ACTIVATED, {
           streamInfo
         });
         resolve();
@@ -52724,7 +50714,7 @@ function Stream(config) {
         if (representationsFromPreviousPeriod && representationsFromPreviousPeriod.length > 0) {
           startScheduleControllers();
         }
-        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_ACTIVATED, {
+        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_ACTIVATED, {
           streamInfo
         });
         resolve();
@@ -52781,7 +50771,7 @@ function Stream(config) {
       const promises = [];
       MEDIA_TYPES.forEach(mediaType => {
         // If we are preloading without a video element we can not start texttrack handling.
-        if (!(mediaType === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && !mediaSource) && (mediaType !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || !element || element && /^VIDEO$/i.test(element.nodeName))) {
+        if (!(mediaType === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT && !mediaSource) && (mediaType !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO || !element || element && /^VIDEO$/i.test(element.nodeName))) {
           const representationFromPreviousPeriod = representationsFromPreviousPeriod.find(representation => {
             return representation.mediaInfo.type === mediaType;
           });
@@ -52793,7 +50783,7 @@ function Stream(config) {
       }).then(bufferSinks => {
         if (streamProcessors.length === 0) {
           const msg = 'No streams to play.';
-          errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_10__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
+          errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg, manifestModel.getValue()));
           logger.fatal(msg);
         } else {
           _initializationCompleted();
@@ -52816,7 +50806,7 @@ function Stream(config) {
    */
   function initializeForTextWithMediaSource(mediaSource) {
     return new Promise((resolve, reject) => {
-      _initializeMediaForType(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT, mediaSource, null).then(() => {
+      _initializeMediaForType(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT, mediaSource, null).then(() => {
         return createBufferSinkForText();
       }).then(() => {
         textController.createTracks(streamInfo);
@@ -52843,22 +50833,22 @@ function Stream(config) {
       logger.info('No ' + type + ' data.');
       return Promise.resolve();
     }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO) {
       hasVideoTrack = true;
     }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO) {
       hasAudioTrack = true;
     }
     for (let i = 0, ln = allMediaForType.length; i < ln; i++) {
       mediaInfo = allMediaForType[i];
-      if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && !!mediaInfo.isEmbedded) {
+      if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT && !!mediaInfo.isEmbedded) {
         textController.addEmbeddedTrack(streamInfo, mediaInfo);
         embeddedMediaInfos.push(mediaInfo);
       }
       if (_isMediaSupported(mediaInfo)) {
         mediaController.addTrack(mediaInfo);
       }
-      if (mediaInfo.type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT) {
+      if (mediaInfo.type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ENHANCEMENT) {
         enhancementMediaInfoIndex = i;
       }
     }
@@ -52874,23 +50864,23 @@ function Stream(config) {
     if (allMediaForType.length === 0) {
       return Promise.resolve();
     }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
-      thumbnailController = (0,_thumbnail_ThumbnailController_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).create({
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
+      thumbnailController = (0,_thumbnail_ThumbnailController_js__WEBPACK_IMPORTED_MODULE_15__["default"])(context).create({
         streamInfo: streamInfo,
         adapter: adapter,
         baseURLController: config.baseURLController,
         timelineConverter: config.timelineConverter,
         debug: debug,
         eventBus: eventBus,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"],
-        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"],
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"],
+        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_3__["default"],
         dashMetrics: config.dashMetrics,
         segmentBaseController: config.segmentBaseController
       });
       thumbnailController.initialize();
       return Promise.resolve();
     }
-    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZING, {
+    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_INITIALIZING, {
       streamInfo: streamInfo,
       mediaInfo: mediaInfo
     });
@@ -52899,11 +50889,11 @@ function Stream(config) {
     if (enhancementMediaInfoIndex >= 0) {
       // An adaptation set, mapped to mediaInfo, of enhancement type was found so a stream processor shall be created for it
       // the enhancement stream processor will work in parallel to the media stream processor it enhances
-      let enhancementMediaSource = new _ExternalMediaSource_js__WEBPACK_IMPORTED_MODULE_14__["default"](eventBus);
+      let enhancementMediaSource = new _ExternalMediaSource_js__WEBPACK_IMPORTED_MODULE_9__["default"](eventBus);
       enhancementMediaSource.open();
       enhancementMediaSource.duration = streamInfo.manifestInfo.duration;
-      let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT);
-      enhancementStreamProcessor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+      let enhancementStreamProcessor = _createStreamProcessor(allMediaForType, enhancementMediaSource, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ENHANCEMENT);
+      enhancementStreamProcessor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__["default"]({
         newMediaInfo: allMediaForType[enhancementMediaInfoIndex]
       }));
       streamProcessor.setEnhancementStreamProcessor(enhancementStreamProcessor);
@@ -52911,8 +50901,8 @@ function Stream(config) {
     initialMediaInfo = mediaController.getCurrentTrackFor(type, streamInfo.id);
     if (initialMediaInfo) {
       // In case of mixed fragmented and embedded text tracks, check if initial selected text track is not an embedded track
-      const newMediaInfo = type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
-      const mediaInfoSelectionInput = new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+      const newMediaInfo = type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT || !initialMediaInfo.isEmbedded ? initialMediaInfo : allMediaForType[0];
+      const mediaInfoSelectionInput = new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__["default"]({
         newMediaInfo,
         previouslySelectedRepresentation: representationFromPreviousPeriod
       });
@@ -52923,17 +50913,17 @@ function Stream(config) {
   function _isMediaSupported(mediaInfo) {
     const type = mediaInfo ? mediaInfo.type : null;
     let msg;
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MUXED) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MUXED) {
       msg = 'Multiplexed representations are intentionally not supported, as they are not compliant with the DASH-AVC/264 guidelines';
       logger.fatal(msg);
-      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_10__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__["default"].MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
+      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__["default"].MANIFEST_ERROR_ID_MULTIPLEXED_CODE, msg, manifestModel.getValue()));
       return false;
     }
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
       return true;
     }
     if (!!mediaInfo.contentProtection && mediaInfo.contentProtection.length > 0 && !capabilities.supportsEncryptedMedia()) {
-      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_10__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__["default"].CAPABILITY_MEDIAKEYS_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__["default"].CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
+      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__["default"].CAPABILITY_MEDIAKEYS_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__["default"].CAPABILITY_MEDIAKEYS_ERROR_MESSAGE));
       return false;
     }
     return true;
@@ -52952,7 +50942,7 @@ function Stream(config) {
     const type = mediaInfo ? mediaInfo.type : null;
     const mimeType = mediaInfo ? mediaInfo.mimeType : null;
     const isFragmented = mediaInfo ? mediaInfo.isFragmented : null;
-    let streamProcessor = (0,_StreamProcessor_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
+    let streamProcessor = (0,_StreamProcessor_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).create({
       abrController,
       adapter,
       baseURLController: config.baseURLController,
@@ -52978,7 +50968,7 @@ function Stream(config) {
     streamProcessor.initialize(mediaSource, hasVideoTrack, isFragmented);
     streamProcessors.push(streamProcessor);
     streamProcessor.setMediaInfoArray(allMediaForType);
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT) {
       textController.addMediaInfosToBuffer(streamInfo, type, allMediaForType, fragmentModel);
     }
     return streamProcessor;
@@ -53010,7 +51000,7 @@ function Stream(config) {
     });
   }
   function createBufferSinkForText() {
-    const sp = _getProcessorByType(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT);
+    const sp = _getProcessorByType(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT);
     if (sp) {
       return sp.createBufferSinks();
     }
@@ -53043,7 +51033,7 @@ function Stream(config) {
     hasFinishedBuffering = false;
     _setPreloaded(false);
     setIsEndedEventSignaled(false);
-    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_DEACTIVATED, {
+    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_DEACTIVATED, {
       streamInfo
     });
   }
@@ -53070,7 +51060,7 @@ function Stream(config) {
         }
         if (streamProcessors.length === 0) {
           const msg = 'No streams to play.';
-          errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_10__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_8__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
+          errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_6__["default"].MANIFEST_ERROR_ID_NOSTREAMS_CODE, msg + 'nostreams', manifestModel.getValue()));
           logger.fatal(msg);
         }
         resolve();
@@ -53140,7 +51130,7 @@ function Stream(config) {
   }
   function checkConfig() {
     if (!videoModel || !abrController) {
-      throw new Error(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MISSING_CONFIG_ERROR);
+      throw new Error(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MISSING_CONFIG_ERROR);
     }
   }
 
@@ -53151,7 +51141,7 @@ function Stream(config) {
    */
   function getRepresentationsByType(type) {
     checkConfig();
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
       if (!thumbnailController) {
         return [];
       }
@@ -53169,7 +51159,7 @@ function Stream(config) {
    */
   function getRepresentationForTypeById(type, id) {
     let possibleVoRepresentations;
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
       if (!thumbnailController) {
         return null;
       }
@@ -53197,7 +51187,7 @@ function Stream(config) {
    */
   function getRepresentationForTypeByIndex(type, index) {
     let possibleVoRepresentations;
-    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].IMAGE) {
+    if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
       if (!thumbnailController) {
         return null;
       }
@@ -53243,7 +51233,7 @@ function Stream(config) {
       processor.clearScheduleTimer();
       processor.setTrackSwitchInProgress(true);
       const oldRepresentation = processor.getRepresentation();
-      processor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+      processor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__["default"]({
         newMediaInfo
       })).then(() => {
         const replaceBuffer = e && e.options && e.options.hasOwnProperty('replaceBuffer') ? e.options.replaceBuffer : false;
@@ -53300,14 +51290,14 @@ function Stream(config) {
     // if there is at least one buffer controller that has not completed buffering yet do nothing
     for (let i = 0; i < ln; i++) {
       //if audio or video buffer is not buffering completed state, do not send STREAM_BUFFERING_COMPLETED
-      if (!processors[i].isBufferingCompleted() && (processors[i].getType() === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO || processors[i].getType() === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO)) {
+      if (!processors[i].isBufferingCompleted() && (processors[i].getType() === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO || processors[i].getType() === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO)) {
         logger.debug('onBufferingCompleted - One streamProcessor has finished but', processors[i].getType(), 'one is not buffering completed');
         return;
       }
     }
     logger.debug('onBufferingCompleted - trigger STREAM_BUFFERING_COMPLETED');
     hasFinishedBuffering = true;
-    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_BUFFERING_COMPLETED, {
+    eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_BUFFERING_COMPLETED, {
       streamInfo: streamInfo
     }, {
       streamInfo
@@ -53320,6 +51310,9 @@ function Stream(config) {
   }
   function _onDataUpdateCompleted() {
     _initializationCompleted();
+  }
+  function _onPlaybackSeeked() {
+    _addInlineEvents();
   }
   function getProcessorForMediaInfo(mediaInfo) {
     if (!mediaInfo || !mediaInfo.type) {
@@ -53342,7 +51335,7 @@ function Stream(config) {
     for (let i = 0; i < streamProcessors.length; i++) {
       streamProcessor = streamProcessors[i];
       type = streamProcessor.getType();
-      if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].ENHANCEMENT) {
+      if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ENHANCEMENT) {
         arr.push(streamProcessor);
       }
     }
@@ -53377,7 +51370,7 @@ function Stream(config) {
         if (allMediaForType) {
           for (let j = 0; j < allMediaForType.length; j++) {
             if (adapter.areMediaInfosEqual(currentMediaInfo, allMediaForType[j])) {
-              promises.push(streamProcessor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+              promises.push(streamProcessor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__["default"]({
                 newMediaInfo: allMediaForType[j]
               })));
             }
@@ -53399,7 +51392,7 @@ function Stream(config) {
           const oldRepresentation = processor.getRepresentation();
           processor.setTrackSwitchInProgress(true);
           promises.push(processor.prepareTrackSwitch(oldRepresentation));
-          promises.push(processor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+          promises.push(processor.selectMediaInfo(new _vo_MediaInfoSelectionInput_js__WEBPACK_IMPORTED_MODULE_12__["default"]({
             newMediaInfo
           })));
         }
@@ -53409,7 +51402,7 @@ function Stream(config) {
         if (processor) {
           processor.setTrackSwitchInProgress(false);
         }
-        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_UPDATED, {
+        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_UPDATED, {
           streamInfo: streamInfo
         });
         resolve();
@@ -53427,7 +51420,7 @@ function Stream(config) {
       for (let i = 0; i < ln && streamProcessors[i]; i++) {
         const type = streamProcessors[i].getType();
         const mediaInfo = streamProcessors[i].getMediaInfo();
-        if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && mediaInfo && mediaInfo.isFragmented) {
+        if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].TEXT && mediaInfo && mediaInfo.isFragmented) {
           let mediaInfo = streamProcessors[i].getMediaInfo();
           if (mediaInfo) {
             protectionController.initializeForMedia(mediaInfo);
@@ -53438,8 +51431,8 @@ function Stream(config) {
     }
     if (!isInitialized) {
       isInitialized = true;
-      videoModel.waitForReadyState(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
-        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].STREAM_INITIALIZED, {
+      videoModel.waitForReadyState(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, () => {
+        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].STREAM_INITIALIZED, {
           streamInfo: streamInfo
         });
       });
@@ -53518,7 +51511,7 @@ function Stream(config) {
   return instance;
 }
 Stream.__dashjs_factory_name = 'Stream';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_9__["default"].getClassFactory(Stream));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_10__["default"].getClassFactory(Stream));
 
 /***/ }),
 
@@ -55743,7 +53736,7 @@ function AbrController() {
   const context = this.context;
   const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  let abandonmentStateDict, abandonmentTimeout, abrRulesCollection, adapter, capabilities, cmsdModel, currentRepresentationId, customParametersModel, dashMetrics, domStorage, droppedFramesHistory, instance, logger, mediaPlayerModel, queuedManualQualitySwitches, settings, streamController, streamProcessorDict, switchRequestHistory, throughputController, videoModel, windowResizeEventCalled;
+  let abandonmentStateDict, abandonmentTimeout, abrRulesCollection, adapter, capabilities, cmsdModel, currentRepresentationId, customParametersModel, dashMetrics, domStorage, droppedFramesHistory, instance, logger, mediaPlayerModel, queuedManualQualitySwitches, settings, streamController, streamProcessorDict, switchRequestHistory, throughputController, videoModel;
   function setup() {
     logger = debug.getLogger(instance);
     resetInitialSettings();
@@ -55765,6 +53758,7 @@ function AbrController() {
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
     eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].METRIC_ADDED, _onMetricAdded, instance);
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
   }
 
   /**
@@ -55811,9 +53805,6 @@ function AbrController() {
     abandonmentStateDict = {};
     streamProcessorDict = {};
     queuedManualQualitySwitches = new Map();
-    if (windowResizeEventCalled === undefined) {
-      windowResizeEventCalled = false;
-    }
     if (droppedFramesHistory) {
       droppedFramesHistory.reset();
     }
@@ -55831,6 +53822,7 @@ function AbrController() {
     eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].QUALITY_CHANGE_RENDERED, _onQualityChangeRendered, instance);
     eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_12__["default"].METRIC_ADDED, _onMetricAdded, instance);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].LOADING_PROGRESS, _onFragmentLoadProgress, instance);
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
     if (abrRulesCollection) {
       abrRulesCollection.reset();
     }
@@ -56161,6 +54153,15 @@ function AbrController() {
     const switchRequest = abrRulesCollection.shouldAbandonFragment(rulesContext);
     if (switchRequest && switchRequest.representation !== _rules_SwitchRequest_js__WEBPACK_IMPORTED_MODULE_8__["default"].NO_CHANGE) {
       _onSegmentDownloadShouldBeAbandoned(e, streamId, type, streamProcessor, switchRequest);
+    }
+  }
+  function _onVideoElementResized() {
+    if (settings.get().streaming.abr.limitBitrateByPortal) {
+      Object.keys(streamProcessorDict).forEach(streamId => {
+        Object.keys(streamProcessorDict[streamId]).forEach(mediaType => {
+          checkPlaybackQuality(mediaType, streamId);
+        });
+      });
     }
   }
   function _createRulesContext(streamProcessor, currentRequest) {
@@ -56531,9 +54532,6 @@ function AbrController() {
     const voRepresentations = getPossibleVoRepresentationsFilteredBySettings(representation.mediaInfo, true);
     return voRepresentations[voRepresentations.length - 1].id === representation.id;
   }
-  function setWindowResizeEventCalled(value) {
-    windowResizeEventCalled = value;
-  }
   function clearDataForStream(streamId) {
     if (droppedFramesHistory) {
       droppedFramesHistory.clearForStream(streamId);
@@ -56572,7 +54570,6 @@ function AbrController() {
     reset,
     setConfig,
     setPlaybackQuality,
-    setWindowResizeEventCalled,
     unRegisterStreamType
   };
   setup();
@@ -59845,6 +57842,7 @@ function GapController() {
     const stallSeek = settings.get().streaming.gaps.stallSeek;
     const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
     const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
+    const seekOffset = settings.get().streaming.gaps.seekOffset;
     const ranges = videoModel.getBufferRange();
     let nextRangeIndex;
     let seekToPosition = NaN;
@@ -59882,16 +57880,16 @@ function GapController() {
         const nextStream = streamController.getStreamForTime(seekToPosition);
         const internalSeek = nextStream && !!nextStream.getPreloaded();
         logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-        playbackController.seek(seekToPosition, true, internalSeek);
+        playbackController.seek(seekToPosition + seekOffset, true, internalSeek);
       } else {
         const isDynamic = playbackController.getIsDynamic();
         const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
         const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
         jumpTimeoutHandler = window.setTimeout(() => {
-          playbackController.seek(seekToPosition, true, true);
+          playbackController.seek(seekToPosition + seekOffset, true, true);
           const activeStream = streamController.getActiveStream();
           if (activeStream) {
-            logger.warn(`Jumping gap occuring in period ${activeStream.getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - start}`);
+            logger.warn(`Jumping gap occuring in period ${activeStream.getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${seekToPosition + seekOffset - start}`);
           }
           jumpTimeoutHandler = null;
         }, timeToWait);
@@ -61158,6 +59156,8 @@ function PlaybackController() {
    * Triggers play() on the video element
    */
   function play(adjustLiveDelay = false) {
+    '';
+
     if (streamInfo && videoModel && videoModel.getElement()) {
       if (adjustLiveDelay && isDynamic) {
         _adjustLiveDelayAfterUserInteraction(getTime());
@@ -61810,40 +59810,40 @@ function PlaybackController() {
   function addAllListeners() {
     videoModel.addEventListener('canplay', _onCanPlay);
     videoModel.addEventListener('canplaythrough', _onCanPlayThrough);
-    videoModel.addEventListener('play', _onPlaybackStart);
-    videoModel.addEventListener('waiting', _onPlaybackWaiting);
-    videoModel.addEventListener('playing', _onPlaybackPlaying);
-    videoModel.addEventListener('pause', _onPlaybackPaused);
+    videoModel.addEventListener('ended', _onNativePlaybackEnded);
     videoModel.addEventListener('error', _onPlaybackError);
-    videoModel.addEventListener('seeking', _onPlaybackSeeking);
-    videoModel.addEventListener('seeked', _onPlaybackSeeked);
-    videoModel.addEventListener('timeupdate', _onPlaybackTimeUpdated);
+    videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
+    videoModel.addEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
+    videoModel.addEventListener('pause', _onPlaybackPaused);
+    videoModel.addEventListener('play', _onPlaybackStart);
+    videoModel.addEventListener('playing', _onPlaybackPlaying);
     videoModel.addEventListener('progress', _onPlaybackProgress);
     videoModel.addEventListener('ratechange', _onPlaybackRateChanged);
-    videoModel.addEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
-    videoModel.addEventListener('loadeddata', _onPlaybackLoadedData);
+    videoModel.addEventListener('seeked', _onPlaybackSeeked);
+    videoModel.addEventListener('seeking', _onPlaybackSeeking);
     videoModel.addEventListener('stalled', onPlaybackStalled);
-    videoModel.addEventListener('ended', _onNativePlaybackEnded);
+    videoModel.addEventListener('timeupdate', _onPlaybackTimeUpdated);
     videoModel.addEventListener('volumechange', _onVolumeChanged);
+    videoModel.addEventListener('waiting', _onPlaybackWaiting);
   }
   function removeAllListeners() {
     videoModel.removeEventListener('canplay', _onCanPlay);
     videoModel.removeEventListener('canplaythrough', _onCanPlayThrough);
-    videoModel.removeEventListener('play', _onPlaybackStart);
-    videoModel.removeEventListener('waiting', _onPlaybackWaiting);
-    videoModel.removeEventListener('playing', _onPlaybackPlaying);
-    videoModel.removeEventListener('pause', _onPlaybackPaused);
+    videoModel.removeEventListener('ended', _onNativePlaybackEnded);
     videoModel.removeEventListener('error', _onPlaybackError);
-    videoModel.removeEventListener('seeking', _onPlaybackSeeking);
-    videoModel.removeEventListener('seeked', _onPlaybackSeeked);
-    videoModel.removeEventListener('timeupdate', _onPlaybackTimeUpdated);
+    videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
+    videoModel.removeEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
+    videoModel.removeEventListener('pause', _onPlaybackPaused);
+    videoModel.removeEventListener('play', _onPlaybackStart);
+    videoModel.removeEventListener('playing', _onPlaybackPlaying);
     videoModel.removeEventListener('progress', _onPlaybackProgress);
     videoModel.removeEventListener('ratechange', _onPlaybackRateChanged);
-    videoModel.removeEventListener('loadedmetadata', _onPlaybackMetaDataLoaded);
-    videoModel.removeEventListener('loadeddata', _onPlaybackLoadedData);
+    videoModel.removeEventListener('seeked', _onPlaybackSeeked);
+    videoModel.removeEventListener('seeking', _onPlaybackSeeking);
     videoModel.removeEventListener('stalled', onPlaybackStalled);
-    videoModel.removeEventListener('ended', _onNativePlaybackEnded);
+    videoModel.removeEventListener('timeupdate', _onPlaybackTimeUpdated);
     videoModel.removeEventListener('volumechange', _onVolumeChanged);
+    videoModel.removeEventListener('waiting', _onPlaybackWaiting);
   }
   instance = {
     computeAndSetLiveDelay,
@@ -62199,7 +60199,7 @@ function ScheduleController(config) {
    */
   function _getGenericBufferTarget() {
     try {
-      const currentRepresentation = representationController.getCurrentRepresentation();
+      const currentRepresentation = settings.get().streaming.enhancement.enabled ? representationController.getCurrentCompositeRepresentation() : representationController.getCurrentRepresentation();
       const streamInfo = currentRepresentation.mediaInfo.streamInfo;
       if (abrController.isPlayingAtTopQuality(currentRepresentation)) {
         const isLongFormContent = streamInfo.manifestInfo.duration >= settings.get().streaming.buffer.longFormContentDurationThreshold;
@@ -67702,13 +65702,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CMCD_PARAM */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdObjectType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamingFormat */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js");
-/* harmony import */ var _svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @svta/common-media-library/cmcd/encodeCmcd */ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js");
-/* harmony import */ var _svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @svta/common-media-library/cmcd/toCmcdHeaders */ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdHeaderField */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -67739,12 +65733,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-
-
-
-
 
 
 
@@ -67856,7 +65844,7 @@ function CmcdModel() {
       if (isCmcdEnabled()) {
         const cmcdData = getCmcdData(request);
         const filteredCmcdData = _applyWhitelist(cmcdData);
-        const finalPayloadString = (0,_svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_14__.encodeCmcd)(filteredCmcdData);
+        const finalPayloadString = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.encodeCmcd)(filteredCmcdData);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -67864,7 +65852,7 @@ function CmcdModel() {
           cmcdString: finalPayloadString
         });
         return {
-          key: _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_10__.CMCD_PARAM,
+          key: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CMCD_PARAM,
           value: finalPayloadString
         };
       }
@@ -67891,7 +65879,7 @@ function CmcdModel() {
         const cmcdData = getCmcdData(request);
         const filteredCmcdData = _applyWhitelist(cmcdData);
         const options = _createCmcdV2HeadersCustomMap();
-        const headers = (0,_svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_15__.toCmcdHeaders)(filteredCmcdData, options);
+        const headers = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.toCmcdHeaders)(filteredCmcdData, options);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -68016,17 +66004,17 @@ function CmcdModel() {
   }
   function _getCmcdDataForSteering(request) {
     const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     return data;
   }
   function _getCmcdDataForLicense(request) {
     const data = _getGenericCmcdData(request);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.KEY;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.KEY;
     return data;
   }
   function _getCmcdDataForMpd() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.MANIFEST;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.MANIFEST;
     return data;
   }
   function _getCmcdDataForMediaSegment(request, mediaType) {
@@ -68042,19 +66030,19 @@ function CmcdModel() {
     const nextRequest = _probeNextRequest(mediaType);
     let ot;
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.VIDEO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.VIDEO;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.AUDIO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.AUDIO;
     }
     if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].ENHANCEMENT) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT) {
       if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.TIMED_TEXT;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.TIMED_TEXT;
       } else {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.CAPTION;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.CAPTION;
       }
     }
     let rtp = settings.get().streaming.cmcd.rtp;
@@ -68119,13 +66107,13 @@ function CmcdModel() {
   }
   function _getCmcdDataForInitSegment() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.INIT;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.INIT;
     data.su = true;
     return data;
   }
   function _getCmcdDataForOther() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     return data;
   }
   function _getGenericCmcdData() {
@@ -68166,8 +66154,8 @@ function CmcdModel() {
     const cmcdVersion = settings.get().streaming.cmcd.version;
     return cmcdVersion === 1 ? {} : {
       customHeaderMap: {
-        [_svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__.CmcdHeaderField.REQUEST]: ['ltc'],
-        [_svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__.CmcdHeaderField.SESSION]: ['msd']
+        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.REQUEST]: ['ltc'],
+        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.SESSION]: ['msd']
       }
     };
   }
@@ -68233,8 +66221,8 @@ function CmcdModel() {
   function _onManifestLoaded(data) {
     try {
       const isDynamic = dashManifestModel.getIsDynamic(data.data);
-      const st = isDynamic ? _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__.CmcdStreamType.LIVE : _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__.CmcdStreamType.VOD;
-      const sf = data.protocol && data.protocol === 'MSS' ? _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__.CmcdStreamingFormat.SMOOTH : _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__.CmcdStreamingFormat.DASH;
+      const st = isDynamic ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.LIVE : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.VOD;
+      const sf = data.protocol && data.protocol === 'MSS' ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.SMOOTH : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.DASH;
       internalData.st = `${st}`;
       internalData.sf = `${sf}`;
     } catch (e) {}
@@ -68349,11 +66337,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_DYNAMIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_STATIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CmsdObjectType.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdDynamic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdStatic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js");
+/* harmony import */ var _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @svta/cml-cmsd */ "./node_modules/@svta/cml-cmsd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -68390,13 +66374,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-
 // Note: in modern browsers, the header names are returned in all lower case
-const CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__.CMSD_STATIC.toLowerCase();
-const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC.toLowerCase();
+const CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC.toLowerCase();
+const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC.toLowerCase();
 const CMSD_KEYS = {
   AVAILABILITY_TIME: 'at',
   DURESS: 'du',
@@ -68419,9 +66399,9 @@ const CMSD_KEYS = {
 const PERSISTENT_PARAMS = [CMSD_KEYS.MAX_SUGGESTED_BITRATE, CMSD_KEYS.STREAM_TYPE, CMSD_KEYS.STREAMING_FORMAT, CMSD_KEYS.VERSION];
 const STREAM = 'stream';
 const MEDIATYPE_TO_OBJECTTYPE = {
-  'video': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.VIDEO,
-  'audio': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.AUDIO,
-  'text': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.TIMED_TEXT,
+  'video': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.VIDEO,
+  'audio': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.AUDIO,
+  'text': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.TIMED_TEXT,
   'stream': STREAM // Specific value for parameters without object type, which apply for all media/objects
 };
 function CmsdModel() {
@@ -68450,14 +66430,14 @@ function CmsdModel() {
   }
   function _parseCMSDStatic(value) {
     try {
-      return (0,_svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_8__.decodeCmsdStatic)(value);
+      return (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdStatic)(value);
     } catch (e) {
       logger.error('Failed to parse CMSD-Static response header value:', e);
     }
   }
   function _parseCMSDDynamic(value) {
     try {
-      const items = (0,_svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_7__.decodeCmsdDynamic)(value);
+      const items = (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdDynamic)(value);
       const last = items[items.length - 1];
       return last?.params || {};
     } catch (e) {
@@ -68466,10 +66446,10 @@ function CmsdModel() {
     }
   }
   function _mediaTypetoObjectType(mediaType) {
-    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.OTHER;
+    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.OTHER;
   }
   function _getParamValueForObjectType(paramsType, ot, key) {
-    const params = paramsType === _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
+    const params = paramsType === _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
     const otParams = params[ot] || {};
     const streamParams = params[STREAM] || {};
     const value = otParams[key] || streamParams[key];
@@ -68523,22 +66503,22 @@ function CmsdModel() {
   }
   function getMaxBitrate(type) {
     let ot = _mediaTypetoObjectType(type);
-    let mb = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
+    let mb = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
     return mb ? mb : -1;
   }
   function getEstimatedThroughput(type) {
     let ot = _mediaTypetoObjectType(type);
-    let etp = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
+    let etp = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
     return etp ? etp : null;
   }
   function getResponseDelay(type) {
     let ot = _mediaTypetoObjectType(type);
-    let rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
     return rd ? rd : null;
   }
   function getRoundTripTime(type) {
     let ot = _mediaTypetoObjectType(type);
-    let rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
     return rd ? rd : null;
   }
   function reset() {
@@ -70609,7 +68589,7 @@ __webpack_require__.r(__webpack_exports__);
 
 const READY_STATES_TO_EVENT_NAMES = new Map([[_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_METADATA, 'loadedmetadata'], [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_CURRENT_DATA, 'loadeddata'], [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_FUTURE_DATA, 'canplay'], [_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA, 'canplaythrough']]);
 function VideoModel() {
-  let instance, logger, settings, element, _currentTime, setCurrentTimeReadyStateFunction, resumeReadyStateFunction, TTMLRenderingDiv, vttRenderingDiv, previousPlaybackRate, timeout;
+  let TTMLRenderingDiv, _currentTime, element, instance, logger, previousPlaybackRate, resizeObserver, resumeReadyStateFunction, setCurrentTimeReadyStateFunction, settings, timeout, vttRenderingDiv;
   const VIDEO_MODEL_WRONG_ELEMENT_TYPE = 'element is not video or audio DOM type!';
   const context = this.context;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
@@ -70618,6 +68598,14 @@ function VideoModel() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().getLogger(instance);
     settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
     _currentTime = NaN;
+    _createResizeObserver();
+  }
+  function _createResizeObserver() {
+    try {
+      resizeObserver = new ResizeObserver(() => {
+        eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO_ELEMENT_RESIZED);
+      });
+    } catch (e) {}
   }
   function initialize() {
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].PLAYBACK_PLAYING, onPlaying, this);
@@ -70626,6 +68614,16 @@ function VideoModel() {
     clearTimeout(timeout);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].PLAYBACK_PLAYING, onPlaying, this);
     stalledStreams.length = 0;
+    _disposeResizeObserver();
+  }
+  function _disposeResizeObserver() {
+    try {
+      if (resizeObserver && element) {
+        resizeObserver.unobserve(element);
+        resizeObserver.disconnect();
+        resizeObserver = null;
+      }
+    } catch (e) {}
   }
   function setConfig(config) {
     if (!config) {
@@ -70723,9 +68721,18 @@ function VideoModel() {
     //add check of value type
     if (value === null || value === undefined || value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
       element = value;
+      _registerResizeObserver(element);
     } else {
       throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
     }
+  }
+  function _registerResizeObserver(element) {
+    try {
+      if (!resizeObserver || !element) {
+        return;
+      }
+      resizeObserver.observe(element);
+    } catch (e) {}
   }
   function setSource(source) {
     if (element) {
@@ -79165,6 +77172,7 @@ function BolaRule(config) {
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
     eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
   }
 
   /**
@@ -79468,6 +77476,16 @@ function BolaRule(config) {
   }
 
   /**
+   * We need to reset to initial settings because the number of available Representations might have changed
+   * @private
+   */
+  function _onVideoElementResized() {
+    if (settings.get().streaming.abr.limitBitrateByPortal) {
+      resetInitialSettings();
+    }
+  }
+
+  /**
    * The minimum buffer level that would cause BOLA to choose target quality rather than a lower bitrate
    * @param bolaState
    * @param representation
@@ -79682,6 +77700,7 @@ function BolaRule(config) {
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_MAX_BITRATE, _onMinMaxBitrateUpdated, instance);
     eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].SETTING_UPDATED_MIN_BITRATE, _onMinMaxBitrateUpdated, instance);
+    eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO_ELEMENT_RESIZED, _onVideoElementResized, instance);
   }
   instance = {
     getSwitchRequest,
@@ -83603,9 +81622,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
 /* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../core/errors/Errors.js */ "./src/core/errors/Errors.js");
-/* harmony import */ var _svta_common_media_library_cta_608_Cta608Parser__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @svta/common-media-library/cta/608/Cta608Parser */ "./node_modules/@svta/common-media-library/dist/cta/608/Cta608Parser.js");
-/* harmony import */ var _svta_common_media_library_cta_608_extractCta608DataFromSample__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @svta/common-media-library/cta/608/extractCta608DataFromSample */ "./node_modules/@svta/common-media-library/dist/cta/608/extractCta608DataFromSample.js");
-/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -83636,7 +81654,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
 
 
 
@@ -83727,9 +81744,9 @@ function TextSourceBuffer(config) {
     // We are mapping DASH specification strings to the ones of the HTML specification.
     // See also https://html.spec.whatwg.org/multipage/media.html#text-track-kind
     const trackKindMap = {};
-    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"].SUBTITLE] = 'subtitles';
-    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"].CAPTION] = 'captions';
-    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"].FORCED_SUBTITLE] = 'subtitles';
+    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_14__["default"].SUBTITLE] = 'subtitles';
+    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_14__["default"].CAPTION] = 'captions';
+    trackKindMap[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_14__["default"].FORCED_SUBTITLE] = 'subtitles';
     const textTrackInfo = new _vo_TextTrackInfo_js__WEBPACK_IMPORTED_MODULE_2__["default"]();
     for (let key in mediaInfo) {
       textTrackInfo[key] = mediaInfo[key];
@@ -84018,7 +82035,7 @@ function TextSourceBuffer(config) {
         return;
       }
       const handler = _makeCueAdderForIndex(trackIdx);
-      embeddedCea608FieldParsers[i] = new _svta_common_media_library_cta_608_Cta608Parser__WEBPACK_IMPORTED_MODULE_13__.Cta608Parser(i + 1, {
+      embeddedCea608FieldParsers[i] = new _svta_cml_608__WEBPACK_IMPORTED_MODULE_13__.Cta608Parser(i + 1, {
         newCue: handler
       }, null);
     }
@@ -84061,7 +82078,7 @@ function TextSourceBuffer(config) {
     const raw = new DataView(data);
     for (let i = 0; i < samples.length; i++) {
       const sample = samples[i];
-      const ccData = (0,_svta_common_media_library_cta_608_extractCta608DataFromSample__WEBPACK_IMPORTED_MODULE_14__.extractCta608DataFromSample)(raw, sample.offset, sample.size);
+      const ccData = (0,_svta_cml_608__WEBPACK_IMPORTED_MODULE_13__.extractCta608DataFromSample)(raw, sample.offset, sample.size);
       let lastSampleTime = null;
       let idx = 0;
       for (let k = 0; k < 2; k++) {
@@ -85685,26 +83702,86 @@ __webpack_require__.r(__webpack_exports__);
 // derived from ISO/IEC 23091-3
 const _mapping_CICP = {
   '0': undefined,
-  '1': 1,
-  '2': 2,
-  '3': 3,
-  '4': 4,
-  '5': 5,
-  '6': 5,
-  '7': 7,
-  '8': 2,
-  '9': 3,
-  '10': 4,
-  '11': 6,
-  '12': 7,
-  '13': 22,
-  '14': 7,
-  '15': 10,
-  '16': 9,
-  '17': 11,
-  '18': 13,
-  '19': 11,
-  '20': 13
+  '1': {
+    channels: 1,
+    lfe: 0
+  },
+  '2': {
+    channels: 2,
+    lfe: 0
+  },
+  '3': {
+    channels: 3,
+    lfe: 0
+  },
+  '4': {
+    channels: 4,
+    lfe: 0
+  },
+  '5': {
+    channels: 5,
+    lfe: 0
+  },
+  '6': {
+    channels: 5,
+    lfe: 1
+  },
+  '7': {
+    channels: 7,
+    lfe: 1
+  },
+  '8': {
+    channels: 2,
+    lfe: 0
+  },
+  '9': {
+    channels: 3,
+    lfe: 0
+  },
+  '10': {
+    channels: 4,
+    lfe: 0
+  },
+  '11': {
+    channels: 6,
+    lfe: 1
+  },
+  '12': {
+    channels: 7,
+    lfe: 1
+  },
+  '13': {
+    channels: 22,
+    lfe: 2
+  },
+  '14': {
+    channels: 7,
+    lfe: 1
+  },
+  '15': {
+    channels: 10,
+    lfe: 2
+  },
+  '16': {
+    channels: 9,
+    lfe: 1
+  },
+  '17': {
+    channels: 11,
+    lfe: 1
+  },
+  '18': {
+    channels: 13,
+    lfe: 1
+  },
+  '19': {
+    channels: 11,
+    lfe: 1
+  },
+  '20': {
+    channels: 13,
+    lfe: 1
+  }
 };
 function _countBits(n) {
   return n == 0 ? 0 : n.toString(2).match(/1/g).length;
@@ -85717,7 +83794,7 @@ function _getNChanFromBitMask(value, masks) {
   nChan = _countBits(singleChannels) + 2 * _countBits(ChannelPairs);
   return nChan;
 }
-function _getNChanDolby2011(value) {
+function _getNChanDolby2011(value, includeLFE) {
   if (value.length !== 4) {
     return undefined;
   }
@@ -85725,9 +83802,12 @@ function _getNChanDolby2011(value) {
   // see ETSI TS 103190-1, table F.1:
   // 0b1111100110001000: single channel flags
   // 0b0000011001110000: channel pair flags
-  return _getNChanFromBitMask(value, [0b1111100110001000, 0b0000011001110000]);
+  // 0b0000000000000110: LFE channels
+  const single_channel_flags = 0b1111100110001000 + (includeLFE ? 0b0000000000000110 : 0);
+  const channel_pair_flags = 0b0000011001110000;
+  return _getNChanFromBitMask(value, [single_channel_flags, channel_pair_flags]);
 }
-function _getNChanDolby2015(value) {
+function _getNChanDolby2015(value, includeLFE) {
   if (value.length !== 6) {
     return undefined;
   }
@@ -85739,19 +83819,22 @@ function _getNChanDolby2015(value) {
   // see ETSI TS 103190-2, table A.27
   // 0b001100111000000010: single channel flags
   // 0b110010000110111101: channel pair flags
-  // 0b000001000001000000: LFE - excluded
-  return _getNChanFromBitMask(value, [0b001100111000000010, 0b110010000110111101]);
+  // 0b000001000001000000: LFE channels
+  const single_channel_flags = 0b001101111000000010 + (includeLFE ? 0b000001000001000000 : 0);
+  const channel_pair_flags = 0b110010000110111101;
+  return _getNChanFromBitMask(value, [single_channel_flags, channel_pair_flags]);
 }
-function _getNChanDTSUHD(value) {
+function _getNChanDTSUHD(value, includeLFE) {
   if (value.length > 8) {
     return undefined;
   }
 
   // see ETSI TS 103491, table B-5
-  // LFE to exclude: 0x00010000 + 0x00000020
-  return _getNChanFromBitMask(value, [0xFFFEFFDF, 0x00000000]);
+  // LFE: 0x00010000 + 0x00000020
+  const mask = 0xFFFEFFDF + (includeLFE ? 0x00010020 : 0);
+  return _getNChanFromBitMask(value, [mask, 0x00000000]);
 }
-function getNChanFromAudioChannelConfig(audioChannelConfiguration) {
+function getNChanFromAudioChannelConfig(audioChannelConfiguration, includeLFE = false) {
   let nChan = undefined;
   if (!audioChannelConfiguration || !audioChannelConfiguration.schemeIdUri || !audioChannelConfiguration.value) {
     return undefined;
@@ -85760,15 +83843,15 @@ function getNChanFromAudioChannelConfig(audioChannelConfiguration) {
   const value = audioChannelConfiguration['value'];
   if (scheme === 'urn:mpeg:dash:23003:3:audio_channel_configuration:2011' || scheme === 'urn:mpeg:mpegB:cicp:ChannelConfiguration') {
     // see ISO/IEC 23091-3
-    nChan = _mapping_CICP[value];
+    nChan = _mapping_CICP[value] && _mapping_CICP[value].channels + (includeLFE ? _mapping_CICP[value].lfe : 0);
   } else if (scheme === 'tag:dolby.com,2014:dash:audio_channel_configuration:2011') {
-    nChan = _getNChanDolby2011(value);
+    nChan = _getNChanDolby2011(value, includeLFE);
   } else if (scheme === 'tag:dolby.com,2015:dash:audio_channel_configuration:2015') {
-    nChan = _getNChanDolby2015(value);
+    nChan = _getNChanDolby2015(value, includeLFE);
   } else if (scheme === 'tag:dts.com,2014:dash:audio_channel_configuration:2012') {
     nChan = parseInt(value); // per ETSI TS 102 114,table G.2, this includes LFE
   } else if (scheme === 'tag:dts.com,2018:uhd:audio_channel_configuration') {
-    nChan = _getNChanDTSUHD(value);
+    nChan = _getNChanDTSUHD(value, includeLFE);
   }
   return nChan;
 }
@@ -86316,8 +84399,11 @@ function Capabilities() {
     if (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO && type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIDEO) {
       return Promise.resolve();
     }
-    const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-    if (settings.get().streaming.enhancement.enabled && enhancementCodecs.some(cdc => basicConfiguration.codec.includes(cdc))) {
+    if (settings.get().streaming.enhancement.enabled && _isEnhancementCodec(basicConfiguration.codec)) {
+      // Remove enhancement codecs from tested configurations so that they can be re-tested if the enhancement settings change
+      testedCodecConfigurations = testedCodecConfigurations.filter(configuration => {
+        return !_isEnhancementCodec(configuration.mediaSourceCodecString);
+      });
       return Promise.resolve(true);
     }
     const configurationsToTest = _getEnhancedConfigurations(basicConfiguration, type);
@@ -86504,6 +84590,18 @@ function Capabilities() {
       });
     });
   }
+
+  /**
+   * Check if codec is an enhancement layer codec, e.g. LCEVC
+   * Enhancement layer codecs can be configured via settings.
+   * @param {string} codec
+   * @return {boolean} true if enhancement codec
+   * @private
+   */
+  function _isEnhancementCodec(codec) {
+    const enhancementCodecs = settings.get().streaming.enhancement.codecs;
+    return enhancementCodecs.some(c => codec.includes(c));
+  }
   function _isConfigSupported(testedConfigurations) {
     return testedConfigurations.some(testedConfiguration => {
       return testedConfiguration && testedConfiguration.decodingInfo && testedConfiguration.decodingInfo.supported;
@@ -86565,6 +84663,9 @@ function Capabilities() {
     };
     if (inputConfig.samplerate) {
       configuration.audio.samplerate = inputConfig.samplerate;
+    }
+    if (inputConfig.channels) {
+      configuration.audio.channels = inputConfig.channels;
     }
     return configuration;
   }
@@ -86651,6 +84752,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./AudioChannelConfiguration.js */ "./src/streaming/utils/AudioChannelConfiguration.js");
+
 
 
 
@@ -86705,6 +84808,7 @@ function CapabilitiesFilter() {
           _filterUnsupportedEssentialProperties(manifest);
         }
         _removeMultiRepresentationPreselections(manifest);
+        _removePreselectionWithNoAdaptationSet(manifest);
         return _applyCustomFilters(manifest);
       }).then(() => {
         resolve();
@@ -86747,14 +84851,14 @@ function CapabilitiesFilter() {
     }
     period.Preselection = period.Preselection.filter(prsl => {
       if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
-        const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+        const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
         let isPrslCodecSupported = true;
-        if (codec) {
-          let repr = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
-          isPrslCodecSupported = _isCodecSupported(type, repr, codec);
+        if (prslCodec) {
+          let commonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+          isPrslCodecSupported = _isCodecSupported(type, prsl, prslCodec, commonRepresentation);
         }
         if (!isPrslCodecSupported) {
-          logger.warn(`[CapabilitiesFilter] Preselection@codecs ${codec} not supported. Removing Preselection with ID ${prsl.id}`);
+          logger.warn(`[CapabilitiesFilter] Preselection@codecs ${prslCodec} not supported. Removing Preselection with ID ${prsl.id}`);
         }
         return isPrslCodecSupported;
       } else {
@@ -86792,8 +84896,8 @@ function CapabilitiesFilter() {
     }
     return isSupplementalCodecSupported;
   }
-  function _isCodecSupported(type, rep, codec, prslRep) {
-    const config = _createConfiguration(type, rep, codec, prslRep);
+  function _isCodecSupported(type, primaryElement, codec, prslCommonRepresentation = undefined) {
+    const config = _createConfiguration(type, primaryElement, codec, prslCommonRepresentation);
     return capabilities.isCodecSupportedBasedOnTestedConfigurations(config, type);
   }
   function _getConfigurationsToCheck(manifest, type) {
@@ -86818,69 +84922,103 @@ function CapabilitiesFilter() {
       if (period.Preselection && period.Preselection.length) {
         period.Preselection.forEach(prsl => {
           if (adapter.getPreselectionIsTypeOf(prsl, period.AdaptationSet, type)) {
-            const codec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
-            const prslRep = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
-            _processCodecToCheck(type, prsl, codec, configurationsSet, configurations, prslRep);
+            const prslCodec = adapter.getCodecForPreselection(prsl, period.AdaptationSet);
+            const prslCommonRepresentation = adapter.getCommonRepresentationForPreselection(prsl, period.AdaptationSet);
+            _processCodecToCheck(type, prsl, prslCodec, configurationsSet, configurations, prslCommonRepresentation);
           }
         });
       }
     });
     return configurations;
   }
-  function _processCodecToCheck(type, rep, codec, configurationsSet, configurations, prslRep) {
-    const config = _createConfiguration(type, rep, codec, prslRep);
+  function _processCodecToCheck(type, element, codec, configurationsSet, configurations, prslCommonRepresentation = undefined) {
+    /* el is either a Representation or Preselection element */
+    const config = _createConfiguration(type, element, codec, prslCommonRepresentation);
     const configString = JSON.stringify(config);
     if (!configurationsSet.has(configString)) {
       configurationsSet.add(configString);
       configurations.push(config);
     }
   }
-  function _createConfiguration(type, rep, codec, prslRep) {
+
+  /* Build the configuration object for capability requests based on primary element (Representation or Preselection) */
+  /* In case Preselection elements are present, attributes of this element override their counterparts from the Representation element */
+  function _createConfiguration(type, primaryElement, codec, prslCommonRepresentation) {
     let config = null;
     switch (type) {
       case _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].VIDEO:
-        config = _createVideoConfiguration(rep, codec, prslRep);
+        config = _createVideoConfiguration(primaryElement, codec, prslCommonRepresentation);
         break;
       case _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].AUDIO:
-        config = _createAudioConfiguration(rep, codec, prslRep);
+        config = _createAudioConfiguration(primaryElement, codec, prslCommonRepresentation);
         break;
       default:
         return config;
     }
-    if (prslRep) {
-      config = _addGenericAttributesToConfig(prslRep, config);
+    if (prslCommonRepresentation) {
+      config = _addGenericAttributesToConfig(prslCommonRepresentation, config);
     }
-    return _addGenericAttributesToConfig(rep, config);
+    return _addGenericAttributesToConfig(primaryElement, config);
   }
-  function _createVideoConfiguration(rep, codec, prslRep) {
+  function _assignMissing(target, enhancement) {
+    for (const key in enhancement) {
+      if (Object.prototype.hasOwnProperty.call(enhancement, key) && !(key in target)) {
+        target[key] = enhancement[key];
+      }
+    }
+    return target;
+  }
+  function _createVideoConfiguration(primaryElement, codec, prslCommonRep) {
     let config = {
       codec: codec,
-      width: rep ? rep.width || null : null,
-      height: rep ? rep.height || null : null,
-      framerate: adapter.getFramerate(rep) || null,
-      bitrate: rep ? rep.bandwidth || null : null,
+      width: primaryElement ? primaryElement.width || null : null,
+      height: primaryElement ? primaryElement.height || null : null,
+      framerate: adapter.getFramerate(primaryElement) || null,
+      bitrate: primaryElement ? primaryElement.bandwidth || null : null,
       isSupported: true
     };
-    if (rep.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslRep) {
+    if (primaryElement.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslCommonRep) {
       if (!config.width) {
-        config.width = prslRep.width || null;
+        config.width = prslCommonRep.width || null;
       }
       if (!config.height) {
-        config.height = prslRep.height || null;
+        config.height = prslCommonRep.height || null;
       }
       if (!config.bitrate) {
-        config.bitrate = prslRep.bandwidth || null;
+        config.bitrate = prslCommonRep.bandwidth || null;
       }
       if (!config.framerate) {
-        config.framerate = adapter.getFramerate(prslRep) || null;
+        config.framerate = adapter.getFramerate(prslCommonRep) || null;
       }
     }
     if (settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties) {
-      Object.assign(config, _convertHDRColorimetryToConfig(rep));
+      Object.assign(config, _convertHDRColorimetryToConfig(primaryElement));
+      if (primaryElement.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslCommonRep) {
+        let prslCommonRepresentationHDRColorimetryConfig = _convertHDRColorimetryToConfig(prslCommonRep);
+
+        // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+        let isCommonRepCfgSupported = prslCommonRepresentationHDRColorimetryConfig.isSupported;
+        delete prslCommonRepresentationHDRColorimetryConfig.isSupported;
+        config.isSupported = config.isSupported && isCommonRepCfgSupported;
+
+        // asign only those attributes that are not present in config
+        _assignMissing(config, prslCommonRepresentationHDRColorimetryConfig);
+      }
     }
     let colorimetrySupported = config.isSupported;
     if (settings.get().streaming.capabilities.filterHDRMetadataFormatEssentialProperties) {
-      Object.assign(config, _convertHDRMetadataFormatToConfig(rep));
+      Object.assign(config, _convertHDRMetadataFormatToConfig(primaryElement));
+      if (primaryElement.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslCommonRep) {
+        let prslCommonRepresentationHDRMetadataFormatConfig = _convertHDRMetadataFormatToConfig(prslCommonRep);
+
+        // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
+        let isCommonRepCfgSupported = prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+        delete prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
+        config.isSupported = config.isSupported && isCommonRepCfgSupported;
+
+        // asign only those attributes that are not present in config
+        _assignMissing(config, prslCommonRepresentationHDRMetadataFormatConfig);
+      }
     }
     let metadataFormatSupported = config.isSupported;
     if (!colorimetrySupported || !metadataFormatSupported) {
@@ -86944,22 +85082,40 @@ function CapabilitiesFilter() {
     }
     return cfg;
   }
-  function _createAudioConfiguration(rep, codec, prslRep) {
-    var samplerate = rep ? rep.audioSamplingRate || null : null;
-    var bitrate = rep ? rep.bandwidth || null : null;
-    if (rep.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslRep) {
-      if (!samplerate) {
-        samplerate = prslRep.audioSamplingRate || null;
+  function _createAudioConfiguration(primaryElement, codec, prslCommonRep) {
+    let cfg = {
+      codec,
+      samplerate: primaryElement ? primaryElement.audioSamplingRate || null : null,
+      bitrate: primaryElement ? primaryElement.bandwidth || null : null,
+      isSupported: true
+    };
+    if (primaryElement.tagName === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].PRESELECTION && prslCommonRep) {
+      if (!cfg.samplerate) {
+        cfg.samplerate = prslCommonRep.audioSamplingRate || null;
       }
-      if (!bitrate) {
-        bitrate = prslRep.bandwidth || null;
+      if (!cfg.bitrate) {
+        cfg.bitrate = prslCommonRep.bandwidth || null;
       }
     }
+    if (settings.get().streaming.capabilities.filterAudioChannelConfiguration) {
+      Object.assign(cfg, _convertAudioChannelConfigurationToConfig(primaryElement, prslCommonRep));
+    }
+    return cfg;
+  }
+  function _convertAudioChannelConfigurationToConfig(primaryElement, prslCommonRep) {
+    let audioChannelConfigs = primaryElement[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO_CHANNEL_CONFIGURATION] || [];
+    let channels = null;
+    if (audioChannelConfigs.length == 0 && prslCommonRep) {
+      audioChannelConfigs = prslCommonRep[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO_CHANNEL_CONFIGURATION] || [];
+    }
+    const channelCounts = audioChannelConfigs.map(channelConfig => (0,_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_6__["default"])(channelConfig, true));
+
+    // ensure that all AudioChannelConfiguration elements are the same value, otherwise ignore
+    if (channelCounts.every(e => e == channelCounts[0])) {
+      channels = channelCounts[0];
+    }
     return {
-      codec,
-      bitrate,
-      samplerate,
-      isSupported: true
+      channels
     };
   }
   function _addGenericAttributesToConfig(rep, config) {
@@ -87027,6 +85183,24 @@ function CapabilitiesFilter() {
             logger.warn(`Multi-Representation Preselection (id: ${prsl.id}) removed as not supported.`);
           }
           return len === 1;
+        });
+      }
+    });
+  }
+  function _removePreselectionWithNoAdaptationSet(manifest) {
+    if (!manifest || !manifest.Period || manifest.Period.length === 0) {
+      return;
+    }
+    manifest.Period.forEach(period => {
+      if (period.Preselection) {
+        period.Preselection = period.Preselection.filter(prsl => {
+          const prslComponents = String(prsl.preselectionComponents).split(' ');
+          const adaptationSetIds = period.AdaptationSet.map(as => {
+            return as.id;
+          });
+          return prslComponents.every(c => {
+            return adaptationSetIds.includes(c);
+          });
         });
       }
     });

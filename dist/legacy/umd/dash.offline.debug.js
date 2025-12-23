@@ -11,4779 +11,6 @@
 return /******/ (function() { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; }
-/* harmony export */ });
-/**
- * Defines the common keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_COMMON_KEYS = ['ab', 'bg', 'bl', 'br', 'bs', 'bsd', 'cdn', 'cid', 'cs', 'df', 'ec', 'lab', 'lb', 'ltc', 'msd', 'mtp', 'pb', 'pr', 'pt', 'sf', 'sid', 'sn', 'st', 'sta', 'tab', 'tb', 'tbl', 'tpb', 'ts', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; }
-/* harmony export */ });
-/**
- * Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_EVENT_KEYS = ['e'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; }
-/* harmony export */ });
-/**
- * CMCD event mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_EVENT_MODE = 'event';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../structuredfield/SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/urlToRelativePath.js */ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js");
-
-
-
-var toRounded = function toRounded(value) {
-  return Math.round(value);
-};
-var _toUrlSafe = function toUrlSafe(value, options) {
-  if (Array.isArray(value)) {
-    return value.map(function (item) {
-      return _toUrlSafe(item, options);
-    });
-  }
-  if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem && typeof value.value === 'string') {
-    return new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem(_toUrlSafe(value.value, options), value.params);
-  } else {
-    if (options.baseUrl) {
-      value = (0,_utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_2__.urlToRelativePath)(value, options.baseUrl);
-    }
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-var toHundred = function toHundred(value) {
-  return toRounded(value / 100) * 100;
-};
-var nor = function nor(value, options) {
-  var norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem && typeof value.value === 'string') {
-      norValue = new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem([value]);
-    } else if (typeof value === 'string') {
-      norValue = [value];
-    }
-  }
-  return _toUrlSafe(norValue, options);
-};
-/**
- * The default formatters for CMCD values.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_FORMATTER_MAP = {
-  /**
-   * Bitrate (kbps) rounded integer
-   */
-  br: toRounded,
-  /**
-   * Duration (milliseconds) rounded integer
-   */
-  d: toRounded,
-  /**
-   * Buffer Length (milliseconds) rounded nearest 100ms
-   */
-  bl: toHundred,
-  /**
-   * Deadline (milliseconds) rounded nearest 100ms
-   */
-  dl: toHundred,
-  /**
-   * Measured Throughput (kbps) rounded nearest 100kbps
-   */
-  mtp: toHundred,
-  /**
-   * Next Object Request URL encoded
-   */
-  nor: nor,
-  /**
-   * Requested maximum throughput (kbps) rounded nearest 100kbps
-   */
-  rtp: toHundred,
-  /**
-   * Top Bitrate (kbps) rounded integer
-   */
-  tb: toRounded
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_HEADER_MAP: function() { return /* binding */ CMCD_HEADER_MAP; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * The map of CMCD keys to their appropriate header shard.
- *
- * @group CMCD
- *
- * @internal
- */
-var CMCD_HEADER_MAP = {
-  // Object
-  br: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  d: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ot: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tpb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  url: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  // Request
-  pb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  bl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  tbl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  dl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ltc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  mtp: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nor: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nrr: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  rc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sn: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sta: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  su: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfbb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttlb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsdd: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsds: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  smrt: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  df: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cs: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // TODO: Which header to put the `ts` field is not defined yet.
-  ts: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // Session
-  cid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  pr: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sf: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  st: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  v: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  msd: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  // Status
-  bs: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bsd: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  cdn: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  rtp: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bg: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  pt: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  ec: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  e: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; }
-/* harmony export */ });
-/**
- * CMCD object header name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_OBJECT = 'CMCD-Object';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; }
-/* harmony export */ });
-/**
- * CMCD parameter name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_PARAM = 'CMCD';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; }
-/* harmony export */ });
-/**
- * CMCD request header name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_REQUEST = 'CMCD-Request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; }
-/* harmony export */ });
-/**
- * Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_REQUEST_KEYS = ['d', 'dl', 'nor', 'ot', 'rtp', 'su'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; }
-/* harmony export */ });
-/**
- * CMCD request mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_REQUEST_MODE = 'request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; }
-/* harmony export */ });
-/**
- * CMCD v2 - Response-only and timing keys.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_RESPONSE_KEYS = ['cmsdd', 'cmsds', 'rc', 'smrt', 'ttfb', 'ttfbb', 'ttlb', 'url'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; }
-/* harmony export */ });
-/**
- * CMCD response mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_RESPONSE_MODE = 'response';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; }
-/* harmony export */ });
-/**
- * CMCD session header name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_SESSION = 'CMCD-Session';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; }
-/* harmony export */ });
-/**
- * CMCD status header name.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_STATUS = 'CMCD-Status';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; }
-/* harmony export */ });
-/**
- * Defines the keys for CMCD (Common Media Client Data) version 1.
- *
- * @group CMCD
- *
- * @beta
- */
-var CMCD_V1_KEYS = ['bl', 'br', 'bs', 'cid', 'd', 'dl', 'mtp', 'nor', 'nrr', 'ot', 'pr', 'rtp', 'sf', 'sid', 'st', 'su', 'tb', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * CMCD header fields.
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-var CmcdHeaderField = {
-  /**
-   * keys whose values vary with the object being requested.
-   */
-  OBJECT: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  /**
-   * keys whose values vary with each request.
-   */
-  REQUEST: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  /**
-   * keys whose values are expected to be invariant over the life of the session.
-   */
-  SESSION: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  /**
-   * keys whose values do not vary with every request or object.
-   */
-  STATUS: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Client Data Object Type
- *
- * @group CMCD
- *
- * @beta
- *
- * @enum
- */
-var CmcdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js");
-
-/**
- * Common Media Client Data Stream Type
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-var CmcdStreamType = _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamingFormat.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js");
-
-/**
- * Common Media Client Data Streaming Format
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-var CmcdStreamingFormat = _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-/**
- * Encode a CMCD object to a string.
- *
- * @param cmcd - The CMCD object to encode.
- * @param options - Options for encoding.
- *
- * @returns The encoded CMCD string.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/encodeCmcd.test.ts#example}
- */
-function encodeCmcd(cmcd) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  if (!cmcd) {
-    return '';
-  }
-  return (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)((0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__.prepareCmcdData)(cmcd, options), {
-    whitespace: false
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
-/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
-/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_HEADER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js");
-/* harmony import */ var _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./CmcdHeaderField.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
-
-
-
-
-
-function createHeaderMap(headerMap) {
-  return Object.keys(headerMap).reduce(function (acc, field) {
-    var _a;
-    (_a = headerMap[field]) === null || _a === void 0 ? void 0 : _a.forEach(function (key) {
-      return acc[key] = field;
-    });
-    return acc;
-  }, {});
-}
-/**
- * Group a CMCD data object into header shards
- *
- * @param cmcd - The CMCD data object to convert.
- * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- */
-function groupCmcdHeaders(cmcd, customHeaderMap) {
-  var result = {};
-  if (!cmcd) {
-    return result;
-  }
-  var keys = Object.keys(cmcd);
-  var custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
-  return keys.reduce(function (acc, key) {
-    var _a;
-    var field = _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_HEADER_MAP[key] || custom[key] || _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_4__.CmcdHeaderField.REQUEST;
-    var data = (_a = acc[field]) !== null && _a !== void 0 ? _a : acc[field] = {};
-    data[key] = cmcd[key];
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-
-
-var CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
- * Check if a key is a custom key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a custom key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- */
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_EVENT_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-
-/**
- * Check if a key is a valid CMCD event key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD event key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdEventKey.test.ts#example}
- */
-function isCmcdEventKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_COMMON_KEYS.includes(key) || _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_EVENT_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_4__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-
-/**
- * Check if a key is a valid CMCD request key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdRequestKey.test.ts#example}
- */
-function isCmcdRequestKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_REQUEST_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_4__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdResponseKey: function() { return /* binding */ isCmcdResponseKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./CMCD_RESPONSE_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-
-
-/**
- * Check if a key is a valid CMCD response key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdResponseKey.test.ts#example}
- */
-function isCmcdResponseKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_REQUEST_KEYS.includes(key) || _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_4__.CMCD_RESPONSE_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_5__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_V1_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-/**
- * Filter function for CMCD v1 keys.
- *
- * @param key - The CMCD key to filter.
- *
- * @returns `true` if the key should be included, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdV1Key.test.ts#example}
- */
-function isCmcdV1Key(key) {
-  return _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_V1_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
-/* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.filter.js */ "./node_modules/core-js/modules/es.array.filter.js");
-/* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.sort.js */ "./node_modules/core-js/modules/es.array.sort.js");
-/* harmony import */ var core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
-/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
-/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
-/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var _cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../cta/utils/isTokenField.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js");
-/* harmony import */ var _cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../cta/utils/isValid.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js");
-/* harmony import */ var _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../structuredfield/SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./CMCD_EVENT_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js");
-/* harmony import */ var _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./CMCD_FORMATTER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js");
-/* harmony import */ var _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./CMCD_REQUEST_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js");
-/* harmony import */ var _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./CMCD_RESPONSE_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js");
-/* harmony import */ var _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./isCmcdEventKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js");
-/* harmony import */ var _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./isCmcdRequestKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js");
-/* harmony import */ var _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./isCmcdResponseKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js");
-/* harmony import */ var _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./isCmcdV1Key.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-var filterMap = (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_18__.CMCD_RESPONSE_MODE, _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_21__.isCmcdResponseKey), _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_15__.CMCD_EVENT_MODE, _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_19__.isCmcdEventKey), _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_17__.CMCD_REQUEST_MODE, _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_20__.isCmcdRequestKey);
-/**
- * Convert a generic object to CMCD data.
- *
- * @param obj - The CMCD object to process.
- * @param options - Options for encoding.
- *
- * @group CMCD
- *
- * @beta
- */
-function prepareCmcdData(obj) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var results = {};
-  if (obj == null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(obj) !== 'object') {
-    return results;
-  }
-  var version = options.version || obj['v'] || 1;
-  var reportingMode = options.reportingMode || _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_17__.CMCD_REQUEST_MODE;
-  var keyFilter = version === 1 ? _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_22__.isCmcdV1Key : filterMap[reportingMode];
-  // Filter keys based on the version, reporting mode and options
-  var keys = Object.keys(obj).filter(keyFilter);
-  var filter = options.filter;
-  if (typeof filter === 'function') {
-    keys = keys.filter(filter);
-  }
-  // Ensure all required keys are present before sorting
-  var needsTimestamp = reportingMode === _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_18__.CMCD_RESPONSE_MODE || reportingMode === _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_15__.CMCD_EVENT_MODE;
-  if (needsTimestamp && !keys.includes('ts')) {
-    keys.push('ts');
-  }
-  if (version > 1 && !keys.includes('v')) {
-    keys.push('v');
-  }
-  var formatters = Object.assign({}, _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_16__.CMCD_FORMATTER_MAP, options.formatters);
-  var formatterOptions = {
-    version: version,
-    reportingMode: reportingMode,
-    baseUrl: options.baseUrl
-  };
-  keys.sort().forEach(function (key) {
-    var value = obj[key];
-    var formatter = formatters[key];
-    if (typeof formatter === 'function') {
-      value = formatter(value, formatterOptions);
-    }
-    // Version should only be reported if not equal to 1.
-    if (key === 'v') {
-      if (version === 1) {
-        return;
-      } else {
-        value = version;
-      }
-    }
-    // Playback rate should only be sent if not equal to 1.
-    if (key == 'pr' && value === 1) {
-      return;
-    }
-    // Ensure a timestamp is set for response and event modes
-    if (needsTimestamp && key === 'ts' && !Number.isFinite(value)) {
-      value = Date.now();
-    }
-    // ignore invalid values
-    if (!(0,_cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_13__.isValid)(value)) {
-      return;
-    }
-    if ((0,_cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_12__.isTokenField)(key) && typeof value === 'string') {
-      value = new _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_14__.SfToken(value);
-    }
-    results[key] = value;
-  });
-  return results;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./groupCmcdHeaders.js */ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-
-
-
-
-/**
- * Convert a CMCD data object to request headers
- *
- * @param cmcd - The CMCD data object to convert.
- * @param options - Options for encoding the CMCD object.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/toCmcdHeaders.test.ts#example}
- */
-function toCmcdHeaders(cmcd) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var result = {};
-  if (!cmcd) {
-    return result;
-  }
-  var data = (0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_5__.prepareCmcdData)(cmcd, options);
-  var shards = (0,_groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_4__.groupCmcdHeaders)(data, options === null || options === void 0 ? void 0 : options.customHeaderMap);
-  return Object.entries(shards).reduce(function (acc, _ref) {
-    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
-      field = _ref2[0],
-      value = _ref2[1];
-    var shard = (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_3__.encodeSfDict)(value, {
-      whitespace: false
-    });
-    if (shard) {
-      acc[field] = shard;
-    }
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; }
-/* harmony export */ });
-/**
- * CMSD dynamic header name.
- *
- * @group CMSD
- *
- * @beta
- */
-var CMSD_DYNAMIC = 'CMSD-Dynamic';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; }
-/* harmony export */ });
-/**
- * CMSD static header name.
- *
- * @group CMSD
- *
- * @beta
- */
-var CMSD_STATIC = 'CMSD-Static';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Server Data Object Type
- *
- * @group CMSD
- *
- * @enum
- *
- * @beta
- */
-var CmsdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/decodeSfList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js");
-
-/**
- * Decode a CMSD dynamic string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdDynamic(cmsd) {
-  if (!cmsd) {
-    return [];
-  }
-  var sfDict = (0,_structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__.decodeSfList)(cmsd);
-  return sfDict;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../structuredfield/decodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js");
-
-
-
-
-
-
-/**
- * Decode a CMSD Static dict string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdStatic(cmsd) {
-  if (!cmsd) {
-    return {};
-  }
-  return Object.entries((0,_structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_5__.decodeSfDict)(cmsd)).reduce(function (acc, _ref) {
-    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__["default"])(_ref, 2),
-      key = _ref2[0],
-      item = _ref2[1];
-    var value = item.value;
-    acc[key] = (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value) === 'symbol' ? (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_4__.symbolToStr)(value) : value;
-    return acc;
-  }, {});
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; }
-/* harmony export */ });
-/**
- * Common Media Object Type
- *
- * @internal
- */
-var CmObjectType = {
-  /**
-   * text file, such as a manifest or playlist
-   */
-  MANIFEST: 'm',
-  /**
-   * audio only
-   */
-  AUDIO: 'a',
-  /**
-   * video only
-   */
-  VIDEO: 'v',
-  /**
-   * muxed audio and video
-   */
-  MUXED: 'av',
-  /**
-   * init segment
-   */
-  INIT: 'i',
-  /**
-   * caption or subtitle
-   */
-  CAPTION: 'c',
-  /**
-   * ISOBMFF timed text track
-   */
-  TIMED_TEXT: 'tt',
-  /**
-   * cryptographic key, license or certificate.
-   */
-  KEY: 'k',
-  /**
-   * other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; }
-/* harmony export */ });
-/**
- * Common Media Stream Type
- *
- * @internal
- */
-var CmStreamType = {
-  /**
-   *  All segments are available – e.g., VOD
-   */
-  VOD: 'v',
-  /**
-   * Segments become available over time – e.g., LIVE
-   */
-  LIVE: 'l'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; }
-/* harmony export */ });
-/**
- * Common Media Streaming Format
- *
- * @internal
- */
-var CmStreamingFormat = {
-  /**
-   * MPEG DASH
-   */
-  DASH: 'd',
-  /**
-   * HTTP Live Streaming (HLS)
-   */
-  HLS: 'h',
-  /**
-   * Smooth Streaming
-   */
-  SMOOTH: 's',
-  /**
-   * Other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-
-/**
- * Checks if the given key is a token field.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a token field.
- *
- * @internal
- */
-function isTokenField(key) {
-  return ['ot', 'sf', 'st', 'e', 'sta'].includes(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isValid: function() { return /* binding */ isValid; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_0__);
-
-/**
- * Checks if the given value is valid
- *
- * @param value - The value to check.
- *
- * @returns `true` if the key is a value is valid.
- *
- * @internal
- */
-function isValid(value) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value);
-  }
-  return value != null && value !== '' && value !== false;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_4__);
-
-
-
-
-
-/**
- * Converts a symbol to a string.
- *
- * @param symbol - The symbol to convert.
- *
- * @returns The string representation of the symbol.
- *
- * @internal
- */
-function symbolToStr(symbol) {
-  return symbol.description || symbol.toString().slice(7, -1);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.string.pad-start.js */ "./node_modules/core-js/modules/es.string.pad-start.js");
-/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_4__);
-
-
-
-
-
-var TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
-/**
- * Process a URI template used in `SegmentTemplate` nodes.
- *
- * @param uriTemplate - URI template to process.
- * @param representationId - Representation ID.
- * @param number - Number.
- * @param subNumber - Sub-number.
- * @param bandwidth - Bandwidth.
- * @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
- *
- * @returns Processed URI template.
- *
- * @group DASH
- * @beta
- *
- * @example
- * {@includeCode ../../test/dash/processUriTemplate.test.ts#example}
- */
-function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
-  var uri = uriTemplate.replace(TOKENS, function (match, name, widthStr, format) {
-    var value;
-    switch (name) {
-      case undefined:
-        // $$ case
-        return '$';
-      case 'RepresentationID':
-        value = representationId;
-        break;
-      case 'Number':
-        value = number;
-        break;
-      case 'SubNumber':
-        value = subNumber;
-        break;
-      case 'Bandwidth':
-        value = bandwidth;
-        break;
-      case 'Time':
-        if (typeof time === 'string') {
-          return time;
-        }
-        value = time ? Math.round(time) : time;
-        break;
-      default:
-        value = null;
-    }
-    if (value == null) {
-      return match;
-    }
-    var valueString;
-    switch (format) {
-      case undefined: // Happens if there is no format specifier.
-      case 'd':
-      case 'i':
-      case 'u':
-        valueString = value.toString();
-        break;
-      case 'o':
-        valueString = value.toString(8);
-        break;
-      case 'x':
-        valueString = value.toString(16);
-        break;
-      case 'X':
-        valueString = value.toString(16).toUpperCase();
-        break;
-      default:
-        valueString = value.toString();
-        break;
-    }
-    var width = parseInt(widthStr, 10) || 1;
-    return valueString.padStart(width, '0');
-  });
-  return uri;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfItem: function() { return /* binding */ SfItem; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__);
-
-
-
-/**
- * Structured Field Item
- *
- * @group Structured Field
- *
- * @beta
- */
-var SfItem = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(function SfItem(value, params) {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, SfItem);
-  if (Array.isArray(value)) {
-    value = value.map(function (v) {
-      return v instanceof SfItem ? v : new SfItem(v);
-    });
-  }
-  this.value = value;
-  this.params = params;
-});
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfToken: function() { return /* binding */ SfToken; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
-/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
-/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
-/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_3__);
-
-
-
-
-/**
- * A class to represent structured field tokens when `Symbol` is not available.
- *
- * @group Structured Field
- *
- * @beta
- */
-var SfToken = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_0__["default"])(function SfToken(description) {
-  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_1__["default"])(this, SfToken);
-  this.description = description;
-});
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _parse_parseDict_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js");
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-
-
-
-
-/**
- * Decode a structured field string into a structured field dictionary
- *
- * @param input - The structured field string to decode
- * @returns The structured field dictionary
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfDict(input, options) {
-  try {
-    var _parseDict = (0,_parse_parseDict_js__WEBPACK_IMPORTED_MODULE_1__.parseDict)(input.trim(), options),
-      src = _parseDict.src,
-      value = _parseDict.value;
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_3__.DICT);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(input, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_3__.DICT, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parse_parseList_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parse/parseList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js");
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-
-
-
-
-/**
- * Decode a structured field string into a structured field list
- *
- * @param input - The structured field string to decode
- * @returns The structured field list
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfList(input, options) {
-  try {
-    var _parseList = (0,_parse_parseList_js__WEBPACK_IMPORTED_MODULE_2__.parseList)(input.trim(), options),
-      src = _parseList.src,
-      value = _parseList.value;
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_3__.LIST);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(input, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_3__.LIST, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var _serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serialize/serializeDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js");
-
-/**
- * Encode an object into a structured field dictionary
- *
- * @param value - The structured field dictionary to encode
- * @param options - Encoding options
- *
- * @returns The structured field string
- *
- * @group Structured Field
- *
- * @beta
- */
-function encodeSfDict(value, options) {
-  return (0,_serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__.serializeDict)(value, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parsedValue: function() { return /* binding */ parsedValue; }
-/* harmony export */ });
-function parsedValue(value, src) {
-  return {
-    value: value,
-    src: src
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js":
-/*!*********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js ***!
-  \*********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _parseBoolean_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js");
-/* harmony import */ var _parseByteSequence_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js");
-/* harmony import */ var _parseDate_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-/* harmony import */ var _parseString_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./parseString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js");
-/* harmony import */ var _parseToken_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./parseToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js");
-
-
-
-
-
-
-
-
-
-
-// 4.2.3.1.  Parsing a Bare Item
-//
-// Given an ASCII string as input_string, return a bare Item.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is a "-" or a DIGIT,
-//     return the result of running Parsing an Integer or Decimal
-//     (Section 4.2.4) with input_string.
-//
-// 2.  If the first character of input_string is a DQUOTE, return the
-//     result of running Parsing a String (Section 4.2.5) with
-//     input_string.
-//
-// 3.  If the first character of input_string is ":", return the result
-//     of running Parsing a Byte Sequence (Section 4.2.7) with
-//     input_string.
-//
-// 4.  If the first character of input_string is "?", return the result
-//     of running Parsing a Boolean (Section 4.2.8) with input_string.
-//
-// 5.  If the first character of input_string is an ALPHA or "*", return
-//     the result of running Parsing a Token (Section 4.2.6) with
-//     input_string.
-//
-// 6.  If the first character of input_string is "@", return the result
-//     of running Parsing a Date (Section 4.2.9) with input_string.
-//
-// 7.  Otherwise, the item type is unrecognized; fail parsing.
-function parseBareItem(src, options) {
-  var first = src[0];
-  if (first === "\"") {
-    return (0,_parseString_js__WEBPACK_IMPORTED_MODULE_8__.parseString)(src);
-  }
-  if (/^[-0-9]/.test(first)) {
-    return (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_7__.parseIntegerOrDecimal)(src);
-  }
-  if (first === "?") {
-    return (0,_parseBoolean_js__WEBPACK_IMPORTED_MODULE_3__.parseBoolean)(src);
-  }
-  if (first === ":") {
-    return (0,_parseByteSequence_js__WEBPACK_IMPORTED_MODULE_4__.parseByteSequence)(src);
-  }
-  if (/^[a-zA-Z*]/.test(first)) {
-    return (0,_parseToken_js__WEBPACK_IMPORTED_MODULE_9__.parseToken)(src, options);
-  }
-  if (first === "@") {
-    return (0,_parseDate_js__WEBPACK_IMPORTED_MODULE_5__.parseDate)(src);
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_6__.parseError)(src, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_2__.BARE_ITEM);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-// 4.2.8.  Parsing a Boolean
-//
-// Given an ASCII string as input_string, return a Boolean. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "?", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If the first character of input_string matches "1", discard the
-//     first character, and return true.
-//
-// 4.  If the first character of input_string matches "0", discard the
-//     first character, and return false.
-//
-// 5.  No value has matched; fail parsing.
-function parseBoolean(src) {
-  var i = 0;
-  if (src[i] !== '?') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  i++;
-  if (src[i] === '1') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(true, src.substring(++i));
-  }
-  if (src[i] === '0') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(false, src.substring(++i));
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../utils/decodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-
-
-
-// 4.2.7.  Parsing a Byte Sequence
-//
-// Given an ASCII string as input_string, return a Byte Sequence.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ":", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If there is not a ":" character before the end of input_string,
-//     fail parsing.
-//
-// 4.  Let b64_content be the result of consuming content of
-//     input_string up to but not including the first instance of the
-//     character ":".
-//
-// 5.  Consume the ":" character at the beginning of input_string.
-//
-// 6.  If b64_content contains a character not included in ALPHA, DIGIT,
-//     "+", "/" and "=", fail parsing.
-//
-// 7.  Let binary_content be the result of Base 64 Decoding [RFC4648]
-//     b64_content, synthesizing padding if necessary (note the
-//     requirements about recipient behavior below).
-//
-// 8.  Return binary_content.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that is not properly "=" padded (see [RFC4648],
-// Section 3.2), parsers SHOULD NOT fail when "=" padding is not
-// present, unless they cannot be configured to do so.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that has non-zero pad bits (see [RFC4648], Section 3.5),
-// parsers SHOULD NOT fail when non-zero pad bits are present, unless
-// they cannot be configured to do so.
-//
-// This specification does not relax the requirements in [RFC4648],
-// Section 3.1 and 3.3; therefore, parsers MUST fail on characters
-// outside the base64 alphabet, and on line feeds in encoded data.
-function parseByteSequence(src) {
-  if (src[0] !== ':') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_6__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_4__.BYTES);
-  }
-  src = src.substring(1);
-  if (src.includes(':') === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_6__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_4__.BYTES);
-  }
-  var re = /(^.*?)(:)/g;
-  var b64_content = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  // pass b64_content char check step 6
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_5__.parsedValue)((0,_utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_3__.decodeBase64)(b64_content), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDate: function() { return /* binding */ parseDate; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _utils_DATE_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DATE.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-
-
-
-
-
-// 4.2.9.  Parsing a Date
-//
-// Given an ASCII string as input_string, return a Date. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "@", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  Let output_date be the result of running Parsing an Integer or
-//     Decimal (Section 4.2.4) with input_string.
-//
-// 4.  If output_date is a Decimal, fail parsing.
-//
-// 5.  Return output_date.
-function parseDate(src) {
-  var i = 0;
-  if (src[i] !== '@') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_1__.DATE);
-  }
-  i++;
-  var date = (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_4__.parseIntegerOrDecimal)(src.substring(i));
-  if (Number.isInteger(date.value) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_1__.DATE);
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(new Date(date.value * 1000), date.src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDict: function() { return /* binding */ parseDict; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-
-
-// 4.2.2.  Parsing a Dictionary
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are (item_or_inner_list, parameters) tuples. input_string is
-// modified to remove the parsed value.
-//
-// 1.  Let dictionary be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Let this_key be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     2.  If the first character of input_string is "=":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let member be the result of running Parsing an Item or
-//             Inner List (Section 4.2.1.1) with input_string.
-//
-//     3.  Otherwise:
-//
-//         1.  Let value be Boolean true.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters Section 4.2.3.2 with input_string.
-//
-//         3.  Let member be the tuple (value, parameters).
-//
-//     4.  Add name this_key with value member to dictionary.  If
-//         dictionary already contains a name this_key (comparing
-//         character-for-character), overwrite its value.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, return dictionary.
-//
-//     7.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     8.  Discard any leading OWS characters from input_string.
-//
-//     9.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return dictionary (which is
-//     empty).
-//
-// Note that when duplicate Dictionary keys are encountered, this has
-// the effect of ignoring all but the last instance.
-function parseDict(src, options) {
-  var value = {};
-  while (src.length > 0) {
-    var member = void 0;
-    var parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_6__.parseKey)(src);
-    var key = parsedKey.value;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      var parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_5__.parseItemOrInnerList)(src.substring(1), options);
-      member = parsedItemOrInnerList.value;
-      src = parsedItemOrInnerList.src;
-    } else {
-      var parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_7__.parseParameters)(src, options);
-      member = new _SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem(true, parsedParameters.value);
-      src = parsedParameters.src;
-    }
-    value[key] = member;
-    src = src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseError: function() { return /* binding */ parseError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function parseError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('parse', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js":
-/*!**********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js ***!
-  \**********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_INNER_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/INNER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-
-
-// 4.2.1.2.  Parsing an Inner List
-//
-// Given an ASCII string as input_string, return the tuple (inner_list,
-// parameters), where inner_list is an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  Consume the first character of input_string; if it is not "(",
-//     fail parsing.
-//
-// 2.  Let inner_list be an empty array.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  Discard any leading SP characters from input_string.
-//
-//     2.  If the first character of input_string is ")":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters (Section 4.2.3.2) with input_string.
-//
-//         3.  Return the tuple (inner_list, parameters).
-//
-//     3.  Let item be the result of running Parsing an Item
-//         (Section 4.2.3) with input_string.
-//
-//     4.  Append item to inner_list.
-//
-//     5.  If the first character of input_string is not SP or ")", fail
-//         parsing.
-//
-// 4.  The end of the inner list was not found; fail parsing.
-function parseInnerList(src, options) {
-  if (src[0] !== '(') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_3__.INNER);
-  }
-  src = src.substring(1);
-  var innerList = [];
-  while (src.length > 0) {
-    src = src.trim();
-    if (src[0] === ')') {
-      src = src.substring(1);
-      var parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_7__.parseParameters)(src, options);
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_2__.SfItem(innerList, parsedParameters.value), parsedParameters.src);
-    }
-    var parsedItem = (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_6__.parseItem)(src, options);
-    innerList.push(parsedItem.value);
-    src = parsedItem.src;
-    if (src[0] !== ' ' && src[0] !== ')') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_3__.INNER);
-    }
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_3__.INNER);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/INTEGER_DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-
-// 4.2.4.  Parsing an Integer or Decimal
-//
-// Given an ASCII string as input_string, return an Integer or Decimal.
-// input_string is modified to remove the parsed value.
-//
-// NOTE: This algorithm parses both Integers (Section 3.3.1) and
-// Decimals (Section 3.3.2), and returns the corresponding structure.
-//
-// 1.   Let type be "integer".
-//
-// 2.   Let sign be 1.
-//
-// 3.   Let input_number be an empty string.
-//
-// 4.   If the first character of input_string is "-", consume it and
-//      set sign to -1.
-//
-// 5.   If input_string is empty, there is an empty integer; fail
-//      parsing.
-//
-// 6.   If the first character of input_string is not a DIGIT, fail
-//      parsing.
-//
-// 7.   While input_string is not empty:
-//
-//      1.  Let char be the result of consuming the first character of
-//          input_string.
-//
-//      2.  If char is a DIGIT, append it to input_number.
-//
-//      3.  Else, if type is "integer" and char is ".":
-//
-//          1.  If input_number contains more than 12 characters, fail
-//              parsing.
-//
-//          2.  Otherwise, append char to input_number and set type to
-//              "decimal".
-//
-//      4.  Otherwise, prepend char to input_string, and exit the loop.
-//
-//      5.  If type is "integer" and input_number contains more than 15
-//          characters, fail parsing.
-//
-//      6.  If type is "decimal" and input_number contains more than 16
-//          characters, fail parsing.
-//
-// 8.   If type is "integer":
-//
-//      1.  Parse input_number as an integer and let output_number be
-//          the product of the result and sign.
-//
-//      2.  If output_number is outside the range -999,999,999,999,999
-//          to 999,999,999,999,999 inclusive, fail parsing.
-//
-// 9.   Otherwise:
-//
-//      1.  If the final character of input_number is ".", fail parsing.
-//
-//      2.  If the number of characters after "." in input_number is
-//          greater than three, fail parsing.
-//
-//      3.  Parse input_number as a decimal number and let output_number
-//          be the product of the result and sign.
-//
-// 10.  Return output_number.
-function parseIntegerOrDecimal(src) {
-  var orig = src;
-  var sign = 1;
-  var num = '';
-  var value;
-  var i = 0;
-  var error = (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(orig, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__.INTEGER_DECIMAL);
-  if (src[i] === '-') {
-    sign = -1;
-    src = src.substring(1);
-  }
-  if (src.length <= 0) {
-    throw error;
-  }
-  var re_integer = /^(\d+)?/g;
-  var result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) {
-    throw error;
-  }
-  num += result_integer[1];
-  src = src.substring(re_integer.lastIndex);
-  if (src[0] === '.') {
-    // decimal
-    if (num.length > 12) {
-      throw error;
-    }
-    var re_decimal = /^(\.\d+)?/g;
-    var result_decimal = re_decimal.exec(src);
-    src = src.substring(re_decimal.lastIndex);
-    // 9.2.  If the number of characters after "." in input_number is greater than three, fail parsing.
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) {
-      throw error;
-    }
-    num += result_decimal[1];
-    // 7.6.  If type is "decimal" and input_number contains more than 16 characters, fail parsing.
-    if (num.length > 16) {
-      throw error;
-    }
-    value = parseFloat(num) * sign;
-  } else {
-    // integer
-    // 7.5.  If type is "integer" and input_number contains more than 15 characters, fail parsing.
-    if (num.length > 15) {
-      throw error;
-    }
-    value = parseInt(num) * sign;
-    if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_2__.isInvalidInt)(value)) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(num, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__.INTEGER_DECIMAL);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItem: function() { return /* binding */ parseItem; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-// 4.2.3.  Parsing an Item
-//
-// Given an ASCII string as input_string, return a (bare_item,
-// parameters) tuple. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let bare_item be the result of running Parsing a Bare Item
-//     (Section 4.2.3.1) with input_string.
-//
-// 2.  Let parameters be the result of running Parsing Parameters
-//     (Section 4.2.3.2) with input_string.
-//
-// 3.  Return the tuple (bare_item, parameters).
-function parseItem(src, options) {
-  var parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__.parseBareItem)(src, options);
-  src = parsedBareItem.src;
-  var parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_3__.parseParameters)(src, options);
-  src = parsedParameters.src;
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(parsedBareItem.value, parsedParameters.value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; }
-/* harmony export */ });
-/* harmony import */ var _parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parseInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-
-
-// 4.2.1.1.  Parsing an Item or Inner List
-//
-// Given an ASCII string as input_string, return the tuple
-// (item_or_inner_list, parameters), where item_or_inner_list can be
-// either a single bare item, or an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is "(", return the result
-//     of running Parsing an Inner List (Section 4.2.1.2) with
-//     input_string.
-//
-// 2.  Return the result of running Parsing an Item (Section 4.2.3) with
-//     input_string.
-function parseItemOrInnerList(src, options) {
-  if (src[0] === '(') {
-    return (0,_parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__.parseInnerList)(src, options);
-  }
-  return (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_1__.parseItem)(src, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js ***!
-  \****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseKey: function() { return /* binding */ parseKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-
-// 4.2.3.3.  Parsing a Key
-//
-// Given an ASCII string as input_string, return a key. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not lcalpha or "*",
-//     fail parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not one of lcalpha,
-//         DIGIT, "_", "-", ".", or "*", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseKey(src) {
-  var i = 0;
-  if (/^[a-z*]$/.test(src[i]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_2__.KEY);
-  }
-  var value = '';
-  while (src.length > i) {
-    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src.substring(i));
-    }
-    value += src[i];
-    i++;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src.substring(i));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseList: function() { return /* binding */ parseList; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-
-
-
-
-
-
-// 4.2.1.  Parsing a List
-//
-// Given an ASCII string as input_string, return an array of
-// (item_or_inner_list, parameters) tuples. input_string is modified to
-// remove the parsed value.
-//
-// 1.  Let members be an empty array.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Append the result of running Parsing an Item or Inner List
-//         (Section 4.2.1.1) with input_string to members.
-//
-//     2.  Discard any leading OWS characters from input_string.
-//
-//     3.  If input_string is empty, return members.
-//
-//     4.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return members (which is
-//     empty).
-function parseList(src, options) {
-  var value = [];
-  while (src.length > 0) {
-    var parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_5__.parseItemOrInnerList)(src, options);
-    value.push(parsedItemOrInnerList.value);
-    src = parsedItemOrInnerList.src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_3__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-
-
-
-
-// 4.2.3.2.  Parsing Parameters
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are bare Items. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let parameters be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not ";", exit the
-//         loop.
-//
-//     2.  Consume a ";" character from the beginning of input_string.
-//
-//     3.  Discard any leading SP characters from input_string.
-//
-//     4.  let param_name be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     5.  Let param_value be Boolean true.
-//
-//     6.  If the first character of input_string is "=":
-//
-//         1.  Consume the "=" character at the beginning of
-//             input_string.
-//
-//         2.  Let param_value be the result of running Parsing a Bare
-//             Item (Section 4.2.3.1) with input_string.
-//
-//     7.  Append key param_name with value param_value to parameters.
-//         If parameters already contains a name param_name (comparing
-//         character-for-character), overwrite its value.
-//
-// 3.  Return parameters.
-//
-// Note that when duplicate Parameter keys are encountered, this has the
-// effect of ignoring all but the last instance.
-function parseParameters(src, options) {
-  var parameters = undefined;
-  while (src.length > 0) {
-    if (src[0] !== ';') {
-      break;
-    }
-    src = src.substring(1).trim();
-    var parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_3__.parseKey)(src);
-    var key = parsedKey.value;
-    var value = true;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      src = src.substring(1);
-      var parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__.parseBareItem)(src, options);
-      value = parsedBareItem.value;
-      src = parsedBareItem.src;
-    }
-    // initialize as object when params exists
-    if (parameters == null) {
-      parameters = {};
-    }
-    // override if param_name exists
-    parameters[key] = value;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(parameters, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseString: function() { return /* binding */ parseString; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-
-
-// 4.2.5.  Parsing a String
-//
-// Given an ASCII string as input_string, return an unquoted String.
-// input_string is modified to remove the parsed value.
-//
-// 1.  Let output_string be an empty string.
-//
-// 2.  If the first character of input_string is not DQUOTE, fail
-//     parsing.
-//
-// 3.  Discard the first character of input_string.
-//
-// 4.  While input_string is not empty:
-//
-//     1.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     2.  If char is a backslash ("\"):
-//
-//         1.  If input_string is now empty, fail parsing.
-//
-//         2.  Let next_char be the result of consuming the first
-//             character of input_string.
-//
-//         3.  If next_char is not DQUOTE or "\", fail parsing.
-//
-//         4.  Append next_char to output_string.
-//
-//     3.  Else, if char is DQUOTE, return output_string.
-//
-//     4.  Else, if char is in the range %x00-1f or %x7f (i.e., is not
-//         in VCHAR or SP), fail parsing.
-//
-//     5.  Else, append char to output_string.
-//
-// 5.  Reached the end of input_string without finding a closing DQUOTE;
-//     fail parsing.
-function parseString(src) {
-  var output = '';
-  var i = 0;
-  if (src[i] !== "\"") {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__.STRING);
-  }
-  i++;
-  while (src.length > i) {
-    if (src[i] === "\\") {
-      if (src.length <= i + 1) {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__.STRING);
-      }
-      i++;
-      if (src[i] !== "\"" && src[i] !== "\\") {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__.STRING);
-      }
-      output += src[i];
-    } else if (src[i] === "\"") {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__.parsedValue)(output, src.substring(++i));
-    } else if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_3__.STRING_REGEX.test(src[i])) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__.STRING);
-    } else {
-      output += src[i];
-    }
-    i++;
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_2__.STRING);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseToken: function() { return /* binding */ parseToken; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-
-
-// 4.2.6.  Parsing a Token
-//
-// Given an ASCII string as input_string, return a Token. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ALPHA or "*", fail
-//     parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not in tchar, ":"
-//         or "/", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseToken(src, options) {
-  if (/^[a-zA-Z*]$/.test(src[0]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_5__.parseError)(src, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_3__.TOKEN);
-  }
-  var re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
-  var value = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_4__.parsedValue)((options === null || options === void 0 ? void 0 : options.useSymbol) === false ? new _SfToken_js__WEBPACK_IMPORTED_MODULE_2__.SfToken(value) : Symbol.for(value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
-/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
-/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_13__);
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_14__);
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_15___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_15__);
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_16__);
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_17__);
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_18__);
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_19___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_19__);
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_20___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_20__);
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_21___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_21__);
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_22___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_22__);
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_23___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_23__);
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_24___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_24__);
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_25___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_25__);
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_26___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_26__);
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_27___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_27__);
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_28___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_28__);
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_29___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_29__);
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_30___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_30__);
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_31___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_31__);
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_32___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_32__);
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_33___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_33__);
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_34___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_34__);
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_35___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_35__);
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_36___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_36__);
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_37___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_37__);
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_38___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_38__);
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _serializeBoolean_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./serializeBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js");
-/* harmony import */ var _serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./serializeByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js");
-/* harmony import */ var _serializeDate_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./serializeDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js");
-/* harmony import */ var _serializeDecimal_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./serializeDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-/* harmony import */ var _serializeString_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./serializeString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js");
-/* harmony import */ var _serializeToken_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./serializeToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 4.1.3.1.  Serializing a Bare Item
-//
-// Given an Item as input_item, return an ASCII string suitable for use
-// in a HTTP field value.
-//
-// 1.  If input_item is an Integer, return the result of running
-//     Serializing an Integer (Section 4.1.4) with input_item.
-//
-// 2.  If input_item is a Decimal, return the result of running
-//     Serializing a Decimal (Section 4.1.5) with input_item.
-//
-// 3.  If input_item is a String, return the result of running
-//     Serializing a String (Section 4.1.6) with input_item.
-//
-// 4.  If input_item is a Token, return the result of running
-//     Serializing a Token (Section 4.1.7) with input_item.
-//
-// 5.  If input_item is a Boolean, return the result of running
-//     Serializing a Boolean (Section 4.1.9) with input_item.
-//
-// 6.  If input_item is a Byte Sequence, return the result of running
-//     Serializing a Byte Sequence (Section 4.1.8) with input_item.
-//
-// 7.  If input_item is a Date, return the result of running Serializing
-//     a Date (Section 4.1.10) with input_item.
-//
-// 8.  Otherwise, fail serialization.
-function serializeBareItem(value) {
-  switch ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value)) {
-    case 'number':
-      if (!Number.isFinite(value)) {
-        throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_45__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_40__.BARE_ITEM);
-      }
-      if (Number.isInteger(value)) {
-        return (0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_46__.serializeInteger)(value);
-      }
-      return (0,_serializeDecimal_js__WEBPACK_IMPORTED_MODULE_44__.serializeDecimal)(value);
-    case 'string':
-      return (0,_serializeString_js__WEBPACK_IMPORTED_MODULE_47__.serializeString)(value);
-    case 'symbol':
-      return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_48__.serializeToken)(value);
-    case 'boolean':
-      return (0,_serializeBoolean_js__WEBPACK_IMPORTED_MODULE_41__.serializeBoolean)(value);
-    case 'object':
-      if (value instanceof Date) {
-        return (0,_serializeDate_js__WEBPACK_IMPORTED_MODULE_43__.serializeDate)(value);
-      }
-      if (value instanceof Uint8Array) {
-        return (0,_serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_42__.serializeByteSequence)(value);
-      }
-      if (value instanceof _SfToken_js__WEBPACK_IMPORTED_MODULE_39__.SfToken) {
-        return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_48__.serializeToken)(value);
-      }
-    default:
-      // fail
-      throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_45__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_40__.BARE_ITEM);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-// 4.1.9.  Serializing a Boolean
-//
-// Given a Boolean as input_boolean, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  If input_boolean is not a boolean, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append "?" to output.
-//
-// 4.  If input_boolean is true, append "1" to output.
-//
-// 5.  If input_boolean is false, append "0" to output.
-//
-// 6.  Return output.
-function serializeBoolean(value) {
-  if (typeof value !== 'boolean') {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_1__.serializeError)(value, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  return value ? '?1' : '?0';
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js":
-/*!*********************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js ***!
-  \*********************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; }
-/* harmony export */ });
-/* harmony import */ var _utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/encodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.8.  Serializing a Byte Sequence
-//
-// Given a Byte Sequence as input_bytes, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_bytes is not a sequence of bytes, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append ":" to output.
-//
-// 4.  Append the result of base64-encoding input_bytes as per
-//     [RFC4648], Section 4, taking account of the requirements below.
-//
-// 5.  Append ":" to output.
-//
-// 6.  Return output.
-//
-// The encoded data is required to be padded with "=", as per [RFC4648],
-// Section 3.2.
-//
-// Likewise, encoded data SHOULD have pad bits set to zero, as per
-// [RFC4648], Section 3.5, unless it is not possible to do so due to
-// implementation constraints.
-function serializeByteSequence(value) {
-  if (ArrayBuffer.isView(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  return ":".concat((0,_utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value), ":");
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; }
-/* harmony export */ });
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-
-// 4.1.10.  Serializing a Date
-//
-// Given a Date as input_integer, return an ASCII string suitable for
-// use in an HTTP field value.
-// 1.  Let output be "@".
-// 2.  Append to output the result of running Serializing an Integer
-//     with input_date (Section 4.1.4).
-// 3.  Return output.
-function serializeDate(value) {
-  return "@".concat((0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__.serializeInteger)(value.getTime() / 1000));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
-/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
-/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var _utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../utils/roundToEven.js */ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js");
-/* harmony import */ var _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-
-
-
-
-// 4.1.5.  Serializing a Decimal
-//
-// Given a decimal number as input_decimal, return an ASCII string
-// suitable for use in a HTTP field value.
-//
-// 1.   If input_decimal is not a decimal number, fail serialization.
-//
-// 2.   If input_decimal has more than three significant digits to the
-//      right of the decimal point, round it to three decimal places,
-//      rounding the final digit to the nearest value, or to the even
-//      value if it is equidistant.
-//
-// 3.   If input_decimal has more than 12 significant digits to the left
-//      of the decimal point after rounding, fail serialization.
-//
-// 4.   Let output be an empty string.
-//
-// 5.   If input_decimal is less than (but not equal to) 0, append "-"
-//      to output.
-//
-// 6.   Append input_decimal's integer component represented in base 10
-//      (using only decimal digits) to output; if it is zero, append
-//      "0".
-//
-// 7.   Append "." to output.
-//
-// 8.   If input_decimal's fractional component is zero, append "0" to
-//      output.
-//
-// 9.   Otherwise, append the significant digits of input_decimal's
-//      fractional component represented in base 10 (using only decimal
-//      digits) to output.
-//
-// 10.  Return output.
-function serializeDecimal(value) {
-  var roundedValue = (0,_utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_4__.roundToEven)(value, 3); // round to 3 decimal places
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_6__.serializeError)(value, _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_5__.DECIMAL);
-  }
-  var stringValue = roundedValue.toString();
-  return stringValue.includes('.') ? stringValue : "".concat(stringValue, ".0");
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
-/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInnerList_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./serializeInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js");
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// 4.1.2.  Serializing a Dictionary
-//
-// Given an ordered Dictionary as input_dictionary (each member having a
-// member_name and a tuple value of (member_value, parameters)), return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each member_name with a value of (member_value, parameters)
-//     in input_dictionary:
-//
-//     1.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with member's member_name to output.
-//
-//     2.  If member_value is Boolean true:
-//
-//         1.  Append the result of running Serializing Parameters
-//             (Section 4.1.1.2) with parameters to output.
-//
-//     3.  Otherwise:
-//
-//         1.  Append "=" to output.
-//
-//         2.  If member_value is an array, append the result of running
-//             Serializing an Inner List (Section 4.1.1.1) with
-//             (member_value, parameters) to output.
-//
-//         3.  Otherwise, append the result of running Serializing an
-//             Item (Section 4.1.3) with (member_value, parameters) to
-//             output.
-//
-//     4.  If more members remain in input_dictionary:
-//
-//         1.  Append "," to output.
-//
-//         2.  Append a single SP to output.
-//
-// 3.  Return output.
-function serializeDict(dict) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
-    whitespace: true
-  };
-  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(dict) !== 'object' || dict == null) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_13__.serializeError)(dict, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_12__.DICT);
-  }
-  var entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  var optionalWhiteSpace = (options === null || options === void 0 ? void 0 : options.whitespace) ? ' ' : '';
-  return Array.from(entries).map(function (_ref) {
-    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
-      key = _ref2[0],
-      item = _ref2[1];
-    if (item instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_11__.SfItem === false) {
-      item = new _SfItem_js__WEBPACK_IMPORTED_MODULE_11__.SfItem(item);
-    }
-    var output = (0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_16__.serializeKey)(key);
-    if (item.value === true) {
-      output += (0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_17__.serializeParams)(item.params);
-    } else {
-      output += '=';
-      if (Array.isArray(item.value)) {
-        output += (0,_serializeInnerList_js__WEBPACK_IMPORTED_MODULE_14__.serializeInnerList)(item);
-      } else {
-        output += (0,_serializeItem_js__WEBPACK_IMPORTED_MODULE_15__.serializeItem)(item);
-      }
-    }
-    return output;
-  }).join(",".concat(optionalWhiteSpace));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeError: function() { return /* binding */ serializeError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function serializeError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('serialize', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js":
-/*!******************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js ***!
-  \******************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-
-
-// 4.1.1.1.  Serializing an Inner List
-//
-// Given an array of (member_value, parameters) tuples as inner_list,
-// and parameters as list_parameters, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  Let output be the string "(".
-//
-// 2.  For each (member_value, parameters) of inner_list:
-//
-//     1.  Append the result of running Serializing an Item
-//         (Section 4.1.3) with (member_value, parameters) to output.
-//
-//     2.  If more values remain in inner_list, append a single SP to
-//         output.
-//
-// 3.  Append ")" to output.
-//
-// 4.  Append the result of running Serializing Parameters
-//     (Section 4.1.1.2) with list_parameters to output.
-//
-// 5.  Return output.
-function serializeInnerList(value) {
-  return "(".concat(value.value.map(_serializeItem_js__WEBPACK_IMPORTED_MODULE_3__.serializeItem).join(' '), ")").concat((0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_4__.serializeParams)(value.params));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
-/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-
-
-// 4.1.4.  Serializing an Integer
-//
-// Given an Integer as input_integer, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_integer is not an integer in the range of
-//     -999,999,999,999,999 to 999,999,999,999,999 inclusive, fail
-//     serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  If input_integer is less than (but not equal to) 0, append "-" to
-//     output.
-//
-// 4.  Append input_integer's numeric value represented in base 10 using
-//     only decimal digits to output.
-//
-// 5.  Return output.
-function serializeInteger(value) {
-  if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_3__.isInvalidInt)(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_4__.serializeError)(value, _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_2__.INTEGER);
-  }
-  return value.toString();
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-
-// 4.1.3.  Serializing an Item
-//
-// Given an Item as bare_item and Parameters as item_parameters, return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  Append the result of running Serializing a Bare Item
-//     Section 4.1.3.1 with bare_item to output.
-//
-// 3.  Append the result of running Serializing Parameters
-//     Section 4.1.1.2 with item_parameters to output.
-//
-// 4.  Return output.
-function serializeItem(value) {
-  if (value instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_1__.SfItem) {
-    return "".concat((0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_2__.serializeBareItem)(value.value)).concat((0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_3__.serializeParams)(value.params));
-  } else {
-    return (0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_2__.serializeBareItem)(value);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js":
-/*!************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js ***!
-  \************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-
-// 4.1.1.3.  Serializing a Key
-//
-// Given a key as input_key, return an ASCII string suitable for use in
-// a HTTP field value.
-//
-// 1.  Convert input_key into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_key contains characters not in lcalpha, DIGIT, "_", "-",
-//     ".", or "*" fail serialization.
-//
-// 3.  If the first character of input_key is not lcalpha or "*", fail
-//     serialization.
-//
-// 4.  Let output be an empty string.
-//
-// 5.  Append input_key to output.
-//
-// 6.  Return output.
-function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_3__.serializeError)(value, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_2__.KEY);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
-/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-
-
-
-
-
-
-
-// 4.1.1.2.  Serializing Parameters
-//
-// Given an ordered Dictionary as input_parameters (each member having a
-// param_name and a param_value), return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each param_name with a value of param_value in
-//     input_parameters:
-//
-//     1.  Append ";" to output.
-//
-//     2.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with param_name to output.
-//
-//     3.  If param_value is not Boolean true:
-//
-//         1.  Append "=" to output.
-//
-//         2.  Append the result of running Serializing a bare Item
-//             (Section 4.1.3.1) with param_value to output.
-//
-// 3.  Return output.
-function serializeParams(params) {
-  if (params == null) {
-    return '';
-  }
-  return Object.entries(params).map(function (_ref) {
-    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
-      key = _ref2[0],
-      value = _ref2[1];
-    if (value === true) {
-      return ";".concat((0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_6__.serializeKey)(key)); // omit true
-    }
-    return ";".concat((0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_6__.serializeKey)(key), "=").concat((0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_5__.serializeBareItem)(value));
-  }).join('');
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeString: function() { return /* binding */ serializeString; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-
-
-
-// 4.1.6.  Serializing a String
-//
-// Given a String as input_string, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Convert input_string into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_string contains characters in the range %x00-1f or %x7f
-//     (i.e., not in VCHAR or SP), fail serialization.
-//
-// 3.  Let output be the string DQUOTE.
-//
-// 4.  For each character char in input_string:
-//
-//     1.  If char is "\" or DQUOTE:
-//
-//         1.  Append "\" to output.
-//
-//     2.  Append char to output.
-//
-// 5.  Append DQUOTE to output.
-//
-// 6.  Return output.
-function serializeString(value) {
-  if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_4__.STRING_REGEX.test(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_5__.serializeError)(value, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_3__.STRING);
-  }
-  return "\"".concat(value.replace(/\\/g, "\\\\").replace(/"/g, "\\\""), "\"");
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
-/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-
-
-function serializeToken(token) {
-  var value = (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_2__.symbolToStr)(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_4__.serializeError)(value, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_3__.TOKEN);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BARE_ITEM: function() { return /* binding */ BARE_ITEM; }
-/* harmony export */ });
-var BARE_ITEM = 'Bare Item';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BOOLEAN: function() { return /* binding */ BOOLEAN; }
-/* harmony export */ });
-var BOOLEAN = 'Boolean';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BYTES: function() { return /* binding */ BYTES; }
-/* harmony export */ });
-var BYTES = 'Byte Sequence';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DATE: function() { return /* binding */ DATE; }
-/* harmony export */ });
-var DATE = 'Date';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DECIMAL: function() { return /* binding */ DECIMAL; }
-/* harmony export */ });
-var DECIMAL = 'Decimal';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DICT: function() { return /* binding */ DICT; }
-/* harmony export */ });
-var DICT = 'Dict';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INNER: function() { return /* binding */ INNER; }
-/* harmony export */ });
-var INNER = 'Inner List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER: function() { return /* binding */ INTEGER; }
-/* harmony export */ });
-var INTEGER = 'Integer';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER_DECIMAL: function() { return /* binding */ INTEGER_DECIMAL; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _INTEGER_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-
-
-
-var INTEGER_DECIMAL = "".concat(_INTEGER_js__WEBPACK_IMPORTED_MODULE_2__.INTEGER, " or ").concat(_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__.DECIMAL);
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   KEY: function() { return /* binding */ KEY; }
-/* harmony export */ });
-var KEY = 'Key';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LIST: function() { return /* binding */ LIST; }
-/* harmony export */ });
-var LIST = 'List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING: function() { return /* binding */ STRING; }
-/* harmony export */ });
-var STRING = 'String';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING_REGEX: function() { return /* binding */ STRING_REGEX; }
-/* harmony export */ });
-var STRING_REGEX = /[\x00-\x1f\x7f]+/;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   TOKEN: function() { return /* binding */ TOKEN; }
-/* harmony export */ });
-var TOKEN = 'Token';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isInvalidInt: function() { return /* binding */ isInvalidInt; }
-/* harmony export */ });
-function isInvalidInt(value) {
-  return value < -999999999999999 || 999999999999999 < value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   throwError: function() { return /* binding */ throwError; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
-/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
-/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
-/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
-/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
-/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
-/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
-/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
-/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
-/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_13__);
-/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
-/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_14__);
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_15___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_15__);
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_16__);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-function format(value) {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value);
-  }
-  if (value instanceof Map) {
-    return 'Map{}';
-  }
-  if (value instanceof Set) {
-    return 'Set{}';
-  }
-  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value) === 'object') {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
-function throwError(action, src, type, cause) {
-  return new Error("failed to ".concat(action, " \"").concat(format(src), "\" as ").concat(type), {
-    cause: cause
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
-/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
-/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
-/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
-/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
-/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
-/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
-/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
-/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
-/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
-/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_13__);
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_14___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_14__);
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_15___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_15__);
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_16___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_16__);
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
-/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_17___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_17__);
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
-/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_18___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_18__);
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
-/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_19___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_19__);
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_20___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_20__);
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
-/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_21___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_21__);
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
-/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_22___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_22__);
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
-/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_23___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_23__);
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
-/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_24___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_24__);
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_25___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_25__);
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
-/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_26___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_26__);
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
-/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_27___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_27__);
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
-/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_28___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_28__);
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
-/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_29___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_29__);
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
-/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_30___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_30__);
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
-/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_31___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_31__);
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
-/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_32___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_32__);
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_33___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_33__);
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_34___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_34__);
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_35___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_35__);
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
-/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_36___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_36__);
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
-/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_37___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_37__);
-/* harmony import */ var core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/web.atob.js */ "./node_modules/core-js/modules/web.atob.js");
-/* harmony import */ var core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_38___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_38__);
-/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/web.dom-exception.constructor.js */ "./node_modules/core-js/modules/web.dom-exception.constructor.js");
-/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_39___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_39__);
-/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/web.dom-exception.stack.js */ "./node_modules/core-js/modules/web.dom-exception.stack.js");
-/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_40___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_40__);
-/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/web.dom-exception.to-string-tag.js */ "./node_modules/core-js/modules/web.dom-exception.to-string-tag.js");
-/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_41___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_41__);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Decodes a base64 encoded string into binary data
- *
- * @param str - The base64 encoded string to decode
- * @returns The decoded binary data
- *
- * @group Utils
- *
- * @beta
- */
-function decodeBase64(str) {
-  return new Uint8Array((0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(atob(str)).map(function (a) {
-    return a.charCodeAt(0);
-  }));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; }
-/* harmony export */ });
-/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
-/* harmony import */ var core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/web.btoa.js */ "./node_modules/core-js/modules/web.btoa.js");
-/* harmony import */ var core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/web.dom-exception.constructor.js */ "./node_modules/core-js/modules/web.dom-exception.constructor.js");
-/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/web.dom-exception.stack.js */ "./node_modules/core-js/modules/web.dom-exception.stack.js");
-/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/web.dom-exception.to-string-tag.js */ "./node_modules/core-js/modules/web.dom-exception.to-string-tag.js");
-/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_4__);
-
-
-
-
-
-/**
- * Encodes binary data to base64
- *
- * @param binary - The binary data to encode
- * @returns The base64 encoded string
- *
- * @group Utils
- *
- * @beta
- */
-function encodeBase64(binary) {
-  return btoa(String.fromCharCode.apply(String, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(binary)));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/roundToEven.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.number.epsilon.js */ "./node_modules/core-js/modules/es.number.epsilon.js");
-/* harmony import */ var core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_0__);
-
-/**
- * This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
- * This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
- *
- * @param value - The value to round
- * @param precision - The number of decimal places to round to
- * @returns The rounded value
- *
- * @group Utils
- *
- * @beta
- */
-function roundToEven(value, precision) {
-  if (value < 0) {
-    return -roundToEven(-value, precision);
-  }
-  var decimalShift = Math.pow(10, precision);
-  var isEquidistant = Math.abs(value * decimalShift % 1 - 0.5) < Number.EPSILON;
-  if (isEquidistant) {
-    // If the tail of the decimal place is 'equidistant' we round to the nearest even value
-    var flooredValue = Math.floor(value * decimalShift);
-    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
-  } else {
-    // Otherwise, proceed as normal
-    return Math.round(value * decimalShift) / decimalShift;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.string.from-code-point.js */ "./node_modules/core-js/modules/es.string.from-code-point.js");
-/* harmony import */ var core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
-/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_3__);
-
-
-
-
-var escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
-/**
- * Unescapes HTML entities
- *
- * @param text - The text to unescape
- * @returns The unescaped text
- *
- * @group Utils
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/utils/unescapeHtml.test.ts#example}
- */
-function unescapeHtml(text) {
-  if (text.indexOf('&') === -1) {
-    return text;
-  }
-  return text.replace(escapedHtml, function (match) {
-    switch (match) {
-      case '&amp;':
-        return '&';
-      case '&lt;':
-        return '<';
-      case '&gt;':
-        return '>';
-      case '&quot;':
-        return '"';
-      case '&apos;':
-        return '\'';
-      case '&nbsp;':
-        return "\xA0";
-      case '&lrm;':
-        return "\u200E";
-      case '&rlm;':
-        return "\u200F";
-      default:
-        {
-          if (match[1] === '#') {
-            var code = match[2] === 'x' || match[2] === 'X' ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
-            return String.fromCodePoint(code);
-          }
-          return match;
-        }
-    }
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
-/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
-/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
-/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
-/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
-/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_5___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_5__);
-/* harmony import */ var core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.string.search.js */ "./node_modules/core-js/modules/es.string.search.js");
-/* harmony import */ var core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_6___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_6__);
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
-/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_7__);
-/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
-/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_8__);
-/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
-/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_9___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_9__);
-/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
-/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_10___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_10__);
-/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
-/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_11___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_11__);
-/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
-/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_12___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_12__);
-/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
-/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_13___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_13__);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/**
- * Constructs a relative path from a URL.
- *
- * @param url - The destination URL
- * @param base - The base URL
- * @returns The relative path
- *
- * @group Utils
- *
- * @beta
- */
-function urlToRelativePath(url, base) {
-  var to = new URL(url);
-  var from = new URL(base);
-  if (to.origin !== from.origin) {
-    return url;
-  }
-  var toPath = to.pathname.split('/').slice(1);
-  var fromPath = from.pathname.split('/').slice(1, -1);
-  // remove common parents
-  while (toPath[0] === fromPath[0]) {
-    toPath.shift();
-    fromPath.shift();
-  }
-  // add back paths
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift('..');
-  }
-  var relativePath = toPath.join('/');
-  // preserve query parameters and hash of the destination url
-  return relativePath + to.search + to.hash;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/xml/parseXml.js ***!
-  \**********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-"use strict";
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseXml: function() { return /* binding */ parseXml; }
-/* harmony export */ });
-/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
-/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
-/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
-/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_2__);
-/* harmony import */ var core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.string.starts-with.js */ "./node_modules/core-js/modules/es.string.starts-with.js");
-/* harmony import */ var core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_3__);
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
-/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_4___default = /*#__PURE__*/__webpack_require__.n(core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_4__);
-/* harmony import */ var _utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/unescapeHtml.js */ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js");
-
-
-
-
-
-
-/**
- * Parse XML into a JS object with no validation and some failure tolerance
- *
- * @param input - The input XML string
- * @param options - Optional parsing options
- * @returns The parsed XML
- *
- * @group XML
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/xml/parseXml.test.ts#example}
- */
-function parseXml(input) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  var pos = options.pos || 0;
-  var length = input.length;
-  var keepComments = !!options.keepComments;
-  var keepWhitespace = !!options.keepWhitespace;
-  var openBracket = '<';
-  var openBracketCC = '<'.charCodeAt(0);
-  var closeBracket = '>';
-  var closeBracketCC = '>'.charCodeAt(0);
-  var minusCC = '-'.charCodeAt(0);
-  var slashCC = '/'.charCodeAt(0);
-  var questionCC = '?'.charCodeAt(0);
-  var exclamationCC = '!'.charCodeAt(0);
-  var singleQuoteCC = "'".charCodeAt(0);
-  var doubleQuoteCC = '"'.charCodeAt(0);
-  var openCornerBracketCC = '['.charCodeAt(0);
-  var closeCornerBracketCC = ']'.charCodeAt(0);
-  var nameSpacer = '\r\n\t>/= ';
-  function createTextNode(value) {
-    var nodeName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '#text';
-    return {
-      nodeName: nodeName,
-      nodeValue: value,
-      attributes: {},
-      childNodes: []
-    };
-  }
-  /**
-   * parsing a list of entries
-   */
-  function parseChildren() {
-    var tagName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-    var children = [];
-    while (input[pos]) {
-      if (input.charCodeAt(pos) == openBracketCC) {
-        if (input.charCodeAt(pos + 1) === slashCC) {
-          var closeStart = pos + 2;
-          pos = input.indexOf(closeBracket, pos);
-          if (!input.startsWith(tagName, closeStart)) {
-            var parsedText = input.substring(0, pos).split('\n');
-            throw new Error('Unexpected close tag\nLine: ' + (parsedText.length - 1) + '\nColumn: ' + (parsedText[parsedText.length - 1].length + 1) + '\nChar: ' + input[pos]);
-          }
-          if (pos + 1) {
-            pos += 1;
-          }
-          return children;
-        } else if (input.charCodeAt(pos + 1) === questionCC) {
-          // xml declaration
-          pos = input.indexOf(closeBracket, pos);
-          pos++;
-          continue;
-        } else if (input.charCodeAt(pos + 1) === exclamationCC) {
-          if (input.charCodeAt(pos + 2) == minusCC) {
-            // comment support
-            var startCommentPos = pos;
-            while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) {
-              pos = input.indexOf(closeBracket, pos + 1);
-            }
-            if (pos === -1) {
-              pos = length;
-            }
-            if (keepComments) {
-              children.push(createTextNode(input.substring(startCommentPos, pos + 1), '#comment'));
-            }
-          } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith('CDATA', pos + 3)) {
-            // cdata
-            var cdataEndIndex = input.indexOf(']]>', pos);
-            if (cdataEndIndex == -1) {
-              children.push(createTextNode(input.substr(pos + 9), '#cdata'));
-              pos = length;
-            } else {
-              children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), '#cdata'));
-              pos = cdataEndIndex + 3;
-            }
-            continue;
-          } else {
-            // doctypesupport
-            var startDoctype = pos + 1;
-            pos += 2;
-            var encapsuled = false;
-            while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
-              if (input.charCodeAt(pos) === openCornerBracketCC) {
-                encapsuled = true;
-              } else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) {
-                encapsuled = false;
-              }
-              pos++;
-            }
-            children.push(createTextNode(input.substring(startDoctype, pos), '#doctype'));
-          }
-          pos++;
-          continue;
-        }
-        var node = parseNode();
-        children.push(node);
-      } else {
-        var text = parseText();
-        if (keepWhitespace) {
-          if (text.length > 0) {
-            children.push(createTextNode(text));
-          }
-        } else {
-          var trimmed = text.trim();
-          if (trimmed.length > 0) {
-            children.push(createTextNode(trimmed));
-          }
-        }
-        pos++;
-      }
-    }
-    return children;
-  }
-  /**
-   * returns the text outside of texts until the first '&lt;'
-   */
-  function parseText() {
-    var start = pos;
-    pos = input.indexOf(openBracket, pos) - 1;
-    if (pos === -2) {
-      pos = length;
-    }
-    return (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_5__.unescapeHtml)(input.slice(start, pos + 1));
-  }
-  /**
-   * returns text until the first nonAlphabetic letter
-   */
-  function parseName() {
-    var start = pos;
-    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) {
-      pos++;
-    }
-    return input.slice(start, pos);
-  }
-  /**
-   * parses the attributes of a node
-   */
-  function parseAttributes() {
-    var attributes = {};
-    // parsing attributes
-    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
-      var c = input.charCodeAt(pos);
-      if (c > 64 && c < 91 || c > 96 && c < 123) {
-        var name = parseName();
-        var value = '';
-        // search beginning of the string
-        var code = input.charCodeAt(pos);
-        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
-          pos++;
-          code = input.charCodeAt(pos);
-        }
-        if (code === singleQuoteCC || code === doubleQuoteCC) {
-          value = parseString();
-          if (pos === -1) {
-            throw new Error('Missing closing quote');
-          }
-        } else {
-          pos--;
-        }
-        attributes[name] = (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_5__.unescapeHtml)(value);
-      }
-      pos++;
-    }
-    return attributes;
-  }
-  /**
-   * parses a node
-   */
-  function parseNode() {
-    pos++;
-    var nodeName = parseName();
-    var localName = nodeName;
-    var prefix = null;
-    var nsIndex = nodeName.indexOf(':');
-    if (nsIndex !== -1) {
-      prefix = nodeName.slice(0, nsIndex);
-      localName = nodeName.slice(nsIndex + 1);
-    }
-    var attributes = parseAttributes();
-    var childNodes = [];
-    // optional parsing of children
-    var prev = input.charCodeAt(pos - 1);
-    pos++;
-    if (prev !== slashCC) {
-      childNodes = parseChildren(nodeName);
-    }
-    return {
-      nodeName: nodeName,
-      nodeValue: null,
-      attributes: attributes,
-      childNodes: childNodes,
-      prefix: prefix,
-      localName: localName
-    };
-  }
-  /**
-   * is parsing a string, that starts with a char and with the same usually ' or "
-   */
-  function parseString() {
-    var startChar = input[pos];
-    var startpos = pos + 1;
-    pos = input.indexOf(startChar, startpos);
-    return input.slice(startpos, pos);
-  }
-  return {
-    nodeName: '#document',
-    nodeValue: null,
-    childNodes: parseChildren(''),
-    attributes: {}
-  };
-}
-
-/***/ }),
-
 /***/ "./node_modules/fast-deep-equal/index.js":
 /*!***********************************************!*\
   !*** ./node_modules/fast-deep-equal/index.js ***!
@@ -29761,6 +24988,3439 @@ function _unsupportedIterableToArray(r, a) {
 
 /***/ }),
 
+/***/ "./node_modules/@svta/cml-cmcd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmcd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; },
+/* harmony export */   CMCD_DEFAULT_TIME_INTERVAL: function() { return /* binding */ CMCD_DEFAULT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
+/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
+/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; },
+/* harmony export */   CMCD_HEADERS: function() { return /* binding */ CMCD_HEADERS; },
+/* harmony export */   CMCD_JSON: function() { return /* binding */ CMCD_JSON; },
+/* harmony export */   CMCD_KEYS: function() { return /* binding */ CMCD_KEYS; },
+/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
+/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
+/* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
+/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
+/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
+/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; },
+/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
+/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
+/* harmony export */   CMCD_V1: function() { return /* binding */ CMCD_V1; },
+/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; },
+/* harmony export */   CMCD_V2: function() { return /* binding */ CMCD_V2; },
+/* harmony export */   CmcdEncoding: function() { return /* binding */ CmcdEncoding; },
+/* harmony export */   CmcdEventType: function() { return /* binding */ CmcdEventType; },
+/* harmony export */   CmcdFormatters: function() { return /* binding */ CmcdFormatters; },
+/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
+/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
+/* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
+/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
+/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; },
+/* harmony export */   CmcdTransmissionMode: function() { return /* binding */ CmcdTransmissionMode; },
+/* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
+/* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
+/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
+/* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
+/* harmony export */   fromCmcdQuery: function() { return /* binding */ fromCmcdQuery; },
+/* harmony export */   fromCmcdUrl: function() { return /* binding */ fromCmcdUrl; },
+/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; },
+/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; },
+/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; },
+/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; },
+/* harmony export */   isCmcdResponseReceivedKey: function() { return /* binding */ isCmcdResponseReceivedKey; },
+/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; },
+/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; },
+/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; },
+/* harmony export */   toCmcdJson: function() { return /* binding */ toCmcdJson; },
+/* harmony export */   toCmcdQuery: function() { return /* binding */ toCmcdQuery; },
+/* harmony export */   toCmcdReport: function() { return /* binding */ toCmcdReport; },
+/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/defineProperty */ "./node_modules/@babel/runtime/helpers/esm/defineProperty.js");
+/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
+/* harmony import */ var core_js_modules_es_array_filter_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.filter.js */ "./node_modules/core-js/modules/es.array.filter.js");
+/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
+/* harmony import */ var core_js_modules_es_array_sort_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.sort.js */ "./node_modules/core-js/modules/es.array.sort.js");
+/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
+/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
+/* harmony import */ var core_js_modules_es_object_assign_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.object.assign.js */ "./node_modules/core-js/modules/es.object.assign.js");
+/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
+/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
+/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
+/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
+/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
+/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
+/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
+/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#region src/CMCD_OBJECT.ts
+/**
+* CMCD object header name.
+*
+*
+* @beta
+*/
+var CMCD_OBJECT = "CMCD-Object";
+
+//#endregion
+//#region src/CMCD_REQUEST.ts
+/**
+* CMCD request header name.
+*
+*
+* @beta
+*/
+var CMCD_REQUEST = "CMCD-Request";
+
+//#endregion
+//#region src/CMCD_SESSION.ts
+/**
+* CMCD session header name.
+*
+*
+* @beta
+*/
+var CMCD_SESSION = "CMCD-Session";
+
+//#endregion
+//#region src/CMCD_STATUS.ts
+/**
+* CMCD status header name.
+*
+*
+* @beta
+*/
+var CMCD_STATUS = "CMCD-Status";
+
+//#endregion
+//#region src/CMCD_HEADER_MAP.ts
+/**
+* The map of CMCD keys to their appropriate header shard.
+*
+*
+* @internal
+*/
+var CMCD_HEADER_MAP = {
+  br: CMCD_OBJECT,
+  ab: CMCD_OBJECT,
+  d: CMCD_OBJECT,
+  ot: CMCD_OBJECT,
+  tb: CMCD_OBJECT,
+  tpb: CMCD_OBJECT,
+  lb: CMCD_OBJECT,
+  tab: CMCD_OBJECT,
+  lab: CMCD_OBJECT,
+  url: CMCD_OBJECT,
+  pb: CMCD_REQUEST,
+  bl: CMCD_REQUEST,
+  tbl: CMCD_REQUEST,
+  dl: CMCD_REQUEST,
+  ltc: CMCD_REQUEST,
+  mtp: CMCD_REQUEST,
+  nor: CMCD_REQUEST,
+  nrr: CMCD_REQUEST,
+  rc: CMCD_REQUEST,
+  sn: CMCD_REQUEST,
+  sta: CMCD_REQUEST,
+  su: CMCD_REQUEST,
+  ttfb: CMCD_REQUEST,
+  ttfbb: CMCD_REQUEST,
+  ttlb: CMCD_REQUEST,
+  cmsdd: CMCD_REQUEST,
+  cmsds: CMCD_REQUEST,
+  smrt: CMCD_REQUEST,
+  df: CMCD_REQUEST,
+  cs: CMCD_REQUEST,
+  ts: CMCD_REQUEST,
+  cid: CMCD_SESSION,
+  pr: CMCD_SESSION,
+  sf: CMCD_SESSION,
+  sid: CMCD_SESSION,
+  st: CMCD_SESSION,
+  v: CMCD_SESSION,
+  msd: CMCD_SESSION,
+  bs: CMCD_STATUS,
+  bsd: CMCD_STATUS,
+  cdn: CMCD_STATUS,
+  rtp: CMCD_STATUS,
+  bg: CMCD_STATUS,
+  pt: CMCD_STATUS,
+  ec: CMCD_STATUS,
+  e: CMCD_STATUS
+};
+
+//#endregion
+//#region src/CmcdHeaderField.ts
+/**
+* CMCD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdHeaderField = {
+  OBJECT: CMCD_OBJECT,
+  REQUEST: CMCD_REQUEST,
+  SESSION: CMCD_SESSION,
+  STATUS: CMCD_STATUS
+};
+
+//#endregion
+//#region src/groupCmcdHeaders.ts
+function createHeaderMap(headerMap) {
+  return Object.keys(headerMap).reduce(function (acc, field) {
+    var _headerMap$field;
+    (_headerMap$field = headerMap[field]) === null || _headerMap$field === void 0 || _headerMap$field.forEach(function (key) {
+      return acc[key] = field;
+    });
+    return acc;
+  }, {});
+}
+/**
+* Group a CMCD data object into header shards
+*
+* @param cmcd - The CMCD data object to convert.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*/
+function groupCmcdHeaders(cmcd, customHeaderMap) {
+  var result = {};
+  if (!cmcd) return result;
+  var keys$1 = Object.keys(cmcd);
+  var custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
+  return keys$1.reduce(function (acc, key) {
+    var _acc$field;
+    var field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
+    var data = (_acc$field = acc[field]) !== null && _acc$field !== void 0 ? _acc$field : acc[field] = {};
+    data[key] = cmcd[key];
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/CMCD_EVENT_MODE.ts
+/**
+* CMCD event mode variable name.
+*
+*
+* @beta
+*/
+var CMCD_EVENT_MODE = "event";
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+var toRounded = function toRounded(value) {
+  return Math.round(value);
+};
+var _toUrlSafe = function toUrlSafe(value, options) {
+  if (Array.isArray(value)) return value.map(function (item) {
+    return _toUrlSafe(item, options);
+  });
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfItem(_toUrlSafe(value.value, options), value.params);else {
+    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_41__.urlToRelativePath)(value, options.baseUrl);
+    return options.version === 1 ? encodeURIComponent(value) : value;
+  }
+};
+var toHundred = function toHundred(value) {
+  return toRounded(value / 100) * 100;
+};
+var nor = function nor(value, options) {
+  var norValue = value;
+  if (options.version >= 2) {
+    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  }
+  return _toUrlSafe(norValue, options);
+};
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*/
+var CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor: nor,
+  rtp: toHundred,
+  tb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_MODE.ts
+/**
+* CMCD request mode variable name.
+*
+*
+* @beta
+*/
+var CMCD_REQUEST_MODE = "request";
+
+//#endregion
+//#region src/CMCD_COMMON_KEYS.ts
+/**
+* Defines the common keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+var CMCD_COMMON_KEYS = ["ab", "bg", "bl", "br", "bs", "bsd", "cdn", "cid", "cs", "df", "ec", "lab", "lb", "ltc", "msd", "mtp", "pb", "pr", "pt", "sf", "sid", "sn", "st", "sta", "tab", "tb", "tbl", "tpb", "ts", "v"];
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+var CMCD_EVENT_KEYS = ["e"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* CMCD v2 - Response-only and timing keys.
+*
+*
+* @beta
+*/
+var CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+var CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
+/**
+* Check if a key is a custom key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+*
+* @beta
+*/
+function isCmcdCustomKey(key) {
+  return CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_EVENT_KEYS.includes(key) || CMCD_RESPONSE_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+var CMCD_REQUEST_KEYS = ["d", "dl", "nor", "ot", "rtp", "su"];
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_REQUEST_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @group CMCD
+*
+* @beta
+*
+* @example
+* {@includeCode ../../test/cmcd/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEYS.includes(key);
+}
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+*
+* @beta
+*/
+var CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
+
+//#endregion
+//#region src/isCmcdV1Key.ts
+/**
+* Filter function for CMCD v1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+var filterMap = (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_2__["default"])({}, CMCD_EVENT_MODE, isCmcdEventKey), CMCD_REQUEST_MODE, isCmcdRequestKey);
+/**
+* Convert a generic object to CMCD data.
+*
+* @param obj - The CMCD object to process.
+* @param options - Options for encoding.
+*
+*
+* @beta
+*/
+function prepareCmcdData(obj) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var results = {};
+  if (obj == null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(obj) !== "object") return results;
+  var version = options.version || obj["v"] || 1;
+  var reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
+  var keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
+  var keys$1 = Object.keys(obj).filter(keyFilter);
+  if (obj["e"] && obj["e"] !== "rr") keys$1 = keys$1.filter(function (key) {
+    return !isCmcdResponseReceivedKey(key);
+  });
+  var filter = options.filter;
+  if (typeof filter === "function") keys$1 = keys$1.filter(filter);
+  var needsTimestamp = reportingMode === CMCD_EVENT_MODE;
+  if (needsTimestamp && !keys$1.includes("ts")) keys$1.push("ts");
+  if (version > 1 && !keys$1.includes("v")) keys$1.push("v");
+  var formatters = Object.assign({}, CMCD_FORMATTER_MAP, options.formatters);
+  var formatterOptions = {
+    version: version,
+    reportingMode: reportingMode,
+    baseUrl: options.baseUrl
+  };
+  keys$1.sort().forEach(function (key) {
+    var value = obj[key];
+    var formatter = formatters[key];
+    if (typeof formatter === "function") value = formatter(value, formatterOptions);
+    if (key === "v") if (version === 1) return;else value = version;
+    if (key == "pr" && value === 1) return;
+    if (needsTimestamp && key === "ts" && !Number.isFinite(value)) value = Date.now();
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__.isTokenField)(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/toCmcdHeaders.ts
+/**
+* Convert a CMCD data object to request headers
+*
+* @param cmcd - The CMCD data object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdHeaders.test.ts#example}
+*/
+function toCmcdHeaders(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var result = {};
+  if (!cmcd) return result;
+  var shards = groupCmcdHeaders(prepareCmcdData(cmcd, options), options === null || options === void 0 ? void 0 : options.customHeaderMap);
+  return Object.entries(shards).reduce(function (acc, _ref) {
+    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
+      field = _ref2[0],
+      value = _ref2[1];
+    var shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.encodeSfDict)(value, {
+      whitespace: false
+    });
+    if (shard) acc[field] = shard;
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/appendCmcdHeaders.ts
+/**
+* Append CMCD query args to a header object.
+*
+* @param headers - The headers to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Encode options.
+*
+* @returns The headers with the CMCD header shards appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdHeaders.test.ts#example}
+*/
+function appendCmcdHeaders(headers, cmcd, options) {
+  return Object.assign(headers, toCmcdHeaders(cmcd, options));
+}
+
+//#endregion
+//#region src/CMCD_PARAM.ts
+/**
+* CMCD parameter name.
+*
+*
+* @beta
+*/
+var CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/encodeCmcd.ts
+/**
+* Encode a CMCD object to a string.
+*
+* @param cmcd - The CMCD object to encode.
+* @param options - Options for encoding.
+*
+* @returns The encoded CMCD string.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/encodeCmcd.test.ts#example}
+*/
+function encodeCmcd(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!cmcd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.encodeSfDict)(prepareCmcdData(cmcd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD data object to a URL encoded string.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL encoded CMCD data.
+*
+*
+* @beta
+*/
+function toCmcdUrl(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!cmcd) return "";
+  var params = encodeCmcd(cmcd, options);
+  return encodeURIComponent(params);
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD data object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD query arg.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  if (!cmcd) return "";
+  return "".concat(CMCD_PARAM, "=").concat(toCmcdUrl(cmcd, options));
+}
+
+//#endregion
+//#region src/appendCmcdQuery.ts
+var REGEX = /CMCD=[^&#]+/;
+/**
+* Append CMCD query args to a URL.
+*
+* @param url - The URL to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL with the CMCD query args appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdQuery.test.ts#example}
+*/
+function appendCmcdQuery(url, cmcd, options) {
+  var query = toCmcdQuery(cmcd, options);
+  if (!query) return url;
+  if (REGEX.test(url)) return url.replace(REGEX, query);
+  return "".concat(url).concat(url.includes("?") ? "&" : "?").concat(query);
+}
+
+//#endregion
+//#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
+/**
+* The default time interval in secondswhen using using event mode
+*
+*
+* @beta
+*/
+var CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_HEADERS.ts
+/**
+* CMCD `headers` transmission mode.
+*
+*
+* @beta
+*/
+var CMCD_HEADERS = "headers";
+
+//#endregion
+//#region src/CMCD_JSON.ts
+/**
+* CMCD `json` transmission mode.
+*
+*
+* @beta
+*
+* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
+*/
+var CMCD_JSON = "json";
+
+//#endregion
+//#region src/CMCD_KEYS.ts
+var keySet = new Set([].concat(CMCD_V1_KEYS, CMCD_COMMON_KEYS, CMCD_REQUEST_KEYS, CMCD_RESPONSE_KEYS, CMCD_EVENT_KEYS));
+/**
+* A list of all CMCD keys.
+*
+*
+* @beta
+*/
+var CMCD_KEYS = Array.from(keySet);
+
+//#endregion
+//#region src/CMCD_QUERY.ts
+/**
+* CMCD `query` transmission mode.
+*
+*
+* @beta
+*/
+var CMCD_QUERY = "query";
+
+//#endregion
+//#region src/CMCD_RESPONSE_MODE.ts
+/**
+* CMCD response mode variable name.
+*
+*
+* @beta
+*/
+var CMCD_RESPONSE_MODE = "response";
+
+//#endregion
+//#region src/CMCD_V1.ts
+/**
+* CMCD Version 1
+*
+*
+* @beta
+*/
+var CMCD_V1 = 1;
+
+//#endregion
+//#region src/CMCD_V2.ts
+/**
+* CMCD Version 2
+*
+*
+* @beta
+*/
+var CMCD_V2 = 2;
+
+//#endregion
+//#region src/CmcdTransmissionMode.ts
+/**
+* CMCD transmission modes.
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdTransmissionMode = {
+  JSON: CMCD_JSON,
+  QUERY: CMCD_QUERY,
+  HEADERS: CMCD_HEADERS
+};
+
+//#endregion
+//#region src/CmcdEncoding.ts
+/**
+* CMCD encoding types.
+*
+*
+* @enum
+*
+* @beta
+*
+* @deprecated Use {@link CmcdTransmissionMode} instead.
+*
+* @see {@link CmcdTransmissionMode}
+*/
+var CmcdEncoding = CmcdTransmissionMode;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdEventType = {
+  PLAY_STATE: "ps",
+  ERROR: "e",
+  TIME_INTERVAL: "t",
+  CONTENT_ID: "c",
+  BACKGROUNDED_MODE: "b",
+  MUTE: "m",
+  UNMUTE: "um",
+  PLAYER_EXPAND: "pe",
+  PLAYER_COLLAPSE: "pc",
+  RESPONSE_RECEIVED: "rr"
+};
+
+//#endregion
+//#region src/CmcdFormatters.ts
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*
+* @deprecated Use `CMCD_FORMATTER_MAP` instead.
+*/
+var CmcdFormatters = CMCD_FORMATTER_MAP;
+
+//#endregion
+//#region src/CmcdObjectType.ts
+/**
+* Common Media Client Data Object Type
+*
+*
+* @beta
+*
+* @enum
+*/
+var CmcdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__.CmObjectType;
+
+//#endregion
+//#region src/CmcdPlayerState.ts
+/**
+* CMCD v2 player states for the 'sta' key.
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdPlayerState = {
+  STARTING: "s",
+  PLAYING: "p",
+  SEEKING: "k",
+  REBUFFERING: "r",
+  PAUSED: "a",
+  WAITING: "w",
+  ENDED: "e",
+  FATAL_ERROR: "f",
+  QUIT: "q",
+  PRELOADING: "d"
+};
+
+//#endregion
+//#region src/CmcdReportingMode.ts
+/**
+* CMCD reporting mode types.
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdReportingMode = {
+  REQUEST: CMCD_REQUEST_MODE,
+  EVENT: CMCD_EVENT_MODE
+};
+
+//#endregion
+//#region src/CmcdStreamingFormat.ts
+/**
+* Common Media Client Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmcdStreamType.ts
+/**
+* Common Media Client Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmcdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_40__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value) {
+  if (Array.isArray(value)) return value.map(reduceValue);
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value) === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.symbolToStr)(value);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfItem && !value.params) return reduceValue(value.value);
+  if (typeof value === "string") return decodeURIComponent(value);
+  return value;
+}
+/**
+* Decode a CMCD string to an object.
+*
+* @param cmcd - The CMCD string to decode.
+*
+* @returns The decoded CMCD object.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeCmcd.test.ts#example}
+*/
+function decodeCmcd(cmcd) {
+  if (!cmcd) return {};
+  var sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.decodeSfDict)(cmcd);
+  return Object.entries(sfDict).reduce(function (acc, _ref3) {
+    var _ref4 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref3, 2),
+      key = _ref4[0],
+      item = _ref4[1];
+    acc[key] = reduceValue(item.value);
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdHeaders.ts
+var keys = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
+/**
+* Decode CMCD data from request headers.
+*
+* @param headers - The request headers to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdHeaders.test.ts#example}
+*/
+function fromCmcdHeaders(headers) {
+  if (!(headers instanceof Headers)) headers = new Headers(headers);
+  return keys.reduce(function (acc, key) {
+    var value = headers.get(key);
+    return Object.assign(acc, decodeCmcd(value));
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdQuery.ts
+/**
+* Decode CMCD data from a query string.
+*
+* @param query - The query string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdQuery.test.ts#example}
+*/
+function fromCmcdQuery(query) {
+  if (typeof query === "string") query = new URLSearchParams(query);
+  return decodeCmcd(query.get(CMCD_PARAM));
+}
+
+//#endregion
+//#region src/fromCmcdUrl.ts
+/**
+* Decode CMCD data from a url encoded string.
+*
+* @param url - The url encoded string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdUrl.test.ts#example}
+*/
+function fromCmcdUrl(url) {
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")));
+}
+
+//#endregion
+//#region src/toCmcdJson.ts
+/**
+* Convert a CMCD data object to JSON.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD JSON.
+*
+*
+* @beta
+*
+* @deprecated Sending CMCD as JSON objects is deprecated. Use `toCmcdUrl` to create an array of url strings instead.
+*/
+function toCmcdJson(cmcd, options) {
+  var data = prepareCmcdData(cmcd, options);
+  return JSON.stringify(data, function (_, value) {
+    return (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value) === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.SfToken ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_39__.symbolToStr)(value) : value;
+  });
+}
+
+//#endregion
+//#region src/toCmcdReport.ts
+/**
+* Converts CMCD data into a report format.
+*
+* @param data - The CMCD data to be transformed into a report
+* @param target - The target configuration for the CMCD report
+*
+* @return A CMCD report object
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdReport.test.ts#example}
+*/
+function toCmcdReport(data, target) {
+  if (!target || !target.url) return null;
+  var url = new URL(target.url);
+  var method = target.method || "GET";
+  var headers = {};
+  var transimissionMode = target.transmissionMode || CMCD_QUERY;
+  var options = {
+    version: target.version,
+    reportingMode: target.reportingMode
+  };
+  var enabledKeys = target.enabledKeys;
+  if (enabledKeys) options.filter = function (key) {
+    return enabledKeys.includes(key);
+  };
+  switch (transimissionMode) {
+    case CMCD_QUERY:
+      var param = encodeCmcd(data, options);
+      if (param) url.searchParams.set(CMCD_PARAM, param);
+      break;
+    case CMCD_HEADERS:
+      Object.assign(headers, toCmcdHeaders(data, options));
+      break;
+  }
+  return {
+    url: url.toString(),
+    method: method,
+    headers: headers
+  };
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmsd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmsd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; },
+/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; },
+/* harmony export */   CMSD_V1: function() { return /* binding */ CMSD_V1; },
+/* harmony export */   CmsdHeaderField: function() { return /* binding */ CmsdHeaderField; },
+/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; },
+/* harmony export */   CmsdStreamType: function() { return /* binding */ CmsdStreamType; },
+/* harmony export */   CmsdStreamingFormat: function() { return /* binding */ CmsdStreamingFormat; },
+/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
+/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
+/* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
+/* harmony import */ var core_js_modules_es_object_keys_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.object.keys.js */ "./node_modules/core-js/modules/es.object.keys.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_web_dom_collections_for_each_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/web.dom-collections.for-each.js */ "./node_modules/core-js/modules/web.dom-collections.for-each.js");
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+
+
+
+
+
+
+
+
+
+//#region src/CMSD_DYNAMIC.ts
+/**
+* CMSD dynamic header name.
+*
+*
+* @beta
+*/
+var CMSD_DYNAMIC = "CMSD-Dynamic";
+
+//#endregion
+//#region src/CMSD_STATIC.ts
+/**
+* CMSD static header name.
+*
+*
+* @beta
+*/
+var CMSD_STATIC = "CMSD-Static";
+
+//#endregion
+//#region src/CMSD_V1.ts
+/**
+* CMSD Version 1
+*
+*
+* @beta
+*/
+var CMSD_V1 = 1;
+
+//#endregion
+//#region src/CmsdHeaderField.ts
+/**
+* CMSD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmsdHeaderField = {
+  STATIC: CMSD_STATIC,
+  DYNAMIC: CMSD_DYNAMIC
+};
+
+//#endregion
+//#region src/CmsdObjectType.ts
+/**
+* Common Media Server Data Object Type
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__.CmObjectType;
+
+//#endregion
+//#region src/CmsdStreamingFormat.ts
+/**
+* Common Media Server Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmsdStreamType.ts
+/**
+* Common Media Server Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+var CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmsdDynamic.ts
+/**
+* Decode a CMSD dynamic string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdDynamic(cmsd) {
+  if (!cmsd) return [];
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.decodeSfList)(cmsd);
+}
+
+//#endregion
+//#region src/decodeCmsdStatic.ts
+/**
+* Decode a CMSD Static dict string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdStatic(cmsd) {
+  if (!cmsd) return {};
+  return Object.entries((0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.decodeSfDict)(cmsd)).reduce(function (acc, _ref) {
+    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_1__["default"])(_ref, 2),
+      key = _ref2[0],
+      item = _ref2[1];
+    var value = item.value;
+    acc[key] = (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(value) === "symbol" ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.symbolToStr)(value) : value;
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/encodeCmsdDynamic.ts
+function encodeCmsdDynamic(value, cmsd) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    if (!cmsd) return "";
+    value = [new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.SfItem(value, cmsd)];
+  }
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.encodeSfList)(value, {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/utils/processCmsd.ts
+function processCmsd(obj, options) {
+  var results = {};
+  if (obj == null || (0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_0__["default"])(obj) !== "object") return results;
+  var keys = Object.keys(obj);
+  var useSymbol = (options === null || options === void 0 ? void 0 : options.useSymbol) !== false;
+  keys.forEach(function (key) {
+    var value = obj[key];
+    if (key === "v" && value === 1) return;
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_6__.isTokenField)(key) && typeof value === "string") value = useSymbol ? Symbol.for(value) : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/encodeCmsdStatic.ts
+/**
+* Encode a CMSD Static object.
+*
+* @param cmsd - The CMSD object to encode.
+* @param options - Encoding options
+*
+* @returns The encoded CMSD string.
+*
+*
+* @beta
+*/
+function encodeCmsdStatic(cmsd, options) {
+  if (!cmsd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_7__.encodeSfDict)(processCmsd(cmsd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cta/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-cta/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; },
+/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; },
+/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; },
+/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; },
+/* harmony export */   isValid: function() { return /* binding */ isValid; }
+/* harmony export */ });
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
+
+
+//#region src/CmObjectType.ts
+/**
+* Common Media Object Type
+*
+* @internal
+*/
+var CmObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamingFormat.ts
+/**
+* Common Media Streaming Format
+*
+* @internal
+*/
+var CmStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamType.ts
+/**
+* Common Media Stream Type
+*
+* @internal
+*/
+var CmStreamType = {
+  VOD: "v",
+  LIVE: "l"
+};
+
+//#endregion
+//#region src/isTokenField.ts
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return ["ot", "sf", "st", "e", "sta"].includes(key);
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-dash/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-dash/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   THUMBNAIL_TILE_SCHEME_ID_URI: function() { return /* binding */ THUMBNAIL_TILE_SCHEME_ID_URI; },
+/* harmony export */   parseFrameRate: function() { return /* binding */ parseFrameRate; },
+/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.string.pad-start.js */ "./node_modules/core-js/modules/es.string.pad-start.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+
+
+
+
+
+
+
+//#region src/parseFrameRate.ts
+/**
+* Parses a DASH framerate string into a number.
+*
+* @param frameRate - The frame rate string to parse.
+* @returns The frame rate as a number.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/parseFrameRate.test.ts#example}
+*/
+function parseFrameRate(frameRate) {
+  var _frameRate$split$map = frameRate.split("/").map(function (value) {
+      return parseInt(value, 10);
+    }),
+    _frameRate$split$map2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_frameRate$split$map, 2),
+    numerator = _frameRate$split$map2[0],
+    denominator = _frameRate$split$map2[1];
+  if (denominator === void 0) return numerator;
+  if (isNaN(numerator) || isNaN(denominator) || denominator === 0) return NaN;
+  return numerator / denominator;
+}
+
+//#endregion
+//#region src/processUriTemplate.ts
+var TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
+/**
+* Process a URI template used in `SegmentTemplate` nodes.
+*
+* @param uriTemplate - URI template to process.
+* @param representationId - Representation ID.
+* @param number - Number.
+* @param subNumber - Sub-number.
+* @param bandwidth - Bandwidth.
+* @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
+*
+* @returns Processed URI template.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/processUriTemplate.test.ts#example}
+*/
+function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
+  return uriTemplate.replace(TOKENS, function (match, name, widthStr, format) {
+    var value;
+    switch (name) {
+      case void 0:
+        return "$";
+      case "RepresentationID":
+        value = representationId;
+        break;
+      case "Number":
+        value = number;
+        break;
+      case "SubNumber":
+        value = subNumber;
+        break;
+      case "Bandwidth":
+        value = bandwidth;
+        break;
+      case "Time":
+        if (typeof time === "string") return time;
+        value = time ? Math.round(time) : time;
+        break;
+      default:
+        value = null;
+    }
+    if (value == null) return match;
+    var valueString;
+    switch (format) {
+      case void 0:
+      case "d":
+      case "i":
+      case "u":
+        valueString = value.toString();
+        break;
+      case "o":
+        valueString = value.toString(8);
+        break;
+      case "x":
+        valueString = value.toString(16);
+        break;
+      case "X":
+        valueString = value.toString(16).toUpperCase();
+        break;
+      default:
+        valueString = value.toString();
+        break;
+    }
+    var width = parseInt(widthStr, 10) || 1;
+    return valueString.padStart(width, "0");
+  });
+}
+
+//#endregion
+//#region src/THUMBNAIL_TILE_SCHEME_ID_URI.ts
+/**
+* The scheme ID URI for thumbnail tiles in DASH.
+*
+*
+* @beta
+*/
+var THUMBNAIL_TILE_SCHEME_ID_URI = "http://dashif.org/guidelines/thumbnail_tile";
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-structured-field-values/dist/index.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@svta/cml-structured-field-values/dist/index.js ***!
+  \**********************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SfItem: function() { return /* binding */ SfItem; },
+/* harmony export */   SfToken: function() { return /* binding */ SfToken; },
+/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; },
+/* harmony export */   decodeSfItem: function() { return /* binding */ decodeSfItem; },
+/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; },
+/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; },
+/* harmony export */   encodeSfItem: function() { return /* binding */ encodeSfItem; },
+/* harmony export */   encodeSfList: function() { return /* binding */ encodeSfList; },
+/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; },
+/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; },
+/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; },
+/* harmony export */   parseDate: function() { return /* binding */ parseDate; },
+/* harmony export */   parseDict: function() { return /* binding */ parseDict; },
+/* harmony export */   parseError: function() { return /* binding */ parseError; },
+/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; },
+/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; },
+/* harmony export */   parseItem: function() { return /* binding */ parseItem; },
+/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; },
+/* harmony export */   parseKey: function() { return /* binding */ parseKey; },
+/* harmony export */   parseList: function() { return /* binding */ parseList; },
+/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; },
+/* harmony export */   parseString: function() { return /* binding */ parseString; },
+/* harmony export */   parseToken: function() { return /* binding */ parseToken; },
+/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; },
+/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; },
+/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; },
+/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; },
+/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; },
+/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; },
+/* harmony export */   serializeError: function() { return /* binding */ serializeError; },
+/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; },
+/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; },
+/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; },
+/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; },
+/* harmony export */   serializeList: function() { return /* binding */ serializeList; },
+/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; },
+/* harmony export */   serializeString: function() { return /* binding */ serializeString; },
+/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; },
+/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/slicedToArray */ "./node_modules/@babel/runtime/helpers/esm/slicedToArray.js");
+/* harmony import */ var _babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @babel/runtime/helpers/typeof */ "./node_modules/@babel/runtime/helpers/esm/typeof.js");
+/* harmony import */ var _babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @babel/runtime/helpers/createClass */ "./node_modules/@babel/runtime/helpers/esm/createClass.js");
+/* harmony import */ var _babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @babel/runtime/helpers/classCallCheck */ "./node_modules/@babel/runtime/helpers/esm/classCallCheck.js");
+/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
+/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
+/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
+/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
+/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
+/* harmony import */ var core_js_modules_es_array_includes_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.array.includes.js */ "./node_modules/core-js/modules/es.array.includes.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
+/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
+/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
+/* harmony import */ var core_js_modules_es_map_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.map.js */ "./node_modules/core-js/modules/es.map.js");
+/* harmony import */ var core_js_modules_es_number_is_finite_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.number.is-finite.js */ "./node_modules/core-js/modules/es.number.is-finite.js");
+/* harmony import */ var core_js_modules_es_number_is_integer_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.number.is-integer.js */ "./node_modules/core-js/modules/es.number.is-integer.js");
+/* harmony import */ var core_js_modules_es_object_entries_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.object.entries.js */ "./node_modules/core-js/modules/es.object.entries.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_set_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.set.js */ "./node_modules/core-js/modules/es.set.js");
+/* harmony import */ var core_js_modules_es_set_difference_v2_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.set.difference.v2.js */ "./node_modules/core-js/modules/es.set.difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_intersection_v2_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.set.intersection.v2.js */ "./node_modules/core-js/modules/es.set.intersection.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_disjoint_from_v2_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.set.is-disjoint-from.v2.js */ "./node_modules/core-js/modules/es.set.is-disjoint-from.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_subset_of_v2_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.set.is-subset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-subset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_is_superset_of_v2_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.set.is-superset-of.v2.js */ "./node_modules/core-js/modules/es.set.is-superset-of.v2.js");
+/* harmony import */ var core_js_modules_es_set_symmetric_difference_v2_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.set.symmetric-difference.v2.js */ "./node_modules/core-js/modules/es.set.symmetric-difference.v2.js");
+/* harmony import */ var core_js_modules_es_set_union_v2_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.set.union.v2.js */ "./node_modules/core-js/modules/es.set.union.v2.js");
+/* harmony import */ var core_js_modules_es_string_includes_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.string.includes.js */ "./node_modules/core-js/modules/es.string.includes.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
+/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
+/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
+/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
+/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
+/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
+/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
+/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
+/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
+/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
+/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
+/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_61__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
+/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_62__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
+/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_63__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
+/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_64__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_65__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_66__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_67__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_68__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_69__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_70__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#region src/SfItem.ts
+/**
+* Structured Field Item
+*
+*
+* @beta
+*/
+var SfItem = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__["default"])(function SfItem(value, params) {
+  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, SfItem);
+  if (Array.isArray(value)) value = value.map(function (v) {
+    return v instanceof SfItem ? v : new SfItem(v);
+  });
+  this.value = value;
+  this.params = params;
+});
+
+//#endregion
+//#region src/utils/DICT.ts
+var DICT = "Dict";
+
+//#endregion
+//#region src/parse/ParsedValue.ts
+/**
+* @internal
+*/
+function parsedValue(value, src) {
+  return {
+    value: value,
+    src: src
+  };
+}
+
+//#endregion
+//#region src/utils/throwError.ts
+function format(value) {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (value instanceof Map) return "Map{}";
+  if (value instanceof Set) return "Set{}";
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value) === "object") return JSON.stringify(value);
+  return String(value);
+}
+function throwError(action, src, type, cause) {
+  return new Error("failed to ".concat(action, " \"").concat(format(src), "\" as ").concat(type), {
+    cause: cause
+  });
+}
+
+//#endregion
+//#region src/parse/parseError.ts
+/**
+* @internal
+*/
+function parseError(src, type, cause) {
+  return throwError("parse", src, type, cause);
+}
+
+//#endregion
+//#region src/utils/INNER.ts
+var INNER = "Inner List";
+
+//#endregion
+//#region src/utils/BARE_ITEM.ts
+var BARE_ITEM = "Bare Item";
+
+//#endregion
+//#region src/utils/BOOLEAN.ts
+var BOOLEAN = "Boolean";
+
+//#endregion
+//#region src/parse/parseBoolean.ts
+/**
+* @internal
+*/
+function parseBoolean(src) {
+  var i = 0;
+  if (src[i] !== "?") throw parseError(src, BOOLEAN);
+  i++;
+  if (src[i] === "1") return parsedValue(true, src.substring(++i));
+  if (src[i] === "0") return parsedValue(false, src.substring(++i));
+  throw parseError(src, BOOLEAN);
+}
+
+//#endregion
+//#region src/utils/BYTES.ts
+var BYTES = "Byte Sequence";
+
+//#endregion
+//#region src/parse/parseByteSequence.ts
+/**
+* @internal
+*/
+function parseByteSequence(src) {
+  if (src[0] !== ":") throw parseError(src, BYTES);
+  src = src.substring(1);
+  if (src.includes(":") === false) throw parseError(src, BYTES);
+  var re = /(^.*?)(:)/g;
+  var b64_content = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.decodeBase64)(b64_content), src);
+}
+
+//#endregion
+//#region src/utils/DATE.ts
+var DATE = "Date";
+
+//#endregion
+//#region src/utils/DECIMAL.ts
+var DECIMAL = "Decimal";
+
+//#endregion
+//#region src/utils/INTEGER.ts
+var INTEGER = "Integer";
+
+//#endregion
+//#region src/utils/INTEGER_DECIMAL.ts
+var INTEGER_DECIMAL = "".concat(INTEGER, " or ").concat(DECIMAL);
+
+//#endregion
+//#region src/utils/isInvalidInt.ts
+function isInvalidInt(value) {
+  return value < -999999999999999 || 999999999999999 < value;
+}
+
+//#endregion
+//#region src/parse/parseIntegerOrDecimal.ts
+/**
+* @internal
+*/
+function parseIntegerOrDecimal(src) {
+  var orig = src;
+  var sign = 1;
+  var num = "";
+  var value;
+  var i = 0;
+  var error = parseError(orig, INTEGER_DECIMAL);
+  if (src[i] === "-") {
+    sign = -1;
+    src = src.substring(1);
+  }
+  if (src.length <= 0) throw error;
+  var re_integer = /^(\d+)?/g;
+  var result_integer = re_integer.exec(src);
+  if (result_integer[0].length === 0) throw error;
+  num += result_integer[1];
+  src = src.substring(re_integer.lastIndex);
+  if (src[0] === ".") {
+    if (num.length > 12) throw error;
+    var re_decimal = /^(\.\d+)?/g;
+    var result_decimal = re_decimal.exec(src);
+    src = src.substring(re_decimal.lastIndex);
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    num += result_decimal[1];
+    if (num.length > 16) throw error;
+    value = parseFloat(num) * sign;
+  } else {
+    if (num.length > 15) throw error;
+    value = parseInt(num) * sign;
+    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/parse/parseDate.ts
+/**
+* @internal
+*/
+function parseDate(src) {
+  var i = 0;
+  if (src[i] !== "@") throw parseError(src, DATE);
+  i++;
+  var date = parseIntegerOrDecimal(src.substring(i));
+  if (Number.isInteger(date.value) === false) throw parseError(src, DATE);
+  return parsedValue(/* @__PURE__ */new Date(date.value * 1e3), date.src);
+}
+
+//#endregion
+//#region src/utils/STRING.ts
+var STRING = "String";
+
+//#endregion
+//#region src/utils/STRING_REGEX.ts
+var STRING_REGEX = /[\x00-\x1f\x7f]+/;
+
+//#endregion
+//#region src/parse/parseString.ts
+/**
+* @internal
+*/
+function parseString(src) {
+  var output = "";
+  var i = 0;
+  if (src[i] !== "\"") throw parseError(src, STRING);
+  i++;
+  while (src.length > i) {
+    if (src[i] === "\\") {
+      if (src.length <= i + 1) throw parseError(src, STRING);
+      i++;
+      if (src[i] !== "\"" && src[i] !== "\\") throw parseError(src, STRING);
+      output += src[i];
+    } else if (src[i] === "\"") return parsedValue(output, src.substring(++i));else if (STRING_REGEX.test(src[i])) throw parseError(src, STRING);else output += src[i];
+    i++;
+  }
+  throw parseError(src, STRING);
+}
+
+//#endregion
+//#region src/SfToken.ts
+/**
+* A class to represent structured field tokens when `Symbol` is not available.
+*
+*
+* @beta
+*/
+var SfToken = /*#__PURE__*/(0,_babel_runtime_helpers_createClass__WEBPACK_IMPORTED_MODULE_2__["default"])(function SfToken(description) {
+  (0,_babel_runtime_helpers_classCallCheck__WEBPACK_IMPORTED_MODULE_3__["default"])(this, SfToken);
+  this.description = description;
+});
+
+//#endregion
+//#region src/utils/TOKEN.ts
+var TOKEN = "Token";
+
+//#endregion
+//#region src/parse/parseToken.ts
+/**
+* @internal
+*/
+function parseToken(src, options) {
+  if (/^[a-zA-Z*]$/.test(src[0]) === false) throw parseError(src, TOKEN);
+  var re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
+  var value = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue((options === null || options === void 0 ? void 0 : options.useSymbol) === false ? new SfToken(value) : Symbol.for(value), src);
+}
+
+//#endregion
+//#region src/parse/parseBareItem.ts
+/**
+* @internal
+*/
+function parseBareItem(src, options) {
+  var first = src[0];
+  if (first === "\"") return parseString(src);
+  if (/^[-0-9]/.test(first)) return parseIntegerOrDecimal(src);
+  if (first === "?") return parseBoolean(src);
+  if (first === ":") return parseByteSequence(src);
+  if (/^[a-zA-Z*]/.test(first)) return parseToken(src, options);
+  if (first === "@") return parseDate(src);
+  throw parseError(src, BARE_ITEM);
+}
+
+//#endregion
+//#region src/utils/KEY.ts
+var KEY = "Key";
+
+//#endregion
+//#region src/parse/parseKey.ts
+/**
+* @internal
+*/
+function parseKey(src) {
+  var i = 0;
+  if (/^[a-z*]$/.test(src[i]) === false) throw parseError(src, KEY);
+  var value = "";
+  while (src.length > i) {
+    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) return parsedValue(value, src.substring(i));
+    value += src[i];
+    i++;
+  }
+  return parsedValue(value, src.substring(i));
+}
+
+//#endregion
+//#region src/parse/parseParameters.ts
+/**
+* @internal
+*/
+function parseParameters(src, options) {
+  var parameters = void 0;
+  while (src.length > 0) {
+    if (src[0] !== ";") break;
+    src = src.substring(1).trim();
+    var parsedKey = parseKey(src);
+    var key = parsedKey.value;
+    var value = true;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      src = src.substring(1);
+      var parsedBareItem = parseBareItem(src, options);
+      value = parsedBareItem.value;
+      src = parsedBareItem.src;
+    }
+    if (parameters == null) parameters = {};
+    parameters[key] = value;
+  }
+  return parsedValue(parameters, src);
+}
+
+//#endregion
+//#region src/parse/parseItem.ts
+/**
+* @internal
+*/
+function parseItem(src, options) {
+  var parsedBareItem = parseBareItem(src, options);
+  src = parsedBareItem.src;
+  var parsedParameters = parseParameters(src, options);
+  src = parsedParameters.src;
+  return parsedValue(new SfItem(parsedBareItem.value, parsedParameters.value), src);
+}
+
+//#endregion
+//#region src/parse/parseInnerList.ts
+/**
+* @internal
+*/
+function parseInnerList(src, options) {
+  if (src[0] !== "(") throw parseError(src, INNER);
+  src = src.substring(1);
+  var innerList = [];
+  while (src.length > 0) {
+    src = src.trim();
+    if (src[0] === ")") {
+      src = src.substring(1);
+      var parsedParameters = parseParameters(src, options);
+      return parsedValue(new SfItem(innerList, parsedParameters.value), parsedParameters.src);
+    }
+    var parsedItem = parseItem(src, options);
+    innerList.push(parsedItem.value);
+    src = parsedItem.src;
+    if (src[0] !== " " && src[0] !== ")") throw parseError(src, INNER);
+  }
+  throw parseError(src, INNER);
+}
+
+//#endregion
+//#region src/parse/parseItemOrInnerList.ts
+/**
+* @internal
+*/
+function parseItemOrInnerList(src, options) {
+  if (src[0] === "(") return parseInnerList(src, options);
+  return parseItem(src, options);
+}
+
+//#endregion
+//#region src/parse/parseDict.ts
+/**
+* @internal
+*/
+function parseDict(src, options) {
+  var value = {};
+  while (src.length > 0) {
+    var member = void 0;
+    var parsedKey = parseKey(src);
+    var key = parsedKey.value;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      var parsedItemOrInnerList = parseItemOrInnerList(src.substring(1), options);
+      member = parsedItemOrInnerList.value;
+      src = parsedItemOrInnerList.src;
+    } else {
+      var parsedParameters = parseParameters(src, options);
+      member = new SfItem(true, parsedParameters.value);
+      src = parsedParameters.src;
+    }
+    value[key] = member;
+    src = src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, DICT);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, DICT);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfDict.ts
+/**
+* Decode a structured field string into a structured field dictionary
+*
+* @param input - The structured field string to decode
+* @returns The structured field dictionary
+*
+*
+* @beta
+*/
+function decodeSfDict(input, options) {
+  try {
+    var _parseDict = parseDict(input.trim(), options),
+      src = _parseDict.src,
+      value = _parseDict.value;
+    if (src !== "") throw parseError(src, DICT);
+    return value;
+  } catch (cause) {
+    throw parseError(input, DICT, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/ITEM.ts
+var ITEM = "Item";
+
+//#endregion
+//#region src/decodeSfItem.ts
+/**
+* Decode a structured field string into a structured field item
+*
+* @param input - The structured field string to decode
+* @returns The structured field item
+*
+*
+* @beta
+*/
+function decodeSfItem(input, options) {
+  try {
+    var _parseItem = parseItem(input.trim(), options),
+      src = _parseItem.src,
+      value = _parseItem.value;
+    if (src !== "") throw parseError(src, ITEM);
+    return value;
+  } catch (cause) {
+    throw parseError(input, ITEM, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/LIST.ts
+var LIST = "List";
+
+//#endregion
+//#region src/parse/parseList.ts
+/**
+* @internal
+*/
+function parseList(src, options) {
+  var value = [];
+  while (src.length > 0) {
+    var parsedItemOrInnerList = parseItemOrInnerList(src, options);
+    value.push(parsedItemOrInnerList.value);
+    src = parsedItemOrInnerList.src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, LIST);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, LIST);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfList.ts
+/**
+* Decode a structured field string into a structured field list
+*
+* @param input - The structured field string to decode
+* @returns The structured field list
+*
+*
+* @beta
+*/
+function decodeSfList(input, options) {
+  try {
+    var _parseList = parseList(input.trim(), options),
+      src = _parseList.src,
+      value = _parseList.value;
+    if (src !== "") throw parseError(src, LIST);
+    return value;
+  } catch (cause) {
+    throw parseError(input, LIST, cause);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeError.ts
+/**
+* @internal
+*/
+function serializeError(src, type, cause) {
+  return throwError("serialize", src, type, cause);
+}
+
+//#endregion
+//#region src/serialize/serializeBoolean.ts
+/**
+* @internal
+*/
+function serializeBoolean(value) {
+  if (typeof value !== "boolean") throw serializeError(value, BOOLEAN);
+  return value ? "?1" : "?0";
+}
+
+//#endregion
+//#region src/serialize/serializeByteSequence.ts
+/**
+* @internal
+*/
+function serializeByteSequence(value) {
+  if (ArrayBuffer.isView(value) === false) throw serializeError(value, BYTES);
+  return ":".concat((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.encodeBase64)(value), ":");
+}
+
+//#endregion
+//#region src/serialize/serializeInteger.ts
+/**
+* @internal
+*/
+function serializeInteger(value) {
+  if (isInvalidInt(value)) throw serializeError(value, INTEGER);
+  return value.toString();
+}
+
+//#endregion
+//#region src/serialize/serializeDate.ts
+/**
+* @internal
+*/
+function serializeDate(value) {
+  return "@".concat(serializeInteger(value.getTime() / 1e3));
+}
+
+//#endregion
+//#region src/serialize/serializeDecimal.ts
+/**
+* @internal
+*/
+function serializeDecimal(value) {
+  var roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_71__.roundToEven)(value, 3);
+  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  var stringValue = roundedValue.toString();
+  return stringValue.includes(".") ? stringValue : "".concat(stringValue, ".0");
+}
+
+//#endregion
+//#region src/serialize/serializeString.ts
+/**
+* @internal
+*/
+function serializeString(value) {
+  if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
+  return "\"".concat(value.replace(/\\/g, "\\\\").replace(/"/g, "\\\""), "\"");
+}
+
+//#endregion
+//#region src/utils/symbolToStr.ts
+/**
+* Converts a symbol to a string.
+*
+* @param symbol - The symbol to convert.
+*
+* @returns The string representation of the symbol.
+*
+*
+* @beta
+*/
+function symbolToStr(symbol) {
+  return symbol.description || symbol.toString().slice(7, -1);
+}
+
+//#endregion
+//#region src/serialize/serializeToken.ts
+/**
+* @internal
+*/
+function serializeToken(token) {
+  var value = symbolToStr(token);
+  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeBareItem.ts
+/**
+* @internal
+*/
+function serializeBareItem(value) {
+  switch ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(value)) {
+    case "number":
+      if (!Number.isFinite(value)) throw serializeError(value, BARE_ITEM);
+      if (Number.isInteger(value)) return serializeInteger(value);
+      return serializeDecimal(value);
+    case "string":
+      return serializeString(value);
+    case "symbol":
+      return serializeToken(value);
+    case "boolean":
+      return serializeBoolean(value);
+    case "object":
+      if (value instanceof Date) return serializeDate(value);
+      if (value instanceof Uint8Array) return serializeByteSequence(value);
+      if (value instanceof SfToken) return serializeToken(value);
+    default:
+      throw serializeError(value, BARE_ITEM);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeKey.ts
+/**
+* @internal
+*/
+function serializeKey(value) {
+  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeParams.ts
+/**
+* @internal
+*/
+function serializeParams(params) {
+  if (params == null) return "";
+  return Object.entries(params).map(function (_ref) {
+    var _ref2 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref, 2),
+      key = _ref2[0],
+      value = _ref2[1];
+    if (value === true) return ";".concat(serializeKey(key));
+    return ";".concat(serializeKey(key), "=").concat(serializeBareItem(value));
+  }).join("");
+}
+
+//#endregion
+//#region src/serialize/serializeItem.ts
+/**
+* @internal
+*/
+function serializeItem(value) {
+  if (value instanceof SfItem) return "".concat(serializeBareItem(value.value)).concat(serializeParams(value.params));else return serializeBareItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeInnerList.ts
+/**
+* @internal
+*/
+function serializeInnerList(value) {
+  return "(".concat(value.value.map(serializeItem).join(" "), ")").concat(serializeParams(value.params));
+}
+
+//#endregion
+//#region src/serialize/serializeDict.ts
+/**
+* @internal
+*/
+function serializeDict(dict) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+    whitespace: true
+  };
+  if ((0,_babel_runtime_helpers_typeof__WEBPACK_IMPORTED_MODULE_1__["default"])(dict) !== "object" || dict == null) throw serializeError(dict, DICT);
+  var entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
+  var optionalWhiteSpace = options !== null && options !== void 0 && options.whitespace ? " " : "";
+  return Array.from(entries).map(function (_ref3) {
+    var _ref4 = (0,_babel_runtime_helpers_slicedToArray__WEBPACK_IMPORTED_MODULE_0__["default"])(_ref3, 2),
+      key = _ref4[0],
+      item = _ref4[1];
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    var output = serializeKey(key);
+    if (item.value === true) output += serializeParams(item.params);else {
+      output += "=";
+      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
+    }
+    return output;
+  }).join(",".concat(optionalWhiteSpace));
+}
+
+//#endregion
+//#region src/encodeSfDict.ts
+/**
+* Encode an object into a structured field dictionary
+*
+* @param value - The structured field dictionary to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfDict(value, options) {
+  return serializeDict(value, options);
+}
+
+//#endregion
+//#region src/encodeSfItem.ts
+function encodeSfItem(value, params) {
+  if (!(value instanceof SfItem)) value = new SfItem(value, params);
+  return serializeItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeList.ts
+/**
+* @internal
+*/
+function serializeList(list) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {
+    whitespace: true
+  };
+  if (Array.isArray(list) === false) throw serializeError(list, LIST);
+  var optionalWhiteSpace = options !== null && options !== void 0 && options.whitespace ? " " : "";
+  return list.map(function (item) {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    var i = item;
+    if (Array.isArray(i.value)) return serializeInnerList(i);
+    return serializeItem(i);
+  }).join(",".concat(optionalWhiteSpace));
+}
+
+//#endregion
+//#region src/encodeSfList.ts
+/**
+* Encode a list into a structured field dictionary
+*
+* @param value - The structured field list to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfList(value, options) {
+  return serializeList(value, options);
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-utils/dist/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/@svta/cml-utils/dist/index.js ***!
+  \****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Encoding: function() { return /* binding */ Encoding; },
+/* harmony export */   RequestType: function() { return /* binding */ RequestType; },
+/* harmony export */   UTF_16: function() { return /* binding */ UTF_16; },
+/* harmony export */   UTF_16_BE: function() { return /* binding */ UTF_16_BE; },
+/* harmony export */   UTF_16_LE: function() { return /* binding */ UTF_16_LE; },
+/* harmony export */   UTF_8: function() { return /* binding */ UTF_8; },
+/* harmony export */   arrayBufferToHex: function() { return /* binding */ arrayBufferToHex; },
+/* harmony export */   arrayBufferToUuid: function() { return /* binding */ arrayBufferToUuid; },
+/* harmony export */   base64decode: function() { return /* binding */ base64decode; },
+/* harmony export */   base64encode: function() { return /* binding */ base64encode; },
+/* harmony export */   convertUint8ToUint16: function() { return /* binding */ convertUint8ToUint16; },
+/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; },
+/* harmony export */   decodeText: function() { return /* binding */ decodeText; },
+/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; },
+/* harmony export */   getBandwidthBps: function() { return /* binding */ getBandwidthBps; },
+/* harmony export */   hexToArrayBuffer: function() { return /* binding */ hexToArrayBuffer; },
+/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; },
+/* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; },
+/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; },
+/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; },
+/* harmony export */   uuid: function() { return /* binding */ uuid; },
+/* harmony export */   uuidToArrayBuffer: function() { return /* binding */ uuidToArrayBuffer; }
+/* harmony export */ });
+/* harmony import */ var _babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @babel/runtime/helpers/toConsumableArray */ "./node_modules/@babel/runtime/helpers/esm/toConsumableArray.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_join_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.array.join.js */ "./node_modules/core-js/modules/es.array.join.js");
+/* harmony import */ var core_js_modules_es_array_map_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.array.map.js */ "./node_modules/core-js/modules/es.array.map.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_array_buffer_constructor_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array-buffer.constructor.js */ "./node_modules/core-js/modules/es.array-buffer.constructor.js");
+/* harmony import */ var core_js_modules_es_array_buffer_detached_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array-buffer.detached.js */ "./node_modules/core-js/modules/es.array-buffer.detached.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer.js */ "./node_modules/core-js/modules/es.array-buffer.transfer.js");
+/* harmony import */ var core_js_modules_es_array_buffer_transfer_to_fixed_length_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array-buffer.transfer-to-fixed-length.js */ "./node_modules/core-js/modules/es.array-buffer.transfer-to-fixed-length.js");
+/* harmony import */ var core_js_modules_es_number_epsilon_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.number.epsilon.js */ "./node_modules/core-js/modules/es.number.epsilon.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_string_from_code_point_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.string.from-code-point.js */ "./node_modules/core-js/modules/es.string.from-code-point.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_pad_start_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.string.pad-start.js */ "./node_modules/core-js/modules/es.string.pad-start.js");
+/* harmony import */ var core_js_modules_es_string_replace_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.string.replace.js */ "./node_modules/core-js/modules/es.string.replace.js");
+/* harmony import */ var core_js_modules_es_string_search_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.string.search.js */ "./node_modules/core-js/modules/es.string.search.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint8_array_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint8-array.js */ "./node_modules/core-js/modules/es.typed-array.uint8-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_uint16_array_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! core-js/modules/es.typed-array.uint16-array.js */ "./node_modules/core-js/modules/es.typed-array.uint16-array.js");
+/* harmony import */ var core_js_modules_es_typed_array_at_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! core-js/modules/es.typed-array.at.js */ "./node_modules/core-js/modules/es.typed-array.at.js");
+/* harmony import */ var core_js_modules_es_typed_array_copy_within_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! core-js/modules/es.typed-array.copy-within.js */ "./node_modules/core-js/modules/es.typed-array.copy-within.js");
+/* harmony import */ var core_js_modules_es_typed_array_every_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! core-js/modules/es.typed-array.every.js */ "./node_modules/core-js/modules/es.typed-array.every.js");
+/* harmony import */ var core_js_modules_es_typed_array_fill_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! core-js/modules/es.typed-array.fill.js */ "./node_modules/core-js/modules/es.typed-array.fill.js");
+/* harmony import */ var core_js_modules_es_typed_array_filter_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! core-js/modules/es.typed-array.filter.js */ "./node_modules/core-js/modules/es.typed-array.filter.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! core-js/modules/es.typed-array.find.js */ "./node_modules/core-js/modules/es.typed-array.find.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_index_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-index.js */ "./node_modules/core-js/modules/es.typed-array.find-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last.js */ "./node_modules/core-js/modules/es.typed-array.find-last.js");
+/* harmony import */ var core_js_modules_es_typed_array_find_last_index_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! core-js/modules/es.typed-array.find-last-index.js */ "./node_modules/core-js/modules/es.typed-array.find-last-index.js");
+/* harmony import */ var core_js_modules_es_typed_array_for_each_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! core-js/modules/es.typed-array.for-each.js */ "./node_modules/core-js/modules/es.typed-array.for-each.js");
+/* harmony import */ var core_js_modules_es_typed_array_includes_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! core-js/modules/es.typed-array.includes.js */ "./node_modules/core-js/modules/es.typed-array.includes.js");
+/* harmony import */ var core_js_modules_es_typed_array_index_of_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! core-js/modules/es.typed-array.index-of.js */ "./node_modules/core-js/modules/es.typed-array.index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_iterator_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! core-js/modules/es.typed-array.iterator.js */ "./node_modules/core-js/modules/es.typed-array.iterator.js");
+/* harmony import */ var core_js_modules_es_typed_array_join_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! core-js/modules/es.typed-array.join.js */ "./node_modules/core-js/modules/es.typed-array.join.js");
+/* harmony import */ var core_js_modules_es_typed_array_last_index_of_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! core-js/modules/es.typed-array.last-index-of.js */ "./node_modules/core-js/modules/es.typed-array.last-index-of.js");
+/* harmony import */ var core_js_modules_es_typed_array_map_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! core-js/modules/es.typed-array.map.js */ "./node_modules/core-js/modules/es.typed-array.map.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce.js */ "./node_modules/core-js/modules/es.typed-array.reduce.js");
+/* harmony import */ var core_js_modules_es_typed_array_reduce_right_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! core-js/modules/es.typed-array.reduce-right.js */ "./node_modules/core-js/modules/es.typed-array.reduce-right.js");
+/* harmony import */ var core_js_modules_es_typed_array_reverse_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! core-js/modules/es.typed-array.reverse.js */ "./node_modules/core-js/modules/es.typed-array.reverse.js");
+/* harmony import */ var core_js_modules_es_typed_array_set_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! core-js/modules/es.typed-array.set.js */ "./node_modules/core-js/modules/es.typed-array.set.js");
+/* harmony import */ var core_js_modules_es_typed_array_slice_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! core-js/modules/es.typed-array.slice.js */ "./node_modules/core-js/modules/es.typed-array.slice.js");
+/* harmony import */ var core_js_modules_es_typed_array_some_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! core-js/modules/es.typed-array.some.js */ "./node_modules/core-js/modules/es.typed-array.some.js");
+/* harmony import */ var core_js_modules_es_typed_array_sort_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! core-js/modules/es.typed-array.sort.js */ "./node_modules/core-js/modules/es.typed-array.sort.js");
+/* harmony import */ var core_js_modules_es_typed_array_subarray_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! core-js/modules/es.typed-array.subarray.js */ "./node_modules/core-js/modules/es.typed-array.subarray.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_locale_string_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-locale-string.js */ "./node_modules/core-js/modules/es.typed-array.to-locale-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_reversed_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-reversed.js */ "./node_modules/core-js/modules/es.typed-array.to-reversed.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_sorted_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-sorted.js */ "./node_modules/core-js/modules/es.typed-array.to-sorted.js");
+/* harmony import */ var core_js_modules_es_typed_array_to_string_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! core-js/modules/es.typed-array.to-string.js */ "./node_modules/core-js/modules/es.typed-array.to-string.js");
+/* harmony import */ var core_js_modules_es_typed_array_with_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! core-js/modules/es.typed-array.with.js */ "./node_modules/core-js/modules/es.typed-array.with.js");
+/* harmony import */ var core_js_modules_web_atob_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! core-js/modules/web.atob.js */ "./node_modules/core-js/modules/web.atob.js");
+/* harmony import */ var core_js_modules_web_btoa_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! core-js/modules/web.btoa.js */ "./node_modules/core-js/modules/web.btoa.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var core_js_modules_web_dom_exception_constructor_js__WEBPACK_IMPORTED_MODULE_52__ = __webpack_require__(/*! core-js/modules/web.dom-exception.constructor.js */ "./node_modules/core-js/modules/web.dom-exception.constructor.js");
+/* harmony import */ var core_js_modules_web_dom_exception_stack_js__WEBPACK_IMPORTED_MODULE_53__ = __webpack_require__(/*! core-js/modules/web.dom-exception.stack.js */ "./node_modules/core-js/modules/web.dom-exception.stack.js");
+/* harmony import */ var core_js_modules_web_dom_exception_to_string_tag_js__WEBPACK_IMPORTED_MODULE_54__ = __webpack_require__(/*! core-js/modules/web.dom-exception.to-string-tag.js */ "./node_modules/core-js/modules/web.dom-exception.to-string-tag.js");
+/* harmony import */ var core_js_modules_web_url_js__WEBPACK_IMPORTED_MODULE_55__ = __webpack_require__(/*! core-js/modules/web.url.js */ "./node_modules/core-js/modules/web.url.js");
+/* harmony import */ var core_js_modules_web_url_to_json_js__WEBPACK_IMPORTED_MODULE_56__ = __webpack_require__(/*! core-js/modules/web.url.to-json.js */ "./node_modules/core-js/modules/web.url.to-json.js");
+/* harmony import */ var core_js_modules_web_url_search_params_js__WEBPACK_IMPORTED_MODULE_57__ = __webpack_require__(/*! core-js/modules/web.url-search-params.js */ "./node_modules/core-js/modules/web.url-search-params.js");
+/* harmony import */ var core_js_modules_web_url_search_params_delete_js__WEBPACK_IMPORTED_MODULE_58__ = __webpack_require__(/*! core-js/modules/web.url-search-params.delete.js */ "./node_modules/core-js/modules/web.url-search-params.delete.js");
+/* harmony import */ var core_js_modules_web_url_search_params_has_js__WEBPACK_IMPORTED_MODULE_59__ = __webpack_require__(/*! core-js/modules/web.url-search-params.has.js */ "./node_modules/core-js/modules/web.url-search-params.has.js");
+/* harmony import */ var core_js_modules_web_url_search_params_size_js__WEBPACK_IMPORTED_MODULE_60__ = __webpack_require__(/*! core-js/modules/web.url-search-params.size.js */ "./node_modules/core-js/modules/web.url-search-params.size.js");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#region src/arrayBufferToHex.ts
+/**
+* Encodes an ArrayBuffer as a hexadecimal string.
+*
+* @param buffer - The ArrayBuffer to encode.
+* @returns The hexadecimal string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToHex.test.ts#example}
+*/
+function arrayBufferToHex(buffer) {
+  return new Uint8Array(buffer).reduce(function (result, byte) {
+    return result + byte.toString(16).padStart(2, "0");
+  }, "");
+}
+
+//#endregion
+//#region src/arrayBufferToUuid.ts
+/**
+* Converts an ArrayBuffer to a UUID string.
+*
+* @param buffer - The ArrayBuffer to convert.
+* @returns The UUID string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToUuid.test.ts#example}
+*/
+function arrayBufferToUuid(buffer) {
+  return arrayBufferToHex(buffer).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
+}
+
+//#endregion
+//#region src/decodeBase64.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*/
+function decodeBase64(str) {
+  return new Uint8Array((0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(atob(str)).map(function (a) {
+    return a.charCodeAt(0);
+  }));
+}
+
+//#endregion
+//#region src/base64decode.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*
+* @deprecated Use {@link decodeBase64} instead.
+*
+* @see {@link decodeBase64}
+*/
+var base64decode = decodeBase64;
+
+//#endregion
+//#region src/encodeBase64.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*/
+function encodeBase64(binary) {
+  return btoa(String.fromCharCode.apply(String, (0,_babel_runtime_helpers_toConsumableArray__WEBPACK_IMPORTED_MODULE_0__["default"])(binary)));
+}
+
+//#endregion
+//#region src/base64encode.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*
+* @deprecated Use {@link encodeBase64} instead.
+*
+* @see {@link encodeBase64}
+*/
+var base64encode = encodeBase64;
+
+//#endregion
+//#region src/convertUint8ToUint16.ts
+/**
+* Converts a Uint8Array to a Uint16Array by aligning its buffer.
+*
+* @param input - The Uint8Array to convert
+* @returns A properly aligned Uint16Array
+*
+* @beta
+*/
+function convertUint8ToUint16(input) {
+  if (input.length % 2 !== 0) {
+    var padded = new Uint8Array(input.length + 1);
+    padded.set(input);
+    return new Uint16Array(padded.buffer);
+  }
+  return new Uint16Array(input.buffer);
+}
+
+//#endregion
+//#region src/UTF_16.ts
+/**
+* UTF-16 Encoding.
+*
+*
+* @beta
+*/
+var UTF_16 = "utf-16";
+
+//#endregion
+//#region src/UTF_16_BE.ts
+/**
+* UTF-16 Big Endian Encoding.
+*
+*
+* @beta
+*/
+var UTF_16_BE = "utf-16be";
+
+//#endregion
+//#region src/UTF_16_LE.ts
+/**
+* UTF-16 Little Endian Encoding.
+*
+*
+* @beta
+*/
+var UTF_16_LE = "utf-16le";
+
+//#endregion
+//#region src/UTF_8.ts
+/**
+* UTF-8 Encoding.
+*
+*
+* @beta
+*/
+var UTF_8 = "utf-8";
+
+//#endregion
+//#region src/decodeText.ts
+/**
+* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
+* but with a fallback for environments that don't support `TextDecoder`.
+*
+* @param data - The data to decode.
+* @param options - The options for the decoding.
+* @returns The string representation of the ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeText.test.ts#example}
+*/
+function decodeText(data) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var view;
+  if (data instanceof ArrayBuffer) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  var byteOffset = 0;
+  var encoding = options.encoding;
+  if (!encoding) {
+    var first = view.getUint8(0);
+    var second = view.getUint8(1);
+    if (first == 239 && second == 187 && view.getUint8(2) == 191) {
+      encoding = UTF_8;
+      byteOffset = 3;
+    } else if (first == 254 && second == 255) {
+      encoding = UTF_16_BE;
+      byteOffset = 2;
+    } else if (first == 255 && second == 254) {
+      encoding = UTF_16_LE;
+      byteOffset = 2;
+    } else encoding = UTF_8;
+  }
+  if (typeof TextDecoder !== "undefined") return new TextDecoder(encoding).decode(view);
+  var _view = view,
+    byteLength = _view.byteLength;
+  var endian = encoding !== UTF_16_BE;
+  var str = "";
+  var char;
+  while (byteOffset < byteLength) {
+    switch (encoding) {
+      case UTF_8:
+        char = view.getUint8(byteOffset);
+        if (char < 128) byteOffset++;else if (char >= 194 && char <= 223) {
+          if (byteOffset + 1 < byteLength) {
+            var byte2 = view.getUint8(byteOffset + 1);
+            if (byte2 >= 128 && byte2 <= 191) {
+              char = (char & 31) << 6 | byte2 & 63;
+              byteOffset += 2;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 224 && char <= 239) {
+          if (byteOffset + 2 <= byteLength - 1) {
+            var _byte = view.getUint8(byteOffset + 1);
+            var byte3 = view.getUint8(byteOffset + 2);
+            if (_byte >= 128 && _byte <= 191 && byte3 >= 128 && byte3 <= 191) {
+              char = (char & 15) << 12 | (_byte & 63) << 6 | byte3 & 63;
+              byteOffset += 3;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 240 && char <= 244) {
+          if (byteOffset + 3 <= byteLength - 1) {
+            var _byte2 = view.getUint8(byteOffset + 1);
+            var _byte3 = view.getUint8(byteOffset + 2);
+            var byte4 = view.getUint8(byteOffset + 3);
+            if (_byte2 >= 128 && _byte2 <= 191 && _byte3 >= 128 && _byte3 <= 191 && byte4 >= 128 && byte4 <= 191) {
+              char = (char & 7) << 18 | (_byte2 & 63) << 12 | (_byte3 & 63) << 6 | byte4 & 63;
+              byteOffset += 4;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else byteOffset++;
+        break;
+      case UTF_16_BE:
+      case UTF_16:
+      case UTF_16_LE:
+        char = view.getUint16(byteOffset, endian);
+        byteOffset += 2;
+        break;
+    }
+    str += String.fromCodePoint(char);
+  }
+  return str;
+}
+
+//#endregion
+//#region src/Encoding.ts
+/**
+* Text encoding types.
+*
+*
+* @beta
+*/
+var Encoding = {
+  UTF8: UTF_8,
+  UTF16: UTF_16,
+  UTF16BE: UTF_16_BE,
+  UTF16LE: UTF_16_LE
+};
+
+//#endregion
+//#region src/getBandwidthBps.ts
+/**
+* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+*
+* @param sample - A ResourceTiming sample
+* @returns
+*
+*
+* @beta
+*/
+function getBandwidthBps(sample) {
+  var durationSeconds = sample.duration / 1e3;
+  return sample.encodedBodySize * 8 / durationSeconds;
+}
+
+//#endregion
+//#region src/hexToArrayBuffer.ts
+/**
+* Decodes a hexadecimal string into an ArrayBuffer.
+*
+* @param hex - The hexadecimal string to decode.
+* @returns The decoded ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/hexToArrayBuffer.test.ts#example}
+*/
+function hexToArrayBuffer(hex) {
+  var buffer = /* @__PURE__ */new ArrayBuffer(hex.length / 2);
+  var view = new Uint8Array(buffer);
+  for (var i = 0; i < hex.length; i += 2) view[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return buffer;
+}
+
+//#endregion
+//#region src/RequestType.ts
+/**
+* The content type of the request.
+*
+*
+* @enum
+*
+* @beta
+*/
+var RequestType = {
+  TEXT: "text",
+  JSON: "json",
+  BLOB: "blob",
+  ARRAY_BUFFER: "arrayBuffer",
+  DOCUMENT: "document"
+};
+
+//#endregion
+//#region src/roundToEven.ts
+/**
+* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
+* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+*
+* @param value - The value to round
+* @param precision - The number of decimal places to round to
+* @returns The rounded value
+*
+*
+* @beta
+*/
+function roundToEven(value, precision) {
+  if (value < 0) return -roundToEven(-value, precision);
+  var decimalShift = Math.pow(10, precision);
+  if (Math.abs(value * decimalShift % 1 - .5) < Number.EPSILON) {
+    var flooredValue = Math.floor(value * decimalShift);
+    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
+  } else return Math.round(value * decimalShift) / decimalShift;
+}
+
+//#endregion
+//#region src/stringToUint16.ts
+/**
+* Converts a string to a Uint16Array.
+*
+* @param str - The string to convert
+* @returns A Uint16Array representation of the string
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/stringToUint16.test.ts#example}
+*/
+function stringToUint16(str) {
+  var buffer = /* @__PURE__ */new ArrayBuffer(str.length * 2);
+  var view = new DataView(buffer);
+  for (var i = 0; i < str.length; i++) view.setUint16(i * 2, str.charCodeAt(i), true);
+  return new Uint16Array(buffer);
+}
+
+//#endregion
+//#region src/unescapeHtml.ts
+var escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
+/**
+* Unescapes HTML entities
+*
+* @param text - The text to unescape
+* @returns The unescaped text
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/unescapeHtml.test.ts#example}
+*/
+function unescapeHtml(text) {
+  if (text.indexOf("&") === -1) return text;
+  return text.replace(escapedHtml, function (match) {
+    switch (match) {
+      case "&amp;":
+        return "&";
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
+      case "&quot;":
+        return "\"";
+      case "&apos;":
+        return "'";
+      case "&nbsp;":
+        return "\xA0";
+      case "&lrm;":
+        return "‎";
+      case "&rlm;":
+        return "‏";
+      default:
+        if (match[1] === "#") {
+          var code = match[2] === "x" || match[2] === "X" ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
+          return String.fromCodePoint(code);
+        }
+        return match;
+    }
+  });
+}
+
+//#endregion
+//#region src/urlToRelativePath.ts
+/**
+* Constructs a relative path from a URL.
+*
+* @param url - The destination URL
+* @param base - The base URL
+* @returns The relative path
+*
+*
+* @beta
+*/
+function urlToRelativePath(url, base) {
+  var to = new URL(url);
+  var from = new URL(base);
+  if (to.origin !== from.origin) return url;
+  var toPath = to.pathname.split("/").slice(1);
+  var fromPath = from.pathname.split("/").slice(1, -1);
+  var length = Math.min(toPath.length, fromPath.length);
+  for (var i = 0; i < length; i++) {
+    if (toPath[i] !== fromPath[i]) break;
+    toPath.shift();
+    fromPath.shift();
+  }
+  while (fromPath.length) {
+    fromPath.shift();
+    toPath.unshift("..");
+  }
+  return toPath.join("/") + to.search + to.hash;
+}
+
+//#endregion
+//#region src/uuid.ts
+/**
+* Generate a random v4 UUID
+*
+* @returns A random v4 UUID
+*
+*
+* @beta
+*/
+function uuid() {
+  try {
+    return crypto.randomUUID();
+  } catch (error) {
+    try {
+      var url = URL.createObjectURL(new Blob());
+      var uuid$1 = url.toString();
+      URL.revokeObjectURL(url);
+      return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
+    } catch (error$1) {
+      var dt = (/* @__PURE__ */new Date()).getTime();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+        var r = (dt + Math.random() * 16) % 16 | 0;
+        dt = Math.floor(dt / 16);
+        return (c == "x" ? r : r & 3 | 8).toString(16);
+      });
+    }
+  }
+}
+
+//#endregion
+//#region src/uuidToArrayBuffer.ts
+/**
+* Converts a UUID string to an ArrayBuffer.
+*
+* @param uuid - The UUID string to convert.
+* @returns The ArrayBuffer representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/uuidToArrayBuffer.test.ts#example}
+*/
+function uuidToArrayBuffer(uuid$1) {
+  return hexToArrayBuffer(uuid$1.replace(/-/g, ""));
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-xml/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-xml/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getElementsByName: function() { return /* binding */ getElementsByName; },
+/* harmony export */   parseXml: function() { return /* binding */ parseXml; },
+/* harmony export */   serializeXml: function() { return /* binding */ serializeXml; }
+/* harmony export */ });
+/* harmony import */ var core_js_modules_es_symbol_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.symbol.js */ "./node_modules/core-js/modules/es.symbol.js");
+/* harmony import */ var core_js_modules_es_symbol_description_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! core-js/modules/es.symbol.description.js */ "./node_modules/core-js/modules/es.symbol.description.js");
+/* harmony import */ var core_js_modules_es_symbol_iterator_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! core-js/modules/es.symbol.iterator.js */ "./node_modules/core-js/modules/es.symbol.iterator.js");
+/* harmony import */ var core_js_modules_es_error_cause_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! core-js/modules/es.error.cause.js */ "./node_modules/core-js/modules/es.error.cause.js");
+/* harmony import */ var core_js_modules_es_array_concat_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! core-js/modules/es.array.concat.js */ "./node_modules/core-js/modules/es.array.concat.js");
+/* harmony import */ var core_js_modules_es_array_from_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! core-js/modules/es.array.from.js */ "./node_modules/core-js/modules/es.array.from.js");
+/* harmony import */ var core_js_modules_es_array_iterator_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! core-js/modules/es.array.iterator.js */ "./node_modules/core-js/modules/es.array.iterator.js");
+/* harmony import */ var core_js_modules_es_array_push_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! core-js/modules/es.array.push.js */ "./node_modules/core-js/modules/es.array.push.js");
+/* harmony import */ var core_js_modules_es_array_slice_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! core-js/modules/es.array.slice.js */ "./node_modules/core-js/modules/es.array.slice.js");
+/* harmony import */ var core_js_modules_es_function_name_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! core-js/modules/es.function.name.js */ "./node_modules/core-js/modules/es.function.name.js");
+/* harmony import */ var core_js_modules_es_json_stringify_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! core-js/modules/es.json.stringify.js */ "./node_modules/core-js/modules/es.json.stringify.js");
+/* harmony import */ var core_js_modules_es_object_to_string_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! core-js/modules/es.object.to-string.js */ "./node_modules/core-js/modules/es.object.to-string.js");
+/* harmony import */ var core_js_modules_es_regexp_exec_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! core-js/modules/es.regexp.exec.js */ "./node_modules/core-js/modules/es.regexp.exec.js");
+/* harmony import */ var core_js_modules_es_regexp_test_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! core-js/modules/es.regexp.test.js */ "./node_modules/core-js/modules/es.regexp.test.js");
+/* harmony import */ var core_js_modules_es_regexp_to_string_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! core-js/modules/es.regexp.to-string.js */ "./node_modules/core-js/modules/es.regexp.to-string.js");
+/* harmony import */ var core_js_modules_es_string_iterator_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! core-js/modules/es.string.iterator.js */ "./node_modules/core-js/modules/es.string.iterator.js");
+/* harmony import */ var core_js_modules_es_string_starts_with_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! core-js/modules/es.string.starts-with.js */ "./node_modules/core-js/modules/es.string.starts-with.js");
+/* harmony import */ var core_js_modules_es_string_trim_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! core-js/modules/es.string.trim.js */ "./node_modules/core-js/modules/es.string.trim.js");
+/* harmony import */ var core_js_modules_web_dom_collections_iterator_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! core-js/modules/web.dom-collections.iterator.js */ "./node_modules/core-js/modules/web.dom-collections.iterator.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
+function _unsupportedIterableToArray(r, a) { if (r) { if ("string" == typeof r) return _arrayLikeToArray(r, a); var t = {}.toString.call(r).slice(8, -1); return "Object" === t && r.constructor && (t = r.constructor.name), "Map" === t || "Set" === t ? Array.from(r) : "Arguments" === t || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(t) ? _arrayLikeToArray(r, a) : void 0; } }
+function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length); for (var e = 0, n = Array(a); e < a; e++) n[e] = r[e]; return n; }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//#region src/getElementsByName.ts
+/**
+* Recursively finds all elements by name within an XML structure.
+*
+* @param node - The current XML node to search within.
+* @param name - The name of the target nodes to find.
+* @param found - An array to collect matching nodes.
+* @returns An array of all matching XmlNodes.
+*
+*
+* @beta
+*
+*/
+function getElementsByName(node, name) {
+  var found = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : [];
+  if (!node) return found;
+  if (node.nodeName === name) found.push(node);
+  if (node.childNodes) {
+    var _iterator = _createForOfIteratorHelper(node.childNodes),
+      _step;
+    try {
+      for (_iterator.s(); !(_step = _iterator.n()).done;) {
+        var child = _step.value;
+        getElementsByName(child, name, found);
+      }
+    } catch (err) {
+      _iterator.e(err);
+    } finally {
+      _iterator.f();
+    }
+  }
+  return found;
+}
+
+//#endregion
+//#region src/parseXml.ts
+/**
+* Parse XML into a JS object with no validation and some failure tolerance
+*
+* @param input - The input XML string
+* @param options - Optional parsing options
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeXml.test.ts#example}
+*/
+function parseXml(input) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var pos = options.pos || 0;
+  var length = input.length;
+  var keepComments = !!options.keepComments;
+  var keepWhitespace = !!options.keepWhitespace;
+  var openBracket = "<";
+  var openBracketCC = "<".charCodeAt(0);
+  var closeBracket = ">";
+  var closeBracketCC = ">".charCodeAt(0);
+  var minusCC = "-".charCodeAt(0);
+  var slashCC = "/".charCodeAt(0);
+  var questionCC = "?".charCodeAt(0);
+  var exclamationCC = "!".charCodeAt(0);
+  var singleQuoteCC = "'".charCodeAt(0);
+  var doubleQuoteCC = "\"".charCodeAt(0);
+  var openCornerBracketCC = "[".charCodeAt(0);
+  var closeCornerBracketCC = "]".charCodeAt(0);
+  var nameSpacer = "\r\n	>/= ";
+  function createTextNode(value) {
+    var nodeName = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : "#text";
+    return {
+      nodeName: nodeName,
+      nodeValue: value,
+      attributes: {},
+      childNodes: []
+    };
+  }
+  /**
+  * parsing a list of entries
+  */
+  function parseChildren() {
+    var tagName = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "";
+    var children = [];
+    while (input[pos]) if (input.charCodeAt(pos) == openBracketCC) {
+      if (input.charCodeAt(pos + 1) === slashCC) {
+        var closeStart = pos + 2;
+        pos = input.indexOf(closeBracket, pos);
+        if (!input.startsWith(tagName, closeStart)) {
+          var parsedText = input.substring(0, pos).split("\n");
+          throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
+        }
+        if (pos + 1) pos += 1;
+        return children;
+      } else if (input.charCodeAt(pos + 1) === questionCC) {
+        pos = input.indexOf(closeBracket, pos);
+        pos++;
+        continue;
+      } else if (input.charCodeAt(pos + 1) === exclamationCC) {
+        if (input.charCodeAt(pos + 2) == minusCC) {
+          var startCommentPos = pos;
+          while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) pos = input.indexOf(closeBracket, pos + 1);
+          if (pos === -1) pos = length;
+          if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
+        } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith("CDATA", pos + 3)) {
+          var cdataEndIndex = input.indexOf("]]>", pos);
+          if (cdataEndIndex == -1) {
+            children.push(createTextNode(input.substr(pos + 9), "#cdata"));
+            pos = length;
+          } else {
+            children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), "#cdata"));
+            pos = cdataEndIndex + 3;
+          }
+          continue;
+        } else {
+          var startDoctype = pos + 1;
+          pos += 2;
+          var encapsuled = false;
+          while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
+            if (input.charCodeAt(pos) === openCornerBracketCC) encapsuled = true;else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) encapsuled = false;
+            pos++;
+          }
+          children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
+        }
+        pos++;
+        continue;
+      }
+      var node = parseNode();
+      children.push(node);
+    } else {
+      var text = parseText();
+      if (keepWhitespace) {
+        if (text.length > 0) children.push(createTextNode(text));
+      } else {
+        var trimmed = text.trim();
+        if (trimmed.length > 0) children.push(createTextNode(trimmed));
+      }
+      pos++;
+    }
+    return children;
+  }
+  /**
+  * returns the text outside of texts until the first '&lt;'
+  */
+  function parseText() {
+    var start = pos;
+    pos = input.indexOf(openBracket, pos) - 1;
+    if (pos === -2) pos = length;
+    return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_19__.unescapeHtml)(input.slice(start, pos + 1));
+  }
+  /**
+  * returns text until the first nonAlphabetic letter
+  */
+  function parseName() {
+    var start = pos;
+    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) pos++;
+    return input.slice(start, pos);
+  }
+  /**
+  * parses the attributes of a node
+  */
+  function parseAttributes() {
+    var attributes = {};
+    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
+      var c = input.charCodeAt(pos);
+      if (c > 64 && c < 91 || c > 96 && c < 123) {
+        var name = parseName();
+        var value = "";
+        var code = input.charCodeAt(pos);
+        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
+          pos++;
+          code = input.charCodeAt(pos);
+        }
+        if (code === singleQuoteCC || code === doubleQuoteCC) {
+          value = parseString();
+          if (pos === -1) throw new Error("Missing closing quote");
+        } else pos--;
+        attributes[name] = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_19__.unescapeHtml)(value);
+      }
+      pos++;
+    }
+    return attributes;
+  }
+  /**
+  * parses a node
+  */
+  function parseNode() {
+    pos++;
+    var nodeName = parseName();
+    var localName = nodeName;
+    var prefix = null;
+    var nsIndex = nodeName.indexOf(":");
+    if (nsIndex !== -1) {
+      prefix = nodeName.slice(0, nsIndex);
+      localName = nodeName.slice(nsIndex + 1);
+    }
+    var attributes = parseAttributes();
+    var childNodes = [];
+    var prev = input.charCodeAt(pos - 1);
+    pos++;
+    if (prev !== slashCC) childNodes = parseChildren(nodeName);
+    return {
+      nodeName: nodeName,
+      nodeValue: null,
+      attributes: attributes,
+      childNodes: childNodes,
+      prefix: prefix,
+      localName: localName
+    };
+  }
+  /**
+  * is parsing a string, that starts with a char and with the same usually ' or "
+  */
+  function parseString() {
+    var startChar = input[pos];
+    var startpos = pos + 1;
+    pos = input.indexOf(startChar, startpos);
+    return input.slice(startpos, pos);
+  }
+  return {
+    nodeName: "#document",
+    nodeValue: null,
+    childNodes: parseChildren(""),
+    attributes: {}
+  };
+}
+
+//#endregion
+//#region src/serializeXml.ts
+/**
+* Basic xml encoding utility. Encodes XML into a string.
+*
+* @param xml - The XML node to encode
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/serializeXml.test.ts#example}
+*/
+function serializeXml(xml) {
+  var nodeName = xml.nodeName,
+    attributes = xml.attributes,
+    childNodes = xml.childNodes;
+  if (nodeName === "#document") return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>".concat(serializeXml(childNodes[0]));
+  if (nodeName === "#text") return xml.nodeValue || "";
+  var result = "<".concat(nodeName);
+  if (attributes) for (var key in attributes) result += " ".concat(key, "=").concat(JSON.stringify(attributes[key]));
+  var children = "";
+  var childCount = childNodes === null || childNodes === void 0 ? void 0 : childNodes.length;
+  if (childCount) for (var i = 0; i < childCount; i++) children += serializeXml(childNodes[i]);
+  var close = !children ? " />" : ">".concat(children, "</").concat(nodeName, ">");
+  result += close;
+  return result;
+}
+
+//#endregion
+
+
+/***/ }),
+
 /***/ "./node_modules/bcp-47-match/index.js":
 /*!********************************************!*\
   !*** ./node_modules/bcp-47-match/index.js ***!
@@ -44019,7 +42679,8 @@ __webpack_require__.r(__webpack_exports__);
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -44076,7 +42737,8 @@ __webpack_require__.r(__webpack_exports__);
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -44492,6 +43154,8 @@ __webpack_require__.r(__webpack_exports__);
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -44666,6 +43330,8 @@ __webpack_require__.r(__webpack_exports__);
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -45104,7 +43770,8 @@ function Settings() {
         }))),
         useMediaCapabilitiesApi: true,
         filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false
+        filterHDRMetadataFormatEssentialProperties: false,
+        filterAudioChannelConfiguration: false
       },
       events: {
         eventControllerRefreshDelay: 100,
@@ -45161,7 +43828,8 @@ function Settings() {
         threshold: 0.3,
         enableSeekFix: true,
         enableStallFix: false,
-        stallSeek: 0.1
+        stallSeek: 0.1,
+        seekOffset: 0
       },
       utcSynchronization: {
         enabled: true,
@@ -46359,8 +45027,8 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     _this.BUFFERING_COMPLETED = 'bufferingCompleted';
     _this.BUFFER_CLEARED = 'bufferCleared';
-    _this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     _this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
+    _this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     _this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
     _this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
     _this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -46370,22 +45038,31 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
     _this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
     _this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    _this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-    _this.LOADING_COMPLETED = 'loadingCompleted';
-    _this.LOADING_PROGRESS = 'loadingProgress';
-    _this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
     _this.LOADING_ABANDONED = 'loadingAborted';
+    _this.LOADING_COMPLETED = 'loadingCompleted';
+    _this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
+    _this.LOADING_PROGRESS = 'loadingProgress';
     _this.MANIFEST_UPDATED = 'manifestUpdated';
+    _this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
     _this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     _this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
-    _this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
+    _this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
     _this.QUOTA_EXCEEDED = 'quotaExceeded';
+    _this.SEEK_TARGET = 'seekTarget';
     _this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     _this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     _this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     _this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
     _this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
+    _this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+    _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+    _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+    _this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+    _this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
     _this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     _this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     _this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -46397,18 +45074,10 @@ var CoreEvents = /*#__PURE__*/function (_EventsBase) {
     _this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
     _this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
     _this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+    _this.VIDEO_ELEMENT_RESIZED = 'videoElementResized';
     _this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
     _this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
     _this.XLINK_READY = 'xlinkReady';
-    _this.SEEK_TARGET = 'seekTarget';
-    _this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
-    _this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
-    _this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
-    _this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
-    _this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
-    _this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
-    _this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
-    _this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
     return _this;
   }
   (0,_babel_runtime_helpers_inherits__WEBPACK_IMPORTED_MODULE_5__["default"])(CoreEvents, _EventsBase);
@@ -48660,7 +47329,7 @@ function DashManifestModel() {
       return undefined;
     }
     var mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
-    return mainAS.Representation[0];
+    return mainAS ? mainAS.Representation[0] : undefined;
   }
   function getPreselectionsForPeriod(voPeriod) {
     var realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
@@ -48879,9 +47548,9 @@ function DashManifestModel() {
           } else {
             event.id = null;
           }
-          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
+          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
             // toString is used to manage both regular and namespaced tags
-            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
+            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
           } else {
             // From Cor.1: 'NOTE: this attribute is an alternative
             // to specifying a complete XML element(s) in the Event.
@@ -49307,7 +47976,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _matchers_LangMatcher_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ./matchers/LangMatcher.js */ "./src/dash/parser/matchers/LangMatcher.js");
 /* harmony import */ var _maps_RepresentationBaseValuesMap_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./maps/RepresentationBaseValuesMap.js */ "./src/dash/parser/maps/RepresentationBaseValuesMap.js");
 /* harmony import */ var _maps_SegmentValuesMap_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./maps/SegmentValuesMap.js */ "./src/dash/parser/maps/SegmentValuesMap.js");
-/* harmony import */ var _svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @svta/common-media-library/xml/parseXml.js */ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js");
+/* harmony import */ var _svta_cml_xml__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! @svta/cml-xml */ "./node_modules/@svta/cml-xml/dist/index.js");
 
 
 
@@ -49409,7 +48078,7 @@ function DashParser(config) {
     return manifest;
   }
   function processXml(data) {
-    var xml = (0,_svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_18__.parseXml)(data);
+    var xml = (0,_svta_cml_xml__WEBPACK_IMPORTED_MODULE_18__.parseXml)(data);
     var root = xml.childNodes.find(function (child) {
       return child.nodeName === 'MPD' || child.nodeName === 'Patch';
     }) || xml.childNodes[0];
@@ -50618,7 +49287,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
 /* harmony export */ });
 /* harmony import */ var core_js_modules_es_number_to_fixed_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! core-js/modules/es.number.to-fixed.js */ "./node_modules/core-js/modules/es.number.to-fixed.js");
-/* harmony import */ var _svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/common-media-library/dash/processUriTemplate.js */ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js");
+/* harmony import */ var _svta_cml_dash__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-dash */ "./node_modules/@svta/cml-dash/dist/index.js");
 /* harmony import */ var _vo_FullSegment_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../vo/FullSegment.js */ "./src/dash/vo/FullSegment.js");
 /* harmony import */ var _vo_PartialSegment_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vo/PartialSegment.js */ "./src/dash/vo/PartialSegment.js");
 
@@ -50762,7 +49431,7 @@ function processUriTemplate(url, representationId, number, subNumber, bandwidth,
   if (!url) {
     return url;
   }
-  return (0,_svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_1__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
+  return (0,_svta_cml_dash__WEBPACK_IMPORTED_MODULE_1__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
 }
 function getIndexBasedSegment(data) {
   var index = data.index,
@@ -56587,7 +55256,7 @@ var MediaPlayerEvents = /*#__PURE__*/function (_EventsBase) {
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     _this.CUE_EXIT = 'cueExit';
 
@@ -57692,13 +56361,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CMCD_PARAM */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdObjectType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamingFormat */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js");
-/* harmony import */ var _svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! @svta/common-media-library/cmcd/encodeCmcd */ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js");
-/* harmony import */ var _svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! @svta/common-media-library/cmcd/toCmcdHeaders */ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdHeaderField */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
 
 
 function _createForOfIteratorHelper(r, e) { var t = "undefined" != typeof Symbol && r[Symbol.iterator] || r["@@iterator"]; if (!t) { if (Array.isArray(r) || (t = _unsupportedIterableToArray(r)) || e && r && "number" == typeof r.length) { t && (r = t); var _n = 0, F = function F() {}; return { s: F, n: function n() { return _n >= r.length ? { done: !0 } : { done: !1, value: r[_n++] }; }, e: function e(r) { throw r; }, f: F }; } throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); } var o, a = !0, u = !1; return { s: function s() { t = t.call(r); }, n: function n() { var r = t.next(); return a = r.done, r; }, e: function e(r) { u = !0, o = r; }, f: function f() { try { a || null == t.return || t.return(); } finally { if (u) throw o; } } }; }
@@ -57754,12 +56417,6 @@ function _arrayLikeToArray(r, a) { (null == a || a > r.length) && (a = r.length)
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-
-
-
-
 
 
 
@@ -57871,7 +56528,7 @@ function CmcdModel() {
       if (isCmcdEnabled()) {
         var cmcdData = getCmcdData(request);
         var filteredCmcdData = _applyWhitelist(cmcdData);
-        var finalPayloadString = (0,_svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_36__.encodeCmcd)(filteredCmcdData);
+        var finalPayloadString = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.encodeCmcd)(filteredCmcdData);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_24__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -57879,7 +56536,7 @@ function CmcdModel() {
           cmcdString: finalPayloadString
         });
         return {
-          key: _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_32__.CMCD_PARAM,
+          key: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CMCD_PARAM,
           value: finalPayloadString
         };
       }
@@ -57908,7 +56565,7 @@ function CmcdModel() {
         var cmcdData = getCmcdData(request);
         var filteredCmcdData = _applyWhitelist(cmcdData);
         var options = _createCmcdV2HeadersCustomMap();
-        var headers = (0,_svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_37__.toCmcdHeaders)(filteredCmcdData, options);
+        var headers = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.toCmcdHeaders)(filteredCmcdData, options);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_24__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -58033,17 +56690,17 @@ function CmcdModel() {
   }
   function _getCmcdDataForSteering(request) {
     var data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.OTHER;
     return data;
   }
   function _getCmcdDataForLicense(request) {
     var data = _getGenericCmcdData(request);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.KEY;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.KEY;
     return data;
   }
   function _getCmcdDataForMpd() {
     var data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.MANIFEST;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.MANIFEST;
     return data;
   }
   function _getCmcdDataForMediaSegment(request, mediaType) {
@@ -58060,19 +56717,19 @@ function CmcdModel() {
     var nextRequest = _probeNextRequest(mediaType);
     var ot;
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_27__["default"].VIDEO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.VIDEO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.VIDEO;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_27__["default"].AUDIO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.AUDIO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.AUDIO;
     }
     if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_27__["default"].ENHANCEMENT) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.OTHER;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_27__["default"].TEXT) {
       if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.TIMED_TEXT;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.TIMED_TEXT;
       } else {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.CAPTION;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.CAPTION;
       }
     }
     var rtp = settings.get().streaming.cmcd.rtp;
@@ -58137,13 +56794,13 @@ function CmcdModel() {
   }
   function _getCmcdDataForInitSegment() {
     var data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.INIT;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.INIT;
     data.su = true;
     return data;
   }
   function _getCmcdDataForOther() {
     var data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_33__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdObjectType.OTHER;
     return data;
   }
   function _getGenericCmcdData() {
@@ -58184,7 +56841,7 @@ function CmcdModel() {
   function _createCmcdV2HeadersCustomMap() {
     var cmcdVersion = settings.get().streaming.cmcd.version;
     return cmcdVersion === 1 ? {} : {
-      customHeaderMap: (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, _svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_38__.CmcdHeaderField.REQUEST, ['ltc']), _svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_38__.CmcdHeaderField.SESSION, ['msd'])
+      customHeaderMap: (0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])((0,_babel_runtime_helpers_defineProperty__WEBPACK_IMPORTED_MODULE_1__["default"])({}, _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdHeaderField.REQUEST, ['ltc']), _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdHeaderField.SESSION, ['msd'])
     };
   }
   function _getBitrateByRequest(request) {
@@ -58249,8 +56906,8 @@ function CmcdModel() {
   function _onManifestLoaded(data) {
     try {
       var isDynamic = dashManifestModel.getIsDynamic(data.data);
-      var st = isDynamic ? _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamType.LIVE : _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_34__.CmcdStreamType.VOD;
-      var sf = data.protocol && data.protocol === 'MSS' ? _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_35__.CmcdStreamingFormat.SMOOTH : _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_35__.CmcdStreamingFormat.DASH;
+      var st = isDynamic ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdStreamType.LIVE : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdStreamType.VOD;
+      var sf = data.protocol && data.protocol === 'MSS' ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdStreamingFormat.SMOOTH : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_32__.CmcdStreamingFormat.DASH;
       internalData.st = "".concat(st);
       internalData.sf = "".concat(sf);
     } catch (e) {}
@@ -58378,11 +57035,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_DYNAMIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_STATIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CmsdObjectType.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdDynamic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdStatic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js");
+/* harmony import */ var _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-cmsd */ "./node_modules/@svta/cml-cmsd/dist/index.js");
 
 
 
@@ -58425,13 +57078,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-
 // Note: in modern browsers, the header names are returned in all lower case
-var CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_11__.CMSD_STATIC.toLowerCase();
-var CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC.toLowerCase();
+var CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_STATIC.toLowerCase();
+var CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC.toLowerCase();
 var CMSD_KEYS = {
   AVAILABILITY_TIME: 'at',
   DURESS: 'du',
@@ -58454,9 +57103,9 @@ var CMSD_KEYS = {
 var PERSISTENT_PARAMS = [CMSD_KEYS.MAX_SUGGESTED_BITRATE, CMSD_KEYS.STREAM_TYPE, CMSD_KEYS.STREAMING_FORMAT, CMSD_KEYS.VERSION];
 var STREAM = 'stream';
 var MEDIATYPE_TO_OBJECTTYPE = {
-  'video': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_12__.CmsdObjectType.VIDEO,
-  'audio': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_12__.CmsdObjectType.AUDIO,
-  'text': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_12__.CmsdObjectType.TIMED_TEXT,
+  'video': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CmsdObjectType.VIDEO,
+  'audio': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CmsdObjectType.AUDIO,
+  'text': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CmsdObjectType.TIMED_TEXT,
   'stream': STREAM // Specific value for parameters without object type, which apply for all media/objects
 };
 function CmsdModel() {
@@ -58485,14 +57134,14 @@ function CmsdModel() {
   }
   function _parseCMSDStatic(value) {
     try {
-      return (0,_svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_14__.decodeCmsdStatic)(value);
+      return (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.decodeCmsdStatic)(value);
     } catch (e) {
       logger.error('Failed to parse CMSD-Static response header value:', e);
     }
   }
   function _parseCMSDDynamic(value) {
     try {
-      var items = (0,_svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_13__.decodeCmsdDynamic)(value);
+      var items = (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.decodeCmsdDynamic)(value);
       var last = items[items.length - 1];
       return (last === null || last === void 0 ? void 0 : last.params) || {};
     } catch (e) {
@@ -58501,10 +57150,10 @@ function CmsdModel() {
     }
   }
   function _mediaTypetoObjectType(mediaType) {
-    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_12__.CmsdObjectType.OTHER;
+    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CmsdObjectType.OTHER;
   }
   function _getParamValueForObjectType(paramsType, ot, key) {
-    var params = paramsType === _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_11__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
+    var params = paramsType === _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
     var otParams = params[ot] || {};
     var streamParams = params[STREAM] || {};
     var value = otParams[key] || streamParams[key];
@@ -58558,22 +57207,22 @@ function CmsdModel() {
   }
   function getMaxBitrate(type) {
     var ot = _mediaTypetoObjectType(type);
-    var mb = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
+    var mb = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
     return mb ? mb : -1;
   }
   function getEstimatedThroughput(type) {
     var ot = _mediaTypetoObjectType(type);
-    var etp = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
+    var etp = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
     return etp ? etp : null;
   }
   function getResponseDelay(type) {
     var ot = _mediaTypetoObjectType(type);
-    var rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
+    var rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
     return rd ? rd : null;
   }
   function getRoundTripTime(type) {
     var ot = _mediaTypetoObjectType(type);
-    var rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
+    var rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_10__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
     return rd ? rd : null;
   }
   function reset() {
@@ -62466,18 +61115,6 @@ HTTPRequest.OTHER_TYPE = 'other';
 /******/ 	/* webpack/runtime/amd options */
 /******/ 	!function() {
 /******/ 		__webpack_require__.amdO = {};
-/******/ 	}();
-/******/ 	
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	!function() {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__webpack_require__.n = function(module) {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				function() { return module['default']; } :
-/******/ 				function() { return module; };
-/******/ 			__webpack_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
 /******/ 	}();
 /******/ 	
 /******/ 	/* webpack/runtime/define property getters */

@@ -1,3974 +1,5 @@
 /******/ var __webpack_modules__ = ({
 
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; }
-/* harmony export */ });
-/**
- * Defines the common keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_COMMON_KEYS = ['ab', 'bg', 'bl', 'br', 'bs', 'bsd', 'cdn', 'cid', 'cs', 'df', 'ec', 'lab', 'lb', 'ltc', 'msd', 'mtp', 'pb', 'pr', 'pt', 'sf', 'sid', 'sn', 'st', 'sta', 'tab', 'tb', 'tbl', 'tpb', 'ts', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; }
-/* harmony export */ });
-/**
- * Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_EVENT_KEYS = ['e'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; }
-/* harmony export */ });
-/**
- * CMCD event mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_EVENT_MODE = 'event';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/urlToRelativePath.js */ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js");
-
-
-const toRounded = value => Math.round(value);
-const toUrlSafe = (value, options) => {
-  if (Array.isArray(value)) {
-    return value.map(item => toUrlSafe(item, options));
-  }
-  if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === 'string') {
-    return new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);
-  } else {
-    if (options.baseUrl) {
-      value = (0,_utils_urlToRelativePath_js__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, options.baseUrl);
-    }
-    return options.version === 1 ? encodeURIComponent(value) : value;
-  }
-};
-const toHundred = value => toRounded(value / 100) * 100;
-const nor = (value, options) => {
-  let norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === 'string') {
-      norValue = new _structuredfield_SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);
-    } else if (typeof value === 'string') {
-      norValue = [value];
-    }
-  }
-  return toUrlSafe(norValue, options);
-};
-/**
- * The default formatters for CMCD values.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_FORMATTER_MAP = {
-  /**
-   * Bitrate (kbps) rounded integer
-   */
-  br: toRounded,
-  /**
-   * Duration (milliseconds) rounded integer
-   */
-  d: toRounded,
-  /**
-   * Buffer Length (milliseconds) rounded nearest 100ms
-   */
-  bl: toHundred,
-  /**
-   * Deadline (milliseconds) rounded nearest 100ms
-   */
-  dl: toHundred,
-  /**
-   * Measured Throughput (kbps) rounded nearest 100kbps
-   */
-  mtp: toHundred,
-  /**
-   * Next Object Request URL encoded
-   */
-  nor,
-  /**
-   * Requested maximum throughput (kbps) rounded nearest 100kbps
-   */
-  rtp: toHundred,
-  /**
-   * Top Bitrate (kbps) rounded integer
-   */
-  tb: toRounded
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_HEADER_MAP: function() { return /* binding */ CMCD_HEADER_MAP; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * The map of CMCD keys to their appropriate header shard.
- *
- * @group CMCD
- *
- * @internal
- */
-const CMCD_HEADER_MAP = {
-  // Object
-  br: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  d: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  ot: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tpb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lb: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  tab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  lab: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  url: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  // Request
-  pb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  bl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  tbl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  dl: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ltc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  mtp: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nor: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  nrr: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  rc: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sn: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  sta: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  su: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttfbb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  ttlb: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsdd: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cmsds: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  smrt: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  df: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  cs: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // TODO: Which header to put the `ts` field is not defined yet.
-  ts: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  // Session
-  cid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  pr: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sf: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  sid: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  st: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  v: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  msd: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  // Status
-  bs: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bsd: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  cdn: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  rtp: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  bg: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  pt: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  ec: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS,
-  e: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; }
-/* harmony export */ });
-/**
- * CMCD object header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_OBJECT = 'CMCD-Object';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; }
-/* harmony export */ });
-/**
- * CMCD parameter name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_PARAM = 'CMCD';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; }
-/* harmony export */ });
-/**
- * CMCD request header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST = 'CMCD-Request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; }
-/* harmony export */ });
-/**
- * Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST_KEYS = ['d', 'dl', 'nor', 'ot', 'rtp', 'su'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; }
-/* harmony export */ });
-/**
- * CMCD request mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_REQUEST_MODE = 'request';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; }
-/* harmony export */ });
-/**
- * CMCD v2 - Response-only and timing keys.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_RESPONSE_KEYS = ['cmsdd', 'cmsds', 'rc', 'smrt', 'ttfb', 'ttfbb', 'ttlb', 'url'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; }
-/* harmony export */ });
-/**
- * CMCD response mode variable name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_RESPONSE_MODE = 'response';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; }
-/* harmony export */ });
-/**
- * CMCD session header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_SESSION = 'CMCD-Session';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; }
-/* harmony export */ });
-/**
- * CMCD status header name.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_STATUS = 'CMCD-Status';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; }
-/* harmony export */ });
-/**
- * Defines the keys for CMCD (Common Media Client Data) version 1.
- *
- * @group CMCD
- *
- * @beta
- */
-const CMCD_V1_KEYS = ['bl', 'br', 'bs', 'cid', 'd', 'dl', 'mtp', 'nor', 'nrr', 'ot', 'pr', 'rtp', 'sf', 'sid', 'st', 'su', 'tb', 'v'];
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_OBJECT.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_OBJECT.js");
-/* harmony import */ var _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST.js");
-/* harmony import */ var _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_SESSION.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_SESSION.js");
-/* harmony import */ var _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_STATUS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_STATUS.js");
-
-
-
-
-/**
- * CMCD header fields.
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdHeaderField = {
-  /**
-   * keys whose values vary with the object being requested.
-   */
-  OBJECT: _CMCD_OBJECT_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_OBJECT,
-  /**
-   * keys whose values vary with each request.
-   */
-  REQUEST: _CMCD_REQUEST_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST,
-  /**
-   * keys whose values are expected to be invariant over the life of the session.
-   */
-  SESSION: _CMCD_SESSION_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_SESSION,
-  /**
-   * keys whose values do not vary with every request or object.
-   */
-  STATUS: _CMCD_STATUS_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_STATUS
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Client Data Object Type
- *
- * @group CMCD
- *
- * @beta
- *
- * @enum
- */
-const CmcdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js");
-
-/**
- * Common Media Client Data Stream Type
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdStreamType = _cta_CmStreamType_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js":
-/*!**********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js ***!
-  \**********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmStreamingFormat.js */ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js");
-
-/**
- * Common Media Client Data Streaming Format
- *
- * @group CMCD
- *
- * @enum
- *
- * @beta
- */
-const CmcdStreamingFormat = _cta_CmStreamingFormat_js__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js":
-/*!*************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js ***!
-  \*************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-/**
- * Encode a CMCD object to a string.
- *
- * @param cmcd - The CMCD object to encode.
- * @param options - Options for encoding.
- *
- * @returns The encoded CMCD string.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/encodeCmcd.test.ts#example}
- */
-function encodeCmcd(cmcd, options = {}) {
-  if (!cmcd) {
-    return '';
-  }
-  return (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)((0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_1__.prepareCmcdData)(cmcd, options), {
-    whitespace: false
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_HEADER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_HEADER_MAP.js");
-/* harmony import */ var _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CmcdHeaderField.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
-
-
-function createHeaderMap(headerMap) {
-  return Object.keys(headerMap).reduce((acc, field) => {
-    var _a;
-    (_a = headerMap[field]) === null || _a === void 0 ? void 0 : _a.forEach(key => acc[key] = field);
-    return acc;
-  }, {});
-}
-/**
- * Group a CMCD data object into header shards
- *
- * @param cmcd - The CMCD data object to convert.
- * @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- */
-function groupCmcdHeaders(cmcd, customHeaderMap) {
-  const result = {};
-  if (!cmcd) {
-    return result;
-  }
-  const keys = Object.keys(cmcd);
-  const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
-  return keys.reduce((acc, key) => {
-    var _a;
-    const field = _CMCD_HEADER_MAP_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_HEADER_MAP[key] || custom[key] || _CmcdHeaderField_js__WEBPACK_IMPORTED_MODULE_1__.CmcdHeaderField.REQUEST;
-    const data = (_a = acc[field]) !== null && _a !== void 0 ? _a : acc[field] = {};
-    data[key] = cmcd[key];
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; }
-/* harmony export */ });
-const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
- * Check if a key is a custom key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a custom key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- */
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_EVENT_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-/**
- * Check if a key is a valid CMCD event key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD event key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdEventKey.test.ts#example}
- */
-function isCmcdEventKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_EVENT_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_EVENT_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-/**
- * Check if a key is a valid CMCD request key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdRequestKey.test.ts#example}
- */
-function isCmcdRequestKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_2__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdResponseKey: function() { return /* binding */ isCmcdResponseKey; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_COMMON_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_COMMON_KEYS.js");
-/* harmony import */ var _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CMCD_REQUEST_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_KEYS.js");
-/* harmony import */ var _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./CMCD_RESPONSE_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-
-
-/**
- * Check if a key is a valid CMCD response key.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a valid CMCD request key, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdResponseKey.test.ts#example}
- */
-function isCmcdResponseKey(key) {
-  return _CMCD_COMMON_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_COMMON_KEYS.includes(key) || _CMCD_REQUEST_KEYS_js__WEBPACK_IMPORTED_MODULE_1__.CMCD_REQUEST_KEYS.includes(key) || _CMCD_RESPONSE_KEYS_js__WEBPACK_IMPORTED_MODULE_2__.CMCD_RESPONSE_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_3__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; }
-/* harmony export */ });
-/* harmony import */ var _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CMCD_V1_KEYS.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_V1_KEYS.js");
-/* harmony import */ var _isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./isCmcdCustomKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdCustomKey.js");
-
-
-/**
- * Filter function for CMCD v1 keys.
- *
- * @param key - The CMCD key to filter.
- *
- * @returns `true` if the key should be included, `false` otherwise.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/isCmcdV1Key.test.ts#example}
- */
-function isCmcdV1Key(key) {
-  return _CMCD_V1_KEYS_js__WEBPACK_IMPORTED_MODULE_0__.CMCD_V1_KEYS.includes(key) || (0,_isCmcdCustomKey_js__WEBPACK_IMPORTED_MODULE_1__.isCmcdCustomKey)(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js":
-/*!******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js ***!
-  \******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/utils/isTokenField.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js");
-/* harmony import */ var _cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../cta/utils/isValid.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js");
-/* harmony import */ var _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../structuredfield/SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./CMCD_EVENT_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_EVENT_MODE.js");
-/* harmony import */ var _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./CMCD_FORMATTER_MAP.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_FORMATTER_MAP.js");
-/* harmony import */ var _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./CMCD_REQUEST_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_REQUEST_MODE.js");
-/* harmony import */ var _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./CMCD_RESPONSE_MODE.js */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_RESPONSE_MODE.js");
-/* harmony import */ var _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./isCmcdEventKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdEventKey.js");
-/* harmony import */ var _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./isCmcdRequestKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdRequestKey.js");
-/* harmony import */ var _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./isCmcdResponseKey.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdResponseKey.js");
-/* harmony import */ var _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./isCmcdV1Key.js */ "./node_modules/@svta/common-media-library/dist/cmcd/isCmcdV1Key.js");
-
-
-
-
-
-
-
-
-
-
-
-const filterMap = {
-  [_CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__.CMCD_RESPONSE_MODE]: _isCmcdResponseKey_js__WEBPACK_IMPORTED_MODULE_9__.isCmcdResponseKey,
-  [_CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_EVENT_MODE]: _isCmcdEventKey_js__WEBPACK_IMPORTED_MODULE_7__.isCmcdEventKey,
-  [_CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__.CMCD_REQUEST_MODE]: _isCmcdRequestKey_js__WEBPACK_IMPORTED_MODULE_8__.isCmcdRequestKey
-};
-/**
- * Convert a generic object to CMCD data.
- *
- * @param obj - The CMCD object to process.
- * @param options - Options for encoding.
- *
- * @group CMCD
- *
- * @beta
- */
-function prepareCmcdData(obj, options = {}) {
-  const results = {};
-  if (obj == null || typeof obj !== 'object') {
-    return results;
-  }
-  const version = options.version || obj['v'] || 1;
-  const reportingMode = options.reportingMode || _CMCD_REQUEST_MODE_js__WEBPACK_IMPORTED_MODULE_5__.CMCD_REQUEST_MODE;
-  const keyFilter = version === 1 ? _isCmcdV1Key_js__WEBPACK_IMPORTED_MODULE_10__.isCmcdV1Key : filterMap[reportingMode];
-  // Filter keys based on the version, reporting mode and options
-  let keys = Object.keys(obj).filter(keyFilter);
-  const filter = options.filter;
-  if (typeof filter === 'function') {
-    keys = keys.filter(filter);
-  }
-  // Ensure all required keys are present before sorting
-  const needsTimestamp = reportingMode === _CMCD_RESPONSE_MODE_js__WEBPACK_IMPORTED_MODULE_6__.CMCD_RESPONSE_MODE || reportingMode === _CMCD_EVENT_MODE_js__WEBPACK_IMPORTED_MODULE_3__.CMCD_EVENT_MODE;
-  if (needsTimestamp && !keys.includes('ts')) {
-    keys.push('ts');
-  }
-  if (version > 1 && !keys.includes('v')) {
-    keys.push('v');
-  }
-  const formatters = Object.assign({}, _CMCD_FORMATTER_MAP_js__WEBPACK_IMPORTED_MODULE_4__.CMCD_FORMATTER_MAP, options.formatters);
-  const formatterOptions = {
-    version,
-    reportingMode,
-    baseUrl: options.baseUrl
-  };
-  keys.sort().forEach(key => {
-    let value = obj[key];
-    const formatter = formatters[key];
-    if (typeof formatter === 'function') {
-      value = formatter(value, formatterOptions);
-    }
-    // Version should only be reported if not equal to 1.
-    if (key === 'v') {
-      if (version === 1) {
-        return;
-      } else {
-        value = version;
-      }
-    }
-    // Playback rate should only be sent if not equal to 1.
-    if (key == 'pr' && value === 1) {
-      return;
-    }
-    // Ensure a timestamp is set for response and event modes
-    if (needsTimestamp && key === 'ts' && !Number.isFinite(value)) {
-      value = Date.now();
-    }
-    // ignore invalid values
-    if (!(0,_cta_utils_isValid_js__WEBPACK_IMPORTED_MODULE_1__.isValid)(value)) {
-      return;
-    }
-    if ((0,_cta_utils_isTokenField_js__WEBPACK_IMPORTED_MODULE_0__.isTokenField)(key) && typeof value === 'string') {
-      value = new _structuredfield_SfToken_js__WEBPACK_IMPORTED_MODULE_2__.SfToken(value);
-    }
-    results[key] = value;
-  });
-  return results;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/encodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js");
-/* harmony import */ var _groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./groupCmcdHeaders.js */ "./node_modules/@svta/common-media-library/dist/cmcd/groupCmcdHeaders.js");
-/* harmony import */ var _prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./prepareCmcdData.js */ "./node_modules/@svta/common-media-library/dist/cmcd/prepareCmcdData.js");
-
-
-
-/**
- * Convert a CMCD data object to request headers
- *
- * @param cmcd - The CMCD data object to convert.
- * @param options - Options for encoding the CMCD object.
- *
- * @returns The CMCD header shards.
- *
- * @group CMCD
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/cmcd/toCmcdHeaders.test.ts#example}
- */
-function toCmcdHeaders(cmcd, options = {}) {
-  const result = {};
-  if (!cmcd) {
-    return result;
-  }
-  const data = (0,_prepareCmcdData_js__WEBPACK_IMPORTED_MODULE_2__.prepareCmcdData)(cmcd, options);
-  const shards = (0,_groupCmcdHeaders_js__WEBPACK_IMPORTED_MODULE_1__.groupCmcdHeaders)(data, options === null || options === void 0 ? void 0 : options.customHeaderMap);
-  return Object.entries(shards).reduce((acc, [field, value]) => {
-    const shard = (0,_structuredfield_encodeSfDict_js__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
-      whitespace: false
-    });
-    if (shard) {
-      acc[field] = shard;
-    }
-    return acc;
-  }, result);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; }
-/* harmony export */ });
-/**
- * CMSD dynamic header name.
- *
- * @group CMSD
- *
- * @beta
- */
-const CMSD_DYNAMIC = 'CMSD-Dynamic';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; }
-/* harmony export */ });
-/**
- * CMSD static header name.
- *
- * @group CMSD
- *
- * @beta
- */
-const CMSD_STATIC = 'CMSD-Static';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js":
-/*!*****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js ***!
-  \*****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; }
-/* harmony export */ });
-/* harmony import */ var _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/CmObjectType.js */ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js");
-
-/**
- * Common Media Server Data Object Type
- *
- * @group CMSD
- *
- * @enum
- *
- * @beta
- */
-const CmsdObjectType = _cta_CmObjectType_js__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; }
-/* harmony export */ });
-/* harmony import */ var _structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../structuredfield/decodeSfList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js");
-
-/**
- * Decode a CMSD dynamic string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdDynamic(cmsd) {
-  if (!cmsd) {
-    return [];
-  }
-  const sfDict = (0,_structuredfield_decodeSfList_js__WEBPACK_IMPORTED_MODULE_0__.decodeSfList)(cmsd);
-  return sfDict;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../structuredfield/decodeSfDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js");
-
-
-/**
- * Decode a CMSD Static dict string to an object.
- *
- * @param cmsd - The CMSD string to decode.
- *
- * @returns The decoded CMSD object.
- *
- * @group CMSD
- *
- * @beta
- */
-function decodeCmsdStatic(cmsd) {
-  if (!cmsd) {
-    return {};
-  }
-  return Object.entries((0,_structuredfield_decodeSfDict_js__WEBPACK_IMPORTED_MODULE_1__.decodeSfDict)(cmsd)).reduce((acc, [key, item]) => {
-    const {
-      value
-    } = item;
-    acc[key] = typeof value === 'symbol' ? (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value;
-    return acc;
-  }, {});
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmObjectType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; }
-/* harmony export */ });
-/**
- * Common Media Object Type
- *
- * @internal
- */
-const CmObjectType = {
-  /**
-   * text file, such as a manifest or playlist
-   */
-  MANIFEST: 'm',
-  /**
-   * audio only
-   */
-  AUDIO: 'a',
-  /**
-   * video only
-   */
-  VIDEO: 'v',
-  /**
-   * muxed audio and video
-   */
-  MUXED: 'av',
-  /**
-   * init segment
-   */
-  INIT: 'i',
-  /**
-   * caption or subtitle
-   */
-  CAPTION: 'c',
-  /**
-   * ISOBMFF timed text track
-   */
-  TIMED_TEXT: 'tt',
-  /**
-   * cryptographic key, license or certificate.
-   */
-  KEY: 'k',
-  /**
-   * other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js":
-/*!**************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamType.js ***!
-  \**************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; }
-/* harmony export */ });
-/**
- * Common Media Stream Type
- *
- * @internal
- */
-const CmStreamType = {
-  /**
-   *  All segments are available – e.g., VOD
-   */
-  VOD: 'v',
-  /**
-   * Segments become available over time – e.g., LIVE
-   */
-  LIVE: 'l'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/CmStreamingFormat.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; }
-/* harmony export */ });
-/**
- * Common Media Streaming Format
- *
- * @internal
- */
-const CmStreamingFormat = {
-  /**
-   * MPEG DASH
-   */
-  DASH: 'd',
-  /**
-   * HTTP Live Streaming (HLS)
-   */
-  HLS: 'h',
-  /**
-   * Smooth Streaming
-   */
-  SMOOTH: 's',
-  /**
-   * Other
-   */
-  OTHER: 'o'
-};
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isTokenField.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; }
-/* harmony export */ });
-/**
- * Checks if the given key is a token field.
- *
- * @param key - The key to check.
- *
- * @returns `true` if the key is a token field.
- *
- * @internal
- */
-function isTokenField(key) {
-  return ['ot', 'sf', 'st', 'e', 'sta'].includes(key);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/isValid.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isValid: function() { return /* binding */ isValid; }
-/* harmony export */ });
-/**
- * Checks if the given value is valid
- *
- * @param value - The value to check.
- *
- * @returns `true` if the key is a value is valid.
- *
- * @internal
- */
-function isValid(value) {
-  if (typeof value === 'number') {
-    return Number.isFinite(value);
-  }
-  return value != null && value !== '' && value !== false;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js":
-/*!*******************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js ***!
-  \*******************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
-/* harmony export */ });
-/**
- * Converts a symbol to a string.
- *
- * @param symbol - The symbol to convert.
- *
- * @returns The string representation of the symbol.
- *
- * @internal
- */
-function symbolToStr(symbol) {
-  return symbol.description || symbol.toString().slice(7, -1);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
-/* harmony export */ });
-const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
-/**
- * Process a URI template used in `SegmentTemplate` nodes.
- *
- * @param uriTemplate - URI template to process.
- * @param representationId - Representation ID.
- * @param number - Number.
- * @param subNumber - Sub-number.
- * @param bandwidth - Bandwidth.
- * @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
- *
- * @returns Processed URI template.
- *
- * @group DASH
- * @beta
- *
- * @example
- * {@includeCode ../../test/dash/processUriTemplate.test.ts#example}
- */
-function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
-  const uri = uriTemplate.replace(TOKENS, (match, name, widthStr, format) => {
-    let value;
-    switch (name) {
-      case undefined:
-        // $$ case
-        return '$';
-      case 'RepresentationID':
-        value = representationId;
-        break;
-      case 'Number':
-        value = number;
-        break;
-      case 'SubNumber':
-        value = subNumber;
-        break;
-      case 'Bandwidth':
-        value = bandwidth;
-        break;
-      case 'Time':
-        if (typeof time === 'string') {
-          return time;
-        }
-        value = time ? Math.round(time) : time;
-        break;
-      default:
-        value = null;
-    }
-    if (value == null) {
-      return match;
-    }
-    let valueString;
-    switch (format) {
-      case undefined: // Happens if there is no format specifier.
-      case 'd':
-      case 'i':
-      case 'u':
-        valueString = value.toString();
-        break;
-      case 'o':
-        valueString = value.toString(8);
-        break;
-      case 'x':
-        valueString = value.toString(16);
-        break;
-      case 'X':
-        valueString = value.toString(16).toUpperCase();
-        break;
-      default:
-        valueString = value.toString();
-        break;
-    }
-    const width = parseInt(widthStr, 10) || 1;
-    return valueString.padStart(width, '0');
-  });
-  return uri;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js":
-/*!********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js ***!
-  \********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfItem: function() { return /* binding */ SfItem; }
-/* harmony export */ });
-/**
- * Structured Field Item
- *
- * @group Structured Field
- *
- * @beta
- */
-class SfItem {
-  constructor(value, params) {
-    if (Array.isArray(value)) {
-      value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
-    }
-    this.value = value;
-    this.params = params;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   SfToken: function() { return /* binding */ SfToken; }
-/* harmony export */ });
-/**
- * A class to represent structured field tokens when `Symbol` is not available.
- *
- * @group Structured Field
- *
- * @beta
- */
-class SfToken {
-  constructor(description) {
-    this.description = description;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var _parse_parseDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parse/parseDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js");
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-
-
-
-/**
- * Decode a structured field string into a structured field dictionary
- *
- * @param input - The structured field string to decode
- * @returns The structured field dictionary
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfDict(input, options) {
-  try {
-    const {
-      src,
-      value
-    } = (0,_parse_parseDict_js__WEBPACK_IMPORTED_MODULE_0__.parseDict)(input.trim(), options);
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_1__.parseError)(input, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_2__.DICT, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/decodeSfList.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; }
-/* harmony export */ });
-/* harmony import */ var _parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parse/parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parse_parseList_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parse/parseList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js");
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-
-
-
-/**
- * Decode a structured field string into a structured field list
- *
- * @param input - The structured field string to decode
- * @returns The structured field list
- *
- * @group Structured Field
- *
- * @beta
- */
-function decodeSfList(input, options) {
-  try {
-    const {
-      src,
-      value
-    } = (0,_parse_parseList_js__WEBPACK_IMPORTED_MODULE_1__.parseList)(input.trim(), options);
-    if (src !== '') {
-      throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST);
-    }
-    return value;
-  } catch (cause) {
-    throw (0,_parse_parseError_js__WEBPACK_IMPORTED_MODULE_0__.parseError)(input, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_2__.LIST, cause);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/encodeSfDict.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; }
-/* harmony export */ });
-/* harmony import */ var _serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serialize/serializeDict.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js");
-
-/**
- * Encode an object into a structured field dictionary
- *
- * @param value - The structured field dictionary to encode
- * @param options - Encoding options
- *
- * @returns The structured field string
- *
- * @group Structured Field
- *
- * @beta
- */
-function encodeSfDict(value, options) {
-  return (0,_serialize_serializeDict_js__WEBPACK_IMPORTED_MODULE_0__.serializeDict)(value, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parsedValue: function() { return /* binding */ parsedValue; }
-/* harmony export */ });
-function parsedValue(value, src) {
-  return {
-    value,
-    src
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js":
-/*!*********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js ***!
-  \*********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; }
-/* harmony export */ });
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _parseBoolean_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js");
-/* harmony import */ var _parseByteSequence_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js");
-/* harmony import */ var _parseDate_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-/* harmony import */ var _parseString_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js");
-/* harmony import */ var _parseToken_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./parseToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js");
-
-
-
-
-
-
-
-
-// 4.2.3.1.  Parsing a Bare Item
-//
-// Given an ASCII string as input_string, return a bare Item.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is a "-" or a DIGIT,
-//     return the result of running Parsing an Integer or Decimal
-//     (Section 4.2.4) with input_string.
-//
-// 2.  If the first character of input_string is a DQUOTE, return the
-//     result of running Parsing a String (Section 4.2.5) with
-//     input_string.
-//
-// 3.  If the first character of input_string is ":", return the result
-//     of running Parsing a Byte Sequence (Section 4.2.7) with
-//     input_string.
-//
-// 4.  If the first character of input_string is "?", return the result
-//     of running Parsing a Boolean (Section 4.2.8) with input_string.
-//
-// 5.  If the first character of input_string is an ALPHA or "*", return
-//     the result of running Parsing a Token (Section 4.2.6) with
-//     input_string.
-//
-// 6.  If the first character of input_string is "@", return the result
-//     of running Parsing a Date (Section 4.2.9) with input_string.
-//
-// 7.  Otherwise, the item type is unrecognized; fail parsing.
-function parseBareItem(src, options) {
-  const first = src[0];
-  if (first === `"`) {
-    return (0,_parseString_js__WEBPACK_IMPORTED_MODULE_6__.parseString)(src);
-  }
-  if (/^[-0-9]/.test(first)) {
-    return (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_5__.parseIntegerOrDecimal)(src);
-  }
-  if (first === `?`) {
-    return (0,_parseBoolean_js__WEBPACK_IMPORTED_MODULE_1__.parseBoolean)(src);
-  }
-  if (first === `:`) {
-    return (0,_parseByteSequence_js__WEBPACK_IMPORTED_MODULE_2__.parseByteSequence)(src);
-  }
-  if (/^[a-zA-Z*]/.test(first)) {
-    return (0,_parseToken_js__WEBPACK_IMPORTED_MODULE_7__.parseToken)(src, options);
-  }
-  if (first === `@`) {
-    return (0,_parseDate_js__WEBPACK_IMPORTED_MODULE_3__.parseDate)(src);
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_4__.parseError)(src, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_0__.BARE_ITEM);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBoolean.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-// 4.2.8.  Parsing a Boolean
-//
-// Given an ASCII string as input_string, return a Boolean. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "?", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If the first character of input_string matches "1", discard the
-//     first character, and return true.
-//
-// 4.  If the first character of input_string matches "0", discard the
-//     first character, and return false.
-//
-// 5.  No value has matched; fail parsing.
-function parseBoolean(src) {
-  let i = 0;
-  if (src[i] !== '?') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  i++;
-  if (src[i] === '1') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(true, src.substring(++i));
-  }
-  if (src[i] === '0') {
-    return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(false, src.substring(++i));
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseByteSequence.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; }
-/* harmony export */ });
-/* harmony import */ var _utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/decodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.7.  Parsing a Byte Sequence
-//
-// Given an ASCII string as input_string, return a Byte Sequence.
-// input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ":", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  If there is not a ":" character before the end of input_string,
-//     fail parsing.
-//
-// 4.  Let b64_content be the result of consuming content of
-//     input_string up to but not including the first instance of the
-//     character ":".
-//
-// 5.  Consume the ":" character at the beginning of input_string.
-//
-// 6.  If b64_content contains a character not included in ALPHA, DIGIT,
-//     "+", "/" and "=", fail parsing.
-//
-// 7.  Let binary_content be the result of Base 64 Decoding [RFC4648]
-//     b64_content, synthesizing padding if necessary (note the
-//     requirements about recipient behavior below).
-//
-// 8.  Return binary_content.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that is not properly "=" padded (see [RFC4648],
-// Section 3.2), parsers SHOULD NOT fail when "=" padding is not
-// present, unless they cannot be configured to do so.
-//
-// Because some implementations of base64 do not allow rejection of
-// encoded data that has non-zero pad bits (see [RFC4648], Section 3.5),
-// parsers SHOULD NOT fail when non-zero pad bits are present, unless
-// they cannot be configured to do so.
-//
-// This specification does not relax the requirements in [RFC4648],
-// Section 3.1 and 3.3; therefore, parsers MUST fail on characters
-// outside the base64 alphabet, and on line feeds in encoded data.
-function parseByteSequence(src) {
-  if (src[0] !== ':') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  src = src.substring(1);
-  if (src.includes(':') === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  const re = /(^.*?)(:)/g;
-  const b64_content = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  // pass b64_content char check step 6
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)((0,_utils_decodeBase64_js__WEBPACK_IMPORTED_MODULE_0__.decodeBase64)(b64_content), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDate.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDate: function() { return /* binding */ parseDate; }
-/* harmony export */ });
-/* harmony import */ var _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/DATE.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseIntegerOrDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js");
-
-
-
-
-// 4.2.9.  Parsing a Date
-//
-// Given an ASCII string as input_string, return a Date. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not "@", fail parsing.
-//
-// 2.  Discard the first character of input_string.
-//
-// 3.  Let output_date be the result of running Parsing an Integer or
-//     Decimal (Section 4.2.4) with input_string.
-//
-// 4.  If output_date is a Decimal, fail parsing.
-//
-// 5.  Return output_date.
-function parseDate(src) {
-  let i = 0;
-  if (src[i] !== '@') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__.DATE);
-  }
-  i++;
-  const date = (0,_parseIntegerOrDecimal_js__WEBPACK_IMPORTED_MODULE_3__.parseIntegerOrDecimal)(src.substring(i));
-  if (Number.isInteger(date.value) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_DATE_js__WEBPACK_IMPORTED_MODULE_0__.DATE);
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(new Date(date.value * 1000), date.src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseDict.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseDict: function() { return /* binding */ parseDict; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-
-// 4.2.2.  Parsing a Dictionary
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are (item_or_inner_list, parameters) tuples. input_string is
-// modified to remove the parsed value.
-//
-// 1.  Let dictionary be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Let this_key be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     2.  If the first character of input_string is "=":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let member be the result of running Parsing an Item or
-//             Inner List (Section 4.2.1.1) with input_string.
-//
-//     3.  Otherwise:
-//
-//         1.  Let value be Boolean true.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters Section 4.2.3.2 with input_string.
-//
-//         3.  Let member be the tuple (value, parameters).
-//
-//     4.  Add name this_key with value member to dictionary.  If
-//         dictionary already contains a name this_key (comparing
-//         character-for-character), overwrite its value.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, return dictionary.
-//
-//     7.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     8.  Discard any leading OWS characters from input_string.
-//
-//     9.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return dictionary (which is
-//     empty).
-//
-// Note that when duplicate Dictionary keys are encountered, this has
-// the effect of ignoring all but the last instance.
-function parseDict(src, options) {
-  const value = {};
-  while (src.length > 0) {
-    let member;
-    const parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_5__.parseKey)(src);
-    const key = parsedKey.value;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      const parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_4__.parseItemOrInnerList)(src.substring(1), options);
-      member = parsedItemOrInnerList.value;
-      src = parsedItemOrInnerList.src;
-    } else {
-      const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_6__.parseParameters)(src, options);
-      member = new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(true, parsedParameters.value);
-      src = parsedParameters.src;
-    }
-    value[key] = member;
-    src = src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseError: function() { return /* binding */ parseError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function parseError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('parse', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js":
-/*!**********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js ***!
-  \**********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/INNER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-
-
-// 4.2.1.2.  Parsing an Inner List
-//
-// Given an ASCII string as input_string, return the tuple (inner_list,
-// parameters), where inner_list is an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  Consume the first character of input_string; if it is not "(",
-//     fail parsing.
-//
-// 2.  Let inner_list be an empty array.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  Discard any leading SP characters from input_string.
-//
-//     2.  If the first character of input_string is ")":
-//
-//         1.  Consume the first character of input_string.
-//
-//         2.  Let parameters be the result of running Parsing
-//             Parameters (Section 4.2.3.2) with input_string.
-//
-//         3.  Return the tuple (inner_list, parameters).
-//
-//     3.  Let item be the result of running Parsing an Item
-//         (Section 4.2.3) with input_string.
-//
-//     4.  Append item to inner_list.
-//
-//     5.  If the first character of input_string is not SP or ")", fail
-//         parsing.
-//
-// 4.  The end of the inner list was not found; fail parsing.
-function parseInnerList(src, options) {
-  if (src[0] !== '(') {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-  }
-  src = src.substring(1);
-  const innerList = [];
-  while (src.length > 0) {
-    src = src.trim();
-    if (src[0] === ')') {
-      src = src.substring(1);
-      const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_5__.parseParameters)(src, options);
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(innerList, parsedParameters.value), parsedParameters.src);
-    }
-    const parsedItem = (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_4__.parseItem)(src, options);
-    innerList.push(parsedItem.value);
-    src = parsedItem.src;
-    if (src[0] !== ' ' && src[0] !== ')') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-    }
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_INNER_js__WEBPACK_IMPORTED_MODULE_1__.INNER);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseIntegerOrDecimal.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; }
-/* harmony export */ });
-/* harmony import */ var _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/INTEGER_DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.4.  Parsing an Integer or Decimal
-//
-// Given an ASCII string as input_string, return an Integer or Decimal.
-// input_string is modified to remove the parsed value.
-//
-// NOTE: This algorithm parses both Integers (Section 3.3.1) and
-// Decimals (Section 3.3.2), and returns the corresponding structure.
-//
-// 1.   Let type be "integer".
-//
-// 2.   Let sign be 1.
-//
-// 3.   Let input_number be an empty string.
-//
-// 4.   If the first character of input_string is "-", consume it and
-//      set sign to -1.
-//
-// 5.   If input_string is empty, there is an empty integer; fail
-//      parsing.
-//
-// 6.   If the first character of input_string is not a DIGIT, fail
-//      parsing.
-//
-// 7.   While input_string is not empty:
-//
-//      1.  Let char be the result of consuming the first character of
-//          input_string.
-//
-//      2.  If char is a DIGIT, append it to input_number.
-//
-//      3.  Else, if type is "integer" and char is ".":
-//
-//          1.  If input_number contains more than 12 characters, fail
-//              parsing.
-//
-//          2.  Otherwise, append char to input_number and set type to
-//              "decimal".
-//
-//      4.  Otherwise, prepend char to input_string, and exit the loop.
-//
-//      5.  If type is "integer" and input_number contains more than 15
-//          characters, fail parsing.
-//
-//      6.  If type is "decimal" and input_number contains more than 16
-//          characters, fail parsing.
-//
-// 8.   If type is "integer":
-//
-//      1.  Parse input_number as an integer and let output_number be
-//          the product of the result and sign.
-//
-//      2.  If output_number is outside the range -999,999,999,999,999
-//          to 999,999,999,999,999 inclusive, fail parsing.
-//
-// 9.   Otherwise:
-//
-//      1.  If the final character of input_number is ".", fail parsing.
-//
-//      2.  If the number of characters after "." in input_number is
-//          greater than three, fail parsing.
-//
-//      3.  Parse input_number as a decimal number and let output_number
-//          be the product of the result and sign.
-//
-// 10.  Return output_number.
-function parseIntegerOrDecimal(src) {
-  const orig = src;
-  let sign = 1;
-  let num = '';
-  let value;
-  const i = 0;
-  const error = (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(orig, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER_DECIMAL);
-  if (src[i] === '-') {
-    sign = -1;
-    src = src.substring(1);
-  }
-  if (src.length <= 0) {
-    throw error;
-  }
-  const re_integer = /^(\d+)?/g;
-  const result_integer = re_integer.exec(src);
-  if (result_integer[0].length === 0) {
-    throw error;
-  }
-  num += result_integer[1];
-  src = src.substring(re_integer.lastIndex);
-  if (src[0] === '.') {
-    // decimal
-    if (num.length > 12) {
-      throw error;
-    }
-    const re_decimal = /^(\.\d+)?/g;
-    const result_decimal = re_decimal.exec(src);
-    src = src.substring(re_decimal.lastIndex);
-    // 9.2.  If the number of characters after "." in input_number is greater than three, fail parsing.
-    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) {
-      throw error;
-    }
-    num += result_decimal[1];
-    // 7.6.  If type is "decimal" and input_number contains more than 16 characters, fail parsing.
-    if (num.length > 16) {
-      throw error;
-    }
-    value = parseFloat(num) * sign;
-  } else {
-    // integer
-    // 7.5.  If type is "integer" and input_number contains more than 15 characters, fail parsing.
-    if (num.length > 15) {
-      throw error;
-    }
-    value = parseInt(num) * sign;
-    if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__.isInvalidInt)(value)) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(num, _utils_INTEGER_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER_DECIMAL);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItem: function() { return /* binding */ parseItem; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseParameters_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseParameters.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js");
-
-
-
-
-// 4.2.3.  Parsing an Item
-//
-// Given an ASCII string as input_string, return a (bare_item,
-// parameters) tuple. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let bare_item be the result of running Parsing a Bare Item
-//     (Section 4.2.3.1) with input_string.
-//
-// 2.  Let parameters be the result of running Parsing Parameters
-//     (Section 4.2.3.2) with input_string.
-//
-// 3.  Return the tuple (bare_item, parameters).
-function parseItem(src, options) {
-  const parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_2__.parseBareItem)(src, options);
-  src = parsedBareItem.src;
-  const parsedParameters = (0,_parseParameters_js__WEBPACK_IMPORTED_MODULE_3__.parseParameters)(src, options);
-  src = parsedParameters.src;
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(parsedBareItem.value, parsedParameters.value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; }
-/* harmony export */ });
-/* harmony import */ var _parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./parseInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseInnerList.js");
-/* harmony import */ var _parseItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItem.js");
-
-
-// 4.2.1.1.  Parsing an Item or Inner List
-//
-// Given an ASCII string as input_string, return the tuple
-// (item_or_inner_list, parameters), where item_or_inner_list can be
-// either a single bare item, or an array of (bare_item, parameters)
-// tuples. input_string is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is "(", return the result
-//     of running Parsing an Inner List (Section 4.2.1.2) with
-//     input_string.
-//
-// 2.  Return the result of running Parsing an Item (Section 4.2.3) with
-//     input_string.
-function parseItemOrInnerList(src, options) {
-  if (src[0] === '(') {
-    return (0,_parseInnerList_js__WEBPACK_IMPORTED_MODULE_0__.parseInnerList)(src, options);
-  }
-  return (0,_parseItem_js__WEBPACK_IMPORTED_MODULE_1__.parseItem)(src, options);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js":
-/*!****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js ***!
-  \****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseKey: function() { return /* binding */ parseKey; }
-/* harmony export */ });
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-// 4.2.3.3.  Parsing a Key
-//
-// Given an ASCII string as input_string, return a key. input_string is
-// modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not lcalpha or "*",
-//     fail parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not one of lcalpha,
-//         DIGIT, "_", "-", ".", or "*", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseKey(src) {
-  let i = 0;
-  if (/^[a-z*]$/.test(src[i]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__.KEY);
-  }
-  let value = '';
-  while (src.length > i) {
-    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src.substring(i));
-    }
-    value += src[i];
-    i++;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src.substring(i));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseList.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseList: function() { return /* binding */ parseList; }
-/* harmony export */ });
-/* harmony import */ var _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/LIST.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-/* harmony import */ var _parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseItemOrInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseItemOrInnerList.js");
-
-
-
-
-// 4.2.1.  Parsing a List
-//
-// Given an ASCII string as input_string, return an array of
-// (item_or_inner_list, parameters) tuples. input_string is modified to
-// remove the parsed value.
-//
-// 1.  Let members be an empty array.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  Append the result of running Parsing an Item or Inner List
-//         (Section 4.2.1.1) with input_string to members.
-//
-//     2.  Discard any leading OWS characters from input_string.
-//
-//     3.  If input_string is empty, return members.
-//
-//     4.  Consume the first character of input_string; if it is not
-//         ",", fail parsing.
-//
-//     5.  Discard any leading OWS characters from input_string.
-//
-//     6.  If input_string is empty, there is a trailing comma; fail
-//         parsing.
-//
-// 3.  No structured data has been found; return members (which is
-//     empty).
-function parseList(src, options) {
-  const value = [];
-  while (src.length > 0) {
-    const parsedItemOrInnerList = (0,_parseItemOrInnerList_js__WEBPACK_IMPORTED_MODULE_3__.parseItemOrInnerList)(src, options);
-    value.push(parsedItemOrInnerList.value);
-    src = parsedItemOrInnerList.src.trim();
-    if (src.length === 0) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src);
-    }
-    if (src[0] !== ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__.LIST);
-    }
-    src = src.substring(1).trim();
-    if (src.length === 0 || src[0] === ',') {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_2__.parseError)(src, _utils_LIST_js__WEBPACK_IMPORTED_MODULE_0__.LIST);
-    }
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_1__.parsedValue)(value, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseParameters.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; }
-/* harmony export */ });
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseBareItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./parseBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseBareItem.js");
-/* harmony import */ var _parseKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./parseKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseKey.js");
-
-
-
-// 4.2.3.2.  Parsing Parameters
-//
-// Given an ASCII string as input_string, return an ordered map whose
-// values are bare Items. input_string is modified to remove the parsed
-// value.
-//
-// 1.  Let parameters be an empty, ordered map.
-//
-// 2.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not ";", exit the
-//         loop.
-//
-//     2.  Consume a ";" character from the beginning of input_string.
-//
-//     3.  Discard any leading SP characters from input_string.
-//
-//     4.  let param_name be the result of running Parsing a Key
-//         (Section 4.2.3.3) with input_string.
-//
-//     5.  Let param_value be Boolean true.
-//
-//     6.  If the first character of input_string is "=":
-//
-//         1.  Consume the "=" character at the beginning of
-//             input_string.
-//
-//         2.  Let param_value be the result of running Parsing a Bare
-//             Item (Section 4.2.3.1) with input_string.
-//
-//     7.  Append key param_name with value param_value to parameters.
-//         If parameters already contains a name param_name (comparing
-//         character-for-character), overwrite its value.
-//
-// 3.  Return parameters.
-//
-// Note that when duplicate Parameter keys are encountered, this has the
-// effect of ignoring all but the last instance.
-function parseParameters(src, options) {
-  let parameters = undefined;
-  while (src.length > 0) {
-    if (src[0] !== ';') {
-      break;
-    }
-    src = src.substring(1).trim();
-    const parsedKey = (0,_parseKey_js__WEBPACK_IMPORTED_MODULE_2__.parseKey)(src);
-    const key = parsedKey.value;
-    let value = true;
-    src = parsedKey.src;
-    if (src[0] === '=') {
-      src = src.substring(1);
-      const parsedBareItem = (0,_parseBareItem_js__WEBPACK_IMPORTED_MODULE_1__.parseBareItem)(src, options);
-      value = parsedBareItem.value;
-      src = parsedBareItem.src;
-    }
-    // initialize as object when params exists
-    if (parameters == null) {
-      parameters = {};
-    }
-    // override if param_name exists
-    parameters[key] = value;
-  }
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_0__.parsedValue)(parameters, src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js":
-/*!*******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseString.js ***!
-  \*******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseString: function() { return /* binding */ parseString; }
-/* harmony export */ });
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.5.  Parsing a String
-//
-// Given an ASCII string as input_string, return an unquoted String.
-// input_string is modified to remove the parsed value.
-//
-// 1.  Let output_string be an empty string.
-//
-// 2.  If the first character of input_string is not DQUOTE, fail
-//     parsing.
-//
-// 3.  Discard the first character of input_string.
-//
-// 4.  While input_string is not empty:
-//
-//     1.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     2.  If char is a backslash ("\"):
-//
-//         1.  If input_string is now empty, fail parsing.
-//
-//         2.  Let next_char be the result of consuming the first
-//             character of input_string.
-//
-//         3.  If next_char is not DQUOTE or "\", fail parsing.
-//
-//         4.  Append next_char to output_string.
-//
-//     3.  Else, if char is DQUOTE, return output_string.
-//
-//     4.  Else, if char is in the range %x00-1f or %x7f (i.e., is not
-//         in VCHAR or SP), fail parsing.
-//
-//     5.  Else, append char to output_string.
-//
-// 5.  Reached the end of input_string without finding a closing DQUOTE;
-//     fail parsing.
-function parseString(src) {
-  let output = '';
-  let i = 0;
-  if (src[i] !== `"`) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-  }
-  i++;
-  while (src.length > i) {
-    if (src[i] === `\\`) {
-      if (src.length <= i + 1) {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-      }
-      i++;
-      if (src[i] !== `"` && src[i] !== `\\`) {
-        throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-      }
-      output += src[i];
-    } else if (src[i] === `"`) {
-      return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)(output, src.substring(++i));
-    } else if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__.STRING_REGEX.test(src[i])) {
-      throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-    } else {
-      output += src[i];
-    }
-    i++;
-  }
-  throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseToken.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseToken: function() { return /* binding */ parseToken; }
-/* harmony export */ });
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./ParsedValue.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/ParsedValue.js");
-/* harmony import */ var _parseError_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./parseError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/parse/parseError.js");
-
-
-
-
-// 4.2.6.  Parsing a Token
-//
-// Given an ASCII string as input_string, return a Token. input_string
-// is modified to remove the parsed value.
-//
-// 1.  If the first character of input_string is not ALPHA or "*", fail
-//     parsing.
-//
-// 2.  Let output_string be an empty string.
-//
-// 3.  While input_string is not empty:
-//
-//     1.  If the first character of input_string is not in tchar, ":"
-//         or "/", return output_string.
-//
-//     2.  Let char be the result of consuming the first character of
-//         input_string.
-//
-//     3.  Append char to output_string.
-//
-// 4.  Return output_string.
-function parseToken(src, options) {
-  if (/^[a-zA-Z*]$/.test(src[0]) === false) {
-    throw (0,_parseError_js__WEBPACK_IMPORTED_MODULE_3__.parseError)(src, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__.TOKEN);
-  }
-  const re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
-  const value = re.exec(src)[1];
-  src = src.substring(re.lastIndex);
-  return (0,_ParsedValue_js__WEBPACK_IMPORTED_MODULE_2__.parsedValue)((options === null || options === void 0 ? void 0 : options.useSymbol) === false ? new _SfToken_js__WEBPACK_IMPORTED_MODULE_0__.SfToken(value) : Symbol.for(value), src);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js":
-/*!*****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js ***!
-  \*****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; }
-/* harmony export */ });
-/* harmony import */ var _SfToken_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfToken.js");
-/* harmony import */ var _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BARE_ITEM.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js");
-/* harmony import */ var _serializeBoolean_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeBoolean.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js");
-/* harmony import */ var _serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeByteSequence.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js");
-/* harmony import */ var _serializeDate_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeDate.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js");
-/* harmony import */ var _serializeDecimal_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeDecimal.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-/* harmony import */ var _serializeString_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./serializeString.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js");
-/* harmony import */ var _serializeToken_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./serializeToken.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js");
-
-
-
-
-
-
-
-
-
-
-// 4.1.3.1.  Serializing a Bare Item
-//
-// Given an Item as input_item, return an ASCII string suitable for use
-// in a HTTP field value.
-//
-// 1.  If input_item is an Integer, return the result of running
-//     Serializing an Integer (Section 4.1.4) with input_item.
-//
-// 2.  If input_item is a Decimal, return the result of running
-//     Serializing a Decimal (Section 4.1.5) with input_item.
-//
-// 3.  If input_item is a String, return the result of running
-//     Serializing a String (Section 4.1.6) with input_item.
-//
-// 4.  If input_item is a Token, return the result of running
-//     Serializing a Token (Section 4.1.7) with input_item.
-//
-// 5.  If input_item is a Boolean, return the result of running
-//     Serializing a Boolean (Section 4.1.9) with input_item.
-//
-// 6.  If input_item is a Byte Sequence, return the result of running
-//     Serializing a Byte Sequence (Section 4.1.8) with input_item.
-//
-// 7.  If input_item is a Date, return the result of running Serializing
-//     a Date (Section 4.1.10) with input_item.
-//
-// 8.  Otherwise, fail serialization.
-function serializeBareItem(value) {
-  switch (typeof value) {
-    case 'number':
-      if (!Number.isFinite(value)) {
-        throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_6__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__.BARE_ITEM);
-      }
-      if (Number.isInteger(value)) {
-        return (0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_7__.serializeInteger)(value);
-      }
-      return (0,_serializeDecimal_js__WEBPACK_IMPORTED_MODULE_5__.serializeDecimal)(value);
-    case 'string':
-      return (0,_serializeString_js__WEBPACK_IMPORTED_MODULE_8__.serializeString)(value);
-    case 'symbol':
-      return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_9__.serializeToken)(value);
-    case 'boolean':
-      return (0,_serializeBoolean_js__WEBPACK_IMPORTED_MODULE_2__.serializeBoolean)(value);
-    case 'object':
-      if (value instanceof Date) {
-        return (0,_serializeDate_js__WEBPACK_IMPORTED_MODULE_4__.serializeDate)(value);
-      }
-      if (value instanceof Uint8Array) {
-        return (0,_serializeByteSequence_js__WEBPACK_IMPORTED_MODULE_3__.serializeByteSequence)(value);
-      }
-      if (value instanceof _SfToken_js__WEBPACK_IMPORTED_MODULE_0__.SfToken) {
-        return (0,_serializeToken_js__WEBPACK_IMPORTED_MODULE_9__.serializeToken)(value);
-      }
-    default:
-      // fail
-      throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_6__.serializeError)(value, _utils_BARE_ITEM_js__WEBPACK_IMPORTED_MODULE_1__.BARE_ITEM);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBoolean.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; }
-/* harmony export */ });
-/* harmony import */ var _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/BOOLEAN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-// 4.1.9.  Serializing a Boolean
-//
-// Given a Boolean as input_boolean, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  If input_boolean is not a boolean, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append "?" to output.
-//
-// 4.  If input_boolean is true, append "1" to output.
-//
-// 5.  If input_boolean is false, append "0" to output.
-//
-// 6.  Return output.
-function serializeBoolean(value) {
-  if (typeof value !== 'boolean') {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_1__.serializeError)(value, _utils_BOOLEAN_js__WEBPACK_IMPORTED_MODULE_0__.BOOLEAN);
-  }
-  return value ? '?1' : '?0';
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js":
-/*!*********************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeByteSequence.js ***!
-  \*********************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; }
-/* harmony export */ });
-/* harmony import */ var _utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/encodeBase64.js */ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js");
-/* harmony import */ var _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/BYTES.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.8.  Serializing a Byte Sequence
-//
-// Given a Byte Sequence as input_bytes, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_bytes is not a sequence of bytes, fail serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  Append ":" to output.
-//
-// 4.  Append the result of base64-encoding input_bytes as per
-//     [RFC4648], Section 4, taking account of the requirements below.
-//
-// 5.  Append ":" to output.
-//
-// 6.  Return output.
-//
-// The encoded data is required to be padded with "=", as per [RFC4648],
-// Section 3.2.
-//
-// Likewise, encoded data SHOULD have pad bits set to zero, as per
-// [RFC4648], Section 3.5, unless it is not possible to do so due to
-// implementation constraints.
-function serializeByteSequence(value) {
-  if (ArrayBuffer.isView(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_BYTES_js__WEBPACK_IMPORTED_MODULE_1__.BYTES);
-  }
-  return `:${(0,_utils_encodeBase64_js__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value)}:`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDate.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; }
-/* harmony export */ });
-/* harmony import */ var _serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeInteger.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js");
-
-// 4.1.10.  Serializing a Date
-//
-// Given a Date as input_integer, return an ASCII string suitable for
-// use in an HTTP field value.
-// 1.  Let output be "@".
-// 2.  Append to output the result of running Serializing an Integer
-//     with input_date (Section 4.1.4).
-// 3.  Return output.
-function serializeDate(value) {
-  return `@${(0,_serializeInteger_js__WEBPACK_IMPORTED_MODULE_0__.serializeInteger)(value.getTime() / 1000)}`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDecimal.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; }
-/* harmony export */ });
-/* harmony import */ var _utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/roundToEven.js */ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js");
-/* harmony import */ var _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.5.  Serializing a Decimal
-//
-// Given a decimal number as input_decimal, return an ASCII string
-// suitable for use in a HTTP field value.
-//
-// 1.   If input_decimal is not a decimal number, fail serialization.
-//
-// 2.   If input_decimal has more than three significant digits to the
-//      right of the decimal point, round it to three decimal places,
-//      rounding the final digit to the nearest value, or to the even
-//      value if it is equidistant.
-//
-// 3.   If input_decimal has more than 12 significant digits to the left
-//      of the decimal point after rounding, fail serialization.
-//
-// 4.   Let output be an empty string.
-//
-// 5.   If input_decimal is less than (but not equal to) 0, append "-"
-//      to output.
-//
-// 6.   Append input_decimal's integer component represented in base 10
-//      (using only decimal digits) to output; if it is zero, append
-//      "0".
-//
-// 7.   Append "." to output.
-//
-// 8.   If input_decimal's fractional component is zero, append "0" to
-//      output.
-//
-// 9.   Otherwise, append the significant digits of input_decimal's
-//      fractional component represented in base 10 (using only decimal
-//      digits) to output.
-//
-// 10.  Return output.
-function serializeDecimal(value) {
-  const roundedValue = (0,_utils_roundToEven_js__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3); // round to 3 decimal places
-  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_DECIMAL_js__WEBPACK_IMPORTED_MODULE_1__.DECIMAL);
-  }
-  const stringValue = roundedValue.toString();
-  return stringValue.includes('.') ? stringValue : `${stringValue}.0`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeDict.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/DICT.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-/* harmony import */ var _serializeInnerList_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./serializeInnerList.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js");
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-
-
-
-
-// 4.1.2.  Serializing a Dictionary
-//
-// Given an ordered Dictionary as input_dictionary (each member having a
-// member_name and a tuple value of (member_value, parameters)), return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each member_name with a value of (member_value, parameters)
-//     in input_dictionary:
-//
-//     1.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with member's member_name to output.
-//
-//     2.  If member_value is Boolean true:
-//
-//         1.  Append the result of running Serializing Parameters
-//             (Section 4.1.1.2) with parameters to output.
-//
-//     3.  Otherwise:
-//
-//         1.  Append "=" to output.
-//
-//         2.  If member_value is an array, append the result of running
-//             Serializing an Inner List (Section 4.1.1.1) with
-//             (member_value, parameters) to output.
-//
-//         3.  Otherwise, append the result of running Serializing an
-//             Item (Section 4.1.3) with (member_value, parameters) to
-//             output.
-//
-//     4.  If more members remain in input_dictionary:
-//
-//         1.  Append "," to output.
-//
-//         2.  Append a single SP to output.
-//
-// 3.  Return output.
-function serializeDict(dict, options = {
-  whitespace: true
-}) {
-  if (typeof dict !== 'object' || dict == null) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(dict, _utils_DICT_js__WEBPACK_IMPORTED_MODULE_1__.DICT);
-  }
-  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
-  const optionalWhiteSpace = (options === null || options === void 0 ? void 0 : options.whitespace) ? ' ' : '';
-  return Array.from(entries).map(([key, item]) => {
-    if (item instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem === false) {
-      item = new _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem(item);
-    }
-    let output = (0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_5__.serializeKey)(key);
-    if (item.value === true) {
-      output += (0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_6__.serializeParams)(item.params);
-    } else {
-      output += '=';
-      if (Array.isArray(item.value)) {
-        output += (0,_serializeInnerList_js__WEBPACK_IMPORTED_MODULE_3__.serializeInnerList)(item);
-      } else {
-        output += (0,_serializeItem_js__WEBPACK_IMPORTED_MODULE_4__.serializeItem)(item);
-      }
-    }
-    return output;
-  }).join(`,${optionalWhiteSpace}`);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeError: function() { return /* binding */ serializeError; }
-/* harmony export */ });
-/* harmony import */ var _utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/throwError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js");
-
-function serializeError(src, type, cause) {
-  return (0,_utils_throwError_js__WEBPACK_IMPORTED_MODULE_0__.throwError)('serialize', src, type, cause);
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js":
-/*!******************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInnerList.js ***!
-  \******************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; }
-/* harmony export */ });
-/* harmony import */ var _serializeItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-// 4.1.1.1.  Serializing an Inner List
-//
-// Given an array of (member_value, parameters) tuples as inner_list,
-// and parameters as list_parameters, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  Let output be the string "(".
-//
-// 2.  For each (member_value, parameters) of inner_list:
-//
-//     1.  Append the result of running Serializing an Item
-//         (Section 4.1.3) with (member_value, parameters) to output.
-//
-//     2.  If more values remain in inner_list, append a single SP to
-//         output.
-//
-// 3.  Append ")" to output.
-//
-// 4.  Append the result of running Serializing Parameters
-//     (Section 4.1.1.2) with list_parameters to output.
-//
-// 5.  Return output.
-function serializeInnerList(value) {
-  return `(${value.value.map(_serializeItem_js__WEBPACK_IMPORTED_MODULE_0__.serializeItem).join(' ')})${(0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_1__.serializeParams)(value.params)}`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js":
-/*!****************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeInteger.js ***!
-  \****************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; }
-/* harmony export */ });
-/* harmony import */ var _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-/* harmony import */ var _utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/isInvalidInt.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.4.  Serializing an Integer
-//
-// Given an Integer as input_integer, return an ASCII string suitable
-// for use in a HTTP field value.
-//
-// 1.  If input_integer is not an integer in the range of
-//     -999,999,999,999,999 to 999,999,999,999,999 inclusive, fail
-//     serialization.
-//
-// 2.  Let output be an empty string.
-//
-// 3.  If input_integer is less than (but not equal to) 0, append "-" to
-//     output.
-//
-// 4.  Append input_integer's numeric value represented in base 10 using
-//     only decimal digits to output.
-//
-// 5.  Return output.
-function serializeInteger(value) {
-  if ((0,_utils_isInvalidInt_js__WEBPACK_IMPORTED_MODULE_1__.isInvalidInt)(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_INTEGER_js__WEBPACK_IMPORTED_MODULE_0__.INTEGER);
-  }
-  return value.toString();
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js":
-/*!*************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeItem.js ***!
-  \*************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; }
-/* harmony export */ });
-/* harmony import */ var _SfItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../SfItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/SfItem.js");
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeParams_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeParams.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js");
-
-
-
-// 4.1.3.  Serializing an Item
-//
-// Given an Item as bare_item and Parameters as item_parameters, return
-// an ASCII string suitable for use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  Append the result of running Serializing a Bare Item
-//     Section 4.1.3.1 with bare_item to output.
-//
-// 3.  Append the result of running Serializing Parameters
-//     Section 4.1.1.2 with item_parameters to output.
-//
-// 4.  Return output.
-function serializeItem(value) {
-  if (value instanceof _SfItem_js__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
-    return `${(0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__.serializeBareItem)(value.value)}${(0,_serializeParams_js__WEBPACK_IMPORTED_MODULE_2__.serializeParams)(value.params)}`;
-  } else {
-    return (0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_1__.serializeBareItem)(value);
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js":
-/*!************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js ***!
-  \************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; }
-/* harmony export */ });
-/* harmony import */ var _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/KEY.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-// 4.1.1.3.  Serializing a Key
-//
-// Given a key as input_key, return an ASCII string suitable for use in
-// a HTTP field value.
-//
-// 1.  Convert input_key into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_key contains characters not in lcalpha, DIGIT, "_", "-",
-//     ".", or "*" fail serialization.
-//
-// 3.  If the first character of input_key is not lcalpha or "*", fail
-//     serialization.
-//
-// 4.  Let output be an empty string.
-//
-// 5.  Append input_key to output.
-//
-// 6.  Return output.
-function serializeKey(value) {
-  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_1__.serializeError)(value, _utils_KEY_js__WEBPACK_IMPORTED_MODULE_0__.KEY);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeParams.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; }
-/* harmony export */ });
-/* harmony import */ var _serializeBareItem_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./serializeBareItem.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeBareItem.js");
-/* harmony import */ var _serializeKey_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./serializeKey.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeKey.js");
-
-
-// 4.1.1.2.  Serializing Parameters
-//
-// Given an ordered Dictionary as input_parameters (each member having a
-// param_name and a param_value), return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Let output be an empty string.
-//
-// 2.  For each param_name with a value of param_value in
-//     input_parameters:
-//
-//     1.  Append ";" to output.
-//
-//     2.  Append the result of running Serializing a Key
-//         (Section 4.1.1.3) with param_name to output.
-//
-//     3.  If param_value is not Boolean true:
-//
-//         1.  Append "=" to output.
-//
-//         2.  Append the result of running Serializing a bare Item
-//             (Section 4.1.3.1) with param_value to output.
-//
-// 3.  Return output.
-function serializeParams(params) {
-  if (params == null) {
-    return '';
-  }
-  return Object.entries(params).map(([key, value]) => {
-    if (value === true) {
-      return `;${(0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_1__.serializeKey)(key)}`; // omit true
-    }
-    return `;${(0,_serializeKey_js__WEBPACK_IMPORTED_MODULE_1__.serializeKey)(key)}=${(0,_serializeBareItem_js__WEBPACK_IMPORTED_MODULE_0__.serializeBareItem)(value)}`;
-  }).join('');
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js":
-/*!***************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeString.js ***!
-  \***************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeString: function() { return /* binding */ serializeString; }
-/* harmony export */ });
-/* harmony import */ var _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/STRING.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js");
-/* harmony import */ var _utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/STRING_REGEX.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-// 4.1.6.  Serializing a String
-//
-// Given a String as input_string, return an ASCII string suitable for
-// use in a HTTP field value.
-//
-// 1.  Convert input_string into a sequence of ASCII characters; if
-//     conversion fails, fail serialization.
-//
-// 2.  If input_string contains characters in the range %x00-1f or %x7f
-//     (i.e., not in VCHAR or SP), fail serialization.
-//
-// 3.  Let output be the string DQUOTE.
-//
-// 4.  For each character char in input_string:
-//
-//     1.  If char is "\" or DQUOTE:
-//
-//         1.  Append "\" to output.
-//
-//     2.  Append char to output.
-//
-// 5.  Append DQUOTE to output.
-//
-// 6.  Return output.
-function serializeString(value) {
-  if (_utils_STRING_REGEX_js__WEBPACK_IMPORTED_MODULE_1__.STRING_REGEX.test(value)) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_STRING_js__WEBPACK_IMPORTED_MODULE_0__.STRING);
-  }
-  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js":
-/*!**************************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeToken.js ***!
-  \**************************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; }
-/* harmony export */ });
-/* harmony import */ var _cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../cta/utils/symbolToStr.js */ "./node_modules/@svta/common-media-library/dist/cta/utils/symbolToStr.js");
-/* harmony import */ var _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/TOKEN.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js");
-/* harmony import */ var _serializeError_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./serializeError.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/serialize/serializeError.js");
-
-
-
-function serializeToken(token) {
-  const value = (0,_cta_utils_symbolToStr_js__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(token);
-  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) {
-    throw (0,_serializeError_js__WEBPACK_IMPORTED_MODULE_2__.serializeError)(value, _utils_TOKEN_js__WEBPACK_IMPORTED_MODULE_1__.TOKEN);
-  }
-  return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js":
-/*!*****************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BARE_ITEM.js ***!
-  \*****************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BARE_ITEM: function() { return /* binding */ BARE_ITEM; }
-/* harmony export */ });
-const BARE_ITEM = 'Bare Item';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BOOLEAN.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BOOLEAN: function() { return /* binding */ BOOLEAN; }
-/* harmony export */ });
-const BOOLEAN = 'Boolean';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/BYTES.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   BYTES: function() { return /* binding */ BYTES; }
-/* harmony export */ });
-const BYTES = 'Byte Sequence';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DATE.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DATE: function() { return /* binding */ DATE; }
-/* harmony export */ });
-const DATE = 'Date';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DECIMAL: function() { return /* binding */ DECIMAL; }
-/* harmony export */ });
-const DECIMAL = 'Decimal';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/DICT.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   DICT: function() { return /* binding */ DICT; }
-/* harmony export */ });
-const DICT = 'Dict';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INNER.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INNER: function() { return /* binding */ INNER; }
-/* harmony export */ });
-const INNER = 'Inner List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js":
-/*!***************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js ***!
-  \***************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER: function() { return /* binding */ INTEGER; }
-/* harmony export */ });
-const INTEGER = 'Integer';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js":
-/*!***********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER_DECIMAL.js ***!
-  \***********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   INTEGER_DECIMAL: function() { return /* binding */ INTEGER_DECIMAL; }
-/* harmony export */ });
-/* harmony import */ var _DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DECIMAL.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/DECIMAL.js");
-/* harmony import */ var _INTEGER_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./INTEGER.js */ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/INTEGER.js");
-
-
-const INTEGER_DECIMAL = `${_INTEGER_js__WEBPACK_IMPORTED_MODULE_1__.INTEGER} or ${_DECIMAL_js__WEBPACK_IMPORTED_MODULE_0__.DECIMAL}`;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js":
-/*!***********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/KEY.js ***!
-  \***********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   KEY: function() { return /* binding */ KEY; }
-/* harmony export */ });
-const KEY = 'Key';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js":
-/*!************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/LIST.js ***!
-  \************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   LIST: function() { return /* binding */ LIST; }
-/* harmony export */ });
-const LIST = 'List';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js":
-/*!**************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING.js ***!
-  \**************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING: function() { return /* binding */ STRING; }
-/* harmony export */ });
-const STRING = 'String';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/STRING_REGEX.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   STRING_REGEX: function() { return /* binding */ STRING_REGEX; }
-/* harmony export */ });
-const STRING_REGEX = /[\x00-\x1f\x7f]+/;
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js":
-/*!*************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/TOKEN.js ***!
-  \*************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   TOKEN: function() { return /* binding */ TOKEN; }
-/* harmony export */ });
-const TOKEN = 'Token';
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js":
-/*!********************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/isInvalidInt.js ***!
-  \********************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isInvalidInt: function() { return /* binding */ isInvalidInt; }
-/* harmony export */ });
-function isInvalidInt(value) {
-  return value < -999999999999999 || 999999999999999 < value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js":
-/*!******************************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/structuredfield/utils/throwError.js ***!
-  \******************************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   throwError: function() { return /* binding */ throwError; }
-/* harmony export */ });
-function format(value) {
-  if (Array.isArray(value)) {
-    return JSON.stringify(value);
-  }
-  if (value instanceof Map) {
-    return 'Map{}';
-  }
-  if (value instanceof Set) {
-    return 'Set{}';
-  }
-  if (typeof value === 'object') {
-    return JSON.stringify(value);
-  }
-  return String(value);
-}
-function throwError(action, src, type, cause) {
-  return new Error(`failed to ${action} "${format(src)}" as ${type}`, {
-    cause
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/decodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; }
-/* harmony export */ });
-/**
- * Decodes a base64 encoded string into binary data
- *
- * @param str - The base64 encoded string to decode
- * @returns The decoded binary data
- *
- * @group Utils
- *
- * @beta
- */
-function decodeBase64(str) {
-  return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/encodeBase64.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; }
-/* harmony export */ });
-/**
- * Encodes binary data to base64
- *
- * @param binary - The binary data to encode
- * @returns The base64 encoded string
- *
- * @group Utils
- *
- * @beta
- */
-function encodeBase64(binary) {
-  return btoa(String.fromCharCode(...binary));
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/roundToEven.js":
-/*!***************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/roundToEven.js ***!
-  \***************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; }
-/* harmony export */ });
-/**
- * This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
- * This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
- *
- * @param value - The value to round
- * @param precision - The number of decimal places to round to
- * @returns The rounded value
- *
- * @group Utils
- *
- * @beta
- */
-function roundToEven(value, precision) {
-  if (value < 0) {
-    return -roundToEven(-value, precision);
-  }
-  const decimalShift = Math.pow(10, precision);
-  const isEquidistant = Math.abs(value * decimalShift % 1 - 0.5) < Number.EPSILON;
-  if (isEquidistant) {
-    // If the tail of the decimal place is 'equidistant' we round to the nearest even value
-    const flooredValue = Math.floor(value * decimalShift);
-    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
-  } else {
-    // Otherwise, proceed as normal
-    return Math.round(value * decimalShift) / decimalShift;
-  }
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js":
-/*!****************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js ***!
-  \****************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; }
-/* harmony export */ });
-const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
-/**
- * Unescapes HTML entities
- *
- * @param text - The text to unescape
- * @returns The unescaped text
- *
- * @group Utils
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/utils/unescapeHtml.test.ts#example}
- */
-function unescapeHtml(text) {
-  if (text.indexOf('&') === -1) {
-    return text;
-  }
-  return text.replace(escapedHtml, match => {
-    switch (match) {
-      case '&amp;':
-        return '&';
-      case '&lt;':
-        return '<';
-      case '&gt;':
-        return '>';
-      case '&quot;':
-        return '"';
-      case '&apos;':
-        return '\'';
-      case '&nbsp;':
-        return '\u{a0}';
-      case '&lrm;':
-        return '\u{200e}';
-      case '&rlm;':
-        return '\u{200f}';
-      default:
-        {
-          if (match[1] === '#') {
-            const code = match[2] === 'x' || match[2] === 'X' ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
-            return String.fromCodePoint(code);
-          }
-          return match;
-        }
-    }
-  });
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js":
-/*!*********************************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/utils/urlToRelativePath.js ***!
-  \*********************************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; }
-/* harmony export */ });
-/**
- * Constructs a relative path from a URL.
- *
- * @param url - The destination URL
- * @param base - The base URL
- * @returns The relative path
- *
- * @group Utils
- *
- * @beta
- */
-function urlToRelativePath(url, base) {
-  const to = new URL(url);
-  const from = new URL(base);
-  if (to.origin !== from.origin) {
-    return url;
-  }
-  const toPath = to.pathname.split('/').slice(1);
-  const fromPath = from.pathname.split('/').slice(1, -1);
-  // remove common parents
-  while (toPath[0] === fromPath[0]) {
-    toPath.shift();
-    fromPath.shift();
-  }
-  // add back paths
-  while (fromPath.length) {
-    fromPath.shift();
-    toPath.unshift('..');
-  }
-  const relativePath = toPath.join('/');
-  // preserve query parameters and hash of the destination url
-  return relativePath + to.search + to.hash;
-}
-
-/***/ }),
-
-/***/ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js":
-/*!**********************************************************************!*\
-  !*** ./node_modules/@svta/common-media-library/dist/xml/parseXml.js ***!
-  \**********************************************************************/
-/***/ (function(__unused_webpack_module, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parseXml: function() { return /* binding */ parseXml; }
-/* harmony export */ });
-/* harmony import */ var _utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../utils/unescapeHtml.js */ "./node_modules/@svta/common-media-library/dist/utils/unescapeHtml.js");
-
-/**
- * Parse XML into a JS object with no validation and some failure tolerance
- *
- * @param input - The input XML string
- * @param options - Optional parsing options
- * @returns The parsed XML
- *
- * @group XML
- *
- * @beta
- *
- * @example
- * {@includeCode ../../test/xml/parseXml.test.ts#example}
- */
-function parseXml(input, options = {}) {
-  let pos = options.pos || 0;
-  const length = input.length;
-  const keepComments = !!options.keepComments;
-  const keepWhitespace = !!options.keepWhitespace;
-  const openBracket = '<';
-  const openBracketCC = '<'.charCodeAt(0);
-  const closeBracket = '>';
-  const closeBracketCC = '>'.charCodeAt(0);
-  const minusCC = '-'.charCodeAt(0);
-  const slashCC = '/'.charCodeAt(0);
-  const questionCC = '?'.charCodeAt(0);
-  const exclamationCC = '!'.charCodeAt(0);
-  const singleQuoteCC = "'".charCodeAt(0);
-  const doubleQuoteCC = '"'.charCodeAt(0);
-  const openCornerBracketCC = '['.charCodeAt(0);
-  const closeCornerBracketCC = ']'.charCodeAt(0);
-  const nameSpacer = '\r\n\t>/= ';
-  function createTextNode(value, nodeName = '#text') {
-    return {
-      nodeName,
-      nodeValue: value,
-      attributes: {},
-      childNodes: []
-    };
-  }
-  /**
-   * parsing a list of entries
-   */
-  function parseChildren(tagName = '') {
-    const children = [];
-    while (input[pos]) {
-      if (input.charCodeAt(pos) == openBracketCC) {
-        if (input.charCodeAt(pos + 1) === slashCC) {
-          const closeStart = pos + 2;
-          pos = input.indexOf(closeBracket, pos);
-          if (!input.startsWith(tagName, closeStart)) {
-            const parsedText = input.substring(0, pos).split('\n');
-            throw new Error('Unexpected close tag\nLine: ' + (parsedText.length - 1) + '\nColumn: ' + (parsedText[parsedText.length - 1].length + 1) + '\nChar: ' + input[pos]);
-          }
-          if (pos + 1) {
-            pos += 1;
-          }
-          return children;
-        } else if (input.charCodeAt(pos + 1) === questionCC) {
-          // xml declaration
-          pos = input.indexOf(closeBracket, pos);
-          pos++;
-          continue;
-        } else if (input.charCodeAt(pos + 1) === exclamationCC) {
-          if (input.charCodeAt(pos + 2) == minusCC) {
-            // comment support
-            const startCommentPos = pos;
-            while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) {
-              pos = input.indexOf(closeBracket, pos + 1);
-            }
-            if (pos === -1) {
-              pos = length;
-            }
-            if (keepComments) {
-              children.push(createTextNode(input.substring(startCommentPos, pos + 1), '#comment'));
-            }
-          } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith('CDATA', pos + 3)) {
-            // cdata
-            const cdataEndIndex = input.indexOf(']]>', pos);
-            if (cdataEndIndex == -1) {
-              children.push(createTextNode(input.substr(pos + 9), '#cdata'));
-              pos = length;
-            } else {
-              children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), '#cdata'));
-              pos = cdataEndIndex + 3;
-            }
-            continue;
-          } else {
-            // doctypesupport
-            const startDoctype = pos + 1;
-            pos += 2;
-            let encapsuled = false;
-            while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
-              if (input.charCodeAt(pos) === openCornerBracketCC) {
-                encapsuled = true;
-              } else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) {
-                encapsuled = false;
-              }
-              pos++;
-            }
-            children.push(createTextNode(input.substring(startDoctype, pos), '#doctype'));
-          }
-          pos++;
-          continue;
-        }
-        const node = parseNode();
-        children.push(node);
-      } else {
-        const text = parseText();
-        if (keepWhitespace) {
-          if (text.length > 0) {
-            children.push(createTextNode(text));
-          }
-        } else {
-          const trimmed = text.trim();
-          if (trimmed.length > 0) {
-            children.push(createTextNode(trimmed));
-          }
-        }
-        pos++;
-      }
-    }
-    return children;
-  }
-  /**
-   * returns the text outside of texts until the first '&lt;'
-   */
-  function parseText() {
-    const start = pos;
-    pos = input.indexOf(openBracket, pos) - 1;
-    if (pos === -2) {
-      pos = length;
-    }
-    return (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
-  }
-  /**
-   * returns text until the first nonAlphabetic letter
-   */
-  function parseName() {
-    const start = pos;
-    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) {
-      pos++;
-    }
-    return input.slice(start, pos);
-  }
-  /**
-   * parses the attributes of a node
-   */
-  function parseAttributes() {
-    const attributes = {};
-    // parsing attributes
-    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
-      const c = input.charCodeAt(pos);
-      if (c > 64 && c < 91 || c > 96 && c < 123) {
-        const name = parseName();
-        let value = '';
-        // search beginning of the string
-        let code = input.charCodeAt(pos);
-        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
-          pos++;
-          code = input.charCodeAt(pos);
-        }
-        if (code === singleQuoteCC || code === doubleQuoteCC) {
-          value = parseString();
-          if (pos === -1) {
-            throw new Error('Missing closing quote');
-          }
-        } else {
-          pos--;
-        }
-        attributes[name] = (0,_utils_unescapeHtml_js__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
-      }
-      pos++;
-    }
-    return attributes;
-  }
-  /**
-   * parses a node
-   */
-  function parseNode() {
-    pos++;
-    const nodeName = parseName();
-    let localName = nodeName;
-    let prefix = null;
-    const nsIndex = nodeName.indexOf(':');
-    if (nsIndex !== -1) {
-      prefix = nodeName.slice(0, nsIndex);
-      localName = nodeName.slice(nsIndex + 1);
-    }
-    const attributes = parseAttributes();
-    let childNodes = [];
-    // optional parsing of children
-    const prev = input.charCodeAt(pos - 1);
-    pos++;
-    if (prev !== slashCC) {
-      childNodes = parseChildren(nodeName);
-    }
-    return {
-      nodeName,
-      nodeValue: null,
-      attributes,
-      childNodes,
-      prefix,
-      localName
-    };
-  }
-  /**
-   * is parsing a string, that starts with a char and with the same usually ' or "
-   */
-  function parseString() {
-    const startChar = input[pos];
-    const startpos = pos + 1;
-    pos = input.indexOf(startChar, startpos);
-    return input.slice(startpos, pos);
-  }
-  return {
-    nodeName: '#document',
-    nodeValue: null,
-    childNodes: parseChildren(''),
-    attributes: {}
-  };
-}
-
-/***/ }),
-
 /***/ "./node_modules/fast-deep-equal/index.js":
 /*!***********************************************!*\
   !*** ./node_modules/fast-deep-equal/index.js ***!
@@ -12419,6 +8450,2969 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
     };
   }
 })(typeof window === 'object' ? window : this);
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmcd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmcd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; },
+/* harmony export */   CMCD_DEFAULT_TIME_INTERVAL: function() { return /* binding */ CMCD_DEFAULT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
+/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
+/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; },
+/* harmony export */   CMCD_HEADERS: function() { return /* binding */ CMCD_HEADERS; },
+/* harmony export */   CMCD_JSON: function() { return /* binding */ CMCD_JSON; },
+/* harmony export */   CMCD_KEYS: function() { return /* binding */ CMCD_KEYS; },
+/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
+/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
+/* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
+/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
+/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
+/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; },
+/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
+/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
+/* harmony export */   CMCD_V1: function() { return /* binding */ CMCD_V1; },
+/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; },
+/* harmony export */   CMCD_V2: function() { return /* binding */ CMCD_V2; },
+/* harmony export */   CmcdEncoding: function() { return /* binding */ CmcdEncoding; },
+/* harmony export */   CmcdEventType: function() { return /* binding */ CmcdEventType; },
+/* harmony export */   CmcdFormatters: function() { return /* binding */ CmcdFormatters; },
+/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
+/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
+/* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
+/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
+/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; },
+/* harmony export */   CmcdTransmissionMode: function() { return /* binding */ CmcdTransmissionMode; },
+/* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
+/* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
+/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
+/* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
+/* harmony export */   fromCmcdQuery: function() { return /* binding */ fromCmcdQuery; },
+/* harmony export */   fromCmcdUrl: function() { return /* binding */ fromCmcdUrl; },
+/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; },
+/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; },
+/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; },
+/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; },
+/* harmony export */   isCmcdResponseReceivedKey: function() { return /* binding */ isCmcdResponseReceivedKey; },
+/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; },
+/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; },
+/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; },
+/* harmony export */   toCmcdJson: function() { return /* binding */ toCmcdJson; },
+/* harmony export */   toCmcdQuery: function() { return /* binding */ toCmcdQuery; },
+/* harmony export */   toCmcdReport: function() { return /* binding */ toCmcdReport; },
+/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+
+
+//#region src/CMCD_OBJECT.ts
+/**
+* CMCD object header name.
+*
+*
+* @beta
+*/
+const CMCD_OBJECT = "CMCD-Object";
+
+//#endregion
+//#region src/CMCD_REQUEST.ts
+/**
+* CMCD request header name.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST = "CMCD-Request";
+
+//#endregion
+//#region src/CMCD_SESSION.ts
+/**
+* CMCD session header name.
+*
+*
+* @beta
+*/
+const CMCD_SESSION = "CMCD-Session";
+
+//#endregion
+//#region src/CMCD_STATUS.ts
+/**
+* CMCD status header name.
+*
+*
+* @beta
+*/
+const CMCD_STATUS = "CMCD-Status";
+
+//#endregion
+//#region src/CMCD_HEADER_MAP.ts
+/**
+* The map of CMCD keys to their appropriate header shard.
+*
+*
+* @internal
+*/
+const CMCD_HEADER_MAP = {
+  br: CMCD_OBJECT,
+  ab: CMCD_OBJECT,
+  d: CMCD_OBJECT,
+  ot: CMCD_OBJECT,
+  tb: CMCD_OBJECT,
+  tpb: CMCD_OBJECT,
+  lb: CMCD_OBJECT,
+  tab: CMCD_OBJECT,
+  lab: CMCD_OBJECT,
+  url: CMCD_OBJECT,
+  pb: CMCD_REQUEST,
+  bl: CMCD_REQUEST,
+  tbl: CMCD_REQUEST,
+  dl: CMCD_REQUEST,
+  ltc: CMCD_REQUEST,
+  mtp: CMCD_REQUEST,
+  nor: CMCD_REQUEST,
+  nrr: CMCD_REQUEST,
+  rc: CMCD_REQUEST,
+  sn: CMCD_REQUEST,
+  sta: CMCD_REQUEST,
+  su: CMCD_REQUEST,
+  ttfb: CMCD_REQUEST,
+  ttfbb: CMCD_REQUEST,
+  ttlb: CMCD_REQUEST,
+  cmsdd: CMCD_REQUEST,
+  cmsds: CMCD_REQUEST,
+  smrt: CMCD_REQUEST,
+  df: CMCD_REQUEST,
+  cs: CMCD_REQUEST,
+  ts: CMCD_REQUEST,
+  cid: CMCD_SESSION,
+  pr: CMCD_SESSION,
+  sf: CMCD_SESSION,
+  sid: CMCD_SESSION,
+  st: CMCD_SESSION,
+  v: CMCD_SESSION,
+  msd: CMCD_SESSION,
+  bs: CMCD_STATUS,
+  bsd: CMCD_STATUS,
+  cdn: CMCD_STATUS,
+  rtp: CMCD_STATUS,
+  bg: CMCD_STATUS,
+  pt: CMCD_STATUS,
+  ec: CMCD_STATUS,
+  e: CMCD_STATUS
+};
+
+//#endregion
+//#region src/CmcdHeaderField.ts
+/**
+* CMCD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdHeaderField = {
+  OBJECT: CMCD_OBJECT,
+  REQUEST: CMCD_REQUEST,
+  SESSION: CMCD_SESSION,
+  STATUS: CMCD_STATUS
+};
+
+//#endregion
+//#region src/groupCmcdHeaders.ts
+function createHeaderMap(headerMap) {
+  return Object.keys(headerMap).reduce((acc, field) => {
+    headerMap[field]?.forEach(key => acc[key] = field);
+    return acc;
+  }, {});
+}
+/**
+* Group a CMCD data object into header shards
+*
+* @param cmcd - The CMCD data object to convert.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*/
+function groupCmcdHeaders(cmcd, customHeaderMap) {
+  const result = {};
+  if (!cmcd) return result;
+  const keys$1 = Object.keys(cmcd);
+  const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
+  return keys$1.reduce((acc, key) => {
+    const field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
+    const data = acc[field] ??= {};
+    data[key] = cmcd[key];
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/CMCD_EVENT_MODE.ts
+/**
+* CMCD event mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_EVENT_MODE = "event";
+
+//#endregion
+//#region src/CMCD_FORMATTER_MAP.ts
+const toRounded = value => Math.round(value);
+const toUrlSafe = (value, options) => {
+  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
+    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__.urlToRelativePath)(value, options.baseUrl);
+    return options.version === 1 ? encodeURIComponent(value) : value;
+  }
+};
+const toHundred = value => toRounded(value / 100) * 100;
+const nor = (value, options) => {
+  let norValue = value;
+  if (options.version >= 2) {
+    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  }
+  return toUrlSafe(norValue, options);
+};
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*/
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor,
+  rtp: toHundred,
+  tb: toRounded
+};
+
+//#endregion
+//#region src/CMCD_REQUEST_MODE.ts
+/**
+* CMCD request mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST_MODE = "request";
+
+//#endregion
+//#region src/CMCD_COMMON_KEYS.ts
+/**
+* Defines the common keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_COMMON_KEYS = ["ab", "bg", "bl", "br", "bs", "bsd", "cdn", "cid", "cs", "df", "ec", "lab", "lb", "ltc", "msd", "mtp", "pb", "pr", "pt", "sf", "sid", "sn", "st", "sta", "tab", "tb", "tbl", "tpb", "ts", "v"];
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_EVENT_KEYS = ["e"];
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* CMCD v2 - Response-only and timing keys.
+*
+*
+* @beta
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
+/**
+* Check if a key is a custom key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+*
+* @beta
+*/
+function isCmcdCustomKey(key) {
+  return CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_EVENT_KEYS.includes(key) || CMCD_RESPONSE_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+*
+* @beta
+*/
+const CMCD_REQUEST_KEYS = ["d", "dl", "nor", "ot", "rtp", "su"];
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_COMMON_KEYS.includes(key) || CMCD_REQUEST_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @group CMCD
+*
+* @beta
+*
+* @example
+* {@includeCode ../../test/cmcd/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEYS.includes(key);
+}
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+*
+* @beta
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
+
+//#endregion
+//#region src/isCmcdV1Key.ts
+/**
+* Filter function for CMCD v1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEYS.includes(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+const filterMap = {
+  [CMCD_EVENT_MODE]: isCmcdEventKey,
+  [CMCD_REQUEST_MODE]: isCmcdRequestKey
+};
+/**
+* Convert a generic object to CMCD data.
+*
+* @param obj - The CMCD object to process.
+* @param options - Options for encoding.
+*
+*
+* @beta
+*/
+function prepareCmcdData(obj, options = {}) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const version = options.version || obj["v"] || 1;
+  const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
+  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
+  let keys$1 = Object.keys(obj).filter(keyFilter);
+  if (obj["e"] && obj["e"] !== "rr") keys$1 = keys$1.filter(key => !isCmcdResponseReceivedKey(key));
+  const filter = options.filter;
+  if (typeof filter === "function") keys$1 = keys$1.filter(filter);
+  const needsTimestamp = reportingMode === CMCD_EVENT_MODE;
+  if (needsTimestamp && !keys$1.includes("ts")) keys$1.push("ts");
+  if (version > 1 && !keys$1.includes("v")) keys$1.push("v");
+  const formatters = Object.assign({}, CMCD_FORMATTER_MAP, options.formatters);
+  const formatterOptions = {
+    version,
+    reportingMode,
+    baseUrl: options.baseUrl
+  };
+  keys$1.sort().forEach(key => {
+    let value = obj[key];
+    const formatter = formatters[key];
+    if (typeof formatter === "function") value = formatter(value, formatterOptions);
+    if (key === "v") if (version === 1) return;else value = version;
+    if (key == "pr" && value === 1) return;
+    if (needsTimestamp && key === "ts" && !Number.isFinite(value)) value = Date.now();
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isTokenField)(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/toCmcdHeaders.ts
+/**
+* Convert a CMCD data object to request headers
+*
+* @param cmcd - The CMCD data object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD header shards.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdHeaders.test.ts#example}
+*/
+function toCmcdHeaders(cmcd, options = {}) {
+  const result = {};
+  if (!cmcd) return result;
+  const shards = groupCmcdHeaders(prepareCmcdData(cmcd, options), options?.customHeaderMap);
+  return Object.entries(shards).reduce((acc, [field, value]) => {
+    const shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
+      whitespace: false
+    });
+    if (shard) acc[field] = shard;
+    return acc;
+  }, result);
+}
+
+//#endregion
+//#region src/appendCmcdHeaders.ts
+/**
+* Append CMCD query args to a header object.
+*
+* @param headers - The headers to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Encode options.
+*
+* @returns The headers with the CMCD header shards appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdHeaders.test.ts#example}
+*/
+function appendCmcdHeaders(headers, cmcd, options) {
+  return Object.assign(headers, toCmcdHeaders(cmcd, options));
+}
+
+//#endregion
+//#region src/CMCD_PARAM.ts
+/**
+* CMCD parameter name.
+*
+*
+* @beta
+*/
+const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/encodeCmcd.ts
+/**
+* Encode a CMCD object to a string.
+*
+* @param cmcd - The CMCD object to encode.
+* @param options - Options for encoding.
+*
+* @returns The encoded CMCD string.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/encodeCmcd.test.ts#example}
+*/
+function encodeCmcd(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(prepareCmcdData(cmcd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD data object to a URL encoded string.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL encoded CMCD data.
+*
+*
+* @beta
+*/
+function toCmcdUrl(cmcd, options = {}) {
+  if (!cmcd) return "";
+  const params = encodeCmcd(cmcd, options);
+  return encodeURIComponent(params);
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD data object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD query arg.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+}
+
+//#endregion
+//#region src/appendCmcdQuery.ts
+const REGEX = /CMCD=[^&#]+/;
+/**
+* Append CMCD query args to a URL.
+*
+* @param url - The URL to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL with the CMCD query args appended.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/appendCmcdQuery.test.ts#example}
+*/
+function appendCmcdQuery(url, cmcd, options) {
+  const query = toCmcdQuery(cmcd, options);
+  if (!query) return url;
+  if (REGEX.test(url)) return url.replace(REGEX, query);
+  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+}
+
+//#endregion
+//#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
+/**
+* The default time interval in secondswhen using using event mode
+*
+*
+* @beta
+*/
+const CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_HEADERS.ts
+/**
+* CMCD `headers` transmission mode.
+*
+*
+* @beta
+*/
+const CMCD_HEADERS = "headers";
+
+//#endregion
+//#region src/CMCD_JSON.ts
+/**
+* CMCD `json` transmission mode.
+*
+*
+* @beta
+*
+* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
+*/
+const CMCD_JSON = "json";
+
+//#endregion
+//#region src/CMCD_KEYS.ts
+const keySet = new Set([...CMCD_V1_KEYS, ...CMCD_COMMON_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS]);
+/**
+* A list of all CMCD keys.
+*
+*
+* @beta
+*/
+const CMCD_KEYS = Array.from(keySet);
+
+//#endregion
+//#region src/CMCD_QUERY.ts
+/**
+* CMCD `query` transmission mode.
+*
+*
+* @beta
+*/
+const CMCD_QUERY = "query";
+
+//#endregion
+//#region src/CMCD_RESPONSE_MODE.ts
+/**
+* CMCD response mode variable name.
+*
+*
+* @beta
+*/
+const CMCD_RESPONSE_MODE = "response";
+
+//#endregion
+//#region src/CMCD_V1.ts
+/**
+* CMCD Version 1
+*
+*
+* @beta
+*/
+const CMCD_V1 = 1;
+
+//#endregion
+//#region src/CMCD_V2.ts
+/**
+* CMCD Version 2
+*
+*
+* @beta
+*/
+const CMCD_V2 = 2;
+
+//#endregion
+//#region src/CmcdTransmissionMode.ts
+/**
+* CMCD transmission modes.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdTransmissionMode = {
+  JSON: CMCD_JSON,
+  QUERY: CMCD_QUERY,
+  HEADERS: CMCD_HEADERS
+};
+
+//#endregion
+//#region src/CmcdEncoding.ts
+/**
+* CMCD encoding types.
+*
+*
+* @enum
+*
+* @beta
+*
+* @deprecated Use {@link CmcdTransmissionMode} instead.
+*
+* @see {@link CmcdTransmissionMode}
+*/
+const CmcdEncoding = CmcdTransmissionMode;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdEventType = {
+  PLAY_STATE: "ps",
+  ERROR: "e",
+  TIME_INTERVAL: "t",
+  CONTENT_ID: "c",
+  BACKGROUNDED_MODE: "b",
+  MUTE: "m",
+  UNMUTE: "um",
+  PLAYER_EXPAND: "pe",
+  PLAYER_COLLAPSE: "pc",
+  RESPONSE_RECEIVED: "rr"
+};
+
+//#endregion
+//#region src/CmcdFormatters.ts
+/**
+* The default formatters for CMCD values.
+*
+*
+* @beta
+*
+* @deprecated Use `CMCD_FORMATTER_MAP` instead.
+*/
+const CmcdFormatters = CMCD_FORMATTER_MAP;
+
+//#endregion
+//#region src/CmcdObjectType.ts
+/**
+* Common Media Client Data Object Type
+*
+*
+* @beta
+*
+* @enum
+*/
+const CmcdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmObjectType;
+
+//#endregion
+//#region src/CmcdPlayerState.ts
+/**
+* CMCD v2 player states for the 'sta' key.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdPlayerState = {
+  STARTING: "s",
+  PLAYING: "p",
+  SEEKING: "k",
+  REBUFFERING: "r",
+  PAUSED: "a",
+  WAITING: "w",
+  ENDED: "e",
+  FATAL_ERROR: "f",
+  QUIT: "q",
+  PRELOADING: "d"
+};
+
+//#endregion
+//#region src/CmcdReportingMode.ts
+/**
+* CMCD reporting mode types.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdReportingMode = {
+  REQUEST: CMCD_REQUEST_MODE,
+  EVENT: CMCD_EVENT_MODE
+};
+
+//#endregion
+//#region src/CmcdStreamingFormat.ts
+/**
+* Common Media Client Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmcdStreamType.ts
+/**
+* Common Media Client Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmcdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value) {
+  if (Array.isArray(value)) return value.map(reduceValue);
+  if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
+  if (typeof value === "string") return decodeURIComponent(value);
+  return value;
+}
+/**
+* Decode a CMCD string to an object.
+*
+* @param cmcd - The CMCD string to decode.
+*
+* @returns The decoded CMCD object.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeCmcd.test.ts#example}
+*/
+function decodeCmcd(cmcd) {
+  if (!cmcd) return {};
+  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
+  return Object.entries(sfDict).reduce((acc, [key, item]) => {
+    acc[key] = reduceValue(item.value);
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdHeaders.ts
+const keys = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
+/**
+* Decode CMCD data from request headers.
+*
+* @param headers - The request headers to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdHeaders.test.ts#example}
+*/
+function fromCmcdHeaders(headers) {
+  if (!(headers instanceof Headers)) headers = new Headers(headers);
+  return keys.reduce((acc, key) => {
+    const value = headers.get(key);
+    return Object.assign(acc, decodeCmcd(value));
+  }, {});
+}
+
+//#endregion
+//#region src/fromCmcdQuery.ts
+/**
+* Decode CMCD data from a query string.
+*
+* @param query - The query string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdQuery.test.ts#example}
+*/
+function fromCmcdQuery(query) {
+  if (typeof query === "string") query = new URLSearchParams(query);
+  return decodeCmcd(query.get(CMCD_PARAM));
+}
+
+//#endregion
+//#region src/fromCmcdUrl.ts
+/**
+* Decode CMCD data from a url encoded string.
+*
+* @param url - The url encoded string to decode.
+*
+* @returns The decoded CMCD data.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/fromCmcdUrl.test.ts#example}
+*/
+function fromCmcdUrl(url) {
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")));
+}
+
+//#endregion
+//#region src/toCmcdJson.ts
+/**
+* Convert a CMCD data object to JSON.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD JSON.
+*
+*
+* @beta
+*
+* @deprecated Sending CMCD as JSON objects is deprecated. Use `toCmcdUrl` to create an array of url strings instead.
+*/
+function toCmcdJson(cmcd, options) {
+  const data = prepareCmcdData(cmcd, options);
+  return JSON.stringify(data, (_, value) => typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value);
+}
+
+//#endregion
+//#region src/toCmcdReport.ts
+/**
+* Converts CMCD data into a report format.
+*
+* @param data - The CMCD data to be transformed into a report
+* @param target - The target configuration for the CMCD report
+*
+* @return A CMCD report object
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/toCmcdReport.test.ts#example}
+*/
+function toCmcdReport(data, target) {
+  if (!target || !target.url) return null;
+  const url = new URL(target.url);
+  const method = target.method || "GET";
+  const headers = {};
+  const transimissionMode = target.transmissionMode || CMCD_QUERY;
+  const options = {
+    version: target.version,
+    reportingMode: target.reportingMode
+  };
+  const {
+    enabledKeys
+  } = target;
+  if (enabledKeys) options.filter = key => enabledKeys.includes(key);
+  switch (transimissionMode) {
+    case CMCD_QUERY:
+      const param = encodeCmcd(data, options);
+      if (param) url.searchParams.set(CMCD_PARAM, param);
+      break;
+    case CMCD_HEADERS:
+      Object.assign(headers, toCmcdHeaders(data, options));
+      break;
+  }
+  return {
+    url: url.toString(),
+    method,
+    headers
+  };
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmsd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmsd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; },
+/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; },
+/* harmony export */   CMSD_V1: function() { return /* binding */ CMSD_V1; },
+/* harmony export */   CmsdHeaderField: function() { return /* binding */ CmsdHeaderField; },
+/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; },
+/* harmony export */   CmsdStreamType: function() { return /* binding */ CmsdStreamType; },
+/* harmony export */   CmsdStreamingFormat: function() { return /* binding */ CmsdStreamingFormat; },
+/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
+/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
+/* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+
+
+
+//#region src/CMSD_DYNAMIC.ts
+/**
+* CMSD dynamic header name.
+*
+*
+* @beta
+*/
+const CMSD_DYNAMIC = "CMSD-Dynamic";
+
+//#endregion
+//#region src/CMSD_STATIC.ts
+/**
+* CMSD static header name.
+*
+*
+* @beta
+*/
+const CMSD_STATIC = "CMSD-Static";
+
+//#endregion
+//#region src/CMSD_V1.ts
+/**
+* CMSD Version 1
+*
+*
+* @beta
+*/
+const CMSD_V1 = 1;
+
+//#endregion
+//#region src/CmsdHeaderField.ts
+/**
+* CMSD header fields.
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdHeaderField = {
+  STATIC: CMSD_STATIC,
+  DYNAMIC: CMSD_DYNAMIC
+};
+
+//#endregion
+//#region src/CmsdObjectType.ts
+/**
+* Common Media Server Data Object Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
+
+//#endregion
+//#region src/CmsdStreamingFormat.ts
+/**
+* Common Media Server Data Streaming Format
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmsdStreamType.ts
+/**
+* Common Media Server Data Stream Type
+*
+*
+* @enum
+*
+* @beta
+*/
+const CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmsdDynamic.ts
+/**
+* Decode a CMSD dynamic string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdDynamic(cmsd) {
+  if (!cmsd) return [];
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfList)(cmsd);
+}
+
+//#endregion
+//#region src/decodeCmsdStatic.ts
+/**
+* Decode a CMSD Static dict string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+*
+* @beta
+*/
+function decodeCmsdStatic(cmsd) {
+  if (!cmsd) return {};
+  return Object.entries((0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfDict)(cmsd)).reduce((acc, [key, item]) => {
+    const {
+      value
+    } = item;
+    acc[key] = typeof value === "symbol" ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.symbolToStr)(value) : value;
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/encodeCmsdDynamic.ts
+function encodeCmsdDynamic(value, cmsd) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    if (!cmsd) return "";
+    value = [new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfItem(value, cmsd)];
+  }
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfList)(value, {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/utils/processCmsd.ts
+function processCmsd(obj, options) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const keys = Object.keys(obj);
+  const useSymbol = options?.useSymbol !== false;
+  keys.forEach(key => {
+    let value = obj[key];
+    if (key === "v" && value === 1) return;
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isTokenField)(key) && typeof value === "string") value = useSymbol ? Symbol.for(value) : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/encodeCmsdStatic.ts
+/**
+* Encode a CMSD Static object.
+*
+* @param cmsd - The CMSD object to encode.
+* @param options - Encoding options
+*
+* @returns The encoded CMSD string.
+*
+*
+* @beta
+*/
+function encodeCmsdStatic(cmsd, options) {
+  if (!cmsd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfDict)(processCmsd(cmsd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cta/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-cta/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; },
+/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; },
+/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; },
+/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; },
+/* harmony export */   isValid: function() { return /* binding */ isValid; }
+/* harmony export */ });
+//#region src/CmObjectType.ts
+/**
+* Common Media Object Type
+*
+* @internal
+*/
+const CmObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamingFormat.ts
+/**
+* Common Media Streaming Format
+*
+* @internal
+*/
+const CmStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamType.ts
+/**
+* Common Media Stream Type
+*
+* @internal
+*/
+const CmStreamType = {
+  VOD: "v",
+  LIVE: "l"
+};
+
+//#endregion
+//#region src/isTokenField.ts
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return ["ot", "sf", "st", "e", "sta"].includes(key);
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-dash/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-dash/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   THUMBNAIL_TILE_SCHEME_ID_URI: function() { return /* binding */ THUMBNAIL_TILE_SCHEME_ID_URI; },
+/* harmony export */   parseFrameRate: function() { return /* binding */ parseFrameRate; },
+/* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
+/* harmony export */ });
+//#region src/parseFrameRate.ts
+/**
+* Parses a DASH framerate string into a number.
+*
+* @param frameRate - The frame rate string to parse.
+* @returns The frame rate as a number.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/parseFrameRate.test.ts#example}
+*/
+function parseFrameRate(frameRate) {
+  const [numerator, denominator] = frameRate.split("/").map(value => parseInt(value, 10));
+  if (denominator === void 0) return numerator;
+  if (isNaN(numerator) || isNaN(denominator) || denominator === 0) return NaN;
+  return numerator / denominator;
+}
+
+//#endregion
+//#region src/processUriTemplate.ts
+const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]+)([diouxX]))?\$/g;
+/**
+* Process a URI template used in `SegmentTemplate` nodes.
+*
+* @param uriTemplate - URI template to process.
+* @param representationId - Representation ID.
+* @param number - Number.
+* @param subNumber - Sub-number.
+* @param bandwidth - Bandwidth.
+* @param time - Time. Should be passed as a number unless the value is larger than `MAX_SAFE_INTEGER`, then it should be provided as a string. If the value is a string all format tags will be ignored.
+*
+* @returns Processed URI template.
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/processUriTemplate.test.ts#example}
+*/
+function processUriTemplate(uriTemplate, representationId, number, subNumber, bandwidth, time) {
+  return uriTemplate.replace(TOKENS, (match, name, widthStr, format) => {
+    let value;
+    switch (name) {
+      case void 0:
+        return "$";
+      case "RepresentationID":
+        value = representationId;
+        break;
+      case "Number":
+        value = number;
+        break;
+      case "SubNumber":
+        value = subNumber;
+        break;
+      case "Bandwidth":
+        value = bandwidth;
+        break;
+      case "Time":
+        if (typeof time === "string") return time;
+        value = time ? Math.round(time) : time;
+        break;
+      default:
+        value = null;
+    }
+    if (value == null) return match;
+    let valueString;
+    switch (format) {
+      case void 0:
+      case "d":
+      case "i":
+      case "u":
+        valueString = value.toString();
+        break;
+      case "o":
+        valueString = value.toString(8);
+        break;
+      case "x":
+        valueString = value.toString(16);
+        break;
+      case "X":
+        valueString = value.toString(16).toUpperCase();
+        break;
+      default:
+        valueString = value.toString();
+        break;
+    }
+    const width = parseInt(widthStr, 10) || 1;
+    return valueString.padStart(width, "0");
+  });
+}
+
+//#endregion
+//#region src/THUMBNAIL_TILE_SCHEME_ID_URI.ts
+/**
+* The scheme ID URI for thumbnail tiles in DASH.
+*
+*
+* @beta
+*/
+const THUMBNAIL_TILE_SCHEME_ID_URI = "http://dashif.org/guidelines/thumbnail_tile";
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-structured-field-values/dist/index.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@svta/cml-structured-field-values/dist/index.js ***!
+  \**********************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SfItem: function() { return /* binding */ SfItem; },
+/* harmony export */   SfToken: function() { return /* binding */ SfToken; },
+/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; },
+/* harmony export */   decodeSfItem: function() { return /* binding */ decodeSfItem; },
+/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; },
+/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; },
+/* harmony export */   encodeSfItem: function() { return /* binding */ encodeSfItem; },
+/* harmony export */   encodeSfList: function() { return /* binding */ encodeSfList; },
+/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; },
+/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; },
+/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; },
+/* harmony export */   parseDate: function() { return /* binding */ parseDate; },
+/* harmony export */   parseDict: function() { return /* binding */ parseDict; },
+/* harmony export */   parseError: function() { return /* binding */ parseError; },
+/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; },
+/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; },
+/* harmony export */   parseItem: function() { return /* binding */ parseItem; },
+/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; },
+/* harmony export */   parseKey: function() { return /* binding */ parseKey; },
+/* harmony export */   parseList: function() { return /* binding */ parseList; },
+/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; },
+/* harmony export */   parseString: function() { return /* binding */ parseString; },
+/* harmony export */   parseToken: function() { return /* binding */ parseToken; },
+/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; },
+/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; },
+/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; },
+/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; },
+/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; },
+/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; },
+/* harmony export */   serializeError: function() { return /* binding */ serializeError; },
+/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; },
+/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; },
+/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; },
+/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; },
+/* harmony export */   serializeList: function() { return /* binding */ serializeList; },
+/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; },
+/* harmony export */   serializeString: function() { return /* binding */ serializeString; },
+/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; },
+/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/SfItem.ts
+/**
+* Structured Field Item
+*
+*
+* @beta
+*/
+var SfItem = class SfItem {
+  constructor(value, params) {
+    if (Array.isArray(value)) value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
+    this.value = value;
+    this.params = params;
+  }
+};
+
+//#endregion
+//#region src/utils/DICT.ts
+const DICT = "Dict";
+
+//#endregion
+//#region src/parse/ParsedValue.ts
+/**
+* @internal
+*/
+function parsedValue(value, src) {
+  return {
+    value,
+    src
+  };
+}
+
+//#endregion
+//#region src/utils/throwError.ts
+function format(value) {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (value instanceof Map) return "Map{}";
+  if (value instanceof Set) return "Set{}";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+function throwError(action, src, type, cause) {
+  return new Error(`failed to ${action} "${format(src)}" as ${type}`, {
+    cause
+  });
+}
+
+//#endregion
+//#region src/parse/parseError.ts
+/**
+* @internal
+*/
+function parseError(src, type, cause) {
+  return throwError("parse", src, type, cause);
+}
+
+//#endregion
+//#region src/utils/INNER.ts
+const INNER = "Inner List";
+
+//#endregion
+//#region src/utils/BARE_ITEM.ts
+const BARE_ITEM = "Bare Item";
+
+//#endregion
+//#region src/utils/BOOLEAN.ts
+const BOOLEAN = "Boolean";
+
+//#endregion
+//#region src/parse/parseBoolean.ts
+/**
+* @internal
+*/
+function parseBoolean(src) {
+  let i = 0;
+  if (src[i] !== "?") throw parseError(src, BOOLEAN);
+  i++;
+  if (src[i] === "1") return parsedValue(true, src.substring(++i));
+  if (src[i] === "0") return parsedValue(false, src.substring(++i));
+  throw parseError(src, BOOLEAN);
+}
+
+//#endregion
+//#region src/utils/BYTES.ts
+const BYTES = "Byte Sequence";
+
+//#endregion
+//#region src/parse/parseByteSequence.ts
+/**
+* @internal
+*/
+function parseByteSequence(src) {
+  if (src[0] !== ":") throw parseError(src, BYTES);
+  src = src.substring(1);
+  if (src.includes(":") === false) throw parseError(src, BYTES);
+  const re = /(^.*?)(:)/g;
+  const b64_content = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.decodeBase64)(b64_content), src);
+}
+
+//#endregion
+//#region src/utils/DATE.ts
+const DATE = "Date";
+
+//#endregion
+//#region src/utils/DECIMAL.ts
+const DECIMAL = "Decimal";
+
+//#endregion
+//#region src/utils/INTEGER.ts
+const INTEGER = "Integer";
+
+//#endregion
+//#region src/utils/INTEGER_DECIMAL.ts
+const INTEGER_DECIMAL = `${INTEGER} or ${DECIMAL}`;
+
+//#endregion
+//#region src/utils/isInvalidInt.ts
+function isInvalidInt(value) {
+  return value < -999999999999999 || 999999999999999 < value;
+}
+
+//#endregion
+//#region src/parse/parseIntegerOrDecimal.ts
+/**
+* @internal
+*/
+function parseIntegerOrDecimal(src) {
+  const orig = src;
+  let sign = 1;
+  let num = "";
+  let value;
+  const i = 0;
+  const error = parseError(orig, INTEGER_DECIMAL);
+  if (src[i] === "-") {
+    sign = -1;
+    src = src.substring(1);
+  }
+  if (src.length <= 0) throw error;
+  const re_integer = /^(\d+)?/g;
+  const result_integer = re_integer.exec(src);
+  if (result_integer[0].length === 0) throw error;
+  num += result_integer[1];
+  src = src.substring(re_integer.lastIndex);
+  if (src[0] === ".") {
+    if (num.length > 12) throw error;
+    const re_decimal = /^(\.\d+)?/g;
+    const result_decimal = re_decimal.exec(src);
+    src = src.substring(re_decimal.lastIndex);
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    num += result_decimal[1];
+    if (num.length > 16) throw error;
+    value = parseFloat(num) * sign;
+  } else {
+    if (num.length > 15) throw error;
+    value = parseInt(num) * sign;
+    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/parse/parseDate.ts
+/**
+* @internal
+*/
+function parseDate(src) {
+  let i = 0;
+  if (src[i] !== "@") throw parseError(src, DATE);
+  i++;
+  const date = parseIntegerOrDecimal(src.substring(i));
+  if (Number.isInteger(date.value) === false) throw parseError(src, DATE);
+  return parsedValue(/* @__PURE__ */new Date(date.value * 1e3), date.src);
+}
+
+//#endregion
+//#region src/utils/STRING.ts
+const STRING = "String";
+
+//#endregion
+//#region src/utils/STRING_REGEX.ts
+const STRING_REGEX = /[\x00-\x1f\x7f]+/;
+
+//#endregion
+//#region src/parse/parseString.ts
+/**
+* @internal
+*/
+function parseString(src) {
+  let output = "";
+  let i = 0;
+  if (src[i] !== `"`) throw parseError(src, STRING);
+  i++;
+  while (src.length > i) {
+    if (src[i] === `\\`) {
+      if (src.length <= i + 1) throw parseError(src, STRING);
+      i++;
+      if (src[i] !== `"` && src[i] !== `\\`) throw parseError(src, STRING);
+      output += src[i];
+    } else if (src[i] === `"`) return parsedValue(output, src.substring(++i));else if (STRING_REGEX.test(src[i])) throw parseError(src, STRING);else output += src[i];
+    i++;
+  }
+  throw parseError(src, STRING);
+}
+
+//#endregion
+//#region src/SfToken.ts
+/**
+* A class to represent structured field tokens when `Symbol` is not available.
+*
+*
+* @beta
+*/
+var SfToken = class {
+  constructor(description) {
+    this.description = description;
+  }
+};
+
+//#endregion
+//#region src/utils/TOKEN.ts
+const TOKEN = "Token";
+
+//#endregion
+//#region src/parse/parseToken.ts
+/**
+* @internal
+*/
+function parseToken(src, options) {
+  if (/^[a-zA-Z*]$/.test(src[0]) === false) throw parseError(src, TOKEN);
+  const re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
+  const value = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue(options?.useSymbol === false ? new SfToken(value) : Symbol.for(value), src);
+}
+
+//#endregion
+//#region src/parse/parseBareItem.ts
+/**
+* @internal
+*/
+function parseBareItem(src, options) {
+  const first = src[0];
+  if (first === `"`) return parseString(src);
+  if (/^[-0-9]/.test(first)) return parseIntegerOrDecimal(src);
+  if (first === `?`) return parseBoolean(src);
+  if (first === `:`) return parseByteSequence(src);
+  if (/^[a-zA-Z*]/.test(first)) return parseToken(src, options);
+  if (first === `@`) return parseDate(src);
+  throw parseError(src, BARE_ITEM);
+}
+
+//#endregion
+//#region src/utils/KEY.ts
+const KEY = "Key";
+
+//#endregion
+//#region src/parse/parseKey.ts
+/**
+* @internal
+*/
+function parseKey(src) {
+  let i = 0;
+  if (/^[a-z*]$/.test(src[i]) === false) throw parseError(src, KEY);
+  let value = "";
+  while (src.length > i) {
+    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) return parsedValue(value, src.substring(i));
+    value += src[i];
+    i++;
+  }
+  return parsedValue(value, src.substring(i));
+}
+
+//#endregion
+//#region src/parse/parseParameters.ts
+/**
+* @internal
+*/
+function parseParameters(src, options) {
+  let parameters = void 0;
+  while (src.length > 0) {
+    if (src[0] !== ";") break;
+    src = src.substring(1).trim();
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    let value = true;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      src = src.substring(1);
+      const parsedBareItem = parseBareItem(src, options);
+      value = parsedBareItem.value;
+      src = parsedBareItem.src;
+    }
+    if (parameters == null) parameters = {};
+    parameters[key] = value;
+  }
+  return parsedValue(parameters, src);
+}
+
+//#endregion
+//#region src/parse/parseItem.ts
+/**
+* @internal
+*/
+function parseItem(src, options) {
+  const parsedBareItem = parseBareItem(src, options);
+  src = parsedBareItem.src;
+  const parsedParameters = parseParameters(src, options);
+  src = parsedParameters.src;
+  return parsedValue(new SfItem(parsedBareItem.value, parsedParameters.value), src);
+}
+
+//#endregion
+//#region src/parse/parseInnerList.ts
+/**
+* @internal
+*/
+function parseInnerList(src, options) {
+  if (src[0] !== "(") throw parseError(src, INNER);
+  src = src.substring(1);
+  const innerList = [];
+  while (src.length > 0) {
+    src = src.trim();
+    if (src[0] === ")") {
+      src = src.substring(1);
+      const parsedParameters = parseParameters(src, options);
+      return parsedValue(new SfItem(innerList, parsedParameters.value), parsedParameters.src);
+    }
+    const parsedItem = parseItem(src, options);
+    innerList.push(parsedItem.value);
+    src = parsedItem.src;
+    if (src[0] !== " " && src[0] !== ")") throw parseError(src, INNER);
+  }
+  throw parseError(src, INNER);
+}
+
+//#endregion
+//#region src/parse/parseItemOrInnerList.ts
+/**
+* @internal
+*/
+function parseItemOrInnerList(src, options) {
+  if (src[0] === "(") return parseInnerList(src, options);
+  return parseItem(src, options);
+}
+
+//#endregion
+//#region src/parse/parseDict.ts
+/**
+* @internal
+*/
+function parseDict(src, options) {
+  const value = {};
+  while (src.length > 0) {
+    let member;
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      const parsedItemOrInnerList = parseItemOrInnerList(src.substring(1), options);
+      member = parsedItemOrInnerList.value;
+      src = parsedItemOrInnerList.src;
+    } else {
+      const parsedParameters = parseParameters(src, options);
+      member = new SfItem(true, parsedParameters.value);
+      src = parsedParameters.src;
+    }
+    value[key] = member;
+    src = src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, DICT);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, DICT);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfDict.ts
+/**
+* Decode a structured field string into a structured field dictionary
+*
+* @param input - The structured field string to decode
+* @returns The structured field dictionary
+*
+*
+* @beta
+*/
+function decodeSfDict(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseDict(input.trim(), options);
+    if (src !== "") throw parseError(src, DICT);
+    return value;
+  } catch (cause) {
+    throw parseError(input, DICT, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/ITEM.ts
+const ITEM = "Item";
+
+//#endregion
+//#region src/decodeSfItem.ts
+/**
+* Decode a structured field string into a structured field item
+*
+* @param input - The structured field string to decode
+* @returns The structured field item
+*
+*
+* @beta
+*/
+function decodeSfItem(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseItem(input.trim(), options);
+    if (src !== "") throw parseError(src, ITEM);
+    return value;
+  } catch (cause) {
+    throw parseError(input, ITEM, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/LIST.ts
+const LIST = "List";
+
+//#endregion
+//#region src/parse/parseList.ts
+/**
+* @internal
+*/
+function parseList(src, options) {
+  const value = [];
+  while (src.length > 0) {
+    const parsedItemOrInnerList = parseItemOrInnerList(src, options);
+    value.push(parsedItemOrInnerList.value);
+    src = parsedItemOrInnerList.src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, LIST);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, LIST);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfList.ts
+/**
+* Decode a structured field string into a structured field list
+*
+* @param input - The structured field string to decode
+* @returns The structured field list
+*
+*
+* @beta
+*/
+function decodeSfList(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseList(input.trim(), options);
+    if (src !== "") throw parseError(src, LIST);
+    return value;
+  } catch (cause) {
+    throw parseError(input, LIST, cause);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeError.ts
+/**
+* @internal
+*/
+function serializeError(src, type, cause) {
+  return throwError("serialize", src, type, cause);
+}
+
+//#endregion
+//#region src/serialize/serializeBoolean.ts
+/**
+* @internal
+*/
+function serializeBoolean(value) {
+  if (typeof value !== "boolean") throw serializeError(value, BOOLEAN);
+  return value ? "?1" : "?0";
+}
+
+//#endregion
+//#region src/serialize/serializeByteSequence.ts
+/**
+* @internal
+*/
+function serializeByteSequence(value) {
+  if (ArrayBuffer.isView(value) === false) throw serializeError(value, BYTES);
+  return `:${(0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value)}:`;
+}
+
+//#endregion
+//#region src/serialize/serializeInteger.ts
+/**
+* @internal
+*/
+function serializeInteger(value) {
+  if (isInvalidInt(value)) throw serializeError(value, INTEGER);
+  return value.toString();
+}
+
+//#endregion
+//#region src/serialize/serializeDate.ts
+/**
+* @internal
+*/
+function serializeDate(value) {
+  return `@${serializeInteger(value.getTime() / 1e3)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDecimal.ts
+/**
+* @internal
+*/
+function serializeDecimal(value) {
+  const roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3);
+  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  const stringValue = roundedValue.toString();
+  return stringValue.includes(".") ? stringValue : `${stringValue}.0`;
+}
+
+//#endregion
+//#region src/serialize/serializeString.ts
+/**
+* @internal
+*/
+function serializeString(value) {
+  if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
+  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
+}
+
+//#endregion
+//#region src/utils/symbolToStr.ts
+/**
+* Converts a symbol to a string.
+*
+* @param symbol - The symbol to convert.
+*
+* @returns The string representation of the symbol.
+*
+*
+* @beta
+*/
+function symbolToStr(symbol) {
+  return symbol.description || symbol.toString().slice(7, -1);
+}
+
+//#endregion
+//#region src/serialize/serializeToken.ts
+/**
+* @internal
+*/
+function serializeToken(token) {
+  const value = symbolToStr(token);
+  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeBareItem.ts
+/**
+* @internal
+*/
+function serializeBareItem(value) {
+  switch (typeof value) {
+    case "number":
+      if (!Number.isFinite(value)) throw serializeError(value, BARE_ITEM);
+      if (Number.isInteger(value)) return serializeInteger(value);
+      return serializeDecimal(value);
+    case "string":
+      return serializeString(value);
+    case "symbol":
+      return serializeToken(value);
+    case "boolean":
+      return serializeBoolean(value);
+    case "object":
+      if (value instanceof Date) return serializeDate(value);
+      if (value instanceof Uint8Array) return serializeByteSequence(value);
+      if (value instanceof SfToken) return serializeToken(value);
+    default:
+      throw serializeError(value, BARE_ITEM);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeKey.ts
+/**
+* @internal
+*/
+function serializeKey(value) {
+  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeParams.ts
+/**
+* @internal
+*/
+function serializeParams(params) {
+  if (params == null) return "";
+  return Object.entries(params).map(([key, value]) => {
+    if (value === true) return `;${serializeKey(key)}`;
+    return `;${serializeKey(key)}=${serializeBareItem(value)}`;
+  }).join("");
+}
+
+//#endregion
+//#region src/serialize/serializeItem.ts
+/**
+* @internal
+*/
+function serializeItem(value) {
+  if (value instanceof SfItem) return `${serializeBareItem(value.value)}${serializeParams(value.params)}`;else return serializeBareItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeInnerList.ts
+/**
+* @internal
+*/
+function serializeInnerList(value) {
+  return `(${value.value.map(serializeItem).join(" ")})${serializeParams(value.params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDict.ts
+/**
+* @internal
+*/
+function serializeDict(dict, options = {
+  whitespace: true
+}) {
+  if (typeof dict !== "object" || dict == null) throw serializeError(dict, DICT);
+  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return Array.from(entries).map(([key, item]) => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    let output = serializeKey(key);
+    if (item.value === true) output += serializeParams(item.params);else {
+      output += "=";
+      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
+    }
+    return output;
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfDict.ts
+/**
+* Encode an object into a structured field dictionary
+*
+* @param value - The structured field dictionary to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfDict(value, options) {
+  return serializeDict(value, options);
+}
+
+//#endregion
+//#region src/encodeSfItem.ts
+function encodeSfItem(value, params) {
+  if (!(value instanceof SfItem)) value = new SfItem(value, params);
+  return serializeItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeList.ts
+/**
+* @internal
+*/
+function serializeList(list, options = {
+  whitespace: true
+}) {
+  if (Array.isArray(list) === false) throw serializeError(list, LIST);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return list.map(item => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    const i = item;
+    if (Array.isArray(i.value)) return serializeInnerList(i);
+    return serializeItem(i);
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfList.ts
+/**
+* Encode a list into a structured field dictionary
+*
+* @param value - The structured field list to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+*
+* @beta
+*/
+function encodeSfList(value, options) {
+  return serializeList(value, options);
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-utils/dist/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/@svta/cml-utils/dist/index.js ***!
+  \****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Encoding: function() { return /* binding */ Encoding; },
+/* harmony export */   RequestType: function() { return /* binding */ RequestType; },
+/* harmony export */   UTF_16: function() { return /* binding */ UTF_16; },
+/* harmony export */   UTF_16_BE: function() { return /* binding */ UTF_16_BE; },
+/* harmony export */   UTF_16_LE: function() { return /* binding */ UTF_16_LE; },
+/* harmony export */   UTF_8: function() { return /* binding */ UTF_8; },
+/* harmony export */   arrayBufferToHex: function() { return /* binding */ arrayBufferToHex; },
+/* harmony export */   arrayBufferToUuid: function() { return /* binding */ arrayBufferToUuid; },
+/* harmony export */   base64decode: function() { return /* binding */ base64decode; },
+/* harmony export */   base64encode: function() { return /* binding */ base64encode; },
+/* harmony export */   convertUint8ToUint16: function() { return /* binding */ convertUint8ToUint16; },
+/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; },
+/* harmony export */   decodeText: function() { return /* binding */ decodeText; },
+/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; },
+/* harmony export */   getBandwidthBps: function() { return /* binding */ getBandwidthBps; },
+/* harmony export */   hexToArrayBuffer: function() { return /* binding */ hexToArrayBuffer; },
+/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; },
+/* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; },
+/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; },
+/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; },
+/* harmony export */   uuid: function() { return /* binding */ uuid; },
+/* harmony export */   uuidToArrayBuffer: function() { return /* binding */ uuidToArrayBuffer; }
+/* harmony export */ });
+//#region src/arrayBufferToHex.ts
+/**
+* Encodes an ArrayBuffer as a hexadecimal string.
+*
+* @param buffer - The ArrayBuffer to encode.
+* @returns The hexadecimal string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToHex.test.ts#example}
+*/
+function arrayBufferToHex(buffer) {
+  return new Uint8Array(buffer).reduce((result, byte) => result + byte.toString(16).padStart(2, "0"), "");
+}
+
+//#endregion
+//#region src/arrayBufferToUuid.ts
+/**
+* Converts an ArrayBuffer to a UUID string.
+*
+* @param buffer - The ArrayBuffer to convert.
+* @returns The UUID string representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/arrayBufferToUuid.test.ts#example}
+*/
+function arrayBufferToUuid(buffer) {
+  return arrayBufferToHex(buffer).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
+}
+
+//#endregion
+//#region src/decodeBase64.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*/
+function decodeBase64(str) {
+  return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
+}
+
+//#endregion
+//#region src/base64decode.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+*
+* @beta
+*
+* @deprecated Use {@link decodeBase64} instead.
+*
+* @see {@link decodeBase64}
+*/
+const base64decode = decodeBase64;
+
+//#endregion
+//#region src/encodeBase64.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*/
+function encodeBase64(binary) {
+  return btoa(String.fromCharCode(...binary));
+}
+
+//#endregion
+//#region src/base64encode.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+*
+* @beta
+*
+* @deprecated Use {@link encodeBase64} instead.
+*
+* @see {@link encodeBase64}
+*/
+const base64encode = encodeBase64;
+
+//#endregion
+//#region src/convertUint8ToUint16.ts
+/**
+* Converts a Uint8Array to a Uint16Array by aligning its buffer.
+*
+* @param input - The Uint8Array to convert
+* @returns A properly aligned Uint16Array
+*
+* @beta
+*/
+function convertUint8ToUint16(input) {
+  if (input.length % 2 !== 0) {
+    const padded = new Uint8Array(input.length + 1);
+    padded.set(input);
+    return new Uint16Array(padded.buffer);
+  }
+  return new Uint16Array(input.buffer);
+}
+
+//#endregion
+//#region src/UTF_16.ts
+/**
+* UTF-16 Encoding.
+*
+*
+* @beta
+*/
+const UTF_16 = "utf-16";
+
+//#endregion
+//#region src/UTF_16_BE.ts
+/**
+* UTF-16 Big Endian Encoding.
+*
+*
+* @beta
+*/
+const UTF_16_BE = "utf-16be";
+
+//#endregion
+//#region src/UTF_16_LE.ts
+/**
+* UTF-16 Little Endian Encoding.
+*
+*
+* @beta
+*/
+const UTF_16_LE = "utf-16le";
+
+//#endregion
+//#region src/UTF_8.ts
+/**
+* UTF-8 Encoding.
+*
+*
+* @beta
+*/
+const UTF_8 = "utf-8";
+
+//#endregion
+//#region src/decodeText.ts
+/**
+* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
+* but with a fallback for environments that don't support `TextDecoder`.
+*
+* @param data - The data to decode.
+* @param options - The options for the decoding.
+* @returns The string representation of the ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeText.test.ts#example}
+*/
+function decodeText(data, options = {}) {
+  let view;
+  if (data instanceof ArrayBuffer) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  let byteOffset = 0;
+  let {
+    encoding
+  } = options;
+  if (!encoding) {
+    const first = view.getUint8(0);
+    const second = view.getUint8(1);
+    if (first == 239 && second == 187 && view.getUint8(2) == 191) {
+      encoding = UTF_8;
+      byteOffset = 3;
+    } else if (first == 254 && second == 255) {
+      encoding = UTF_16_BE;
+      byteOffset = 2;
+    } else if (first == 255 && second == 254) {
+      encoding = UTF_16_LE;
+      byteOffset = 2;
+    } else encoding = UTF_8;
+  }
+  if (typeof TextDecoder !== "undefined") return new TextDecoder(encoding).decode(view);
+  const {
+    byteLength
+  } = view;
+  const endian = encoding !== UTF_16_BE;
+  let str = "";
+  let char;
+  while (byteOffset < byteLength) {
+    switch (encoding) {
+      case UTF_8:
+        char = view.getUint8(byteOffset);
+        if (char < 128) byteOffset++;else if (char >= 194 && char <= 223) {
+          if (byteOffset + 1 < byteLength) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            if (byte2 >= 128 && byte2 <= 191) {
+              char = (char & 31) << 6 | byte2 & 63;
+              byteOffset += 2;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 224 && char <= 239) {
+          if (byteOffset + 2 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191) {
+              char = (char & 15) << 12 | (byte2 & 63) << 6 | byte3 & 63;
+              byteOffset += 3;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 240 && char <= 244) {
+          if (byteOffset + 3 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            const byte4 = view.getUint8(byteOffset + 3);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191 && byte4 >= 128 && byte4 <= 191) {
+              char = (char & 7) << 18 | (byte2 & 63) << 12 | (byte3 & 63) << 6 | byte4 & 63;
+              byteOffset += 4;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else byteOffset++;
+        break;
+      case UTF_16_BE:
+      case UTF_16:
+      case UTF_16_LE:
+        char = view.getUint16(byteOffset, endian);
+        byteOffset += 2;
+        break;
+    }
+    str += String.fromCodePoint(char);
+  }
+  return str;
+}
+
+//#endregion
+//#region src/Encoding.ts
+/**
+* Text encoding types.
+*
+*
+* @beta
+*/
+const Encoding = {
+  UTF8: UTF_8,
+  UTF16: UTF_16,
+  UTF16BE: UTF_16_BE,
+  UTF16LE: UTF_16_LE
+};
+
+//#endregion
+//#region src/getBandwidthBps.ts
+/**
+* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+*
+* @param sample - A ResourceTiming sample
+* @returns
+*
+*
+* @beta
+*/
+function getBandwidthBps(sample) {
+  const durationSeconds = sample.duration / 1e3;
+  return sample.encodedBodySize * 8 / durationSeconds;
+}
+
+//#endregion
+//#region src/hexToArrayBuffer.ts
+/**
+* Decodes a hexadecimal string into an ArrayBuffer.
+*
+* @param hex - The hexadecimal string to decode.
+* @returns The decoded ArrayBuffer.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/hexToArrayBuffer.test.ts#example}
+*/
+function hexToArrayBuffer(hex) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(hex.length / 2);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < hex.length; i += 2) view[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return buffer;
+}
+
+//#endregion
+//#region src/RequestType.ts
+/**
+* The content type of the request.
+*
+*
+* @enum
+*
+* @beta
+*/
+const RequestType = {
+  TEXT: "text",
+  JSON: "json",
+  BLOB: "blob",
+  ARRAY_BUFFER: "arrayBuffer",
+  DOCUMENT: "document"
+};
+
+//#endregion
+//#region src/roundToEven.ts
+/**
+* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
+* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+*
+* @param value - The value to round
+* @param precision - The number of decimal places to round to
+* @returns The rounded value
+*
+*
+* @beta
+*/
+function roundToEven(value, precision) {
+  if (value < 0) return -roundToEven(-value, precision);
+  const decimalShift = Math.pow(10, precision);
+  if (Math.abs(value * decimalShift % 1 - .5) < Number.EPSILON) {
+    const flooredValue = Math.floor(value * decimalShift);
+    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
+  } else return Math.round(value * decimalShift) / decimalShift;
+}
+
+//#endregion
+//#region src/stringToUint16.ts
+/**
+* Converts a string to a Uint16Array.
+*
+* @param str - The string to convert
+* @returns A Uint16Array representation of the string
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/stringToUint16.test.ts#example}
+*/
+function stringToUint16(str) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(str.length * 2);
+  const view = new DataView(buffer);
+  for (let i = 0; i < str.length; i++) view.setUint16(i * 2, str.charCodeAt(i), true);
+  return new Uint16Array(buffer);
+}
+
+//#endregion
+//#region src/unescapeHtml.ts
+const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
+/**
+* Unescapes HTML entities
+*
+* @param text - The text to unescape
+* @returns The unescaped text
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/unescapeHtml.test.ts#example}
+*/
+function unescapeHtml(text) {
+  if (text.indexOf("&") === -1) return text;
+  return text.replace(escapedHtml, match => {
+    switch (match) {
+      case "&amp;":
+        return "&";
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
+      case "&quot;":
+        return "\"";
+      case "&apos;":
+        return "'";
+      case "&nbsp;":
+        return "\xA0";
+      case "&lrm;":
+        return "‎";
+      case "&rlm;":
+        return "‏";
+      default:
+        if (match[1] === "#") {
+          const code = match[2] === "x" || match[2] === "X" ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
+          return String.fromCodePoint(code);
+        }
+        return match;
+    }
+  });
+}
+
+//#endregion
+//#region src/urlToRelativePath.ts
+/**
+* Constructs a relative path from a URL.
+*
+* @param url - The destination URL
+* @param base - The base URL
+* @returns The relative path
+*
+*
+* @beta
+*/
+function urlToRelativePath(url, base) {
+  const to = new URL(url);
+  const from = new URL(base);
+  if (to.origin !== from.origin) return url;
+  const toPath = to.pathname.split("/").slice(1);
+  const fromPath = from.pathname.split("/").slice(1, -1);
+  const length = Math.min(toPath.length, fromPath.length);
+  for (let i = 0; i < length; i++) {
+    if (toPath[i] !== fromPath[i]) break;
+    toPath.shift();
+    fromPath.shift();
+  }
+  while (fromPath.length) {
+    fromPath.shift();
+    toPath.unshift("..");
+  }
+  return toPath.join("/") + to.search + to.hash;
+}
+
+//#endregion
+//#region src/uuid.ts
+/**
+* Generate a random v4 UUID
+*
+* @returns A random v4 UUID
+*
+*
+* @beta
+*/
+function uuid() {
+  try {
+    return crypto.randomUUID();
+  } catch (error) {
+    try {
+      const url = URL.createObjectURL(new Blob());
+      const uuid$1 = url.toString();
+      URL.revokeObjectURL(url);
+      return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
+    } catch (error$1) {
+      let dt = (/* @__PURE__ */new Date()).getTime();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = (dt + Math.random() * 16) % 16 | 0;
+        dt = Math.floor(dt / 16);
+        return (c == "x" ? r : r & 3 | 8).toString(16);
+      });
+    }
+  }
+}
+
+//#endregion
+//#region src/uuidToArrayBuffer.ts
+/**
+* Converts a UUID string to an ArrayBuffer.
+*
+* @param uuid - The UUID string to convert.
+* @returns The ArrayBuffer representation.
+*
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/uuidToArrayBuffer.test.ts#example}
+*/
+function uuidToArrayBuffer(uuid$1) {
+  return hexToArrayBuffer(uuid$1.replace(/-/g, ""));
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-xml/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-xml/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   getElementsByName: function() { return /* binding */ getElementsByName; },
+/* harmony export */   parseXml: function() { return /* binding */ parseXml; },
+/* harmony export */   serializeXml: function() { return /* binding */ serializeXml; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/getElementsByName.ts
+/**
+* Recursively finds all elements by name within an XML structure.
+*
+* @param node - The current XML node to search within.
+* @param name - The name of the target nodes to find.
+* @param found - An array to collect matching nodes.
+* @returns An array of all matching XmlNodes.
+*
+*
+* @beta
+*
+*/
+function getElementsByName(node, name, found = []) {
+  if (!node) return found;
+  if (node.nodeName === name) found.push(node);
+  if (node.childNodes) for (const child of node.childNodes) getElementsByName(child, name, found);
+  return found;
+}
+
+//#endregion
+//#region src/parseXml.ts
+/**
+* Parse XML into a JS object with no validation and some failure tolerance
+*
+* @param input - The input XML string
+* @param options - Optional parsing options
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/decodeXml.test.ts#example}
+*/
+function parseXml(input, options = {}) {
+  let pos = options.pos || 0;
+  const length = input.length;
+  const keepComments = !!options.keepComments;
+  const keepWhitespace = !!options.keepWhitespace;
+  const openBracket = "<";
+  const openBracketCC = "<".charCodeAt(0);
+  const closeBracket = ">";
+  const closeBracketCC = ">".charCodeAt(0);
+  const minusCC = "-".charCodeAt(0);
+  const slashCC = "/".charCodeAt(0);
+  const questionCC = "?".charCodeAt(0);
+  const exclamationCC = "!".charCodeAt(0);
+  const singleQuoteCC = "'".charCodeAt(0);
+  const doubleQuoteCC = "\"".charCodeAt(0);
+  const openCornerBracketCC = "[".charCodeAt(0);
+  const closeCornerBracketCC = "]".charCodeAt(0);
+  const nameSpacer = "\r\n	>/= ";
+  function createTextNode(value, nodeName = "#text") {
+    return {
+      nodeName,
+      nodeValue: value,
+      attributes: {},
+      childNodes: []
+    };
+  }
+  /**
+  * parsing a list of entries
+  */
+  function parseChildren(tagName = "") {
+    const children = [];
+    while (input[pos]) if (input.charCodeAt(pos) == openBracketCC) {
+      if (input.charCodeAt(pos + 1) === slashCC) {
+        const closeStart = pos + 2;
+        pos = input.indexOf(closeBracket, pos);
+        if (!input.startsWith(tagName, closeStart)) {
+          const parsedText = input.substring(0, pos).split("\n");
+          throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
+        }
+        if (pos + 1) pos += 1;
+        return children;
+      } else if (input.charCodeAt(pos + 1) === questionCC) {
+        pos = input.indexOf(closeBracket, pos);
+        pos++;
+        continue;
+      } else if (input.charCodeAt(pos + 1) === exclamationCC) {
+        if (input.charCodeAt(pos + 2) == minusCC) {
+          const startCommentPos = pos;
+          while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) pos = input.indexOf(closeBracket, pos + 1);
+          if (pos === -1) pos = length;
+          if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
+        } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith("CDATA", pos + 3)) {
+          const cdataEndIndex = input.indexOf("]]>", pos);
+          if (cdataEndIndex == -1) {
+            children.push(createTextNode(input.substr(pos + 9), "#cdata"));
+            pos = length;
+          } else {
+            children.push(createTextNode(input.substring(pos + 9, cdataEndIndex), "#cdata"));
+            pos = cdataEndIndex + 3;
+          }
+          continue;
+        } else {
+          const startDoctype = pos + 1;
+          pos += 2;
+          let encapsuled = false;
+          while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
+            if (input.charCodeAt(pos) === openCornerBracketCC) encapsuled = true;else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) encapsuled = false;
+            pos++;
+          }
+          children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
+        }
+        pos++;
+        continue;
+      }
+      const node = parseNode();
+      children.push(node);
+    } else {
+      const text = parseText();
+      if (keepWhitespace) {
+        if (text.length > 0) children.push(createTextNode(text));
+      } else {
+        const trimmed = text.trim();
+        if (trimmed.length > 0) children.push(createTextNode(trimmed));
+      }
+      pos++;
+    }
+    return children;
+  }
+  /**
+  * returns the text outside of texts until the first '&lt;'
+  */
+  function parseText() {
+    const start = pos;
+    pos = input.indexOf(openBracket, pos) - 1;
+    if (pos === -2) pos = length;
+    return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
+  }
+  /**
+  * returns text until the first nonAlphabetic letter
+  */
+  function parseName() {
+    const start = pos;
+    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) pos++;
+    return input.slice(start, pos);
+  }
+  /**
+  * parses the attributes of a node
+  */
+  function parseAttributes() {
+    const attributes = {};
+    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
+      const c = input.charCodeAt(pos);
+      if (c > 64 && c < 91 || c > 96 && c < 123) {
+        const name = parseName();
+        let value = "";
+        let code = input.charCodeAt(pos);
+        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
+          pos++;
+          code = input.charCodeAt(pos);
+        }
+        if (code === singleQuoteCC || code === doubleQuoteCC) {
+          value = parseString();
+          if (pos === -1) throw new Error("Missing closing quote");
+        } else pos--;
+        attributes[name] = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(value);
+      }
+      pos++;
+    }
+    return attributes;
+  }
+  /**
+  * parses a node
+  */
+  function parseNode() {
+    pos++;
+    const nodeName = parseName();
+    let localName = nodeName;
+    let prefix = null;
+    const nsIndex = nodeName.indexOf(":");
+    if (nsIndex !== -1) {
+      prefix = nodeName.slice(0, nsIndex);
+      localName = nodeName.slice(nsIndex + 1);
+    }
+    const attributes = parseAttributes();
+    let childNodes = [];
+    const prev = input.charCodeAt(pos - 1);
+    pos++;
+    if (prev !== slashCC) childNodes = parseChildren(nodeName);
+    return {
+      nodeName,
+      nodeValue: null,
+      attributes,
+      childNodes,
+      prefix,
+      localName
+    };
+  }
+  /**
+  * is parsing a string, that starts with a char and with the same usually ' or "
+  */
+  function parseString() {
+    const startChar = input[pos];
+    const startpos = pos + 1;
+    pos = input.indexOf(startChar, startpos);
+    return input.slice(startpos, pos);
+  }
+  return {
+    nodeName: "#document",
+    nodeValue: null,
+    childNodes: parseChildren(""),
+    attributes: {}
+  };
+}
+
+//#endregion
+//#region src/serializeXml.ts
+/**
+* Basic xml encoding utility. Encodes XML into a string.
+*
+* @param xml - The XML node to encode
+* @returns The parsed XML
+*
+* @beta
+*
+* @example
+* {@includeCode ../test/serializeXml.test.ts#example}
+*/
+function serializeXml(xml) {
+  const {
+    nodeName,
+    attributes,
+    childNodes
+  } = xml;
+  if (nodeName === "#document") return `<?xml version="1.0" encoding="UTF-8"?>${serializeXml(childNodes[0])}`;
+  if (nodeName === "#text") return xml.nodeValue || "";
+  let result = `<${nodeName}`;
+  if (attributes) for (const key in attributes) result += ` ${key}=${JSON.stringify(attributes[key])}`;
+  let children = "";
+  const childCount = childNodes?.length;
+  if (childCount) for (let i = 0; i < childCount; i++) children += serializeXml(childNodes[i]);
+  const close = !children ? " />" : `>${children}</${nodeName}>`;
+  result += close;
+  return result;
+}
+
+//#endregion
+
 
 /***/ }),
 
@@ -26544,7 +25538,8 @@ __webpack_require__.r(__webpack_exports__);
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -26601,7 +25596,8 @@ __webpack_require__.r(__webpack_exports__);
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -27017,6 +26013,8 @@ __webpack_require__.r(__webpack_exports__);
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -27191,6 +26189,8 @@ __webpack_require__.r(__webpack_exports__);
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -27629,7 +26629,8 @@ function Settings() {
         })],
         useMediaCapabilitiesApi: true,
         filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false
+        filterHDRMetadataFormatEssentialProperties: false,
+        filterAudioChannelConfiguration: false
       },
       events: {
         eventControllerRefreshDelay: 100,
@@ -27686,7 +26687,8 @@ function Settings() {
         threshold: 0.3,
         enableSeekFix: true,
         enableStallFix: false,
-        stallSeek: 0.1
+        stallSeek: 0.1,
+        seekOffset: 0
       },
       utcSynchronization: {
         enabled: true,
@@ -28639,8 +27641,8 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.ATTEMPT_BACKGROUND_SYNC = 'attemptBackgroundSync';
     this.BUFFERING_COMPLETED = 'bufferingCompleted';
     this.BUFFER_CLEARED = 'bufferCleared';
-    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.BUFFER_REPLACEMENT_STARTED = 'bufferReplacementStarted';
+    this.BYTES_APPENDED_END_FRAGMENT = 'bytesAppendedEndFragment';
     this.CHECK_FOR_EXISTENCE_COMPLETED = 'checkForExistenceCompleted';
     this.CMSD_STATIC_HEADER = 'cmsdStaticHeader';
     this.CURRENT_TRACK_CHANGED = 'currentTrackChanged';
@@ -28650,22 +27652,31 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.INIT_FRAGMENT_LOADED = 'initFragmentLoaded';
     this.INIT_FRAGMENT_NEEDED = 'initFragmentNeeded';
     this.INTERNAL_MANIFEST_LOADED = 'internalManifestLoaded';
-    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
-    this.LOADING_COMPLETED = 'loadingCompleted';
-    this.LOADING_PROGRESS = 'loadingProgress';
-    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
     this.LOADING_ABANDONED = 'loadingAborted';
+    this.LOADING_COMPLETED = 'loadingCompleted';
+    this.LOADING_DATA_PROGRESS = 'loadingDataProgress';
+    this.LOADING_PROGRESS = 'loadingProgress';
     this.MANIFEST_UPDATED = 'manifestUpdated';
+    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
     this.MEDIA_FRAGMENT_LOADED = 'mediaFragmentLoaded';
     this.MEDIA_FRAGMENT_NEEDED = 'mediaFragmentNeeded';
-    this.MEDIAINFO_UPDATED = 'mediaInfoUpdated';
+    this.ORIGINAL_MANIFEST_LOADED = 'originalManifestLoaded';
     this.QUOTA_EXCEEDED = 'quotaExceeded';
+    this.SEEK_TARGET = 'seekTarget';
     this.SEGMENT_LOCATION_BLACKLIST_ADD = 'segmentLocationBlacklistAdd';
     this.SEGMENT_LOCATION_BLACKLIST_CHANGED = 'segmentLocationBlacklistChanged';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD = 'serviceLocationBlacklistAdd';
     this.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED = 'serviceLocationBlacklistChanged';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_ADD = 'serviceLocationLocationBlacklistAdd';
     this.SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED = 'serviceLocationLocationBlacklistChanged';
+    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
+    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
+    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
+    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
+    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
+    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
+    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
     this.SET_FRAGMENTED_TEXT_AFTER_DISABLED = 'setFragmentedTextAfterDisabled';
     this.SET_NON_FRAGMENTED_TEXT = 'setNonFragmentedText';
     this.SOURCE_BUFFER_ERROR = 'sourceBufferError';
@@ -28677,18 +27688,10 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
     this.UPDATE_TIME_SYNC_OFFSET = 'updateTimeSyncOffset';
     this.URL_RESOLUTION_FAILED = 'urlResolutionFailed';
     this.VIDEO_CHUNK_RECEIVED = 'videoChunkReceived';
+    this.VIDEO_ELEMENT_RESIZED = 'videoElementResized';
     this.WALLCLOCK_TIME_UPDATED = 'wallclockTimeUpdated';
     this.XLINK_ELEMENT_LOADED = 'xlinkElementLoaded';
     this.XLINK_READY = 'xlinkReady';
-    this.SEEK_TARGET = 'seekTarget';
-    this.SETTING_UPDATED_LIVE_DELAY = 'settingUpdatedLiveDelay';
-    this.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT = 'settingUpdatedLiveDelayFragmentCount';
-    this.SETTING_UPDATED_CATCHUP_ENABLED = 'settingUpdatedCatchupEnabled';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MIN = 'settingUpdatedPlaybackRateMin';
-    this.SETTING_UPDATED_PLAYBACK_RATE_MAX = 'settingUpdatedPlaybackRateMax';
-    this.SETTING_UPDATED_ABR_ACTIVE_RULES = 'settingUpdatedAbrActiveRules';
-    this.SETTING_UPDATED_MAX_BITRATE = 'settingUpdatedMaxBitrate';
-    this.SETTING_UPDATED_MIN_BITRATE = 'settingUpdatedMinBitrate';
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (CoreEvents);
@@ -30789,7 +29792,7 @@ function DashManifestModel() {
       return undefined;
     }
     const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
-    return mainAS.Representation[0];
+    return mainAS ? mainAS.Representation[0] : undefined;
   }
   function getPreselectionsForPeriod(voPeriod) {
     const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
@@ -31006,9 +30009,9 @@ function DashManifestModel() {
           } else {
             event.id = null;
           }
-          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary) {
+          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
             // toString is used to manage both regular and namespaced tags
-            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.toString());
+            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
           } else {
             // From Cor.1: 'NOTE: this attribute is an alternative
             // to specifying a complete XML element(s) in the Event.
@@ -31415,7 +30418,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _matchers_LangMatcher_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./matchers/LangMatcher.js */ "./src/dash/parser/matchers/LangMatcher.js");
 /* harmony import */ var _maps_RepresentationBaseValuesMap_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./maps/RepresentationBaseValuesMap.js */ "./src/dash/parser/maps/RepresentationBaseValuesMap.js");
 /* harmony import */ var _maps_SegmentValuesMap_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./maps/SegmentValuesMap.js */ "./src/dash/parser/maps/SegmentValuesMap.js");
-/* harmony import */ var _svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/common-media-library/xml/parseXml.js */ "./node_modules/@svta/common-media-library/dist/xml/parseXml.js");
+/* harmony import */ var _svta_cml_xml__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/cml-xml */ "./node_modules/@svta/cml-xml/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -31504,7 +30507,7 @@ function DashParser(config) {
     return manifest;
   }
   function processXml(data) {
-    const xml = (0,_svta_common_media_library_xml_parseXml_js__WEBPACK_IMPORTED_MODULE_9__.parseXml)(data);
+    const xml = (0,_svta_cml_xml__WEBPACK_IMPORTED_MODULE_9__.parseXml)(data);
     const root = xml.childNodes.find(child => child.nodeName === 'MPD' || child.nodeName === 'Patch') || xml.childNodes[0];
     function processNode(node) {
       // Convert tag name
@@ -32541,7 +31544,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   getTotalNumberOfPartialSegments: function() { return /* binding */ getTotalNumberOfPartialSegments; },
 /* harmony export */   processUriTemplate: function() { return /* binding */ processUriTemplate; }
 /* harmony export */ });
-/* harmony import */ var _svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/common-media-library/dash/processUriTemplate.js */ "./node_modules/@svta/common-media-library/dist/dash/processUriTemplate.js");
+/* harmony import */ var _svta_cml_dash__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-dash */ "./node_modules/@svta/cml-dash/dist/index.js");
 /* harmony import */ var _vo_FullSegment_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./../vo/FullSegment.js */ "./src/dash/vo/FullSegment.js");
 /* harmony import */ var _vo_PartialSegment_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/PartialSegment.js */ "./src/dash/vo/PartialSegment.js");
 /**
@@ -32690,7 +31693,7 @@ function processUriTemplate(url, representationId, number, subNumber, bandwidth,
   if (!url) {
     return url;
   }
-  return (0,_svta_common_media_library_dash_processUriTemplate_js__WEBPACK_IMPORTED_MODULE_0__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
+  return (0,_svta_cml_dash__WEBPACK_IMPORTED_MODULE_0__.processUriTemplate)(url, representationId, number, subNumber, bandwidth, time);
 }
 function getIndexBasedSegment(data) {
   const {
@@ -38162,7 +37165,7 @@ class MediaPlayerEvents extends _core_events_EventsBase_js__WEBPACK_IMPORTED_MOD
 
     /**
      * Triggered when a text track should be hidden
-     * @event MediaPlayerEvents#CUE_ENTER
+     * @event MediaPlayerEvents#CUE_EXIT
      */
     this.CUE_EXIT = 'cueExit';
 
@@ -39172,13 +38175,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
 /* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CMCD_PARAM */ "./node_modules/@svta/common-media-library/dist/cmcd/CMCD_PARAM.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdObjectType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamType */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamType.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdStreamingFormat */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdStreamingFormat.js");
-/* harmony import */ var _svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! @svta/common-media-library/cmcd/encodeCmcd */ "./node_modules/@svta/common-media-library/dist/cmcd/encodeCmcd.js");
-/* harmony import */ var _svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! @svta/common-media-library/cmcd/toCmcdHeaders */ "./node_modules/@svta/common-media-library/dist/cmcd/toCmcdHeaders.js");
-/* harmony import */ var _svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! @svta/common-media-library/cmcd/CmcdHeaderField */ "./node_modules/@svta/common-media-library/dist/cmcd/CmcdHeaderField.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -39209,12 +38206,6 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-
-
-
-
-
 
 
 
@@ -39326,7 +38317,7 @@ function CmcdModel() {
       if (isCmcdEnabled()) {
         const cmcdData = getCmcdData(request);
         const filteredCmcdData = _applyWhitelist(cmcdData);
-        const finalPayloadString = (0,_svta_common_media_library_cmcd_encodeCmcd__WEBPACK_IMPORTED_MODULE_14__.encodeCmcd)(filteredCmcdData);
+        const finalPayloadString = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.encodeCmcd)(filteredCmcdData);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -39334,7 +38325,7 @@ function CmcdModel() {
           cmcdString: finalPayloadString
         });
         return {
-          key: _svta_common_media_library_cmcd_CMCD_PARAM__WEBPACK_IMPORTED_MODULE_10__.CMCD_PARAM,
+          key: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CMCD_PARAM,
           value: finalPayloadString
         };
       }
@@ -39361,7 +38352,7 @@ function CmcdModel() {
         const cmcdData = getCmcdData(request);
         const filteredCmcdData = _applyWhitelist(cmcdData);
         const options = _createCmcdV2HeadersCustomMap();
-        const headers = (0,_svta_common_media_library_cmcd_toCmcdHeaders__WEBPACK_IMPORTED_MODULE_15__.toCmcdHeaders)(filteredCmcdData, options);
+        const headers = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.toCmcdHeaders)(filteredCmcdData, options);
         eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
           url: request.url,
           mediaType: request.mediaType,
@@ -39486,17 +38477,17 @@ function CmcdModel() {
   }
   function _getCmcdDataForSteering(request) {
     const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     return data;
   }
   function _getCmcdDataForLicense(request) {
     const data = _getGenericCmcdData(request);
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.KEY;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.KEY;
     return data;
   }
   function _getCmcdDataForMpd() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.MANIFEST;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.MANIFEST;
     return data;
   }
   function _getCmcdDataForMediaSegment(request, mediaType) {
@@ -39512,19 +38503,19 @@ function CmcdModel() {
     const nextRequest = _probeNextRequest(mediaType);
     let ot;
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.VIDEO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.VIDEO;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.AUDIO;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.AUDIO;
     }
     if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].ENHANCEMENT) {
-      ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     }
     if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT) {
       if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.TIMED_TEXT;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.TIMED_TEXT;
       } else {
-        ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.CAPTION;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.CAPTION;
       }
     }
     let rtp = settings.get().streaming.cmcd.rtp;
@@ -39589,13 +38580,13 @@ function CmcdModel() {
   }
   function _getCmcdDataForInitSegment() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.INIT;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.INIT;
     data.su = true;
     return data;
   }
   function _getCmcdDataForOther() {
     const data = _getGenericCmcdData();
-    data.ot = _svta_common_media_library_cmcd_CmcdObjectType__WEBPACK_IMPORTED_MODULE_11__.CmcdObjectType.OTHER;
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
     return data;
   }
   function _getGenericCmcdData() {
@@ -39636,8 +38627,8 @@ function CmcdModel() {
     const cmcdVersion = settings.get().streaming.cmcd.version;
     return cmcdVersion === 1 ? {} : {
       customHeaderMap: {
-        [_svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__.CmcdHeaderField.REQUEST]: ['ltc'],
-        [_svta_common_media_library_cmcd_CmcdHeaderField__WEBPACK_IMPORTED_MODULE_16__.CmcdHeaderField.SESSION]: ['msd']
+        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.REQUEST]: ['ltc'],
+        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.SESSION]: ['msd']
       }
     };
   }
@@ -39703,8 +38694,8 @@ function CmcdModel() {
   function _onManifestLoaded(data) {
     try {
       const isDynamic = dashManifestModel.getIsDynamic(data.data);
-      const st = isDynamic ? _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__.CmcdStreamType.LIVE : _svta_common_media_library_cmcd_CmcdStreamType__WEBPACK_IMPORTED_MODULE_12__.CmcdStreamType.VOD;
-      const sf = data.protocol && data.protocol === 'MSS' ? _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__.CmcdStreamingFormat.SMOOTH : _svta_common_media_library_cmcd_CmcdStreamingFormat__WEBPACK_IMPORTED_MODULE_13__.CmcdStreamingFormat.DASH;
+      const st = isDynamic ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.LIVE : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.VOD;
+      const sf = data.protocol && data.protocol === 'MSS' ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.SMOOTH : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.DASH;
       internalData.st = `${st}`;
       internalData.sf = `${sf}`;
     } catch (e) {}
@@ -39818,11 +38809,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_DYNAMIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_DYNAMIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CMSD_STATIC.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CMSD_STATIC.js");
-/* harmony import */ var _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @svta/common-media-library/cmsd/CmsdObjectType.js */ "./node_modules/@svta/common-media-library/dist/cmsd/CmsdObjectType.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdDynamic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdDynamic.js");
-/* harmony import */ var _svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! @svta/common-media-library/cmsd/decodeCmsdStatic.js */ "./node_modules/@svta/common-media-library/dist/cmsd/decodeCmsdStatic.js");
+/* harmony import */ var _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @svta/cml-cmsd */ "./node_modules/@svta/cml-cmsd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -39859,13 +38846,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-
-
 // Note: in modern browsers, the header names are returned in all lower case
-const CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__.CMSD_STATIC.toLowerCase();
-const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC.toLowerCase();
+const CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC.toLowerCase();
+const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC.toLowerCase();
 const CMSD_KEYS = {
   AVAILABILITY_TIME: 'at',
   DURESS: 'du',
@@ -39888,9 +38871,9 @@ const CMSD_KEYS = {
 const PERSISTENT_PARAMS = [CMSD_KEYS.MAX_SUGGESTED_BITRATE, CMSD_KEYS.STREAM_TYPE, CMSD_KEYS.STREAMING_FORMAT, CMSD_KEYS.VERSION];
 const STREAM = 'stream';
 const MEDIATYPE_TO_OBJECTTYPE = {
-  'video': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.VIDEO,
-  'audio': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.AUDIO,
-  'text': _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.TIMED_TEXT,
+  'video': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.VIDEO,
+  'audio': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.AUDIO,
+  'text': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.TIMED_TEXT,
   'stream': STREAM // Specific value for parameters without object type, which apply for all media/objects
 };
 function CmsdModel() {
@@ -39919,14 +38902,14 @@ function CmsdModel() {
   }
   function _parseCMSDStatic(value) {
     try {
-      return (0,_svta_common_media_library_cmsd_decodeCmsdStatic_js__WEBPACK_IMPORTED_MODULE_8__.decodeCmsdStatic)(value);
+      return (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdStatic)(value);
     } catch (e) {
       logger.error('Failed to parse CMSD-Static response header value:', e);
     }
   }
   function _parseCMSDDynamic(value) {
     try {
-      const items = (0,_svta_common_media_library_cmsd_decodeCmsdDynamic_js__WEBPACK_IMPORTED_MODULE_7__.decodeCmsdDynamic)(value);
+      const items = (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdDynamic)(value);
       const last = items[items.length - 1];
       return last?.params || {};
     } catch (e) {
@@ -39935,10 +38918,10 @@ function CmsdModel() {
     }
   }
   function _mediaTypetoObjectType(mediaType) {
-    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_common_media_library_cmsd_CmsdObjectType_js__WEBPACK_IMPORTED_MODULE_6__.CmsdObjectType.OTHER;
+    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.OTHER;
   }
   function _getParamValueForObjectType(paramsType, ot, key) {
-    const params = paramsType === _svta_common_media_library_cmsd_CMSD_STATIC_js__WEBPACK_IMPORTED_MODULE_5__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
+    const params = paramsType === _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
     const otParams = params[ot] || {};
     const streamParams = params[STREAM] || {};
     const value = otParams[key] || streamParams[key];
@@ -39992,22 +38975,22 @@ function CmsdModel() {
   }
   function getMaxBitrate(type) {
     let ot = _mediaTypetoObjectType(type);
-    let mb = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
+    let mb = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
     return mb ? mb : -1;
   }
   function getEstimatedThroughput(type) {
     let ot = _mediaTypetoObjectType(type);
-    let etp = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
+    let etp = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
     return etp ? etp : null;
   }
   function getResponseDelay(type) {
     let ot = _mediaTypetoObjectType(type);
-    let rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
     return rd ? rd : null;
   }
   function getRoundTripTime(type) {
     let ot = _mediaTypetoObjectType(type);
-    let rd = _getParamValueForObjectType(_svta_common_media_library_cmsd_CMSD_DYNAMIC_js__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
     return rd ? rd : null;
   }
   function reset() {
