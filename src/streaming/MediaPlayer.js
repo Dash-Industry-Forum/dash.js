@@ -74,10 +74,10 @@ import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
 import VideoModel from './models/VideoModel.js';
-import {Cta608Parser} from '@svta/common-media-library/cta/608/Cta608Parser';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import {checkParameterType} from './utils/SupervisorTools.js';
 import {getVersionString} from '../core/Version.js';
+import { Cta608Parser } from '@svta/cml-608';
 
 /**
  * The media types

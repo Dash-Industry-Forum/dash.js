@@ -32,11 +32,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import Debug from '../../core/Debug.js';
-import { CMSD_DYNAMIC } from '@svta/common-media-library/cmsd/CMSD_DYNAMIC.js';
-import { CMSD_STATIC } from '@svta/common-media-library/cmsd/CMSD_STATIC.js';
-import { CmsdObjectType } from '@svta/common-media-library/cmsd/CmsdObjectType.js';
-import { decodeCmsdDynamic } from '@svta/common-media-library/cmsd/decodeCmsdDynamic.js';
-import { decodeCmsdStatic } from '@svta/common-media-library/cmsd/decodeCmsdStatic.js';
+import { CMSD_DYNAMIC, CMSD_STATIC, CmsdObjectType, decodeCmsdDynamic, decodeCmsdStatic } from '@svta/cml-cmsd';
 
 // Note: in modern browsers, the header names are returned in all lower case
 const CMSD_STATIC_RESPONSE_FIELD_NAME = CMSD_STATIC.toLowerCase();
