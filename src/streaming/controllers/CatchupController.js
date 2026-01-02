@@ -194,7 +194,7 @@ function CatchupController() {
      */
     function _startPlaybackCatchUp() {
 
-        // we are seeking dont do anything for now
+        // we are seeking don't do anything for now
         if (isCatchupSeekInProgress) {
             return;
         }
@@ -224,6 +224,9 @@ function CatchupController() {
                     // Custom playback control: Based on buffer level
                     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
                     newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel);
+                } else if (_getCatchupMode() === Constants.LIVE_CATCHUP_MODE_STEP) {
+                    // Custom playback control: Based on minimising playback rate changes
+                    newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, targetLiveDelay, bufferLevel);
                 } else {
                     // Default playback control: Based on target and current latency
                     newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
@@ -255,12 +258,31 @@ function CatchupController() {
     }
 
     /**
+     * Calculates the drift between the current latency and the absolute target latency specified in the service description or settings
+     * @return {number}
+     * @private
+     */
+    function _getAbsoluteLatencyDrift() {
+        const currentLiveLatency = playbackController.getCurrentLiveLatency();
+        const targetLiveDelay = playbackController.getOriginalLiveDelay();
+
+        return currentLiveLatency - targetLiveDelay;
+    }
+
+    /**
      * Checks whether the catchup mechanism should be enabled. We use different subfunctions here depending on the catchup mode.
      * @return {boolean}
      */
     function _shouldStartCatchUp() {
         try {
-            if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
+            if (playbackController.getTime() <= 0 || isCatchupSeekInProgress) {
+                return false;
+            }
+
+            // Don't catchup during synthetic stalls -
+            // prevents edge case where Catchup Controller and Synthetic Stalls Event
+            // "fight" over the playback rate
+            if (playbackStalled && videoModel.getPlaybackRate() === 0) {
                 return false;
             }
 
@@ -271,6 +293,8 @@ function CatchupController() {
                 const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
 
                 return _lolpNeedToCatchUpCustom(currentBuffer, playbackBufferMin);
+            } else if (catchupMode === Constants.LIVE_CATCHUP_MODE_STEP) {
+                return _stepNeedToCatchUp();
             } else {
                 return _defaultNeedToCatchUp();
             }
@@ -280,7 +304,6 @@ function CatchupController() {
         }
     }
 
-
     /**
      * Returns the mode for live playback catchup.
      * @return {String}
@@ -288,8 +311,16 @@ function CatchupController() {
      */
     function _getCatchupMode() {
         const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
+        let catchupMode = Constants.LIVE_CATCHUP_MODE_DEFAULT;
 
-        return settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin) ? Constants.LIVE_CATCHUP_MODE_LOLP : Constants.LIVE_CATCHUP_MODE_DEFAULT;
+        if (settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_STEP) {
+            catchupMode = Constants.LIVE_CATCHUP_MODE_STEP;
+        }
+        else if (settings.get().streaming.liveCatchup.mode === Constants.LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin)) {
+            catchupMode = Constants.LIVE_CATCHUP_MODE_LOLP;
+        }
+
+        return catchupMode;
     }
 
     /**
@@ -319,6 +350,31 @@ function CatchupController() {
             const latencyDrift = Math.abs(_getLatencyDrift());
 
             return latencyDrift > 0 || currentBuffer < playbackBufferMin;
+        } catch (e) {
+            return false;
+        }
+    }
+
+    /**
+     * Step-based algorithm to determine if catchup mode should be enabled
+     * @return {boolean}
+     * @private
+     */
+    function _stepNeedToCatchUp() {
+        try {
+            const stepSettings = mediaPlayerModel.getCatchupStepSettings();
+            const deltaLatency = _getAbsoluteLatencyDrift();
+
+            //If latency is outside of the acceptable window, consider a new speed
+            if (deltaLatency < (stepSettings.start.min * -1) || deltaLatency > stepSettings.start.max) {
+                logger.debug(`[_stepNeedToCatchUp] latency offset ${deltaLatency}`);
+                return true;
+            }
+            //If we're already catching up, consider a new speed
+            if (playbackController.getPlaybackRate() !== 1) {
+                return true;
+            }
+
         } catch (e) {
             return false;
         }
@@ -413,6 +469,62 @@ function CatchupController() {
         }
 
         return newRate
+    }
+
+    /**
+* Step algorithm to calculate the new playback rate
+* @param {object} liveCatchUpPlaybackRates
+* @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+* @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
+* @param {number} currentLiveLatency
+* @param {number} liveDelay
+* @param {number} bufferLevel
+* @return {number}
+* @private
+*/
+    function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, liveDelay, bufferLevel) {
+
+        let newRate = 1.0
+        const stepSettings = mediaPlayerModel.getCatchupStepSettings();
+
+        // Only adjust playback rates if playback has not stalled
+        if (!playbackStalled) {
+
+            const deltaLatency = _getAbsoluteLatencyDrift();
+
+            // Check if we need to need to speed up
+            if (deltaLatency > stepSettings.stop.max && deltaLatency > 0) {
+                newRate = 1 + liveCatchUpPlaybackRates.max
+            }
+            // or slow down
+            else if (deltaLatency < (stepSettings.stop.min * -1) && deltaLatency < 0) {
+                newRate = 1 + liveCatchUpPlaybackRates.min
+            }
+
+            // Check if we need to return to 1.0
+            if (deltaLatency > (stepSettings.stop.min * -1) && deltaLatency < 0) {
+                newRate = 1.0;
+            }
+            else if (deltaLatency < stepSettings.stop.max && deltaLatency > 0) {
+                newRate = 1.0;
+            }
+            else if (deltaLatency === 0) {
+                newRate = 1.0;
+
+            }
+
+            // take into account situations in which there are buffer stalls,
+            // in which increasing playbackRate to reach target latency will
+            // just cause more and more stall situations
+            if (playbackController.getPlaybackStalled()) {
+                if (bufferLevel <= liveDelay / 2 && deltaLatency > 0) {
+                    newRate = 1.0;
+                }
+            }
+        }
+
+        logger.debug(`[_calculateNewPlaybackRateStep] rate should be ${newRate}`);
+        return newRate;
     }
 
     function _checkPlaybackRates() {

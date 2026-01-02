@@ -78,6 +78,31 @@
                                        step="0.05" max="0.0" min="-0.5">
                             </div>
                         </div>
+
+                        <div class="col-md-6">
+                            <h6>Step Parameters</h6>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Start Min</span>
+                                <input type="number" id="step-start-min" class="form-control" value="1"
+                                        step="0.05" max="30.0" min="0.0" >
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Start Max</span>
+                                <input type="number" id="step-start-max" class="form-control" value="1"
+                                       step="0.05" max="30.0" min="0.0" >
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Stop Min</span>
+                                <input type="number" id="step-stop-min" class="form-control" value="0.1"
+                                        step="0.05" max="30.0" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Stop Max</span>
+                                <input type="number" id="step-stop-max" class="form-control" value="0.1"
+                                        step="0.05" max="30.0" min="0.0">
+                            </div>
+                        </div>
+
                         <div class="col-md-3">
                             <h6>ABR - Rules</h6>
                             <div class="form-check">
@@ -133,6 +158,10 @@
                                     L2aRule
                                 </label>
                             </div>
+
+                            </div>
+                            <div class="col-md-3">
+
                             <h6 class="mt-4">Catchup mechanism</h6>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="catchup"
@@ -151,12 +180,21 @@
                                 </label>
                             </div>
                             <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup"
+                                       value="liveCatchupModeStep"
+                                       id="liveCatchupModeStep">
+                                <label class="form-check-label" for="liveCatchupModeStep">
+                                    Step based
+                                </label>
+                            </div>
+                            <div class="form-check">
                                 <input class="form-check-input" type="checkbox" id="live-catchup-enabled"
                                        checked>
                                 <label class="form-check-label" for="live-catchup-enabled">
                                     Enabled
                                 </label>
                             </div>
+
                         </div>
                         <div class="col-md-3">
                             <h6 >Additional APIs</h6>
@@ -193,7 +231,11 @@
                                     AAST decisioning
                                 </label>
                             </div>
-                            <h6 class="mt-4">Throughput Estimation Mode</h6>
+
+                            </div>
+                            <div class="col-md-3">
+
+                            <h6>Throughput Estimation Mode</h6>
                             <div class="form-check">
                                 <input class="form-check-input" type="radio" name="throughput-estimation"
                                        value="throughputCalculationModeEwma"
