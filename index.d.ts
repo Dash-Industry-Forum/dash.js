@@ -1777,7 +1777,8 @@ export class MediaPlayerSettingClass {
             }
         },
         liveCatchup?: {
-            maxDrift?: number;
+            maxDrift?: number,
+            liveThreshold?: number,
             playbackRate?: {
                 min?: number,
                 max?: number

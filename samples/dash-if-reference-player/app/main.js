@@ -570,6 +570,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         });
     };
 
+    $scope.updateLiveThreshold = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    liveThreshold: parseInt($scope.liveThreshold)
+                }
+            }
+        });
+    };
+
     $scope.toggleFastSwitch = function () {
         $scope.player.updateSettings({
             'streaming': {

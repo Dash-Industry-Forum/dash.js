@@ -30,6 +30,7 @@ App.prototype.init = function () {
 App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
+    this.domElements.settings.liveThreshold = document.getElementById('live-threshold');
     this.domElements.settings.maxCatchupPlaybackRate = document.getElementById('max-catchup-playback-rate');
     this.domElements.settings.minCatchupPlaybackRate = document.getElementById('min-catchup-playback-rate');
     this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
@@ -106,6 +107,7 @@ App.prototype._applyParameters = function () {
             liveCatchup: {
                 enabled: settings.catchupEnabled,
                 maxDrift: settings.maxDrift,
+                liveThreshold: settings.liveThreshold,
                 playbackRate: {
                     min: settings.minCatchupPlaybackRate,
                     max: settings.maxCatchupPlaybackRate
@@ -194,6 +196,9 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxDrift !== undefined) {
             this.domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
         }
+        if (params.liveThreshold !== undefined) {
+            this.domElements.settings.liveThreshold.value = parseFloat(params.liveThreshold).toFixed(1);
+        }
         if (params.minCatchupPlaybackRate !== undefined) {
             this.domElements.settings.minCatchupPlaybackRate.value = parseFloat(params.minCatchupPlaybackRate).toFixed(2);
         }
@@ -258,6 +263,7 @@ App.prototype._adjustSettingsByUrlParameters = function () {
 App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
+    var liveThreshold = parseFloat(this.domElements.settings.liveThreshold.value, 10);
     var minCatchupPlaybackRate = parseFloat(this.domElements.settings.minCatchupPlaybackRate.value, 10);
     var maxCatchupPlaybackRate = parseFloat(this.domElements.settings.maxCatchupPlaybackRate.value, 10);
     var minStartStepParameters = parseFloat(this.domElements.settings.minStartStepParameters.value, 10);
@@ -280,6 +286,7 @@ App.prototype._getCurrentSettings = function () {
 
     return {
         targetLatency,
+        liveThreshold,
         maxDrift,
         minCatchupPlaybackRate,
         maxCatchupPlaybackRate,
