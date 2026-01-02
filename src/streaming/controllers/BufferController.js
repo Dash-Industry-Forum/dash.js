@@ -38,7 +38,7 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import InitCache from '../utils/InitCache.js';
-import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
+import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
 const BUFFER_END_THRESHOLD = 0.5;
@@ -760,10 +760,11 @@ function BufferController(config) {
         return null;
     }
 
-
     function _onPlaybackProgression() {
-        if (!replacingBuffer || (type === Constants.TEXT && textController.isTextEnabled())) {
-            _updateBufferLevel();
+        if (!replacingBuffer) {
+            if (type !== Constants.TEXT || textController.isTextEnabled()) {
+                _updateBufferLevel();
+            }
         }
     }
 
