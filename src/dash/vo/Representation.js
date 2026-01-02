@@ -58,6 +58,7 @@ class Representation {
         this.id = null;
         this.indexRange = null;
         this.initialization = null;
+        this.k = 1;
         this.maxPlayoutRate = NaN;
         this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
         this.mediaInfo = null;

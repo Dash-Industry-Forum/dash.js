@@ -752,7 +752,7 @@ function DashManifestModel() {
 
     function getRepresentationFor(index, adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 &&
-        isInteger(index) ? adaptation.Representation[index] : null;
+            isInteger(index) ? adaptation.Representation[index] : null;
     }
 
     function getRealAdaptationFor(voAdaptation) {
@@ -933,6 +933,9 @@ function DashManifestModel() {
         }
         if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
             voRepresentation.media = segmentInfo.media;
+        }
+        if (segmentInfo.hasOwnProperty(DashConstants.K)) {
+            voRepresentation.k = segmentInfo.k || 1;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.START_NUMBER)) {
             voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
