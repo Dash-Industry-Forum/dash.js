@@ -205,9 +205,9 @@ function CatchupController() {
             const liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
             const bufferLevel = playbackController.getBufferLevel();
             const deltaLatency = _getLatencyDrift();
+            const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
 
             // we reached the maxDrift. Do a seek
-            const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
             if (!isNaN(maxDrift) && maxDrift > 0 &&
                 deltaLatency > maxDrift) {
                 logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');

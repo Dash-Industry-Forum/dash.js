@@ -558,7 +558,16 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 }
             }
         });
+    };
 
+    $scope.updateMaxDrift = function () {
+        $scope.player.updateSettings({
+            streaming: {
+                liveCatchup: {
+                    maxDrift: parseInt($scope.maxDrift)
+                }
+            }
+        });
     };
 
     $scope.toggleFastSwitch = function () {
@@ -2204,8 +2213,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if (value === 'null') typedValue = null;
         else if (value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) :
-                (floatRegEx.test(value) ? typedValue = parseFloat(value) :
-                    typedValue = value);
+            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
+                typedValue = value);
 
         return typedValue;
     }

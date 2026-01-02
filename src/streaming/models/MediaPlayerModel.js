@@ -128,7 +128,8 @@ function MediaPlayerModel() {
      * @return {number}
      */
     function getCatchupMaxDrift() {
-        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift >= 0) {
+
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift)) {
             return settings.get().streaming.liveCatchup.maxDrift;
         }
 

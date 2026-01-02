@@ -252,6 +252,9 @@
                                    ng-click="changeLiveCatchupMode('liveCatchupModeLoLP')" value="liveCatchupModeLoLP">
                             LoL+ based
                         </label>
+
+                        <label class="options-label">Max Drift:</label>
+                        <input type="number" class="form-control" placeholder="value in seconds" ng-model="maxDrift" ng-change="updateMaxDrift()">
                     </div>
                 </div>
             </div>

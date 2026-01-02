@@ -33,7 +33,7 @@ import MetricSerialiser from '../../utils/MetricSerialiser.js';
 import RNG from '../../utils/RNG.js';
 import CustomParametersModel from '../../../models/CustomParametersModel.js';
 import FactoryMaker from '../../../../core/FactoryMaker.js';
-import Settings from '../../../../core/Settings';
+import Settings from '../../../../core/Settings.js';
 
 function DVBReporting(config) {
     config = config || {};
