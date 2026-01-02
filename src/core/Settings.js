@@ -32,7 +32,7 @@ import FactoryMaker from './FactoryMaker.js';
 import Utils from './Utils.js';
 import Debug from '../core/Debug.js';
 import Constants from '../streaming/constants/Constants.js';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
 import Events from './events/Events.js';
 import SwitchRequest from '../streaming/rules/SwitchRequest.js';
@@ -343,7 +343,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
- *            }
+ *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -959,6 +962,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  */
 
 /**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Override DVB reporting url in manifest with a custom one
+ */
+
+/**
  * @typedef {Object} EnhancementSettings
  * @property {boolean} [enabled=false]
  * Enable or disable the scalable enhancement playback (e.g. LCEVC).
@@ -1099,6 +1108,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
+ * Settings related to DVB metrics reporting.
  */
 
 
@@ -1160,7 +1171,7 @@ function Settings() {
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
-                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI},
+                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
                         return { 'schemeIdUri': ep };
                     })
@@ -1448,6 +1459,9 @@ function Settings() {
                 audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
+            },
+            dvbReporting: {
+                reportingUrl: null,
             }
         },
         errors: {

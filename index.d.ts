@@ -1951,6 +1951,9 @@ export class MediaPlayerSettingClass {
             audioChannelConfiguration?: string,
             role?: string,
             accessibility?: string
+        },
+        dvbReporting?: {
+            reportingUrl?: string | null,
         }
     };
     errors?: {
