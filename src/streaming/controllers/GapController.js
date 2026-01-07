@@ -310,6 +310,7 @@ function GapController() {
         const stallSeek = settings.get().streaming.gaps.stallSeek;
         const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
         const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
+        const seekOffset = settings.get().streaming.gaps.seekOffset;
         const ranges = videoModel.getBufferRange();
         let nextRangeIndex;
         let seekToPosition = NaN;
@@ -353,17 +354,17 @@ function GapController() {
                 const internalSeek = nextStream && !!nextStream.getPreloaded();
 
                 logger.warn(`Jumping to end of stream because of gap from ${currentTime} to ${seekToPosition}. Gap duration: ${timeUntilGapEnd}`);
-                playbackController.seek(seekToPosition, true, internalSeek);
+                playbackController.seek(seekToPosition + seekOffset, true, internalSeek);
             } else {
                 const isDynamic = playbackController.getIsDynamic();
                 const start = nextRangeIndex > 0 ? ranges.end(nextRangeIndex - 1) : currentTime;
                 const timeToWait = !isDynamic ? 0 : Math.max(0, timeUntilGapEnd - GAP_JUMP_WAITING_TIME_OFFSET) * 1000;
 
                 jumpTimeoutHandler = window.setTimeout(() => {
-                    playbackController.seek(seekToPosition, true, true);
+                    playbackController.seek(seekToPosition + seekOffset, true, true);
                     const activeStream = streamController.getActiveStream();
                     if (activeStream) {
-                        logger.warn(`Jumping gap occuring in period ${activeStream.getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${seekToPosition - start}`);
+                        logger.warn(`Jumping gap occuring in period ${activeStream.getStreamId()} starting at ${start} and ending at ${seekToPosition}. Jumping by: ${(seekToPosition + seekOffset) - start}`);
                     }
                     jumpTimeoutHandler = null;
                 }, timeToWait);

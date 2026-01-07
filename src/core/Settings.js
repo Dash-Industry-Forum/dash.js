@@ -84,7 +84,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *               ],
  *               useMediaCapabilitiesApi: true,
  *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false
+ *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
  *              eventControllerRefreshDelay: 100,
@@ -141,7 +142,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                threshold: 0.3,
  *                enableSeekFix: true,
  *                enableStallFix: false,
- *                stallSeek: 0.1
+ *                stallSeek: 0.1,
+ *                seekOffset: 0
  *            },
  *            utcSynchronization: {
  *                enabled: true,
@@ -557,6 +559,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If playback stalled in a buffered range this fix will perform a seek by the value defined in stallSeek to trigger playback again.
  * @property {number} [stallSeek=0.1]
  * Value to be used in case enableStallFix is set to true
+ * @property {number} [seekOffset=0]
+ * An additional offset in seconds that is applied when performing a seek to jump a gap.
  */
 
 /**
@@ -732,6 +736,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
  * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
+ * @property {boolean} [filterAudioChannelConfiguration=false]
+ * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
  */
 
 /**
@@ -1161,7 +1167,8 @@ function Settings() {
                 ],
                 useMediaCapabilitiesApi: true,
                 filterVideoColorimetryEssentialProperties: false,
-                filterHDRMetadataFormatEssentialProperties: false
+                filterHDRMetadataFormatEssentialProperties: false,
+                filterAudioChannelConfiguration: false
             },
             events: {
                 eventControllerRefreshDelay: 100,
@@ -1218,7 +1225,8 @@ function Settings() {
                 threshold: 0.3,
                 enableSeekFix: true,
                 enableStallFix: false,
-                stallSeek: 0.1
+                stallSeek: 0.1,
+                seekOffset: 0
             },
             utcSynchronization: {
                 enabled: true,

@@ -37,7 +37,7 @@ import NumericMatcher from './matchers/NumericMatcher.js';
 import LangMatcher from './matchers/LangMatcher.js';
 import RepresentationBaseValuesMap from './maps/RepresentationBaseValuesMap.js';
 import SegmentValuesMap from './maps/SegmentValuesMap.js';
-import { parseXml as cmlParseXml } from '@svta/common-media-library/xml/parseXml.js';
+import { parseXml as cmlParseXml } from '@svta/cml-xml';
 
 // List of node that shall be represented as arrays
 const arrayNodes = [

@@ -29,7 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import {processUriTemplate as cmlProcessUriTemplate} from '@svta/common-media-library/dash/processUriTemplate.js';
+import { processUriTemplate as cmlProcessUriTemplate } from '@svta/cml-dash';
 import FullSegment from './../vo/FullSegment.js';
 import PartialSegment from '../vo/PartialSegment.js';
 

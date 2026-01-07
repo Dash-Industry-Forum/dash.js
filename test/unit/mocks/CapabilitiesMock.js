@@ -45,6 +45,10 @@ class CapabilitiesMock {
     isCodecSupportedBasedOnTestedConfigurations() {
         return true;
     }
+
+    supportsEssentialProperty() {
+        return true;
+    }
 }
 
 export default CapabilitiesMock;
