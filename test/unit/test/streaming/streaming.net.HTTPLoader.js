@@ -10,6 +10,7 @@ import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
 import ClientDataReportingController from '../../../../src/streaming/controllers/ClientDataReportingController.js';
 
 import {expect} from 'chai';
+import {fakeXhr} from 'nise';
 import sinon from 'sinon';
 
 const context = {};
@@ -44,7 +45,7 @@ describe('HTTPLoader', function () {
     });
 
     beforeEach(function () {
-        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
         this.requests = [];
         window.XMLHttpRequest.onCreate = function (xhr) {
@@ -114,7 +115,7 @@ describe('HTTPLoader', function () {
             self.requests[0].respond(200);
             sinon.assert.calledOnce(callbackSucceeded);
             sinon.assert.calledOnce(callbackCompleted);
-            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line    
+            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
         });
     });
 
