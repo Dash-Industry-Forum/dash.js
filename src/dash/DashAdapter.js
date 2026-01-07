@@ -39,7 +39,7 @@ import DashManifestModel from './models/DashManifestModel.js';
 import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
 import {bcp47Normalize} from 'bcp-47-normalize';
-import { getId3Frames } from '@svta/cml-id3';
+import {getId3Frames} from '@svta/cml-id3';
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
 
@@ -1206,8 +1206,8 @@ function DashAdapter() {
         });
         if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
             const ids = adaptationSetSwitching[0].value.toString().split(',')
-            adaptationSetSwitchingCompatibleIds = ids.map((id) => {
-                return id
+            adaptationSetSwitchingCompatibleIds = ids.filter((id) => {
+                return id !== mediaInfo.id
             })
         }
 
@@ -1310,6 +1310,7 @@ function DashAdapter() {
     instance = {
         applyPatchToManifest,
         areMediaInfosEqual,
+        convertAdaptationToMediaInfo,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,

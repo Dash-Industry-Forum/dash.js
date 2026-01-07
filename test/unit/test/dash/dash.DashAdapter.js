@@ -67,7 +67,7 @@ const manifest_without_properties = {
 const manifest_with_preselections = {
     loadedTime: new Date(),
     mediaPresentationDuration: 10,
-    Period: [{ 
+    Period: [{
         AdaptationSet: [
             { id: '0', mimeType: Constants.VIDEO },
             { id: '1', mimeType: Constants.AUDIO, [DashConstants.REPRESENTATION]: [{id: 101, mimeType: Constants.AUDIO, codecs: 'codec1', bandwidth: 128000}] },
@@ -1639,5 +1639,285 @@ describe('DashAdapter', function () {
             expect(result).to.be.false;
         });
     });
+
+    describe('convertAdaptationToMediaInfo()', function () {
+
+        it('should  contain any adaptationSetSwitchingCompatibleIds if the AdaptationSet links to AdaptationSets with different Ids', function () {
+            const adaptationSet = {
+                'period': {
+                    'id': 'defaultId_0',
+                    'index': 0,
+                    'duration': 634.566,
+                    'start': 0,
+                    'mpd': {
+                        'availabilityEndTime': null,
+                        'availabilityStartTime': '2026-01-07T06:34:39.453Z',
+                        'manifest': {
+                            'nodeName': 'MPD',
+                            'nodeValue': null,
+                            'attributes': {
+                                'mediaPresentationDuration': 'PT634.566S',
+                                'minBufferTime': 'PT2.00S',
+                                'profiles': 'urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011',
+                                'type': 'static',
+                                'xmlns': 'urn:mpeg:dash:schema:mpd:2011',
+                                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                                'xsi:schemaLocation': 'urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd'
+                            },
+                            'prefix': null,
+                            'localName': 'MPD',
+                            'tagName': 'MPD',
+                            'mediaPresentationDuration': 634.566,
+                            'minBufferTime': 2,
+                            'profiles': 'urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011',
+                            'type': 'static',
+                            'xmlns': 'urn:mpeg:dash:schema:mpd:2011',
+                            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                            'xsi:schemaLocation': 'urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd',
+                            'Period': [
+                                {
+                                    'AdaptationSet': [
+                                        {
+                                            'prefix': null,
+                                            'localName': 'AdaptationSet',
+                                            'tagName': 'AdaptationSet',
+                                            'mimeType': 'video/mp4',
+                                            'contentType': 'video',
+                                            'subsegmentAlignment': 'true',
+                                            'subsegmentStartsWithSAP': 1,
+                                            'par': '16:9',
+                                            'id:': '1',
+                                            'SupplementalProperty': [
+                                                {
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'SupplementalProperty',
+                                                    'tagName': 'SupplementalProperty',
+                                                    'schemeIdUri': 'urn:mpeg:dash:adaptation-set-switching:2016',
+                                                    'value': '2,3',
+                                                    '__children': []
+                                                }
+                                            ],
+                                            'Representation': [
+                                                {
+                                                    'nodeName': 'Representation',
+                                                    'nodeValue': null,
+                                                    'attributes': {
+                                                        'id': 'bbb_30fps_320x180_200k',
+                                                        'codecs': 'avc1.64000d',
+                                                        'bandwidth': '254320',
+                                                        'width': '320',
+                                                        'height': '180',
+                                                        'frameRate': '30',
+                                                        'sar': '1:1',
+                                                        'scanType': 'progressive'
+                                                    },
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'Representation',
+                                                    'tagName': 'Representation',
+                                                    'id': 'bbb_30fps_320x180_200k',
+                                                    'codecs': 'avc1.64000d',
+                                                    'bandwidth': 254320,
+                                                    'width': 320,
+                                                    'height': 180,
+                                                    'frameRate': 30,
+                                                    'sar': '1:1',
+                                                    'scanType': 'progressive',
+                                                    '__children': [],
+                                                    'mimeType': 'video/mp4'
+                                                },
+                                                {
+                                                    'nodeName': 'Representation',
+                                                    'nodeValue': null,
+                                                    'attributes': {
+                                                        'id': 'bbb_30fps_320x180_400k',
+                                                        'codecs': 'avc1.64000d',
+                                                        'bandwidth': '507246',
+                                                        'width': '320',
+                                                        'height': '180',
+                                                        'frameRate': '30',
+                                                        'sar': '1:1',
+                                                        'scanType': 'progressive'
+                                                    },
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'Representation',
+                                                    'tagName': 'Representation',
+                                                    'id': 'bbb_30fps_320x180_400k',
+                                                    'codecs': 'avc1.64000d',
+                                                    'bandwidth': 507246,
+                                                    'width': 320,
+                                                    'height': 180,
+                                                    'frameRate': 30,
+                                                    'sar': '1:1',
+                                                    'scanType': 'progressive',
+                                                    '__children': [],
+                                                    'mimeType': 'video/mp4'
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                }
+                            ],
+                        },
+                        'maxSegmentDuration': null,
+                        'mediaPresentationDuration': 634.566,
+                        'minimumUpdatePeriod': null,
+                        'publishTime': null,
+                        'suggestedPresentationDelay': 0,
+                        'timeShiftBufferDepth': null
+                    },
+                    'nextPeriodId': null,
+                    'isEncrypted': false
+                },
+                'index': 0,
+                'id': '1',
+                'type': 'video'
+            }
+            const mediaInfo = dashAdapter.convertAdaptationToMediaInfo(adaptationSet)
+            expect(mediaInfo.adaptationSetSwitchingCompatibleIds).to.have.length(2)
+            expect(mediaInfo.adaptationSetSwitchingCompatibleIds).to.have.members(['2', '3']);
+            expect(mediaInfo.adaptationSetSwitchingCompatibleIds).to.not.include('1');
+
+        })
+
+        it('should not contain any adaptationSetSwitchingCompatibleIds if the AdaptationSet links to itself', function () {
+            const adaptationSet = {
+                'period': {
+                    'id': 'defaultId_0',
+                    'index': 0,
+                    'duration': 634.566,
+                    'start': 0,
+                    'mpd': {
+                        'availabilityEndTime': null,
+                        'availabilityStartTime': '2026-01-07T06:34:39.453Z',
+                        'manifest': {
+                            'nodeName': 'MPD',
+                            'nodeValue': null,
+                            'attributes': {
+                                'mediaPresentationDuration': 'PT634.566S',
+                                'minBufferTime': 'PT2.00S',
+                                'profiles': 'urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011',
+                                'type': 'static',
+                                'xmlns': 'urn:mpeg:dash:schema:mpd:2011',
+                                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                                'xsi:schemaLocation': 'urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd'
+                            },
+                            'prefix': null,
+                            'localName': 'MPD',
+                            'tagName': 'MPD',
+                            'mediaPresentationDuration': 634.566,
+                            'minBufferTime': 2,
+                            'profiles': 'urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011',
+                            'type': 'static',
+                            'xmlns': 'urn:mpeg:dash:schema:mpd:2011',
+                            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                            'xsi:schemaLocation': 'urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd',
+                            'Period': [
+                                {
+                                    'AdaptationSet': [
+                                        {
+                                            'prefix': null,
+                                            'localName': 'AdaptationSet',
+                                            'tagName': 'AdaptationSet',
+                                            'mimeType': 'video/mp4',
+                                            'contentType': 'video',
+                                            'subsegmentAlignment': 'true',
+                                            'subsegmentStartsWithSAP': 1,
+                                            'par': '16:9',
+                                            'id:': '1',
+                                            'SupplementalProperty': [
+                                                {
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'SupplementalProperty',
+                                                    'tagName': 'SupplementalProperty',
+                                                    'schemeIdUri': 'urn:mpeg:dash:adaptation-set-switching:2016',
+                                                    'value': '1',
+                                                    '__children': []
+                                                }
+                                            ],
+                                            'Representation': [
+                                                {
+                                                    'nodeName': 'Representation',
+                                                    'nodeValue': null,
+                                                    'attributes': {
+                                                        'id': 'bbb_30fps_320x180_200k',
+                                                        'codecs': 'avc1.64000d',
+                                                        'bandwidth': '254320',
+                                                        'width': '320',
+                                                        'height': '180',
+                                                        'frameRate': '30',
+                                                        'sar': '1:1',
+                                                        'scanType': 'progressive'
+                                                    },
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'Representation',
+                                                    'tagName': 'Representation',
+                                                    'id': 'bbb_30fps_320x180_200k',
+                                                    'codecs': 'avc1.64000d',
+                                                    'bandwidth': 254320,
+                                                    'width': 320,
+                                                    'height': 180,
+                                                    'frameRate': 30,
+                                                    'sar': '1:1',
+                                                    'scanType': 'progressive',
+                                                    '__children': [],
+                                                    'mimeType': 'video/mp4'
+                                                },
+                                                {
+                                                    'nodeName': 'Representation',
+                                                    'nodeValue': null,
+                                                    'attributes': {
+                                                        'id': 'bbb_30fps_320x180_400k',
+                                                        'codecs': 'avc1.64000d',
+                                                        'bandwidth': '507246',
+                                                        'width': '320',
+                                                        'height': '180',
+                                                        'frameRate': '30',
+                                                        'sar': '1:1',
+                                                        'scanType': 'progressive'
+                                                    },
+                                                    'childNodes': [],
+                                                    'prefix': null,
+                                                    'localName': 'Representation',
+                                                    'tagName': 'Representation',
+                                                    'id': 'bbb_30fps_320x180_400k',
+                                                    'codecs': 'avc1.64000d',
+                                                    'bandwidth': 507246,
+                                                    'width': 320,
+                                                    'height': 180,
+                                                    'frameRate': 30,
+                                                    'sar': '1:1',
+                                                    'scanType': 'progressive',
+                                                    '__children': [],
+                                                    'mimeType': 'video/mp4'
+                                                },
+                                            ],
+                                        },
+                                    ],
+                                }
+                            ],
+                        },
+                        'maxSegmentDuration': null,
+                        'mediaPresentationDuration': 634.566,
+                        'minimumUpdatePeriod': null,
+                        'publishTime': null,
+                        'suggestedPresentationDelay': 0,
+                        'timeShiftBufferDepth': null
+                    },
+                    'nextPeriodId': null,
+                    'isEncrypted': false
+                },
+                'index': 0,
+                'id': '1',
+                'type': 'video'
+            }
+            const mediaInfo = dashAdapter.convertAdaptationToMediaInfo(adaptationSet)
+            expect(mediaInfo.adaptationSetSwitchingCompatibleIds).to.be.empty
+        })
+    })
 
 });
