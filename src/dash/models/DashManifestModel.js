@@ -936,7 +936,7 @@ function DashManifestModel() {
             voRepresentation.media = segmentInfo.media;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.K)) {
-            voRepresentation.k = segmentInfo.k || 1;
+            voRepresentation.k = segmentInfo.k;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.START_NUMBER)) {
             voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
