@@ -930,6 +930,7 @@ function DashManifestModel() {
             voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
         } else if (segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
             voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+            voRepresentation.k = _getKValue(segmentInfo.SegmentTimeline)
         }
         if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
             voRepresentation.media = segmentInfo.media;
@@ -979,6 +980,14 @@ function DashManifestModel() {
         let s0 = segmentTimeline.S[0];
         let s1 = segmentTimeline.S[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
+    }
+
+    function _getKValue(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S) {
+            return NaN;
+        }
+        const s0 = segmentTimeline.S[0];
+        return s0.hasOwnProperty('k') ? s0.k : undefined;
     }
 
     function _calcMseTimeOffset(representation) {
