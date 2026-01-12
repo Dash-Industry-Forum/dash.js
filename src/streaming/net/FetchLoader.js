@@ -76,11 +76,6 @@ function FetchLoader() {
     function _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse) {
         _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse);
 
-        if (!fetchResponse.ok) {
-            commonMediaRequest.customData.onloadend();
-            return;
-        }
-
         let totalBytesReceived = 0;
         let signaledFirstByte = false;
         let receivedData = new Uint8Array();
