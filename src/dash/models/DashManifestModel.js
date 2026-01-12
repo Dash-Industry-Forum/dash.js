@@ -936,7 +936,7 @@ function DashManifestModel() {
             voRepresentation.media = segmentInfo.media;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.K)) {
-            voRepresentation.k = segmentInfo.k;
+            voRepresentation.k = segmentInfo.k || NaN;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.START_NUMBER)) {
             voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
@@ -987,7 +987,7 @@ function DashManifestModel() {
             return NaN;
         }
         const s0 = segmentTimeline.S[0];
-        return s0.hasOwnProperty('k') ? s0.k : undefined;
+        return s0.hasOwnProperty(DashConstants.K) ? s0.k : NaN;
     }
 
     function _calcMseTimeOffset(representation) {
