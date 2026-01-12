@@ -100,6 +100,7 @@ export default {
     INDEX_RANGE: 'indexRange',
     INITIALIZATION: 'Initialization',
     INITIALIZATION_MINUS: 'initialization',
+    K: 'k',
     LA_URL: 'Laurl',
     LA_URL_LOWER_CASE: 'laurl',
     LABEL: 'Label',
