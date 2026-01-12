@@ -78,6 +78,7 @@ function FetchLoader() {
 
         if (!fetchResponse.ok) {
             commonMediaRequest.customData.onloadend();
+            return;
         }
 
         let totalBytesReceived = 0;
