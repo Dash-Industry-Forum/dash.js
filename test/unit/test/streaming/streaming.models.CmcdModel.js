@@ -9,7 +9,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
-import {decodeCmcd} from '@svta/common-media-library/cmcd/decodeCmcd';
+import { decodeCmcd } from '@svta/cml-cmcd';
 
 import {expect} from 'chai';
 

@@ -177,7 +177,7 @@ function PlaybackController() {
     /**
      * Triggers play() on the video element
      */
-    function play(adjustLiveDelay = false) {''
+    function play(adjustLiveDelay = false) {
         if (streamInfo && videoModel && videoModel.getElement()) {
             if (adjustLiveDelay && isDynamic) {
                 _adjustLiveDelayAfterUserInteraction(getTime());
@@ -829,7 +829,7 @@ function PlaybackController() {
     }
 
     /**
-     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false
+     * We enable low latency playback if for the current representation availabilityTimeComplete is set to false or there is a k value larger than 1 in the segment template
      * @param e
      * @private
      */
@@ -839,7 +839,7 @@ function PlaybackController() {
             return;
         }
 
-        lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false;
+        lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false || e.currentRepresentation.k > 1;
 
         // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
         if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
