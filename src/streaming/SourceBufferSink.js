@@ -94,7 +94,7 @@ function SourceBufferSink(config) {
                         buffer.changeType(codec);
                         resolve();
                     } catch (e) {
-                        logger.error(e);
+                        _handleChangeTypeError(e)
                         reject()
                     }
                 } else {
@@ -102,6 +102,13 @@ function SourceBufferSink(config) {
                 }
             });
         });
+    }
+
+    function _handleChangeTypeError(e) {
+        logger.error(e);
+        if (typeof e?.name === 'string' && e.name === 'NotSupportedError') {
+            settings.update({streaming: {buffer: {useChangeType: false, resetSourceBuffersForTrackSwitch: true}}});
+        }
     }
 
     function _copyPreviousSinkData(oldSourceBufferSink) {
