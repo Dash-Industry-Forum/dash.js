@@ -86,13 +86,20 @@ function SourceBufferSink(config) {
 
     function changeType(representation) {
         const codec = _getCodecStringForRepresentation(representation);
-        return new Promise((resolve) => {
+        return new Promise((resolve, reject) => {
             _waitForUpdateEnd(() => {
-                if (buffer.changeType) {
-                    logger.debug(`Changing SourceBuffer codec to ${codec}`);
-                    buffer.changeType(codec);
+                if (buffer && buffer.changeType) {
+                    try {
+                        logger.debug(`Changing SourceBuffer codec to ${codec}`);
+                        buffer.changeType(codec);
+                        resolve();
+                    } catch (e) {
+                        logger.error(e);
+                        reject()
+                    }
+                } else {
+                    resolve();
                 }
-                resolve();
             });
         });
     }
@@ -281,7 +288,7 @@ function SourceBufferSink(config) {
                 });
                 return;
             }
-            appendQueue.push({ data: chunk, promise: { resolve, reject }, request });
+            appendQueue.push({data: chunk, promise: {resolve, reject}, request});
             _waitForUpdateEnd(_appendNextInQueue.bind(this));
         });
     }
@@ -362,7 +369,7 @@ function SourceBufferSink(config) {
                 if (nextChunk && nextChunk.data && nextChunk.data.segmentType && nextChunk.data.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
                     delete nextChunk.data.bytes;
                 }
-                nextChunk.promise.resolve({ chunk: nextChunk.data });
+                nextChunk.promise.resolve({chunk: nextChunk.data});
             };
 
             try {
@@ -394,7 +401,7 @@ function SourceBufferSink(config) {
                 }
 
                 delete nextChunk.data.bytes;
-                nextChunk.promise.reject({ chunk: nextChunk.data, error: new DashJSError(err.code, err.message) });
+                nextChunk.promise.reject({chunk: nextChunk.data, error: new DashJSError(err.code, err.message)});
             }
         }
     }
@@ -449,12 +456,12 @@ function SourceBufferSink(config) {
 
     function _errHandler(e) {
         const error = e.target || {};
-        _triggerEvent(Events.SOURCE_BUFFER_ERROR, { error, lastRequestAppended })
+        _triggerEvent(Events.SOURCE_BUFFER_ERROR, {error, lastRequestAppended})
     }
 
     function _triggerEvent(eventType, data) {
         let payload = data || {};
-        eventBus.trigger(eventType, payload, { streamId: mediaInfo.streamInfo.id, mediaType: type });
+        eventBus.trigger(eventType, payload, {streamId: mediaInfo.streamInfo.id, mediaType: type});
     }
 
     function _waitForUpdateEnd(callback) {
