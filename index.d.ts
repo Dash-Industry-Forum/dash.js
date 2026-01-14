@@ -3755,21 +3755,55 @@ export interface BaseURLTreeModel {
 }
 
 export interface CmcdModel {
-    getCmcdData(request: HTTPRequest): object;
-
-    getCmcdParametersFromManifest(): CMCDParameters;
-
-    getHeaderParameters(request: HTTPRequest): object | null;
-
-    getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
-
-    initialize(): void;
-
-    isCmcdEnabled(): boolean;
+    setup(): void;
 
     reset(): void;
 
     setConfig(config: object): void;
+
+    getCmcdData(request: HTTPRequest): object;
+
+    onStateChange(state: any): void;
+
+    onPeriodSwitchComplete(): void;
+
+    onPlaybackStarted(): void;
+
+    onPlaybackPlaying(): void;
+
+    onRebufferingStarted(mediaType: string): void;
+
+    onRebufferingCompleted(mediaType: string): void;
+
+    onPlayerError(errorData: any): void;
+
+    onPlaybackSeeking(): void;
+
+    onPlaybackSeeked(): void;
+
+    onPlaybackRateChanged(data: any): void;
+
+    wasPlaying(): boolean;
+
+    onManifestLoaded(data: any): void;
+
+    onBufferLevelStateChanged(data: any): void;
+
+    updateMsdData(mode: string): object;
+
+    resetInitialSettings(): void;
+
+    getCmcdParametersFromManifest(): CMCDParameters;
+
+    triggerCmcdEventMode(event: string): object;
+
+    getGenericCmcdData(mediaType?: string): object;
+
+    isIncludedInRequestFilter(type: string, includeInRequests?: any): boolean;
+
+    getLastMediaTypeRequest(): string;
+
+    onEventChange(state: any): void;
 }
 
 export interface CmsdModel {
@@ -6011,5 +6045,4 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
-
 

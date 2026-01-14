@@ -720,7 +720,30 @@
           "Video",
           "Audio"
         ]
+      },      
+      {
+        "title": "CMCD v2 Reporting",
+        "description": "This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5005).",
+        "href": "advanced/cmcd-v2.html",
+        "image": "lib/img/bbb-1.jpg",
+        "labels": [
+          "VoD",
+          "Video",
+          "Audio"
+        ]
       },
+      {
+        "title": "CMCD v2 Callbacks with Network Interceptors",
+        "description": "This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode",
+        "href": "advanced/cmcd-v2-network-interceptors.html",
+        "image": "lib/img/bbb-1.jpg",
+        "labels": [
+          "VoD",
+          "Video",
+          "Audio"
+        ]
+      },
+
       {
         "title": "Flexible Insertion of URL Parameters Sample",
         "description": "This sample demonstrates the Flexible Insertion of URL Parameters in dash.js.",

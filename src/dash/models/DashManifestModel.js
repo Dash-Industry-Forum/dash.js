@@ -1571,7 +1571,11 @@ function DashManifestModel() {
     function _createClientDataReportingInstance(element) {
         const entry = new ClientDataReporting();
 
-        if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && element[DashConstants.CMCD_PARAMETERS].schemeIdUri === Constants.CTA_5004_2023_SCHEME) {
+        // Check if schemeIdUri is either in ClientDataReporting (v2) or CMCDParameters (v1)
+        const schemeIdUri = element.schemeIdUri || (element[DashConstants.CMCD_PARAMETERS] && element[DashConstants.CMCD_PARAMETERS].schemeIdUri);
+        const isCmcdSupported = schemeIdUri === Constants.CTA_5004_2023_SCHEME || schemeIdUri === Constants.CTA_5004_2025_SCHEME;
+
+        if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && isCmcdSupported) {
             entry.cmcdParameters = new CMCDParameters();
             entry.cmcdParameters.init(element[DashConstants.CMCD_PARAMETERS]);
         }

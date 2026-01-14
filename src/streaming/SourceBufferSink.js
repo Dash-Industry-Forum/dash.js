@@ -438,8 +438,8 @@ function SourceBufferSink(config) {
     }
 
     function _updateEndHandler() {
-        // if updating is still in progress do nothing and wait for the next check again.
-        if (buffer.updating) {
+        // if buffer is null or updating is still in progress do nothing and wait for the next check again.
+        if (!buffer || buffer.updating) {
             return;
         }
 

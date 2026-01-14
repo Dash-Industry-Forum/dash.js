@@ -21,6 +21,7 @@ class CommonMediaRequest {
         this.timeout = params.timeout !== undefined ? params.timeout : 0;
         this.cmcd = params.cmcd !== undefined ? params.cmcd : null;
         this.customData = params.customData !== undefined ? params.customData : null;
+        this.body = params.body !== undefined ? params.body : null;
     }
 }
 

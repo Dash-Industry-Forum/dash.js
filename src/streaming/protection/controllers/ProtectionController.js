@@ -68,7 +68,7 @@ function ProtectionController(config) {
 
     config = config || {};
     const BASE64 = config.BASE64;
-    const cmcdModel = config.cmcdModel;
+    const cmcdController = config.cmcdController;
     const constants = config.constants;
     const customParametersModel = config.customParametersModel;
     const debug = config.debug;
@@ -870,12 +870,12 @@ function ProtectionController(config) {
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
-        const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
+        const cmcdParameters = cmcdController.getCmcdParametersFromManifest();
 
-        if (cmcdModel.isCmcdEnabled()) {
+        if (cmcdController.isCmcdEnabled()) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                const cmcdParams = cmcdModel.getQueryParameter({
+                const cmcdParams = cmcdController.getQueryParameter({
                     url: request.url,
                     type: HTTPRequest.LICENSE
                 });
@@ -896,10 +896,10 @@ function ProtectionController(config) {
             xhr.setRequestHeader(key, request.headers[key]);
         }
 
-        if (cmcdModel.isCmcdEnabled()) {
+        if (cmcdController.isCmcdEnabled()) {
             const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
             if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                const cmcdHeaders = cmcdModel.getHeaderParameters({
+                const cmcdHeaders = cmcdController.getHeaderParameters({
                     url: request.url,
                     type: HTTPRequest.LICENSE
                 });
