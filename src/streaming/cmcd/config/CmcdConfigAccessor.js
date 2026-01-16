@@ -322,7 +322,7 @@ function CmcdConfigAccessor() {
      * const targets = cmcdConfig.getTargets();
      * targets.forEach((target, index) => {
      *   const targetAccessor = cmcdConfig.getTarget(index);
-     *   const mode = targetAccessor.get('targetMode');
+     *   const keys = targetAccessor.get('targetKeys');
      * });
      */
     function getTargets() {
@@ -346,7 +346,6 @@ function CmcdConfigAccessor() {
      * @example
      * const target = cmcdConfig.getTarget(0);
      * if (target) {
-     *   const mode = target.get('targetMode');
      *   const url = target.get('targetUrl');
      *   const keys = target.get('targetKeys');
      *   const events = target.get('targetEvents');
@@ -364,7 +363,7 @@ function CmcdConfigAccessor() {
         return {
             /**
              * Get a target-specific property value
-             * @param {string} property - Property name (should be target-specific like 'targetMode', 'targetUrl', etc.)
+             * @param {string} property - Property name (should be target-specific like 'targetUrl', 'targetKeys', etc.)
              * @returns {*} Property value
              */
             get: (property) => {

@@ -1696,7 +1696,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             enabledKeys: ['e', 'sta'],
                             events: ['ps'],
                             timeInterval: 0
@@ -1706,14 +1705,14 @@ describe('CmcdController', function () {
             });
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-            
+
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            expect(requestSent.body).to.be.a('string');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
         });
 
@@ -1726,7 +1725,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             timeInterval: 0
                         }]
                     }
@@ -1734,14 +1732,14 @@ describe('CmcdController', function () {
             });
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-            
+
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            expect(requestSent.body).to.be.a('string');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'p');
             expect(metrics).to.have.property('ts');
@@ -1758,7 +1756,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             enabledKeys: ['e', 'sta', 'ttfb'],
                             events: ['ps'],
                             timeInterval: 0
@@ -1768,14 +1765,14 @@ describe('CmcdController', function () {
             });
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-            
+
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            expect(requestSent.body).to.be.a('string');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'p');
             expect(metrics).to.not.have.property('ttfb');
@@ -1790,7 +1787,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             enabledKeys: ['e'],
                             events: ['e'],
                             timeInterval: 0
@@ -1814,11 +1810,11 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.ERROR, errorPayload);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            expect(requestSent.body).to.be.a('string');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'e');
         });
 
@@ -1831,7 +1827,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             enabledKeys: ['e'],
                             events: ['e'],
                             timeInterval: 0
@@ -1865,7 +1860,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             timeInterval: 0
                         }]
                     }
@@ -1885,7 +1879,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             events: ['ps']
                         }]
                     }
@@ -1897,16 +1890,14 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const request1 = urlLoaderMock.load.firstCall.args[0].request;
-            const url1 = new URL(request1.url);
-            const cmcdString1 = url1.searchParams.get('CMCD');
-            const metrics1 = decodeCmcd(cmcdString1);
+            expect(request1.method).to.equal(HTTPRequest.POST);
+            const metrics1 = decodeCmcd(decodeURIComponent(request1.body));
             expect(metrics1).to.have.property('sn', 1);
-            
+
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
             const request2 = urlLoaderMock.load.secondCall.args[0].request;
-            const url2 = new URL(request2.url);
-            const cmcdString2 = url2.searchParams.get('CMCD');
-            const metrics2 = decodeCmcd(cmcdString2);
+            expect(request2.method).to.equal(HTTPRequest.POST);
+            const metrics2 = decodeCmcd(decodeURIComponent(request2.body));
             expect(metrics2).to.have.property('sn', 2);
         });
 
@@ -1918,7 +1909,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
-                            mode: 'query',
                             enabledKeys: [],
                         }]
                     }
@@ -1943,9 +1933,10 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            expect(requestSent.body).to.be.a('string');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('ts');
             expect(metrics).to.have.property('v');
         });
@@ -1968,7 +1959,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             enabledKeys: ['e', 'sta'],
                             events: ['ps'],
                         }]
@@ -1992,11 +1982,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_INITIALIZED);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 's');
         });
@@ -2005,11 +1994,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'p');
         });
@@ -2019,11 +2007,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_WAITING);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'r');
         });
@@ -2032,11 +2019,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PAUSED);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'a');
         });
@@ -2045,11 +2031,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_SEEKING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'k');
         });
@@ -2058,11 +2043,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_WAITING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'w');
         });
@@ -2071,10 +2055,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_ENDED);
             expect(urlLoaderMock.load.called).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 'ps');
             expect(metrics).to.have.property('sta', 'e');
         });
@@ -2099,7 +2083,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'header',
                             enabledKeys: ['e'],
                             events: ['ps', 't'],
                             timeInterval: 1
@@ -2127,8 +2110,8 @@ describe('CmcdController', function () {
             clock.tick(1000);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             let requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            let headers = requestSent.headers;
-            let metrics = decodeCmcd(headers['CMCD-Status']);
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+            let metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('e', 't');
             clock.tick(1000);
             expect(urlLoaderMock.load.calledTwice).to.be.true;
@@ -2145,7 +2128,7 @@ describe('CmcdController', function () {
             };
             cmcdController.reset();
             internalPlaybackControllerMock = new PlaybackControllerMock();
-            
+
             settings.update({
                 streaming: {
                     cmcd: {
@@ -2154,7 +2137,6 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             cmcdMode: 'event',
-                            mode: 'query',
                             events: ['ps'],
                             timeInterval: 0
                         }]
@@ -2176,10 +2158,10 @@ describe('CmcdController', function () {
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.not.have.property('ab');
             expect(metrics).to.not.have.property('tab');
             expect(metrics).to.not.have.property('lab');
@@ -2194,16 +2176,16 @@ describe('CmcdController', function () {
             streamMock.getCurrentRepresentationForType = function() {
                 return { bitrateInKbit: 2000 };
             }
-        
+
             internalPlaybackControllerMock.streamController.activeStream = streamMock;
-            
+
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.event.collector/api?');
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('lab');
             expect(metrics.lab).to.equal(2000);
             expect(metrics).to.have.property('ab');
@@ -2239,7 +2221,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
@@ -2270,11 +2251,10 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+            expect(requestSent.url).to.equal('https://cmcd.response.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
 
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('rc');
             expect(metrics).to.have.property('sid', 'session-id');
             expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
@@ -2290,7 +2270,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
@@ -2324,9 +2303,9 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
 
             expect(metrics).to.have.property('cmsds', btoa(cmsdStaticHeaderValue));
             expect(metrics).to.have.property('cmsdd', btoa(cmsdDynamicHeaderValue));
@@ -2340,7 +2319,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
                         }]
@@ -2375,7 +2353,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
                         }]
@@ -2402,52 +2379,6 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.called).to.be.false;
         });
 
-        it('should send a report with headers if mode is "header"', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        targets: [{
-                            url: 'https://cmcd.response.collector/api',
-                            enabled: true,
-                            mode: 'header',
-                            includeOnRequests: ['segment'],
-                            enabledKeys: ['rc', 'sid'],
-                            events: ['rr']
-                        }]
-                    }
-                }
-            });
-
-            const mockResponse = {
-                status: 200,
-                request: {
-                    customData: {
-                        request: {
-                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
-                            url: 'http://test.url/video.m4s'
-                        }
-                    },
-                    cmcd: { sid: 'session-id' }
-                }
-            };
-
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
-            interceptor(mockResponse);
-
-            expect(urlLoaderMock.load.calledOnce).to.be.true;
-            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.not.include('?CMCD=');
-            expect(requestSent.headers).to.have.property('CMCD-Request');
-            expect(requestSent.headers).to.have.property('CMCD-Session');
-
-            const requestMetrics = decodeCmcd(requestSent.headers['CMCD-Request']);
-            const sessionMetrics = decodeCmcd(requestSent.headers['CMCD-Session']);
-
-            expect(requestMetrics).to.have.property('rc', 200);
-            expect(sessionMetrics).to.have.property('sid', 'session-id');
-        });
-
         it('should send all available keys if enabledKeys is not defined', () => {
             settings.update({
                 streaming: {
@@ -2456,7 +2387,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
                         }]
@@ -2486,11 +2416,10 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+            expect(requestSent.url).to.equal('https://cmcd.response.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
 
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('rc');
             expect(metrics).to.have.property('sid', 'session-id');
             expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
@@ -2507,7 +2436,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
@@ -2538,11 +2466,10 @@ describe('CmcdController', function () {
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.include('https://cmcd.response.collector/api?');
+            expect(requestSent.url).to.equal('https://cmcd.response.collector/api');
+            expect(requestSent.method).to.equal(HTTPRequest.POST);
 
-            const url = new URL(requestSent.url);
-            const cmcdString = url.searchParams.get('CMCD');
-            const metrics = decodeCmcd(cmcdString);
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('rc');
             expect(metrics).to.have.property('e');
             expect(metrics).to.not.have.property('d');
@@ -2556,7 +2483,6 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            mode: 'query',
                             includeOnRequests: ['segment'],
                             events: ['rr']
                         }]
@@ -2585,15 +2511,13 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.calledTwice).to.be.true;
 
             const request1 = urlLoaderMock.load.firstCall.args[0].request;
-            const url1 = new URL(request1.url);
-            const cmcdString1 = url1.searchParams.get('CMCD');
-            const metrics1 = decodeCmcd(cmcdString1);
+            expect(request1.method).to.equal(HTTPRequest.POST);
+            const metrics1 = decodeCmcd(decodeURIComponent(request1.body));
             expect(metrics1).to.have.property('sn', 1);
 
             const request2 = urlLoaderMock.load.secondCall.args[0].request;
-            const url2 = new URL(request2.url);
-            const cmcdString2 = url2.searchParams.get('CMCD');
-            const metrics2 = decodeCmcd(cmcdString2);
+            expect(request2.method).to.equal(HTTPRequest.POST);
+            const metrics2 = decodeCmcd(decodeURIComponent(request2.body));
             expect(metrics2).to.have.property('sn', 2);
         });
     });

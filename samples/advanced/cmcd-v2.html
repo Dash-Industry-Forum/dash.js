@@ -26,10 +26,13 @@
     <script class="code">
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
 
-        /* possible modes of attach cmcd data */
-        var CMCD_MODE_QUERY = 'query'; /* as query parameters */
-        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
-        var CMCD_MODE_BODY = 'body'; /* as body of request */
+        /* CMCD v2 transmission modes:
+         * - Request Mode: uses 'query' or 'header' (configurable via settings.streaming.cmcd.mode)
+         * - Event Mode (targets): always uses 'body' (POST request) - mode is not configurable per target
+         */
+        var CMCD_MODE_QUERY = 'query'; /* as query parameters (Request Mode only) */
+        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers (Request Mode only) */
+        var CMCD_MODE_BODY = 'body'; /* as body of request (Event Mode only) */
         var player;
 
         function init() {
@@ -60,7 +63,6 @@
                                 enabledKeys: ['url', 'rc', 'msd'],
                                 includeOnRequests: ['mpd', 'segment'],
                                 events: ['rr'],
-                                mode: CMCD_MODE_QUERY,
                             },
                             {
                                 enabled: true,
@@ -68,24 +70,20 @@
                                 timeInterval: 10,
                                 enabledKeys: ['e', 'msd', 'sta'],
                                 events: ['ps', 'e', 't'],
-                                mode: CMCD_MODE_QUERY,
                             },
                             {
                                 enabled: true,
                                 url: 'http://localhost:3003/cmcd/event-mode',
                                 timeInterval: 6,
-                                mode: CMCD_MODE_HEADER,
                             },
                             {
                                 enabled: true,
                                 url: 'http://localhost:3004/cmcd/event-body-mode',
-                                mode: CMCD_MODE_BODY,
                                 batchSize: 3,
                             },
                             {
                                 enabled: true,
                                 url: 'http://localhost:3005/cmcd/event-body-mode',
-                                mode: CMCD_MODE_BODY,
                                 batchTimer: 3,
                             }
                         ]

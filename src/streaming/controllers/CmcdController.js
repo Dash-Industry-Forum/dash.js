@@ -260,7 +260,6 @@ function CmcdController() {
             const includeOnRequests = targetAccessor.get('targetIncludeOnRequests');
             const events = targetAccessor.get('targetEvents');
             const url = targetAccessor.get('targetUrl');
-            const mode = targetAccessor.get('targetMode');
             const keys = targetAccessor.get('targetKeys');
             const batchSize = targetAccessor.get('targetBatchSize');
             const batchTimer = targetAccessor.get('targetBatchTimer');
@@ -288,7 +287,7 @@ function CmcdController() {
             let cmcd = {...cmcdData, sn: sequenceNumber}
             httpRequest.cmcd = cmcd;
 
-            _updateRequestWithCmcd(httpRequest, cmcd, mode, keys, true)
+            _updateRequestWithCmcd(httpRequest, cmcd, null, keys, true)
             if ((batchSize || batchTimer) && httpRequest.body){
                 cmcdBatchController.addReport(targetSettings, httpRequest.body)
             } else {
@@ -311,9 +310,10 @@ function CmcdController() {
 
     /**
      * Updates the request url and headers with CMCD data
+     * CMCD v2: Event Mode always uses body transmission, Request Mode uses query or header based on config
      * @param request
      * @param cmcdData
-     * @param mode - CMCD mode (query, header, body)
+     * @param mode - CMCD mode (query, header) - only used for Request Mode
      * @param keys - Array of enabled CMCD keys
      * @param isEventMode - Whether this is event mode (true) or request mode (false)
      * @private
@@ -328,24 +328,27 @@ function CmcdController() {
             const effectiveMode = mode || cmcdConfig.get('mode');
             const effectiveKeys = keys || cmcdConfig.get('keys');
 
-            switch (effectiveMode) {
-                case Constants.CMCD_MODE_QUERY:
-                    request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
-                    const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, effectiveKeys, isEventMode);
-                    request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-                    break;
-                case Constants.CMCD_MODE_HEADER:
+            // CMCD v2: Event Mode only uses Body mode
+            if (isEventMode) {
+                if (request.type === HTTPRequest.CMCD_EVENT) {
+                    request.body = getJsonParameters(request, cmcdData, effectiveKeys, isEventMode, Constants.CMCD_MODE_BODY);
+                    request.method = HTTPRequest.POST;
                     request.headers = request.headers || {};
-                    request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, effectiveKeys, isEventMode, effectiveMode));
-                    break;
-                case Constants.CMCD_MODE_BODY:
-                    if (request.type === HTTPRequest.CMCD_EVENT) {
-                        request.body = getJsonParameters(request, cmcdData, effectiveKeys, isEventMode, effectiveMode);
-                        request.method = HTTPRequest.POST;
+                    request.headers = Object.assign(request.headers, Constants.CMCD_CONTENT_TYPE_HEADER)
+                }
+            } else {
+                // Request Mode: use Query or Header based on configuration
+                switch (effectiveMode) {
+                    case Constants.CMCD_MODE_QUERY:
+                        request.url = Utils.removeQueryParameterFromUrl(request.url, Constants.CMCD_QUERY_KEY);
+                        const additionalQueryParameter = _getAdditionalQueryParameter(request, cmcdData, effectiveKeys, isEventMode);
+                        request.url = Utils.addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
+                        break;
+                    case Constants.CMCD_MODE_HEADER:
                         request.headers = request.headers || {};
-                        request.headers = Object.assign(request.headers, Constants.CMCD_CONTENT_TYPE_HEADER)
-                    }
-                    break;
+                        request.headers = Object.assign(request.headers, getHeaderParameters(request, cmcdData, effectiveKeys, isEventMode, effectiveMode));
+                        break;
+                }
             }
         }
     }

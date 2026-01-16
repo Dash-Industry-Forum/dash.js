@@ -320,27 +320,6 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target mode (can override global mode)
-     * Note: This is target-specific, requires context
-     */
-    targetMode: {
-        version: [2],
-        sources: [
-            {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].mode',
-                priority: 1,
-                type: 'string'
-            },
-            {
-                path: 'settings.streaming.cmcd.mode',
-                priority: 2,
-                type: 'string',
-                default: Constants.CMCD_MODE_QUERY
-            }
-        ]
-    },
-
-    /**
      * V2: Target enabled keys (can override global keys)
      * Note: This is target-specific, requires context
      */
