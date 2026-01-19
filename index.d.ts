@@ -988,11 +988,7 @@ declare namespace dashjs {
                 stallThreshold?: number,
                 lowLatencyStallThreshold?: number,
                 useAppendWindow?: boolean,
-                setStallState?: boolean
-                videoFramesNotAdvancing?: {
-                    enabled?: boolean
-                    thresholdInSeconds?: number,
-                },                
+                setStallState?: boolean             
                 avoidCurrentTimeRangePruning?: boolean
                 useChangeTypeForTrackSwitch?: boolean
                 mediaSourceDurationInfinity?: boolean
@@ -1582,7 +1578,6 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
-        PLAYBACK_FROZEN: 'playbackFrozen'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_VOLUME_CHANGED: 'playbackVolumeChanged';
@@ -2514,7 +2509,6 @@ declare namespace dashjs {
         CORRUPT_MEDIA_OTHER:            'M01';
         BASE_URL_CHANGED:               'F00';
         BECAME_REPORTER:                'S00';
-        PLAYBACK_FROZEN:                'P00';
     }
 
     export interface Metrics {
@@ -4318,7 +4312,6 @@ declare namespace dashjs {
         PLAYBACK_SEEKED: 'playbackSeeked';
         PLAYBACK_SEEKING: 'playbackSeeking';
         PLAYBACK_STALLED: 'playbackStalled';
-        PLAYBACK_FROZEN: 'playbackFrozen'
         PLAYBACK_STARTED: 'playbackStarted';
         PLAYBACK_TIME_UPDATED: 'playbackTimeUpdated';
         PLAYBACK_WAITING: 'playbackWaiting';

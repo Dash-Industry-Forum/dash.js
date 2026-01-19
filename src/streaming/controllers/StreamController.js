@@ -63,7 +63,7 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, bufferSinks, preloadingStreams,
-        supportsChangeType, settings, totalVideoFramesAtLastPlaybackProgress, timeAtLastPlaybackProgress, videoFramesNotAdvancingTriggered,
+        supportsChangeType, settings,
         firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
 
     function setup() {
@@ -796,78 +796,17 @@ function StreamController() {
             }
         }
     }
-
-    /**
-     * Checks whether the browser environment is WebKit based or not
-     * @private
-     */
-    function isWebKit() {
-        return typeof window.webkitConvertPointFromNodeToPage === 'function' || false
-    }
-
-    /**
-     * Evaluates whether video frames have potentially stopped advancing, added to address https://issues.chromium.org/issues/41243192
-     * @private
-     */
-    function checkIfVideoFramesNotAdvancing(event) {
-
-        const playbackQuality = videoModel.getPlaybackQuality();
-
-        if(videoModel.isSeeking()){
-            totalVideoFramesAtLastPlaybackProgress = 0
-        }
-
-        const isEnded = event.timeToEnd ? event.timeToEnd <= 0 : false;
-
-        const isVideoFramesNotAdvancing = !isWebKit()
-            && playbackQuality 
-            && typeof playbackQuality.totalVideoFrames === 'number'
-            && !isEnded
-            && timeAtLastPlaybackProgress !== 0
-            && event.time > settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds // We should be at least one threshold into the video before triggering
-            && !videoModel.isPaused()
-            && !videoModel.isStalled()
-            && !videoModel.isSeeking()
-            && videoModel.getReadyState() >= Constants.VIDEO_ELEMENT_READY_STATES.HAVE_ENOUGH_DATA
-            && playbackQuality.totalVideoFrames > 0 // Handles devices (some TVs), where Video Quality API, totalVideoFrames always returns 0.
-            && playbackQuality.totalVideoFrames < 2147483647 //Handles devices, where Video Quality API, totalVideoFrames can return the max value of a 32 bit signed integer becuase the implementation uses totalVideoFrames = mediaTime * framerate.
-            && playbackQuality.totalVideoFrames !== playbackQuality.droppedVideoFrames // Handles devices (some TVs), where Video Quality API, totalVideoFrames always equals the number of dropped frames.
-            && playbackQuality.totalVideoFrames === totalVideoFramesAtLastPlaybackProgress // Total frames should advance with time progression, if not something is wrong. On some some TVs the total video frames is reset if the decoder is reinitialised.
-
-        if(isVideoFramesNotAdvancing){
-            if((timeAtLastPlaybackProgress + settings.get().streaming.buffer.videoFramesNotAdvancing.thresholdInSeconds < event.time) && !videoFramesNotAdvancingTriggered){
-                eventBus.trigger(Events.PLAYBACK_FROZEN,{
-                    cause:'Frames have stopped advancing, Chromium bug #41243192',
-                    totalVideoFrames: playbackQuality.totalVideoFrames,
-                    mediaTime: event.time
-                });
-                if(settings.get().streaming.buffer.videoFramesNotAdvancing.enabled){
-                    logger.warn('Video playback has frozen, attempting to recover by seeking to current time')
-                    videoModel.setCurrentTime(videoModel.getTime()-0.0001,false)
-                }
-                videoFramesNotAdvancingTriggered = true
-            }        
-        }
-        else{
-            timeAtLastPlaybackProgress = event.time
-            videoFramesNotAdvancingTriggered = false
-            if(typeof playbackQuality.totalVideoFrames === 'number'){
-                totalVideoFramesAtLastPlaybackProgress = playbackQuality.totalVideoFrames
-            }
-        }
-    }
     
     /**
      * When the playback time is updated we add the droppedFrames metric to the dash metric object
      * @private
      */
-    function _onPlaybackTimeUpdated(event) {
+    function _onPlaybackTimeUpdated() {
 
         if (hasVideoTrack()) {
             const playbackQuality = videoModel.getPlaybackQuality();
             if (playbackQuality) {
                 dashMetrics.addDroppedFrames(playbackQuality);
-                checkIfVideoFramesNotAdvancing(event)
             }
         }
     }
@@ -1623,9 +1562,6 @@ function StreamController() {
         supportsChangeType = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
-        totalVideoFramesAtLastPlaybackProgress = 0;
-        timeAtLastPlaybackProgress = 0;
-        videoFramesNotAdvancingTriggered = false;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

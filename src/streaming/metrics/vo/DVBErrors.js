@@ -57,7 +57,6 @@ class DVBErrors {
         // Corrupt media – Not otherwise specified                      "M01"
         // Changing Base URL in use due to errors                       "F00"
         // Becoming an error reporting Player                           "S00"
-        // Playback error has occured, the cause is unknown             "P00"
 
         this.terror = null;
         // Real-Time - Date and time at which error occurred in UTC,
@@ -94,6 +93,5 @@ DVBErrors.CORRUPT_MEDIA_ISOBMFF = 'M00';
 DVBErrors.CORRUPT_MEDIA_OTHER = 'M01';
 DVBErrors.BASE_URL_CHANGED = 'F00';
 DVBErrors.BECAME_REPORTER = 'S00';
-DVBErrors.PLAYBACK_FROZEN = 'P00';
 
 export default DVBErrors;

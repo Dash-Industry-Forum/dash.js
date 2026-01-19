@@ -377,12 +377,6 @@ class MediaPlayerEvents extends EventsBase {
         this.PLAYBACK_STALLED = 'playbackStalled';
 
         /**
-         * Sent when a stall in playback has occured but the reason for it is unclear.
-         * @event MediaPlayerEvents#PLAYBACK_FROZEN
-         */
-        this.PLAYBACK_FROZEN = `playbackFrozen`;
-
-        /**
          * Sent when playback of the media starts after having been paused;
          * that is, when playback is resumed after a prior pause event.
          *
