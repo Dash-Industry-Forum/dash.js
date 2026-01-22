@@ -26,6 +26,11 @@
             font-family: monospace;
             font-size: 12px;
         }
+
+        .source-input-group {
+            width: 640px;
+            margin: 0 auto;
+        }
     </style>
 
     <script class="code">
@@ -39,17 +44,18 @@
         var CMCD_MODE_HEADER = 'header'; /* as HTTP headers (Request Mode only) */
         var CMCD_MODE_BODY = 'body'; /* as body of request (Event Mode only) */
         var player;
+        var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
         var defaultCmcdConfig = {
             version: 2,
-            enabled: false,
+            enabled: true,
             sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5',
             cid: '21cf726cfe3d937b5f974f72bb5bd06a',
             mode: CMCD_MODE_QUERY,
             enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
             targets: [
                 {
-                    enabled: false,
+                    enabled: true,
                     url: 'http://localhost:3001/cmcd/response-received',
                     enabledKeys: ['url', 'rc', 'msd'],
                     includeOnRequests: ['mpd', 'segment'],
@@ -63,17 +69,17 @@
                     events: ['ps', 'e', 't']
                 },
                 {
-                    enabled: false,
+                    enabled: true,
                     url: 'http://localhost:3003/cmcd/event-mode',
                     timeInterval: 6
                 },
                 {
-                    enabled: false,
+                    enabled: true,
                     url: 'http://localhost:3004/cmcd/event-body-mode',
                     batchSize: 3
                 },
                 {
-                    enabled: false,
+                    enabled: true,
                     url: 'http://localhost:3005/cmcd/event-body-mode',
                     batchTimer: 3
                 }
@@ -81,16 +87,16 @@
         };
 
         function init() {
-            var video,
-                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
-                version;
+            var video;
 
             player = dashjs.MediaPlayer().create();
             video = document.querySelector('video');
             player.initialize();
-            version = player.getVersion();
 
             player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
+
+            // Initialize source input with default URL
+            document.getElementById('source-url').value = defaultSourceUrl;
 
             // Initialize config textarea with default config
             document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
@@ -102,7 +108,15 @@
             });
             player.setAutoPlay(false);
             player.attachView(video);
-            player.attachSource(url);
+            player.attachSource(defaultSourceUrl);
+        }
+
+        function loadSource() {
+            var url = document.getElementById('source-url').value.trim();
+            if (url) {
+                player.attachSource(url);
+                log('Source loaded: ' + url);
+            }
         }
 
         function applyCmcdSettings() {
@@ -246,6 +260,14 @@
                     <h3>CMCD v2 Reporting</h3>
                     <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
                         Client Data (CMCD - CTA 5004).</p>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-12">
+                <div class="input-group source-input-group">
+                    <input type="text" class="form-control" id="source-url" placeholder="Enter MPD URL">
+                    <button class="btn btn-primary" onclick="loadSource()">Load</button>
                 </div>
             </div>
         </div>
