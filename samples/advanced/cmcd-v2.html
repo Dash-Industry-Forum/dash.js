@@ -17,9 +17,14 @@
         }
 
         #trace {
-            height: 500px;
-            margin-top: 20px;
+            height: 300px;
             font-size: 10px;
+        }
+
+        #cmcd-config {
+            height: 300px;
+            font-family: monospace;
+            font-size: 12px;
         }
     </style>
 
@@ -35,6 +40,46 @@
         var CMCD_MODE_BODY = 'body'; /* as body of request (Event Mode only) */
         var player;
 
+        var defaultCmcdConfig = {
+            version: 2,
+            enabled: false,
+            sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5',
+            cid: '21cf726cfe3d937b5f974f72bb5bd06a',
+            mode: CMCD_MODE_QUERY,
+            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
+            targets: [
+                {
+                    enabled: false,
+                    url: 'http://localhost:3001/cmcd/response-received',
+                    enabledKeys: ['url', 'rc', 'msd'],
+                    includeOnRequests: ['mpd', 'segment'],
+                    events: ['rr']
+                },
+                {
+                    enabled: true,
+                    url: 'http://localhost:3002/cmcd/event-mode',
+                    timeInterval: 10,
+                    enabledKeys: ['e', 'msd', 'sta'],
+                    events: ['ps', 'e', 't']
+                },
+                {
+                    enabled: false,
+                    url: 'http://localhost:3003/cmcd/event-mode',
+                    timeInterval: 6
+                },
+                {
+                    enabled: false,
+                    url: 'http://localhost:3004/cmcd/event-body-mode',
+                    batchSize: 3
+                },
+                {
+                    enabled: false,
+                    url: 'http://localhost:3005/cmcd/event-body-mode',
+                    batchTimer: 3
+                }
+            ]
+        };
+
         function init() {
             var video,
                 url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
@@ -47,53 +92,40 @@
 
             player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
 
+            // Initialize config textarea with default config
+            document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
+
             player.updateSettings({
                 streaming: {
-                    cmcd: {
-                        version: 2,
-                        enabled: true, /* enable reporting of cmcd parameters */
-                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
-                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
-                        mode: CMCD_MODE_QUERY,
-                        enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-                        targets: [
-                            {
-                                enabled: true,
-                                url: 'http://localhost:3001/cmcd/response-received',
-                                enabledKeys: ['url', 'rc', 'msd'],
-                                includeOnRequests: ['mpd', 'segment'],
-                                events: ['rr'],
-                            },
-                            {
-                                enabled: true,
-                                url: 'http://localhost:3002/cmcd/event-mode',
-                                timeInterval: 10,
-                                enabledKeys: ['e', 'msd', 'sta'],
-                                events: ['ps', 'e', 't'],
-                            },
-                            {
-                                enabled: true,
-                                url: 'http://localhost:3003/cmcd/event-mode',
-                                timeInterval: 6,
-                            },
-                            {
-                                enabled: true,
-                                url: 'http://localhost:3004/cmcd/event-body-mode',
-                                batchSize: 3,
-                            },
-                            {
-                                enabled: true,
-                                url: 'http://localhost:3005/cmcd/event-body-mode',
-                                batchTimer: 3,
-                            }
-                        ]
-                    }
-                },
-
+                    cmcd: defaultCmcdConfig
+                }
             });
             player.setAutoPlay(false);
             player.attachView(video);
             player.attachSource(url);
+        }
+
+        function applyCmcdSettings() {
+            var configTextarea = document.getElementById('cmcd-config');
+            try {
+                var cmcdConfig = JSON.parse(configTextarea.value);
+                player.updateSettings({
+                    streaming: {
+                        cmcd: cmcdConfig
+                    }
+                });
+                log('CMCD settings applied successfully');
+                configTextarea.style.borderColor = '';
+            } catch (e) {
+                log('Error parsing JSON: ' + e.message);
+                configTextarea.style.borderColor = 'red';
+            }
+        }
+
+        function resetCmcdSettings() {
+            document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
+            document.getElementById('cmcd-config').style.borderColor = '';
+            applyCmcdSettings();
         }
 
         function handleCmcdDataGeneratedEvent(event) {
@@ -218,15 +250,22 @@
             </div>
         </div>
         <div class="row mt-2">
-            <div class="col-md-6">
+            <div class="col-md-12 text-center">
                 <video controls="true"></video>
             </div>
+        </div>
+        <div class="row mt-3">
             <div class="col-md-6">
-                <div class="form-floating">
-                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
-                              id="trace"></textarea>
-                    <label for="trace">CMCD Data</label>
+                <label for="cmcd-config" class="form-label"><strong>CMCD Configuration (streaming.cmcd)</strong></label>
+                <textarea class="form-control" id="cmcd-config" placeholder="Enter CMCD JSON configuration"></textarea>
+                <div class="mt-2">
+                    <button class="btn btn-primary" onclick="applyCmcdSettings()">Apply Settings</button>
+                    <button class="btn btn-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
                 </div>
+            </div>
+            <div class="col-md-6">
+                <label for="trace" class="form-label"><strong>CMCD Data</strong></label>
+                <textarea class="form-control" placeholder="Sent CMCD data will be displayed here" id="trace"></textarea>
             </div>
         </div>
         <div class="row">
