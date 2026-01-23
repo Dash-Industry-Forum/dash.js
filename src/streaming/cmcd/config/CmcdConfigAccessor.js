@@ -61,7 +61,7 @@ function CmcdConfigAccessor() {
     let instance;
     let settings;
     let manifestParams;
-    let detectedVersion;
+    let manifestParamsProvider;
 
     const context = this.context;
 
@@ -72,7 +72,58 @@ function CmcdConfigAccessor() {
     function setup() {
         settings = Settings(context).getInstance();
         manifestParams = null;
-        detectedVersion = null;
+        manifestParamsProvider = null;
+    }
+
+    /**
+     * Set a provider function for live access to manifest params
+     * This enables lazy loading of CMCDParameters, resolving timing issues
+     * where params are needed before they're available in the manifest
+     *
+     * @param {Function} providerFn - Function that returns CMCDParameters object or null
+     * @public
+     *
+     * @example
+     * cmcdConfig.setManifestParamsProvider(() => {
+     *   return serviceDescriptionController.getServiceDescriptionSettings()
+     *     ?.clientDataReporting?.cmcdParameters || null;
+     * });
+     */
+    function setManifestParamsProvider(providerFn) {
+        manifestParamsProvider = providerFn;
+    }
+
+    /**
+     * Get CMCDParameters from the provider function
+     * @returns {Object|null} CMCDParameters or null if provider not set or returns nothing
+     * @private
+     */
+    function _getManifestParamsFromProvider() {
+        if (typeof manifestParamsProvider !== 'function') {
+            return null;
+        }
+        try {
+            return manifestParamsProvider();
+        } catch (e) {
+            // Provider not ready yet or threw an error
+            return null;
+        }
+    }
+
+    /**
+     * Get the effective manifest params (live from provider, or cached)
+     * Prefers live access from provider when available
+     * @returns {Object|null} CMCDParameters
+     * @private
+     */
+    function _getEffectiveManifestParams() {
+        // Try live access first (resolves timing issues)
+        const liveParams = _getManifestParamsFromProvider();
+        if (liveParams && Object.keys(liveParams).length > 0) {
+            return liveParams;
+        }
+        // Fall back to cached params
+        return manifestParams;
     }
 
     /**
@@ -82,7 +133,6 @@ function CmcdConfigAccessor() {
      */
     function setManifestParams(params) {
         manifestParams = params;
-        detectedVersion = null; // Reset version detection
     }
 
     /**
@@ -92,12 +142,10 @@ function CmcdConfigAccessor() {
      * @private
      */
     function _detectVersion() {
-        // Check manifest parameters first (cache this since it's set explicitly)
-        if (manifestParams && manifestParams.version) {
-            if (detectedVersion === null) {
-                detectedVersion = parseInt(manifestParams.version, 10);
-            }
-            return detectedVersion;
+        // Check manifest parameters first (use live access for timing safety)
+        const effectiveManifestParams = _getEffectiveManifestParams();
+        if (effectiveManifestParams && effectiveManifestParams.version) {
+            return parseInt(effectiveManifestParams.version, 10);
         }
 
         // Check settings (don't cache - settings can change dynamically)
@@ -185,7 +233,7 @@ function CmcdConfigAccessor() {
     function _getContext() {
         return {
             settings: settings.get(),
-            manifestParams: manifestParams || {}
+            manifestParams: _getEffectiveManifestParams() || {}
         };
     }
 
@@ -296,7 +344,9 @@ function CmcdConfigAccessor() {
      * @public
      */
     function isEnabled() {
-        if (manifestParams && manifestParams.version) {
+        // Use live access to manifest params (resolves timing issues)
+        const effectiveManifestParams = _getEffectiveManifestParams();
+        if (effectiveManifestParams && effectiveManifestParams.version) {
             return true;
         }
 
@@ -310,7 +360,7 @@ function CmcdConfigAccessor() {
      */
     function reset() {
         manifestParams = null;
-        detectedVersion = null;
+        manifestParamsProvider = null;
     }
 
     /**
@@ -395,6 +445,7 @@ function CmcdConfigAccessor() {
     }
 
     instance = {
+        setManifestParamsProvider,
         setManifestParams,
         get,
         has,

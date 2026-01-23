@@ -84,20 +84,31 @@ function CmcdController() {
         if (!config) {
             return;
         }
-        
+
         if (config.dashMetrics) {
             dashMetrics = config.dashMetrics;
         }
-        
+
         if (config.mediaPlayerModel) {
             mediaPlayerModel = config.mediaPlayerModel;
         }
-        
+
         if (config.errHandler) {
             errHandler = config.errHandler;
         }
         if (config.urlLoader) {
             urlLoader = config.urlLoader;
+        }
+
+        // Set up a provider function for CmcdConfigAccessor to get manifest params
+        // This resolves timing issues where CMCDParameters are needed before they're available
+        // Using a provider pattern keeps CmcdConfigAccessor decoupled from ServiceDescriptionController
+        if (config.serviceDescriptionController) {
+            const sdc = config.serviceDescriptionController;
+            cmcdConfig.setManifestParamsProvider(() => {
+                const serviceDescription = sdc.getServiceDescriptionSettings();
+                return serviceDescription?.clientDataReporting?.cmcdParameters || null;
+            });
         }
 
         cmcdModel.setConfig(config);
