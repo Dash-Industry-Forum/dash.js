@@ -88,6 +88,15 @@ class Representation {
             this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
             !this.indexRange;
     }
+
+    isBootstrapRepresentation() {
+        if (!this.segmentSequenceProperties || this.segmentSequenceProperties.length === 0) {
+            return false;
+        }
+        return this.segmentSequenceProperties.some((ssp) => {
+            return ssp.isBootstrapConfiguration();
+        })
+    }
 }
 
 export default Representation;
