@@ -489,27 +489,26 @@ function AbrController() {
 
     function _sortByDefaultParameters(voRepresentations) {
         voRepresentations.sort((a, b) => {
-
-            // In case both Representations are coming from the same MediaInfo then choose the one with the highest resolution and highest bitrate
             if (adapter.areMediaInfosEqual(a.mediaInfo, b.mediaInfo)) {
                 return _sortForSameMediaInfos(a, b);
             }
-
-            // In case the Representations are coming from different MediaInfos they might have different codecs. The bandwidth is not a good indicator, use bits per pixel instead
-            else {
-                return _sortForDifferentMediaInfos(a, b);
-            }
-        })
+            return _sortForDifferentMediaInfos(a, b);
+        });
 
         return voRepresentations
     }
 
     function _sortForSameMediaInfos(a, b) {
         if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
-            return a.pixelsPerSecond - b.pixelsPerSecond
-        } else {
-            return a.bandwidth - b.bandwidth
+            return a.pixelsPerSecond - b.pixelsPerSecond;
         }
+
+        const bwDiff = a.bandwidth - b.bandwidth;
+        if (bwDiff !== 0) {
+            return bwDiff;
+        }
+
+        return _sortBySegmentSequenceProperties(a, b);
     }
 
     function _sortForDifferentMediaInfos(a, b) {
@@ -530,6 +529,13 @@ function AbrController() {
     }
 
     function _sortBySegmentSequenceProperties(a, b) {
+        const isABootstrapRepresentation = a.isBootstrapRepresentation();
+        const isBBootstrapRepresentation = b.isBootstrapRepresentation();
+
+        if (isABootstrapRepresentation !== isBBootstrapRepresentation) {
+            return isABootstrapRepresentation ? -1 : 1;
+        }
+
         return b.k - a.k;
     }
 
