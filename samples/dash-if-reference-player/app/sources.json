@@ -226,7 +226,7 @@
                 },
                 {
                     "name": "Multiple AdaptationSets",
-                    "url": "https://webapi.streaming.dolby.com/v0_9/sources/media/v01/dash/lesson_8.mpd",
+                    "url": "https://ott.dolby.com/webapi/testasset_dashjs/multiAudio.mpd",
                     "moreInfo": "",
                     "provider": "dolby"
                 }
