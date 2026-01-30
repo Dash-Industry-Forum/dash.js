@@ -132,6 +132,52 @@ function TextTracks(config) {
         return streamInfo.id;
     }
 
+    /**
+     * Clears all displayed captions from the DOM.
+     * This includes HTML-rendered captions (TTML/embedded) from the shared captionContainer,
+     * and manually rendered VTT captions from vttCaptionContainer.
+     * @param {TextTrack} track - The track whose activeCues array should be cleared
+     */
+    function _clearDisplayedCaptions(track) {
+        // Clean up HTML-rendered captions (TTML/embedded)
+        clearCaptionContainer();
+
+        // Clean up manual VTT rendering
+        if (track) {
+            const cueData = tracksCueData.get(track);
+            if (cueData && vttCaptionContainer) {
+                cueData.activeCues.forEach((cue) => {
+                    _exitCue(cue);
+                });
+                cueData.activeCues = [];
+            }
+        }
+
+        // Clear currentCaptionEventCue if it's being displayed
+        if (currentCaptionEventCue) {
+            currentCaptionEventCue = null;
+        }
+    }
+
+    /**
+     * Set up event listener for TextTrackList mode changes.
+     * Clears displayed captions from the DOM when the current track's mode is changed to hidden or disabled externally.
+     */
+    function _setupTextTrackListChangeListener() {
+        const textTracks = videoModel.getTextTracks();
+        if (!textTracks) {
+            return;
+        }
+
+        textTracks.addEventListener('change', () => {
+            const track = getTrackByIdx(currentTrackIdx);
+            if (!track || track.mode === Constants.TEXT_SHOWING) {
+                return;
+            }
+            _clearDisplayedCaptions(track);
+        });
+    }
+
     function createTracks() {
         //Sort in same order as in manifest
         textTrackInfos.sort(function (a, b) {
@@ -200,6 +246,8 @@ function TextTracks(config) {
                 }
             }
         }
+
+        _setupTextTrackListChangeListener();
 
         eventBus.trigger(Events.TEXT_TRACKS_QUEUE_INITIALIZED, {
             index: currentTrackIdx,
