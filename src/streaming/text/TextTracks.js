@@ -816,11 +816,7 @@ function TextTracks(config) {
 
             // Exit cues that are no longer active
             cuesToExit.forEach((cue) => {
-                if (settings.get().streaming.text.dispatchForManualRendering) {
-                    _triggerCueExit(cue);
-                } else {
-                    _removeManualCue(cue);
-                }
+                _exitCue(cue);
             });
 
             // Enter cues that are newly active
@@ -850,6 +846,18 @@ function TextTracks(config) {
         }
     }
 
+    /**
+     * Exits a cue by either triggering a CUE_EXIT event or removing it from the DOM.
+     * @param {TextTrackCue} cue - The cue to exit
+     */
+    function _exitCue(cue) {
+        if (settings.get().streaming.text.dispatchForManualRendering) {
+            _triggerCueExit(cue);
+        } else {
+            _removeManualCue(cue);
+        }
+    }
+
     function disableManualTracks() {
         const activeTracks = _getManualActiveTracks();
 
@@ -863,11 +871,7 @@ function TextTracks(config) {
 
             // Exit all currently active cues for this track
             cueData.activeCues.forEach((cue) => {
-                if (settings.get().streaming.text.dispatchForManualRendering) {
-                    _triggerCueExit(cue);
-                } else {
-                    _removeManualCue(cue);
-                }
+                _exitCue(cue);
             });
 
             // Clear the activeCues for this track
@@ -981,11 +985,7 @@ function TextTracks(config) {
             );
 
             cuesToRemove.forEach(cue => {
-                if (settings.get().streaming.text.dispatchForManualRendering) {
-                    _triggerCueExit(cue);
-                } else {
-                    _removeManualCue(cue);
-                }
+                _exitCue(cue);
             });
 
             // Remove from active cues array
