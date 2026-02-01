@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Proactive Buffer Pruning Test</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .stat-row {
+            margin: 8px 0;
+        }
+
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: #28a745;
+        }
+
+        #log {
+            margin-top: 20px;
+            height: 150px;
+            overflow-y: auto;
+            background: #212529;
+            color: #fff;
+            padding: 10px;
+            font-size: 12px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+    </style>
+
+    <script class="code">
+        var player;
+        var maxBufferSeen = 0;
+        var metricsData = {
+            startTime: Date.now(),
+            samples: [],
+            pruningTriggered: 0,
+            quotaExceededEvents: 0
+        };
+
+        function init() {
+            var video = document.querySelector('video');
+            var url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+
+            player = dashjs.MediaPlayer().create();
+
+            // Enable debug logging to see proactive pruning messages
+            player.updateSettings({
+                debug: {
+                    logLevel: dashjs.Debug.LOG_LEVEL_DEBUG
+                }
+            });
+
+            player.initialize(video, url, true);
+
+            // Monitor buffer every second
+            setInterval(updateStats, 1000);
+
+            // Collect samples every 5 seconds for analysis
+            setInterval(collectSample, 5000);
+
+            // Listen for buffer events
+            player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_STATE_CHANGED, function (e) {
+                logMessage('Buffer state: ' + e.state + ' (' + e.mediaType + ')');
+            });
+
+            player.on(dashjs.MediaPlayer.events.QUOTA_EXCEEDED, function (e) {
+                metricsData.quotaExceededEvents++;
+                logMessage('QUOTA_EXCEEDED! Critical: ' + e.criticalBufferLevel);
+            });
+
+            logMessage('Player initialized - monitoring buffer levels...');
+            logMessage('With proactive pruning: buffer should stay under ~64-80s');
+        }
+
+        function getBufferInfo() {
+            var video = document.querySelector('video');
+            var buffered = video.buffered;
+            var total = 0;
+            var ranges = [];
+
+            for (var i = 0; i < buffered.length; i++) {
+                var start = buffered.start(i);
+                var end = buffered.end(i);
+                total += end - start;
+                ranges.push(start.toFixed(1) + '-' + end.toFixed(1));
+            }
+
+            return {total: total, ranges: ranges};
+        }
+
+        function updateStats() {
+            var video = document.querySelector('video');
+            var info = getBufferInfo();
+            var currentTime = video.currentTime;
+
+            document.getElementById('bufferTotal').textContent = info.total.toFixed(2) + 's';
+            document.getElementById('bufferRanges').textContent = info.ranges.join(', ') || 'none';
+            document.getElementById('currentTime').textContent = currentTime.toFixed(2) + 's';
+
+            if (info.total > maxBufferSeen) {
+                maxBufferSeen = info.total;
+                document.getElementById('maxBuffer').textContent = maxBufferSeen.toFixed(2) + 's';
+            }
+
+            var statusEl = document.getElementById('status');
+            if (info.total > 80) {
+                statusEl.textContent = 'EXCEEDED 80s - Pruning may not be working!';
+                statusEl.className = 'warning';
+            } else if (info.total > 64) {
+                statusEl.textContent = 'Above threshold (64s) - Proactive pruning expected soon';
+                statusEl.className = 'warning';
+            } else {
+                statusEl.textContent = 'OK - Buffer under control';
+                statusEl.className = 'ok';
+            }
+        }
+
+        function collectSample() {
+            var info = getBufferInfo();
+            metricsData.samples.push({
+                time: (Date.now() - metricsData.startTime) / 1000,
+                buffer: info.total
+            });
+        }
+
+        function logMessage(msg) {
+            var log = document.getElementById('log');
+            var time = new Date().toLocaleTimeString();
+            log.innerHTML = '[' + time + '] ' + msg + '<br>' + log.innerHTML;
+        }
+
+        function exportMetrics() {
+            metricsData.maxBufferSeen = maxBufferSeen;
+            metricsData.duration = (Date.now() - metricsData.startTime) / 1000;
+            console.log('=== METRICS DATA ===');
+            console.log(JSON.stringify(metricsData, null, 2));
+            alert('Metrics exported to console. Duration: ' + metricsData.duration.toFixed(0) + 's, Max buffer: ' + maxBufferSeen.toFixed(2) + 's');
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>Proactive Buffer Pruning Test</h3>
+                    <p>This sample tests the proactive buffer pruning feature that prevents
+                        <code>QuotaExceededError</code> on memory-constrained devices.</p>
+                    <p><b>Expected behavior:</b></p>
+                    <ul>
+                        <li>Buffer total should stay under ~80 seconds</li>
+                        <li>Proactive pruning triggers at 64s (80% of 80s)</li>
+                        <li>No <code>QUOTA_EXCEEDED</code> events</li>
+                    </ul>
+                    <p><b>How to test:</b></p>
+                    <ol>
+                        <li>Let the video play for 5-10 minutes</li>
+                        <li>Watch "Max Buffer Seen" metric</li>
+                        <li>Check console for "Proactive buffer pruning triggered" logs</li>
+                    </ol>
+                    <button class="btn btn-primary" onclick="exportMetrics()">Export Metrics</button>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+                <div id="stats">
+                    <div class="stat-row"><b>Buffer Total:</b> <span id="bufferTotal">-</span></div>
+                    <div class="stat-row"><b>Buffer Ranges:</b> <span id="bufferRanges">-</span></div>
+                    <div class="stat-row"><b>Current Time:</b> <span id="currentTime">-</span></div>
+                    <div class="stat-row"><b>Max Buffer Seen:</b> <span id="maxBuffer">0</span></div>
+                    <div class="stat-row"><b>Status:</b> <span id="status" class="ok">-</span></div>
+                </div>
+                <div id="log"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>
