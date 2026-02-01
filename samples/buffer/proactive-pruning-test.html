@@ -86,9 +86,11 @@
                 logMessage('Buffer state: ' + e.state + ' (' + e.mediaType + ')');
             });
 
-            player.on(dashjs.MediaPlayer.events.QUOTA_EXCEEDED, function (e) {
-                metricsData.quotaExceededEvents++;
-                logMessage('QUOTA_EXCEEDED! Critical: ' + e.criticalBufferLevel);
+            player.on(dashjs.MediaPlayer.events.ERROR, function (e) {
+                if (e.error && e.error.code === 22) { // QUOTA_EXCEEDED_ERROR_CODE
+                    metricsData.quotaExceededEvents++;
+                    logMessage('QUOTA_EXCEEDED ERROR detected!');
+                }
             });
 
             logMessage('Player initialized - monitoring buffer levels...');
