@@ -1,0 +1,538 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>InitCache LRU Test</title>
+
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="../lib/main.css" rel="stylesheet">
+
+    <style>
+        video {
+            width: 640px;
+            height: 360px;
+        }
+
+        #stats {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+        }
+
+        .stat-row {
+            margin: 8px 0;
+        }
+
+        .warning {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: #28a745;
+        }
+
+        #log {
+            margin-top: 20px;
+            height: 200px;
+            overflow-y: auto;
+            background: #212529;
+            color: #fff;
+            padding: 10px;
+            font-size: 12px;
+            font-family: monospace;
+            border-radius: 5px;
+        }
+
+        .test-panel {
+            background: #e7f3ff;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .test-panel h5 {
+            color: #004085;
+            margin-bottom: 15px;
+        }
+
+        .memory-panel {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .memory-panel h5 {
+            color: #856404;
+        }
+
+        .btn-test {
+            margin: 5px;
+        }
+
+        #memoryChart {
+            width: 100%;
+            height: 150px;
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+
+        .progress {
+            height: 25px;
+            margin: 10px 0;
+        }
+
+        #testProgress {
+            transition: width 0.3s;
+        }
+    </style>
+
+    <script class="code">
+        var player;
+        var initCacheRef = null;
+        var testRunning = false;
+        var memorySnapshots = [];
+        var maxCacheEntriesSeen = 0;
+
+        var metricsData = {
+            startTime: Date.now(),
+            cacheSnapshots: [],
+            memorySnapshots: [],
+            qualitySwitches: 0,
+            periodSwitches: 0
+        };
+
+        // Multi-period test content URLs
+        var testStreams = [
+            'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
+            'https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd',
+            'https://dash.akamaized.net/dash264/TestCases/2a/qualcomm/1/MultiResMPEG2.mpd'
+        ];
+
+        function init() {
+            var video = document.querySelector('video');
+            var url = testStreams[0];
+
+            player = dashjs.MediaPlayer().create();
+
+            player.updateSettings({
+                debug: {
+                    logLevel: dashjs.Debug.LOG_LEVEL_DEBUG
+                }
+            });
+
+            player.initialize(video, url, false);
+
+            // Try to get InitCache reference
+            setTimeout(function() {
+                try {
+                    // Access internal InitCache through player internals
+                    initCacheRef = player.getInitCache ? player.getInitCache() : null;
+                    if (initCacheRef) {
+                        logMessage('InitCache reference acquired');
+                    } else {
+                        logMessage('InitCache reference not available via API - using indirect monitoring');
+                    }
+                } catch(e) {
+                    logMessage('Could not get InitCache reference: ' + e.message);
+                }
+            }, 1000);
+
+            // Monitor cache every second
+            setInterval(updateStats, 1000);
+
+            // Collect memory snapshots every 5 seconds
+            setInterval(collectMemorySnapshot, 5000);
+
+            // Listen for quality changes
+            player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_RENDERED, function(e) {
+                metricsData.qualitySwitches++;
+                logMessage('Quality changed: ' + e.mediaType + ' -> ' + e.newQuality);
+            });
+
+            player.on(dashjs.MediaPlayer.events.PERIOD_SWITCH_COMPLETED, function(e) {
+                metricsData.periodSwitches++;
+                logMessage('Period switch completed');
+            });
+
+            logMessage('Player initialized - ready for cache testing');
+            logMessage('MAX_CACHE_SIZE should be 50 entries with LRU eviction');
+        }
+
+        function getCacheStats() {
+            if (initCacheRef && initCacheRef.getStats) {
+                return initCacheRef.getStats();
+            }
+            // Fallback: estimate from player metrics
+            return {
+                entryCount: 'N/A (use Chrome DevTools)',
+                streamCount: 'N/A',
+                maxSize: 50,
+                accessOrderLength: 'N/A'
+            };
+        }
+
+        function updateStats() {
+            var stats = getCacheStats();
+
+            document.getElementById('cacheEntries').textContent = stats.entryCount;
+            document.getElementById('cacheStreams').textContent = stats.streamCount;
+            document.getElementById('cacheMaxSize').textContent = stats.maxSize;
+            document.getElementById('accessOrderLen').textContent = stats.accessOrderLength;
+
+            if (typeof stats.entryCount === 'number') {
+                if (stats.entryCount > maxCacheEntriesSeen) {
+                    maxCacheEntriesSeen = stats.entryCount;
+                    document.getElementById('maxEntriesSeen').textContent = maxCacheEntriesSeen;
+                }
+
+                var statusEl = document.getElementById('cacheStatus');
+                if (stats.entryCount > stats.maxSize) {
+                    statusEl.textContent = 'EXCEEDED MAX SIZE - LRU not working!';
+                    statusEl.className = 'warning';
+                } else if (stats.entryCount >= stats.maxSize * 0.8) {
+                    statusEl.textContent = 'Near limit (' + stats.entryCount + '/' + stats.maxSize + ') - LRU should trigger';
+                    statusEl.className = 'warning';
+                } else {
+                    statusEl.textContent = 'OK - ' + stats.entryCount + '/' + stats.maxSize + ' entries';
+                    statusEl.className = 'ok';
+                }
+
+                // Record snapshot
+                metricsData.cacheSnapshots.push({
+                    time: (Date.now() - metricsData.startTime) / 1000,
+                    entries: stats.entryCount
+                });
+            }
+        }
+
+        function collectMemorySnapshot() {
+            if (window.performance && window.performance.memory) {
+                var mem = window.performance.memory;
+                var snapshot = {
+                    time: (Date.now() - metricsData.startTime) / 1000,
+                    usedJSHeapSize: mem.usedJSHeapSize,
+                    totalJSHeapSize: mem.totalJSHeapSize
+                };
+                memorySnapshots.push(snapshot);
+                metricsData.memorySnapshots.push(snapshot);
+
+                document.getElementById('heapUsed').textContent =
+                    (mem.usedJSHeapSize / 1024 / 1024).toFixed(2) + ' MB';
+                document.getElementById('heapTotal').textContent =
+                    (mem.totalJSHeapSize / 1024 / 1024).toFixed(2) + ' MB';
+            }
+        }
+
+        function logMessage(msg) {
+            var log = document.getElementById('log');
+            var time = new Date().toLocaleTimeString();
+            log.innerHTML = '[' + time + '] ' + msg + '<br>' + log.innerHTML;
+        }
+
+        // ============================================
+        // TEST 1: Automated Quality Switch Stress Test
+        // ============================================
+        async function runQualitySwitchTest() {
+            if (testRunning) {
+                logMessage('Test already running');
+                return;
+            }
+            testRunning = true;
+            logMessage('=== Starting Quality Switch Stress Test ===');
+            logMessage('Will cycle through all quality levels 10 times');
+
+            var progressBar = document.getElementById('testProgress');
+            var bitrateInfo = player.getBitrateInfoListFor('video');
+            var totalIterations = bitrateInfo.length * 10;
+            var currentIteration = 0;
+
+            player.play();
+
+            for (var round = 0; round < 10; round++) {
+                for (var i = 0; i < bitrateInfo.length; i++) {
+                    player.setQualityFor('video', i, true);
+                    logMessage('Set quality to ' + i + ' (bitrate: ' + bitrateInfo[i].bitrate + ')');
+
+                    currentIteration++;
+                    progressBar.style.width = (currentIteration / totalIterations * 100) + '%';
+                    progressBar.textContent = currentIteration + '/' + totalIterations;
+
+                    await sleep(2000); // Wait 2s between switches
+                }
+            }
+
+            logMessage('=== Quality Switch Test Complete ===');
+            logMessage('Total quality switches: ' + metricsData.qualitySwitches);
+            var stats = getCacheStats();
+            logMessage('Final cache entries: ' + stats.entryCount + '/' + stats.maxSize);
+
+            testRunning = false;
+            progressBar.style.width = '100%';
+            progressBar.textContent = 'Complete';
+            progressBar.className = 'progress-bar bg-success';
+        }
+
+        // ============================================
+        // TEST 2: Stream Switch Stress Test
+        // ============================================
+        async function runStreamSwitchTest() {
+            if (testRunning) {
+                logMessage('Test already running');
+                return;
+            }
+            testRunning = true;
+            logMessage('=== Starting Stream Switch Stress Test ===');
+            logMessage('Will switch between ' + testStreams.length + ' streams, 5 times each');
+
+            var progressBar = document.getElementById('testProgress');
+            progressBar.className = 'progress-bar bg-primary';
+            var totalIterations = testStreams.length * 5;
+            var currentIteration = 0;
+
+            for (var round = 0; round < 5; round++) {
+                for (var i = 0; i < testStreams.length; i++) {
+                    logMessage('Loading stream ' + (i + 1) + ': ' + testStreams[i].substring(0, 50) + '...');
+                    player.attachSource(testStreams[i]);
+                    player.play();
+
+                    currentIteration++;
+                    progressBar.style.width = (currentIteration / totalIterations * 100) + '%';
+                    progressBar.textContent = currentIteration + '/' + totalIterations;
+
+                    await sleep(5000); // Wait 5s per stream
+                }
+            }
+
+            logMessage('=== Stream Switch Test Complete ===');
+            var stats = getCacheStats();
+            logMessage('Final cache entries: ' + stats.entryCount + '/' + stats.maxSize);
+            logMessage('Max entries seen during test: ' + maxCacheEntriesSeen);
+
+            testRunning = false;
+            progressBar.style.width = '100%';
+            progressBar.textContent = 'Complete';
+            progressBar.className = 'progress-bar bg-success';
+        }
+
+        // ============================================
+        // TEST 3: Cache Overflow Test (Synthetic)
+        // ============================================
+        async function runCacheOverflowTest() {
+            if (testRunning) {
+                logMessage('Test already running');
+                return;
+            }
+            testRunning = true;
+            logMessage('=== Starting Cache Overflow Test ===');
+            logMessage('Will simulate 100 unique init segment saves (exceeds MAX_CACHE_SIZE=50)');
+
+            var progressBar = document.getElementById('testProgress');
+            progressBar.className = 'progress-bar bg-warning';
+
+            if (!initCacheRef) {
+                logMessage('ERROR: InitCache reference not available');
+                logMessage('This test requires direct access to InitCache');
+                testRunning = false;
+                return;
+            }
+
+            // Reset cache first
+            initCacheRef.reset();
+            logMessage('Cache reset. Starting insertions...');
+
+            for (var i = 0; i < 100; i++) {
+                // Create fake chunk
+                var fakeChunk = {
+                    streamId: 'stream_' + Math.floor(i / 10),
+                    representation: {
+                        id: 'rep_' + i
+                    },
+                    bytes: new ArrayBuffer(1024) // 1KB fake data
+                };
+
+                initCacheRef.save(fakeChunk);
+
+                progressBar.style.width = ((i + 1)) + '%';
+                progressBar.textContent = (i + 1) + '/100 insertions';
+
+                if ((i + 1) % 10 === 0) {
+                    var stats = initCacheRef.getStats();
+                    logMessage('After ' + (i + 1) + ' insertions: ' + stats.entryCount + ' entries');
+                }
+
+                await sleep(50);
+            }
+
+            var finalStats = initCacheRef.getStats();
+            logMessage('=== Cache Overflow Test Complete ===');
+            logMessage('Inserted: 100 entries');
+            logMessage('Final cache size: ' + finalStats.entryCount + ' entries');
+            logMessage('Max allowed: ' + finalStats.maxSize);
+
+            if (finalStats.entryCount <= finalStats.maxSize) {
+                logMessage('SUCCESS: LRU eviction working correctly!');
+                progressBar.className = 'progress-bar bg-success';
+            } else {
+                logMessage('FAILURE: Cache exceeded max size!');
+                progressBar.className = 'progress-bar bg-danger';
+            }
+
+            testRunning = false;
+            progressBar.style.width = '100%';
+            progressBar.textContent = 'Complete';
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        function exportMetrics() {
+            metricsData.maxCacheEntriesSeen = maxCacheEntriesSeen;
+            metricsData.duration = (Date.now() - metricsData.startTime) / 1000;
+            metricsData.finalCacheStats = getCacheStats();
+
+            console.log('=== INITCACHE TEST METRICS ===');
+            console.log(JSON.stringify(metricsData, null, 2));
+
+            var summary = 'Duration: ' + metricsData.duration.toFixed(0) + 's\n' +
+                          'Max cache entries seen: ' + maxCacheEntriesSeen + '\n' +
+                          'Quality switches: ' + metricsData.qualitySwitches + '\n' +
+                          'Memory snapshots: ' + metricsData.memorySnapshots.length;
+            alert('Metrics exported to console.\n\n' + summary);
+        }
+
+        function takeHeapSnapshot() {
+            logMessage('To take a heap snapshot:');
+            logMessage('1. Open Chrome DevTools (F12)');
+            logMessage('2. Go to "Memory" tab');
+            logMessage('3. Select "Heap snapshot"');
+            logMessage('4. Click "Take snapshot"');
+            logMessage('5. Search for "InitCache" in the snapshot');
+            alert('See console log for heap snapshot instructions.\n\nIn Chrome DevTools Memory tab:\n1. Take Heap Snapshot\n2. Search for "InitCache"\n3. Compare retained size before/after tests');
+        }
+    </script>
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+
+        <!-- Test Panel -->
+        <div class="test-panel">
+            <h5>InitCache LRU Limit Test Suite</h5>
+            <p>Tests to validate that InitCache properly limits entries to MAX_CACHE_SIZE (50) using LRU eviction.</p>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <h6>Test 1: Quality Switch Stress</h6>
+                    <p class="small">Cycles through all quality levels 10 times to generate many init segment loads.</p>
+                    <button class="btn btn-primary btn-test" onclick="runQualitySwitchTest()">Run Test 1</button>
+                </div>
+                <div class="col-md-4">
+                    <h6>Test 2: Stream Switch Stress</h6>
+                    <p class="small">Switches between 3 different streams 5 times each to simulate multi-content playback.</p>
+                    <button class="btn btn-primary btn-test" onclick="runStreamSwitchTest()">Run Test 2</button>
+                </div>
+                <div class="col-md-4">
+                    <h6>Test 3: Cache Overflow (Synthetic)</h6>
+                    <p class="small">Directly inserts 100 entries to verify LRU eviction at limit.</p>
+                    <button class="btn btn-warning btn-test" onclick="runCacheOverflowTest()">Run Test 3</button>
+                </div>
+            </div>
+
+            <div class="progress mt-3">
+                <div id="testProgress" class="progress-bar" role="progressbar" style="width: 0%">Ready</div>
+            </div>
+        </div>
+
+        <!-- Memory Profiling Panel -->
+        <div class="memory-panel">
+            <h5>Memory Profiling (Chrome DevTools)</h5>
+            <p class="small">For accurate memory analysis, use Chrome DevTools Memory tab.</p>
+
+            <div class="row">
+                <div class="col-md-6">
+                    <strong>Current JS Heap:</strong><br>
+                    Used: <span id="heapUsed">-</span> | Total: <span id="heapTotal">-</span>
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-outline-warning" onclick="takeHeapSnapshot()">How to Take Heap Snapshot</button>
+                </div>
+            </div>
+
+            <div class="mt-2 small">
+                <strong>Profiling Steps:</strong>
+                <ol>
+                    <li>Open DevTools (F12) → Memory tab</li>
+                    <li>Take initial heap snapshot</li>
+                    <li>Run a stress test above</li>
+                    <li>Take another heap snapshot</li>
+                    <li>Compare: search for "InitCache" or "data" object</li>
+                    <li>With LRU: entries should stay ≤50</li>
+                </ol>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <div class="h-100 p-5 bg-light border rounded-3">
+                    <h3>InitCache LRU Test</h3>
+                    <p>This sample tests the LRU cache limit feature that prevents unbounded memory growth.</p>
+                    <p><b>Expected behavior:</b></p>
+                    <ul>
+                        <li>Cache entries should never exceed 50</li>
+                        <li>Oldest entries evicted when limit reached</li>
+                        <li>Memory growth should be bounded</li>
+                    </ul>
+                    <button class="btn btn-primary" onclick="exportMetrics()">Export Metrics</button>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <video controls="true"></video>
+                <div id="stats">
+                    <div class="stat-row"><b>Cache Entries:</b> <span id="cacheEntries">-</span></div>
+                    <div class="stat-row"><b>Cache Streams:</b> <span id="cacheStreams">-</span></div>
+                    <div class="stat-row"><b>Max Cache Size:</b> <span id="cacheMaxSize">50</span></div>
+                    <div class="stat-row"><b>Access Order Length:</b> <span id="accessOrderLen">-</span></div>
+                    <div class="stat-row"><b>Max Entries Seen:</b> <span id="maxEntriesSeen">0</span></div>
+                    <div class="stat-row"><b>Status:</b> <span id="cacheStatus" class="ok">-</span></div>
+                </div>
+                <div id="log"></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div id="code-output"></div>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        init();
+    });
+</script>
+<script src="../highlighter.js"></script>
+</body>
+</html>

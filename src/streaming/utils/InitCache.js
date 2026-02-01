@@ -89,11 +89,30 @@ function InitCache() {
         accessOrder = [];
     }
 
+    /**
+     * Get cache statistics for debugging/testing
+     * @returns {object} Cache stats including entry count and stream count
+     */
+    function getStats() {
+        const streamCount = Object.keys(data).length;
+        let entryCount = 0;
+        for (const streamId in data) {
+            entryCount += Object.keys(data[streamId]).length;
+        }
+        return {
+            entryCount: entryCount,
+            streamCount: streamCount,
+            maxSize: MAX_CACHE_SIZE,
+            accessOrderLength: accessOrder.length
+        };
+    }
+
     const instance = {
         save: save,
         extract: extract,
         removeStream: removeStream,
-        reset: reset
+        reset: reset,
+        getStats: getStats
     };
 
     return instance;

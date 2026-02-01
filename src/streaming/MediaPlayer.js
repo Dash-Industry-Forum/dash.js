@@ -42,6 +42,7 @@ import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import DOMStorage from './utils/DOMStorage.js';
+import InitCache from './utils/InitCache.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import DashJSError from './vo/DashJSError.js';
@@ -561,6 +562,16 @@ function MediaPlayer() {
      */
     function getDebug() {
         return debug;
+    }
+
+    /**
+     * Returns the InitCache instance for debugging/testing purposes.
+     * @returns {object} InitCache instance
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getInitCache() {
+        return InitCache(context).getInstance();
     }
 
     /*
@@ -2860,6 +2871,7 @@ function MediaPlayer() {
         getDashAdapter,
         getDashMetrics,
         getDebug,
+        getInitCache,
         getDvrSeekOffset,
         getDvrWindow,
         getExternalSubtitles,
