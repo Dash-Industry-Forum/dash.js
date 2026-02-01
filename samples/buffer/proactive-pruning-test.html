@@ -48,16 +48,83 @@
             font-family: monospace;
             border-radius: 5px;
         }
+
+        .simulation-panel {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .simulation-panel h5 {
+            color: #856404;
+            margin-bottom: 15px;
+        }
+
+        .simulation-panel label {
+            display: block;
+            margin: 10px 0 5px;
+            font-weight: bold;
+        }
+
+        .simulation-panel input[type="number"] {
+            width: 80px;
+            padding: 5px;
+            margin-right: 10px;
+        }
+
+        .simulation-panel .hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 3px;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            border: none;
+            color: #212529;
+        }
+
+        #simStatus {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        #simStatus.active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        #simStatus.inactive {
+            background: #f8f9fa;
+            color: #6c757d;
+        }
     </style>
 
     <script class="code">
         var player;
         var maxBufferSeen = 0;
+        var simulationMode = false;
+        var quotaExceededThreshold = 40; // Simulated QuotaExceeded threshold
+        var quotaExceededInjected = false;
+
         var metricsData = {
             startTime: Date.now(),
             samples: [],
             pruningTriggered: 0,
-            quotaExceededEvents: 0
+            quotaExceededEvents: 0,
+            simulatedQuotaExceeded: 0,
+            mode: 'desktop'
+        };
+
+        // Simulation settings (Smart TV defaults)
+        var simSettings = {
+            bufferTimeAtTopQuality: 20,      // Option 3: Limit buffering
+            criticalBufferLevel: 30,          // Option 1: Proactive pruning threshold
+            quotaExceededThreshold: 40        // Option 2: Simulated QuotaExceeded
         };
 
         function init() {
@@ -66,13 +133,35 @@
 
             player = dashjs.MediaPlayer().create();
 
-            // Enable debug logging to see proactive pruning messages
-            player.updateSettings({
+            // Check URL params for simulation mode
+            var urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('simulate') === 'tv') {
+                enableSimulation();
+            }
+
+            // Base settings
+            var settings = {
                 debug: {
                     logLevel: dashjs.Debug.LOG_LEVEL_DEBUG
                 }
-            });
+            };
 
+            // Apply simulation settings if enabled
+            if (simulationMode) {
+                settings.streaming = {
+                    buffer: {
+                        bufferTimeAtTopQuality: simSettings.bufferTimeAtTopQuality,
+                        bufferTimeAtTopQualityLongForm: simSettings.bufferTimeAtTopQuality,
+                        criticalBufferLevel: simSettings.criticalBufferLevel
+                    }
+                };
+                logMessage('Smart TV Simulation ENABLED');
+                logMessage('- bufferTimeAtTopQuality: ' + simSettings.bufferTimeAtTopQuality + 's');
+                logMessage('- criticalBufferLevel: ' + simSettings.criticalBufferLevel + 's (proactive pruning at ' + (simSettings.criticalBufferLevel * 0.8).toFixed(0) + 's)');
+                logMessage('- QuotaExceeded threshold: ' + simSettings.quotaExceededThreshold + 's');
+            }
+
+            player.updateSettings(settings);
             player.initialize(video, url, true);
 
             // Monitor buffer every second
@@ -80,6 +169,11 @@
 
             // Collect samples every 5 seconds for analysis
             setInterval(collectSample, 5000);
+
+            // Check for simulated QuotaExceeded every 500ms
+            if (simulationMode) {
+                setInterval(checkSimulatedQuotaExceeded, 500);
+            }
 
             // Listen for buffer events
             player.on(dashjs.MediaPlayer.events.BUFFER_LEVEL_STATE_CHANGED, function (e) {
@@ -94,7 +188,56 @@
             });
 
             logMessage('Player initialized - monitoring buffer levels...');
-            logMessage('With proactive pruning: buffer should stay under ~64-80s');
+            if (simulationMode) {
+                logMessage('Smart TV mode: buffer should stay under ~' + simSettings.criticalBufferLevel + 's');
+            } else {
+                logMessage('Desktop mode: buffer should stay under ~64-80s');
+            }
+        }
+
+        function enableSimulation() {
+            simulationMode = true;
+            metricsData.mode = 'smarttv-simulation';
+
+            // Read custom values from inputs if available
+            var bufferInput = document.getElementById('simBufferTime');
+            var criticalInput = document.getElementById('simCriticalLevel');
+            var quotaInput = document.getElementById('simQuotaThreshold');
+
+            if (bufferInput) simSettings.bufferTimeAtTopQuality = parseInt(bufferInput.value) || 20;
+            if (criticalInput) simSettings.criticalBufferLevel = parseInt(criticalInput.value) || 30;
+            if (quotaInput) simSettings.quotaExceededThreshold = parseInt(quotaInput.value) || 40;
+
+            quotaExceededThreshold = simSettings.quotaExceededThreshold;
+
+            updateSimStatus();
+        }
+
+        function checkSimulatedQuotaExceeded() {
+            if (!simulationMode) return;
+
+            var info = getBufferInfo();
+
+            // Simulate QuotaExceeded when buffer exceeds threshold
+            if (info.total > simSettings.quotaExceededThreshold && !quotaExceededInjected) {
+                quotaExceededInjected = true;
+                metricsData.simulatedQuotaExceeded++;
+                logMessage('SIMULATED QuotaExceeded at ' + info.total.toFixed(2) + 's (threshold: ' + simSettings.quotaExceededThreshold + 's)');
+
+                // Trigger the error event in dash.js
+                // This simulates what a real Smart TV would do
+                player.trigger(dashjs.MediaPlayer.events.ERROR, {
+                    error: {
+                        code: 22,
+                        message: 'Simulated QUOTA_EXCEEDED_ERR for Smart TV testing'
+                    }
+                });
+
+                // Reset after 5 seconds to allow re-triggering
+                setTimeout(function() {
+                    quotaExceededInjected = false;
+                }, 5000);
+            }
         }
 
         function getBufferInfo() {
@@ -127,12 +270,19 @@
                 document.getElementById('maxBuffer').textContent = maxBufferSeen.toFixed(2) + 's';
             }
 
+            // Use simulation thresholds if enabled
+            var criticalLevel = simulationMode ? simSettings.criticalBufferLevel : 80;
+            var proactiveThreshold = criticalLevel * 0.8;
+
             var statusEl = document.getElementById('status');
-            if (info.total > 80) {
-                statusEl.textContent = 'EXCEEDED 80s - Pruning may not be working!';
+            if (simulationMode && info.total > simSettings.quotaExceededThreshold) {
+                statusEl.textContent = 'SIMULATED QuotaExceeded! (' + info.total.toFixed(0) + 's > ' + simSettings.quotaExceededThreshold + 's)';
                 statusEl.className = 'warning';
-            } else if (info.total > 64) {
-                statusEl.textContent = 'Above threshold (64s) - Proactive pruning expected soon';
+            } else if (info.total > criticalLevel) {
+                statusEl.textContent = 'EXCEEDED ' + criticalLevel + 's - Pruning may not be working!';
+                statusEl.className = 'warning';
+            } else if (info.total > proactiveThreshold) {
+                statusEl.textContent = 'Above threshold (' + proactiveThreshold.toFixed(0) + 's) - Proactive pruning expected';
                 statusEl.className = 'warning';
             } else {
                 statusEl.textContent = 'OK - Buffer under control';
@@ -157,9 +307,31 @@
         function exportMetrics() {
             metricsData.maxBufferSeen = maxBufferSeen;
             metricsData.duration = (Date.now() - metricsData.startTime) / 1000;
+            metricsData.settings = simulationMode ? simSettings : {mode: 'desktop-default'};
             console.log('=== METRICS DATA ===');
             console.log(JSON.stringify(metricsData, null, 2));
-            alert('Metrics exported to console. Duration: ' + metricsData.duration.toFixed(0) + 's, Max buffer: ' + maxBufferSeen.toFixed(2) + 's');
+            alert('Metrics exported to console.\nMode: ' + metricsData.mode + '\nDuration: ' + metricsData.duration.toFixed(0) + 's\nMax buffer: ' + maxBufferSeen.toFixed(2) + 's\nSimulated QuotaExceeded: ' + metricsData.simulatedQuotaExceeded);
+        }
+
+        function updateSimStatus() {
+            var statusEl = document.getElementById('simStatus');
+            if (simulationMode) {
+                statusEl.textContent = 'Smart TV Simulation ACTIVE';
+                statusEl.className = 'active';
+            } else {
+                statusEl.textContent = 'Desktop Mode (no simulation)';
+                statusEl.className = 'inactive';
+            }
+        }
+
+        function startWithSimulation() {
+            enableSimulation();
+            // Reload with simulation param
+            window.location.href = window.location.pathname + '?simulate=tv';
+        }
+
+        function startWithoutSimulation() {
+            window.location.href = window.location.pathname;
         }
     </script>
 </head>
@@ -172,6 +344,38 @@
                  src="../lib/img/dashjs-logo.png"
                  width="200">
         </header>
+
+        <!-- Simulation Panel -->
+        <div class="simulation-panel">
+            <h5>Smart TV Simulation Settings</h5>
+            <p>Simulate Smart TV memory constraints on desktop Chrome:</p>
+
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Option 3: bufferTimeAtTopQuality</label>
+                    <input type="number" id="simBufferTime" value="20" min="5" max="60"> seconds
+                    <div class="hint">How much dash.js tries to buffer ahead</div>
+                </div>
+                <div class="col-md-4">
+                    <label>Option 1: criticalBufferLevel</label>
+                    <input type="number" id="simCriticalLevel" value="30" min="10" max="80"> seconds
+                    <div class="hint">Proactive pruning triggers at 80% of this (24s)</div>
+                </div>
+                <div class="col-md-4">
+                    <label>Option 2: QuotaExceeded threshold</label>
+                    <input type="number" id="simQuotaThreshold" value="40" min="20" max="100"> seconds
+                    <div class="hint">Simulates browser QuotaExceeded error</div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                <button class="btn btn-warning" onclick="startWithSimulation()">Start with Smart TV Simulation</button>
+                <button class="btn btn-secondary" onclick="startWithoutSimulation()">Start Desktop Mode</button>
+            </div>
+
+            <div id="simStatus" class="inactive">Desktop Mode (no simulation)</div>
+        </div>
+
         <div class="row">
             <div class="col-md-4">
                 <div class="h-100 p-5 bg-light border rounded-3">
@@ -180,15 +384,16 @@
                         <code>QuotaExceededError</code> on memory-constrained devices.</p>
                     <p><b>Expected behavior:</b></p>
                     <ul>
-                        <li>Buffer total should stay under ~80 seconds</li>
-                        <li>Proactive pruning triggers at 64s (80% of 80s)</li>
+                        <li>Buffer total should stay under critical level</li>
+                        <li>Proactive pruning triggers at 80% of critical level</li>
                         <li>No <code>QUOTA_EXCEEDED</code> events</li>
                     </ul>
                     <p><b>How to test:</b></p>
                     <ol>
-                        <li>Let the video play for 5-10 minutes</li>
+                        <li>Choose simulation mode above</li>
+                        <li>Let the video play for 2-5 minutes</li>
                         <li>Watch "Max Buffer Seen" metric</li>
-                        <li>Check console for "Proactive buffer pruning triggered" logs</li>
+                        <li>Check console for pruning logs</li>
                     </ol>
                     <button class="btn btn-primary" onclick="exportMetrics()">Export Metrics</button>
                 </div>
@@ -219,6 +424,12 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function () {
+        // Check if simulation mode from URL
+        var urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('simulate') === 'tv') {
+            document.getElementById('simStatus').textContent = 'Smart TV Simulation ACTIVE';
+            document.getElementById('simStatus').className = 'active';
+        }
         init();
     });
 </script>

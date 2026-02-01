@@ -44,7 +44,6 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 const BUFFER_END_THRESHOLD = 0.5;
 const BUFFER_RANGE_CALCULATION_THRESHOLD = 0.01;
 const QUOTA_EXCEEDED_ERROR_CODE = 22;
-const DEFAULT_CRITICAL_BUFFER_LEVEL = 80; // Default critical buffer level in seconds for proactive pruning (Smart TV safe)
 const PROACTIVE_PRUNING_THRESHOLD = 0.8; // Trigger proactive pruning at 80% of critical buffer level
 
 const BUFFER_CONTROLLER_TYPE = 'BufferController';
@@ -1267,7 +1266,7 @@ function BufferController(config) {
     }
 
     function resetInitialSettings(errored, keepBuffers) {
-        criticalBufferLevel = DEFAULT_CRITICAL_BUFFER_LEVEL;
+        criticalBufferLevel = settings.get().streaming.buffer.criticalBufferLevel;
         bufferState = undefined;
         maximumIndex = Number.POSITIVE_INFINITY;
         maxAppendedIndex = 0;
@@ -1332,6 +1331,7 @@ function BufferController(config) {
         getStreamId,
         getType,
         hasBufferAtTime,
+        hasEnoughSpaceToAppend,
         initialize,
         prepareForAbandonQualitySwitch,
         prepareForDefaultQualitySwitch,

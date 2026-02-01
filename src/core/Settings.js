@@ -427,6 +427,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Enable reuse of existing MediaSource Sourcebuffers during period transition.
  * @property {number} [bufferPruningInterval=10]
  * The interval of pruning buffer in seconds.
+ * @property {number} [criticalBufferLevel=80]
+ * The critical buffer level in seconds used for proactive buffer pruning.
+ *
+ * When the total buffered time exceeds 80% of this value, proactive pruning is triggered
+ * to prevent QuotaExceededError on memory-constrained devices like Smart TVs.
+ * - Desktop: 80s (default) - browsers have generous SourceBuffer limits
+ * - Smart TV (Tizen/WebOS): 30-50s recommended - stricter memory limits
+ *
+ * This value is also dynamically adjusted after a QuotaExceededError occurs.
  * @property {number} [bufferToKeep=20]
  * This value influences the buffer pruning logic.
  *
@@ -1199,6 +1208,7 @@ function Settings() {
                 flushBufferAtTrackSwitch: false,
                 reuseExistingSourceBuffers: true,
                 bufferPruningInterval: 10,
+                criticalBufferLevel: 80,
                 bufferToKeep: 20,
                 bufferTimeAtTopQuality: 30,
                 bufferTimeAtTopQualityLongForm: 60,

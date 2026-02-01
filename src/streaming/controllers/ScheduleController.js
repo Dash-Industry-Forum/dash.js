@@ -236,6 +236,12 @@ function ScheduleController(config) {
         if (!type || !currentRepresentation) {
             return true;
         }
+
+        // Check if total buffer exceeds critical level (prevents QuotaExceededError on Smart TVs)
+        if (bufferController && !bufferController.hasEnoughSpaceToAppend()) {
+            return false;
+        }
+
         let segmentDurationToAddToBufferLevel = currentRepresentation && currentRepresentation.segmentDuration && !isNaN(currentRepresentation.segmentDuration) ? currentRepresentation.segmentDuration : 0;
         const bufferLevel = dashMetrics.getCurrentBufferLevel(type);
         const bufferTarget = getBufferTarget();
