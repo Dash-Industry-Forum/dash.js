@@ -946,7 +946,11 @@ function BufferController(config) {
         // This is especially important for Smart TV devices with limited SourceBuffer capacity
         if (totalBufferedTime > proactiveThreshold) {
             logger.debug(`Proactive buffer pruning triggered: ${totalBufferedTime.toFixed(2)}s exceeds threshold ${proactiveThreshold.toFixed(2)}s`);
-            clearBuffers(getClearRanges());
+            // Only prune buffer BEHIND current position - do NOT prune ahead or playback will stall
+            const ranges = getClearRanges();
+            if (ranges.length > 0) {
+                clearBuffers(ranges);
+            }
             return;
         }
 
