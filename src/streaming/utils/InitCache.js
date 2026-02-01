@@ -35,16 +35,38 @@
 
 import FactoryMaker from '../../core/FactoryMaker.js';
 
+const MAX_CACHE_SIZE = 50;
+
 function InitCache() {
 
     let data = {};
+    let accessOrder = [];
 
     function save (chunk) {
         const id = chunk.streamId;
         const representationId = chunk.representation.id;
 
         data[id] = data[id] || {};
+
+        const isNewEntry = !data[id][representationId];
         data[id][representationId] = chunk;
+
+        if (isNewEntry) {
+            accessOrder.push({ streamId: id, representationId: representationId });
+            _enforceCacheLimit();
+        }
+    }
+
+    function _enforceCacheLimit() {
+        while (accessOrder.length > MAX_CACHE_SIZE) {
+            const oldest = accessOrder.shift();
+            if (data[oldest.streamId] && data[oldest.streamId][oldest.representationId]) {
+                delete data[oldest.streamId][oldest.representationId];
+                if (Object.keys(data[oldest.streamId]).length === 0) {
+                    delete data[oldest.streamId];
+                }
+            }
+        }
     }
 
     function extract (streamId, representationId) {
@@ -55,14 +77,22 @@ function InitCache() {
         }
     }
 
+    function removeStream(streamId) {
+        if (data[streamId]) {
+            delete data[streamId];
+            accessOrder = accessOrder.filter(entry => entry.streamId !== streamId);
+        }
+    }
 
     function reset () {
         data = {};
+        accessOrder = [];
     }
 
     const instance = {
         save: save,
         extract: extract,
+        removeStream: removeStream,
         reset: reset
     };
 
