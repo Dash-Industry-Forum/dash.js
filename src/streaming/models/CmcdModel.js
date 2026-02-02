@@ -33,6 +33,7 @@ import {
     CmcdObjectType,
     CmcdStreamType,
     CmcdStreamingFormat,
+    toCmcdValue,
 } from '@svta/cml-cmcd';
 import {HTTPRequest} from '../vo/metrics/HTTPRequest.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
@@ -102,6 +103,21 @@ function CmcdModel() {
         }
     }
 
+    function _isValidValue(value) {
+        return value !== null && value !== undefined && !isNaN(value) && isFinite(value);
+    }
+
+    function _toInnerList(videoValue, audioValue) {
+        const values = [];
+        if (_isValidValue(videoValue)) {
+            values.push(toCmcdValue(videoValue, { v: true }));
+        }
+        if (_isValidValue(audioValue)) {
+            values.push(toCmcdValue(audioValue, { a: true }));
+        }
+        return values.length > 0 ? values : null;
+    }
+
     function _calculateCmcdDataForRequestForMediaSegment(request, mediaType) {
         _initForMediaType(mediaType);
         const data = getGenericCmcdData(mediaType);
@@ -141,15 +157,29 @@ function CmcdModel() {
         }
 
         if (nextRequest) {
-            if (request.url !== nextRequest.url) {
-                data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
-            } else if (nextRequest.range) {
-                data.nrr = nextRequest.range;
+            if (cmcdConfig.getVersion() === 2) {
+                if (request.url !== nextRequest.url) {
+                    const relativeUrl = Utils.getRelativeUrl(request.url, nextRequest.url);
+                    const params = nextRequest.range ? { r: nextRequest.range } : undefined;
+                    data.nor = [toCmcdValue(relativeUrl, params)];
+                }
+            } else {
+                if (request.url !== nextRequest.url) {
+                    data.nor = encodeURIComponent(Utils.getRelativeUrl(request.url, nextRequest.url));
+                } else if (nextRequest.range) {
+                    data.nrr = nextRequest.range;
+                }
             }
         }
 
         if (encodedBitrate) {
-            data.br = encodedBitrate;
+            if (cmcdConfig.getVersion() === 2) {
+                const videoBr = mediaType === Constants.VIDEO ? encodedBitrate : null;
+                const audioBr = mediaType === Constants.AUDIO ? encodedBitrate : null;
+                data.br = _toInnerList(videoBr, audioBr) || [toCmcdValue(encodedBitrate, {})];
+            } else {
+                data.br = encodedBitrate;
+            }
         }
 
         if (ot) {
@@ -161,7 +191,13 @@ function CmcdModel() {
         }
 
         if (!isNaN(mtp)) {
-            data.mtp = mtp;
+            if (cmcdConfig.getVersion() === 2) {
+                const videoMtp = mediaType === Constants.VIDEO ? mtp : null;
+                const audioMtp = mediaType === Constants.AUDIO ? mtp : null;
+                data.mtp = _toInnerList(videoMtp, audioMtp) || [toCmcdValue(mtp, {})];
+            } else {
+                data.mtp = mtp;
+            }
         }
 
         if (!isNaN(dl)) {
@@ -169,19 +205,43 @@ function CmcdModel() {
         }
 
         if (!isNaN(bl)) {
-            data.bl = bl;
+            if (cmcdConfig.getVersion() === 2) {
+                const videoBl = mediaType === Constants.VIDEO ? bl : null;
+                const audioBl = mediaType === Constants.AUDIO ? bl : null;
+                data.bl = _toInnerList(videoBl, audioBl) || [toCmcdValue(bl, {})];
+            } else {
+                data.bl = bl;
+            }
         }
 
-        if (!isNaN(tb)) {
-            data.tb = tb;
+        if (!isNaN(tb) && isFinite(tb)) {
+            if (cmcdConfig.getVersion() === 2) {
+                const videoTb = mediaType === Constants.VIDEO ? tb : null;
+                const audioTb = mediaType === Constants.AUDIO ? tb : null;
+                data.tb = _toInnerList(videoTb, audioTb) || [toCmcdValue(tb, {})];
+            } else {
+                data.tb = tb;
+            }
         }
 
         if (tpb !== null && !isNaN(tpb)) {
-            data.tpb = tpb;
+            if (cmcdConfig.getVersion() === 2) {
+                const videoTpb = mediaType === Constants.VIDEO ? tpb : null;
+                const audioTpb = mediaType === Constants.AUDIO ? tpb : null;
+                data.tpb = _toInnerList(videoTpb, audioTpb) || [toCmcdValue(tpb, {})];
+            } else {
+                data.tpb = tpb;
+            }
         }
         
         if (pb !== null && !isNaN(pb)) {
-            data.pb = pb;
+            if (cmcdConfig.getVersion() === 2) {
+                const videoPb = mediaType === Constants.VIDEO ? pb : null;
+                const audioPb = mediaType === Constants.AUDIO ? pb : null;
+                data.pb = _toInnerList(videoPb, audioPb) || [toCmcdValue(pb, {})];
+            } else {
+                data.pb = pb;
+            }
         }
 
         if (_bufferLevelStarved[mediaType]) {
@@ -190,7 +250,13 @@ function CmcdModel() {
         }
 
         if (_rebufferingDuration[mediaType]) {
-            data.bsd = _rebufferingDuration[mediaType];
+            if (cmcdConfig.getVersion() === 2) {
+                const videoBsd = mediaType === Constants.VIDEO ? _rebufferingDuration[mediaType] : null;
+                const audioBsd = mediaType === Constants.AUDIO ? _rebufferingDuration[mediaType] : null;
+                data.bsd = _toInnerList(videoBsd, audioBsd) || [toCmcdValue(_rebufferingDuration[mediaType], {})];
+            } else {
+                data.bsd = _rebufferingDuration[mediaType];
+            }
             delete _rebufferingDuration[mediaType];
         }
 
@@ -199,6 +265,8 @@ function CmcdModel() {
             _isStartup[mediaType] = false;
             _initialMediaRequestsDone[mediaType] = true;
         }
+
+        Object.assign(data, _getAggregatedBitrateData());
 
         return data;
     }
@@ -235,7 +303,25 @@ function CmcdModel() {
         return data;
     }
 
-    
+    function _getEncodedBitrateData() {
+        const data = {};
+        const activeStream = playbackController.getStreamController()?.getActiveStream();
+        if (!activeStream) {
+            return data;
+        }
+
+        const videoRep = activeStream.getCurrentRepresentationForType(Constants.VIDEO);
+        const audioRep = activeStream.getCurrentRepresentationForType(Constants.AUDIO);
+        const videoBr = videoRep ? Math.round(videoRep.bitrateInKbit) : null;
+        const audioBr = audioRep ? Math.round(audioRep.bitrateInKbit) : null;
+        const brValues = _toInnerList(videoBr, audioBr);
+        if (brValues) {
+            data.br = brValues;
+        }
+
+        return data;
+    }
+
     function _getBitrateByRequest(request) {
         try {
             return parseInt(request.bandwidth / 1000);
@@ -272,6 +358,50 @@ function CmcdModel() {
         } catch (e) {
             return null;
         }
+    }
+
+    function _getPlayheadBitrateData() {
+        const data = {};
+        const videoPb = _getPlayheadBitrate(Constants.VIDEO);
+        const audioPb = _getPlayheadBitrate(Constants.AUDIO);
+        const pbValues = _toInnerList(videoPb, audioPb);
+        if (pbValues) {
+            data.pb = pbValues;
+        }
+
+        return data;
+    }
+
+    function _getTopBitrateDataForType(mediaType) {
+        if (!streamProcessors || streamProcessors.length === 0) {
+            return null;
+        }
+        const sp = streamProcessors.find(p => p.getType() === mediaType);
+        if (!sp) {
+            return null;
+        }
+        const mediaInfo = sp.getMediaInfo();
+        const tb = _getTopBitrateByType(mediaInfo);
+        return isFinite(tb) && tb > 0 ? tb : null;
+    }
+
+    function _getTopBitrateData() {
+        const data = {};
+        const videoTb = _getTopBitrateDataForType(Constants.VIDEO);
+        const audioTb = _getTopBitrateDataForType(Constants.AUDIO);
+        const tbValues = _toInnerList(videoTb, audioTb);
+        if (tbValues) {
+            data.tb = tbValues;
+        }
+
+        const videoTpb = _getTopPlayableBitrate(Constants.VIDEO);
+        const audioTpb = _getTopPlayableBitrate(Constants.AUDIO);
+        const tpbValues = _toInnerList(videoTpb, audioTpb);
+        if (tpbValues) {
+            data.tpb = tpbValues;
+        }
+
+        return data;
     }
 
     function _getTopPlayableBitrate(mediaType) {
@@ -312,6 +442,18 @@ function CmcdModel() {
         }
     }
 
+    function _getMeasuredThroughputData() {
+        const data = {};
+        const videoMtp = _getMeasuredThroughputByType(Constants.VIDEO);
+        const audioMtp = _getMeasuredThroughputByType(Constants.AUDIO);
+        const mtpValues = _toInnerList(videoMtp, audioMtp);
+        if (mtpValues) {
+            data.mtp = mtpValues;
+        }
+
+        return data;
+    }
+
     function _getDeadlineByType(mediaType) {
         try {
             const playbackRate = playbackController ? playbackController.getPlaybackRate() : 1;
@@ -341,7 +483,17 @@ function CmcdModel() {
         }
     }
 
+    function _getBufferLevelData() {
+        const data = {};
+        const videoBl = _getBufferLevelByType(Constants.VIDEO);
+        const audioBl = _getBufferLevelByType(Constants.AUDIO);
+        const blValues = _toInnerList(videoBl, audioBl);
+        if (blValues) {
+            data.bl = blValues;
+        }
 
+        return data;
+    }
 
     function onBufferLevelStateChanged(data) {
         try {
@@ -482,6 +634,11 @@ function CmcdModel() {
             ...getGenericCmcdData(),
             ...updateMsdData(Constants.CMCD_REPORTING_MODE.EVENT),
             ..._getAggregatedBitrateData(),
+            ..._getEncodedBitrateData(),
+            ..._getBufferLevelData(),
+            ..._getMeasuredThroughputData(),
+            ..._getPlayheadBitrateData(),
+            ..._getTopBitrateData(),
         };
 
         return cmcdData;
@@ -710,30 +867,62 @@ function CmcdModel() {
         const videoRep = activeStream.getCurrentRepresentationForType(Constants.VIDEO);
         const audioRep = activeStream.getCurrentRepresentationForType(Constants.AUDIO);
 
-        // Calculate aggregated bitrate (current video + audio)
         const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
         const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
-        const aggregatedBitrate = currentVideoBitrate + currentAudioBitrate;
-        if (aggregatedBitrate > 0) {
-            data.ab = Math.round(aggregatedBitrate);
+        const isV2 = cmcdConfig.getVersion() === 2;
+
+        // Calculate aggregated bitrate
+        if (isV2) {
+            const abValues = _toInnerList(
+                currentVideoBitrate > 0 ? Math.round(currentVideoBitrate) : null,
+                currentAudioBitrate > 0 ? Math.round(currentAudioBitrate) : null
+            );
+            if (abValues) {
+                data.ab = abValues;
+            }
+        } else {
+            const aggregatedBitrate = currentVideoBitrate + currentAudioBitrate;
+            if (aggregatedBitrate > 0) {
+                data.ab = Math.round(aggregatedBitrate);
+            }
         }
 
-        // Calculate top aggregated bitrate (max video + max audio)
+        // Calculate top aggregated bitrate
         const allVideoReps = activeStream.getRepresentationsByType(Constants.VIDEO) || [];
         const allAudioReps = activeStream.getRepresentationsByType(Constants.AUDIO) || [];
         const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
         const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
-        const topAggregatedBitrate = topVideoBitrate + topAudioBitrate;
-        if (topAggregatedBitrate > 0) {
-            data.tab = Math.round(topAggregatedBitrate);
+        if (isV2) {
+            const tabValues = _toInnerList(
+                topVideoBitrate > 0 ? Math.round(topVideoBitrate) : null,
+                topAudioBitrate > 0 ? Math.round(topAudioBitrate) : null
+            );
+            if (tabValues) {
+                data.tab = tabValues;
+            }
+        } else {
+            const topAggregatedBitrate = topVideoBitrate + topAudioBitrate;
+            if (topAggregatedBitrate > 0) {
+                data.tab = Math.round(topAggregatedBitrate);
+            }
         }
 
-        // Calculate lowest aggregated bitrate (min video + min audio)
+        // Calculate lowest aggregated bitrate
         const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
         const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
-        const lowestAggregatedBitrate = lowestVideoBitrate + lowestAudioBitrate;
-        if (lowestAggregatedBitrate > 0) {
-            data.lab = Math.round(lowestAggregatedBitrate);
+        if (isV2) {
+            const labValues = _toInnerList(
+                lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null,
+                lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null
+            );
+            if (labValues) {
+                data.lab = labValues;
+            }
+        } else {
+            const lowestAggregatedBitrate = lowestVideoBitrate + lowestAudioBitrate;
+            if (lowestAggregatedBitrate > 0) {
+                data.lab = Math.round(lowestAggregatedBitrate);
+            }
         }
 
         return data;

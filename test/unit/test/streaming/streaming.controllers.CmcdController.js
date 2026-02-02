@@ -588,7 +588,7 @@ describe('CmcdController', function () {
             expect(metrics).to.not.have.property('lab');
         });
 
-        it('aggregated bitrate values ab, tab, lab should be present on active stream', () => {
+        it('aggregated bitrate values ab, tab, lab should be present on active stream as inner lists', () => {
             // mocking active stream
             const streamMock = new StreamMock();
             streamMock.getRepresentationsByType = function() {
@@ -608,11 +608,17 @@ describe('CmcdController', function () {
 
             const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
             expect(metrics).to.have.property('lab');
-            expect(metrics.lab).to.equal(2000);
+            expect(metrics.lab).to.be.an('array').with.lengthOf(2);
+            expect(metrics.lab[0].value).to.equal(1000);
+            expect(metrics.lab[1].value).to.equal(1000);
             expect(metrics).to.have.property('ab');
-            expect(metrics.ab).to.equal(4000);
+            expect(metrics.ab).to.be.an('array').with.lengthOf(2);
+            expect(metrics.ab[0].value).to.equal(2000);
+            expect(metrics.ab[1].value).to.equal(2000);
             expect(metrics).to.have.property('tab');
-            expect(metrics.tab).to.equal(6000);
+            expect(metrics.tab).to.be.an('array').with.lengthOf(2);
+            expect(metrics.tab[0].value).to.equal(3000);
+            expect(metrics.tab[1].value).to.equal(3000);
         });
     });
 
