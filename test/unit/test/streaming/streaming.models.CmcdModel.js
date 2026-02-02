@@ -62,36 +62,13 @@ describe('CmcdModel', function () {
             expect(cmcdModel).to.exist;
             expect(typeof cmcdModel.setup).to.equal('function');
             expect(typeof cmcdModel.reset).to.equal('function');
-            expect(typeof cmcdModel.getCmcdData).to.equal('function');
+            expect(typeof cmcdModel.calculateCmcdDataForRequest).to.equal('function');
         });
 
         it('should reset to initial settings', function () {
             cmcdModel.resetInitialSettings();
-            const genericData = cmcdModel.getGenericCmcdData();
-            expect(genericData.sid).to.exist;
-            expect(genericData.pr).to.not.exist; // pr should not be included if it equals 1
-        });
-    });
-
-    describe('getGenericCmcdData', function () {
-        it('should return basic CMCD data', function () {
-            const data = cmcdModel.getGenericCmcdData();
-            
-            expect(data.v).to.equal(1);
-            expect(data.sid).to.equal('test-session-id');
-            expect(data.cid).to.equal('test-content-id');
-            expect(data.ts).to.be.a('number');
-        });
-
-        it('should not include pr when playback rate is 1', function () {
-            const data = cmcdModel.getGenericCmcdData();
-            expect(data.pr).to.not.exist;
-        });
-
-        it('should include pr when playback rate is not 1', function () {
-            cmcdModel.onPlaybackRateChanged({ playbackRate: 1.5 });
-            const data = cmcdModel.getGenericCmcdData();
-            expect(data.pr).to.equal(1.5);
+            // After reset, model should be in clean state
+            expect(cmcdModel).to.exist;
         });
     });
 
@@ -102,7 +79,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/manifest.mpd'
             };
 
-            const data = cmcdModel.getCmcdData(request);
+            const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('m'); // manifest object type
         });
@@ -120,7 +97,7 @@ describe('CmcdModel', function () {
                 }
             };
 
-            const data = cmcdModel.getCmcdData(request);
+            const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('v'); // video object type
             expect(data.br).to.equal(1000); // bitrate in kbps
@@ -133,7 +110,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/init.mp4'
             };
 
-            const data = cmcdModel.getCmcdData(request);
+            const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('i'); // init object type
             expect(data.su).to.equal(true); // startup
@@ -145,7 +122,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/file'
             };
 
-            const data = cmcdModel.getCmcdData(request);
+            const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data).to.deep.equal({});
         });
     });
@@ -153,10 +130,14 @@ describe('CmcdModel', function () {
     describe('event handlers', function () {
         it('should handle playback rate changes', function () {
             const rateChangeData = { playbackRate: 2.0 };
-            cmcdModel.onPlaybackRateChanged(rateChangeData);
-            
-            const data = cmcdModel.getGenericCmcdData();
-            expect(data.pr).to.equal(2.0);
+            const result = cmcdModel.onPlaybackRateChanged(rateChangeData);
+
+            expect(result).to.deep.equal({ pr: 2.0 });
+        });
+
+        it('should return null for playback rate change without playbackRate', function () {
+            const result = cmcdModel.onPlaybackRateChanged({});
+            expect(result).to.be.null;
         });
 
         it('should handle manifest loaded events', function () {
@@ -164,31 +145,15 @@ describe('CmcdModel', function () {
                 data: {},
                 protocol: 'DASH'
             };
-            
-            dashMetricsMock.getCurrentManifestMetrics = sinon.stub().returns({ 
-                DVRWindowSize: 60000 
-            });
-            
-            cmcdModel.onManifestLoaded(manifestData);
-            const data = cmcdModel.getGenericCmcdData();
-            expect(data.sf).to.equal('d'); // DASH streaming format
+
+            const result = cmcdModel.onManifestLoaded(manifestData);
+            expect(result.sf).to.equal('d'); // DASH streaming format
+            expect(result.st).to.exist;
         });
 
         it('should handle playback seeking events', function () {
             cmcdModel.onPlaybackSeeking();
             expect(cmcdModel.wasPlaying()).to.be.false;
-        });
-
-        it('should handle player error events', function () {
-            const errorData = {
-                error: {
-                    code: 500
-                }
-            };
-            
-            cmcdModel.onPlayerError(errorData);
-            const eventData = cmcdModel.triggerCmcdEventMode('e');
-            expect(eventData.ec).to.equal(500);
         });
     });
 
@@ -246,16 +211,9 @@ describe('CmcdModel', function () {
 
     describe('triggerCmcdEventMode', function () {
         it('should return event mode CMCD data', function () {
-            const eventData = cmcdModel.triggerCmcdEventMode('s');
+            const eventData = cmcdModel.triggerCmcdEventMode();
             expect(eventData).to.exist;
-            expect(eventData.e).to.equal('s');
-        });
-
-        it('should include error code for error events', function () {
-            cmcdModel.onPlayerError({ error: { code: 404 } });
-            const eventData = cmcdModel.triggerCmcdEventMode('e');
-            expect(eventData.e).to.equal('e');
-            expect(eventData.ec).to.equal(404);
+            expect(eventData.ts).to.be.a('number');
         });
     });
 
@@ -277,10 +235,10 @@ describe('CmcdModel', function () {
             clock.tick(500);
             cmcdModel.onPlaybackPlaying();
 
-            const data = cmcdModel.getCmcdData(request);
+            const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data.bsd).to.equal(500);
 
-            const data2 = cmcdModel.getCmcdData(request);
+            const data2 = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data2.bsd).to.not.exist;
             clock.restore();
         });

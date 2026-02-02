@@ -389,22 +389,6 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target batch timer (ms) for batched reporting
-     * Note: This is target-specific, requires context
-     */
-    targetBatchTimer: {
-        version: [2],
-        sources: [
-            {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].batchTimer',
-                priority: 1,
-                type: 'number',
-                default: 0
-            }
-        ]
-    },
-
-    /**
      * V2: Target includeInRequests filter
      * Note: This is target-specific, requires context
      */

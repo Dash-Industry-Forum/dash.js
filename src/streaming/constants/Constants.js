@@ -303,7 +303,7 @@ export default {
      *  @static
     */
     CMCD_CONTENT_TYPE_HEADER: {
-        'Content-Type': 'application/cmcd+text'
+        'Content-Type': 'text/cmcd'
     },
 
     /**
