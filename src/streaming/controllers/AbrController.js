@@ -563,11 +563,11 @@ function AbrController() {
 
     function _onVideoElementResized() {
         if (settings.get().streaming.abr.limitBitrateByPortal) {
-            Object.keys(streamProcessorDict).forEach(streamId => {
-                Object.keys(streamProcessorDict[streamId]).forEach(mediaType => {
+            for (const streamId in streamProcessorDict) {
+                for (const mediaType in streamProcessorDict[streamId]) {
                     checkPlaybackQuality(mediaType, streamId);
-                });
-            });
+                }
+            }
         }
     }
 
