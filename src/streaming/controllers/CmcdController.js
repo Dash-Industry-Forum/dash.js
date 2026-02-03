@@ -154,15 +154,20 @@ function CmcdController() {
         if (!reporterNeedsRebuild || !cmcdReporter) {
             return;
         }
-        reporterNeedsRebuild = false;
 
         // Only rebuild if manifest params are available and enabled.
         // Without manifest params, the reporter config hasn't changed
         // and rebuilding would unnecessarily reset sid and sn.
+        // IMPORTANT: Don't reset reporterNeedsRebuild until we actually rebuild,
+        // otherwise a race condition can occur where params aren't available yet
+        // and we never get another chance to rebuild.
         const applyFromMpd = cmcdConfig.get('applyParametersFromMpd') ?? true;
         if (!applyFromMpd || !cmcdConfig.hasManifestParams()) {
             return;
         }
+
+        // Reset flag only after confirming we will rebuild
+        reporterNeedsRebuild = false;
 
         cmcdReporter.stop();
         cmcdReporter.flush();
