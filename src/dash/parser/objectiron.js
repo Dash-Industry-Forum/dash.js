@@ -46,15 +46,12 @@ function ObjectIron(mappers) {
         return allowMapping;
     }
     
-    function _conditionallyMapProperty(exception, propertyParentElement, parentIsArray, parentEl, child, mergeFlag) {
+    function _conditionallyMapProperty(exception, propertyParentElement, parentIsArray, parentEl, child) {
         if (_mappingAllowed(parentEl, exception)) {
             if (child[propertyParentElement]) {
                 // property already exists
-                // check to see if we should merge
-                if (mergeFlag) {
-                    if (parentIsArray) {
-                        child[propertyParentElement].push(parentEl);
-                    }
+                if (parentIsArray) {
+                    child[propertyParentElement].push(parentEl);
                 }
             } else {
                 // just add the property
@@ -71,15 +68,15 @@ function ObjectIron(mappers) {
         for (let i = 0, len = properties.length; i < len; ++i) {
             const property = properties[i];
 
-            if (parent[property.name]) {
-                const propertyParentElement = parent[property.name];
+            if (parent[property]) {
+                const propertyParentElement = parent[property];
 
                 if (Array.isArray(propertyParentElement)) {
                     propertyParentElement.forEach(propParentEl => {
-                        _conditionallyMapProperty(exceptions[property.name], property.name, true, propParentEl, child, property.merge);
+                        _conditionallyMapProperty(exceptions[property], property, true, propParentEl, child);
                     });
                 } else {
-                    _conditionallyMapProperty(exceptions[property.name], property.name, false, propertyParentElement, child, property.merge);
+                    _conditionallyMapProperty(exceptions[property], property, false, propertyParentElement, child);
                 }
             }
         }
