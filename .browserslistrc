@@ -1,1 +1,10 @@
-defaults
+Safari 15.4
+iOS 15.4
+ios_saf 15.4
+# We kind of regard only these Safari versions as constraining us; unlikely to find any browsers of the below,
+# but since focus-visible is the cutoff, include them anyway; I don't think they limit any features when the above is active.
+Chrome 86
+Firefox 85
+Opera 72
+Samsung 14
+Android 86
