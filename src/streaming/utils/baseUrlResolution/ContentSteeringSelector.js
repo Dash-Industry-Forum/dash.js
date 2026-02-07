@@ -108,7 +108,7 @@ function ContentSteeringSelector() {
         const entry = e.entry
         const timer = setTimeout(() => {
             blacklistController.remove(entry);
-            blacklistResetTimeout.splice(blacklistResetTimeout.indexOf(timer, 1))
+            blacklistResetTimeout.splice(blacklistResetTimeout.indexOf(timer), 1)
         }, currentSteeringResponseData.ttl * 1000);
         blacklistResetTimeout.push(timer)
     }
