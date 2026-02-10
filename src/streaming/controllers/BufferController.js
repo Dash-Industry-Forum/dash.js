@@ -377,19 +377,7 @@ function BufferController(config) {
 
     function _onAppended(e) {
         if (e.error) {
-            // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
-            if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
-                _handleQuotaExceededError();
-            }
-            if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
-                logger.warn('Clearing playback buffer to overcome quota exceed situation');
-                // Notify ScheduleController to stop scheduling until buffer has been pruned
-                _triggerEvent(Events.QUOTA_EXCEEDED, {
-                    criticalBufferLevel: criticalBufferLevel,
-                    quotaExceededTime: e.chunk.start
-                });
-                clearBuffers(getClearRanges());
-            }
+            _handleAppendedError(e)
             return;
         }
 
@@ -436,6 +424,22 @@ function BufferController(config) {
                 mediaType: type,
                 representationId: appendedBytesInfo.representation.id
             });
+        }
+    }
+
+    function _handleAppendedError(e) {
+        // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
+        if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
+            _handleQuotaExceededError();
+        }
+        if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+            logger.warn('Clearing playback buffer to overcome quota exceed situation');
+            // Notify ScheduleController to stop scheduling until buffer has been pruned
+            _triggerEvent(Events.QUOTA_EXCEEDED, {
+                criticalBufferLevel: criticalBufferLevel,
+                quotaExceededTime: e.chunk.start
+            });
+            clearBuffers(getClearRanges());
         }
     }
 
@@ -857,7 +861,7 @@ function BufferController(config) {
         return null;
     }
 
-    function getBufferLength(time, tolerance) {
+    function _getBufferLength(time, tolerance) {
         let range,
             length;
 
@@ -885,7 +889,7 @@ function BufferController(config) {
                 referenceTime = !isNaN(seekTarget) ? seekTarget : 0;
             }
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
-            bufferLevel = Math.max(getBufferLength(referenceTime, tolerance), 0);
+            bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0);
             _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
