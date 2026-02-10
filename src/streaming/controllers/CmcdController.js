@@ -169,8 +169,7 @@ function CmcdController() {
         // Reset flag only after confirming we will rebuild
         reporterNeedsRebuild = false;
 
-        cmcdReporter.stop();
-        cmcdReporter.flush();
+        cmcdReporter.stop(true);
         cmcdReporter = _createCmcdReporter();
         cmcdReporter.start();
     }
@@ -243,17 +242,13 @@ function CmcdController() {
             });
         });
     }
-    
+
     function _onStateChange(state) {
         // Update CmcdReporter with the new player state
         if (cmcdReporter) {
             cmcdReporter.update({ sta: state });
         }
-        _onEventChange(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
-    }
-
-    function _onEventChange(event, response){
-        triggerCmcdEventMode(event, response);
+        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
     function _onPeriodSwitchComplete() {
@@ -281,32 +276,31 @@ function CmcdController() {
             }
         }
 
-        _onEventChange(Constants.CMCD_REPORTING_EVENTS.ERROR);
+        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
-    function triggerCmcdEventMode(event, response) {
+    function triggerCmcdEventMode(event) {
         if (!cmcdReporter) {
             return;
         }
 
         _rebuildReporterIfNeeded();
 
-        let cmcdData = cmcdModel.triggerCmcdEventMode();
+        const cmcdData = cmcdModel.getEventModeData();
 
-        // For RESPONSE_RECEIVED, merge request CMCD data and response metrics
-        if (event === Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED && response) {
-            cmcdData = { ...cmcdData, ...response.request.cmcd };
-            cmcdData = _addCmcdResponseReceivedData(response, cmcdData);
+        // Route MSD through update() for the reporter's internal send-once tracking
+        const msdData = cmcdModel.calculateMsd();
+        if (msdData.msd !== undefined) {
+            cmcdReporter.update(msdData);
         }
 
-        // Update reporter with calculated data and record the event
-        cmcdReporter.update(cmcdData);
-        cmcdReporter.recordEvent(event);
+        // Pass event-mode data as transient per-event data (not persisted)
+        cmcdReporter.recordEvent(event, cmcdData);
     }
 
     /**
      * Applies CMCD data to a request by decorating its URL and/or headers.
-     * Delegates to CmcdReporter.applyRequestReport() which handles
+     * Delegates to CmcdReporter.createRequestReport() which handles
      * transmission mode (query vs header) internally.
      *
      * @param {object} request - The request object with at least { url, type }.
@@ -320,17 +314,18 @@ function CmcdController() {
         _rebuildReporterIfNeeded();
 
         try {
-            const cmcdData = {
-                ...cmcdModel.calculateCmcdDataForRequest(request),
-                ...cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST),
-            };
-            
-            request.cmcd = cmcdData; //TODO: wrong because cmcdData only has data from model, not complete data with reporter
-            cmcdReporter.update(cmcdData);
+            const cmcdData = cmcdModel.calculateCmcdDataForRequest(request);
 
-            const decorated = cmcdReporter.applyRequestReport(request);
+            // Route MSD through update() for the reporter's internal send-once tracking
+            const msdData = cmcdModel.calculateMsd();
+            if (msdData.msd !== undefined) {
+                cmcdReporter.update(msdData);
+            }
+
+            const decorated = cmcdReporter.createRequestReport(request, cmcdData);
             request.url = decorated.url;
             request.headers = decorated.headers;
+            request.cmcd = decorated.customData?.cmcd || {};
 
             _triggerCMCDDataGeneratedEvent(request)
 
@@ -516,8 +511,8 @@ function CmcdController() {
             ...commonMediaRequest,
             url: request.url,
             headers: request.headers,
-            customData: { request },
             cmcd: request.cmcd,
+            customData: { ...commonMediaRequest.customData, cmcd: request.cmcd },
         };
 
         return commonMediaRequest;
@@ -532,48 +527,46 @@ function CmcdController() {
         if (requestType === HTTPRequest.CMCD_EVENT) {
             return response;
         }
-        _onEventChange(Constants.CMCD_REPORTING_EVENTS.RESPONSE_RECEIVED, response)
+        _handleResponseReceived(response);
         return response;
     }
 
-    function _addCmcdResponseReceivedData(response, cmcdData){
-        const responseData = {};
-        const request = response.request.customData.request;
-        const requestType = request.type;
-
-        if (requestType === HTTPRequest.MEDIA_SEGMENT_TYPE){
-            responseData.rc = response.status;
+    function _handleResponseReceived(response) {
+        if (!cmcdReporter) {
+            return;
         }
 
-        if (request.startDate && request.firstByteDate){
-            responseData.ttfb = request.firstByteDate - request.startDate;
+        _rebuildReporterIfNeeded();
+
+        // Collect event-mode data from the model
+        const eventData = cmcdModel.getEventModeData();
+
+        // Route MSD through update() for the reporter's internal send-once tracking
+        const msdData = cmcdModel.calculateMsd();
+        if (msdData.msd !== undefined) {
+            cmcdReporter.update(msdData);
         }
 
-        if (request.endDate && request.startDate){
-            responseData.ttlb = request.endDate - request.startDate
-        }
+        // Collect dash.js-specific additional data
+        const additionalData = {};
 
-        if (request.url) {
-            responseData.url = request.url.split('?')[0]
-        }
-    
-        if (response.headers){
+        if (response.headers) {
             try {
                 const cmsdStaticHeader = response.headers['cmsd-static'];
                 if (cmsdStaticHeader) {
-                    responseData.cmsds = btoa(cmsdStaticHeader);
+                    additionalData.cmsds = btoa(cmsdStaticHeader);
                 }
 
                 const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
                 if (cmsdDynamicHeader) {
-                    responseData.cmsdd = btoa(cmsdDynamicHeader);
+                    additionalData.cmsdd = btoa(cmsdDynamicHeader);
                 }
             } catch (e) {
                 logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
             }
         }
 
-        return {...cmcdData, ...responseData};
+        cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
     }
 
     function getCmcdParametersFromManifest() {
@@ -592,8 +585,7 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
         if (cmcdReporter) {
-            cmcdReporter.stop();
-            cmcdReporter.flush();
+            cmcdReporter.stop(true);
             cmcdReporter = null;
         }
 

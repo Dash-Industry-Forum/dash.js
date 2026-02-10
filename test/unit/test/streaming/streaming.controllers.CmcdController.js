@@ -104,7 +104,7 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('e', 'ps');
         });
 
-        it('should send all available keys and events if they are undefined', () => {
+        it('should not send any event if they are undefined', () => {
             settings.update({
                 streaming: {
                     cmcd: {
@@ -121,18 +121,7 @@ describe('CmcdController', function () {
 
             eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
 
-            expect(urlLoaderMock.load.calledOnce).to.be.true;
-            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
-            expect(requestSent.method).to.equal(HTTPRequest.POST);
-            expect(requestSent.body).to.be.a('string');
-
-            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
-            expect(metrics).to.have.property('e', 'ps');
-            expect(metrics).to.have.property('sta', 'p');
-            expect(metrics).to.have.property('ts');
-            expect(metrics).to.have.property('sid');
-            expect(metrics).to.have.property('v');
+            expect(urlLoaderMock.load.called).to.be.false;
         });
 
         it('should send a report with event mode available keys', () => {
@@ -266,6 +255,7 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
+                            enabledKeys: ['sn'],
                             events: ['ps']
                         }]
                     }
@@ -288,7 +278,7 @@ describe('CmcdController', function () {
             expect(metrics2).to.have.property('sn', 1);
         });
 
-        it('should send mandatory keys if enabled keys is empty', () => {
+        it('should send mandatory keys if enabled keys is not defined', () => {
             settings.update({
                 streaming: {
                     cmcd: {
@@ -309,6 +299,7 @@ describe('CmcdController', function () {
             const mockResponse = {
                 status: 200,
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,
@@ -558,6 +549,7 @@ describe('CmcdController', function () {
                         targets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
+                            enabledKeys: ['ab', 'tab', 'lab'],
                             events: ['ps'],
                             timeInterval: 0
                         }]
@@ -663,6 +655,7 @@ describe('CmcdController', function () {
             const mockResponse = {
                 status: 200,
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,
@@ -673,6 +666,11 @@ describe('CmcdController', function () {
                         }
                     },
                     cmcd: { sid: 'session-id' },
+                },
+                resourceTiming: {
+                    startTime: currentTime - 1000,
+                    responseStart: currentTime - 500,
+                    duration: 1000
                 }
             };
 
@@ -720,6 +718,7 @@ describe('CmcdController', function () {
                     'cmsd-dynamic': cmsdDynamicHeaderValue
                 },
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,
@@ -761,6 +760,7 @@ describe('CmcdController', function () {
             const mockResponse = {
                 status: 200,
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,
@@ -811,58 +811,6 @@ describe('CmcdController', function () {
             expect(urlLoaderMock.load.called).to.be.false;
         });
 
-        it('should send all available keys if enabledKeys is not defined', () => {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        sid: 'session-id',
-                        targets: [{
-                            url: 'https://cmcd.response.collector/api',
-                            enabled: true,
-                            includeOnRequests: ['segment'],
-                            events: ['rr'],
-                            timeInterval: 0
-                        }]
-                    }
-                }
-            });
-            cmcdController.initialize();
-
-            let currentTime = new Date(Date.now());
-            const mockResponse = {
-                status: 200,
-                request: {
-                    customData: {
-                        request: {
-                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
-                            url: 'http://test.url/video.m4s',
-                            startDate: currentTime - 1000,
-                            firstByteDate: currentTime - 500,
-                            endDate: new Date()
-                        }
-                    },
-                    cmcd: { sid: 'session-id' },
-                }
-            };
-
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
-            interceptor(mockResponse);
-
-            expect(urlLoaderMock.load.calledOnce).to.be.true;
-            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
-            expect(requestSent.url).to.equal('https://cmcd.response.collector/api');
-            expect(requestSent.method).to.equal(HTTPRequest.POST);
-
-            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
-            expect(metrics).to.have.property('rc');
-            expect(metrics).to.have.property('sid', 'session-id');
-            expect(metrics).to.have.property('url', 'http://test.url/video.m4s');
-            expect(metrics).to.have.property('ttfb');
-            expect(metrics).to.have.property('ttlb');
-            expect(metrics).to.have.property('v');
-        });
-
         it('should send a response report with response mode available keys', () => {
             settings.update({
                 streaming: {
@@ -885,6 +833,7 @@ describe('CmcdController', function () {
             const mockResponse = {
                 status: 200,
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,
@@ -895,6 +844,11 @@ describe('CmcdController', function () {
                         }
                     },
                     cmcd: { sid: 'session-id' },
+                },
+                resourceTiming: {
+                    startTime: currentTime - 1000,
+                    responseStart: currentTime - 500,
+                    duration: 1000
                 }
             };
 
@@ -921,6 +875,7 @@ describe('CmcdController', function () {
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
                             includeOnRequests: ['segment'],
+                            enabledKeys: ['sn'],
                             events: ['rr']
                         }]
                     }
@@ -931,6 +886,7 @@ describe('CmcdController', function () {
             const mockResponse = {
                 status: 200,
                 request: {
+                    url: 'http://test.url/video.m4s',
                     customData: {
                         request: {
                             type: HTTPRequest.MEDIA_SEGMENT_TYPE,

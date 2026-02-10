@@ -7,6 +7,7 @@ import DashMetricsMock from '../../mocks/DashMetricsMock.js';
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
+import { SfItem } from '@svta/cml-structured-field-values';
 
 import {expect} from 'chai';
 import sinon from 'sinon';
@@ -100,7 +101,7 @@ describe('CmcdModel', function () {
             const data = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('v'); // video object type
-            expect(data.br).to.equal(1000); // bitrate in kbps
+            expect(data.br).to.deep.equal([new SfItem(1000, { v: true })]); // bitrate in kbps
             expect(data.d).to.equal(4000); // duration in ms
         });
 
@@ -172,48 +173,31 @@ describe('CmcdModel', function () {
                     }
                 }
             });
-            
+
             const isIncluded = cmcdModel.isIncludedInRequestFilter(HTTPRequest.MEDIA_SEGMENT_TYPE);
             expect(isIncluded).to.be.false;
         });
     });
 
-    describe('updateMsdData', function () {
-        it('should return MSD data for version 2', function () {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 2
-                    }
-                }
-            });
-            
+    describe('calculateMsd', function () {
+        it('should return MSD data when playback has started', function () {
             cmcdModel.onPlaybackStarted();
             cmcdModel.onPlaybackPlaying();
-            
-            const msdData = cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST);
+
+            const msdData = cmcdModel.calculateMsd();
             expect(msdData).to.have.property('msd').that.is.a('number');
         });
 
-        it('should not return MSD data for version 1', function () {
-            settings.update({
-                streaming: {
-                    cmcd: {
-                        version: 1
-                    }
-                }
-            });
-            
-            const msdData = cmcdModel.updateMsdData(Constants.CMCD_REPORTING_MODE.REQUEST);
+        it('should return empty object when playback has not started', function () {
+            const msdData = cmcdModel.calculateMsd();
             expect(Object.keys(msdData)).to.have.length(0);
         });
     });
 
-    describe('triggerCmcdEventMode', function () {
+    describe('getEventModeData', function () {
         it('should return event mode CMCD data', function () {
-            const eventData = cmcdModel.triggerCmcdEventMode();
+            const eventData = cmcdModel.getEventModeData();
             expect(eventData).to.exist;
-            expect(eventData.ts).to.be.a('number');
         });
     });
 
@@ -236,7 +220,7 @@ describe('CmcdModel', function () {
             cmcdModel.onPlaybackPlaying();
 
             const data = cmcdModel.calculateCmcdDataForRequest(request);
-            expect(data.bsd).to.equal(500);
+            expect(data.bsd).to.deep.equal([new SfItem(500, { v: true })]);
 
             const data2 = cmcdModel.calculateCmcdDataForRequest(request);
             expect(data2.bsd).to.not.exist;

@@ -297,7 +297,8 @@ function HTTPLoader(cfg) {
         }
 
         const _updateResourceTimingInfo = function () {
-            commonMediaResponse.resourceTiming.responseEnd = Date.now();
+            commonMediaResponse.resourceTiming.responseEnd = performance.now();
+            commonMediaResponse.resourceTiming.duration = commonMediaResponse.resourceTiming.responseEnd - commonMediaResponse.resourceTiming.startTime;
 
             // If enabled the ResourceTimingApi we add the corresponding information to the request object.
             // These values are more accurate and can be used by the ThroughputController later
@@ -314,7 +315,7 @@ function HTTPLoader(cfg) {
                     httpRequest.customData.onabort = _onabort;
                     httpRequest.customData.ontimeout = _ontimeout;
 
-                    httpResponse.resourceTiming.startTime = Date.now();
+                    httpResponse.resourceTiming.startTime = performance.now();
                     loader.load(httpRequest, httpResponse);
                     resolve();
                 });
@@ -386,7 +387,7 @@ function HTTPLoader(cfg) {
         const loaderInformation = _getLoader(requestObject);
         const loader = loaderInformation.loader;
         requestObject.fileLoaderType = loaderInformation.fileLoaderType;
-        
+
         requestObject.headers = requestObject.headers || {};
         _updateRequestUrlAndHeaders(requestObject);
         if (requestObject.range) {
@@ -409,7 +410,7 @@ function HTTPLoader(cfg) {
         commonMediaResponse = new CommonMediaResponse({
             request: commonMediaRequest,
             resourceTiming: {
-                startTime: Date.now(),
+                startTime: performance.now(),
                 encodedBodySize: 0
             },
             status: 0
