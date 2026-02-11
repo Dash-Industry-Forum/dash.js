@@ -118,8 +118,8 @@ player.updateSettings({
 })
 ````
 
-To accomplish this and if no `Role` descriptor with `@vlaue="main"` is present, dash.js considers the absence of this 
-descriptor also as "main". This feature can be disabled in Settings with the `streaming.assumeDefaultRoleAsMain` property.
+To accomplish this and if no `Role` descriptor with `@value="main"` is present, dash.js considers the absence of this 
+descriptor also as "main". This feature can be disabled by adjusting the `streaming.assumeDefaultRoleAsMain` settings flag.
 
 
 If still no unique selection could be made, dash.js offers various predefined approaches to select the initial track.
