@@ -532,6 +532,13 @@ function MediaController() {
     function selectInitialTrack(type, tracks) {
         if (type === Constants.TEXT) return tracks[0];
 
+        if (settings.get().streaming.initialTrackSelectionPreferMainRole) {
+            const mainTracks = tracks.filter(t => t.roles && t.roles.includes('main'));
+            if (mainTracks.length > 0) {
+                tracks = mainTracks;
+            }
+        }
+
         let mode = settings.get().streaming.selectionModeForInitialTrack;
         let tmpArr;
         const customInitialTrackSelectionFunction = customParametersModel.getCustomInitialTrackSelectionFunction();

@@ -883,6 +883,78 @@ describe('MediaController', function () {
             });
         });
 
+        describe('"initialTrackSelectionPreferMainRole" setting', function () {
+            beforeEach(function () {
+                settings.update({
+                    streaming: {
+                        selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_HIGHEST_BITRATE,
+                        initialTrackSelectionPreferMainRole: false
+                    }
+                });
+            });
+            it('should select track with role "main" when enabled', function () {
+                settings.update({ streaming: { initialTrackSelectionPreferMainRole: true } });
+                const tracks = [
+                    {
+                        bitrateList: [{ bandwidth: 10000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['alternate']
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 8000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['main']
+                    }
+                ];
+                const selection = mediaController.selectInitialTrack('video', tracks);
+                expect(selection.roles).to.include('main');
+            });
+
+            it('should fall back to all tracks when no track has role "main"', function () {
+                settings.update({ streaming: { initialTrackSelectionPreferMainRole: true } });
+                const tracks = [
+                    {
+                        bitrateList: [{ bandwidth: 10000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['alternate']
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 8000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['supplementary']
+                    }
+                ];
+                const selection = mediaController.selectInitialTrack('video', tracks);
+                // highest bitrate wins since no "main" track exists
+                expect(selection.bitrateList[0].bandwidth).to.equal(10000);
+            });
+
+            it('should not filter by role when disabled', function () {
+                settings.update({ streaming: { initialTrackSelectionPreferMainRole: false } });
+                const tracks = [
+                    {
+                        bitrateList: [{ bandwidth: 10000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['alternate']
+                    },
+                    {
+                        bitrateList: [{ bandwidth: 8000 }],
+                        representationCount: 1,
+                        selectionPriority: 1,
+                        roles: ['main']
+                    }
+                ];
+                const selection = mediaController.selectInitialTrack('video', tracks);
+                // highest bitrate wins, ignoring roles
+                expect(selection.bitrateList[0].bandwidth).to.equal(10000);
+            });
+        });
+
         describe('custom initial track selection function', function () {
             beforeEach(function () {
 
