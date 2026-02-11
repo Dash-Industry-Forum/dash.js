@@ -746,6 +746,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If true, the size of the video portal will limit the max chosen video resolution.
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ * @property {number} [limitBitrateByPortalMinimum=0]
+ * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AbrRules} [rules]
@@ -1324,6 +1326,7 @@ function Settings() {
             abr: {
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
+                limitBitrateByPortalMinimum: 0,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 rules: {
                     throughputRule: {

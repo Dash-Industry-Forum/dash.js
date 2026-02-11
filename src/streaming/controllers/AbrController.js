@@ -400,12 +400,13 @@ function AbrController() {
             if (!settings.get().streaming.abr.limitBitrateByPortal) {
                 return voRepresentations;
             }
+            const minimum = (settings.get().streaming.abr.limitBitrateByPortalMinimum * 1000) || 0;
 
             const { elementWidth } = videoModel.getVideoElementSize();
 
             const filteredArray = voRepresentations.filter((voRepresentation) => {
-                return voRepresentation.mediaInfo.type !== Constants.VIDEO || voRepresentation.width <= elementWidth;
-            })
+                return voRepresentation.mediaInfo.type !== Constants.VIDEO || voRepresentation.width <= elementWidth || voRepresentation.bandwidth <= minimum;
+            });
 
             if (filteredArray.length > 0) {
                 return filteredArray
