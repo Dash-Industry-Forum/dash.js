@@ -11,8 +11,7 @@ separate Adaptation Sets. dash.js allows the application to define an initial tr
 at runtime.
 
 ## Capability checks
-While parsing a manifest, dash.js removes all Adaptation Sets it assumes that are not supported. 
-This detection is based on the `@codecs` attributes or the `EssentialProperty` element. 
+While parsing a manifest, dash.js removes all Adaptation Sets it assumes that are not supported based on the `@codecs` attributes, the `EssentialProperty` element and other properties.
 
 ## Initial track selection
 dash.js offers multiple ways to control the initial track selection as described below.
@@ -28,7 +27,7 @@ those that matches the given setting. If no Adaptation Set is found or the param
 object, all Adaptaptation Sets are kept. This processing iterates sequentially the following parameters in the given order:
 1. `@id`
 2. `@lang`
-3. Index
+3. Index (i.e. order of Adaptation Sets in the MPD)
 4. `Viewpoint`
 5. `Role`
 6. `Accessibility`
@@ -51,12 +50,16 @@ An example how to set the initial audio track by specifying the target language 
 ````js
 player.initialize(videoElement, url, true);
 player.setInitialMediaSettingsFor('audio', {
-    lang: 'et-ET'
+    lang: 'es'},
+    accessibility: {
+        schemeIdUri: 'urn:mpeg:dash:role:2011',
+        value: 'description'
+    }
 });
 ````
 
 A working example can be found in
-our [sample section](https://reference.dashif.org/dash.js/nightly/samples/multi-audio/multi-audio.html).
+our [sample section](https://reference.dashif.org/dash.js/nightly/samples/multi-audio/multi-audio-default-lang-acc.html).
 
 ### Custom track selection function
 
