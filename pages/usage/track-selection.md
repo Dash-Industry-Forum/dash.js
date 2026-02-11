@@ -107,7 +107,7 @@ player.updateSettings({
 })
 ````
 
-After this, dash.js tries to find a the "main" track based on the `Role` descriptor.
+After this, dash.js tries to find a the "main" track based on the `Role` descriptor. 
 This logic can be disabled by adjusting the corresponding settings flag:
 
 ````js
@@ -118,16 +118,21 @@ player.updateSettings({
 })
 ````
 
+To accomplish this and if no `Role` descriptor with `@vlaue="main"` is present, dash.js considers the absence of this 
+descriptor also as "main". This feature can be disabled in Settings with the `streaming.assumeDefaultRoleAsMain` property.
+
+
 If still no unique selection could be made, dash.js offers various predefined approaches to select the initial track.
 The default track selection mode can be changed using the `selectionModeForInitialTrack` setting. The following modes
 are supported:
 
-| Mode                          | Description                                                                            |
-|:------------------------------|:---------------------------------------------------------------------------------------|
-| `highestBitrate`              | This mode makes the player select the track with a highest bitrate.                    |
-| `firstTrack`                  | This mode makes the player select the first track found in the manifest                |
-| `highestEfficiency` (default) | This mode makes the player select the track with the lowest bitrate per pixel average. |
-| `widestRange`                 | This mode makes the player select the track with a widest range of bitrates.           |
+| Mode                           | Description                                                                                                 |
+|:-------------------------------|:------------------------------------------------------------------------------------------------------------|
+| `lowestStartupDelay` (default) | This mode makes the player select the track that contains partial segments that start with SAP type 0 or 1. |
+| `highestBitrate`               | This mode makes the player select the track with a highest bitrate.                                         |
+| `firstTrack`                   | This mode makes the player select the first track found in the manifest                                     |
+| `highestEfficiency`            | This mode makes the player select the track with the lowest bitrate per pixel average.                      |
+| `widestRange`                  | This mode makes the player select the track with a widest range of bitrates.                                |
 
 ### Example
 
