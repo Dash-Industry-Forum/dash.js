@@ -10,6 +10,10 @@ Some media streams offer multiple audio or video tracks. In MPEG-DASH this is do
 separate Adaptation Sets. dash.js allows the application to define an initial track at startup and switch between tracks
 at runtime.
 
+## Capability checks
+While parsing a manifest, dash.js removes all Adaptation Sets it assumes that are not supported. 
+This detection is based on the `@codecs` attributes or the `EssentialProperty` element. 
+
 ## Initial track selection
 dash.js offers multiple ways to control the initial track selection as described below.
 
@@ -17,8 +21,27 @@ dash.js offers multiple ways to control the initial track selection as described
 
 To select an initial track prior to the start of the playback based on specific media settings use the
 `setInitialMediaSettingsFor()` function. The function takes
-an object as input allowing you to define initial values such as the target language. For a detailed description of this
-method checkout
+an object as input allowing you to define initial values such as the target language. 
+
+For each parameter present in the configuration object, dash.js tries to find matching Adaptation Sets and keeps only 
+those that matches the given setting. If no Adaptation Set is found or the parameter is not present in configuration 
+object, all Adaptaptation Sets are kept. This processing iterates sequentially the following parameters in the given order:
+1. `@id`
+2. `@lang`
+3. Index
+4. `Viewpoint`
+5. `Role`
+6. `Accessibility`
+7. `AudioChannelConfiguration`
+8. `@codecs`
+
+Notes and Exceptions:
+- dash.js does normalize and compare the values provided via the @lang attributes and the `lang` setting according to 
+  the rules provided with IEFT BCP 47 (e.g. `spa` will get converted to `es` prior to comparison)
+- If `accessibility` is not provided as parameter, dash.js prioritizes those AdaptationSets where no `<Accessibility>` 
+  element is present
+
+For a detailed description of this method checkout
 our [API documentation](https://cdn.dashjs.org/latest/jsdoc/module-MediaPlayer.html#setInitialMediaSettingsFor).
 
 ### Example
@@ -69,11 +92,9 @@ A working example can be found in
 our [sample section](https://reference.dashif.org/dash.js/nightly/samples/advanced/custom-initial-track-selection.html)
 
 ### Changing the default track selection logic
-
-dash.js offers various predefined approaches to select the initial track. By default, the `selectionPriority` attribute
-from the MPD is used to determine which track to select. This logic can be disabled by adjusting the corresponding
-settings
-flag:
+When neither initial media setting nor any custon track selection function provided a unique selection, the
+`selectionPriority` attribute from the MPD is used to determine which track to select. This logic can be disabled by 
+adjusting the corresponding settings flag:
 
 ````js
 player.updateSettings({
@@ -83,6 +104,18 @@ player.updateSettings({
 })
 ````
 
+After this, dash.js tries to find a the "main" track based on the `Role` descriptor.
+This logic can be disabled by adjusting the corresponding settings flag:
+
+````js
+player.updateSettings({
+    streaming: {
+        prioritizeRoleMain: false
+    }
+})
+````
+
+If still no unique selection could be made, dash.js offers various predefined approaches to select the initial track.
 The default track selection mode can be changed using the `selectionModeForInitialTrack` setting. The following modes
 are supported:
 
