@@ -561,6 +561,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Value to be used in case enableStallFix is set to true
  * @property {number} [seekOffset=0]
  * An additional offset in seconds that is applied when performing a seek to jump a gap.
+ * @property {number} [checkInterval=250]
+ * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster but increase CPU usage. Default is 250ms.
  */
 
 /**
@@ -1226,7 +1228,8 @@ function Settings() {
                 enableSeekFix: true,
                 enableStallFix: false,
                 stallSeek: 0.1,
-                seekOffset: 0
+                seekOffset: 0,
+                checkInterval: 250
             },
             utcSynchronization: {
                 enabled: true,
