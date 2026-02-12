@@ -471,7 +471,7 @@ function PlaybackController() {
             delay = suggestedPresentationDelay;
         }
 
-        // We found a fragment duration, use that to calculcate live delay
+        // We found a fragment duration, use that to calculate live delay
         else if (!isNaN(adjustedFragmentDuration)) {
             delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
         }
