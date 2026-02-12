@@ -359,7 +359,7 @@ function StreamController() {
 
             // Compute and set the live delay
             if (adapter.getIsDynamic()) {
-                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+                const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
 
@@ -839,7 +839,7 @@ function StreamController() {
             const streamsInfo = adapter.getStreamsInfo()
             if (streamsInfo.length > 0) {
                 const manifestInfo = streamsInfo[0].manifestInfo;
-                const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+                const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
 
                 playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
             }
@@ -1290,26 +1290,23 @@ function StreamController() {
     }
 
     /**
-     * In order to calculate the initial live delay we might required the duration of the segments.
+     * In order to calculate the initial live delay we might require the duration of the segments.
      * @param {array} streamInfos
      * @param {object} manifestInfo
      * @return {number}
      * @private
      */
-    function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
+    function _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo) {
         try {
-            let segmentDuration = NaN;
-
-            //  We use the maxFragmentDuration attribute if present
-            if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
+            if (manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)) {
                 return manifestInfo.maxFragmentDuration;
             }
-
-            return isFinite(segmentDuration) ? segmentDuration : NaN;
+            return NaN;
         } catch (e) {
             return NaN;
         }
     }
+
 
     /**
      * Callback handler after the steering manifest was updated
