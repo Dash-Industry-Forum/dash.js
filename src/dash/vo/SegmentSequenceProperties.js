@@ -49,6 +49,10 @@ class SegmentSequenceProperties {
             this.alignment = data.alignment !== undefined ? data.alignment : null;
         }
     }
+
+    isBootstrapConfiguration() {
+        return this.cadence === 1 && (this.sapType === 0 || this.sapType === 1);
+    }
 }
 
 export default SegmentSequenceProperties;
