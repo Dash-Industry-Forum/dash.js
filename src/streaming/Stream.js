@@ -298,7 +298,7 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
-                    return _createBufferSinks(previousSourceBufferSinks)
+                    return _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod)
                 })
                 .then((bufferSinks) => {
                     if (streamProcessors.length === 0) {
@@ -527,14 +527,16 @@ function Stream(config) {
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
      * @param {array} previousSourceBufferSinks
+     * @param {array} representationsFromPreviousPeriod
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousSourceBufferSinks) {
+    function _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                const oldRepresentation = sp.getRepresentation();
+                const spRepresentation = sp.getRepresentation();
+                const oldRepresentation = representationsFromPreviousPeriod.find((r) => r.mediaInfo.type === spRepresentation.mediaInfo.type);
                 return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
             });
 
