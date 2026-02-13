@@ -34,10 +34,12 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
-
-const MAX_CACHE_SIZE = 50;
+import Settings from '../../core/Settings.js';
 
 function InitCache() {
+
+    const context = this.context;
+    const settings = Settings(context).getInstance();
 
     let data = {};
     let accessOrder = [];
@@ -58,7 +60,8 @@ function InitCache() {
     }
 
     function _enforceCacheLimit() {
-        while (accessOrder.length > MAX_CACHE_SIZE) {
+        const maxCacheSize = settings.get().streaming.cacheInitSegmentsLimit;
+        while (accessOrder.length > maxCacheSize) {
             const oldest = accessOrder.shift();
             if (data[oldest.streamId] && data[oldest.streamId][oldest.representationId]) {
                 delete data[oldest.streamId][oldest.representationId];
@@ -74,13 +77,6 @@ function InitCache() {
             return data[streamId][representationId];
         } else {
             return null;
-        }
-    }
-
-    function removeStream(streamId) {
-        if (data[streamId]) {
-            delete data[streamId];
-            accessOrder = accessOrder.filter(entry => entry.streamId !== streamId);
         }
     }
 
@@ -102,7 +98,7 @@ function InitCache() {
         return {
             entryCount: entryCount,
             streamCount: streamCount,
-            maxSize: MAX_CACHE_SIZE,
+            maxSize: settings.get().streaming.cacheInitSegmentsLimit,
             accessOrderLength: accessOrder.length
         };
     }
@@ -110,7 +106,6 @@ function InitCache() {
     const instance = {
         save: save,
         extract: extract,
-        removeStream: removeStream,
         reset: reset,
         getStats: getStats
     };

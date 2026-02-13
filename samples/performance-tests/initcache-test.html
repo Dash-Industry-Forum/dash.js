@@ -269,16 +269,16 @@
             logMessage('Will cycle through all quality levels 10 times');
 
             var progressBar = document.getElementById('testProgress');
-            var bitrateInfo = player.getBitrateInfoListFor('video');
-            var totalIterations = bitrateInfo.length * 10;
+            var representations = player.getRepresentationsByType('video');
+            var totalIterations = representations.length * 10;
             var currentIteration = 0;
 
             player.play();
 
             for (var round = 0; round < 10; round++) {
-                for (var i = 0; i < bitrateInfo.length; i++) {
-                    player.setQualityFor('video', i, true);
-                    logMessage('Set quality to ' + i + ' (bitrate: ' + bitrateInfo[i].bitrate + ')');
+                for (var i = 0; i < representations.length; i++) {
+                    player.setRepresentationForTypeByIndex('video', i, true);
+                    logMessage('Set quality to ' + i + ' (bitrate: ' + representations[i].bitrateInKbit + ' kbit/s)');
 
                     currentIteration++;
                     progressBar.style.width = (currentIteration / totalIterations * 100) + '%';

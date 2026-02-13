@@ -65,6 +65,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
+ *            cacheInitSegmentsLimit: 50,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -992,6 +993,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
+ * @property {number} [cacheInitSegmentsLimit=50]
+ * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently used entries are evicted.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
@@ -1149,6 +1152,7 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
+            cacheInitSegmentsLimit: 50,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
