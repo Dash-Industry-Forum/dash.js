@@ -2020,6 +2020,8 @@ export interface MediaPlayerClass {
     on(type: MetricEvent['type'], listener: (e: MetricEvent) => void, scope?: object): void;
 
     on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
+    
+    on(type: NewTrackSelectedEvent['type'], listener: (e: NewTrackSelectedEvent) => void, scope?: object): void;
 
     on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
 
@@ -2052,6 +2054,8 @@ export interface MediaPlayerClass {
     on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
 
     on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
+    
+    on(type: TrackChangeRenderedEvent['type'], listener: (e: TrackChangeRenderedEvent) => void, scope?: object): void;
 
     on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
 
@@ -2422,6 +2426,7 @@ export interface MediaPlayerEvents {
     TRACK_CHANGE_RENDERED: 'trackChangeRendered';
     QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
     QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
+    NEW_TRACK_SELECTED: 'newTrackSelected';
     STREAM_ACTIVATED: 'streamActivated'
     STREAM_DEACTIVATED: 'streamDeactivated';
     STREAM_INITIALIZED: 'streamInitialized';
@@ -2752,6 +2757,11 @@ export interface TrackChangeRenderedEvent extends MediaPlayerEvent {
     newMediaInfo: MediaInfo;
     oldMediaInfo: MediaInfo;
     type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
+}
+
+export interface NewTrackSelectedEvent extends MediaPlayerEvent {
+    value: MediaInfo;
+    type: MediaPlayerEvents['NEW_TRACK_SELECTED'];
 }
 
 export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
@@ -6012,5 +6022,4 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
-
 
