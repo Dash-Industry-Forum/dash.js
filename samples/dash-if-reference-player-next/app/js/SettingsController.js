@@ -11,6 +11,7 @@ export class SettingsController {
         this._defaultSettings = null;
         this._autoPlay = true;
         this._loop = true;
+        this._restoredProtData = null;
     }
 
     /**
@@ -34,6 +35,13 @@ export class SettingsController {
      */
     get loop() {
         return this._loop;
+    }
+
+    /**
+     * Get DRM protection data restored from URL (or null)
+     */
+    get restoredProtData() {
+        return this._restoredProtData || null;
     }
 
     /**
@@ -240,8 +248,9 @@ export class SettingsController {
 
     /**
      * Copy the current settings URL to clipboard
+     * @param {Object|null} [protectionData] - DRM protection data to include
      */
-    copySettingsUrl() {
+    copySettingsUrl(protectionData) {
         const currentSettings = this.player.getSettings();
         const diff = this._makeSettingsDiff(currentSettings, this._defaultSettings);
         const params = new URLSearchParams();
@@ -266,6 +275,16 @@ export class SettingsController {
         const streamUrl = $('#stream-url').value.trim();
         if (streamUrl) {
             url.searchParams.set('stream', streamUrl);
+        }
+
+        // Add DRM protection data (base64-encoded JSON)
+        if (protectionData && Object.keys(protectionData).length > 0) {
+            try {
+                const json = JSON.stringify(protectionData);
+                url.searchParams.set('protData', btoa(json));
+            } catch (e) {
+                // Skip DRM data if encoding fails
+            }
         }
 
         navigator.clipboard.writeText(url.toString()).then(() => {
@@ -310,10 +329,20 @@ export class SettingsController {
             $('#opt-muted').checked = true;
         }
 
+        // Handle DRM protection data
+        const protDataParam = params.get('protData');
+        if (protDataParam) {
+            try {
+                this._restoredProtData = JSON.parse(atob(protDataParam));
+            } catch (e) {
+                // Invalid protData — ignore
+            }
+        }
+
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (['stream', 'autoplay', 'loop', 'muted', 'autoLoad'].includes(key)) {
+            if (['stream', 'autoplay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key)) {
                 continue;
             }
             this._setNestedValue(settingsObj, key, this._coerceType(value));
@@ -401,8 +430,7 @@ export class SettingsController {
             radio.addEventListener('change', () => this._applySettings());
         }
 
-        // Copy URL button
-        $('#btn-copy-url').addEventListener('click', () => this.copySettingsUrl());
+        // Copy URL button is wired in main.js (needs access to DrmController)
     }
 
     _bindCheckbox(id, handler) {

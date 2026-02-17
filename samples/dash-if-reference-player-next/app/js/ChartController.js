@@ -30,6 +30,7 @@ const METRIC_UNITS = {
     buffer:        { unit: 's',     label: 'Seconds' },
     liveLatency:   { unit: 's',     label: 'Seconds' },
     bitrate:       { unit: 'kbps',  label: 'kbps' },
+    throughput:    { unit: 'kbps',  label: 'kbit/s' },
     pendingIndex:  { unit: 'idx',   label: 'Index' },
     currentIndex:  { unit: 'idx',   label: 'Index' },
     droppedFrames: { unit: 'count', label: 'Count' },

@@ -556,6 +556,23 @@
                                 <span class="metric-value" id="mv-dropped">0</span>
                                 <button class="metric-chart-toggle" data-metric="droppedFrames" data-type="video" title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                             </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Avg Throughput</span>
+                                <span class="metric-value" id="mv-throughput">0 kbit/s</span>
+                                <button class="metric-chart-toggle" data-metric="throughput" data-type="video" title="Plot on chart"><i class="bi bi-graph-up"></i></button>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Resolution</span>
+                                <span class="metric-value" id="mv-resolution">-</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Codec</span>
+                                <span class="metric-value" id="mv-codec">-</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Buffer State</span>
+                                <span class="metric-value" id="mv-buffer-state">-</span>
+                            </div>
                             <div class="metric-section-title">HTTP Metrics</div>
                             <div class="metric-row">
                                 <span class="metric-label">Latency (ms)</span>
@@ -594,6 +611,10 @@
                                 <span class="metric-value" id="mv-playback-rate">1.0x</span>
                                 <button class="metric-chart-toggle" data-metric="playbackRate" data-type="video" title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                             </div>
+                            <div class="metric-row d-none" id="mv-target-delay-row">
+                                <span class="metric-label">Target Delay (s)</span>
+                                <span class="metric-value" id="mv-target-delay">-</span>
+                            </div>
                         </div>
 
                         <!-- Audio Stats -->
@@ -623,6 +644,19 @@
                                 <span class="metric-label">Dropped Frames</span>
                                 <span class="metric-value" id="ma-dropped">0</span>
                                 <button class="metric-chart-toggle" data-metric="droppedFrames" data-type="audio" title="Plot on chart"><i class="bi bi-graph-up"></i></button>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Avg Throughput</span>
+                                <span class="metric-value" id="ma-throughput">0 kbit/s</span>
+                                <button class="metric-chart-toggle" data-metric="throughput" data-type="audio" title="Plot on chart"><i class="bi bi-graph-up"></i></button>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Codec</span>
+                                <span class="metric-value" id="ma-codec">-</span>
+                            </div>
+                            <div class="metric-row">
+                                <span class="metric-label">Buffer State</span>
+                                <span class="metric-value" id="ma-buffer-state">-</span>
                             </div>
                             <div class="metric-section-title">HTTP Metrics</div>
                             <div class="metric-row">
@@ -662,6 +696,10 @@
                             <div class="metric-row">
                                 <span class="metric-label">Buffering Period</span>
                                 <span class="metric-value" id="ms-buffering-period">-</span>
+                            </div>
+                            <div class="metric-row d-none" id="ms-dvr-window-row">
+                                <span class="metric-label">DVR Window (s)</span>
+                                <span class="metric-value" id="ms-dvr-window">-</span>
                             </div>
                         </div>
 

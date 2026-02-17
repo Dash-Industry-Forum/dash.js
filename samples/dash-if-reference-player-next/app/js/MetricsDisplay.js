@@ -148,6 +148,27 @@ export class MetricsDisplay {
             }
         }
 
+        // Average throughput
+        if (metrics.throughput !== undefined) {
+            this._setText(`${prefix}-throughput`, `${metrics.throughput} kbit/s`);
+        }
+
+        // Resolution (video only)
+        if (type === 'video' && metrics.resolution) {
+            this._setText(`${prefix}-resolution`, metrics.resolution);
+        }
+
+        // Codec
+        if (metrics.codec) {
+            this._setText(`${prefix}-codec`, metrics.codec);
+        }
+
+        // Buffer state
+        if (metrics.bufferState) {
+            this._setText(`${prefix}-buffer-state`,
+                metrics.bufferState === 'bufferLoaded' ? 'Loaded' : 'Stalled');
+        }
+
         // Live metrics
         if (this._isDynamic) {
             if (metrics.liveLatency !== undefined) {
@@ -155,6 +176,12 @@ export class MetricsDisplay {
             }
             if (metrics.playbackRate !== undefined) {
                 this._setText(`${prefix}-playback-rate`, `${parseFloat(metrics.playbackRate).toFixed(2)}x`);
+            }
+            if (metrics.targetDelay !== undefined) {
+                this._setText(`${prefix}-target-delay`, `${parseFloat(metrics.targetDelay).toFixed(2)} s`);
+            }
+            if (metrics.dvrWindowSize !== undefined) {
+                this._setText('ms-dvr-window', `${Math.round(metrics.dvrWindowSize)} s`);
             }
         }
 
@@ -172,6 +199,7 @@ export class MetricsDisplay {
             pendingIndex: metrics.pendingIndex,
             currentIndex: metrics.currentIndex,
             droppedFrames: metrics.droppedFrames,
+            throughput: metrics.throughput,
             latency: metrics.latencyAvg,
             download: metrics.downloadAvg,
             ratio: parseFloat(metrics.ratioAvg),
@@ -196,6 +224,9 @@ export class MetricsDisplay {
             this._setText(`${prefix}-index-pending`, '0 / 0');
             this._setText(`${prefix}-index-current`, '0 / 0');
             this._setText(`${prefix}-dropped`, '0');
+            this._setText(`${prefix}-throughput`, '0 kbit/s');
+            this._setText(`${prefix}-codec`, '-');
+            this._setText(`${prefix}-buffer-state`, '-');
             this._setText(`${prefix}-latency`, '-');
             this._setText(`${prefix}-download`, '-');
             this._setText(`${prefix}-ratio`, '-');
@@ -203,6 +234,7 @@ export class MetricsDisplay {
             this._setText(`${prefix}-etp`, '-');
             this._setText(`${prefix}-live-latency`, '-');
             this._setText(`${prefix}-playback-rate`, '1.0x');
+            this._setText(`${prefix}-target-delay`, '-');
 
             const bar = $(`#${prefix}-buffer-bar`);
             if (bar) {
@@ -210,8 +242,10 @@ export class MetricsDisplay {
             }
         }
 
+        this._setText('mv-resolution', '-');
         this._setText('ms-active-period', '-');
         this._setText('ms-buffering-period', '-');
+        this._setText('ms-dvr-window', '-');
         this._setText('ms-mpd-type', '-');
         this._setText('ms-period-count', '-');
 
@@ -224,10 +258,24 @@ export class MetricsDisplay {
         const elements = [
             `${prefix}-live-section`, `${prefix}-live-latency-row`, `${prefix}-playback-rate-row`
         ];
+
+        // Target delay row is video-only
+        if (type === 'video') {
+            elements.push(`${prefix}-target-delay-row`);
+        }
+
         for (const id of elements) {
             const el = $(`#${id}`);
             if (el) {
                 el.classList.toggle('d-none', !show);
+            }
+        }
+
+        // DVR window in stream tab (toggle once from video)
+        if (type === 'video') {
+            const dvrEl = $('#ms-dvr-window-row');
+            if (dvrEl) {
+                dvrEl.classList.toggle('d-none', !show);
             }
         }
     }

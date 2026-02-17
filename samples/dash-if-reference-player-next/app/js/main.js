@@ -83,6 +83,13 @@ async function init() {
     $('#btn-load').addEventListener('click', doLoad);
     $('#btn-stop').addEventListener('click', doStop);
 
+    // Copy URL (includes DRM protData from the DRM controller or the selected stream)
+    $('#btn-copy-url').addEventListener('click', () => {
+        const selectedItem = streamCatalog.getSelectedItem();
+        const protData = drmController.buildProtectionData() || selectedItem?.protData || null;
+        settingsController.copySettingsUrl(protData);
+    });
+
     // Allow Enter key in URL field to trigger load
     $('#stream-url').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
@@ -109,6 +116,11 @@ async function init() {
 
     // 8. Apply URL parameters
     const shouldAutoLoad = settingsController.applyFromUrl();
+
+    // 8b. Apply restored DRM protection data from URL
+    if (settingsController.restoredProtData) {
+        drmController.setFromProtData(settingsController.restoredProtData);
+    }
 
     // 9. Handle stream URL from query param
     const params = new URLSearchParams(window.location.search);
@@ -169,10 +181,8 @@ function doLoad() {
     const config = settingsController.buildConfig();
     playerController.updateSettings(config);
 
-    // Set auto-play and mute
+    // Set auto-play
     playerController.player.setAutoPlay(settingsController.autoPlay);
-    const muted = $('#opt-muted')?.checked || false;
-    playerController.player.setMute(muted);
 
     // Build DRM protection data
     const selectedItem = streamCatalog.getSelectedItem();
@@ -193,8 +203,16 @@ function doLoad() {
     controlBar.reset();
     controlBar.disable();
 
+    // If mute option is checked, apply to control bar before load
+    if ($('#opt-muted')?.checked) {
+        controlBar.setMuted(true);
+    }
+
     // Load stream
     playerController.load(url, protData);
+
+    // Re-apply control bar volume/mute state to the new source
+    controlBar.syncMuteState();
 }
 
 function doStop() {
@@ -205,6 +223,8 @@ function doStop() {
 }
 
 // ---- Error handling ----
+let _errorModal = null;
+
 function onPlayerError(e) {
     let message = 'An error occurred during playback.';
 
@@ -223,8 +243,11 @@ function onPlayerError(e) {
         errorMsg.textContent = message;
     }
 
-    const modal = new bootstrap.Modal($('#errorModal'));
-    modal.show();
+    // Reuse a single modal instance to prevent stale backdrops
+    if (!_errorModal) {
+        _errorModal = new bootstrap.Modal($('#errorModal'));
+    }
+    _errorModal.show();
 }
 
 // ---- Playback ended (loop) ----

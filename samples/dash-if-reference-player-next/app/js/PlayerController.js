@@ -312,12 +312,36 @@ export class PlayerController extends EventEmitter {
                         ? reps.findIndex(r => r.id === currentRep.id)
                         : -1;
                     metrics.currentIndex = currentIdx + 1;
+
+                    // Resolution (video only)
+                    if (type === 'video' && currentRep.width && currentRep.height) {
+                        metrics.resolution = `${currentRep.width}x${currentRep.height}`;
+                    }
                 }
             }
 
             // Dropped frames
             const droppedFrames = dashMetrics.getCurrentDroppedFrames();
             metrics.droppedFrames = droppedFrames ? droppedFrames.droppedFrames : 0;
+
+            // Average throughput
+            metrics.throughput = Math.round(this.player.getAverageThroughput(type) || 0);
+
+            // Codec
+            try {
+                const currentTrack = this.player.getCurrentTrackFor(type);
+                if (currentTrack && currentTrack.codec) {
+                    metrics.codec = currentTrack.codec;
+                }
+            } catch (e) {
+                // Track may not be available yet
+            }
+
+            // Buffer state
+            const bufferState = dashMetrics.getCurrentBufferState(type);
+            if (bufferState) {
+                metrics.bufferState = bufferState.state;
+            }
 
             // HTTP metrics
             const httpMetrics = this._calculateHTTPMetrics(type, dashMetrics);
@@ -327,9 +351,18 @@ export class PlayerController extends EventEmitter {
             if (this.isDynamic) {
                 metrics.liveLatency = this.player.getCurrentLiveLatency() || 0;
                 metrics.playbackRate = this.player.getPlaybackRate() || 1;
+
+                // Target live delay and DVR window (video only to avoid duplicates)
+                if (type === 'video') {
+                    metrics.targetDelay = this.player.getTargetLiveDelay() || 0;
+                    const dvrWindow = this.player.getDvrWindow();
+                    if (dvrWindow && dvrWindow.size) {
+                        metrics.dvrWindowSize = dvrWindow.size;
+                    }
+                }
             }
 
-            // Throughput
+            // Throughput (legacy field — kept for chart plotting)
             metrics.averageThroughput = this.player.getAverageThroughput(type) || 0;
 
         } catch (err) {

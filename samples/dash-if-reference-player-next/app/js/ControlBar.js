@@ -124,6 +124,36 @@ export class ControlBar {
     }
 
     /**
+     * Programmatically set the control bar to muted or unmuted state.
+     * Updates slider and icon without touching the player (use syncMuteState for that).
+     * @param {boolean} muted
+     */
+    setMuted(muted) {
+        if (muted) {
+            this._lastVolume = parseFloat(this.volumeSlider.value) || 1;
+            this.volumeSlider.value = 0;
+        } else {
+            this.volumeSlider.value = this._lastVolume || 1;
+        }
+        this.muteIcon.className = muted ? 'bi bi-volume-mute-fill' : 'bi bi-volume-up-fill';
+    }
+
+    /**
+     * Re-apply the control bar's current volume/mute state to the player.
+     * Call after a new source is attached to keep mute state in sync.
+     */
+    syncMuteState() {
+        try {
+            const vol = parseFloat(this.volumeSlider.value);
+            const isMuted = vol === 0 || this.muteIcon.className === 'bi bi-volume-mute-fill';
+            this.player.setVolume(isMuted ? 0 : vol);
+            this.player.setMute(isMuted);
+        } catch (e) {
+            // Player not ready
+        }
+    }
+
+    /**
      * Destroy the control bar, remove all event listeners
      */
     destroy() {
@@ -756,15 +786,19 @@ export class ControlBar {
     }
 
     _isTracksEqual(t1, t2) {
-        if (!t1 || !t2) {
+        try {
+            if (!t1 || !t2) {
+                return false;
+            }
+            return t1.id === t2.id
+                && t1.lang === t2.lang
+                && t1.viewpoint === t2.viewpoint
+                && String(t1.roles || '') === String(t2.roles || '')
+                && String(t1.accessibility || '') === String(t2.accessibility || '')
+                && String(t1.audioChannelConfiguration || '') === String(t2.audioChannelConfiguration || '');
+        } catch (e) {
             return false;
         }
-        return t1.id === t2.id
-            && t1.lang === t2.lang
-            && t1.viewpoint === t2.viewpoint
-            && String(t1.roles) === String(t2.roles)
-            && String(t1.accessibility || '') === String(t2.accessibility || '')
-            && String(t1.audioChannelConfiguration || '') === String(t2.audioChannelConfiguration || '');
     }
 
     _rebuildCaptionMenu() {
