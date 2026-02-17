@@ -19,6 +19,7 @@ export class PlayerController extends EventEmitter {
         this._metricsInterval = null;
         this._metricsTickCount = 0;
         this._sessionStartTime = 0;
+        this._currentRenderedRep = { video: null, audio: null };
     }
 
     /**
@@ -99,6 +100,7 @@ export class PlayerController extends EventEmitter {
         this.periodCount = 0;
         this.activePeriodId = '';
         this.bufferingPeriodId = '';
+        this._currentRenderedRep = { video: null, audio: null };
         this.conformanceViolations = [];
         this.emit('stopped');
     }
@@ -161,6 +163,7 @@ export class PlayerController extends EventEmitter {
     _resetSession() {
         this._sessionStartTime = Date.now();
         this._metricsTickCount = 0;
+        this._currentRenderedRep = { video: null, audio: null };
         this.conformanceViolations = [];
         this.emit('sessionReset');
     }
@@ -209,6 +212,9 @@ export class PlayerController extends EventEmitter {
     }
 
     _onQualityChangeRendered(e) {
+        if (e && e.mediaType && e.newRepresentation) {
+            this._currentRenderedRep[e.mediaType] = e.newRepresentation;
+        }
         this.emit('qualityChangeRendered', e);
     }
 
@@ -298,25 +304,27 @@ export class PlayerController extends EventEmitter {
             const reps = this.player.getRepresentationsByType(type);
             metrics.maxIndex = reps ? reps.length : 0;
 
-            // Current representation switch
+            // Index (downloading) — from representation switch metric
             const repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             if (repSwitch) {
                 const pendingIdx = reps
                     ? reps.findIndex(r => r.id === repSwitch.to)
                     : -1;
                 metrics.pendingIndex = pendingIdx + 1;
-                const currentRep = this.player.getCurrentRepresentationForType(type);
-                if (currentRep) {
-                    metrics.bitrate = Math.round(currentRep.bandwidth / 1000);
-                    const currentIdx = reps
-                        ? reps.findIndex(r => r.id === currentRep.id)
-                        : -1;
-                    metrics.currentIndex = currentIdx + 1;
+            }
 
-                    // Resolution (video only)
-                    if (type === 'video' && currentRep.width && currentRep.height) {
-                        metrics.resolution = `${currentRep.width}x${currentRep.height}`;
-                    }
+            // Index (playing) — from QUALITY_CHANGE_RENDERED event
+            const renderedRep = this._currentRenderedRep[type];
+            if (renderedRep) {
+                const currentIdx = reps
+                    ? reps.findIndex(r => r.id === renderedRep.id)
+                    : -1;
+                metrics.currentIndex = currentIdx + 1;
+                metrics.bitrate = Math.round(renderedRep.bandwidth / 1000);
+
+                // Resolution (video only)
+                if (type === 'video' && renderedRep.width && renderedRep.height) {
+                    metrics.resolution = `${renderedRep.width}x${renderedRep.height}`;
                 }
             }
 

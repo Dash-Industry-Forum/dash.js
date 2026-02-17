@@ -30,6 +30,24 @@ export class MetricsDisplay {
             });
         }
 
+        // Enable buffer and bitrate for video by default
+        const defaultMetrics = [
+            { metric: 'buffer', type: 'video' },
+            { metric: 'bitrate', type: 'video' }
+        ];
+        for (const { metric, type } of defaultMetrics) {
+            const btn = document.querySelector(
+                `.metric-chart-toggle[data-metric="${metric}"][data-type="${type}"]`
+            );
+            if (btn) {
+                btn.classList.add('active');
+                const key = `${type}-${metric}`;
+                if (this.chartController) {
+                    this.chartController.toggleSeries(key, true, `${type} ${metric}`);
+                }
+            }
+        }
+
         // Listen for metrics updates from PlayerController
         this.playerController.on('metricsUpdate', (data) => this._onMetricsUpdate(data));
         this.playerController.on('manifestLoaded', (data) => this._onManifestLoaded(data));

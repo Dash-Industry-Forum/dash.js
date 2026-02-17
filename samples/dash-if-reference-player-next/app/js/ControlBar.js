@@ -743,7 +743,7 @@ export class ControlBar {
                             this.player.updateSettings({
                                 streaming: { abr: { autoSwitchBitrate: { [type]: false } } }
                             });
-                            this.player.setRepresentationForTypeByIndex(type, idx, true);
+                            this.player.setRepresentationForTypeByIndex(type, idx, false);
                             this._rebuildBitrateMenu();
                         }
                     });
