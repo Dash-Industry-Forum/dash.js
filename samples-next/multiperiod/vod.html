@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiperiod VoD example</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Multi Period"
+            data-title="Multiperiod VoD example"
+            data-description="Shows how dash.js handles on-demand streams with multiple periods.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

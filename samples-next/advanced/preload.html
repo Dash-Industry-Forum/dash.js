@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Preload content</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Preload content"
+            data-description="Initializes streaming and caches segments before attaching the player to a video element."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3 align-items-start">
+        <div class="col-lg-8">
+            <div class="dash-video-player" id="player-container"></div>
+        </div>
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3">
+                <h5>Attach playback</h5>
+                <p class="text-muted mb-3">Attach the video element after preload completes to start playback.</p>
+                <button class="btn btn-primary" id="attach-button" type="button">Attach View</button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<template id="sample-description-extra">
+    <div class="bd-callout mt-3">
+        <p class="mb-2">When this page loads, dash.js downloads segments into a virtual buffer. Once you attach the view,
+            the cached data is appended to the new SourceBuffers.</p>
+        <p class="mb-0">For this to work, <code>cacheInitSegments</code> must be enabled.</p>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+
+        player = dashjs.MediaPlayer().create();
+        player.initialize(null, url, true);
+        player.updateSettings({
+            debug: { logLevel: 5 },
+            streaming: { cacheInitSegments: true }
+        });
+        player.preload();
+
+        document.getElementById('attach-button').addEventListener('click', attachVideoPlayer);
+    }
+
+    function attachVideoPlayer() {
+        const container = document.querySelector('#player-container');
+        container.innerHTML = DashjsSamples.getControlBarMarkup({ ttmlRenderingDiv: true });
+        const video = container.querySelector('video');
+        const ttmlDiv = container.querySelector('#ttml-rendering-div');
+
+        if (video) {
+            player.attachView(video);
+        }
+        if (ttmlDiv) {
+            player.attachTTMLRenderingDiv(ttmlDiv);
+        }
+
+        const controlbar = new ControlBar(player);
+        controlbar.initialize();
+    }
+</script>
+</body>
+</html>

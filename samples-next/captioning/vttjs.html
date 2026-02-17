@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>WebVTT Custom Rendering</title>
+    <script src="../../contrib/videojs-vtt.js/vtt.min.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="WebVTT Custom Rendering"
+            data-description="Shows how to use vtt.js for custom WebVTT rendering when native VTT is not available."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-description-extra">
+    <p>Note: This sample will only work when using http as the subtitles are not hosted via https.</p>
+</template>
+
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', url, { autoplay: true });
+
+        player.updateSettings({
+            debug: {
+                logLevel: 5
+            },
+            streaming: {
+                text: {
+                    webvtt: {
+                        customRenderingEnabled: true
+                    }
+                }
+            }
+        });
+
+        const vttDiv = document.createElement('div');
+        vttDiv.id = 'vtt-rendering-div';
+        vttDiv.style.minWidth = '600px';
+        vttDiv.style.minHeight = '100px';
+        vttDiv.style.position = 'relative';
+
+        const container = document.querySelector('#player-container');
+        container.appendChild(vttDiv);
+
+        player.attachVttRenderingDiv(vttDiv);
+    }
+</script>
+</body>
+</html>

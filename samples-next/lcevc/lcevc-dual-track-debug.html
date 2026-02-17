@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MPEG-5 LCEVC dual track (debug)</title>
+    <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="MPEG-5 Part 2 - LCEVC"
+            data-title="MPEG-5 LCEVC dual track (debug)"
+            data-description="Debug LCEVC dual-track stream that shows enhancement decoding with moving squares."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+    <canvas id="lcevc-canvas" class="mt-3"></canvas>
+</template>
+
+<template id="sample-description-extra">
+    <div class="bd-callout mt-3">
+        <p class="mb-0">The HTML5 video element is hidden and LCEVC renders to the canvas.</p>
+    </div>
+</template>
+
+<script data-sample>
+    const AutoRenderMode = {
+        DISABLED: 0,
+        ENABLED: 1
+    };
+
+    dashjs.Extensions = {
+        ...dashjs.Extensions,
+        useLcevc: function useLcevc(player) {
+            if (!player) {
+                throw new TypeError('The provided Dash.js player instance was null or undefined.');
+            }
+            const { LCEVCdec } = window;
+            if (!LCEVCdec) {
+                throw new TypeError('LCEVC Decoder Libraries could not be loaded.');
+            }
+
+            let abrIndex = -1;
+
+            player.attachLcevc = function attachLcevc(media, canvas, lcevcDecConfig) {
+                player.LCEVCdec = new LCEVCdec.LCEVCdec(media, canvas, lcevcDecConfig);
+
+                player.on(dashjs.MediaPlayer.events.QUALITY_CHANGE_REQUESTED, handleQualityChange);
+                player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_COMPLETED, handleFragmentLoadingCompleted);
+                player.on(dashjs.MediaPlayer.events.REPRESENTATION_SWITCH, handleRepresentationSwitch);
+                player.on('externalSourceBufferUpdateStart', handleBufferUpdates);
+            };
+
+            function handleFragmentLoadingCompleted(event) {
+                if (event.mediaType === 'enhancement') {
+                    abrIndex = event.request.representation.absoluteIndex;
+                }
+            }
+
+            function handleQualityChange(event) {
+                if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                    const index = event.newRepresentation.absoluteIndex;
+                    player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                }
+            }
+
+            function handleRepresentationSwitch(event) {
+                if (event.mediaType === 'video' || event.mediaType === 'enhancement') {
+                    const rep = event.currentRepresentation;
+                    const index = rep.absoluteIndex;
+                    if (rep && rep.dependentRepresentation) {
+                        player.LCEVCdec.setLevelSwitching(index, AutoRenderMode.ENABLED);
+                    }
+                }
+            }
+
+            function handleBufferUpdates(event) {
+                if (event.request === 'appendBuffer') {
+                    player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, false);
+                } else if (event.request === 'remove') {
+                    player.LCEVCdec.flushBuffer(event.start, event.end);
+                }
+            }
+        }
+    };
+
+    function init() {
+        const url = 'https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_with_dR/master.mpd';
+        const container = document.getElementById('player-container');
+        container.innerHTML = DashjsSamples.getControlBarMarkup();
+
+        const video = container.querySelector('video');
+        const canvas = document.getElementById('lcevc-canvas');
+        const player = dashjs.MediaPlayer().create();
+
+        video.style.display = 'none';
+
+        const defaultSettings = {
+            debug: {
+                logLevel: 5,
+                dispatchEvent: false
+            },
+            streaming: {
+                enhancement: {
+                    enabled: true
+                },
+                abr: {
+                    rules: {
+                        insufficientBufferRule: {
+                            active: false
+                        }
+                    }
+                }
+            }
+        };
+
+        const lcevcDecConfig = {
+            dynamicPerformanceScaling: false
+        };
+
+        video._getVideoPlaybackQuality = video.getVideoPlaybackQuality;
+        video.getVideoPlaybackQuality = function () {
+            const quality = video._getVideoPlaybackQuality();
+            const { creationTime, totalVideoFrames, droppedVideoFrames, corruptedVideoFrames } = quality;
+            return {
+                creationTime,
+                totalVideoFrames,
+                droppedVideoFrames: LCEVCdec?.instance?.totalDroppedFrames || 0,
+                corruptedVideoFrames
+            };
+        };
+
+        LCEVCdec.ready.then(() => {
+            dashjs.Extensions.useLcevc(player);
+            player.attachLcevc(video, canvas, lcevcDecConfig);
+            player.initialize(video, url, false);
+            player.updateSettings(defaultSettings);
+            const controlbar = new ControlBar(player);
+            controlbar.initialize();
+        });
+    }
+</script>
+</body>
+</html>

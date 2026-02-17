@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live delay comparison using setLiveDelay</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Live"
+            data-title="Live delay comparison using setLiveDelay"
+            data-description="Illustrates how segment duration and liveDelay affect live latency.
+                Each player uses a different liveDelay with 2s and 6s segment durations."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-lg-8">
+            <div class="p-4 border rounded-3 h-100">
+                <h5>Wall Clock reference time</h5>
+                <div class="display-4" id="clock"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>2s segment, 2s target latency</h6>
+                <video id="video1" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video1delay"></span></div>
+                <div>Buffer length: <span id="video1buffer"></span></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>2s segment, 4s target latency</h6>
+                <video id="video2" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video2delay"></span></div>
+                <div>Buffer length: <span id="video2buffer"></span></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>2s segment, 8s target latency <span class="badge bg-info text-dark">Default</span></h6>
+                <video id="video3" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video3delay"></span></div>
+                <div>Buffer length: <span id="video3buffer"></span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>6s segment, 6s target latency</h6>
+                <video id="video4" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video4delay"></span></div>
+                <div>Buffer length: <span id="video4buffer"></span></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>6s segment, 12s target latency</h6>
+                <video id="video5" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video5delay"></span></div>
+                <div>Buffer length: <span id="video5buffer"></span></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>6s segment, 24s target latency <span class="badge bg-info text-dark">Default</span></h6>
+                <video id="video6" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video6delay"></span></div>
+                <div>Buffer length: <span id="video6buffer"></span></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    const MPD_2S_SEGMENTS = 'https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd';
+    const MPD_6S_SEGMENTS = 'https://livesim2.dashif.org/livesim2/testpic_6s/Manifest.mpd';
+
+    const players = [];
+
+    function init() {
+        players.push(createPlayer('#video1', MPD_2S_SEGMENTS, 2));
+        players.push(createPlayer('#video2', MPD_2S_SEGMENTS, 4));
+        players.push(createPlayer('#video3', MPD_2S_SEGMENTS, 8));
+        players.push(createPlayer('#video4', MPD_6S_SEGMENTS, 6));
+        players.push(createPlayer('#video5', MPD_6S_SEGMENTS, 12));
+        players.push(createPlayer('#video6', MPD_6S_SEGMENTS, 24));
+
+        setInterval(updateMetrics, 1000);
+    }
+
+    function createPlayer(selector, url, delaySeconds) {
+        const video = document.querySelector(selector);
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+        player.updateSettings({
+            streaming: {
+                delay: { liveDelay: delaySeconds }
+            }
+        });
+        return { player, selector };
+    }
+
+    function updateMetrics() {
+        const now = new Date();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock').textContent = `${minutes}:${seconds}`;
+
+        players.forEach((entry, index) => {
+            const p = entry.player;
+            const delay = Math.round((now.getTime() / 1000) - Number(p.timeAsUTC()));
+            document.getElementById(`video${index + 1}delay`).textContent = delay;
+            document.getElementById(`video${index + 1}buffer`).textContent = `${p.getBufferLength()}s`;
+        });
+    }
+</script>
+</body>
+</html>

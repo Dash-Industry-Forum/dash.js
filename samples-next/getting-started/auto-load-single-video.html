@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Auto load single video</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Auto load single video"
+            data-description="The MPD source is specified within the child <code>&lt;source&gt;</code> element
+                of the video element. The <code>type</code> attribute must be set to
+                <code>application/dash+xml</code> for automatic detection.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video autoplay preload="none" controls>
+        <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                type="application/dash+xml">
+    </video>
+</template>
+</body>
+</html>

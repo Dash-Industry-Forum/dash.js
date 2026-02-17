@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live stream with availabilityTimeOffset</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Live"
+            data-title="Live stream with availabilityTimeOffset"
+            data-description="Example showing how dash.js handles live streams with availabilityTimeOffset (ATO)."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3 h-100">
+                <h5>Wall Clock reference time</h5>
+                <div class="display-4" id="clock"></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3 h-100">
+                <h5>Debug information</h5>
+                <div>Seconds behind live: <span id="videoDelay">-</span></div>
+                <div>Video buffer: <span id="videoBuffer">-</span></div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg-7">
+            <video controls></video>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+
+    function init() {
+        const url = 'https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd';
+        const video = document.querySelector('video');
+        player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+
+        setInterval(updateMetrics, 1000);
+    }
+
+    function updateMetrics() {
+        const now = new Date();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock').textContent = `${minutes}:${seconds}`;
+
+        if (player && player.isReady()) {
+            const delay = Math.round((now.getTime() / 1000) - Number(player.timeAsUTC()));
+            document.getElementById('videoDelay').textContent = delay;
+            document.getElementById('videoBuffer').textContent = `${player.getBufferLength()}s`;
+        }
+    }
+</script>
+</body>
+</html>

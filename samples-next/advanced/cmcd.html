@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CMCD Reporting</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="CMCD Reporting"
+            data-description="Shows how to enable Common Media Client Data (CMCD) reporting and inspect the generated keys."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <video controls></video>
+        </div>
+        <div class="col-lg-6">
+            <div class="form-floating">
+                <textarea class="form-control trace-log" placeholder="Sent CMCD data will be displayed here"
+                          id="trace"></textarea>
+                <label for="trace">CMCD Data</label>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    const cmcdDataGenerated = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
+    const cmcdModeQuery = 'query';
+    const cmcdModeHeader = 'header';
+    let player;
+
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+
+        player = dashjs.MediaPlayer().create();
+        player.initialize();
+        player.on(cmcdDataGenerated, handleCmcdDataGeneratedEvent);
+
+        player.updateSettings({
+            streaming: {
+                cmcd: {
+                    enabled: true,
+                    sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5',
+                    cid: '21cf726cfe3d937b5f974f72bb5bd06a',
+                    mode: cmcdModeQuery,
+                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v']
+                }
+            }
+        });
+
+        player.setAutoPlay(false);
+        player.attachView(video);
+        player.attachSource(url);
+    }
+
+    function handleCmcdDataGeneratedEvent(event) {
+        log(`type: ${event.mediaType}`);
+        log(`file: ${event.url.split('/').pop()}`);
+        const mode = player.getSettings().streaming.cmcd.mode;
+        const data = mode === cmcdModeHeader ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+        const keys = Object.keys(data).sort();
+        keys.forEach((key) => {
+            log(`${key.padEnd(4)}: ${event.cmcdData[key]}`);
+        });
+        log('');
+    }
+
+    function getKeysForQueryMode(event) {
+        const cmcdData = {};
+        extractKeyValuePairs(event.cmcdString, cmcdData);
+        return cmcdData;
+    }
+
+    function getKeysForHeaderMode(event) {
+        const cmcdData = {};
+        Object.keys(event.headers).forEach((key) => {
+            extractKeyValuePairs(event.headers[key], cmcdData);
+        });
+        return cmcdData;
+    }
+
+    function extractKeyValuePairs(cmcdString, cmcdData) {
+        if (cmcdString === '') {
+            return;
+        }
+        cmcdString.split(',').forEach((keyValuePair) => {
+            const data = keyValuePair.split('=');
+            cmcdData[data[0]] = data[1];
+        });
+    }
+
+    function log(msg) {
+        const safeMsg = msg.length > 200 ? `${msg.substring(0, 200)}...` : msg;
+        const tracePanel = document.getElementById('trace');
+        tracePanel.value += `${safeMsg}\n`;
+        tracePanel.scrollTop = tracePanel.scrollHeight;
+        console.log(safeMsg);
+    }
+</script>
+</body>
+</html>

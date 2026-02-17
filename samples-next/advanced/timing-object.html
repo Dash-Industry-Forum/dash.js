@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Synchronization with a TimingObject</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Synchronization with a TimingObject"
+            data-description="Connects a TimingObject to dash.js to synchronize playback across devices."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video></video>
+    <div class="mt-3">
+        <button id="play" class="btn btn-primary" disabled type="button">Play</button>
+        <button id="pause" class="btn btn-outline-secondary" disabled type="button">Pause</button>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const player = dashjs.MediaPlayer().create();
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+
+        player.initialize(video, url, false);
+
+        const pauseButton = document.getElementById('pause');
+        const playButton = document.getElementById('play');
+
+        Promise.all([
+            import('https://jspm.dev/npm:timing-object'),
+            import('https://jspm.dev/npm:timing-provider'),
+            import('https://jspm.dev/npm:timingsrc')
+        ]).then(([{ TimingObject }, { TimingProvider }, { setTimingsrc }]) => {
+            const timingObject = new TimingObject(new TimingProvider('V7X4LuPQMgtuspLtLy4i'));
+
+            pauseButton.addEventListener('click', () => {
+                pauseButton.disabled = true;
+                playButton.disabled = false;
+                timingObject.update({ velocity: 0 });
+            });
+
+            playButton.addEventListener('click', () => {
+                playButton.disabled = true;
+                pauseButton.disabled = false;
+                timingObject.update({ velocity: 1 });
+            });
+
+            timingObject.addEventListener('change', () => {
+                const { velocity } = timingObject.query();
+                if (velocity === 0) {
+                    pauseButton.disabled = true;
+                    playButton.disabled = false;
+                } else {
+                    playButton.disabled = true;
+                    pauseButton.disabled = false;
+                }
+            });
+
+            timingObject.addEventListener('readystatechange', () => {
+                if (timingObject.readyState === 'open') {
+                    playButton.disabled = false;
+                    setTimingsrc(video, timingObject);
+                }
+            });
+
+            video.addEventListener('ended', () => {
+                pauseButton.disabled = true;
+                playButton.disabled = false;
+                timingObject.update({ position: 0 });
+            });
+        });
+    }
+</script>
+</body>
+</html>

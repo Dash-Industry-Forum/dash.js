@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live delay comparison custom manifest</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Live"
+            data-title="Live delay comparison custom manifest"
+            data-description="Explore how live delay can be configured in seconds or by fragment count.
+                Use the input to load any live manifest and compare the resulting delay and buffer."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row mt-2 g-3">
+        <div class="col-lg-7">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Manifest URL</span>
+                <input type="text" id="manifest" class="form-control"
+                       value="https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd">
+                <button type="button" id="loadButton" class="btn btn-primary">Load stream</button>
+            </div>
+            <video controls></video>
+        </div>
+        <div class="col-lg-5">
+            <div class="p-4 border rounded-3 mb-3">
+                <h4>Settings</h4>
+                <div class="form-check">
+                    <input class="form-check-input" value="default" type="radio" name="delay" id="delay-default" checked>
+                    <label class="form-check-label" for="delay-default">Default</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" value="segments" type="radio" name="delay" id="delay-segments">
+                    <label class="form-check-label" for="delay-segments">Fragment Count</label>
+                    <div class="mt-2" id="fragmentsEntry" style="display:none;">
+                        <input id="delayInFragments" type="number" class="form-control form-control-sm" placeholder="e.g. 2">
+                    </div>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" value="time" type="radio" name="delay" id="delay-time">
+                    <label class="form-check-label" for="delay-time">Time in seconds</label>
+                    <div class="mt-2" id="secondsEntry" style="display:none;">
+                        <input id="delayInSeconds" type="number" class="form-control form-control-sm" placeholder="e.g. 10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-4 border rounded-3 mb-3">
+                <h4>Wall Clock</h4>
+                <div class="display-4" id="clock"></div>
+            </div>
+
+            <div class="p-4 border rounded-3">
+                <h4>Debug information</h4>
+                <div>Seconds behind live: <span id="videoDelay">-</span></div>
+                <div>Video buffer: <span id="videoBuffer">-</span></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+    let firstLoad = true;
+
+    function init() {
+        document.getElementById('loadButton').addEventListener('click', load);
+        document.querySelectorAll('input[name="delay"]').forEach(radio => {
+            radio.addEventListener('change', onDelayChange);
+        });
+
+        setInterval(updateClockAndMetrics, 1000);
+    }
+
+    function onDelayChange(e) {
+        const value = e.target.value;
+        document.getElementById('fragmentsEntry').style.display = value === 'segments' ? 'block' : 'none';
+        document.getElementById('secondsEntry').style.display = value === 'time' ? 'block' : 'none';
+    }
+
+    function load() {
+        if (player && !firstLoad) {
+            player.reset();
+        }
+        firstLoad = false;
+
+        const url = document.getElementById('manifest').value.trim();
+        if (!url) {
+            return;
+        }
+
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({ debug: { logLevel: dashjs.Debug.LOG_LEVEL_NONE } });
+
+        const selection = document.querySelector('input[name="delay"]:checked').value;
+        if (selection === 'segments') {
+            const count = Number(document.getElementById('delayInFragments').value) || 0;
+            player.updateSettings({
+                streaming: { delay: { liveDelayFragmentCount: count } }
+            });
+        } else if (selection === 'time') {
+            const seconds = Number(document.getElementById('delayInSeconds').value) || 0;
+            player.updateSettings({
+                streaming: { delay: { liveDelay: seconds } }
+            });
+        }
+
+        player.initialize(document.querySelector('video'), url, true);
+    }
+
+    function updateClockAndMetrics() {
+        const now = new Date();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock').textContent = `${minutes}:${seconds}`;
+
+        if (player && player.isReady()) {
+            const delay = Math.round((now.getTime() / 1000) - Number(player.timeAsUTC()));
+            document.getElementById('videoDelay').textContent = `${delay}`;
+            document.getElementById('videoBuffer').textContent = `${player.getBufferLength()}s`;
+        }
+    }
+</script>
+</body>
+</html>

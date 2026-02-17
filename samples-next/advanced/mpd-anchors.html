@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>MPD anchors</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="MPD anchors"
+            data-description="Uses an MPD URL fragment to start playback at a specific time.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd#t=60';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

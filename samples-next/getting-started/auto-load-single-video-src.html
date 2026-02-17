@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Auto load single video src</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Auto load single video src"
+            data-description="The simplest way to use a dash.js player in a web page. The MPD source is specified
+                via the <code>@src</code> attribute of the video element. The <code>data-dashjs-player</code>
+                attribute triggers automatic player instantiation via <code>Dash.createAll()</code>.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video data-dashjs-player autoplay
+           src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls></video>
+</template>
+</body>
+</html>

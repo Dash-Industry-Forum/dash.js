@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiple audio tracks with different codecs</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Multi-Audio"
+            data-title="Multiple audio tracks with different codecs"
+            data-description="Shows playback of multi-audio content with different codecs using Widevine DRM."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', url);
+
+        player.setProtectionData({
+            'com.widevine.alpha': {
+                serverURL: 'https://cwip-shaka-proxy.appspot.com/no_auth'
+            }
+        });
+    }
+</script>
+</body>
+</html>

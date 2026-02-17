@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>UMD ES5 build</title>
+    <script src="../../dist/legacy/umd/dash.all.min.js"></script>
+    <script src="../common/layout.js"
+            data-section="Builds"
+            data-title="UMD ES5"
+            data-description="Demonstrates the legacy UMD ES5 build. The player auto-attaches via the
+                <code>&lt;source&gt;</code> element with <code>type=&quot;application/dash+xml&quot;</code>.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls>
+        <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                type="application/dash+xml">
+    </video>
+</template>
+</body>
+</html>

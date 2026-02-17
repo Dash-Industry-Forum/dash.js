@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Audio only stream example</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Audio only"
+            data-title="Audio only stream example"
+            data-description="Shows how to play audio-only streams in dash.js. This sample uses an <code>&lt;audio&gt;</code> element.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <audio controls></audio>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://livesim2.dashif.org/vod/testpic_2s/audio.mpd';
+        const audio = document.querySelector('audio');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(audio, url, true);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Thumbnails</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Thumbnails"
+            data-title="Thumbnails"
+            data-description="Shows how to use streams with thumbnail representations. The thumbnail representation can be selected from the bitrate menu.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd';
+        DashjsSamples.createPlayerWithControlBar('#player-container', url, { thumbnails: true });
+    }
+</script>
+</body>
+</html>

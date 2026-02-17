@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>External WebVTT example</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="Adding external WebVTT subtitles"
+            data-description="Shows how to add external WebVTT subtitles not included in the DASH manifest."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', null);
+
+        const externalSubtitle = new dashjs.ExternalSubtitle({
+            id: 'external_1',
+            url: 'https://reference.dashif.org/other/content/webvtt/external-subtitle.vtt',
+            mimeType: 'text/vtt',
+            language: 'en',
+            bandwidth: 256
+        });
+        const externalSubtitleTwo = new dashjs.ExternalSubtitle({
+            id: 'external_2',
+            url: 'https://reference.dashif.org/other/content/webvtt/external-subtitle-2.vtt',
+            mimeType: 'text/vtt',
+            language: 'de',
+            bandwidth: 256
+        });
+
+        player.initialize(document.querySelector('video'), null, true);
+        player.addExternalSubtitle(externalSubtitle);
+        player.addExternalSubtitle(externalSubtitleTwo);
+        player.attachSource(url);
+    }
+</script>
+</body>
+</html>

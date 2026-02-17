@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Low latency streaming - Testplayer</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="../../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.4.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="../../../contrib/akamai/controlbar/controlbar.css">
+    <link href="../../lib/main.css" rel="stylesheet">
+    <link href="main.css" rel="stylesheet">
+
+    <script src="../../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.3.2/dist/chart.min.js"></script>
+    <script src="../../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../lib/sweetalert2/sweetalert2.all.min.js"></script>
+
+</head>
+<body>
+
+<main>
+    <div class="container py-4">
+        <header class="pb-3 mb-4 border-bottom">
+            <img class=""
+                 src="../../lib/img/dashjs-logo.png"
+                 width="200">
+        </header>
+        <div class="row">
+            <div class="col-lg-12">
+                <div class=" p-5 bg-light border rounded-3">
+                    <h3><i class="bi bi-info-square"></i> Live low-latency playback</h3>
+                    Example showing how to use dash.js to play low latency streams. The low-latency related parameters
+                    can be adjusted in the settings section. For more information checkout the <a
+                    href="https://dashif.org/dash.js/pages/usage/low-latency.html" target="_blank">documentation</a>.
+
+                    <div class="alert alert-warning mt-4" role="alert">
+                        <ul>
+                            <li>All the
+                                additional ABR rules defined in "ABR - Additional" will be automatically disabled for
+                                L2A-LL and
+                                LoL+. Both, L2A-LL and LoL+ are standalone rules.
+                            </li>
+                            <li>It is not possible to switch between the ABR rules dynamically. In order change the ABR
+                                rule reload the stream.
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-lg-12">
+                <div class="p-5 border rounded-3">
+                    <h4>Settings</h4>
+                    <hr>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>General</h6>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Target latency (sec)</span>
+                                <input type="number" id="target-latency" class="form-control" value="3"
+                                       step="0.5">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Max drift (sec)</span>
+                                <input id="max-drift" class="form-control" value="0"
+                                       step="0.5" min="0" type="number">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Maximum catch-up playback rate</span>
+                                <input type="number" id="max-catchup-playback-rate" class="form-control" value="0.1"
+                                       step="0.05" max="0.5" min="0.0">
+                            </div>
+                            <div class="input-group input-group-sm mb-3">
+                                <span class="input-group-text">Minimum catch-up playback rate</span>
+                                <input type="number" id="min-catchup-playback-rate" class="form-control" value="-0.1"
+                                       step="0.05" max="0.0" min="-0.5">
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6>ABR - Rules</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-throughput"
+                                       checked>
+                                <label class="form-check-label" for="abr-throughput">
+                                    ThroughputRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-bola"
+                                       checked>
+                                <label class="form-check-label" for="abr-bola">
+                                    BolaRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-insufficient"
+                                       checked>
+                                <label class="form-check-label" for="abr-insufficient">
+                                    InsufficientBufferRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-switch"
+                                       checked>
+                                <label class="form-check-label" for="abr-switch">
+                                    SwitchHistoryRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-dropped"
+                                       checked>
+                                <label class="form-check-label" for="abr-dropped">
+                                    DroppedFramesRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-abandon">
+                                <label class="form-check-label" for="abr-abandon">
+                                    AbandonRequestRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-lolp">
+                                <label class="form-check-label" for="abr-lolp">
+                                    LoLPRule
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="abr-l2a">
+                                <label class="form-check-label" for="abr-l2a">
+                                    L2aRule
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Catchup mechanism</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup"
+                                       value="liveCatchupModeDefault" id="liveCatchupModeDefault"
+                                       checked>
+                                <label class="form-check-label" for="liveCatchupModeDefault">
+                                    Default
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="catchup"
+                                       value="liveCatchupModeLoLP"
+                                       id="liveCatchupModeLoLP">
+                                <label class="form-check-label" for="liveCatchupModeLoLP">
+                                    LoL+ based
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="live-catchup-enabled"
+                                       checked>
+                                <label class="form-check-label" for="live-catchup-enabled">
+                                    Enabled
+                                </label>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <h6 >Additional APIs</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" id="network-api">
+                                <label class="form-check-label" for="network-api">
+                                    Network Information API
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Download Time Estimation</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation"
+                                       value="lowLatencyDownloadTimeCalculationModeDownloadedData"
+                                       id="abrFetchThroughputCalculationDownloadedData">
+                                <label class="form-check-label"
+                                       for="abrFetchThroughputCalculationDownloadedData">
+                                    data chunks
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation"
+                                       value="lowLatencyDownloadTimeCalculationModeMoofParsing"
+                                       id="abrFetchThroughputCalculationMoofParsing"
+                                       checked>
+                                <label class="form-check-label" for="abrFetchThroughputCalculationMoofParsing">
+                                    moof parsing
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="download-estimation"
+                                       value="abrFetchThroughputCalculationAAST"
+                                       id="abrFetchThroughputCalculationAAST">
+                                <label class="form-check-label" for="abrFetchThroughputCalculationAAST">
+                                    AAST decisioning
+                                </label>
+                            </div>
+                            <h6 class="mt-4">Throughput Estimation Mode</h6>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeEwma"
+                                       id="throughputCalculationModeEwma" checked>
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeEwma">
+                                    Exponential Weighted Moving Average (EWMA)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeZlema"
+                                       id="throughputCalculationModeZlema"
+                                >
+                                <label class="form-check-label" for="throughputCalculationModeZlema">
+                                    Zero-Latency Exponential Moving Average (ZLEMA)
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeArithmeticMean"
+                                       id="throughputCalculationModeArithmeticMean">
+                                <label class="form-check-label" for="throughputCalculationModeArithmeticMean">
+                                    Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeByteSizeWeightedArithmeticMean"
+                                       id="throughputCalculationModeByteSizeWeightedArithmeticMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeByteSizeWeightedArithmeticMean">
+                                    Byte Size Weighted Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeDateWeightedArithmeticMean"
+                                       id="throughputCalculationModeDateWeightedArithmeticMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeDateWeightedArithmeticMean">
+                                    Date Weighted Arithmetic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeHarmonicMean"
+                                       id="throughputCalculationModeHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeHarmonicMean">
+                                    Harmonic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeByteSizeWeightedHarmonicMean"
+                                       id="throughputCalculationModeByteSizeWeightedHarmonicMean">
+                                <label class="form-check-label"
+                                       for="throughputCalculationModeByteSizeWeightedHarmonicMean">
+                                    Byte Size Weighted Harmonic Mean
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="throughput-estimation"
+                                       value="throughputCalculationModeDateWeightedHarmonicMean"
+                                       id="throughputCalculationModeDateWeightedHarmonicMean">
+                                <label class="form-check-label" for="throughputCalculationModeDateWeightedHarmonicMean">
+                                    Date Weighted Harmonic Mean
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <button type="button" id="apply-settings-button" class="btn btn-success">Apply
+                            </button>
+                            <button type="button" id="export-settings-button" class="btn btn-warning">Copy Settings
+                                URL
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+        <div class="row mt-4">
+            <div class="col-md-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1">Manifest URL</span>
+                    <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
+                           value="https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd"
+                           aria-label="Username"
+                           aria-describedby="basic-addon1">
+                    <button type="button" id="load-button" class="btn btn-success">Load stream
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-2">
+            <div class="col-md-7 dash-video-player">
+                <div id="videoContainer" class="videoContainer">
+                    <video></video>
+                    <div id="videoController" class="video-controller unselectable">
+                        <div id="playPauseBtn" class="btn-play-pause" title="Play/Pause">
+                            <span id="iconPlayPause" class="icon-play"></span>
+                        </div>
+                        <span id="videoTime" class="time-display">00:00:00</span>
+                        <div id="fullscreenBtn" class="btn-fullscreen control-icon-layout" title="Fullscreen">
+                            <span class="icon-fullscreen-enter"></span>
+                        </div>
+                        <div id="bitrateListBtn" class="control-icon-layout" title="Bitrate List">
+                            <span class="icon-bitrate"></span>
+                        </div>
+                        <input type="range" id="volumebar" class="volumebar" value="1" min="0" max="1" step=".01"/>
+                        <div id="muteBtn" class="btn-mute control-icon-layout" title="Mute">
+                            <span id="iconMute" class="icon-mute-off"></span>
+                        </div>
+                        <div id="trackSwitchBtn" class="control-icon-layout" title="A/V Tracks">
+                            <span class="icon-tracks"></span>
+                        </div>
+                        <div id="captionBtn" class="btn-caption control-icon-layout" title="Closed Caption">
+                            <span class="icon-caption"></span>
+                        </div>
+                        <span id="videoDuration" class="duration-display">00:00:00</span>
+                        <div class="seekContainer">
+                            <div id="seekbar" class="seekbar seekbar-complete">
+                                <div id="seekbar-buffer" class="seekbar seekbar-buffer"></div>
+                                <div id="seekbar-play" class="seekbar seekbar-play"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="p-5 border rounded-3 mt-1">
+                    <h5>Wall Clock reference time</h5>
+                    <div class="clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
+                </div>
+                <div class="p-5 border rounded-3 mt-1">
+                    <div>
+                        <div><span class="metric-value">Seconds behind live: </span> <span
+                            id="latency-tag"></span></div>
+                        <div><span class="metric-value">Video Buffer: </span><span
+                            id="buffer-tag"></span></div>
+                        <div><span class="metric-value">Video Index Downloading: </span><span
+                            id="video-index"></span>/<span
+                            id="video-max-index"></span></div>
+                        <div><span class="metric-value">Video Bitrate Downloading kbits/s: </span><span
+                            id="video-bitrate"></span></div>
+                        <div><span class="metric-value"> Playback rate: </span><span
+                            id="playbackrate-tag"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row mt-4">
+            <div class="col-lg-9">
+                <div>
+                    <canvas id="metric-chart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-3">
+                <h5>Chart settings</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="chart-enabled"
+                           checked>
+                    <label class="form-check-label" for="chart-enabled">
+                        Enabled
+                    </label>
+                </div>
+                <div class="input-group input-group-sm mb-3 mt-2">
+                    <span class="input-group-text">Interval (ms)</span>
+                    <input type="number" id="chart-interval" class="form-control" value="300"
+                           step="50" min="200">
+                </div>
+                <div class="input-group input-group-sm mb-3 mt-2">
+                    <span class="input-group-text">Number of data points</span>
+                    <input type="number" id="chart-number-of-entries" class="form-control" value="30"
+                           step="1">
+                </div>
+                <button type="button" id="chart-settings-button" class="btn btn-success">Apply
+                </button>
+            </div>
+        </div>
+        <footer class="pt-3 mt-4 text-muted border-top">
+            &copy; DASH-IF
+        </footer>
+    </div>
+</main>
+<script src="main.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        var app = new App();
+        app.init();
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiple Language EBU Timed Text Sample</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="TTML EBU timed text tracks"
+            data-description="Example showing content with TTML EBU timed text tracks."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd';
+        DashjsSamples.createPlayerWithControlBar('#player-container', url, { ttmlRenderingDiv: true });
+    }
+</script>
+</body>
+</html>

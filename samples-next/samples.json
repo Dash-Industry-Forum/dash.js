@@ -1,0 +1,533 @@
+[
+    {
+        "section": "Getting Started",
+        "active": true,
+        "samples": [
+            {
+                "title": "Auto load single video src",
+                "description": "The simplest way to use dash.js. The MPD source is specified via the @src attribute of the video element.",
+                "href": "getting-started/auto-load-single-video-src.html",
+                "labels": ["basic"]
+            },
+            {
+                "title": "Auto load single video",
+                "description": "The MPD source is specified within the child <source> element of the video element with type application/dash+xml.",
+                "href": "getting-started/auto-load-single-video.html",
+                "labels": ["basic"]
+            },
+            {
+                "title": "Auto load multi video",
+                "description": "Shows how to auto-embed multiple instances of dash.js players on a single page.",
+                "href": "getting-started/auto-load-multi-video.html",
+                "labels": ["basic"]
+            },
+            {
+                "title": "Manual load single video",
+                "description": "Shows how to manually create a player instance and load a single video.",
+                "href": "getting-started/manual-load-single-video.html",
+                "labels": ["basic"]
+            },
+            {
+                "title": "Manual load with custom settings",
+                "description": "Shows how to load a video using custom player settings.",
+                "href": "getting-started/manual-load-with-custom-settings.html",
+                "labels": ["settings"]
+            },
+            {
+                "title": "Using the Control Bar",
+                "description": "Shows how to add and configure the ControlBar UI with the dash.js player.",
+                "href": "getting-started/controlbar.html",
+                "labels": ["ui"]
+            },
+            {
+                "title": "Listening to events",
+                "description": "Shows how to listen to events raised by dash.js and dynamically add or remove event listeners.",
+                "href": "getting-started/listening-to-events.html",
+                "labels": ["events"]
+            },
+            {
+                "title": "Log levels",
+                "description": "Shows how to configure dash.js logging levels.",
+                "href": "getting-started/logging.html",
+                "labels": ["debug"]
+            },
+            {
+                "title": "Load with URL parameters",
+                "description": "Demonstrates configuring playback via URL query parameters (url, autoplay).",
+                "href": "getting-started/load-with-url-params.html?autoplay=true&url=https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
+                "labels": ["configuration"]
+            }
+        ]
+    },
+    {
+        "section": "Live",
+        "samples": [
+            {
+                "title": "Live delay comparison custom manifest",
+                "description": "Explore live delay settings by loading any manifest and comparing delay and buffer.",
+                "href": "live-streaming/live-delay-comparison-custom-manifest.html",
+                "labels": ["live", "delay"]
+            },
+            {
+                "title": "Live delay comparison using fragment count",
+                "description": "Compare latency using fragment count based live delay.",
+                "href": "live-streaming/live-delay-comparison-using-fragmentCount.html",
+                "labels": ["live", "delay"]
+            },
+            {
+                "title": "Live delay comparison using setLiveDelay",
+                "description": "Compare latency using time-based live delay.",
+                "href": "live-streaming/live-delay-comparison-using-setLiveDelay.html",
+                "labels": ["live", "delay"]
+            },
+            {
+                "title": "Synchronized live playback",
+                "description": "Synchronize live playback using catchup mode.",
+                "href": "live-streaming/synchronized-live-playback.html",
+                "labels": ["live", "sync"]
+            },
+            {
+                "title": "Availability time offset",
+                "description": "Shows how live streams behave with availabilityTimeOffset (ATO).",
+                "href": "live-streaming/availability-time-offset.html",
+                "labels": ["live", "ato"]
+            },
+            {
+                "title": "MPD patching",
+                "description": "Demonstrates MPD patching updates for live streams.",
+                "href": "live-streaming/mpd-patching.html",
+                "labels": ["live", "mpd"]
+            }
+        ]
+    },
+    {
+        "section": "Live Low Latency",
+        "samples": [
+            {
+                "title": "Low latency testplayer",
+                "description": "Full low latency player with ABR algorithms and tuning controls.",
+                "href": "low-latency/testplayer/testplayer.html",
+                "labels": ["live", "low latency"]
+            }
+        ]
+    },
+    {
+        "section": "ABR",
+        "samples": [
+            {
+                "title": "Changing the default ABR algorithm",
+                "description": "Configure ABR algorithms in dash.js.",
+                "href": "abr/abr.html",
+                "labels": ["abr"]
+            },
+            {
+                "title": "Custom ABR Rules",
+                "description": "Create and register custom ABR rules.",
+                "href": "abr/custom-abr-rules.html",
+                "labels": ["abr", "custom"]
+            },
+            {
+                "title": "Disable ABR",
+                "description": "Disable automatic bitrate switching.",
+                "href": "abr/disable-abr.html",
+                "labels": ["abr"]
+            },
+            {
+                "title": "Initial bitrate",
+                "description": "Set the initial bitrate selection.",
+                "href": "abr/initial-bitrate.html",
+                "labels": ["abr"]
+            },
+            {
+                "title": "Max/min bitrate",
+                "description": "Define maximum and minimum bitrate limits.",
+                "href": "abr/max-min-bitrate.html",
+                "labels": ["abr"]
+            },
+            {
+                "title": "Fast bitrate switch",
+                "description": "Aggressively replace segments when switching up in quality.",
+                "href": "abr/fastswitch.html",
+                "labels": ["abr"]
+            },
+            {
+                "title": "Average throughput calculation modes",
+                "description": "Change how throughput is calculated for ABR decisions.",
+                "href": "abr/average-calculation-mode.html",
+                "labels": ["abr"]
+            }
+        ]
+    },
+    {
+        "section": "Buffer",
+        "samples": [
+            {
+                "title": "Buffer target",
+                "description": "Configure buffer targets for short and long-form content.",
+                "href": "buffer/buffer-target.html",
+                "labels": ["buffer"]
+            },
+            {
+                "title": "Buffer cleanup",
+                "description": "Configure pruning parameters for buffer cleanup.",
+                "href": "buffer/buffer-cleanup.html",
+                "labels": ["buffer"]
+            },
+            {
+                "title": "Initial buffer target",
+                "description": "Define the initial buffer target at playback start.",
+                "href": "buffer/initial-buffer.html",
+                "labels": ["buffer"]
+            }
+        ]
+    },
+    {
+        "section": "DRM",
+        "samples": [
+            {
+                "title": "Widevine",
+                "description": "Play streams with Widevine DRM protection.",
+                "href": "drm/widevine.html",
+                "labels": ["drm", "widevine"]
+            },
+            {
+                "title": "PlayReady",
+                "description": "Play streams with PlayReady DRM protection (Edge on Windows).",
+                "href": "drm/playready.html",
+                "labels": ["drm", "playready"]
+            },
+            {
+                "title": "ClearKey",
+                "description": "Play streams with ClearKey protection.",
+                "href": "drm/clearkey.html",
+                "labels": ["drm", "clearkey"]
+            },
+            {
+                "title": "License wrapping",
+                "description": "Filter and wrap license requests and responses.",
+                "href": "drm/license-wrapping.html",
+                "labels": ["drm"]
+            },
+            {
+                "title": "Keysystem priority",
+                "description": "Specify DRM system priority when multiple systems are supported.",
+                "href": "drm/system-priority.html",
+                "labels": ["drm"]
+            },
+            {
+                "title": "Keysystem string priority",
+                "description": "Specify system string priority for key system access requests.",
+                "href": "drm/system-string-priority.html",
+                "labels": ["drm"]
+            },
+            {
+                "title": "License server via MPD",
+                "description": "Specify the license server url in the MPD using dashif:laurl.",
+                "href": "drm/dashif-laurl.html",
+                "labels": ["drm"]
+            },
+            {
+                "title": "DRM - Keep MediaKeySession",
+                "description": "Keep MediaKeys and MediaKeySessions for fewer license requests.",
+                "href": "drm/keepProtectionKeys.html",
+                "labels": ["drm"]
+            },
+            {
+                "title": "DRM robustness level",
+                "description": "Define robustness level for requestMediaKeySystemAccess.",
+                "href": "drm/robustness-level.html",
+                "labels": ["drm"]
+            }
+        ]
+    },
+    {
+        "section": "Multi Period",
+        "samples": [
+            {
+                "title": "VoD Multiperiod",
+                "description": "Handle streams with two periods.",
+                "href": "multiperiod/vod.html",
+                "labels": ["multiperiod"]
+            },
+            {
+                "title": "Live Multiperiod",
+                "description": "Handle live streams with multiple periods.",
+                "href": "multiperiod/live.html",
+                "labels": ["multiperiod", "live"]
+            }
+        ]
+    },
+    {
+        "section": "Subtitles and Captions",
+        "samples": [
+            {
+                "title": "Caption VTT",
+                "description": "Play VTT captions with dash.js.",
+                "href": "captioning/caption_vtt.html",
+                "labels": ["captions"]
+            },
+            {
+                "title": "CEA 608/708",
+                "description": "Play embedded CEA 608/708 captions.",
+                "href": "captioning/cea608.html",
+                "labels": ["captions"]
+            },
+            {
+                "title": "Multi Track Captions",
+                "description": "Play content with multiple text tracks.",
+                "href": "captioning/multi-track-captions.html",
+                "labels": ["captions"]
+            },
+            {
+                "title": "TTML EBU timed text tracks",
+                "description": "Play TTML EBU timed text tracks.",
+                "href": "captioning/ttml-ebutt-sample.html",
+                "labels": ["captions"]
+            },
+            {
+                "title": "WebVTT Custom Rendering",
+                "description": "Use vtt.js to render WebVTT captions.",
+                "href": "captioning/vttjs.html",
+                "labels": ["captions"]
+            },
+            {
+                "title": "Subtitle Event Handling",
+                "description": "Consume subtitle events and render them yourself.",
+                "href": "captioning/events.html",
+                "labels": ["captions", "events"]
+            },
+            {
+                "title": "Adding external WebVTT subtitles",
+                "description": "Add external WebVTT subtitles not specified in the manifest.",
+                "href": "captioning/external-subtitle.html",
+                "labels": ["captions"]
+            }
+        ]
+    },
+    {
+        "section": "Multi-Audio",
+        "samples": [
+            {
+                "title": "Multiple audio tracks",
+                "description": "Switch between multiple audio tracks during playback.",
+                "href": "multi-audio/multi-audio.html",
+                "labels": ["audio"]
+            },
+            {
+                "title": "Multiple audio tracks with different codecs",
+                "description": "Switch between audio tracks that use different codecs.",
+                "href": "multi-audio/multi-audio-drm-codec-change.html",
+                "labels": ["audio", "drm"]
+            },
+            {
+                "title": "Multi Audio - Initial Track",
+                "description": "Select a default audio language for playback.",
+                "href": "multi-audio/multi-audio-default-track.html",
+                "labels": ["audio"]
+            },
+            {
+                "title": "Multi Audio - Initial Track with language and accessibility",
+                "description": "Select a default audio language and accessibility for playback.",
+                "href": "multi-audio/multi-audio-default-lang-acc.html",
+                "labels": ["audio"]
+            }
+        ]
+    },
+    {
+        "section": "Thumbnails",
+        "samples": [
+            {
+                "title": "Thumbnails",
+                "description": "Use streams with thumbnail representations.",
+                "href": "thumbnails/thumbnails.html",
+                "labels": ["thumbnails"]
+            }
+        ]
+    },
+    {
+        "section": "Audio only",
+        "samples": [
+            {
+                "title": "Audio only stream",
+                "description": "Play audio-only streams with dash.js.",
+                "href": "audio-only/index.html",
+                "labels": ["audio"]
+            }
+        ]
+    },
+    {
+        "section": "Advanced",
+        "samples": [
+            {
+                "title": "Monitoring stream",
+                "description": "Monitor bitrate, buffer level, frame rate, and resolution.",
+                "href": "advanced/monitoring.html",
+                "labels": ["metrics"]
+            },
+            {
+                "title": "Listening to SCTE-EMSG Events",
+                "description": "Listen to SCTE-35 events embedded in EMSG boxes.",
+                "href": "advanced/listening-to-SCTE-EMSG-events.html",
+                "labels": ["events", "live"]
+            },
+            {
+                "title": "Autoplay browser policy",
+                "description": "Recover from autoplay blocks by muting and reloading playback.",
+                "href": "advanced/auto-play-browser-policy.html",
+                "labels": ["playback"]
+            },
+            {
+                "title": "Network interceptor",
+                "description": "Apply request/response interceptors via CommonMediaLibrary API.",
+                "href": "network-interceptor/index.html",
+                "labels": ["network"]
+            },
+            {
+                "title": "CMCD Reporting",
+                "description": "Enhance requests with Common Media Client Data (CMCD).",
+                "href": "advanced/cmcd.html",
+                "labels": ["cmcd"]
+            },
+            {
+                "title": "CMCD Reporting from manifest",
+                "description": "Configure CMCD from MPD parameters and optionally override them.",
+                "href": "advanced/cmcd-from-manifest.html",
+                "labels": ["cmcd"]
+            },
+            {
+                "title": "Flexible Insertion of URL Parameters",
+                "description": "Append query parameters to manifest and segment requests.",
+                "href": "advanced/ext-url-query-info.html",
+                "labels": ["network"]
+            },
+            {
+                "title": "Custom Capabilities Filters",
+                "description": "Filter representations based on custom constraints.",
+                "href": "advanced/custom-capabilities-filters.html",
+                "labels": ["capabilities"]
+            },
+            {
+                "title": "Custom Capabilities Filter - MediaCapabilitiesAPI",
+                "description": "Filter representations using the MediaCapabilities API.",
+                "href": "advanced/custom-capabilities-filter-mca.html",
+                "labels": ["capabilities"]
+            },
+            {
+                "title": "Custom initial track selection",
+                "description": "Define a custom initial track selection function.",
+                "href": "advanced/custom-initial-track-selection.html",
+                "labels": ["selection", "drm"]
+            },
+            {
+                "title": "Load with parsed manifest object",
+                "description": "Load the manifest from a parsed JavaScript object.",
+                "href": "advanced/load_with_manifest.html",
+                "labels": ["manifest"]
+            },
+            {
+                "title": "MPD anchors",
+                "description": "Start playback at a given time using MPD anchors.",
+                "href": "advanced/mpd-anchors.html",
+                "labels": ["mpd"]
+            },
+            {
+                "title": "Manual load with start time",
+                "description": "Initialize playback at a specific start time for live or VOD.",
+                "href": "advanced/load-with-starttime.html",
+                "labels": ["live", "start time"]
+            },
+            {
+                "title": "Content Steering",
+                "description": "Observe content steering selection and steering responses.",
+                "href": "advanced/content-steering.html",
+                "labels": ["steering"]
+            },
+            {
+                "title": "Preload content",
+                "description": "Preload segments before attaching to a video element.",
+                "href": "advanced/preload.html",
+                "labels": ["preload"]
+            },
+            {
+                "title": "Synchronization with a TimingObject",
+                "description": "Synchronize playback across devices using a TimingObject.",
+                "href": "advanced/timing-object.html",
+                "labels": ["sync"]
+            },
+            {
+                "title": "End of stream buffering",
+                "description": "Buffer the entire asset to trigger end-of-stream behavior.",
+                "href": "advanced/endofstream.html",
+                "labels": ["buffer"]
+            }
+        ]
+    },
+    {
+        "section": "MSS",
+        "samples": [
+            {
+                "title": "Microsoft Smooth Streaming",
+                "description": "Play Microsoft Smooth Streaming streams with dash.js.",
+                "href": "smooth-streaming/mss.html",
+                "labels": ["mss"]
+            }
+        ]
+    },
+    {
+        "section": "MPEG-5 Part 2 - LCEVC",
+        "samples": [
+            {
+                "title": "Scalable LCEVC carriage",
+                "description": "Scalable delivery with base and enhancement tracks.",
+                "href": "lcevc/lcevc-dual-track.html",
+                "labels": ["lcevc"]
+            },
+            {
+                "title": "Scalable with Debug Residuals",
+                "description": "Debug stream showing LCEVC enhancement decoding.",
+                "href": "lcevc/lcevc-dual-track-debug.html",
+                "labels": ["lcevc"]
+            },
+            {
+                "title": "LCEVC using SEI carriage",
+                "description": "Use SEI carriage for LCEVC enhancement data.",
+                "href": "lcevc/lcevc-sei.html",
+                "labels": ["lcevc"]
+            }
+        ]
+    },
+    {
+        "section": "Builds",
+        "samples": [
+            {
+                "title": "UMD ES5",
+                "description": "Legacy build transpiled to ES5 with polyfills.",
+                "href": "builds/umd-es5.html",
+                "labels": ["umd"]
+            },
+            {
+                "title": "UMD Browserlist",
+                "description": "Modern UMD build targeting default browserlist.",
+                "href": "builds/umd-browserlist.html",
+                "labels": ["umd"]
+            },
+            {
+                "title": "ESM Browserlist",
+                "description": "ESM build targeting default browserlist.",
+                "href": "builds/esm-browserlist.html",
+                "labels": ["esm"]
+            }
+        ]
+    },
+    {
+        "section": "Module builds",
+        "samples": [
+            {
+                "title": "Mediaplayer only",
+                "description": "Use the dash.mediaplayer bundle without DRM playback support.",
+                "href": "module-builds/mediaplayer-only.html",
+                "labels": ["module"]
+            }
+        ]
+    }
+]

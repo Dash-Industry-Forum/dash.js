@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Clearkey DRM instantiation example</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="DRM"
+            data-title="ClearKey"
+            data-description="Shows how to configure ClearKey DRM protection data and play a protected stream."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-description-extra">
+    <p>For a detailed explanation on DRM playback in dash.js checkout the
+        <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.</p>
+    <div class="alert alert-danger mt-3" role="alert" style="display: none" id="http-warning"></div>
+</template>
+
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        checkProtocol();
+
+        const protData = {
+            'org.w3.clearkey': {
+                clearkeys: {
+                    nrQFDeRLSAKTLifXUIPiZg: 'FmY0xnWCPCNaSpRG-tUuTQ'
+                }
+            }
+        };
+
+        const url = 'https://media.axprod.net/TestVectors/v7-MultiDRM-SingleKey/Manifest_1080p_ClearKey.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(video, url, true);
+        player.setProtectionData(protData);
+    }
+
+    function checkProtocol() {
+        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+            const out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.';
+            const div = document.getElementById('http-warning');
+            div.innerHTML = out;
+            div.style.display = '';
+        }
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Log levels</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Log levels"
+            data-description="Shows how to configure dash.js logging levels. Available levels are:
+                <code>LOG_LEVEL_NONE</code>, <code>LOG_LEVEL_FATAL</code>,
+                <code>LOG_LEVEL_ERROR</code>, <code>LOG_LEVEL_WARNING</code>,
+                <code>LOG_LEVEL_INFO</code>, and <code>LOG_LEVEL_DEBUG</code>.
+                Open the browser console to see the log output.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(video, url, true);
+        player.updateSettings({
+            debug: {
+                logLevel: dashjs.Debug.LOG_LEVEL_INFO
+            }
+        });
+    }
+</script>
+</body>
+</html>

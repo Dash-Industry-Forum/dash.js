@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Manual load single video</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Manual load single video"
+            data-description="Shows how to manually create a player instance, attach it to a video element,
+                and load a single video. Autoplay is set to <code>false</code>.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, false);
+    }
+</script>
+</body>
+</html>

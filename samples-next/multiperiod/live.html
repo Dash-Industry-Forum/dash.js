@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiperiod Live example</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Multi Period"
+            data-title="Multiperiod Live example"
+            data-description="Shows how dash.js handles live streams with multiple periods. A new period starts every minute.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

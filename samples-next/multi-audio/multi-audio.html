@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiple audio tracks sample</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Multi-Audio"
+            data-title="Multiple audio tracks"
+            data-description="Shows how content with multiple audio tracks can be played and switched during playback."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', url);
+        player.setInitialMediaSettingsFor('audio', { lang: 'et-ET' });
+    }
+</script>
+</body>
+</html>

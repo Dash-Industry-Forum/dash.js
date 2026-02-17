@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Load with URL parameters</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Load with URL parameters"
+            data-description="Demonstrates configuring playback via URL query parameters."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-description-extra">
+    <table class="table table-sm mt-3">
+        <thead>
+            <tr>
+                <th>Parameter</th>
+                <th>Description</th>
+                <th>Default</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><code>autoplay</code></td>
+                <td>Enable autoplay. Set to <code>true</code> or <code>false</code></td>
+                <td><code>true</code></td>
+            </tr>
+            <tr>
+                <td><code>url</code></td>
+                <td>Specify the MPD URL</td>
+                <td><code>https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd</code></td>
+            </tr>
+        </tbody>
+    </table>
+</template>
+
+<template id="sample-content">
+    <div class="row mt-3">
+        <div class="col-md-8">
+            <video controls></video>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const params = new URLSearchParams(window.location.search);
+
+        const url = params.get('url') || 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const autoplay = params.has('autoplay') ? params.get('autoplay') === 'true' : true;
+
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, autoplay);
+    }
+</script>
+</body>
+</html>

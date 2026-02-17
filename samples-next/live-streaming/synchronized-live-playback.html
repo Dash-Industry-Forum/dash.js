@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Synchronized live playback</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Live"
+            data-title="Synchronized live playback"
+            data-description="Shows how to use the catchup mechanism to synchronize playback of two live streams."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3 align-items-stretch">
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3 h-100">
+                <h5>Wall Clock reference time</h5>
+                <div class="display-4" id="clock"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-3 mt-1">
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>2s segment, 10s target latency</h6>
+                <video id="video1" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video1delay"></span></div>
+                <div>Buffer length: <span id="video1buffer"></span></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3 h-100">
+                <h6>2s segment, 10s target latency</h6>
+                <video id="video2" class="video-sm" controls muted></video>
+                <div>Seconds behind live: <span id="video2delay"></span></div>
+                <div>Buffer length: <span id="video2buffer"></span></div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    const MPD_2S_SEGMENTS = 'https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd';
+    const players = [];
+
+    function init() {
+        const settings = {
+            streaming: {
+                delay: { liveDelay: 10 },
+                liveCatchup: { enabled: true }
+            }
+        };
+
+        players.push(createPlayer('#video1', settings));
+        players.push(createPlayer('#video2', settings));
+
+        setInterval(updateMetrics, 1000);
+    }
+
+    function createPlayer(selector, settings) {
+        const video = document.querySelector(selector);
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, MPD_2S_SEGMENTS, true);
+        player.updateSettings(settings);
+        return player;
+    }
+
+    function updateMetrics() {
+        const now = new Date();
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        document.getElementById('clock').textContent = `${minutes}:${seconds}`;
+
+        players.forEach((p, index) => {
+            const delay = Math.round((now.getTime() / 1000) - Number(p.timeAsUTC()));
+            document.getElementById(`video${index + 1}delay`).textContent = delay;
+            document.getElementById(`video${index + 1}buffer`).textContent = `${p.getBufferLength()}s`;
+        });
+    }
+</script>
+</body>
+</html>

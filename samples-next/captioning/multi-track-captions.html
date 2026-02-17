@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multiple Language Timed Text Sample</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="Multi Track Captions"
+            data-description="Example showing content with multiple timed text tracks and optional localStorage caching."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <div class="dash-video-player" id="player-container"></div>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3">
+                <h5>Settings</h5>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="textDefaultEnabled" checked>
+                    <label class="form-check-label" for="textDefaultEnabled">textDefaultEnabled</label>
+                </div>
+                <div class="mt-2">
+                    <label for="textSettings" class="form-label">Initial settings language/role</label>
+                    <select class="form-select" id="textSettings">
+                        <option value="">-- unset initial lang and role --</option>
+                        <option value="en-subtitle">eng - subtitles</option>
+                        <option value="en-caption">eng - captions</option>
+                        <option value="sv">swe - subtitles</option>
+                        <option value="qb">qbb - subtitles</option>
+                        <option value="no">nor - subtitles</option>
+                    </select>
+                </div>
+                <div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="lastMediaSettingsCachingInfoEnabled">
+                    <label class="form-check-label" for="lastMediaSettingsCachingInfoEnabled">
+                        streaming.lastMediaSettingsCachingInfo.enabled
+                    </label>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">localStorage content:</label>
+                    <div id="domStorage"></div>
+                </div>
+                <div class="mt-3">
+                    <button type="button" class="btn btn-danger" id="clearDom">Clear localStorage</button>
+                    <button type="button" id="loadButton" class="btn btn-primary">Load stream</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    const FRAGMENTED_CAPTION_URL = 'https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd';
+    let player;
+
+    function init() {
+        const { player: p } = DashjsSamples.createPlayerWithControlBar('#player-container', null, { ttmlRenderingDiv: true, autoplay: false });
+        player = p;
+        player.initialize();
+
+        player.on('currentTrackChanged', e => {
+            if (e.newMediaInfo.type === 'text') {
+                setTimeout(showDomStorage, 0);
+            }
+        });
+
+        document.getElementById('textDefaultEnabled').addEventListener('change', setTextDefaultEnabled);
+        document.getElementById('textSettings').addEventListener('change', setLang);
+        document.getElementById('lastMediaSettingsCachingInfoEnabled').addEventListener('change', setLastMediaSettingsCachingInfoEnabled);
+        document.getElementById('clearDom').addEventListener('click', clearDomStorage);
+        document.getElementById('loadButton').addEventListener('click', play);
+
+        showDomStorage();
+    }
+
+    function showDomStorage() {
+        document.getElementById('domStorage').textContent = localStorage.getItem('dashjs_text_settings');
+    }
+
+    function play() {
+        player.attachSource(FRAGMENTED_CAPTION_URL);
+        setTextDefaultEnabled();
+        setLang();
+        player.play();
+        showDomStorage();
+    }
+
+    function setTextDefaultEnabled() {
+        const checkbox = document.getElementById('textDefaultEnabled');
+        player.updateSettings({ streaming: { text: { defaultEnabled: checkbox.checked } } });
+    }
+
+    function setLang() {
+        let lang = document.getElementById('textSettings').value;
+        let role = null;
+        if (lang) {
+            if (lang.includes('-')) {
+                const values = lang.split('-');
+                lang = values[0];
+                role = values[1];
+            }
+            player.setInitialMediaSettingsFor('text', { lang, role });
+        }
+    }
+
+    function setLastMediaSettingsCachingInfoEnabled() {
+        const checkbox = document.getElementById('lastMediaSettingsCachingInfoEnabled');
+        player.updateSettings({
+            streaming: {
+                lastMediaSettingsCachingInfo: { enabled: checkbox.checked }
+            }
+        });
+    }
+
+    function clearDomStorage() {
+        localStorage.removeItem('dashjs_text_settings');
+        showDomStorage();
+    }
+</script>
+</body>
+</html>

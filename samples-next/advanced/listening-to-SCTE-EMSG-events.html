@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Listening to SCTE-EMSG Events</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Listening to SCTE-EMSG Events"
+            data-description="Catches SCTE-35 events embedded in EMSG boxes and displays them for on-start and on-receive modes."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <video controls></video>
+        </div>
+        <div class="col-lg-6">
+            <div class="form-floating">
+                <textarea class="form-control trace-log" placeholder="Trapped on_receive events will be displayed here"
+                          id="receive"></textarea>
+                <label for="receive">Received Events</label>
+            </div>
+        </div>
+    </div>
+    <div class="row g-3 margin-top-row">
+        <div class="col-lg-6">
+            <div class="form-floating">
+                <textarea class="form-control trace-log" placeholder="Trapped on_start events will be displayed here"
+                          id="start"></textarea>
+                <label for="start">Started Events</label>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+    const mpd = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
+    const schemeIdUri = 'urn:scte:scte35:2013:bin';
+    const eventModeOnReceive = dashjs.MediaPlayer.events.EVENT_MODE_ON_RECEIVE;
+
+    function init() {
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({ debug: { logLevel: dashjs.Debug.LOG_LEVEL_DEBUG } });
+        player.on(schemeIdUri, showStartEvent, null);
+        player.on(schemeIdUri, showReceiveEvent, null, { mode: eventModeOnReceive });
+        player.initialize(document.querySelector('video'), mpd, true);
+    }
+
+    function showStartEvent(e) {
+        showEvent(e, 'start');
+    }
+
+    function showReceiveEvent(e) {
+        showEvent(e, 'receive');
+    }
+
+    function showEvent(e, output) {
+        for (const name in e) {
+            if (typeof e[name] !== 'object') {
+                log(`    ${name}: ${e[name]}`, output);
+            }
+        }
+        for (const name in e) {
+            if (typeof e[name] === 'object') {
+                log(`    ${name}:`, output);
+                for (const name2 in e[name]) {
+                    log(`        ${name2}: ${JSON.stringify(e[name][name2])}`, output);
+                }
+            }
+        }
+        log('', output);
+    }
+
+    function log(msg, output) {
+        const safeMsg = msg.length > 200 ? `${msg.substring(0, 200)}...` : msg;
+        const tracePanel = document.getElementById(output);
+        tracePanel.value += `${safeMsg}\n`;
+        tracePanel.scrollTop = tracePanel.scrollHeight;
+        console.log(safeMsg);
+    }
+</script>
+</body>
+</html>

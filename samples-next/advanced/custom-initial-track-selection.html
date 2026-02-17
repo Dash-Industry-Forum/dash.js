@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Custom initial track selection</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Custom initial track selection"
+            data-description="Defines a custom initial track selection function to prefer a specific adaptation set."
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd';
+
+        const getTrackWithLowestBitrate = (trackArr) => {
+            let min = Infinity;
+            let result = [];
+
+            trackArr.forEach((track) => {
+                const tmp = Math.min(...track.bitrateList.map((obj) => obj.bandwidth));
+                if (tmp < min) {
+                    min = tmp;
+                    result = [track];
+                }
+            });
+
+            return result;
+        };
+
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.setProtectionData({
+            'com.widevine.alpha': {
+                serverURL: 'https://cwip-shaka-proxy.appspot.com/no_auth'
+            }
+        });
+        player.initialize(video, url, true);
+        player.setCustomInitialTrackSelectionFunction(getTrackWithLowestBitrate);
+    }
+</script>
+</body>
+</html>

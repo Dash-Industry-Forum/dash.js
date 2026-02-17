@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Auto load multi video</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Auto load multi video"
+            data-description="Shows how to auto-embed multiple instances of dash.js players on a single page.
+                One player uses a <code>&lt;source&gt;</code> element with autoplay, another without autoplay,
+                and a third uses the <code>data-dashjs-player</code> attribute on the <code>src</code>.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-12">
+            <h6>Player 1: auto-start via &lt;source&gt; element</h6>
+            <video class="video-sm" autoplay controls>
+                <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                        type="application/dash+xml">
+            </video>
+        </div>
+        <div class="col-12">
+            <hr>
+            <h6>Player 2: no autostart via &lt;source&gt; element</h6>
+            <video class="video-sm" controls>
+                <source src="https://dash.akamaized.net/digitalprimates/fraunhofer/480p_video/heaac_2_0_with_video/Sintel/sintel_480p_heaac2_0.mpd"
+                        type="application/dash+xml">
+            </video>
+        </div>
+        <div class="col-12">
+            <hr>
+            <h6>Player 3: manifest via data-dashjs-player src attribute</h6>
+            <video class="video-sm" data-dashjs-player autoplay
+                   src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd" controls>
+            </video>
+        </div>
+    </div>
+</template>
+</body>
+</html>

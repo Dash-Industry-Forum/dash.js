@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Manual load with custom settings</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Manual load with custom settings"
+            data-description="Shows how to load a video using custom player settings. Demonstrates the
+                step-by-step initialization approach: create player, configure settings, attach view,
+                then attach source.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(); /* initialize the MediaPlayer instance */
+
+        player.updateSettings({
+            debug: {
+                logLevel: dashjs.Debug.LOG_LEVEL_NONE /* turns off console logging */
+            },
+            streaming: {
+                scheduling: {
+                    scheduleWhilePaused: false /* stops loading segments while paused */
+                },
+                buffer: {
+                    fastSwitchEnabled: true /* enables faster bitrate switching */
+                }
+            }
+        });
+
+        player.setAutoPlay(false); /* remove this line to start automatically on load */
+        player.attachView(video); /* tell the player which videoElement to use */
+        player.attachSource(url); /* provide the manifest source */
+    }
+</script>
+</body>
+</html>

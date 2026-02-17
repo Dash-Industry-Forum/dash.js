@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multi Audio - Initial Track with language and accessibility</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Multi-Audio"
+            data-title="Multi Audio - Initial Track with language and accessibility"
+            data-description="Demonstrates detailed initial audio selection using language, role, channel configuration, viewpoint, and accessibility settings."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <div class="dash-video-player" id="player-container"></div>
+        </div>
+        <div class="col-lg-5">
+            <div class="p-4 border rounded-3">
+                <h5>Initial settings (input)</h5>
+                <textarea class="form-control mb-3" id="initial-settings" rows="6" readonly></textarea>
+                <h5>Selected audio track</h5>
+                <textarea class="form-control" id="selected-track" rows="6" readonly></textarea>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', url);
+
+        player.updateSettings({
+            debug: {
+                logLevel: dashjs.Debug.LOG_LEVEL_INFO
+            }
+        });
+
+        const initialSettings = {
+            lang: 'fr',
+            role: 'main',
+            audioChannelConfiguration: '6',
+            viewpoint: 'commentary',
+            accessibility: {
+                schemeIdUri: 'urn:tva:metadata:cs:AudioPurposeCS:2007',
+                value: '1'
+            }
+        };
+
+        player.setInitialMediaSettingsFor('audio', initialSettings);
+        document.getElementById('initial-settings').value = JSON.stringify(initialSettings, null, 2);
+
+        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => {
+            const track = player.getCurrentTrackFor('audio');
+            document.getElementById('selected-track').value = JSON.stringify(track, null, 2);
+        });
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>CEA 608/708 Embedded Captions Sample</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="CEA 608/708"
+            data-description="Shows how content with embedded CEA 608/708 captions can be played by dash.js."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://livesim2.dashif.org/vod/testpic_2s/cea608.mpd';
+        DashjsSamples.createPlayerWithControlBar('#player-container', url, { ttmlRenderingDiv: true });
+    }
+</script>
+</body>
+</html>

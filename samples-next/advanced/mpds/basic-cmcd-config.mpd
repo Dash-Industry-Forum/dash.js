@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" xmlns:mas="urn:marlin:mas:1-0:services:schemas:mpd" xmlns:mspr="urn:microsoft:playready" xmlns:cenc="urn:mpeg:cenc:2013" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="static" mediaPresentationDuration="PT10M34.600S" minBufferTime="PT1.980S">
+  <BaseURL serviceLocation="cdn-a">https://cloudfront.content-steering.com/bbb/</BaseURL>
+  <BaseURL serviceLocation="cdn-b">https://fastly.content-steering.com/bbb/</BaseURL>
+  <BaseURL serviceLocation="cdn-c">https://akamai.content-steering.com/bbb/</BaseURL>
+  <ServiceDescription>
+	<ContentSteering defaultServiceLocation="cdn-a" queryBeforeStart="true">https://cloudfront.content-steering.com/dash.dcsm?steering_params=eyJjZG5PcmRlciI6WyJjZG4tYSIsImNkbi1iIiwiY2RuLWMiXSwibWluQml0cmF0ZSI6OTE0ODc4LCJwYXRod2F5cyI6W3siaWQiOiJjZG4tYSIsInRocm91Z2hwdXQiOjIwMDAwMDAwfSx7ImlkIjoiY2RuLWIiLCJ0aHJvdWdocHV0IjoyMDAwMDAwMH0seyJpZCI6ImNkbi1jIiwidGhyb3VnaHB1dCI6MjAwMDAwMDB9XX0=</ContentSteering>
+    <ClientDataReporting>
+      <CMCDParameters version="1" keys="br sid cid" contentID="content-id-1" sessionID="session-id-1" includeInRequests='segment steering' schemeIdUri="urn:mpeg:dash:cta-5004:2023"/>
+    </ClientDataReporting>
+  </ServiceDescription>
+  <Period>
+    <AdaptationSet mimeType="audio/mp4" segmentAlignment="true" startWithSAP="1" lang="und" group="0">
+      <SegmentTemplate duration="1984" initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/seg-$Number$.m4f" startNumber="1" timescale="1000"/>
+      <Representation audioSamplingRate="48000" bandwidth="131556" codecs="mp4a.40.2" id="audio_128kbps">
+        <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet mimeType="video/mp4" scanType="progressive" segmentAlignment="true" startWithSAP="1" group="0">
+      <SegmentTemplate duration="2000" initialization="$RepresentationID$/init.mp4" media="$RepresentationID$/seg-$Number$.m4f" startNumber="1" timescale="1000"/>
+      <Representation bandwidth="4530860" codecs="avc1.640028" frameRate="30" height="1080" id="video_1920x1080_4531kbps" scanType="progressive" width="1920"/>
+      <Representation bandwidth="2445034" codecs="avc1.4D401F" frameRate="30" height="720" id="video_1280x720_2445kbps" scanType="progressive" width="1280"/>
+      <Representation bandwidth="1419255" codecs="avc1.4D401F" frameRate="30" height="576" id="video_1024x576_1419kbps" scanType="progressive" width="1024"/>
+      <Representation bandwidth="783322" codecs="avc1.4D401E" frameRate="30" height="360" id="video_640x360_783kbps" scanType="progressive" width="640"/>
+    </AdaptationSet>
+  </Period>
+</MPD>

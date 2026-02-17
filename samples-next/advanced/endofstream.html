@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>End of stream buffering</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="End of stream buffering"
+            data-description="Demonstrates buffering the entire asset to trigger end-of-stream behavior."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-6">
+            <video class="video-sm"></video>
+        </div>
+        <div class="col-lg-6">
+            <div class="p-4 border rounded-3">
+                <h5>Buffer level</h5>
+                <div class="display-6"><span id="bufferLevel">0%</span></div>
+                <p class="text-muted mb-0">Playback jumps to the highest quality once the buffer is full.</p>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const video = document.querySelector('video');
+        const url = 'https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd';
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(video, url);
+        player.setMute(true);
+        player.updateSettings({
+            debug: {
+                logLevel: 5
+            },
+            streaming: {
+                buffer: {
+                    bufferToKeep: Infinity,
+                    bufferTimeAtTopQuality: Infinity,
+                    bufferTimeAtTopQualityLongForm: Infinity
+                },
+                abr: {
+                    limitBitrateByPortal: true
+                }
+            }
+        });
+
+        player.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, () => player.play());
+
+        video.addEventListener('progress', () => {
+            let start = 0;
+            let end = 0;
+
+            for (let i = 0; i < video.buffered.length; i++) {
+                start = Math.min(start, video.buffered.start(i));
+                end = Math.max(start, video.buffered.end(i));
+            }
+
+            const level = (end - start) / video.duration;
+            document.getElementById('bufferLevel').innerText = `${(level * 100).toFixed(2)}%`;
+
+            if (level >= 1) {
+                onBufferFull(player, video);
+            }
+        });
+    }
+
+    function onBufferFull(player, video) {
+        video.style.width = '100%';
+        video.style.height = '100%';
+
+        const highest = player.getBitrateInfoListFor('video').length - 1;
+        window.setTimeout(() => player.setQualityFor('video', highest), 5000);
+    }
+</script>
+</body>
+</html>

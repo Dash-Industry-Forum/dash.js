@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Monitoring stream</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Monitoring stream"
+            data-description="Shows how to monitor stream metrics such as bitrate, buffer level, frame rate, and resolution.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-7">
+            <video controls></video>
+        </div>
+        <div class="col-lg-5">
+            <div class="p-4 border rounded-3">
+                <h4>Metrics</h4>
+                <div>
+                    <strong>Reported bitrate:</strong>
+                    <span id="reportedBitrate">-</span>
+                    <br>
+                    <strong>Buffer level:</strong>
+                    <span id="bufferLevel">-</span>
+                    <div id="chrome-only">
+                        <strong>Calculated bitrate:</strong>
+                        <span id="calculatedBitrate">-</span>
+                    </div>
+                    <strong>Framerate:</strong>
+                    <span id="framerate">-</span>
+                    <br>
+                    <strong>Resolution:</strong>
+                    <span id="resolution">-</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let eventPoller;
+    let bitrateCalculator;
+
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize(video, url, true);
+        player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, () => {
+            if (eventPoller) {
+                clearInterval(eventPoller);
+            }
+            if (bitrateCalculator) {
+                clearInterval(bitrateCalculator);
+            }
+        });
+
+        eventPoller = setInterval(() => {
+            const stream = player.getActiveStream();
+            const streamInfo = stream ? stream.getStreamInfo() : null;
+            const dashMetrics = player.getDashMetrics();
+            const dashAdapter = player.getDashAdapter();
+
+            if (dashMetrics && streamInfo) {
+                const periodIdx = streamInfo.index;
+                const repSwitch = dashMetrics.getCurrentRepresentationSwitch('video');
+                const bufferLevel = dashMetrics.getCurrentBufferLevel('video');
+                const bitrate = repSwitch
+                    ? Math.round(dashAdapter.getBandwidthForRepresentation(repSwitch.to, periodIdx) / 1000)
+                    : NaN;
+                const currentRep = player.getCurrentRepresentationForType('video');
+                const frameRate = currentRep ? currentRep.frameRate : '-';
+                const resolution = currentRep ? `${currentRep.width}x${currentRep.height}` : '-';
+
+                document.getElementById('bufferLevel').innerText = `${bufferLevel} secs`;
+                document.getElementById('framerate').innerText = `${frameRate} fps`;
+                document.getElementById('reportedBitrate').innerText = `${bitrate} Kbps`;
+                document.getElementById('resolution').innerText = resolution;
+            }
+        }, 1000);
+
+        if (video.webkitVideoDecodedByteCount !== undefined) {
+            let lastDecodedByteCount = 0;
+            const bitrateInterval = 5;
+
+            bitrateCalculator = setInterval(() => {
+                const calculatedBitrate = (((video.webkitVideoDecodedByteCount - lastDecodedByteCount) / 1000) * 8) / bitrateInterval;
+                document.getElementById('calculatedBitrate').innerText = `${Math.round(calculatedBitrate)} Kbps`;
+                lastDecodedByteCount = video.webkitVideoDecodedByteCount;
+            }, bitrateInterval * 1000);
+        } else {
+            document.getElementById('chrome-only').style.display = 'none';
+        }
+    }
+</script>
+</body>
+</html>

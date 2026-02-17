@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Custom capabilities filter (MediaCapabilities)</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Custom capabilities filter (MediaCapabilities)"
+            data-description="Uses the MediaCapabilities API to decide which representations to keep."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+
+        const filterCapabilities = async (representation) => {
+            if (!navigator.mediaCapabilities) {
+                console.log('[sample] MediaCapabilities API not detected; no filtering applied.');
+                return true;
+            }
+
+            if (representation.mimeType !== 'video/mp4') {
+                console.log(`[sample] Representation ${representation.id} - mimeType ${representation.mimeType} not subject to filtering.`);
+                return true;
+            }
+
+            const mimeType = `${representation.mimeType};codecs="${representation.codecs}"`;
+            const cfg = {
+                type: 'media-source',
+                video: {
+                    contentType: mimeType,
+                    framerate: representation.frameRate,
+                    width: representation.width,
+                    height: representation.height,
+                    bitrate: representation.bandwidth,
+                    colorGamut: 'srgb',
+                    transferFunction: 'srgb'
+                }
+            };
+
+            console.log(`[sample] Representation ${representation.id} - Config : %o`, cfg);
+            const ok = await navigator.mediaCapabilities.decodingInfo(cfg).then((result) => result.supported);
+            console.log(`[sample] MediaCapabilities said ${ok} for Representation-id: ${representation.id} and config: ${JSON.stringify(cfg, null, 4)}`);
+            return ok;
+        };
+
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.registerCustomCapabilitiesFilter(filterCapabilities);
+        player.initialize(video, url, true);
+        player.updateSettings({
+            debug: {
+                logLevel: dashjs.Debug.LOG_LEVEL_INFO
+            }
+        });
+    }
+</script>
+</body>
+</html>

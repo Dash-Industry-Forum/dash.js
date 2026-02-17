@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Live stream with MPD Patching</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Live"
+            data-title="Live stream with MPD Patching"
+            data-description="Example showing how dash.js handles live streams with updates to the manifest file
+                provided via MPD patches."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row">
+        <div class="col-lg-7">
+            <video controls></video>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="p-4 border rounded-3">
+                <h5>Last MPD update</h5>
+                <pre class="mb-0"><code id="output-container"></code></pre>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let outputContainer;
+
+    function init() {
+        const url = 'https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize(video, url, true);
+        outputContainer = document.getElementById('output-container');
+        player.on('internalManifestLoaded', showEvent);
+    }
+
+    function showEvent(e) {
+        outputContainer.textContent = '';
+        for (const name in e) {
+            if (typeof e[name] !== 'object') {
+                log(`    ${name}: ${e[name]}`);
+            }
+        }
+        for (const name in e) {
+            if (typeof e[name] === 'object') {
+                log(`    ${name}:`);
+                for (const name2 in e[name]) {
+                    log(`        ${name2}: ${JSON.stringify(e[name][name2])}`);
+                }
+            }
+        }
+    }
+
+    function log(msg) {
+        const truncated = msg.length > 90 ? `${msg.substring(0, 90)}...` : msg;
+        outputContainer.textContent += `${truncated}\n`;
+    }
+</script>
+</body>
+</html>

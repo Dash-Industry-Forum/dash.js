@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Using the Control Bar</title>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Using the Control Bar"
+            data-description="Shows how to add and configure the ControlBar UI with the dash.js player.
+                The ControlBar provides play/pause, seek, volume, bitrate selection, track switching,
+                caption controls, and fullscreen toggle.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="dash-video-player" id="player-container"></div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        DashjsSamples.createPlayerWithControlBar('#player-container', url);
+    }
+</script>
+</body>
+</html>

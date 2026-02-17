@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Manual load with start time</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Advanced"
+            data-title="Manual load with start time"
+            data-description="Initializes playback at a specific start time for live or VOD content.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<template id="sample-description-extra">
+    <div class="bd-callout mt-3">
+        <strong>Start time behavior</strong>
+        <ul class="mb-0 mt-2">
+            <li>For VoD, start time is relative to the first period.</li>
+            <li>For live, use <code>posix:</code> for UTC seconds or omit it to use the MPD availability start time.</li>
+        </ul>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.initialize();
+        player.updateSettings({
+            debug: {
+                logLevel: 4
+            }
+        });
+
+        const starttime = (Date.now() / 1000) - 60;
+        player.attachView(video);
+        player.attachSource(url, `posix:${starttime}`);
+        // player.attachSource(url, starttime); // start relative to AST
+    }
+</script>
+</body>
+</html>

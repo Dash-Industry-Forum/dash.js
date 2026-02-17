@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Fast bitrate switch</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="ABR"
+            data-title="Fast bitrate switch"
+            data-description="Demonstrates fast bitrate switching by enabling buffer replacement for quicker upswitches.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.updateSettings({
+            streaming: {
+                buffer: {
+                    fastSwitchEnabled: true
+                }
+            }
+        });
+
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

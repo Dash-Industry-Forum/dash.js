@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Smooth Streaming example</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../../dist/modern/umd/dash.mss.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="MSS"
+            data-title="Microsoft Smooth Streaming"
+            data-description="Example showing how to use dash.js to play Microsoft Smooth Streaming streams.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-12">
+            <div class="input-group mb-3">
+                <span class="input-group-text">Manifest URL</span>
+                <input type="text" id="streamUrl" class="form-control"
+                       value="https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest">
+            </div>
+            <div class="input-group mb-3">
+                <span class="input-group-text">License Server URL</span>
+                <input type="text" id="licenseServerUrl" class="form-control" placeholder="License Server URL">
+            </div>
+            <button type="button" id="loadButton" class="btn btn-primary">Load stream</button>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-lg-8">
+            <video controls></video>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        document.getElementById('loadButton').addEventListener('click', loadStream);
+    }
+
+    function loadStream() {
+        const streamUrl = document.getElementById('streamUrl').value.trim();
+        const licenseServerUrl = document.getElementById('licenseServerUrl').value.trim();
+
+        if (!streamUrl) {
+            return;
+        }
+
+        let protData = null;
+        if (licenseServerUrl) {
+            protData = {
+                'com.widevine.alpha': {
+                    serverURL: licenseServerUrl
+                }
+            };
+        }
+
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+        player.initialize();
+        player.attachView(video);
+        player.setProtectionData(protData);
+        player.attachSource(streamUrl);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Captions Event Sample</title>
+    <script src="../../contrib/videojs-vtt.js/vtt.min.js"></script>
+    <script src="../../contrib/akamai/controlbar/ControlBar.js"></script>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/player-utils.js"></script>
+    <link rel="stylesheet" href="../../contrib/akamai/controlbar/controlbar.css">
+    <script src="../common/layout.js"
+            data-section="Subtitles and Captions"
+            data-title="Subtitle Event Handling"
+            data-description="Shows how to consume subtitle events and render captions manually."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row g-3">
+        <div class="col-lg-4">
+            <div class="p-4 border rounded-3 mb-3">
+                <h5>Subtitle Event Handling</h5>
+                <p>Example showing how to consume subtitle events raised by dash.js.
+                    This way you can render the subtitles yourself.</p>
+            </div>
+            <div class="p-4 border rounded-3">
+                <h5>Current Subtitle</h5>
+                <div id="subtitles"></div>
+            </div>
+        </div>
+        <div class="col-lg-8">
+            <div class="dash-video-player" id="player-container"></div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd';
+        const { player } = DashjsSamples.createPlayerWithControlBar('#player-container', url);
+
+        player.updateSettings({
+            streaming: {
+                text: {
+                    dispatchForManualRendering: true
+                }
+            }
+        });
+
+        player.on('cueEnter', e => {
+            const subtitle = document.createElement('p');
+            subtitle.id = `subtitle-${e.cueID}`;
+            subtitle.textContent = e.text;
+            document.getElementById('subtitles').appendChild(subtitle);
+        });
+
+        player.on('cueExit', e => {
+            const el = document.getElementById(`subtitle-${e.cueID}`);
+            if (el) {
+                el.remove();
+            }
+        });
+    }
+</script>
+</body>
+</html>

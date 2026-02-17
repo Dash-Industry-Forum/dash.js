@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="Sample players for dash.js - DASH Industry Forum reference client">
+    <meta name="author" content="DASH Industry Forum">
+    <title>dash.js Samples</title>
+
+    <link href="lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+    <link href="lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+
+    <style>
+        /* --- Hero section --- */
+        .hero {
+            background: linear-gradient(135deg, #e8f0fe 0%, #f8f9fa 50%, #fff 100%);
+            border-bottom: 1px solid var(--bs-border-color);
+            padding: 3rem 0 2.5rem;
+        }
+        .hero .logo {
+            width: 220px;
+            height: auto;
+            margin-bottom: 1rem;
+        }
+        .hero h1 {
+            font-weight: 700;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+        .hero .lead {
+            color: var(--bs-secondary-color);
+            max-width: 700px;
+        }
+        .hero .btn-group-hero {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-top: 1rem;
+        }
+
+        /* --- Search bar --- */
+        .search-container {
+            position: relative;
+            max-width: 400px;
+        }
+        .search-container .bi-search {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--bs-secondary-color);
+            pointer-events: none;
+        }
+        .search-container input {
+            padding-left: 2.25rem;
+        }
+
+        /* --- Nav underline tabs --- */
+        .nav-section {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-bottom: 1.25rem;
+        }
+        #tab-list {
+            flex-wrap: wrap;
+        }
+        #tab-list .nav-link {
+            font-size: 0.9rem;
+            white-space: nowrap;
+        }
+
+        /* --- Card styling --- */
+        .sample-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid var(--bs-border-color);
+            overflow: hidden;
+        }
+        .sample-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        .card-icon-header {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            color: #fff;
+        }
+        .card-title a {
+            text-decoration: none;
+            color: var(--bs-body-color);
+            font-weight: 600;
+        }
+        .card-title a:hover {
+            color: var(--bs-primary);
+        }
+        .card-text {
+            font-size: 0.875rem;
+            color: var(--bs-secondary-color);
+        }
+        .card-footer {
+            border: none;
+            background: transparent;
+        }
+
+        /* --- Search results mode --- */
+        .search-active #tab-list,
+        .search-active .tab-content {
+            display: none !important;
+        }
+        #search-results {
+            display: none;
+        }
+        .search-active #search-results {
+            display: block;
+        }
+        .search-no-results {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: var(--bs-secondary-color);
+        }
+        .search-no-results i {
+            font-size: 2.5rem;
+            display: block;
+            margin-bottom: 0.75rem;
+        }
+
+        /* --- Footer --- */
+        .site-footer {
+            background: var(--bs-light);
+            border-top: 1px solid var(--bs-border-color);
+            padding: 2rem 0;
+            color: var(--bs-secondary-color);
+            font-size: 0.85rem;
+        }
+        .site-footer a {
+            color: var(--bs-secondary-color);
+            text-decoration: none;
+        }
+        .site-footer a:hover {
+            color: var(--bs-primary);
+        }
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            display: flex;
+            align-items: center;
+            gap: 0.35rem;
+        }
+    </style>
+</head>
+<body>
+
+<!-- Hero Section -->
+<section class="hero">
+    <div class="container">
+        <img src="./lib/img/dashjs-logo.png" alt="dash.js logo" class="logo">
+        <h1>Samples</h1>
+        <p class="lead">
+            Explore the features and capabilities of
+            <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"><strong>dash.js</strong></a>,
+            the reference MPEG-DASH player by the
+            <a href="https://dashif.org" target="_blank">DASH Industry Forum</a>.
+        </p>
+        <div class="btn-group-hero">
+            <a href="../samples/dash-if-reference-player/index.html" target="_blank"
+               class="btn btn-primary">
+                <i class="bi bi-play-circle me-1"></i> Reference Player
+            </a>
+            <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-github me-1"></i> GitHub
+            </a>
+            <a href="https://cdn.dashjs.org/latest/jsdoc/index.html" target="_blank"
+               class="btn btn-outline-secondary">
+                <i class="bi bi-book me-1"></i> API Docs
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Main Content -->
+<main>
+    <div class="container py-4">
+
+        <!-- Navigation: tabs + search -->
+        <div class="nav-section">
+            <ul class="nav nav-underline" id="tab-list" role="tablist"></ul>
+            <div class="search-container">
+                <i class="bi bi-search"></i>
+                <input type="text" class="form-control form-control-sm" id="search-input"
+                       placeholder="Search samples..." aria-label="Search samples">
+            </div>
+        </div>
+
+        <!-- Tab content (normal browsing) -->
+        <div class="tab-content" id="tab-content"></div>
+
+        <!-- Search results (shown when searching) -->
+        <div id="search-results"></div>
+
+    </div>
+</main>
+
+<!-- Footer -->
+<footer class="site-footer">
+    <div class="container">
+        <div class="d-flex flex-wrap justify-content-between align-items-center">
+            <span>&copy; DASH Industry Forum 2012-2025</span>
+            <div class="footer-links">
+                <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank">
+                    <i class="bi bi-github"></i> GitHub
+                </a>
+                <a href="https://cdn.dashjs.org/latest/jsdoc/index.html" target="_blank">
+                    <i class="bi bi-book"></i> API Docs
+                </a>
+                <a href="../samples/dash-if-reference-player/index.html" target="_blank">
+                    <i class="bi bi-play-circle"></i> Reference Player
+                </a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Card template -->
+<template id="card-template">
+    <div class="col">
+        <div class="card h-100 sample-card shadow-sm">
+            <div class="card-icon-header">
+                <i class=""></i>
+            </div>
+            <div class="card-body">
+                <h5 class="card-title"><a href="#" target="_blank"></a></h5>
+                <p class="card-text"></p>
+            </div>
+            <div class="card-footer">
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="labels"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script src="./lib/bootstrap/bootstrap.bundle.min.js"></script>
+<script>
+    'use strict';
+
+    /* Default section icon/color mapping.
+     * Sections in samples.json can override these with "icon" and "color" fields. */
+    const SECTION_DEFAULTS = {
+        'Getting Started':          { icon: 'bi-play-circle-fill',    color: '#0d6efd' },
+        'Live':                     { icon: 'bi-broadcast',           color: '#dc3545' },
+        'Live Low Latency':         { icon: 'bi-lightning-charge',    color: '#fd7e14' },
+        'ABR':                      { icon: 'bi-speedometer2',        color: '#6610f2' },
+        'Buffer':                   { icon: 'bi-layers-half',         color: '#0dcaf0' },
+        'DRM':                      { icon: 'bi-shield-lock-fill',    color: '#198754' },
+        'Multi Period':             { icon: 'bi-collection-play',     color: '#6f42c1' },
+        'Subtitles and Captions':   { icon: 'bi-badge-cc-fill',       color: '#20c997' },
+        'Multi-Audio':              { icon: 'bi-music-note-list',     color: '#e83e8c' },
+        'Thumbnails':               { icon: 'bi-image',               color: '#ffc107' },
+        'Audio only':               { icon: 'bi-speaker-fill',        color: '#6c757d' },
+        'Advanced':                 { icon: 'bi-gear-wide-connected', color: '#343a40' },
+        'MSS':                      { icon: 'bi-microsoft',           color: '#0078d4' },
+        'MPEG-5 Part 2 - LCEVC':    { icon: 'bi-cpu',                 color: '#795548' },
+        'Builds':                   { icon: 'bi-box-seam',            color: '#0d6efd' },
+        'Module builds':            { icon: 'bi-puzzle',              color: '#6610f2' }
+    };
+    const DEFAULT_ICON = 'bi-file-earmark-play';
+    const DEFAULT_COLOR = '#6c757d';
+
+    let sampleData = [];
+    let allSamples = []; // flattened for search
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const response = await fetch('samples.json');
+            sampleData = await response.json();
+        } catch (e) {
+            console.error('Failed to load samples.json:', e);
+            return;
+        }
+
+        // Flatten all samples with section metadata for search
+        for (const section of sampleData) {
+            const meta = getSectionMeta(section.section);
+            for (const sample of section.samples) {
+                allSamples.push({ ...sample, sectionName: section.section, ...meta });
+            }
+        }
+
+        renderSections();
+        selectSectionFromHash();
+        registerTabCallbacks();
+        initSearch();
+    });
+
+    /* ------------------------------------------------------------------
+     *  Section rendering
+     * ------------------------------------------------------------------ */
+    function getSectionMeta(sectionName) {
+        const defaults = SECTION_DEFAULTS[sectionName] || {};
+        return {
+            icon: defaults.icon || DEFAULT_ICON,
+            color: defaults.color || DEFAULT_COLOR
+        };
+    }
+
+    function renderSections() {
+        const tabList = document.getElementById('tab-list');
+        const tabContent = document.getElementById('tab-content');
+
+        for (const section of sampleData) {
+            const id = nameToId(section.section);
+
+            // Tab button
+            const li = document.createElement('li');
+            li.className = 'nav-item';
+            li.setAttribute('role', 'presentation');
+
+            const button = document.createElement('button');
+            button.className = `nav-link${section.active ? ' active' : ''}`;
+            button.id = `${id}-tab`;
+            button.setAttribute('data-bs-toggle', 'tab');
+            button.setAttribute('data-bs-target', `#${id}`);
+            button.setAttribute('type', 'button');
+            button.setAttribute('role', 'tab');
+            button.setAttribute('aria-controls', id);
+            button.setAttribute('aria-selected', section.active ? 'true' : 'false');
+            button.textContent = section.section;
+
+            li.appendChild(button);
+            tabList.appendChild(li);
+
+            // Tab pane
+            const pane = document.createElement('div');
+            pane.className = `tab-pane fade${section.active ? ' show active' : ''}`;
+            pane.id = id;
+            pane.setAttribute('role', 'tabpanel');
+            pane.setAttribute('aria-labelledby', `${id}-tab`);
+
+            const row = document.createElement('div');
+            row.className = 'row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3';
+
+            const meta = getSectionMeta(section.section);
+            renderSampleCards(section.samples, meta, row);
+            pane.appendChild(row);
+            tabContent.appendChild(pane);
+        }
+    }
+
+    function renderSampleCards(samples, meta, container) {
+        const template = document.getElementById('card-template');
+
+        for (const sample of samples) {
+            const card = template.content.cloneNode(true);
+            const iconHeader = card.querySelector('.card-icon-header');
+            const iconEl = card.querySelector('.card-icon-header i');
+            const titleLink = card.querySelector('.card-title a');
+            const text = card.querySelector('.card-text');
+            const labelsSpan = card.querySelector('.labels');
+
+            // Icon header with section color
+            const sampleIcon = sample.icon || meta.icon;
+            const sampleColor = sample.color || meta.color;
+            iconHeader.style.background = `linear-gradient(135deg, ${sampleColor}, ${adjustColor(sampleColor, 30)})`;
+            iconEl.className = `bi ${sampleIcon}`;
+
+            titleLink.href = sample.href;
+            titleLink.textContent = sample.title;
+            text.textContent = sample.description || '';
+
+            if (sample.labels?.length > 0) {
+                for (const label of sample.labels) {
+                    const badge = document.createElement('span');
+                    badge.className = 'badge bg-secondary me-1';
+                    badge.textContent = label;
+                    labelsSpan.appendChild(badge);
+                }
+            }
+
+            container.appendChild(card);
+        }
+    }
+
+    /**
+     * Lighten a hex color by the given percentage for the gradient end.
+     */
+    function adjustColor(hex, percent) {
+        const num = parseInt(hex.replace('#', ''), 16);
+        const r = Math.min(255, ((num >> 16) & 0xff) + percent);
+        const g = Math.min(255, ((num >> 8) & 0xff) + percent);
+        const b = Math.min(255, (num & 0xff) + percent);
+        return `rgb(${r}, ${g}, ${b})`;
+    }
+
+    /* ------------------------------------------------------------------
+     *  Tab navigation via hash
+     * ------------------------------------------------------------------ */
+    function selectSectionFromHash() {
+        try {
+            const hash = decodeURI(window.location.hash);
+            if (!hash) return;
+            const tabButton = document.querySelector(`${hash}-tab`);
+            if (tabButton) {
+                new bootstrap.Tab(tabButton).show();
+            }
+        } catch {
+            // Ignore invalid hash
+        }
+    }
+
+    function registerTabCallbacks() {
+        document.querySelectorAll('button[data-bs-toggle="tab"]').forEach(tabEl => {
+            tabEl.addEventListener('shown.bs.tab', (event) => {
+                const target = event.target.getAttribute('data-bs-target');
+                if (target) history.replaceState(null, '', target);
+            });
+        });
+    }
+
+    /* ------------------------------------------------------------------
+     *  Search / filter
+     * ------------------------------------------------------------------ */
+    function initSearch() {
+        const input = document.getElementById('search-input');
+        const mainContainer = document.querySelector('main > .container');
+        let debounceTimer;
+
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => handleSearch(input.value.trim()), 150);
+        });
+
+        // ESC to clear
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                input.value = '';
+                handleSearch('');
+            }
+        });
+
+        function handleSearch(query) {
+            const resultsContainer = document.getElementById('search-results');
+
+            if (!query) {
+                mainContainer.classList.remove('search-active');
+                resultsContainer.innerHTML = '';
+                return;
+            }
+
+            mainContainer.classList.add('search-active');
+            const lowerQuery = query.toLowerCase();
+
+            const matches = allSamples.filter(s =>
+                s.title.toLowerCase().includes(lowerQuery) ||
+                (s.description || '').toLowerCase().includes(lowerQuery) ||
+                s.sectionName.toLowerCase().includes(lowerQuery)
+            );
+
+            if (matches.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="search-no-results">
+                        <i class="bi bi-search"></i>
+                        No samples found for "<strong>${escapeHtml(query)}</strong>"
+                    </div>`;
+                return;
+            }
+
+            const row = document.createElement('div');
+            row.className = 'row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-3';
+
+            for (const sample of matches) {
+                renderSampleCards([sample], { icon: sample.icon, color: sample.color }, row);
+            }
+
+            resultsContainer.innerHTML = `<p class="text-body-secondary mb-2">${matches.length} result${matches.length === 1 ? '' : 's'} for "<strong>${escapeHtml(query)}</strong>"</p>`;
+            resultsContainer.appendChild(row);
+        }
+    }
+
+    /* ------------------------------------------------------------------
+     *  Utilities
+     * ------------------------------------------------------------------ */
+    function nameToId(name) {
+        return name.replace(/[^a-z0-9]/gmi, '');
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+</script>
+</body>
+</html>

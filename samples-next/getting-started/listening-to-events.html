@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Listening to events</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Getting Started"
+            data-title="Listening to events"
+            data-description="Shows how to listen to events raised by dash.js. This sample allows you to
+                explore the various external events accessible from MediaPlayer. Events can be
+                dynamically added and removed. Choose the events you would like to monitor before
+                starting playback."
+            data-layout="full-width">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <div class="row mt-3">
+        <div class="col-md-3">
+            <div class="p-4 bg-body-tertiary border rounded-3">
+                <h5>Add events</h5>
+                <select class="form-select" id="available-events">
+                    <option selected disabled>Select an event...</option>
+                    <option>BUFFER_EMPTY</option>
+                    <option>BUFFER_LOADED</option>
+                    <option>CAN_PLAY</option>
+                    <option>DYNAMIC_TO_STATIC</option>
+                    <option>ERROR</option>
+                    <option>LOG</option>
+                    <option>MANIFEST_LOADED</option>
+                    <option>METRIC_ADDED</option>
+                    <option>METRIC_CHANGED</option>
+                    <option>METRIC_UPDATED</option>
+                    <option>METRICS_CHANGED</option>
+                    <option>PERIOD_SWITCH_COMPLETED</option>
+                    <option>PERIOD_SWITCH_STARTED</option>
+                    <option>PLAYBACK_ENDED</option>
+                    <option>PLAYBACK_ERROR</option>
+                    <option>PLAYBACK_METADATA_LOADED</option>
+                    <option>PLAYBACK_PAUSED</option>
+                    <option>PLAYBACK_PLAYING</option>
+                    <option>PLAYBACK_PROGRESS</option>
+                    <option>PLAYBACK_RATE_CHANGED</option>
+                    <option>PLAYBACK_SEEKED</option>
+                    <option>PLAYBACK_SEEKING</option>
+                    <option>PLAYBACK_STARTED</option>
+                    <option>PLAYBACK_TIME_UPDATED</option>
+                    <option>PLAYBACK_WAITING</option>
+                    <option>STREAM_UPDATED</option>
+                    <option>STREAM_INITIALIZED</option>
+                    <option>TEXT_TRACK_ADDED</option>
+                    <option>TEXT_TRACKS_ADDED</option>
+                </select>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="p-4 border rounded-3">
+                <h5>Active events</h5>
+                <div id="event-holder"></div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <video controls></video>
+            <div class="mt-2">
+                <button class="btn btn-primary" id="load-btn" type="button">Load</button>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="form-floating">
+                <textarea class="form-control trace-log" placeholder="Trapped events will be displayed here"
+                          id="trace" readonly></textarea>
+                <label for="trace">Event log</label>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+    let firstLoad = true;
+
+    function init() {
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({
+            debug: { logLevel: dashjs.Debug.LOG_LEVEL_NONE }
+        });
+
+        document.getElementById('available-events').addEventListener('change', (e) => {
+            const eventName = e.target.options[e.target.selectedIndex].text;
+            addEventListenerForName(eventName);
+            e.target.selectedIndex = 0;
+        });
+
+        document.getElementById('load-btn').addEventListener('click', () => {
+            loadStream();
+        });
+    }
+
+    function showEvent(e) {
+        log(`Event received: ${e.type}`);
+        for (const name in e) {
+            if (typeof e[name] !== 'object') {
+                log(`    ${name}: ${e[name]}`);
+            }
+        }
+        for (const name in e) {
+            if (typeof e[name] === 'object') {
+                log(`    ${name}:`);
+                for (const name2 in e[name]) {
+                    log(`        ${name2}: ${JSON.stringify(e[name][name2])}`);
+                }
+            }
+        }
+    }
+
+    function log(msg) {
+        const truncated = msg.length > 90 ? `${msg.substring(0, 90)}...` : msg;
+        const tracePanel = document.getElementById('trace');
+        tracePanel.value += `${truncated}\n`;
+        tracePanel.scrollTop = tracePanel.scrollHeight;
+    }
+
+    function addEventListenerForName(eventName) {
+        player.on(dashjs.MediaPlayer.events[eventName], showEvent);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn btn-sm btn-danger me-1 mt-1';
+        btn.textContent = `Remove ${eventName}`;
+        btn.addEventListener('click', () => {
+            player.off(dashjs.MediaPlayer.events[eventName], showEvent);
+            btn.remove();
+        });
+
+        document.getElementById('event-holder').appendChild(btn);
+    }
+
+    function loadStream() {
+        const url = 'https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd';
+
+        if (firstLoad) {
+            firstLoad = false;
+            document.getElementById('load-btn').textContent = 'Reload Player';
+            player.initialize(document.querySelector('video'), url, true);
+        } else {
+            player.attachSource(url);
+        }
+
+        document.getElementById('trace').value = '';
+    }
+</script>
+</body>
+</html>

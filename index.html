@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="DASH-IF dash.js reference client">
+    <title>Samples players for dash.js</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="./lib/bootstrap/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        a {
+            text-decoration: none;
+        }
+
+        .bs-callout {
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 3px;
+            background: #FFFFFF;
+        }
+
+        .bg-primary {
+            background-color: #136bfb;
+            color: #FFFFFF;
+        }
+
+    </style>
+
+
+</head>
+<body onload="init()">
+
+
+<main>
+    <div class="album py-5 bg-white">
+        <div class="container">
+            <header class="pb-3 mb-4 border-bottom">
+                <img class=""
+                     src="./lib/img/dashjs-logo.png"
+                     width="200">
+            </header>
+
+            <h2>dash.js JavaScript Reference Client</h2>
+            <p><a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank"> dash.js </a> is a
+                reference client implementation by the <a href="http://dashif.org" target="_blank">DASH Industry
+                    Forum</a> (DASH-IF) for the playback of MPEG-DASH via JavaScript
+                and compliant
+                MSE/EME platforms.</p>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="alert alert-warning" role="alert" id="SSL"></div>
+                </div>
+            </div>
+            <hr>
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card" >
+                        <div class="card-header bg-primary">Latest Release</div>
+                        <div class="card-body">
+                            <p class="card-text">The latest official release of dash.js.</p>
+                            <a href="https://reference.dashif.org/dash.js/latest/samples/" class="card-link">Sample
+                                Section</a>
+                            <a href="https://reference.dashif.org/dash.js/latest/samples/dash-if-reference-player/index.html"
+                               class="card-link">Reference UI</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card">
+                        <div class="card-header bg-primary">Nightly build</div>
+                        <div class="card-body">
+                            <p class="card-text">The nightly build of dash.js based on the latest commit on the development branch.</p>
+                            <a href="https://reference.dashif.org/dash.js/nightly/samples/" class="card-link">Sample
+                                Section</a>
+                            <a href="https://reference.dashif.org/dash.js/nightly/samples/dash-if-reference-player/index.html"
+                               class="card-link">Reference UI</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-12">
+                    <h5>Release list</h5>
+                    <table class="table table-hover table-striped table-sm">
+                        <thead>
+                        <tr>
+                            <th scope="col">Version</th>
+                            <th scope="col">Release Date</th>
+                            <th scope="col">Link</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>5.1.1</td>
+                            <td>December 23rd, 2025</td>
+                            <td><a href="v5.1.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>5.1.0</td>
+                            <td>November 21st, 2025</td>
+                            <td><a href="v5.1.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>5.0.3</td>
+                            <td>May 28th, 2025</td>
+                            <td><a href="v5.0.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>5.0.2</td>
+                            <td>May 14th, 2025</td>
+                            <td><a href="v5.0.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>5.0.1</td>
+                            <td>Apr 16th, 2025</td>
+                            <td><a href="v5.0.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>5.0.0</td>
+                            <td>Feb 14th, 2025</td>
+                            <td><a href="v5.0.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.7.4</td>
+                            <td>Feb 20th, 2024</td>
+                            <td><a href="v4.7.4/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.7.3</td>
+                            <td>Dec 8th, 2023</td>
+                            <td><a href="v4.7.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.7.2</td>
+                            <td>Sep 28th, 2023</td>
+                            <td><a href="v4.7.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.7.1</td>
+                            <td>June 21st, 2023</td>
+                            <td><a href="v4.7.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.7.0</td>
+                            <td>May 5th, 2023</td>
+                            <td><a href="v4.7.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.6.0</td>
+                            <td>Feb 20th, 2023</td>
+                            <td><a href="v4.6.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.5.2</td>
+                            <td>Dec 14th, 2022</td>
+                            <td><a href="v4.5.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.5.1</td>
+                            <td>Nov 11th, 2022</td>
+                            <td><a href="v4.5.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.5.0</td>
+                            <td>Sep 28th, 2022</td>
+                            <td><a href="v4.5.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.4.1</td>
+                            <td>July 25th, 2022</td>
+                            <td><a href="v4.4.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.4.0</td>
+                            <td>May 4th, 2022</td>
+                            <td><a href="v4.4.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.3.0</td>
+                            <td>Feb 25th, 2022</td>
+                            <td><a href="v4.3.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.2.1</td>
+                            <td>Dec 23rd, 2021</td>
+                            <td><a href="v4.2.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.2.0</td>
+                            <td>Nov 29th, 2021</td>
+                            <td><a href="v4.2.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.1.0</td>
+                            <td>Sep 24th, 2021</td>
+                            <td><a href="v4.1.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.0.1</td>
+                            <td>July 30th, 2021</td>
+                            <td><a href="v4.0.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>4.0.0</td>
+                            <td>June 25th, 2021</td>
+                            <td><a href="v4.0.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.2.2</td>
+                            <td>April 13th, 2021</td>
+                            <td><a href="v3.2.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.2.1</td>
+                            <td>February 22nd, 2021</td>
+                            <td><a href="v3.2.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.2.0</td>
+                            <td>December 11th, 2020</td>
+                            <td><a href="v3.2.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.1.3</td>
+                            <td>September 8th, 2020</td>
+                            <td><a href="v3.1.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.1.2</td>
+                            <td>July 24th, 2020</td>
+                            <td><a href="v3.1.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.1.1</td>
+                            <td>May 22nd, 2020</td>
+                            <td><a href="v3.1.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.1.0</td>
+                            <td>April 14th, 2020</td>
+                            <td><a href="v3.1.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.0.3</td>
+                            <td>March 12th, 2020</td>
+                            <td><a href="v3.0.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.0.2</td>
+                            <td>February 4th, 2020</td>
+                            <td><a href="v3.0.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.0.1</td>
+                            <td>December 4th, 2019</td>
+                            <td><a href="v3.0.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>3.0.0</td>
+                            <td>June 28th, 2019</td>
+                            <td><a href="v3.0.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.9.3</td>
+                            <td>February 13th, 2019</td>
+                            <td><a href="v2.9.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.9.2</td>
+                            <td>October 29th, 2018</td>
+                            <td><a href="v2.9.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.9.1</td>
+                            <td>October 1st, 2018</td>
+                            <td><a href="v2.9.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.9.0</td>
+                            <td>August 1st, 2018</td>
+                            <td><a href="v2.9.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.8.0</td>
+                            <td>July 3rd, 2018</td>
+                            <td><a href="v2.8.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.7.0</td>
+                            <td>May 30th, 2018</td>
+                            <td><a href="v2.7.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.8</td>
+                            <td>April 30th, 2018</td>
+                            <td><a href="v2.6.8/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.7</td>
+                            <td>March 14th, 2018</td>
+                            <td><a href="v2.6.7/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.6</td>
+                            <td>February 14th, 2018</td>
+                            <td><a href="v2.6.6/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.5</td>
+                            <td>January 11th, 2018</td>
+                            <td><a href="v2.6.5/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.4</td>
+                            <td>December 6th, 2017</td>
+                            <td><a href="v2.6.4/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.3</td>
+                            <td>November 9th, 2017</td>
+                            <td><a href="v2.6.3/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.2</td>
+                            <td>October 12th, 2017</td>
+                            <td><a href="v2.6.2/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.1</td>
+                            <td>October 11th, 2017</td>
+                            <td><a href="v2.6.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.6.0</td>
+                            <td>September 1st, 2017</td>
+                            <td><a href="v2.6.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.5.0</td>
+                            <td>April 27th, 2017</td>
+                            <td><a href="v2.5.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.4.1</td>
+                            <td>February 1st, 2017</td>
+                            <td><a href="v2.4.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.4.0</td>
+                            <td>December 21st, 2016</td>
+                            <td><a href="v2.4.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.3.0</td>
+                            <td>September 2nd, 2016</td>
+                            <td><a href="v2.3.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.2.0</td>
+                            <td>July 6th, 2016</td>
+                            <td><a href="v2.2.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.1.1</td>
+                            <td>April 21st, 2016</td>
+                            <td><a href="v2.1.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>2.1.0</td>
+                            <td>April 15th, 2016</td>
+                            <td><a href="v2.1.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+
+                        <tr>
+                            <td>2.0.0</td>
+                            <td>February 12, 2016</td>
+                            <td><a href="v2.0.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>1.6.0</td>
+                            <td>December 21, 2015</td>
+                            <td><a href="v1.6.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>1.5.1</td>
+                            <td>October 14, 2015</td>
+                            <td><a href="v1.5.1/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>1.5.0</td>
+                            <td>September 8, 2015</td>
+                            <td><a href="v1.5.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>1.4.0</td>
+                            <td>June 16, 2015</td>
+                            <td><a href="v1.4.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+                        <tr>
+                            <td>1.3.0</td>
+                            <td>January 30, 2015</td>
+                            <td><a href="v1.3.0/samples/dash-if-reference-player/index.html">Link</a></td>
+                        </tr>
+
+                        </tbody>
+                        <tfoot>
+                        <tr>
+                            <td scope="col">Version</td>
+                            <td scope="col">Release Date</td>
+                            <td scope="col">Link</td>
+                        </tr>
+                        </tfoot>
+                    </table>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+<hr>
+<footer class="text-muted py-5">
+    <div class="container">
+        Copyright DASH Industry Forum 2012-2021
+    </div>
+</footer>
+
+
+<script src="./lib/bootstrap/bootstrap.bundle.min.js"></script>
+
+<script>
+    var out;
+
+    function init() {
+        console.log('protocol=' + location.protocol)
+        if (location.protocol == 'https:') {
+            out = 'This page has been loaded under https. Any player you launch from here will also be loaded under the same protocol. This will enable EME to function however it will require all manifest URLs to also be loaded under https. If you wish to test manifest URLs under http, then <a href=\'http:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under http</a>.'
+        } else {
+            out = 'This page has been loaded under http. Any player you launch from here will also be loaded under the same protocol. This will result in the EME APIs not being available to the player and any DRM-protected content will fail to play. If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
+        }
+        document.querySelector('#SSL').innerHTML = out;
+    }
+
+    function reload(secure) {
+        location.href = (secure ? 'https:' : 'https') + window.location.href.substring(window.location.protocol.length);
+    }
+</script>
+
+
+</body>
+</html>

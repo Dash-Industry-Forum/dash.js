@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Average throughput calculation modes</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="ABR"
+            data-title="Average throughput calculation modes"
+            data-description="Shows how to configure the throughput calculation mode and sample settings used by ABR.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.updateSettings({
+            streaming: {
+                abr: {
+                    throughput: {
+                        averageCalculationMode: dashjs.Constants.THROUGHPUT_CALCULATION_MODES.BYTE_SIZE_WEIGHTED_HARMONIC_MEAN,
+                        sampleSettings: {
+                            vod: 5,
+                            enableSampleSizeAdjustment: false
+                        }
+                    }
+                }
+            }
+        });
+
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>UMD Browserlist build</title>
+    <script src="../../dist/modern/umd/dash.all.min.js"></script>
+    <script src="../common/layout.js"
+            data-section="Builds"
+            data-title="UMD Browserlist"
+            data-description="Demonstrates the modern UMD browserlist build. The player auto-attaches via the
+                <code>&lt;source&gt;</code> element with <code>type=&quot;application/dash+xml&quot;</code>.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls>
+        <source src="https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd"
+                type="application/dash+xml">
+    </video>
+</template>
+</body>
+</html>

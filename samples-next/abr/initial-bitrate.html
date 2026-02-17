@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Initial bitrate</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="ABR"
+            data-title="Initial bitrate"
+            data-description="Shows how to set the initial video bitrate and disable ABR for video.">
+    </script>
+</head>
+<body>
+<template id="sample-content">
+    <video controls></video>
+</template>
+
+<script data-sample>
+    function init() {
+        const url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        const video = document.querySelector('video');
+        const player = dashjs.MediaPlayer().create();
+
+        player.updateSettings({
+            streaming: {
+                abr: {
+                    initialBitrate: {
+                        audio: -1,
+                        video: 800
+                    },
+                    autoSwitchBitrate: {
+                        audio: true,
+                        video: false
+                    }
+                }
+            }
+        });
+
+        player.initialize(video, url, true);
+    }
+</script>
+</body>
+</html>

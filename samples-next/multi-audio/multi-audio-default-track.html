@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Multi Audio - Initial Track</title>
+    <script src="../../dist/modern/umd/dash.all.debug.js"></script>
+    <script src="../common/layout.js"
+            data-section="Multi-Audio"
+            data-title="Multi Audio - Initial Track"
+            data-description="Shows how to set a default audio track before attaching the source."
+            data-layout="default">
+    </script>
+</head>
+<body>
+<template id="sample-description-extra">
+    <div class="alert alert-danger mt-3" role="alert" style="display: none" id="http-warning"></div>
+</template>
+
+<template id="sample-content">
+    <video controls></video>
+    <div class="mt-2">
+        <button class="btn btn-primary" id="attach_button">(Re)attach Source</button>
+    </div>
+</template>
+
+<script data-sample>
+    let player;
+
+    function init() {
+        checkProtocol();
+
+        const url = 'https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd';
+        const video = document.querySelector('video');
+        const attachSourceButton = document.getElementById('attach_button');
+
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({ debug: { logLevel: 5 } });
+        player.initialize(video, null, false);
+        player.setInitialMediaSettingsFor('audio', { lang: 'et-ET' });
+
+        attachSourceButton.addEventListener('click', () => {
+            player.attachSource(url);
+            player.play();
+        });
+    }
+
+    function checkProtocol() {
+        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+            const out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.';
+            const div = document.getElementById('http-warning');
+            div.innerHTML = out;
+            div.style.display = '';
+        }
+    }
+</script>
+</body>
+</html>
