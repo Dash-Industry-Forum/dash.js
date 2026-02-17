@@ -203,6 +203,10 @@ function DashAdapter() {
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(voAdaptations[idx]);
 
+            if (!media) {
+                continue;
+            }
+
             if (embeddedText) {
                 let accessibilityLength = media.accessibility.length;
                 for (j = 0; j < accessibilityLength; j++) {
@@ -1077,7 +1081,7 @@ function DashAdapter() {
         mediaInfo.subSegmentAlignment = dashManifestModel.getSubSegmentAlignment(realAdaptation);
         mediaInfo.viewpoint = dashManifestModel.getViewpointForAdaptation(realAdaptation);
         mediaInfo.accessibility = dashManifestModel.getAccessibilityForAdaptation(realAdaptation);
-        if (mediaInfo.accessibility.filter(function (accessibility) {
+        if (mediaInfo.accessibility && mediaInfo.accessibility.filter(function (accessibility) {
             if (accessibility.schemeIdUri && (accessibility.schemeIdUri.search('cea-608') >= 0) && typeof (cea608parser) !== 'undefined') {
                 return true;
             }
