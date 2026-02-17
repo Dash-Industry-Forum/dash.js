@@ -277,19 +277,8 @@ function BufferController(config) {
             //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
             dischargeFragments = [];
             let chunks = dischargeBuffer.discharge();
-            let lastInit = null;
             for (let j = 0; j < chunks.length; j++) {
                 const chunk = chunks[j];
-                if (chunk.segmentType !== HTTPRequest.INIT_SEGMENT_TYPE) {
-                    const initChunk = initCache.extract(chunk.streamId, chunk.representation.id);
-                    if (initChunk) {
-                        if (lastInit !== initChunk) {
-                            dischargeFragments.push(initChunk);
-                            sourceBufferSink.append(initChunk);
-                            lastInit = initChunk;
-                        }
-                    }
-                }
                 dischargeFragments.push(chunk);
                 sourceBufferSink.append(chunk);
             }
