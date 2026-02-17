@@ -121,34 +121,43 @@ export class DrmController {
         // PlayReady
         const pr = protData['com.microsoft.playready'] || protData['com.microsoft.playready.recommendation'];
         if (pr) {
-            if (pr.serverURL) {
-                $('#drm-pr-url').value = pr.serverURL;
-            }
+            this._setVal('drm-pr-url', pr.serverURL);
+            this._setVal('drm-pr-cert-url', pr.serverCertificateUrl);
+            this._setVal('drm-pr-timeout', pr.httpTimeout);
+            this._setVal('drm-pr-video-robustness', pr.videoRobustness);
+            this._setVal('drm-pr-audio-robustness', pr.audioRobustness);
+            this._extractHeaders(pr.httpRequestHeaders, this._prHeaders, 'drm-pr-headers');
+            this._applyPriority('drm-pr-priority', pr.priority);
         }
 
         // Widevine
         const wv = protData['com.widevine.alpha'];
         if (wv) {
-            if (wv.serverURL) {
-                $('#drm-wv-url').value = wv.serverURL;
-            }
+            this._setVal('drm-wv-url', wv.serverURL);
+            this._setVal('drm-wv-cert-url', wv.serverCertificateUrl);
+            this._setVal('drm-wv-timeout', wv.httpTimeout);
+            this._setVal('drm-wv-video-robustness', wv.videoRobustness);
+            this._setVal('drm-wv-audio-robustness', wv.audioRobustness);
+            this._extractHeaders(wv.httpRequestHeaders, this._wvHeaders, 'drm-wv-headers');
+            this._applyPriority('drm-wv-priority', wv.priority);
         }
 
         // ClearKey
         const ck = protData['org.w3.clearkey'];
         if (ck) {
             if (ck.serverURL) {
-                $('#drm-ck-url').value = ck.serverURL;
+                this._setVal('drm-ck-url', ck.serverURL);
             } else if (ck.clearkeys) {
                 const entries = Object.entries(ck.clearkeys);
                 if (entries.length > 0) {
-                    $('#drm-ck-url').value = `${entries[0][0]}:${entries[0][1]}`;
+                    this._setVal('drm-ck-url', `${entries[0][0]}:${entries[0][1]}`);
                     for (let i = 1; i < entries.length; i++) {
                         this._ckPairs.push({ kid: entries[i][0], key: entries[i][1] });
                     }
                     this._renderKeyPairs();
                 }
             }
+            this._extractHeaders(ck.httpRequestHeaders, this._ckHeaders, 'drm-ck-headers');
         }
     }
 
@@ -198,6 +207,29 @@ export class DrmController {
     _isChecked(id) {
         const el = $(`#${id}`);
         return el ? el.checked : false;
+    }
+
+    _setVal(id, value) {
+        const el = $(`#${id}`);
+        if (el && value !== undefined && value !== null) {
+            el.value = String(value);
+        }
+    }
+
+    _extractHeaders(headersObj, headerArray, containerId) {
+        if (!headersObj || typeof headersObj !== 'object') {
+            return;
+        }
+        for (const [key, value] of Object.entries(headersObj)) {
+            headerArray.push({ key, value: String(value) });
+        }
+        this._renderHeaders(containerId, headerArray);
+    }
+
+    _applyPriority(inputId, value) {
+        if (value !== undefined && value !== null) {
+            this._setVal(inputId, value);
+        }
     }
 
     _addAdvancedDrmFields(target, prefix) {

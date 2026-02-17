@@ -182,6 +182,11 @@ body {
     white-space: nowrap;
 }
 
+/* Prevent Bootstrap input-group negative-margin overlap between adjacent buttons */
+.url-bar .input-group > .btn + .btn {
+    margin-left: 0;
+}
+
 .copy-notification {
     position: fixed;
     top: 1rem;
@@ -546,7 +551,7 @@ body {
 /* Live indicator */
 .cb-live-indicator {
     cursor: pointer;
-    color: var(--rp-text-muted);
+    color: #8a8aa0;
 }
 
 .cb-live-indicator.cb-at-live-edge {
@@ -587,13 +592,13 @@ body {
     position: relative;
 }
 
-/* Control bar menus */
+/* Control bar menus — always dark (overlays video) */
 .cb-menu {
     position: absolute;
     bottom: 100%;
     right: 0;
     background: rgba(20, 20, 40, 0.95);
-    border: 1px solid var(--rp-border);
+    border: 1px solid #2d2d50;
     border-radius: 6px;
     min-width: 180px;
     max-height: 300px;
@@ -617,7 +622,7 @@ body {
     padding: 0.35rem 0.75rem;
     font-size: 0.8rem;
     cursor: pointer;
-    color: var(--rp-text);
+    color: #e0e0e0;
     transition: background 0.1s;
 }
 

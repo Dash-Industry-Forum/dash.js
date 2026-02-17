@@ -25,6 +25,22 @@ const COLORS = [
     '#6ea8fe', // light blue
 ];
 
+// Unit metadata per metric — used for dual Y-axis assignment
+const METRIC_UNITS = {
+    buffer:        { unit: 's',     label: 'Seconds' },
+    liveLatency:   { unit: 's',     label: 'Seconds' },
+    bitrate:       { unit: 'kbps',  label: 'kbps' },
+    pendingIndex:  { unit: 'idx',   label: 'Index' },
+    currentIndex:  { unit: 'idx',   label: 'Index' },
+    droppedFrames: { unit: 'count', label: 'Count' },
+    latency:       { unit: 'ms',    label: 'ms' },
+    download:      { unit: 'ms',    label: 'ms' },
+    ratio:         { unit: 'ratio', label: 'Ratio' },
+    playbackRate:  { unit: 'ratio', label: 'Ratio' },
+    mtp:           { unit: 'Mbps',  label: 'Mbps' },
+    etp:           { unit: 'Mbps',  label: 'Mbps' },
+};
+
 export class ChartController {
     constructor() {
         this.chart = null;
@@ -158,9 +174,15 @@ export class ChartController {
                 return;
             }
 
+            // Extract metric name from key (e.g. "video-buffer" -> "buffer")
+            const metricName = key.split('-').slice(1).join('-');
+            const unitInfo = METRIC_UNITS[metricName] || { unit: 'value', label: 'Value' };
+
             this._series[key] = {
                 label,
                 colorIdx: this._colorIdx % COLORS.length,
+                unit: unitInfo.unit,
+                unitLabel: unitInfo.label,
                 data: []
             };
             this._colorIdx++;
@@ -243,6 +265,14 @@ export class ChartController {
         opts.scales.y.grid.color = grid;
         opts.scales.y.ticks.color = tick;
         opts.scales.y.title.color = tick;
+
+        // Style right axis if it exists
+        if (opts.scales.y1) {
+            opts.scales.y1.grid.color = grid;
+            opts.scales.y1.ticks.color = tick;
+            opts.scales.y1.title.color = tick;
+        }
+
         opts.plugins.legend.labels.color = tick;
         opts.plugins.tooltip.backgroundColor = tooltipBg;
         opts.plugins.tooltip.titleColor = tooltipText;
@@ -260,6 +290,9 @@ export class ChartController {
         this._colorIdx = 0;
         if (this.chart) {
             this.chart.data.datasets = [];
+            // Remove right axis and reset left axis label
+            delete this.chart.options.scales.y1;
+            this.chart.options.scales.y.title.text = 'Value';
             this.chart.update('none');
         }
 
@@ -272,11 +305,47 @@ export class ChartController {
 
     // ---- Private ----
 
+    /**
+     * Determine axis assignment for each active series based on unit.
+     * Returns a map: unit -> 'y' | 'y1', plus metadata for axis labels.
+     */
+    _assignAxes() {
+        const unitOrder = [];  // ordered list of distinct units
+        for (const series of Object.values(this._series)) {
+            if (!unitOrder.includes(series.unit)) {
+                unitOrder.push(series.unit);
+            }
+        }
+
+        // First unit -> left axis (y), second unit -> right axis (y1)
+        // Third+ units fall back to left axis
+        const unitToAxis = {};
+        for (let i = 0; i < unitOrder.length; i++) {
+            unitToAxis[unitOrder[i]] = i === 1 ? 'y1' : 'y';
+        }
+
+        // Build label for each axis
+        const axisLabels = { y: null, y1: null };
+        for (const series of Object.values(this._series)) {
+            const axisId = unitToAxis[series.unit];
+            if (!axisLabels[axisId]) {
+                axisLabels[axisId] = series.unitLabel;
+            } else if (!axisLabels[axisId].includes(series.unitLabel)) {
+                axisLabels[axisId] += ' / ' + series.unitLabel;
+            }
+        }
+
+        return { unitToAxis, axisLabels, hasRightAxis: unitOrder.length >= 2 };
+    }
+
     _rebuildDatasets() {
         if (!this.chart) {
             return;
         }
 
+        const { unitToAxis, axisLabels, hasRightAxis } = this._assignAxes();
+
+        // Build datasets with axis assignment
         this.chart.data.datasets = Object.entries(this._series).map(([key, series]) => ({
             label: series.label,
             data: [...series.data],
@@ -286,8 +355,42 @@ export class ChartController {
             pointRadius: 2,
             pointHoverRadius: 4,
             tension: 0.3,
-            fill: false
+            fill: false,
+            yAxisID: unitToAxis[series.unit]
         }));
+
+        // Update left axis label
+        const opts = this.chart.options;
+        opts.scales.y.title.text = axisLabels.y || 'Value';
+
+        // Manage right axis
+        if (hasRightAxis) {
+            const style = getComputedStyle(document.documentElement);
+            const grid = style.getPropertyValue('--rp-chart-grid').trim();
+            const tick = style.getPropertyValue('--rp-chart-tick').trim();
+
+            opts.scales.y1 = {
+                position: 'right',
+                title: {
+                    display: true,
+                    text: axisLabels.y1,
+                    color: tick,
+                    font: { size: 11 }
+                },
+                ticks: {
+                    color: tick,
+                    font: { size: 10 }
+                },
+                grid: {
+                    drawOnChartArea: false,
+                    color: grid
+                },
+                beginAtZero: true
+            };
+        } else {
+            // Remove right axis when not needed
+            delete opts.scales.y1;
+        }
 
         this.chart.update('none');
     }
