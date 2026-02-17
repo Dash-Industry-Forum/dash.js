@@ -252,7 +252,7 @@ function onPlayerError(e) {
 
 // ---- Playback ended (loop) ----
 function onPlaybackEnded() {
-    if (settingsController.loop) {
+    if (settingsController.loop && !playerController.isDynamic) {
         playerController.player.seek(0);
         playerController.player.play();
     }
