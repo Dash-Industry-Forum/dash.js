@@ -37,6 +37,7 @@ export class ControlBar {
         this.trackMenu = null;
         this.captionBtn = null;
         this.captionMenu = null;
+        this.timeSeparator = null;
         this.thumbnailContainer = null;
         this.thumbnailElem = null;
         this.thumbnailTimeLabel = null;
@@ -78,6 +79,7 @@ export class ControlBar {
         this.bitrateBtn = $('#cb-bitrate-btn');
         this.trackBtn = $('#cb-track-btn');
         this.captionBtn = $('#cb-caption-btn');
+        this.timeSeparator = $('#cb-time-separator');
         this.thumbnailContainer = $('#cb-thumbnail-container');
         this.thumbnailElem = $('#cb-thumbnail-elem');
         this.thumbnailTimeLabel = $('#cb-thumbnail-time');
@@ -119,6 +121,9 @@ export class ControlBar {
         this.timeDisplay.textContent = '00:00';
         this.durationDisplay.textContent = '00:00';
         this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
+        if (this.timeSeparator) {
+            this.timeSeparator.classList.remove('d-none');
+        }
         this._closeAllMenus();
         this._destroyMenus();
     }
@@ -171,6 +176,9 @@ export class ControlBar {
         this.muteBtn.addEventListener('click', () => this._toggleMute());
         this.fullscreenBtn.addEventListener('click', () => this._toggleFullscreen());
         this.volumeSlider.addEventListener('input', () => this._onVolumeInput());
+
+        // Live indicator click — seek to live edge
+        this.durationDisplay.addEventListener('click', () => this._seekToLiveEdge());
 
         // Seekbar mouse events
         this.seekbarContainer.addEventListener('mousedown', (e) => this._onSeekMouseDown(e));
@@ -297,20 +305,32 @@ export class ControlBar {
             this._duration = duration;
             this._isDynamic = this.player.isDynamic();
 
-            this.timeDisplay.textContent = formatTime(time);
-
             if (this._isDynamic) {
+                // Show negative latency (e.g. -00:20) instead of DVR position
+                const liveLatency = this.player.getCurrentLiveLatency() || 0;
+                this.timeDisplay.textContent = `-${formatTime(Math.round(liveLatency))}`;
+
                 this.durationDisplay.innerHTML = '<i class="bi bi-circle-fill"></i> LIVE';
                 this.durationDisplay.classList.add('cb-live-indicator');
 
+                // Hide separator for live
+                if (this.timeSeparator) {
+                    this.timeSeparator.classList.add('d-none');
+                }
+
                 // Check if at live edge
                 const targetDelay = this.player.getTargetLiveDelay() || 0;
-                const liveLatency = this.player.getCurrentLiveLatency() || 0;
                 const atLiveEdge = liveLatency <= targetDelay + 1;
                 this.durationDisplay.classList.toggle('cb-at-live-edge', atLiveEdge);
             } else {
+                this.timeDisplay.textContent = formatTime(time);
                 this.durationDisplay.textContent = formatTime(duration);
                 this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
+
+                // Show separator for VoD
+                if (this.timeSeparator) {
+                    this.timeSeparator.classList.remove('d-none');
+                }
             }
 
             // Update seekbar progress
@@ -320,6 +340,22 @@ export class ControlBar {
             }
         } catch (err) {
             // Player may not be ready
+        }
+    }
+
+    _seekToLiveEdge() {
+        if (!this._enabled || !this._isDynamic) {
+            return;
+        }
+        try {
+            this.player.seekToOriginalLive();
+        } catch (e) {
+            // Fallback: seek to duration (end of DVR window)
+            try {
+                this.player.seek(this.player.duration());
+            } catch (e2) {
+                // Player not ready
+            }
         }
     }
 
