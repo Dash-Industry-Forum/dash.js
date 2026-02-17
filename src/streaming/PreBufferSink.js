@@ -45,6 +45,8 @@ function PreBufferSink(onAppendedCallback) {
     let instance,
         logger,
         outstandingInit;
+
+    let initSegments = [];
     let chunks = [];
     let onAppended = onAppendedCallback;
 
@@ -54,18 +56,23 @@ function PreBufferSink(onAppendedCallback) {
 
     function reset() {
         chunks = [];
+        initSegments = [];
         outstandingInit = null;
         onAppended = null;
     }
 
     function append(chunk) {
-        if (chunk.segmentType !== 'InitializationSegment') { //Init segments are stored in the initCache.
+        if (chunk.segmentType !== 'InitializationSegment') {
             chunks.push(chunk);
             chunks.sort(function (a, b) {
                 return a.start - b.start;
             });
             outstandingInit = null;
-        } else {//We need to hold an init chunk for when a corresponding media segment is being downloaded when the discharge happens.
+        } else {
+            if (!initSegments.includes(chunk)) {
+                initSegments.push(chunk);
+            }
+            //We might be in the process of downloading a media segment, this would be its init pair.
             outstandingInit = chunk;
         }
 
@@ -79,7 +86,7 @@ function PreBufferSink(onAppendedCallback) {
     }
 
     function remove(start, end) {
-        chunks = chunks.filter(a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
+        chunks = chunks.filter(a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)));
         return Promise.resolve();
     }
 
@@ -132,24 +139,30 @@ function PreBufferSink(onAppendedCallback) {
      * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
      * Chunks are removed from the buffer when they are discharged.
      * @function PreBufferSink#discharge
-     * @param {?Number} start The start time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
-     * @param {?Number} end The end time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
      * @returns {Array} The set of chunks from the buffer within the time ranges.
      */
-    function discharge(start, end) {
-        const result = getChunksAt(start, end);
-        if (outstandingInit) {
-            result.push(outstandingInit);
-            outstandingInit = null;
+    function discharge() {
+        const result = chunks;
+        let lastInit = null;
+
+        for (let i = 0; i < result.length; i++) {
+            if (!lastInit || result[i].representation.id != lastInit.representation.id) {
+                lastInit = initSegments.find(init => init.representation.id === result[i].representation.id);
+                if (lastInit) {
+                    result.splice(i, 0, lastInit);
+                    i++;
+                }
+            }
         }
 
-        remove(start, end);
+        if (outstandingInit) {
+            result.push(outstandingInit);
+        }
+
+        chunks = [];
+        initSegments = [];
 
         return result;
-    }
-
-    function getChunksAt(start, end) {
-        return chunks.filter(a => ((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)));
     }
 
     function waitForUpdateEnd(callback) {
