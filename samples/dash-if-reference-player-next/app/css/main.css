@@ -548,6 +548,33 @@ body {
     border: none;
 }
 
+/* Playback rate controls */
+.cb-rate-group {
+    display: flex;
+    align-items: center;
+    gap: 0.15rem;
+    margin: 0 0.25rem;
+}
+
+.cb-rate-display {
+    color: #e0e0e0;
+    font-size: 0.75rem;
+    min-width: 2.5rem;
+    text-align: center;
+    cursor: pointer;
+    user-select: none;
+    line-height: 1;
+}
+
+.cb-rate-display:hover {
+    color: #ffffff;
+}
+
+.cb-btn-sm {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.3rem;
+}
+
 /* Live indicator */
 .cb-live-indicator {
     cursor: pointer;

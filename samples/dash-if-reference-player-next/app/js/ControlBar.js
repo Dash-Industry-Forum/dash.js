@@ -38,6 +38,9 @@ export class ControlBar {
         this.captionBtn = null;
         this.captionMenu = null;
         this.timeSeparator = null;
+        this.rateDownBtn = null;
+        this.rateUpBtn = null;
+        this.rateDisplay = null;
         this.thumbnailContainer = null;
         this.thumbnailElem = null;
         this.thumbnailTimeLabel = null;
@@ -80,6 +83,9 @@ export class ControlBar {
         this.trackBtn = $('#cb-track-btn');
         this.captionBtn = $('#cb-caption-btn');
         this.timeSeparator = $('#cb-time-separator');
+        this.rateDownBtn = $('#cb-rate-down');
+        this.rateUpBtn = $('#cb-rate-up');
+        this.rateDisplay = $('#cb-rate-display');
         this.thumbnailContainer = $('#cb-thumbnail-container');
         this.thumbnailElem = $('#cb-thumbnail-elem');
         this.thumbnailTimeLabel = $('#cb-thumbnail-time');
@@ -124,6 +130,7 @@ export class ControlBar {
         if (this.timeSeparator) {
             this.timeSeparator.classList.remove('d-none');
         }
+        this._updateRateDisplay(1);
         this._closeAllMenus();
         this._destroyMenus();
     }
@@ -179,6 +186,17 @@ export class ControlBar {
 
         // Live indicator click — seek to live edge
         this.durationDisplay.addEventListener('click', () => this._seekToLiveEdge());
+
+        // Playback rate controls
+        if (this.rateDownBtn) {
+            this.rateDownBtn.addEventListener('click', () => this._changeRate(-0.25));
+        }
+        if (this.rateUpBtn) {
+            this.rateUpBtn.addEventListener('click', () => this._changeRate(0.25));
+        }
+        if (this.rateDisplay) {
+            this.rateDisplay.addEventListener('click', () => this._resetRate());
+        }
 
         // Seekbar mouse events
         this.seekbarContainer.addEventListener('mousedown', (e) => this._onSeekMouseDown(e));
@@ -338,6 +356,12 @@ export class ControlBar {
                 const pct = (time / duration) * 100;
                 this.seekbarPlayed.style.width = `${Math.min(pct, 100)}%`;
             }
+
+            // Sync rate display with actual playback rate
+            const actualRate = this.player.getPlaybackRate();
+            if (actualRate !== undefined && actualRate !== null) {
+                this._updateRateDisplay(actualRate);
+            }
         } catch (err) {
             // Player may not be ready
         }
@@ -356,6 +380,40 @@ export class ControlBar {
             } catch (e2) {
                 // Player not ready
             }
+        }
+    }
+
+    // ---- Playback Rate ----
+
+    _changeRate(delta) {
+        if (!this._enabled) {
+            return;
+        }
+        try {
+            const current = this.player.getPlaybackRate() || 1;
+            const next = Math.min(4, Math.max(0.25, Math.round((current + delta) * 4) / 4));
+            this.player.setPlaybackRate(next);
+            this._updateRateDisplay(next);
+        } catch (e) {
+            // Player not ready
+        }
+    }
+
+    _resetRate() {
+        if (!this._enabled) {
+            return;
+        }
+        try {
+            this.player.setPlaybackRate(1);
+            this._updateRateDisplay(1);
+        } catch (e) {
+            // Player not ready
+        }
+    }
+
+    _updateRateDisplay(rate) {
+        if (this.rateDisplay) {
+            this.rateDisplay.textContent = `${rate.toFixed(2)}x`;
         }
     }
 
