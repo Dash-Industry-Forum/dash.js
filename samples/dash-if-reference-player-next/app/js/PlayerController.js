@@ -294,22 +294,24 @@ export class PlayerController extends EventEmitter {
             // Buffer level
             metrics.bufferLevel = dashMetrics.getCurrentBufferLevel(type, true) || 0;
 
-            // Representations
+            // Representations (display as 1-based: 1/N instead of 0/N)
             const reps = this.player.getRepresentationsByType(type);
-            metrics.maxIndex = reps ? reps.length - 1 : 0;
+            metrics.maxIndex = reps ? reps.length : 0;
 
             // Current representation switch
             const repSwitch = dashMetrics.getCurrentRepresentationSwitch(type, true);
             if (repSwitch) {
-                metrics.pendingIndex = reps
+                const pendingIdx = reps
                     ? reps.findIndex(r => r.id === repSwitch.to)
-                    : 0;
+                    : -1;
+                metrics.pendingIndex = pendingIdx + 1;
                 const currentRep = this.player.getCurrentRepresentationForType(type);
                 if (currentRep) {
                     metrics.bitrate = Math.round(currentRep.bandwidth / 1000);
-                    metrics.currentIndex = reps
+                    const currentIdx = reps
                         ? reps.findIndex(r => r.id === currentRep.id)
-                        : 0;
+                        : -1;
+                    metrics.currentIndex = currentIdx + 1;
                 }
             }
 

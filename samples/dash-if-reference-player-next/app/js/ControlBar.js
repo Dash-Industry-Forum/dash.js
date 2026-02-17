@@ -734,7 +734,7 @@ export class ControlBar {
                         }
                     }
 
-                    const isCurrent = currentTrack && currentTrack.id === track.id;
+                    const isCurrent = currentTrack && this._isTracksEqual(currentTrack, track);
                     const item = createElement('div', {
                         className: `cb-menu-item ${isCurrent ? 'cb-menu-item-selected' : ''}`,
                         textContent: label,
@@ -755,6 +755,18 @@ export class ControlBar {
         }
     }
 
+    _isTracksEqual(t1, t2) {
+        if (!t1 || !t2) {
+            return false;
+        }
+        return t1.id === t2.id
+            && t1.lang === t2.lang
+            && t1.viewpoint === t2.viewpoint
+            && String(t1.roles) === String(t2.roles)
+            && String(t1.accessibility || '') === String(t2.accessibility || '')
+            && String(t1.audioChannelConfiguration || '') === String(t2.audioChannelConfiguration || '');
+    }
+
     _rebuildCaptionMenu() {
         const menuEl = $('#cb-caption-menu');
         if (!menuEl) {
@@ -763,9 +775,9 @@ export class ControlBar {
         menuEl.innerHTML = '';
 
         try {
-            // Check text tracks from the video element
-            const textTracks = this.video.textTracks;
-            if (!textTracks || textTracks.length === 0) {
+            // Use dash.js track info for reliable lang/labels instead of native textTracks
+            const tracks = this.player.getTracksFor('text');
+            if (!tracks || tracks.length === 0) {
                 if (this.captionBtn) {
                     this.captionBtn.classList.add('d-none');
                 }
@@ -785,19 +797,26 @@ export class ControlBar {
             });
             menuEl.appendChild(offItem);
 
-            let validTrackCount = 0;
+            for (let i = 0; i < tracks.length; i++) {
+                const track = tracks[i];
 
-            for (let i = 0; i < textTracks.length; i++) {
-                const tt = textTracks[i];
-                if (tt.mode === 'disabled') {
-                    continue;
+                // Build label: prefer Label element text, fall back to lang
+                let label = '';
+                if (track.labels && track.labels.length > 0) {
+                    const textLabel = track.labels.find(l => l.text);
+                    if (textLabel) {
+                        label = textLabel.text;
+                    }
                 }
-                validTrackCount++;
+                if (!label) {
+                    label = track.lang || 'Und';
+                }
 
-                let label = tt.label || tt.language || `Track ${i + 1}`;
-                if (tt.kind) {
-                    label += ` (${tt.kind})`;
-                }
+                // Append kind from roles or track kind
+                const kind = (track.roles && track.roles.length > 0)
+                    ? track.roles[0].value || track.roles[0]
+                    : 'subtitle';
+                label += ` (${kind})`;
 
                 const isCurrent = currentIdx === i;
                 const item = createElement('div', {
@@ -812,7 +831,7 @@ export class ControlBar {
             }
 
             if (this.captionBtn) {
-                this.captionBtn.classList.toggle('d-none', validTrackCount === 0);
+                this.captionBtn.classList.toggle('d-none', tracks.length === 0);
             }
         } catch (err) {
             if (this.captionBtn) {
