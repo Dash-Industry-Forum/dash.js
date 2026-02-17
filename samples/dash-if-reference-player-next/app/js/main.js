@@ -122,10 +122,13 @@ async function init() {
         doLoad();
     }
 
-    // 11. Load contributors
+    // 11. Theme toggle (light/dark)
+    initThemeToggle();
+
+    // 12. Load contributors
     loadContributors();
 
-    // 12. Initialize Bootstrap tooltips
+    // 13. Initialize Bootstrap tooltips
     const tooltipElements = document.querySelectorAll('[data-bs-toggle="tooltip"]');
     for (const el of tooltipElements) {
         new bootstrap.Tooltip(el);
@@ -230,6 +233,41 @@ function onPlaybackEnded() {
         playerController.player.seek(0);
         playerController.player.play();
     }
+}
+
+// ---- Theme toggle ----
+function initThemeToggle() {
+    const btn = $('#btn-theme-toggle');
+    if (!btn) {
+        return;
+    }
+
+    const STORAGE_KEY = 'rp-theme';
+
+    function applyTheme(theme) {
+        document.documentElement.setAttribute('data-bs-theme', theme);
+        const icon = btn.querySelector('i');
+        if (icon) {
+            icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
+        }
+        btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+
+        // Update chart colors for new theme
+        if (chartController) {
+            chartController.updateTheme();
+        }
+    }
+
+    // Load saved preference (fall back to 'light')
+    const saved = localStorage.getItem(STORAGE_KEY) || 'light';
+    applyTheme(saved);
+
+    btn.addEventListener('click', () => {
+        const current = document.documentElement.getAttribute('data-bs-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(STORAGE_KEY, next);
+        applyTheme(next);
+    });
 }
 
 // ---- Contributors ----

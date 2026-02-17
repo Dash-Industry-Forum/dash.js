@@ -1,27 +1,74 @@
 /* ============================================================
-   dash.js Reference Player v2 - Dark Theme
+   dash.js Reference Player v2 - Light / Dark Theme
    ============================================================ */
 
+/* ---- Light theme (default) ---- */
 :root {
-    --rp-bg-primary: #0f0f1a;
-    --rp-bg-secondary: #1a1a2e;
-    --rp-bg-card: #1e1e36;
-    --rp-bg-card-header: #16213e;
+    --rp-bg-primary: #f5f6fa;
+    --rp-bg-secondary: #ffffff;
+    --rp-bg-card: #ffffff;
+    --rp-bg-card-header: #f0f1f5;
     --rp-accent: #0d6efd;
     --rp-accent-hover: #3d8bfd;
-    --rp-text: #e0e0e0;
-    --rp-text-muted: #8a8aa0;
-    --rp-border: #2d2d50;
+    --rp-text: #1a1a2e;
+    --rp-text-muted: #6c757d;
+    --rp-border: #dee2e6;
     --rp-success: #198754;
     --rp-warning: #ffc107;
     --rp-danger: #dc3545;
     --rp-info: #0dcaf0;
     --rp-control-bg: rgba(0, 0, 0, 0.75);
     --rp-transition: 0.3s ease;
+
+    /* Intermediate properties for theme-dependent surfaces */
+    --rp-separator: rgba(0, 0, 0, 0.06);
+    --rp-hover: rgba(0, 0, 0, 0.04);
+    --rp-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --rp-logo-bg: transparent;
+    --rp-contributor-bg: transparent;
+    --rp-tag-bg: rgba(0, 0, 0, 0.04);
+    --rp-accent-subtle: rgba(13, 110, 253, 0.08);
+    --rp-buffer-bar-bg: rgba(0, 0, 0, 0.08);
+    --rp-chart-grid: rgba(0, 0, 0, 0.08);
+    --rp-chart-tick: #6c757d;
+    --rp-chart-tooltip-bg: rgba(255, 255, 255, 0.95);
+    --rp-chart-tooltip-text: #1a1a2e;
+    --rp-chart-tooltip-border: #dee2e6;
 }
 
-/* ---- Global ---- */
+/* ---- Dark theme ---- */
 [data-bs-theme="dark"] {
+    --rp-bg-primary: #0f0f1a;
+    --rp-bg-secondary: #1a1a2e;
+    --rp-bg-card: #1e1e36;
+    --rp-bg-card-header: #16213e;
+    --rp-text: #e0e0e0;
+    --rp-text-muted: #8a8aa0;
+    --rp-border: #2d2d50;
+
+    --rp-separator: rgba(255, 255, 255, 0.05);
+    --rp-hover: rgba(255, 255, 255, 0.06);
+    --rp-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --rp-logo-bg: rgba(255, 255, 255, 0.92);
+    --rp-contributor-bg: rgba(255, 255, 255, 0.92);
+    --rp-tag-bg: rgba(255, 255, 255, 0.06);
+    --rp-accent-subtle: rgba(13, 110, 253, 0.1);
+    --rp-buffer-bar-bg: rgba(255, 255, 255, 0.1);
+    --rp-chart-grid: rgba(255, 255, 255, 0.05);
+    --rp-chart-tick: #8a8aa0;
+    --rp-chart-tooltip-bg: rgba(20, 20, 40, 0.9);
+    --rp-chart-tooltip-text: #e0e0e0;
+    --rp-chart-tooltip-border: #2d2d50;
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+/* ---- Global (light) ---- */
+[data-bs-theme="light"] {
     --bs-body-bg: var(--rp-bg-primary);
     --bs-body-color: var(--rp-text);
     --bs-border-color: var(--rp-border);
@@ -60,6 +107,9 @@ body {
 
 .header-bar .logo-area img {
     height: 36px;
+    background: var(--rp-logo-bg);
+    border-radius: 6px;
+    padding: 4px 8px;
 }
 
 .header-bar .logo-area h1 {
@@ -80,6 +130,27 @@ body {
 .header-bar .github-links {
     display: flex;
     gap: 0.5rem;
+    align-items: center;
+}
+
+.btn-theme-toggle {
+    background: none;
+    border: 1px solid var(--rp-border);
+    color: var(--rp-text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    transition: color 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.btn-theme-toggle:hover {
+    color: var(--rp-accent);
+    border-color: var(--rp-accent);
 }
 
 /* ---- URL Bar ---- */
@@ -601,7 +672,7 @@ body {
     justify-content: space-between;
     padding: 0.3rem 0;
     font-size: 0.8rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--rp-separator);
 }
 
 .metric-row:last-child {
@@ -661,7 +732,7 @@ body {
 .metric-buffer-bar {
     width: 60px;
     height: 6px;
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--rp-buffer-bar-bg);
     border-radius: 3px;
     overflow: hidden;
     margin-right: 0.5rem;
@@ -726,7 +797,7 @@ body {
     gap: 0.5rem;
     padding: 0.4rem 0.75rem;
     font-size: 0.8rem;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid var(--rp-separator);
 }
 
 .conformance-badge {
@@ -781,18 +852,19 @@ body {
     justify-content: center;
     gap: 1.5rem;
     align-items: center;
+    background: var(--rp-contributor-bg);
+    border-radius: 8px;
+    padding: 1.25rem 1.5rem;
 }
 
 .contributor-logos a img {
     max-height: 35px;
-    opacity: 0.7;
+    opacity: 0.85;
     transition: opacity 0.2s;
-    filter: grayscale(50%);
 }
 
 .contributor-logos a:hover img {
     opacity: 1;
-    filter: grayscale(0%);
 }
 
 /* ---- DRM Header Dialog ---- */
@@ -860,7 +932,7 @@ body {
     background: var(--rp-bg-card);
     border: 1px solid var(--rp-border);
     border-radius: 0 0 8px 8px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    box-shadow: var(--rp-shadow);
     max-height: 70vh;
     display: flex;
     flex-direction: column;
@@ -923,7 +995,7 @@ body {
     padding: 0.3rem 0.75rem;
     font-size: 0.7rem;
     color: var(--rp-text-muted);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--rp-separator);
 }
 
 .stream-panel-list {
@@ -934,9 +1006,13 @@ body {
     scrollbar-width: thin;
 }
 
+.stream-panel-group-items.collapsed {
+    display: none;
+}
+
 .stream-panel-category {
-    padding: 0.4rem 0.75rem 0.2rem;
-    font-size: 0.7rem;
+    padding: 0.45rem 0.75rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--rp-accent);
     text-transform: uppercase;
@@ -945,18 +1021,39 @@ body {
     top: 0;
     background: var(--rp-bg-card);
     z-index: 1;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--rp-separator);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    user-select: none;
+}
+
+.stream-panel-category:hover {
+    background: var(--rp-accent-subtle);
+}
+
+.stream-panel-category i {
+    font-size: 0.65rem;
+    transition: transform 0.15s;
+}
+
+.stream-panel-category-count {
+    margin-left: auto;
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    font-weight: 400;
 }
 
 .stream-panel-item {
     padding: 0.4rem 0.75rem;
     cursor: pointer;
     transition: background 0.1s;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--rp-separator);
 }
 
 .stream-panel-item:hover {
-    background: rgba(13, 110, 253, 0.1);
+    background: var(--rp-accent-subtle);
 }
 
 .stream-panel-item-name {
@@ -977,7 +1074,7 @@ body {
     font-size: 0.6rem;
     padding: 1px 5px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.06);
+    background: var(--rp-tag-bg);
     color: var(--rp-text-muted);
 }
 

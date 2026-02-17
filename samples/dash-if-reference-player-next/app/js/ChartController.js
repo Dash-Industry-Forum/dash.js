@@ -123,6 +123,9 @@ export class ChartController {
             }
         });
 
+        // Apply theme-aware colors
+        this.updateTheme();
+
         // Bind chart control buttons
         const clearBtn = $('#btn-chart-clear');
         if (clearBtn) {
@@ -216,6 +219,37 @@ export class ChartController {
                 ? '<i class="bi bi-eye"></i> Enabled'
                 : '<i class="bi bi-eye-slash"></i> Disabled';
         }
+    }
+
+    /**
+     * Update chart colors to match the current theme (reads CSS custom properties)
+     */
+    updateTheme() {
+        if (!this.chart) {
+            return;
+        }
+
+        const style = getComputedStyle(document.documentElement);
+        const grid = style.getPropertyValue('--rp-chart-grid').trim();
+        const tick = style.getPropertyValue('--rp-chart-tick').trim();
+        const tooltipBg = style.getPropertyValue('--rp-chart-tooltip-bg').trim();
+        const tooltipText = style.getPropertyValue('--rp-chart-tooltip-text').trim();
+        const tooltipBorder = style.getPropertyValue('--rp-chart-tooltip-border').trim();
+
+        const opts = this.chart.options;
+        opts.scales.x.grid.color = grid;
+        opts.scales.x.ticks.color = tick;
+        opts.scales.x.title.color = tick;
+        opts.scales.y.grid.color = grid;
+        opts.scales.y.ticks.color = tick;
+        opts.scales.y.title.color = tick;
+        opts.plugins.legend.labels.color = tick;
+        opts.plugins.tooltip.backgroundColor = tooltipBg;
+        opts.plugins.tooltip.titleColor = tooltipText;
+        opts.plugins.tooltip.bodyColor = tooltipText;
+        opts.plugins.tooltip.borderColor = tooltipBorder;
+
+        this.chart.update('none');
     }
 
     /**

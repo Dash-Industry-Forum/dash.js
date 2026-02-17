@@ -195,16 +195,41 @@ export class StreamCatalog {
             grouped.get(stream.category).push(stream);
         }
 
+        const hasActiveFilters = this.activeTags.size > 0 || this.searchQuery.length > 0;
+
         for (const [category, streams] of grouped) {
+            const group = createElement('div', { className: 'stream-panel-group' });
+
             const catHeader = createElement('div', {
-                className: 'stream-panel-category',
-                textContent: category
+                className: 'stream-panel-category'
             });
-            listContainer.appendChild(catHeader);
+            const chevron = createElement('i', {
+                className: hasActiveFilters ? 'bi bi-chevron-down' : 'bi bi-chevron-right'
+            });
+            const label = createElement('span', { textContent: ` ${category}` });
+            const count = createElement('span', {
+                className: 'stream-panel-category-count',
+                textContent: `${streams.length}`
+            });
+            catHeader.appendChild(chevron);
+            catHeader.appendChild(label);
+            catHeader.appendChild(count);
+
+            const itemsContainer = createElement('div', {
+                className: `stream-panel-group-items ${hasActiveFilters ? '' : 'collapsed'}`
+            });
+
+            catHeader.addEventListener('click', () => {
+                const isCollapsed = itemsContainer.classList.toggle('collapsed');
+                chevron.className = isCollapsed ? 'bi bi-chevron-right' : 'bi bi-chevron-down';
+            });
 
             for (const stream of streams) {
                 const row = createElement('div', { className: 'stream-panel-item' });
-                row.addEventListener('click', () => this._selectStream(stream));
+                row.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    this._selectStream(stream);
+                });
 
                 const nameSpan = createElement('span', {
                     className: 'stream-panel-item-name',
@@ -212,12 +237,11 @@ export class StreamCatalog {
                 });
                 row.appendChild(nameSpan);
 
-                // Show tags as small badges
                 if (stream.tags.length > 0) {
                     const tagSpan = createElement('span', { className: 'stream-panel-item-tags' });
                     for (const tag of stream.tags) {
                         if (this.providers[tag]) {
-                            continue; // skip provider tags in results
+                            continue;
                         }
                         const badge = createElement('span', {
                             className: `stream-tag-badge ${this.activeTags.has(tag) ? 'active' : ''}`,
@@ -228,8 +252,12 @@ export class StreamCatalog {
                     row.appendChild(tagSpan);
                 }
 
-                listContainer.appendChild(row);
+                itemsContainer.appendChild(row);
             }
+
+            group.appendChild(catHeader);
+            group.appendChild(itemsContainer);
+            listContainer.appendChild(group);
         }
     }
 
