@@ -89,7 +89,7 @@
     "yargs": "^18.0.0"
   },
   "dependencies": {
-    "@svta/cml-608": "1.0.1",
+    "@svta/cml-608": "1.0.2",
     "@svta/cml-cmcd": "1.0.1",
     "@svta/cml-cmsd": "1.0.1",
     "@svta/cml-dash": "1.0.1",
