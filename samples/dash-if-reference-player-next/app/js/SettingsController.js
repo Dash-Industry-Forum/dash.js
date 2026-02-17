@@ -185,6 +185,11 @@ export class SettingsController {
             };
         }
 
+        // Enhancement (LCEVC)
+        config.streaming.enhancement = {
+            enabled: this._isChecked('opt-enhancement-enabled')
+        };
+
         return config;
     }
 
@@ -394,14 +399,15 @@ export class SettingsController {
             'opt-schedule-while-paused', 'opt-calc-seg-avail', 'opt-reuse-sourcebuffers',
             'opt-mediasource-duration-inf', 'opt-reset-sb-track-switch', 'opt-save-last-media',
             'opt-local-storage', 'opt-jump-gaps', 'opt-content-steering', 'opt-catchup-enabled',
-            'opt-fast-switch', 'opt-auto-switch-video', 'opt-force-quality-switch',
+            'opt-fast-switch', 'opt-auto-switch-video',
             'opt-rule-throughput', 'opt-rule-bola', 'opt-rule-insufficient-buffer',
             'opt-rule-switch-history', 'opt-rule-dropped-frames', 'opt-rule-abandon',
             'opt-rule-l2a', 'opt-rule-lolp',
             'opt-text-default-enabled', 'opt-force-text-streaming',
             'opt-imsc-rollup', 'opt-imsc-forced-only',
             'opt-apply-service-desc', 'opt-use-suggested-pd',
-            'opt-cmcd-enabled', 'opt-cmsd-enabled', 'opt-cmsd-apply-mb'
+            'opt-cmcd-enabled', 'opt-cmsd-enabled', 'opt-cmsd-apply-mb',
+            'opt-enhancement-enabled'
         ];
 
         for (const id of settingsCheckboxes) {
@@ -458,19 +464,61 @@ export class SettingsController {
     _syncFromPlayer() {
         const s = this.player.getSettings();
 
-        // Sync checkboxes from player state
+        // ---- General ----
         this._setChecked('opt-schedule-while-paused', s?.streaming?.scheduling?.scheduleWhilePaused);
-        this._setChecked('opt-jump-gaps', s?.streaming?.gaps?.jumpGaps);
-        this._setChecked('opt-fast-switch', s?.streaming?.buffer?.fastSwitchEnabled);
-        this._setChecked('opt-auto-switch-video', s?.streaming?.abr?.autoSwitchBitrate?.video);
+        this._setChecked('opt-calc-seg-avail', s?.streaming?.timeShiftBuffer?.calcFromSegmentTimeline);
         this._setChecked('opt-reuse-sourcebuffers', s?.streaming?.buffer?.reuseExistingSourceBuffers);
-        this._setChecked('opt-apply-service-desc', s?.streaming?.applyServiceDescription);
+        this._setChecked('opt-mediasource-duration-inf', s?.streaming?.buffer?.mediaSourceDurationInfinity);
+        this._setChecked('opt-reset-sb-track-switch', s?.streaming?.buffer?.resetSourceBuffersForTrackSwitch);
+        this._setChecked('opt-save-last-media', s?.streaming?.saveLastMediaSettingsForCurrentStreamingSession);
+        this._setChecked('opt-local-storage', s?.streaming?.lastBitrateCachingInfo?.enabled);
+        this._setChecked('opt-jump-gaps', s?.streaming?.gaps?.jumpGaps);
         this._setChecked('opt-content-steering', s?.streaming?.applyContentSteering);
+        this._setChecked('opt-catchup-enabled', !!s?.streaming?.liveCatchup?.enabled);
 
-        // Log level
+        // ---- ABR ----
+        this._setChecked('opt-fast-switch', !!s?.streaming?.buffer?.fastSwitchEnabled);
+        this._setChecked('opt-auto-switch-video', s?.streaming?.abr?.autoSwitchBitrate?.video);
+
+        // ABR rules
+        this._setChecked('opt-rule-throughput', s?.streaming?.abr?.rules?.throughputRule?.active);
+        this._setChecked('opt-rule-bola', s?.streaming?.abr?.rules?.bolaRule?.active);
+        this._setChecked('opt-rule-insufficient-buffer', s?.streaming?.abr?.rules?.insufficientBufferRule?.active);
+        this._setChecked('opt-rule-switch-history', s?.streaming?.abr?.rules?.switchHistoryRule?.active);
+        this._setChecked('opt-rule-dropped-frames', s?.streaming?.abr?.rules?.droppedFramesRule?.active);
+        this._setChecked('opt-rule-abandon', s?.streaming?.abr?.rules?.abandonRequestsRule?.active);
+        this._setChecked('opt-rule-l2a', s?.streaming?.abr?.rules?.l2ARule?.active);
+        this._setChecked('opt-rule-lolp', s?.streaming?.abr?.rules?.loLPRule?.active);
+
+        // ---- Live Delay ----
+        this._setChecked('opt-apply-service-desc', s?.streaming?.applyServiceDescription);
+        this._setChecked('opt-use-suggested-pd', s?.streaming?.delay?.useSuggestedPresentationDelay);
+
+        // ---- Text / IMSC ----
+        this._setChecked('opt-text-default-enabled', s?.streaming?.text?.defaultEnabled);
+        this._setChecked('opt-imsc-rollup', s?.streaming?.text?.imsc?.enableRollUp);
+        this._setChecked('opt-imsc-forced-only', s?.streaming?.text?.imsc?.displayForcedOnlyMode);
+
+        // ---- CMCD ----
+        this._setChecked('opt-cmcd-enabled', s?.streaming?.cmcd?.enabled);
+
+        // ---- CMSD ----
+        this._setChecked('opt-cmsd-enabled', s?.streaming?.cmsd?.enabled);
+        this._setChecked('opt-cmsd-apply-mb', s?.streaming?.cmsd?.abr?.applyMb);
+
+        // ---- Enhancement ----
+        this._setChecked('opt-enhancement-enabled', s?.streaming?.enhancement?.enabled);
+
+        // ---- Log level ----
         const logLevel = $(`#opt-log-level`);
         if (logLevel && s?.debug?.logLevel !== undefined) {
             logLevel.value = String(s.debug.logLevel);
+        }
+
+        // ---- Catchup mode ----
+        const catchupMode = $('#opt-catchup-mode');
+        if (catchupMode && s?.streaming?.liveCatchup?.mode) {
+            catchupMode.value = s.streaming.liveCatchup.mode;
         }
     }
 
