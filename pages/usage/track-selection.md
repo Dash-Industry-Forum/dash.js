@@ -10,12 +10,21 @@ separate Adaptation Sets. dash.js allows the application to define an initial tr
 at runtime.
 
 ## Capability checks
-While parsing a manifest, dash.js removes all Adaptation Sets it assumes that are not supported based on the `@codecs` attribute, the `EssentialProperty` elements, required DRM systems and other properties.
+While parsing a manifest, dash.js removes Adaptation Sets / Representations it deems unsupported based on the `@codecs` 
+attribute, `EssentialProperty` descriptors, required DRM systems and other properties. (This filtering is enabled by 
+default and is intentionally conservative.)
 
-By default, dash.js filters out AdaptationSets/Representations whose `EssentialProperty` descriptors are not recognized as supported. This behavior is controlled by `settings.capabilities.filterUnsupportedEssentialProperties` (enabled by default) together with an allow‑list in `settings.capabilities.supportedEssentialProperties`. The allow‑list includes a small, conservative set of schemes (e.g., DVB font download, DASH-IF thumbnails) and a minimal SDR‑only subset of CICP colorimetry values for `ColourPrimaries`, `MatrixCoefficients`, and `TransferCharacteristics`. As a result, HDR variants may be pruned unless you either
+### Default handling of `EssentialProperty`
+By default, dash.js filters out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
+recognized as supported. This is controlled by:
 
-* enable MediaCapabilities‑based filtering (see below) or 
-* extend the allow‑list to add the CICP values your target devices support.
+* `capabilities.filterUnsupportedEssentialProperties`: **true** by default, and
+* `capabilities.supportedEssentialProperties`: a conservative allow‑list (e.g. DVB font download, DASH‑IF thumbnails)
+   plus a minimal **SDR‑only** subset of CICP colorimetry (`ColourPrimaries`, `MatrixCoefficients`, `TransferCharacteristics`).  
+
+As a consequence, HDR variants can be pruned unless you either 
+* enable **MediaCapabilities‑based** filtering, or 
+* extend the allow‑list with the CICP values your target devices support.
 
 If your application can rely on the MediaCapabilities API, you can set:
 
@@ -29,9 +38,11 @@ player.updateSettings({
 });
 ```
 
-With these flags, dash.js will query the platform to evaluate colorimetry/HDR EssentialProperty combinations instead of relying solely on the static allow‑list, reducing the risk of “over‑filtering” valid HDR tracks on capable devices.
+With these flags, dash.js will query the platform to evaluate colorimetry / HDR `EssentialProperty` combinations instead
+of relying solely on the static allow‑list, reducing the risk of “over‑filtering” valid HDR tracks on capable devices.
 
-If MediaCapabilities is not an option, you should explicitly extend `capabilities.supportedEssentialProperties` to include the HDR schemes/values (e.g., PQ10: primaries=9, matrix=9, transfer=16) that are known to work across your device fleet.
+If MediaCapabilities is not an option, you should explicitly extend `capabilities.supportedEssentialProperties` to include 
+the HDR schemes/values (e.g., PQ10: ColourPrimaries=9, MatrixCoefficients=9, TransferCharacteristics=16) that are known to work across your target devices.
 
 ## Initial track selection
 dash.js offers multiple ways to control the initial track selection as described below.
