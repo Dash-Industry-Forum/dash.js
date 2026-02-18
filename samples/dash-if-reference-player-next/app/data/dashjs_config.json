@@ -1,5 +1,10 @@
 {
     "debug": {
         "logLevel": 5
+    },
+    "streaming": {
+        "buffer": {
+            "fastSwitchEnabled": true
+        }
     }
 }
