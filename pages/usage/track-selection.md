@@ -13,6 +13,10 @@ at runtime.
 While parsing a manifest, dash.js removes Adaptation Sets / Representations it deems unsupported based on the `@codecs` 
 attribute, `EssentialProperty` descriptors, required DRM systems and other properties.
 
+### Handling of `@supplementalCodecs`
+dash.js will evaluate optionally present `@supplementalCodecs` and if it is recognoized as supported, this its content 
+will be used instead of the value provided with the `@codecs` attribute.
+
 ### Default handling of `EssentialProperty`
 By default, dash.js filters out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
 recognized as supported. This is controlled by:
