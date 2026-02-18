@@ -34,17 +34,42 @@
  */
 
 import FactoryMaker from '../../core/FactoryMaker.js';
+import Settings from '../../core/Settings.js';
 
 function InitCache() {
 
+    const context = this.context;
+    const settings = Settings(context).getInstance();
+
     let data = {};
+    let accessOrder = [];
 
     function save (chunk) {
         const id = chunk.streamId;
         const representationId = chunk.representation.id;
 
         data[id] = data[id] || {};
+
+        const isNewEntry = !data[id][representationId];
         data[id][representationId] = chunk;
+
+        if (isNewEntry) {
+            accessOrder.push({ streamId: id, representationId: representationId });
+            _enforceCacheLimit();
+        }
+    }
+
+    function _enforceCacheLimit() {
+        const maxCacheSize = settings.get().streaming.cacheInitSegmentsLimit;
+        while (accessOrder.length > maxCacheSize) {
+            const oldest = accessOrder.shift();
+            if (data[oldest.streamId] && data[oldest.streamId][oldest.representationId]) {
+                delete data[oldest.streamId][oldest.representationId];
+                if (Object.keys(data[oldest.streamId]).length === 0) {
+                    delete data[oldest.streamId];
+                }
+            }
+        }
     }
 
     function extract (streamId, representationId) {
@@ -55,15 +80,34 @@ function InitCache() {
         }
     }
 
-
     function reset () {
         data = {};
+        accessOrder = [];
+    }
+
+    /**
+     * Get cache statistics for debugging/testing
+     * @returns {object} Cache stats including entry count and stream count
+     */
+    function getStats() {
+        const streamCount = Object.keys(data).length;
+        let entryCount = 0;
+        for (const streamId in data) {
+            entryCount += Object.keys(data[streamId]).length;
+        }
+        return {
+            entryCount: entryCount,
+            streamCount: streamCount,
+            maxSize: settings.get().streaming.cacheInitSegmentsLimit,
+            accessOrderLength: accessOrder.length
+        };
     }
 
     const instance = {
         save: save,
         extract: extract,
-        reset: reset
+        reset: reset,
+        getStats: getStats
     };
 
     return instance;

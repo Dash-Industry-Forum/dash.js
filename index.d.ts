@@ -1669,6 +1669,7 @@ export class MediaPlayerSettingClass {
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
         cacheInitSegments?: boolean,
+        cacheInitSegmentsLimit?: number,
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
