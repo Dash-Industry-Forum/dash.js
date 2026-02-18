@@ -51,9 +51,17 @@ async function init() {
     // 2. Load default config
     await loadDefaultConfig();
 
-    // 3. Display version
+    // 3. Display version + build commit
     const version = playerController.getVersion();
     $('#version-info').textContent = `v${version}`;
+    const commitInfo = $('#commit-info');
+    const buildCommit = typeof __DASHJS_BUILD_COMMIT__ !== 'undefined'
+        ? __DASHJS_BUILD_COMMIT__
+        : 'unknown';
+    if (commitInfo && buildCommit && buildCommit !== 'unknown') {
+        const commitUrl = `https://github.com/Dash-Industry-Forum/dash.js/commit/${buildCommit}`;
+        commitInfo.innerHTML = `commit <a href="${commitUrl}" target="_blank" rel="noopener">${buildCommit}</a>`;
+    }
 
     // 4. Initialize all modules
     controlBar = new ControlBar(playerController);
