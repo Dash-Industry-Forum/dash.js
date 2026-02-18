@@ -38,13 +38,26 @@
                 <span class="version-badge" id="version-info"></span>
             </div>
             <div class="github-links">
-                <button class="btn-theme-toggle" id="btn-theme-toggle" title="Toggle light/dark theme">
-                    <i class="bi bi-moon-fill"></i>
-                </button>
+                <select class="theme-select" id="theme-select" aria-label="Theme">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                    <option value="latte">Catppuccin Latte</option>
+                    <option value="frappe">Catppuccin Frappe</option>
+                    <option value="macchiato">Catppuccin Macchiato</option>
+                    <option value="mocha">Catppuccin Mocha</option>
+                </select>
                 <iframe src="https://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=star&count=true"
                         frameborder="0" scrolling="0" width="100" height="20" title="GitHub Stars"></iframe>
                 <iframe src="https://ghbtns.com/github-btn.html?user=Dash-Industry-Forum&repo=dash.js&type=fork&count=true"
                         frameborder="0" scrolling="0" width="100" height="20" title="GitHub Forks"></iframe>
+            </div>
+        </div>
+
+        <!-- ============ NOTICE ============ -->
+        <div class="notice-banner" role="alert">
+            <i class="bi bi-exclamation-triangle"></i>
+            <div>
+                <strong>New Reference UI:</strong> This is a new implementation of the reference UI and may contain bugs.
             </div>
         </div>
 

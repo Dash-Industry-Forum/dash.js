@@ -67,6 +67,154 @@
     --bs-secondary-bg: var(--rp-bg-card);
 }
 
+/* ---- Catppuccin Latte ---- */
+[data-bs-theme="latte"] {
+    --rp-bg-primary: #eff1f5;
+    --rp-bg-secondary: #e6e9ef;
+    --rp-bg-card: #ffffff;
+    --rp-bg-card-header: #e6e9ef;
+    --rp-accent: #1e66f5;
+    --rp-accent-hover: #3856f2;
+    --rp-text: #4c4f69;
+    --rp-text-muted: #6c6f85;
+    --rp-border: #ccd0da;
+    --rp-success: #40a02b;
+    --rp-warning: #df8e1d;
+    --rp-danger: #d20f39;
+    --rp-info: #04a5e5;
+
+    --rp-separator: rgba(76, 79, 105, 0.08);
+    --rp-hover: rgba(30, 102, 245, 0.08);
+    --rp-shadow: 0 8px 24px rgba(76, 79, 105, 0.18);
+    --rp-logo-bg: transparent;
+    --rp-contributor-bg: rgba(76, 79, 105, 0.04);
+    --rp-tag-bg: rgba(76, 79, 105, 0.08);
+    --rp-accent-subtle: rgba(30, 102, 245, 0.12);
+    --rp-buffer-bar-bg: rgba(76, 79, 105, 0.1);
+    --rp-chart-grid: rgba(76, 79, 105, 0.08);
+    --rp-chart-tick: #6c6f85;
+    --rp-chart-tooltip-bg: rgba(239, 241, 245, 0.96);
+    --rp-chart-tooltip-text: #4c4f69;
+    --rp-chart-tooltip-border: #ccd0da;
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+/* ---- Catppuccin Frappe ---- */
+[data-bs-theme="frappe"] {
+    --rp-bg-primary: #303446;
+    --rp-bg-secondary: #292c3c;
+    --rp-bg-card: #414559;
+    --rp-bg-card-header: #3a3d4f;
+    --rp-accent: #8caaee;
+    --rp-accent-hover: #a6c0ff;
+    --rp-text: #c6d0f5;
+    --rp-text-muted: #a5adce;
+    --rp-border: #51576d;
+    --rp-success: #a6d189;
+    --rp-warning: #e5c890;
+    --rp-danger: #e78284;
+    --rp-info: #99d1db;
+
+    --rp-separator: rgba(198, 208, 245, 0.08);
+    --rp-hover: rgba(140, 170, 238, 0.12);
+    --rp-shadow: 0 8px 24px rgba(17, 17, 27, 0.4);
+    --rp-logo-bg: rgba(255, 255, 255, 0.9);
+    --rp-contributor-bg: rgba(255, 255, 255, 0.08);
+    --rp-tag-bg: rgba(198, 208, 245, 0.1);
+    --rp-accent-subtle: rgba(140, 170, 238, 0.14);
+    --rp-buffer-bar-bg: rgba(198, 208, 245, 0.12);
+    --rp-chart-grid: rgba(198, 208, 245, 0.08);
+    --rp-chart-tick: #a5adce;
+    --rp-chart-tooltip-bg: rgba(41, 44, 60, 0.95);
+    --rp-chart-tooltip-text: #c6d0f5;
+    --rp-chart-tooltip-border: #51576d;
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+/* ---- Catppuccin Macchiato ---- */
+[data-bs-theme="macchiato"] {
+    --rp-bg-primary: #24273a;
+    --rp-bg-secondary: #1e2030;
+    --rp-bg-card: #363a4f;
+    --rp-bg-card-header: #2d3145;
+    --rp-accent: #8aadf4;
+    --rp-accent-hover: #a6daff;
+    --rp-text: #cad3f5;
+    --rp-text-muted: #a5adcb;
+    --rp-border: #494d64;
+    --rp-success: #a6da95;
+    --rp-warning: #eed49f;
+    --rp-danger: #ed8796;
+    --rp-info: #91d7e3;
+
+    --rp-separator: rgba(202, 211, 245, 0.08);
+    --rp-hover: rgba(138, 173, 244, 0.14);
+    --rp-shadow: 0 8px 24px rgba(14, 15, 24, 0.45);
+    --rp-logo-bg: rgba(255, 255, 255, 0.88);
+    --rp-contributor-bg: rgba(255, 255, 255, 0.07);
+    --rp-tag-bg: rgba(202, 211, 245, 0.12);
+    --rp-accent-subtle: rgba(138, 173, 244, 0.16);
+    --rp-buffer-bar-bg: rgba(202, 211, 245, 0.12);
+    --rp-chart-grid: rgba(202, 211, 245, 0.08);
+    --rp-chart-tick: #a5adcb;
+    --rp-chart-tooltip-bg: rgba(30, 32, 48, 0.95);
+    --rp-chart-tooltip-text: #cad3f5;
+    --rp-chart-tooltip-border: #494d64;
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+/* ---- Catppuccin Mocha ---- */
+[data-bs-theme="mocha"] {
+    --rp-bg-primary: #1e1e2e;
+    --rp-bg-secondary: #181825;
+    --rp-bg-card: #313244;
+    --rp-bg-card-header: #2a2b3c;
+    --rp-accent: #89b4fa;
+    --rp-accent-hover: #b4befe;
+    --rp-text: #cdd6f4;
+    --rp-text-muted: #a6adc8;
+    --rp-border: #45475a;
+    --rp-success: #a6e3a1;
+    --rp-warning: #f9e2af;
+    --rp-danger: #f38ba8;
+    --rp-info: #89dceb;
+
+    --rp-separator: rgba(205, 214, 244, 0.08);
+    --rp-hover: rgba(137, 180, 250, 0.16);
+    --rp-shadow: 0 8px 24px rgba(12, 12, 18, 0.5);
+    --rp-logo-bg: rgba(255, 255, 255, 0.85);
+    --rp-contributor-bg: rgba(255, 255, 255, 0.06);
+    --rp-tag-bg: rgba(205, 214, 244, 0.12);
+    --rp-accent-subtle: rgba(137, 180, 250, 0.16);
+    --rp-buffer-bar-bg: rgba(205, 214, 244, 0.12);
+    --rp-chart-grid: rgba(205, 214, 244, 0.08);
+    --rp-chart-tick: #a6adc8;
+    --rp-chart-tooltip-bg: rgba(24, 24, 37, 0.95);
+    --rp-chart-tooltip-text: #cdd6f4;
+    --rp-chart-tooltip-border: #45475a;
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
 /* ---- Global (light) ---- */
 [data-bs-theme="light"] {
     --bs-body-bg: var(--rp-bg-primary);
@@ -133,24 +281,43 @@ body {
     align-items: center;
 }
 
-.btn-theme-toggle {
-    background: none;
+.theme-select {
+    background: var(--rp-bg-secondary);
     border: 1px solid var(--rp-border);
-    color: var(--rp-text-muted);
-    font-size: 1rem;
-    cursor: pointer;
-    padding: 0.25rem 0.5rem;
+    color: var(--rp-text);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.45rem;
     border-radius: 6px;
-    transition: color 0.2s, border-color 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    line-height: 1;
+    cursor: pointer;
+    height: 30px;
 }
 
-.btn-theme-toggle:hover {
-    color: var(--rp-accent);
+.theme-select:focus {
+    outline: none;
     border-color: var(--rp-accent);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+/* ---- Notice banner ---- */
+.notice-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    background: rgba(255, 193, 7, 0.12);
+    border: 1px solid rgba(255, 193, 7, 0.35);
+    border-left: 5px solid var(--rp-warning);
+    color: var(--rp-text);
+    padding: 0.65rem 0.9rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    margin-bottom: 0.9rem;
+    box-shadow: var(--rp-shadow);
+}
+
+[data-bs-theme="dark"] .notice-banner {
+    background: rgba(255, 193, 7, 0.08);
+    border-color: rgba(255, 193, 7, 0.25);
 }
 
 /* ---- URL Bar ---- */

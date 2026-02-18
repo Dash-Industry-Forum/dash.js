@@ -260,20 +260,17 @@ function onPlaybackEnded() {
 
 // ---- Theme toggle ----
 function initThemeToggle() {
-    const btn = $('#btn-theme-toggle');
-    if (!btn) {
+    const select = $('#theme-select');
+    if (!select) {
         return;
     }
 
     const STORAGE_KEY = 'rp-theme';
+    const THEMES = ['light', 'dark', 'latte', 'frappe', 'macchiato', 'mocha'];
 
     function applyTheme(theme) {
         document.documentElement.setAttribute('data-bs-theme', theme);
-        const icon = btn.querySelector('i');
-        if (icon) {
-            icon.className = theme === 'dark' ? 'bi bi-sun-fill' : 'bi bi-moon-fill';
-        }
-        btn.title = theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode';
+        select.value = theme;
 
         // Update chart colors for new theme
         if (chartController) {
@@ -282,14 +279,15 @@ function initThemeToggle() {
     }
 
     // Load saved preference (fall back to 'light')
-    const saved = localStorage.getItem(STORAGE_KEY) || 'light';
-    applyTheme(saved);
+    const saved = localStorage.getItem(STORAGE_KEY);
+    const initialTheme = THEMES.includes(saved) ? saved : 'light';
+    applyTheme(initialTheme);
 
-    btn.addEventListener('click', () => {
-        const current = document.documentElement.getAttribute('data-bs-theme');
-        const next = current === 'dark' ? 'light' : 'dark';
-        localStorage.setItem(STORAGE_KEY, next);
-        applyTheme(next);
+    select.addEventListener('change', () => {
+        const selectedTheme = select.value;
+        const nextTheme = THEMES.includes(selectedTheme) ? selectedTheme : 'light';
+        localStorage.setItem(STORAGE_KEY, nextTheme);
+        applyTheme(nextTheme);
     });
 }
 
