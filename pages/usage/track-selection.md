@@ -11,8 +11,7 @@ at runtime.
 
 ## Capability checks
 While parsing a manifest, dash.js removes Adaptation Sets / Representations it deems unsupported based on the `@codecs` 
-attribute, `EssentialProperty` descriptors, required DRM systems and other properties. (This filtering is enabled by 
-default and is intentionally conservative.)
+attribute, `EssentialProperty` descriptors, required DRM systems and other properties.
 
 ### Default handling of `EssentialProperty`
 By default, dash.js filters out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
@@ -42,7 +41,8 @@ With these flags, dash.js will query the platform to evaluate colorimetry / HDR 
 of relying solely on the static allow‑list, reducing the risk of “over‑filtering” valid HDR tracks on capable devices.
 
 If MediaCapabilities is not an option, you should explicitly extend `capabilities.supportedEssentialProperties` to include 
-the HDR schemes/values (e.g., PQ10: ColourPrimaries=9, MatrixCoefficients=9, TransferCharacteristics=16) that are known to work across your target devices.
+the HDR schemes/values that are known to work across your target devices.
+(Example for PQ10: ColourPrimaries=9, MatrixCoefficients=9, TransferCharacteristics=16)
 
 ## Initial track selection
 dash.js offers multiple ways to control the initial track selection as described below.
