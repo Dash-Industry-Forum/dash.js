@@ -152,6 +152,7 @@ function PreBufferSink(onAppendedCallback) {
 
         if (outstandingInit) {
             result.push(outstandingInit);
+            outstandingInit = null;
         }
 
         chunks = [];
