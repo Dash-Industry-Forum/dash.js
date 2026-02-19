@@ -83,15 +83,25 @@ EssentialPropertyPrivateTransferFunction.init({
 describe('Capabilities', function () {
     beforeEach(function () {
         settings = Settings({}).getInstance();
+        settings.reset();
         capabilities = Capabilities({}).getInstance();
 
         capabilities.setConfig({
             settings: settings
         });
-        settings.reset();
     });
 
     describe('supports EssentialProperty', function () {
+        beforeEach(function () {
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        filterVideoColorimetryEssentialProperties: false,
+                        filterHDRMetadataFormatEssentialProperties: false,
+                    }
+                }
+            })
+        });
         it('should return true if EssentialProperty value is known', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyThumbNail);
             expect(res).to.be.true;
@@ -113,6 +123,7 @@ describe('Capabilities', function () {
         });
 
         it('should return false if EssentialProperty value is absent for known schemeId+value', function () {
+            console.log(settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties);
             let res = capabilities.supportsEssentialProperty(EssentialPropertynoVal);
             expect(res).to.be.false;
         });
