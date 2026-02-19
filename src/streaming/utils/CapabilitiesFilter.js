@@ -164,7 +164,37 @@ function CapabilitiesFilter() {
                             }
                             return supported[i];
                         });
-                    resolve()
+
+                    // Filter out representations whose codec family is incompatible with the
+                    // first remaining representation. The SourceBuffer is initialized with the
+                    // codec of the first representation (index 0), so allowing ABR to switch to
+                    // a representation with a different codec family (e.g. HEVC vs AVC in the
+                    // same AdaptationSet) would cause the MSE SourceBuffer to reject the data.
+                    if (settings.get().streaming.capabilities.filterMixedCodecAdaptationSets &&
+                        as.Representation_asArray.length > 1) {
+                        const firstCodecRoot = as.Representation_asArray[0].codecs
+                            ? as.Representation_asArray[0].codecs.split('.')[0]
+                            : null;
+                        if (firstCodecRoot) {
+                            const beforeLength = as.Representation_asArray.length;
+                            as.Representation_asArray = as.Representation_asArray.filter((rep) => {
+                                if (!rep.codecs) {
+                                    return true;
+                                }
+                                const repCodecRoot = rep.codecs.split('.')[0];
+                                const compatible = capabilities.codecRootCompatibleWithCodec(firstCodecRoot, repCodecRoot);
+                                if (!compatible) {
+                                    logger.debug(`[Stream] Filtered out representation with codec ${rep.codecs} (codec family "${repCodecRoot}" is incompatible with primary codec family "${firstCodecRoot}")`);
+                                }
+                                return compatible;
+                            });
+                            if (as.Representation_asArray.length < beforeLength) {
+                                logger.info(`[Stream] Removed ${beforeLength - as.Representation_asArray.length} representations with mixed codec families to prevent SourceBuffer codec mismatch`);
+                            }
+                        }
+                    }
+
+                    resolve();
                 })
                 .catch(() => {
                     resolve();

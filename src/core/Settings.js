@@ -600,6 +600,12 @@ import Events from './events/Events';
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
  * @property {Array.<[string, string]>} [replaceCodecs=[]]
  * List of codecs to be replaced.
+ * @property {boolean} [filterMixedCodecAdaptationSets=true]
+ * Enable to filter out representations whose codec family is incompatible with the first representation in
+ * the same AdaptationSet. This prevents ABR from switching to a representation with a different codec
+ * (e.g. switching between HEVC and AVC within the same AdaptationSet) that would be incompatible with
+ * the codec the MSE SourceBuffer was initialized with. Disable if you intentionally use changeType-based
+ * switching and have confirmed the platform supports it for the codec pairs in your stream.
  */
 
 /**
@@ -906,7 +912,8 @@ function Settings() {
             capabilities: {
                 filterUnsupportedEssentialProperties: true,
                 useMediaCapabilitiesApi: true,
-                replaceCodecs: []
+                replaceCodecs: [],
+                filterMixedCodecAdaptationSets: true
             },
             timeShiftBuffer: {
                 calcFromSegmentTimeline: false,

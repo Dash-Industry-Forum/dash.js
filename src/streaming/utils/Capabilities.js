@@ -40,6 +40,14 @@ const codecCompatibilityTable = [
     {
         'codec': 'avc3',
         'compatibleCodecs': ['avc1']
+    },
+    {
+        'codec': 'hvc1',
+        'compatibleCodecs': ['hev1']
+    },
+    {
+        'codec': 'hev1',
+        'compatibleCodecs': ['hvc1']
     }
 ];
 

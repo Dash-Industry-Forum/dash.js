@@ -975,7 +975,8 @@ declare namespace dashjs {
             capabilities?: {
                 filterUnsupportedEssentialProperties?: boolean,
                 useMediaCapabilitiesApi?: boolean,
-                replaceCodecs?: [string, string][]
+                replaceCodecs?: [string, string][],
+                filterMixedCodecAdaptationSets?: boolean
             },
             timeShiftBuffer?: {
                 calcFromSegmentTimeline?: boolean
