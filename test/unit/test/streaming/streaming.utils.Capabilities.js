@@ -123,7 +123,6 @@ describe('Capabilities', function () {
         });
 
         it('should return false if EssentialProperty value is absent for known schemeId+value', function () {
-            console.log(settings.get().streaming.capabilities.filterVideoColorimetryEssentialProperties);
             let res = capabilities.supportsEssentialProperty(EssentialPropertynoVal);
             expect(res).to.be.false;
         });
