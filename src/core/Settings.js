@@ -1163,10 +1163,10 @@ function Settings() {
                 filterUnsupportedEssentialProperties: true,
                 supportedEssentialProperties: [
                     { schemeIdUri: Constants.FONT_DOWNLOAD_DVB_SCHEME },
-                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /1|5|6|7/ },
+                    { schemeIdUri: Constants.COLOUR_PRIMARIES_SCHEME_ID_URI, value: /1|5|6|7|9/ },
                     { schemeIdUri: Constants.URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
-                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
+                    { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6|9/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
                     { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI},
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
