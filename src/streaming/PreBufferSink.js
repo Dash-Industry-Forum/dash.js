@@ -134,13 +134,8 @@ function PreBufferSink(onAppendedCallback) {
         return this;
     }
 
-    /**
-     * Return the all chunks in the buffer the lie between times start and end.
-     * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
-     * Chunks are removed from the buffer when they are discharged.
-     * @function PreBufferSink#discharge
-     * @returns {Array} The set of chunks from the buffer within the time ranges.
-     */
+    //Return an array of all chunks along with init segments in the order to append to the SourceBuffer.
+    //Chunks are removed from PreBuffer when they are discharged.
     function discharge() {
         const result = chunks;
         let lastInit = null;
