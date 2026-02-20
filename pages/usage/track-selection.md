@@ -17,11 +17,14 @@ attribute, `EssentialProperty` descriptors, required DRM systems and other prope
 dash.js will evaluate optionally present `@supplementalCodecs` and if it is recognized as supported, then its content 
 will be used instead of the value provided with the `@codecs` attribute.
 
-### Filtering using MediaCapabilities
+### Basic filtering
 The MediaCapabilities API is the default mechanism used by dash.js to determine device capabilities for track selection.
-It can be disabled by setting the `capabilities.useMediaCapabilitiesApi` setting to ***false***.
+It can be disabled by setting the `capabilities.useMediaCapabilitiesApi` setting to ***false***, which makes dash.js to 
+use the `isTypeSupported()` from `MediaSource` instead.
 
+### Filtering using MediaCapabilities
 By default, only `@codecs` is used to query the media capabilities of the MediaCapabilities API.
+
 Audio tracks can also be filtered by matching the AudioChannelConfiguration against the number of
 audio channels supported by the device.
 This option is disabled by default and can be enabled using the `capabilities.filterAudioChannelConfiguration` setting.
@@ -41,8 +44,9 @@ Two mechanisms can be used to configure filtering using EssentialProperty descri
 
 Simple filtering can be controlled by defining regular expressions to match values in
 `EssentialProperty` descriptors.
-The `capabilities.supportedEssentialProperties` setting can list the *schemeIdUri* of supported descriptors and
-regular expressions to match against descriptor values.
+The `capabilities.supportedEssentialProperties` setting can list the `@schemeIdUri` of supported descriptors and
+regular expressions to match against descriptor `@value`.
+
 For example, the following configuration would remove all DVB low-latency tracks:
 
 ```js
@@ -52,22 +56,24 @@ player.updateSettings({
             { schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'false' }
         ]
     }
-}
+});
 ```
 
-By default, a conservative allow-list is defined that handles EssentialProperty descriptors for
+By default, a conservative allow-list is defined that handles `EssentialProperty` descriptors for
 DVB font download, DASH‑IF thumbnails, and an **SDR‑only** subset of CICP colorimetry
 (`ColourPrimaries`, `MatrixCoefficients`, `TransferCharacteristics`).
 
 If your application can rely on the MediaCapabilities API, then dash.js can match
-EssentialProperty descriptors against device capabilities.
-The following settings can be used to control matching logic for
-EssentialProperty descriptors.
-* filterVideoColorimetryEssentialProperties,
-* filterHDRMetadataFormatEssentialProperties
-These settings are needed to ensure that HDR tracks are correctly matched against device capabilities.
-For example:
+`EssentialProperty` descriptors against device capabilities.
 
+The following settings can be used to control matching logic for
+`EssentialProperty` descriptors:
+* `filterVideoColorimetryEssentialProperties`
+* `filterHDRMetadataFormatEssentialProperties`
+
+These settings are needed to ensure that HDR tracks are correctly matched against device capabilities.
+
+For example:
 ```js
 player.updateSettings({
     capabilities: {
