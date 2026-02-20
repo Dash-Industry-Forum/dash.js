@@ -14,22 +14,59 @@ While parsing a manifest, dash.js removes Adaptation Sets / Representations it d
 attribute, `EssentialProperty` descriptors, required DRM systems and other properties.
 
 ### Handling of `@supplementalCodecs`
-dash.js will evaluate optionally present `@supplementalCodecs` and if it is recognoized as supported, this its content 
+dash.js will evaluate optionally present `@supplementalCodecs` and if it is recognized as supported, then its content 
 will be used instead of the value provided with the `@codecs` attribute.
 
-### Default handling of `EssentialProperty`
-By default, dash.js filters out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
-recognized as supported. This is controlled by:
+### Filtering using MediaCapabilities
+The MediaCapabilities API is the default mechanism used by dash.js to determine device capabilities for track selection.
+It can be disabled by setting the `capabilities.useMediaCapabilitiesApi` setting to ***false***.
 
-* `capabilities.filterUnsupportedEssentialProperties`: **true** by default, and
-* `capabilities.supportedEssentialProperties`: a conservative allow‑list (e.g. DVB font download, DASH‑IF thumbnails)
-   plus a minimal **SDR‑only** subset of CICP colorimetry (`ColourPrimaries`, `MatrixCoefficients`, `TransferCharacteristics`).  
+By default, only `@codecs` is used to query the media capabilities of the MediaCapabilities API.
+Audio tracks can also be filtered by matching the AudioChannelConfiguration against the number of
+audio channels supported by the device.
+This option is disabled by default and can be enabled using the `capabilities.filterAudioChannelConfiguration` setting.
 
-As a consequence, HDR variants can be pruned unless you either 
-* enable **MediaCapabilities‑based** filtering, or 
-* extend the allow‑list with the CICP values your target devices support.
+Other media capabilities can be matched against `EssentialProperty` descriptors (see the next section).
 
-If your application can rely on the MediaCapabilities API, you can set:
+### Filtering using `EssentialProperty` descriptors
+By default, dash.js will filter-out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
+recognized.
+This behavour is controlled by the `capabilities.filterUnsupportedEssentialProperties` setting.
+If set to ***false***, all EssentialProperty descriptors are ignored and do not influence track selection.
+
+Two mechanisms can be used to configure filtering using EssentialProperty descriptors:
+
+* an allow‑list using a regular-expression syntax; or
+* MediaCapabilities API‑based filtering.
+
+Simple filtering can be controlled by defining regular expressions to match values in
+`EssentialProperty` descriptors.
+The `capabilities.supportedEssentialProperties` setting can list the *schemeIdUri* of supported descriptors and
+regular expressions to match against descriptor values.
+For example, the following configuration would remove all DVB low-latency tracks:
+
+```js
+player.updateSettings({
+    capabilities: {
+        supportedEssentialProperties: [
+            { schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'false' }
+        ]
+    }
+}
+```
+
+By default, a conservative allow-list is defined that handles EssentialProperty descriptors for
+DVB font download, DASH‑IF thumbnails, and an **SDR‑only** subset of CICP colorimetry
+(`ColourPrimaries`, `MatrixCoefficients`, `TransferCharacteristics`).
+
+If your application can rely on the MediaCapabilities API, then dash.js can match
+EssentialProperty descriptors against device capabilities.
+The following settings can be used to control matching logic for
+EssentialProperty descriptors.
+* filterVideoColorimetryEssentialProperties,
+* filterHDRMetadataFormatEssentialProperties
+These settings are needed to ensure that HDR tracks are correctly matched against device capabilities.
+For example:
 
 ```js
 player.updateSettings({
@@ -43,10 +80,6 @@ player.updateSettings({
 
 With these flags, dash.js will query the platform to evaluate colorimetry / HDR `EssentialProperty` combinations instead
 of relying solely on the static allow‑list, reducing the risk of “over‑filtering” valid HDR tracks on capable devices.
-
-If MediaCapabilities is not an option, you should explicitly extend `capabilities.supportedEssentialProperties` to include 
-the HDR schemes/values that are known to work across your target devices.
-(Example for PQ10: ColourPrimaries=9, MatrixCoefficients=9, TransferCharacteristics=16)
 
 ## Initial track selection
 dash.js offers multiple ways to control the initial track selection as described below.
