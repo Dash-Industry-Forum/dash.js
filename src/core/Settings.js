@@ -84,8 +84,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
  *               useMediaCapabilitiesApi: true,
- *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterVideoColorimetryEssentialProperties: true,
+ *               filterHDRMetadataFormatEssentialProperties: true,
  *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
@@ -734,10 +734,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
- * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
+ * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
- * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
+ * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
  * @property {boolean} [filterAudioChannelConfiguration=false]
  * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
@@ -1174,8 +1174,8 @@ function Settings() {
                     })
                 ],
                 useMediaCapabilitiesApi: true,
-                filterVideoColorimetryEssentialProperties: false,
-                filterHDRMetadataFormatEssentialProperties: false,
+                filterVideoColorimetryEssentialProperties: true,
+                filterHDRMetadataFormatEssentialProperties: true,
                 filterAudioChannelConfiguration: false
             },
             events: {
