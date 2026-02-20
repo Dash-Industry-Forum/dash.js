@@ -20,9 +20,9 @@ will be used instead of the value provided with the `@codecs` attribute.
 ### Basic filtering
 The MediaCapabilities API is the default mechanism used by dash.js to determine device capabilities for track selection.
 It can be disabled by setting the `capabilities.useMediaCapabilitiesApi` setting to ***false***, which makes dash.js to 
-use the `isTypeSupported()` from `MediaSource` instead.
+use `isTypeSupported()` from `MediaSource` instead.
 
-### Filtering using MediaCapabilities
+### Advanced filtering using MediaCapabilities
 By default, only `@codecs` is used to query the media capabilities of the MediaCapabilities API.
 
 Audio tracks can also be filtered by matching the AudioChannelConfiguration against the number of
