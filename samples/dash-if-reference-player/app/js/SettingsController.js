@@ -3,6 +3,7 @@
  */
 
 import {$} from './UIHelpers.js';
+import SETTINGS_DESCRIPTIONS from '../data/settingsDescriptions.js';
 
 export class SettingsController {
     constructor(playerController) {
@@ -21,6 +22,7 @@ export class SettingsController {
         this._defaultSettings = JSON.parse(JSON.stringify(this.player.getSettings()));
         this._bindAll();
         this._syncFromPlayer();
+        this._addTooltips();
     }
 
     /**
@@ -459,6 +461,50 @@ export class SettingsController {
     _applySettings() {
         const config = this.buildConfig();
         this.player.updateSettings(config);
+    }
+
+    _addTooltips() {
+        for (const [id, description] of Object.entries(SETTINGS_DESCRIPTIONS)) {
+            const el = document.getElementById(id);
+            if (!el) {
+                continue;
+            }
+
+            // Find the label associated with this control
+            let label;
+            if (el.type === 'checkbox' || el.type === 'radio') {
+                label = document.querySelector(`label[for="${id}"]`);
+            } else {
+                // For inputs and selects the label is the preceding .option-label span
+                let sibling = el.previousElementSibling;
+                while (sibling) {
+                    if (sibling.classList && sibling.classList.contains('option-label')) {
+                        label = sibling;
+                        break;
+                    }
+                    sibling = sibling.previousElementSibling;
+                }
+            }
+
+            if (!label) {
+                continue;
+            }
+
+            const icon = document.createElement('i');
+            icon.className = 'bi bi-info-circle option-tooltip-icon';
+            icon.setAttribute('data-bs-toggle', 'tooltip');
+            icon.setAttribute('data-bs-placement', 'top');
+            icon.setAttribute('data-bs-title', description);
+            label.appendChild(icon);
+        }
+
+        // Initialize all Bootstrap tooltips
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+            for (const el of tooltipTriggerList) {
+                new bootstrap.Tooltip(el, { html: false });
+            }
+        }
     }
 
     _syncFromPlayer() {

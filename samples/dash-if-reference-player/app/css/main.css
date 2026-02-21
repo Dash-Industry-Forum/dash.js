@@ -526,6 +526,27 @@ body {
     display: block;
 }
 
+.option-tooltip-icon {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    margin-left: 0.3rem;
+    cursor: help;
+    opacity: 0.6;
+    transition: opacity 0.15s;
+}
+
+.option-tooltip-icon:hover {
+    opacity: 1;
+    color: var(--rp-accent);
+}
+
+.tooltip-inner {
+    max-width: 350px;
+    text-align: left;
+    white-space: pre-line;
+    font-size: 0.75rem;
+}
+
 .option-card-body .option-section {
     font-size: 0.7rem;
     color: var(--rp-accent);
