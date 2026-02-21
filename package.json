@@ -38,6 +38,7 @@
     "prepare": "node githook.cjs",
     "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
+    "test-refplayer": "karma start test/unit/config/karma.unit.conf.cjs --grep \"Reference Player\"",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
     "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
     "webpack-build-modern": "webpack --config build/webpack/modern/webpack.modern.prod.cjs"

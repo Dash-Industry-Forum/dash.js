@@ -51,7 +51,7 @@ export class SettingsController {
     buildConfig() {
         const config = {
             debug: {
-                logLevel: parseInt($('#opt-log-level').value) || 3
+                logLevel: !isNaN(parseInt($('#opt-log-level').value)) ? parseInt($('#opt-log-level').value) : 3
             },
             streaming: {
                 scheduling: {
@@ -519,6 +519,44 @@ export class SettingsController {
         const catchupMode = $('#opt-catchup-mode');
         if (catchupMode && s?.streaming?.liveCatchup?.mode) {
             catchupMode.value = s.streaming.liveCatchup.mode;
+        }
+
+        // ---- Buffer numeric inputs ----
+        const stallThreshold = $('#opt-stall-threshold');
+        if (stallThreshold && s?.streaming?.buffer?.stallThreshold !== undefined) {
+            stallThreshold.value = s.streaming.buffer.stallThreshold;
+        }
+        const llStallThreshold = $('#opt-ll-stall-threshold');
+        if (llStallThreshold && s?.streaming?.buffer?.lowLatencyStallThreshold !== undefined) {
+            llStallThreshold.value = s.streaming.buffer.lowLatencyStallThreshold;
+        }
+
+        // ---- CMCD numeric inputs ----
+        const cmcdRtpSafety = $('#opt-cmcd-rtp-safety');
+        if (cmcdRtpSafety && s?.streaming?.cmcd?.rtpSafetyFactor !== undefined) {
+            cmcdRtpSafety.value = s.streaming.cmcd.rtpSafetyFactor;
+        }
+
+        // ---- CMSD numeric inputs ----
+        const cmsdEtpWeight = $('#opt-cmsd-etp-weight');
+        if (cmsdEtpWeight && s?.streaming?.cmsd?.abr?.etpWeightRatio !== undefined) {
+            cmsdEtpWeight.value = s.streaming.cmsd.abr.etpWeightRatio;
+        }
+
+        // ---- Track switch mode radios ----
+        const audioMode = s?.streaming?.trackSwitchMode?.audio;
+        if (audioMode) {
+            const audioRadio = document.querySelector(`input[name="track-audio"][value="${audioMode}"]`);
+            if (audioRadio) {
+                audioRadio.checked = true;
+            }
+        }
+        const videoMode = s?.streaming?.trackSwitchMode?.video;
+        if (videoMode) {
+            const videoRadio = document.querySelector(`input[name="track-video"][value="${videoMode}"]`);
+            if (videoRadio) {
+                videoRadio.checked = true;
+            }
         }
     }
 
