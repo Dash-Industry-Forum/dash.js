@@ -1,10 +1,13 @@
 {
-    "debug": {
-        "logLevel": 5
+  "debug": {
+    "logLevel": 5
+  },
+  "streaming": {
+    "buffer": {
+      "fastSwitchEnabled": true
     },
-    "streaming": {
-        "buffer": {
-            "fastSwitchEnabled": true
-        }
+    "liveCatchup": {
+      "enabled": true
     }
+  }
 }

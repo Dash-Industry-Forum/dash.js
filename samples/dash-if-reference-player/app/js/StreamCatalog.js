@@ -19,6 +19,7 @@ export class StreamCatalog {
         this.allTags = [];         // sorted list of all unique tags
         this.providers = {};       // provider map
         this.activeTags = new Set();
+        this.providerColorMap = {};
         this.searchQuery = '';
         this.onStreamSelected = null;
         this._selectedItem = null;
@@ -34,6 +35,7 @@ export class StreamCatalog {
             const data = await fetchJSON(url);
             this.sources = data.items || [];
             this.providers = data.provider || {};
+            this._buildProviderColorMap();
 
             this._flattenStreams();
             this._collectTags();
@@ -61,6 +63,15 @@ export class StreamCatalog {
     }
 
     // ---- Private: Data Processing ----
+
+    _buildProviderColorMap() {
+        const NUM_COLORS = 10;
+        const keys = Object.keys(this.providers);
+        this.providerColorMap = {};
+        for (let i = 0; i < keys.length; i++) {
+            this.providerColorMap[keys[i]] = i % NUM_COLORS;
+        }
+    }
 
     _flattenStreams() {
         this.flatStreams = [];
@@ -231,10 +242,19 @@ export class StreamCatalog {
                     this._selectStream(stream);
                 });
 
-                const nameSpan = createElement('span', {
-                    className: 'stream-panel-item-name',
-                    textContent: stream.name
-                });
+                const nameSpan = createElement('span', { className: 'stream-panel-item-name' });
+
+                const providerInfo = stream.provider ? this.providers[stream.provider] : null;
+                if (providerInfo) {
+                    const colorIdx = this.providerColorMap[stream.provider] || 0;
+                    const providerBadge = createElement('span', {
+                        className: `stream-provider-badge stream-provider-badge-${colorIdx}`,
+                        textContent: providerInfo.acronym
+                    });
+                    nameSpan.appendChild(providerBadge);
+                }
+
+                nameSpan.appendChild(document.createTextNode(stream.name));
                 row.appendChild(nameSpan);
 
                 if (stream.tags.length > 0) {
