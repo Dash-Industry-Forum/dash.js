@@ -2,7 +2,7 @@
  * ConformancePanel.js - Conformance violations display
  */
 
-import { $, show, createElement } from './UIHelpers.js';
+import {$, show, createElement} from './UIHelpers.js';
 
 const SEVERITY_MAP = {
     0: { label: 'Suggestion', className: 'badge-suggestion' },

@@ -6,7 +6,7 @@
  * auto-hide on hover with 3s timeout.
  */
 
-import { $, formatTime, createElement } from './UIHelpers.js';
+import {$, formatTime, createElement} from './UIHelpers.js';
 
 const HIDE_DELAY = 3000;
 
@@ -730,12 +730,12 @@ export class ControlBar {
 
     _getMenuElement(name) {
         switch (name) {
-        case 'bitrate':
-            return $('#cb-bitrate-menu');
-        case 'track':
-            return $('#cb-track-menu');
-        case 'caption':
-            return $('#cb-caption-menu');
+            case 'bitrate':
+                return $('#cb-bitrate-menu');
+            case 'track':
+                return $('#cb-track-menu');
+            case 'caption':
+                return $('#cb-caption-menu');
         }
         return null;
     }

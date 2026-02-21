@@ -4,15 +4,15 @@
  * Initializes all modules, wires them together, handles the load/stop lifecycle.
  */
 
-import { $, fetchJSON, show } from './UIHelpers.js';
-import { PlayerController } from './PlayerController.js';
-import { ControlBar } from './ControlBar.js';
-import { StreamCatalog } from './StreamCatalog.js';
-import { SettingsController } from './SettingsController.js';
-import { DrmController } from './DrmController.js';
-import { MetricsDisplay } from './MetricsDisplay.js';
-import { ChartController } from './ChartController.js';
-import { ConformancePanel } from './ConformancePanel.js';
+import {$, fetchJSON, show} from './UIHelpers.js';
+import {PlayerController} from './PlayerController.js';
+import {ControlBar} from './ControlBar.js';
+import {StreamCatalog} from './StreamCatalog.js';
+import {SettingsController} from './SettingsController.js';
+import {DrmController} from './DrmController.js';
+import {MetricsDisplay} from './MetricsDisplay.js';
+import {ChartController} from './ChartController.js';
+import {ConformancePanel} from './ConformancePanel.js';
 
 // ---- State ----
 let playerController;

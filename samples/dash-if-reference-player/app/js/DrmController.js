@@ -2,7 +2,7 @@
  * DrmController.js - DRM configuration UI logic
  */
 
-import { $, createElement } from './UIHelpers.js';
+import {$, createElement} from './UIHelpers.js';
 
 export class DrmController {
     constructor() {

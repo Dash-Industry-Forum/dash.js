@@ -2,7 +2,7 @@
  * StreamCatalog.js - Stream source loading, tag-based filtering, and selection
  */
 
-import { $, fetchJSON, createElement } from './UIHelpers.js';
+import {$, fetchJSON, createElement} from './UIHelpers.js';
 
 // Tags to display prominently as filter pills (ordered by importance)
 const FEATURED_TAGS = [

@@ -2,7 +2,7 @@
  * MetricsDisplay.js - Stats panel tab updates and metric display
  */
 
-import { $ } from './UIHelpers.js';
+import {$} from './UIHelpers.js';
 
 export class MetricsDisplay {
     constructor(playerController, chartController) {

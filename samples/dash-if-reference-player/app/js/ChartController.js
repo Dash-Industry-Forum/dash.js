@@ -2,7 +2,7 @@
  * ChartController.js - Chart.js integration for real-time metrics plotting
  */
 
-import { $, formatTime } from './UIHelpers.js';
+import {$, formatTime} from './UIHelpers.js';
 
 // Chart is loaded globally via UMD script tag in index.html
 const { Chart } = window;
@@ -26,19 +26,19 @@ const COLORS = [
 
 // Unit metadata per metric — used for dual Y-axis assignment
 const METRIC_UNITS = {
-    buffer:        { unit: 's',     label: 'Seconds' },
-    liveLatency:   { unit: 's',     label: 'Seconds' },
-    bitrate:       { unit: 'kbps',  label: 'kbps' },
-    throughput:    { unit: 'kbps',  label: 'kbit/s' },
-    pendingIndex:  { unit: 'idx',   label: 'Index' },
-    currentIndex:  { unit: 'idx',   label: 'Index' },
+    buffer: { unit: 's', label: 'Seconds' },
+    liveLatency: { unit: 's', label: 'Seconds' },
+    bitrate: { unit: 'kbps', label: 'kbps' },
+    throughput: { unit: 'kbps', label: 'kbit/s' },
+    pendingIndex: { unit: 'idx', label: 'Index' },
+    currentIndex: { unit: 'idx', label: 'Index' },
     droppedFrames: { unit: 'count', label: 'Count' },
-    latency:       { unit: 'ms',    label: 'ms' },
-    download:      { unit: 'ms',    label: 'ms' },
-    ratio:         { unit: 'ratio', label: 'Ratio' },
-    playbackRate:  { unit: 'ratio', label: 'Ratio' },
-    mtp:           { unit: 'Mbps',  label: 'Mbps' },
-    etp:           { unit: 'Mbps',  label: 'Mbps' },
+    latency: { unit: 'ms', label: 'ms' },
+    download: { unit: 'ms', label: 'ms' },
+    ratio: { unit: 'ratio', label: 'Ratio' },
+    playbackRate: { unit: 'ratio', label: 'Ratio' },
+    mtp: { unit: 'Mbps', label: 'Mbps' },
+    etp: { unit: 'Mbps', label: 'Mbps' },
 };
 
 export class ChartController {

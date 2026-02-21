@@ -2,7 +2,7 @@
  * PlayerController.js - dash.js player lifecycle, event handling, metrics polling
  */
 
-import { EventEmitter } from './UIHelpers.js';
+import {EventEmitter} from './UIHelpers.js';
 
 export class PlayerController extends EventEmitter {
     constructor() {

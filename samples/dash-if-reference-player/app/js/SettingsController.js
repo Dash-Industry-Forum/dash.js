@@ -2,7 +2,7 @@
  * SettingsController.js - Options panel state management and URL export/import
  */
 
-import { $ } from './UIHelpers.js';
+import {$} from './UIHelpers.js';
 
 export class SettingsController {
     constructor(playerController) {
