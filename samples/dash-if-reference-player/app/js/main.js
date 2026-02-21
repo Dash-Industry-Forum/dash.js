@@ -317,8 +317,7 @@ async function loadContributors() {
 
             if (contrib.logo) {
                 const img = document.createElement('img');
-                // Logo paths in contributors.json are relative to the old player dir
-                img.src = `../dash-if-reference-player/${contrib.logo}`;
+                img.src = contrib.logo;
                 img.alt = contrib.name || '';
                 a.appendChild(img);
             } else {

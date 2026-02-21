@@ -2,11 +2,10 @@
  * ChartController.js - Chart.js integration for real-time metrics plotting
  */
 
-import { Chart, registerables } from 'chart.js';
 import { $, formatTime } from './UIHelpers.js';
 
-// Register all Chart.js components
-Chart.register(...registerables);
+// Chart is loaded globally via UMD script tag in index.html
+const { Chart } = window;
 
 const MAX_DATA_POINTS = 30;
 const MAX_SERIES = 5;
