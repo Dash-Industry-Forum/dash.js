@@ -78,7 +78,7 @@ import VideoModel from './models/VideoModel.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import {checkParameterType} from './utils/SupervisorTools.js';
 import {getVersionString} from '../core/Version.js';
-import { Cta608Parser } from '@svta/cml-608';
+import {Cta608Parser} from '@svta/cml-608';
 
 /**
  * The media types
@@ -1658,6 +1658,8 @@ function MediaPlayer() {
     }
 
     /**
+     * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+     * If you want to get the unfiltered list of representations then use getUnfilteredRepresentationsByType() instead.
      * @param {MediaType} type
      * @param {string} streamId
      * @returns {Array}
@@ -1666,11 +1668,29 @@ function MediaPlayer() {
      * @instance
      */
     function getRepresentationsByType(type, streamId = null) {
+        return _getRepresentations(type, streamId, true);
+    }
+
+    /**
+     * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+     * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
+     * @param {MediaType} type
+     * @param {string} streamId
+     * @returns {Array}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function getUnfilteredRepresentationsByType(type, streamId = null) {
+        return _getRepresentations(type, streamId, false);
+    }
+
+    function _getRepresentations(type, streamId, filterBySettings = true) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
-        return stream ? stream.getRepresentationsByType(type) : [];
+        return stream ? stream.getRepresentationsByType(type, filterBySettings) : [];
     }
 
     /**
@@ -2891,6 +2911,7 @@ function MediaPlayer() {
         getTargetLiveDelay,
         getTracksFor,
         getTracksForTypeFromManifest,
+        getUnfilteredRepresentationsByType,
         getVersion,
         getVideoElement,
         getVolume,
