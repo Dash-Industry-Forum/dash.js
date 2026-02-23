@@ -989,6 +989,14 @@ describe('MediaPlayer', function () {
                 expect(player.getCurrentRepresentationForType).to.throw('You must first call initialize() and set a source before calling this method');
             });
 
+            it('Method getRepresentationsByType should throw an exception', function () {
+                expect(player.getRepresentationsByType).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
+            });
+
+            it('Method getRepresentationsByTypeUnfiltered should throw an exception', function () {
+                expect(player.getRepresentationsByTypeUnfiltered).to.throw(STREAMING_NOT_INITIALIZED_ERROR);
+            });
+
             it('Method getStreamsFromManifest should throw an exception', function () {
                 expect(player.getStreamsFromManifest).to.throw('You must first call initialize() and set a source before calling this method');
             });
@@ -1144,6 +1152,92 @@ describe('MediaPlayer', function () {
 
                 currentTrack = mediaControllerMock.isCurrentTrack('audio');
                 expect(currentTrack).to.be.true;
+            });
+        });
+    });
+
+    describe('getRepresentationsByType and getRepresentationsByTypeUnfiltered', function () {
+        const filteredVideoReps = [
+            { id: 'rep1', bandwidth: 500000 },
+            { id: 'rep2', bandwidth: 1000000 }
+        ];
+        const unfilteredVideoReps = [
+            { id: 'rep1', bandwidth: 500000 },
+            { id: 'rep2', bandwidth: 1000000 },
+            { id: 'rep3', bandwidth: 3000000 }
+        ];
+        const filteredAudioReps = [{ id: 'audioRep1', bandwidth: 128000 }];
+        const unfilteredAudioReps = [
+            { id: 'audioRep1', bandwidth: 128000 },
+            { id: 'audioRep2', bandwidth: 256000 }
+        ];
+
+        beforeEach(function () {
+            player.initialize(videoElementMock, dummyUrl, false);
+            streamControllerMock.getActiveStream().setRepresentationsByType('video', filteredVideoReps, unfilteredVideoReps);
+            streamControllerMock.getActiveStream().setRepresentationsByType('audio', filteredAudioReps, unfilteredAudioReps);
+        });
+
+        describe('getRepresentationsByType', function () {
+            it('should return filtered representations from the active stream when no streamId is provided', function () {
+                const reps = player.getRepresentationsByType('video');
+                expect(reps).to.deep.equal(filteredVideoReps);
+            });
+
+            it('should return filtered representations for a specific streamId', function () {
+                const reps = player.getRepresentationsByType('video', 'DUMMY_STREAM-01');
+                expect(reps).to.deep.equal(filteredVideoReps);
+            });
+
+            it('should return filtered audio representations', function () {
+                const reps = player.getRepresentationsByType('audio');
+                expect(reps).to.have.lengthOf(1);
+                expect(reps[0].id).to.equal('audioRep1');
+            });
+
+            it('should return empty array when no stream is available', function () {
+                streamControllerMock.getActiveStreamInfo = function () { return null; };
+                const reps = player.getRepresentationsByType('video');
+                expect(reps).to.be.empty;
+            });
+
+            it('should return empty array for a type with no representations configured', function () {
+                const reps = player.getRepresentationsByType('text');
+                expect(reps).to.be.empty;
+            });
+        });
+
+        describe('getRepresentationsByTypeUnfiltered', function () {
+            it('should return unfiltered representations from the active stream when no streamId is provided', function () {
+                const reps = player.getRepresentationsByTypeUnfiltered('video');
+                expect(reps).to.deep.equal(unfilteredVideoReps);
+            });
+
+            it('should return unfiltered representations for a specific streamId', function () {
+                const reps = player.getRepresentationsByTypeUnfiltered('video', 'DUMMY_STREAM-01');
+                expect(reps).to.deep.equal(unfilteredVideoReps);
+            });
+
+            it('should return unfiltered audio representations', function () {
+                const reps = player.getRepresentationsByTypeUnfiltered('audio');
+                expect(reps).to.have.lengthOf(2);
+            });
+
+            it('should return more representations than the filtered method', function () {
+                const filtered = player.getRepresentationsByType('video');
+                const unfiltered = player.getRepresentationsByTypeUnfiltered('video');
+                expect(unfiltered.length).to.be.greaterThan(filtered.length);
+            });
+
+            it('should return empty array when no stream is available', function () {
+                streamControllerMock.getActiveStreamInfo = function () { return null; };
+                const reps = player.getRepresentationsByTypeUnfiltered('video');
+                expect(reps).to.be.empty;
+            });
+
+            it('should return empty array for a type with no representations configured', function () {
+                const reps = player.getRepresentationsByTypeUnfiltered('text');
+                expect(reps).to.be.empty;
             });
         });
     });

@@ -2021,7 +2021,7 @@ export interface MediaPlayerClass {
     on(type: MetricEvent['type'], listener: (e: MetricEvent) => void, scope?: object): void;
 
     on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
-    
+
     on(type: NewTrackSelectedEvent['type'], listener: (e: NewTrackSelectedEvent) => void, scope?: object): void;
 
     on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
@@ -2055,7 +2055,7 @@ export interface MediaPlayerClass {
     on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
 
     on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
-    
+
     on(type: TrackChangeRenderedEvent['type'], listener: (e: TrackChangeRenderedEvent) => void, scope?: object): void;
 
     on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
@@ -2157,6 +2157,8 @@ export interface MediaPlayerClass {
     getRawThroughputData(type: MediaType): ThroughputDictValue[];
 
     getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
+
+    getRepresentationsByTypeUnfiltered(type: MediaType, streamId?: string | null): Representation[];
 
     getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
