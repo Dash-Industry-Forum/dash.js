@@ -264,12 +264,36 @@
     border: 1px solid #2d2d50;
     border-radius: 6px;
     min-width: 180px;
-    max-height: 300px;
+    max-height: min(400px, 60vh);
     overflow-y: auto;
     padding: 0.25rem 0;
     margin-bottom: 0.5rem;
     backdrop-filter: blur(10px);
     z-index: 30;
+}
+
+/* Scrollbar styling for menus */
+.cb-menu::-webkit-scrollbar {
+    width: 6px;
+}
+
+.cb-menu::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.cb-menu::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+}
+
+.cb-menu::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+/* Firefox scrollbar */
+.cb-menu {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
 }
 
 .cb-menu-title {

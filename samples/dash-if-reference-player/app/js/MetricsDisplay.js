@@ -186,6 +186,11 @@ export class MetricsDisplay {
             this._setText(`${prefix}-codec`, metrics.codec);
         }
 
+        // Segment duration
+        if (metrics.segmentDuration !== undefined) {
+            this._setText(`${prefix}-segment-duration`, `${parseFloat(metrics.segmentDuration).toFixed(2)} s`);
+        }
+
         // Buffer state
         if (metrics.bufferState) {
             this._setText(`${prefix}-buffer-state`,
@@ -251,6 +256,7 @@ export class MetricsDisplay {
             this._setText(`${prefix}-dropped`, '0');
             this._setText(`${prefix}-throughput`, '0 kbit/s');
             this._setText(`${prefix}-codec`, '-');
+            this._setText(`${prefix}-segment-duration`, '-');
             this._setText(`${prefix}-buffer-state`, '-');
             this._setText(`${prefix}-latency`, '-');
             this._setText(`${prefix}-download`, '-');

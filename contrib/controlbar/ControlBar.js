@@ -1035,15 +1035,38 @@ export class ControlBar {
                 const currentTrack = this.player.getCurrentTrackFor(type);
 
                 tracks.forEach((track) => {
-                    let label = track.lang || 'Unknown';
-                    if (track.roles && track.roles.length > 0) {
-                        label += ` (${track.roles.join(', ')})`;
-                    }
+                    let label = '';
+
+                    // Prefer explicit label if available
                     if (track.labels && track.labels.length > 0) {
-                        const browserLabel = track.labels.find(l => l.text) || track.labels[0];
-                        if (browserLabel && browserLabel.text) {
-                            label = browserLabel.text;
+                        const textLabel = track.labels.find(l => l.text) || track.labels[0];
+                        if (textLabel && textLabel.text) {
+                            label = textLabel.text;
                         }
+                    }
+
+                    // Fall back to language
+                    if (!label) {
+                        label = track.lang || 'Unknown';
+                    }
+
+                    // Build descriptive details (role, channels, codec)
+                    const details = [];
+                    if (track.roles && track.roles.length > 0) {
+                        const roleValues = track.roles.map(r => r.value).filter(Boolean);
+                        if (roleValues.length > 0) {
+                            details.push(roleValues.join(', '));
+                        }
+                    }
+                    const channels = this._formatChannels(track);
+                    if (channels) {
+                        details.push(channels);
+                    }
+                    if (track.codec) {
+                        details.push(track.codec);
+                    }
+                    if (details.length > 0) {
+                        label += ` (${details.join(', ')})`;
                     }
 
                     const isCurrent = currentTrack && this._isTracksEqual(currentTrack, track);
@@ -1080,6 +1103,25 @@ export class ControlBar {
                 && String(t1.audioChannelConfiguration || '') === String(t2.audioChannelConfiguration || '');
         } catch (e) {
             return false;
+        }
+    }
+
+    _formatChannels(track) {
+        if (!track.audioChannelConfiguration || !track.audioChannelConfiguration.length) {
+            return null;
+        }
+        const value = track.audioChannelConfiguration[0].value;
+        switch (value) {
+        case '1':
+            return 'mono';
+        case '2':
+            return 'stereo';
+        case '6':
+            return '5.1';
+        case '8':
+            return '7.1';
+        default:
+            return value ? `${value}ch` : null;
         }
     }
 

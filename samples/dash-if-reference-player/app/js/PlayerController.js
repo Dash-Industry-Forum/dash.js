@@ -331,6 +331,11 @@ export class PlayerController extends EventEmitter {
                 if (type === 'video' && renderedRep.frameRate) {
                     metrics.framerate = renderedRep.frameRate;
                 }
+
+                // Segment duration
+                if (renderedRep.fragmentDuration && !isNaN(renderedRep.fragmentDuration)) {
+                    metrics.segmentDuration = renderedRep.fragmentDuration;
+                }
             }
 
             // Dropped frames
