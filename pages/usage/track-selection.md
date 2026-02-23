@@ -19,22 +19,22 @@ will be used instead of the value provided with the `@codecs` attribute.
 
 ### Basic filtering
 The MediaCapabilities API is the default mechanism used by dash.js to determine device capabilities for track selection.
-It can be disabled by setting the `capabilities.useMediaCapabilitiesApi` setting to ***false***, which makes dash.js to 
-use `isTypeSupported()` from `MediaSource` instead.
+This can be disabled by setting the `streaming.capabilities.useMediaCapabilitiesApi` setting to ***false***, which makes dash.js to 
+utilize `isTypeSupported()` from `MediaSource` instead.
 
 ### Advanced filtering using MediaCapabilities
 By default, only `@codecs` is used to query the media capabilities of the MediaCapabilities API.
 
 Audio tracks can also be filtered by matching the AudioChannelConfiguration against the number of
 audio channels supported by the device.
-This option is disabled by default and can be enabled using the `capabilities.filterAudioChannelConfiguration` setting.
+This option is disabled by default and can be enabled using the `streaming.capabilities.filterAudioChannelConfiguration` setting.
 
 Other media capabilities can be matched against `EssentialProperty` descriptors (see the next section).
 
 ### Filtering using `EssentialProperty` descriptors
 By default, dash.js will filter-out AdaptationSets / Representations whose `EssentialProperty` descriptors are not 
 recognized.
-This behavour is controlled by the `capabilities.filterUnsupportedEssentialProperties` setting.
+This behavour is controlled by the `streaming.capabilities.filterUnsupportedEssentialProperties` setting.
 If set to ***false***, all EssentialProperty descriptors are ignored and do not influence track selection.
 
 Two mechanisms can be used to configure filtering using EssentialProperty descriptors:
@@ -44,17 +44,19 @@ Two mechanisms can be used to configure filtering using EssentialProperty descri
 
 Simple filtering can be controlled by defining regular expressions to match values in
 `EssentialProperty` descriptors.
-The `capabilities.supportedEssentialProperties` setting can list the `@schemeIdUri` of supported descriptors and
+The `streaming.capabilities.supportedEssentialProperties` setting can list the `@schemeIdUri` of supported descriptors and
 regular expressions to match against descriptor `@value`.
 
 For example, the following configuration would remove all DVB low-latency tracks:
 
 ```js
 player.updateSettings({
-    capabilities: {
-        supportedEssentialProperties: [
-            { schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'false' }
-        ]
+    streaming: {
+        capabilities: {
+            supportedEssentialProperties: [
+                { schemeIdUri: 'urn:dvb:dash:lowlatency:critical:2019', value: 'false' }
+            ]
+        }
     }
 });
 ```
@@ -76,10 +78,12 @@ These settings are needed to ensure that HDR tracks are correctly matched agains
 For example:
 ```js
 player.updateSettings({
-    capabilities: {
-        useMediaCapabilitiesApi: true,
-        filterVideoColorimetryEssentialProperties: true,
-        filterHDRMetadataFormatEssentialProperties: true
+    streaming: {
+        capabilities: {
+            useMediaCapabilitiesApi: true,
+            filterVideoColorimetryEssentialProperties: true,
+            filterHDRMetadataFormatEssentialProperties: true
+        }
     }
 });
 ```
