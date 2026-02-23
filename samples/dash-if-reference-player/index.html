@@ -10,6 +10,8 @@
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link href="vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Controlbar CSS (contrib) -->
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="app/css/main.css" rel="stylesheet">
 
@@ -451,79 +453,7 @@
             <div id="video-wrapper">
                 <video id="video-element" disableRemotePlayback="true"></video>
                 <div id="video-caption"></div>
-
-                <!-- Control Bar -->
-                <div id="control-bar" class="cb-disabled">
-                    <!-- Thumbnail preview -->
-                    <div id="cb-thumbnail-container" class="cb-thumbnail-container d-none">
-                        <div id="cb-thumbnail-elem" class="cb-thumbnail-elem"></div>
-                        <div id="cb-thumbnail-time" class="cb-thumbnail-time"></div>
-                    </div>
-
-                    <!-- Seekbar row -->
-                    <div class="cb-seekbar-row">
-                        <div id="cb-seekbar" class="cb-seekbar">
-                            <div id="cb-seekbar-buffer" class="cb-seekbar-buffer" style="width: 0%"></div>
-                            <div id="cb-seekbar-played" class="cb-seekbar-played" style="width: 0%"></div>
-                        </div>
-                    </div>
-
-                    <!-- Controls row -->
-                    <div class="cb-controls-row">
-                        <button id="cb-play-pause" class="cb-btn" title="Play/Pause">
-                            <i id="cb-play-pause-icon" class="bi bi-play-fill"></i>
-                        </button>
-                        <span id="cb-time" class="cb-time">00:00</span>
-                        <span id="cb-time-separator" class="cb-time cb-time-separator">/</span>
-                        <span id="cb-duration" class="cb-time">00:00</span>
-
-                        <div class="cb-spacer"></div>
-
-                        <div class="cb-volume-group">
-                            <button id="cb-mute" class="cb-btn" title="Mute/Unmute">
-                                <i id="cb-mute-icon" class="bi bi-volume-up-fill"></i>
-                            </button>
-                            <input id="cb-volume" type="range" class="cb-volume-slider"
-                                   min="0" max="1" step="0.05" value="1">
-                        </div>
-
-                        <div class="cb-rate-group">
-                            <button id="cb-rate-down" class="cb-btn cb-btn-sm" title="Decrease speed">
-                                <i class="bi bi-dash"></i>
-                            </button>
-                            <span id="cb-rate-display" class="cb-rate-display" title="Reset to 1x">1.0x</span>
-                            <button id="cb-rate-up" class="cb-btn cb-btn-sm" title="Increase speed">
-                                <i class="bi bi-plus"></i>
-                            </button>
-                        </div>
-
-                        <!-- Menus positioned relative to their buttons -->
-                        <div class="cb-menu-anchor">
-                            <button id="cb-bitrate-btn" class="cb-btn d-none" title="Quality">
-                                <i class="bi bi-gear"></i>
-                            </button>
-                            <div id="cb-bitrate-menu" class="cb-menu d-none"></div>
-                        </div>
-
-                        <div class="cb-menu-anchor">
-                            <button id="cb-track-btn" class="cb-btn d-none" title="Tracks">
-                                <i class="bi bi-music-note-list"></i>
-                            </button>
-                            <div id="cb-track-menu" class="cb-menu d-none"></div>
-                        </div>
-
-                        <div class="cb-menu-anchor">
-                            <button id="cb-caption-btn" class="cb-btn d-none" title="Captions">
-                                <i class="bi bi-badge-cc"></i>
-                            </button>
-                            <div id="cb-caption-menu" class="cb-menu d-none"></div>
-                        </div>
-
-                        <button id="cb-fullscreen" class="cb-btn" title="Fullscreen">
-                            <i id="cb-fullscreen-icon" class="bi bi-fullscreen"></i>
-                        </button>
-                    </div>
-                </div>
+                <!-- Controlbar is injected here by ControlBar.js from contrib/controlbar -->
             </div>
         </div>
 

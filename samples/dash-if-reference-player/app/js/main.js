@@ -6,7 +6,7 @@
 
 import {$, fetchJSON, show} from './UIHelpers.js';
 import {PlayerController} from './PlayerController.js';
-import {ControlBar} from './ControlBar.js';
+import {ControlBar} from '../../../../contrib/controlbar/ControlBar.js';
 import {StreamCatalog} from './StreamCatalog.js';
 import {SettingsController} from './SettingsController.js';
 import {DrmController} from './DrmController.js';
@@ -64,8 +64,8 @@ async function init() {
     }
 
     // 4. Initialize all modules
-    controlBar = new ControlBar(playerController);
-    controlBar.init();
+    controlBar = new ControlBar(playerController.player, videoElement);
+    controlBar.init($('#video-wrapper'));
     controlBar.disable();
 
     settingsController = new SettingsController(playerController);

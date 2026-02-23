@@ -1,24 +1,84 @@
 /**
- * ControlBar.js - Custom video control bar with modern UX
+ * ControlBar.js - Reusable dash.js video control bar
  *
- * Features: play/pause, seekbar (div-based with buffer+played overlay),
+ * A self-contained, self-generating control bar component for dash.js.
+ * Generates its own DOM structure inside a consumer-provided container element.
+ *
+ * Features: play/pause, seekbar (div-based with buffer + played overlay),
  * volume, mute, fullscreen, bitrate/track/caption menus, thumbnail preview,
- * auto-hide on hover with 3s timeout.
+ * playback rate controls, auto-hide on hover with configurable timeout.
+ *
+ * Requirements:
+ * - dash.js MediaPlayer instance (global `dashjs` must be available)
+ * - Bootstrap Icons CSS loaded in the page
+ * - controlbar.css loaded in the page
+ *
+ * Usage:
+ *   import { ControlBar } from './ControlBar.js';
+ *   const cb = new ControlBar(player, videoElement);
+ *   cb.init(document.getElementById('my-container'));
+ *   cb.enable();
  */
-
-import {$, formatTime, createElement} from './UIHelpers.js';
 
 const HIDE_DELAY = 3000;
 
-export class ControlBar {
-    constructor(playerController) {
-        this.playerController = playerController;
-        this.player = playerController.player;
-        this.video = playerController.video;
+// ---- Inline helpers (replaces UIHelpers.js dependency) ----
 
-        // DOM references
-        this.container = null;
-        this.videoWrapper = null;
+function formatTime(seconds) {
+    if (isNaN(seconds) || !isFinite(seconds)) {
+        return '00:00';
+    }
+    const negative = seconds < 0;
+    seconds = Math.abs(Math.floor(seconds));
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    const pad = (n) => String(n).padStart(2, '0');
+    const prefix = negative ? '- ' : '';
+    if (h > 0) {
+        return `${prefix}${pad(h)}:${pad(m)}:${pad(s)}`;
+    }
+    return `${prefix}${pad(m)}:${pad(s)}`;
+}
+
+function createElement(tag, attrs = {}, ...children) {
+    const el = document.createElement(tag);
+    for (const [key, value] of Object.entries(attrs)) {
+        if (key === 'className') {
+            el.className = value;
+        } else if (key === 'textContent') {
+            el.textContent = value;
+        } else if (key === 'innerHTML') {
+            el.innerHTML = value;
+        } else if (key.startsWith('on') && typeof value === 'function') {
+            el.addEventListener(key.slice(2).toLowerCase(), value);
+        } else {
+            el.setAttribute(key, value);
+        }
+    }
+    for (const child of children) {
+        if (typeof child === 'string') {
+            el.appendChild(document.createTextNode(child));
+        } else if (child) {
+            el.appendChild(child);
+        }
+    }
+    return el;
+}
+
+export class ControlBar {
+
+    /**
+     * @param {object} player - A dash.js MediaPlayer instance
+     * @param {HTMLVideoElement} videoElement - The video element managed by the player
+     */
+    constructor(player, videoElement) {
+        this.player = player;
+        this.video = videoElement;
+
+        // DOM references (populated by _buildDOM)
+        this.container = null;      // the controlbar root element we create
+        this.wrapper = null;        // the consumer-provided wrapper / container parent
         this.playPauseBtn = null;
         this.playPauseIcon = null;
         this.timeDisplay = null;
@@ -62,33 +122,25 @@ export class ControlBar {
     }
 
     /**
-     * Initialize the control bar, attach to DOM and register events
+     * Initialize the control bar: build DOM, inject into container, register events.
+     *
+     * @param {HTMLElement|string} wrapperElement - The wrapper element (or CSS selector)
+     *   that contains the video element. The controlbar will be appended inside this
+     *   wrapper. It should have `position: relative` so the controlbar overlays correctly.
      */
-    init() {
-        this.container = $('#control-bar');
-        this.videoWrapper = $('#video-wrapper');
-        this.playPauseBtn = $('#cb-play-pause');
-        this.playPauseIcon = $('#cb-play-pause-icon');
-        this.timeDisplay = $('#cb-time');
-        this.durationDisplay = $('#cb-duration');
-        this.seekbarContainer = $('#cb-seekbar');
-        this.seekbarPlayed = $('#cb-seekbar-played');
-        this.seekbarBuffer = $('#cb-seekbar-buffer');
-        this.volumeSlider = $('#cb-volume');
-        this.muteBtn = $('#cb-mute');
-        this.muteIcon = $('#cb-mute-icon');
-        this.fullscreenBtn = $('#cb-fullscreen');
-        this.fullscreenIcon = $('#cb-fullscreen-icon');
-        this.bitrateBtn = $('#cb-bitrate-btn');
-        this.trackBtn = $('#cb-track-btn');
-        this.captionBtn = $('#cb-caption-btn');
-        this.timeSeparator = $('#cb-time-separator');
-        this.rateDownBtn = $('#cb-rate-down');
-        this.rateUpBtn = $('#cb-rate-up');
-        this.rateDisplay = $('#cb-rate-display');
-        this.thumbnailContainer = $('#cb-thumbnail-container');
-        this.thumbnailElem = $('#cb-thumbnail-elem');
-        this.thumbnailTimeLabel = $('#cb-thumbnail-time');
+    init(wrapperElement) {
+        if (typeof wrapperElement === 'string') {
+            this.wrapper = document.querySelector(wrapperElement);
+        } else {
+            this.wrapper = wrapperElement;
+        }
+
+        if (!this.wrapper) {
+            throw new Error('ControlBar: wrapper element not found');
+        }
+
+        this._buildDOM();
+        this.wrapper.appendChild(this.container);
 
         this._attachDOMEvents();
         this._attachPlayerEvents();
@@ -99,7 +151,7 @@ export class ControlBar {
     }
 
     /**
-     * Enable the control bar
+     * Enable the control bar (interactive).
      */
     enable() {
         this._enabled = true;
@@ -107,7 +159,7 @@ export class ControlBar {
     }
 
     /**
-     * Disable the control bar
+     * Disable the control bar (non-interactive, dimmed).
      */
     disable() {
         this._enabled = false;
@@ -116,7 +168,7 @@ export class ControlBar {
     }
 
     /**
-     * Reset control bar state (on new stream load)
+     * Reset control bar state (call on new stream load).
      */
     reset() {
         this._seeking = false;
@@ -128,7 +180,7 @@ export class ControlBar {
         this.durationDisplay.textContent = '00:00';
         this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
         if (this.timeSeparator) {
-            this.timeSeparator.classList.remove('d-none');
+            this.timeSeparator.classList.remove('cb-hidden-element');
         }
         this._updateRateDisplay(1);
         this._closeAllMenus();
@@ -166,7 +218,7 @@ export class ControlBar {
     }
 
     /**
-     * Destroy the control bar, remove all event listeners
+     * Destroy the control bar: remove all event listeners and remove DOM.
      */
     destroy() {
         this._detachDOMEvents();
@@ -174,9 +226,135 @@ export class ControlBar {
         this._closeAllMenus();
         this._destroyMenus();
         clearTimeout(this._hideTimer);
+        if (this.container && this.container.parentNode) {
+            this.container.parentNode.removeChild(this.container);
+        }
     }
 
-    // ---- DOM event handlers ----
+    // ================================================================
+    // DOM generation
+    // ================================================================
+
+    _buildDOM() {
+        // Thumbnail preview
+        this.thumbnailElem = createElement('div', { className: 'cb-thumbnail-elem' });
+        this.thumbnailTimeLabel = createElement('div', { className: 'cb-thumbnail-time' });
+        this.thumbnailContainer = createElement('div', { className: 'cb-thumbnail-container cb-hidden-element' },
+            this.thumbnailElem,
+            this.thumbnailTimeLabel
+        );
+
+        // Seekbar
+        this.seekbarBuffer = createElement('div', { className: 'cb-seekbar-buffer', style: 'width: 0%' });
+        this.seekbarPlayed = createElement('div', { className: 'cb-seekbar-played', style: 'width: 0%' });
+        this.seekbarContainer = createElement('div', { className: 'cb-seekbar' },
+            this.seekbarBuffer,
+            this.seekbarPlayed
+        );
+        const seekbarRow = createElement('div', { className: 'cb-seekbar-row' }, this.seekbarContainer);
+
+        // Play / Pause
+        this.playPauseIcon = createElement('i', { className: 'bi bi-play-fill' });
+        this.playPauseBtn = createElement('button', { className: 'cb-btn', title: 'Play/Pause' }, this.playPauseIcon);
+
+        // Time display
+        this.timeDisplay = createElement('span', { className: 'cb-time', textContent: '00:00' });
+        this.timeSeparator = createElement('span', { className: 'cb-time cb-time-separator', textContent: '/' });
+        this.durationDisplay = createElement('span', { className: 'cb-time', textContent: '00:00' });
+
+        // Spacer
+        const spacer = createElement('div', { className: 'cb-spacer' });
+
+        // Volume / Mute
+        this.muteIcon = createElement('i', { className: 'bi bi-volume-up-fill' });
+        this.muteBtn = createElement('button', { className: 'cb-btn', title: 'Mute/Unmute' }, this.muteIcon);
+        this.volumeSlider = createElement('input', {
+            type: 'range',
+            className: 'cb-volume-slider',
+            min: '0',
+            max: '1',
+            step: '0.05',
+            value: '1'
+        });
+        const volumeGroup = createElement('div', { className: 'cb-volume-group' },
+            this.muteBtn,
+            this.volumeSlider
+        );
+
+        // Playback rate
+        this.rateDownBtn = createElement('button', { className: 'cb-btn cb-btn-sm', title: 'Decrease speed' },
+            createElement('i', { className: 'bi bi-dash' })
+        );
+        this.rateDisplay = createElement('span', { className: 'cb-rate-display', title: 'Reset to 1x', textContent: '1.00x' });
+        this.rateUpBtn = createElement('button', { className: 'cb-btn cb-btn-sm', title: 'Increase speed' },
+            createElement('i', { className: 'bi bi-plus' })
+        );
+        const rateGroup = createElement('div', { className: 'cb-rate-group' },
+            this.rateDownBtn,
+            this.rateDisplay,
+            this.rateUpBtn
+        );
+
+        // Bitrate menu
+        this.bitrateMenu = createElement('div', { className: 'cb-menu cb-hidden-element' });
+        this.bitrateBtn = createElement('button', { className: 'cb-btn cb-hidden-element', title: 'Quality' },
+            createElement('i', { className: 'bi bi-gear' })
+        );
+        const bitrateAnchor = createElement('div', { className: 'cb-menu-anchor' },
+            this.bitrateBtn,
+            this.bitrateMenu
+        );
+
+        // Track menu
+        this.trackMenu = createElement('div', { className: 'cb-menu cb-hidden-element' });
+        this.trackBtn = createElement('button', { className: 'cb-btn cb-hidden-element', title: 'Tracks' },
+            createElement('i', { className: 'bi bi-music-note-list' })
+        );
+        const trackAnchor = createElement('div', { className: 'cb-menu-anchor' },
+            this.trackBtn,
+            this.trackMenu
+        );
+
+        // Caption menu
+        this.captionMenu = createElement('div', { className: 'cb-menu cb-hidden-element' });
+        this.captionBtn = createElement('button', { className: 'cb-btn cb-hidden-element', title: 'Captions' },
+            createElement('i', { className: 'bi bi-badge-cc' })
+        );
+        const captionAnchor = createElement('div', { className: 'cb-menu-anchor' },
+            this.captionBtn,
+            this.captionMenu
+        );
+
+        // Fullscreen
+        this.fullscreenIcon = createElement('i', { className: 'bi bi-fullscreen' });
+        this.fullscreenBtn = createElement('button', { className: 'cb-btn', title: 'Fullscreen' }, this.fullscreenIcon);
+
+        // Controls row
+        const controlsRow = createElement('div', { className: 'cb-controls-row' },
+            this.playPauseBtn,
+            this.timeDisplay,
+            this.timeSeparator,
+            this.durationDisplay,
+            spacer,
+            volumeGroup,
+            rateGroup,
+            bitrateAnchor,
+            trackAnchor,
+            captionAnchor,
+            this.fullscreenBtn
+        );
+
+        // Root container
+        this.container = createElement('div', { className: 'cb-controlbar cb-disabled' },
+            this.thumbnailContainer,
+            seekbarRow,
+            controlsRow
+        );
+    }
+
+    // ================================================================
+    // DOM event handlers
+    // ================================================================
 
     _attachDOMEvents() {
         this.playPauseBtn.addEventListener('click', () => this._togglePlayPause());
@@ -188,15 +366,9 @@ export class ControlBar {
         this.durationDisplay.addEventListener('click', () => this._seekToLiveEdge());
 
         // Playback rate controls
-        if (this.rateDownBtn) {
-            this.rateDownBtn.addEventListener('click', () => this._changeRate(-0.25));
-        }
-        if (this.rateUpBtn) {
-            this.rateUpBtn.addEventListener('click', () => this._changeRate(0.25));
-        }
-        if (this.rateDisplay) {
-            this.rateDisplay.addEventListener('click', () => this._resetRate());
-        }
+        this.rateDownBtn.addEventListener('click', () => this._changeRate(-0.25));
+        this.rateUpBtn.addEventListener('click', () => this._changeRate(0.25));
+        this.rateDisplay.addEventListener('click', () => this._resetRate());
 
         // Seekbar mouse events
         this.seekbarContainer.addEventListener('mousedown', (e) => this._onSeekMouseDown(e));
@@ -210,34 +382,28 @@ export class ControlBar {
         this.seekbarContainer.addEventListener('touchmove', (e) => this._onSeekTouchMove(e), { passive: false });
         this.seekbarContainer.addEventListener('touchend', (e) => this._onSeekTouchEnd(e));
 
-        // Auto-hide: show on mouse move over video wrapper, hide after delay
-        this.videoWrapper.addEventListener('mousemove', this._onMouseMove);
-        this.videoWrapper.addEventListener('mouseleave', this._onMouseLeave);
-        this.videoWrapper.addEventListener('touchstart', this._onMouseMove, { passive: true });
+        // Auto-hide: show on mouse move over wrapper, hide after delay
+        this.wrapper.addEventListener('mousemove', this._onMouseMove);
+        this.wrapper.addEventListener('mouseleave', this._onMouseLeave);
+        this.wrapper.addEventListener('touchstart', this._onMouseMove, { passive: true });
 
         // Fullscreen change
         document.addEventListener('fullscreenchange', this._onFullscreenChange);
         document.addEventListener('webkitfullscreenchange', this._onFullscreenChange);
 
         // Bitrate / track / caption buttons
-        if (this.bitrateBtn) {
-            this.bitrateBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._toggleMenu('bitrate');
-            });
-        }
-        if (this.trackBtn) {
-            this.trackBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._toggleMenu('track');
-            });
-        }
-        if (this.captionBtn) {
-            this.captionBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                this._toggleMenu('caption');
-            });
-        }
+        this.bitrateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleMenu('bitrate');
+        });
+        this.trackBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleMenu('track');
+        });
+        this.captionBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this._toggleMenu('caption');
+        });
 
         // Close menus on click outside
         document.addEventListener('click', () => this._closeAllMenus());
@@ -247,8 +413,8 @@ export class ControlBar {
     }
 
     _detachDOMEvents() {
-        this.videoWrapper.removeEventListener('mousemove', this._onMouseMove);
-        this.videoWrapper.removeEventListener('mouseleave', this._onMouseLeave);
+        this.wrapper.removeEventListener('mousemove', this._onMouseMove);
+        this.wrapper.removeEventListener('mouseleave', this._onMouseLeave);
         document.removeEventListener('fullscreenchange', this._onFullscreenChange);
         document.removeEventListener('webkitfullscreenchange', this._onFullscreenChange);
     }
@@ -273,7 +439,9 @@ export class ControlBar {
         // Player cleanup happens via player.destroy()
     }
 
-    // ---- Play/Pause ----
+    // ================================================================
+    // Play / Pause
+    // ================================================================
 
     _togglePlayPause() {
         if (!this._enabled) {
@@ -310,7 +478,9 @@ export class ControlBar {
         this._clearHideTimer();
     }
 
-    // ---- Time / Duration ----
+    // ================================================================
+    // Time / Duration
+    // ================================================================
 
     _onTimeUpdate() {
         if (this._seeking) {
@@ -333,7 +503,7 @@ export class ControlBar {
 
                 // Hide separator for live
                 if (this.timeSeparator) {
-                    this.timeSeparator.classList.add('d-none');
+                    this.timeSeparator.classList.add('cb-hidden-element');
                 }
 
                 // Check if at live edge
@@ -347,7 +517,7 @@ export class ControlBar {
 
                 // Show separator for VoD
                 if (this.timeSeparator) {
-                    this.timeSeparator.classList.remove('d-none');
+                    this.timeSeparator.classList.remove('cb-hidden-element');
                 }
             }
 
@@ -383,7 +553,9 @@ export class ControlBar {
         }
     }
 
-    // ---- Playback Rate ----
+    // ================================================================
+    // Playback Rate
+    // ================================================================
 
     _changeRate(delta) {
         if (!this._enabled) {
@@ -417,7 +589,9 @@ export class ControlBar {
         }
     }
 
-    // ---- Seekbar ----
+    // ================================================================
+    // Seekbar
+    // ================================================================
 
     _getSeekTime(clientX) {
         const rect = this.seekbarContainer.getBoundingClientRect();
@@ -495,7 +669,9 @@ export class ControlBar {
         }
     }
 
-    // ---- Thumbnails ----
+    // ================================================================
+    // Thumbnails
+    // ================================================================
 
     _showThumbnail(clientX, time) {
         if (!this.player.provideThumbnail) {
@@ -509,10 +685,10 @@ export class ControlBar {
             }
 
             const containerRect = this.seekbarContainer.getBoundingClientRect();
-            const videoRect = this.videoWrapper.getBoundingClientRect();
+            const wrapperRect = this.wrapper.getBoundingClientRect();
 
             // Scale thumbnail
-            const maxHeight = videoRect.height * 0.15;
+            const maxHeight = wrapperRect.height * 0.15;
             const scale = Math.min(maxHeight / thumbnail.height, 2);
             const width = thumbnail.width * scale;
             const height = thumbnail.height * scale;
@@ -520,7 +696,7 @@ export class ControlBar {
             this.thumbnailElem.style.width = `${width}px`;
             this.thumbnailElem.style.height = `${height}px`;
             this.thumbnailElem.style.background = `url("${thumbnail.url}") -${thumbnail.x * scale}px -${thumbnail.y * scale}px`;
-            this.thumbnailElem.style.backgroundSize = `${(thumbnail.width * scale * (thumbnail.url ? 1 : 1))}px auto`;
+            this.thumbnailElem.style.backgroundSize = `${thumbnail.width * scale}px auto`;
 
             // Position horizontally centered on mouse
             let left = clientX - containerRect.left - width / 2;
@@ -529,17 +705,19 @@ export class ControlBar {
             this.thumbnailContainer.style.left = `${left}px`;
             this.thumbnailContainer.style.bottom = `${containerRect.height + 10}px`;
             this.thumbnailTimeLabel.textContent = formatTime(time);
-            this.thumbnailContainer.classList.remove('d-none');
+            this.thumbnailContainer.classList.remove('cb-hidden-element');
         });
     }
 
     _hideThumbnail() {
         if (this.thumbnailContainer) {
-            this.thumbnailContainer.classList.add('d-none');
+            this.thumbnailContainer.classList.add('cb-hidden-element');
         }
     }
 
-    // ---- Buffer ----
+    // ================================================================
+    // Buffer
+    // ================================================================
 
     _onBufferLevelUpdated(e) {
         if (!e || e.mediaType !== 'video' || !this._duration || this._isDynamic) {
@@ -557,7 +735,9 @@ export class ControlBar {
         }
     }
 
-    // ---- Volume / Mute ----
+    // ================================================================
+    // Volume / Mute
+    // ================================================================
 
     _onVolumeInput() {
         const val = parseFloat(this.volumeSlider.value);
@@ -597,15 +777,16 @@ export class ControlBar {
         }
     }
 
-    // ---- Fullscreen ----
+    // ================================================================
+    // Fullscreen
+    // ================================================================
 
     _toggleFullscreen() {
-        const wrapper = this.videoWrapper;
         if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-            if (wrapper.requestFullscreen) {
-                wrapper.requestFullscreen();
-            } else if (wrapper.webkitRequestFullscreen) {
-                wrapper.webkitRequestFullscreen();
+            if (this.wrapper.requestFullscreen) {
+                this.wrapper.requestFullscreen();
+            } else if (this.wrapper.webkitRequestFullscreen) {
+                this.wrapper.webkitRequestFullscreen();
             }
         } else {
             if (document.exitFullscreen) {
@@ -621,10 +802,12 @@ export class ControlBar {
         this.fullscreenIcon.className = this._isFullscreen
             ? 'bi bi-fullscreen-exit'
             : 'bi bi-fullscreen';
-        this.videoWrapper.classList.toggle('cb-fullscreen', this._isFullscreen);
+        this.wrapper.classList.toggle('cb-fullscreen', this._isFullscreen);
     }
 
-    // ---- Auto-hide ----
+    // ================================================================
+    // Auto-hide
+    // ================================================================
 
     _onMouseMoveBound() {
         this._showControlBar();
@@ -643,7 +826,7 @@ export class ControlBar {
 
     _showControlBar() {
         this.container.classList.remove('cb-hidden');
-        this.videoWrapper.style.cursor = '';
+        this.wrapper.style.cursor = '';
     }
 
     _hideControlBar() {
@@ -655,7 +838,7 @@ export class ControlBar {
             return;
         }
         this.container.classList.add('cb-hidden');
-        this.videoWrapper.style.cursor = 'none';
+        this.wrapper.style.cursor = 'none';
     }
 
     _startHideTimer() {
@@ -677,7 +860,9 @@ export class ControlBar {
         }
     }
 
-    // ---- Stream events ----
+    // ================================================================
+    // Stream events
+    // ================================================================
 
     _onStreamActivated() {
         this._rebuildBitrateMenu();
@@ -701,7 +886,9 @@ export class ControlBar {
         this._rebuildCaptionMenu();
     }
 
-    // ---- Menus ----
+    // ================================================================
+    // Menus
+    // ================================================================
 
     _toggleMenu(menuName) {
         const menuEl = this._getMenuElement(menuName);
@@ -713,7 +900,7 @@ export class ControlBar {
             this._closeAllMenus();
         } else {
             this._closeAllMenus();
-            menuEl.classList.remove('d-none');
+            menuEl.classList.remove('cb-hidden-element');
             this._activeMenu = menuName;
         }
     }
@@ -722,7 +909,7 @@ export class ControlBar {
         for (const name of ['bitrate', 'track', 'caption']) {
             const menuEl = this._getMenuElement(name);
             if (menuEl) {
-                menuEl.classList.add('d-none');
+                menuEl.classList.add('cb-hidden-element');
             }
         }
         this._activeMenu = null;
@@ -730,31 +917,33 @@ export class ControlBar {
 
     _getMenuElement(name) {
         switch (name) {
-            case 'bitrate':
-                return $('#cb-bitrate-menu');
-            case 'track':
-                return $('#cb-track-menu');
-            case 'caption':
-                return $('#cb-caption-menu');
+        case 'bitrate':
+            return this.bitrateMenu;
+        case 'track':
+            return this.trackMenu;
+        case 'caption':
+            return this.captionMenu;
         }
         return null;
     }
 
     _destroyMenus() {
-        for (const id of ['#cb-bitrate-menu', '#cb-track-menu', '#cb-caption-menu']) {
-            const el = $(id);
-            if (el) {
-                el.innerHTML = '';
-            }
+        if (this.bitrateMenu) {
+            this.bitrateMenu.innerHTML = '';
+        }
+        if (this.trackMenu) {
+            this.trackMenu.innerHTML = '';
+        }
+        if (this.captionMenu) {
+            this.captionMenu.innerHTML = '';
         }
     }
 
     _rebuildBitrateMenu() {
-        const menuEl = $('#cb-bitrate-menu');
-        if (!menuEl) {
+        if (!this.bitrateMenu) {
             return;
         }
-        menuEl.innerHTML = '';
+        this.bitrateMenu.innerHTML = '';
 
         let hasItems = false;
 
@@ -767,7 +956,7 @@ export class ControlBar {
 
                 hasItems = true;
                 const title = createElement('div', { className: 'cb-menu-title' }, type.charAt(0).toUpperCase() + type.slice(1));
-                menuEl.appendChild(title);
+                this.bitrateMenu.appendChild(title);
 
                 // Auto switch option
                 const autoItem = createElement('div', {
@@ -780,7 +969,7 @@ export class ControlBar {
                         this._rebuildBitrateMenu();
                     }
                 });
-                menuEl.appendChild(autoItem);
+                this.bitrateMenu.appendChild(autoItem);
 
                 const settings = this.player.getSettings();
                 const autoSwitch = settings?.streaming?.abr?.autoSwitchBitrate?.[type] !== false;
@@ -805,7 +994,7 @@ export class ControlBar {
                             this._rebuildBitrateMenu();
                         }
                     });
-                    menuEl.appendChild(item);
+                    this.bitrateMenu.appendChild(item);
                 });
 
                 // Update auto item class
@@ -820,16 +1009,15 @@ export class ControlBar {
 
         // Show/hide button
         if (this.bitrateBtn) {
-            this.bitrateBtn.classList.toggle('d-none', !hasItems);
+            this.bitrateBtn.classList.toggle('cb-hidden-element', !hasItems);
         }
     }
 
     _rebuildTrackMenu() {
-        const menuEl = $('#cb-track-menu');
-        if (!menuEl) {
+        if (!this.trackMenu) {
             return;
         }
-        menuEl.innerHTML = '';
+        this.trackMenu.innerHTML = '';
 
         let hasItems = false;
 
@@ -842,7 +1030,7 @@ export class ControlBar {
 
                 hasItems = true;
                 const title = createElement('div', { className: 'cb-menu-title' }, type.charAt(0).toUpperCase() + type.slice(1));
-                menuEl.appendChild(title);
+                this.trackMenu.appendChild(title);
 
                 const currentTrack = this.player.getCurrentTrackFor(type);
 
@@ -867,7 +1055,7 @@ export class ControlBar {
                             this._rebuildTrackMenu();
                         }
                     });
-                    menuEl.appendChild(item);
+                    this.trackMenu.appendChild(item);
                 });
             } catch (err) {
                 // ignore
@@ -875,7 +1063,7 @@ export class ControlBar {
         }
 
         if (this.trackBtn) {
-            this.trackBtn.classList.toggle('d-none', !hasItems);
+            this.trackBtn.classList.toggle('cb-hidden-element', !hasItems);
         }
     }
 
@@ -896,18 +1084,17 @@ export class ControlBar {
     }
 
     _rebuildCaptionMenu() {
-        const menuEl = $('#cb-caption-menu');
-        if (!menuEl) {
+        if (!this.captionMenu) {
             return;
         }
-        menuEl.innerHTML = '';
+        this.captionMenu.innerHTML = '';
 
         try {
             // Use dash.js track info for reliable lang/labels instead of native textTracks
             const tracks = this.player.getTracksFor('text');
             if (!tracks || tracks.length === 0) {
                 if (this.captionBtn) {
-                    this.captionBtn.classList.add('d-none');
+                    this.captionBtn.classList.add('cb-hidden-element');
                 }
                 return;
             }
@@ -923,7 +1110,7 @@ export class ControlBar {
                     this._rebuildCaptionMenu();
                 }
             });
-            menuEl.appendChild(offItem);
+            this.captionMenu.appendChild(offItem);
 
             for (let i = 0; i < tracks.length; i++) {
                 const track = tracks[i];
@@ -955,15 +1142,15 @@ export class ControlBar {
                         this._rebuildCaptionMenu();
                     }
                 });
-                menuEl.appendChild(item);
+                this.captionMenu.appendChild(item);
             }
 
             if (this.captionBtn) {
-                this.captionBtn.classList.toggle('d-none', tracks.length === 0);
+                this.captionBtn.classList.toggle('cb-hidden-element', tracks.length === 0);
             }
         } catch (err) {
             if (this.captionBtn) {
-                this.captionBtn.classList.add('d-none');
+                this.captionBtn.classList.add('cb-hidden-element');
             }
         }
     }
