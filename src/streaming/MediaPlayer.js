@@ -1681,7 +1681,7 @@ function MediaPlayer() {
      * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
      * @instance
      */
-    function getUnfilteredRepresentationsByType(type, streamId = null) {
+    function getRepresentationsByTypeUnfiltered(type, streamId = null) {
         return _getRepresentations(type, streamId, false);
     }
 
@@ -2903,6 +2903,7 @@ function MediaPlayer() {
         getProtectionController,
         getRawThroughputData,
         getRepresentationsByType,
+        getRepresentationsByTypeUnfiltered,
         getSafeAverageThroughput,
         getSettings,
         getSource,
@@ -2911,7 +2912,6 @@ function MediaPlayer() {
         getTargetLiveDelay,
         getTracksFor,
         getTracksForTypeFromManifest,
-        getUnfilteredRepresentationsByType,
         getVersion,
         getVideoElement,
         getVolume,

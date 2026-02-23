@@ -2158,6 +2158,8 @@ export interface MediaPlayerClass {
 
     getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
 
+    getRepresentationsByTypeUnfiltered(type: MediaType, streamId?: string | null): Representation[];
+
     getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
     getSettings(): MediaPlayerSettingClass;
@@ -2173,8 +2175,6 @@ export interface MediaPlayerClass {
     getTracksFor(type: MediaType): MediaInfo[];
 
     getTracksForTypeFromManifest(type: MediaType, manifest: object, streamInfo: StreamInfo): MediaInfo[];
-
-    getUnfilteredRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
 
     getVersion(): string;
 
