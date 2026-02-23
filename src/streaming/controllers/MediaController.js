@@ -180,10 +180,10 @@ function MediaController() {
         if (!track) {
             return;
         }
-        logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\'');
 
         const mediaType = track.type;
         if (!_isMultiTrackSupportedByType(mediaType)) {
+            logger.info('track not added (_isMultiTrackSupportedByType), track.index=' + track.index);
             return;
         }
 
@@ -196,10 +196,12 @@ function MediaController() {
         for (let i = 0, len = mediaTracks.length; i < len; ++i) {
             //track is already set.
             if (areTracksEqual(mediaTracks[i], track)) {
+                logger.info('track not added as it is already set (this track-index=' + track.index + ' - existing track.index=' + mediaTracks[i].index + ')');
                 return;
             }
         }
-
+        
+        logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\', track.id=\'' + track.id + '\', track.index=' + track.index);
         mediaTracks.push(track);
     }
 
@@ -373,8 +375,10 @@ function MediaController() {
         const sameRoles = JSON.stringify(t1.roles) === JSON.stringify(t2.roles);
         const sameAccessibility = JSON.stringify(t1.accessibility) === JSON.stringify(t2.accessibility);
         const sameAudioChannelConfiguration = JSON.stringify(t1.audioChannelConfiguration) === JSON.stringify(t2.audioChannelConfiguration);
+        const sameSupplementalProps = JSON.stringify(t1.supplementalProperties) === JSON.stringify(t2.supplementalProperties);
+        const sameEssentialProps = JSON.stringify(t1.essentialProperties) === JSON.stringify(t2.essentialProperties);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps);
     }
 
 
