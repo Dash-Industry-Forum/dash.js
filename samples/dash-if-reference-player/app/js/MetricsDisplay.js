@@ -187,13 +187,15 @@ export class MetricsDisplay {
                 metrics.bufferState === 'bufferLoaded' ? 'Loaded' : 'Stalled');
         }
 
-        // Live metrics
+        // Playback rate (applicable to both VoD and live)
+        if (metrics.playbackRate !== undefined) {
+            this._setText(`${prefix}-playback-rate`, `${parseFloat(metrics.playbackRate).toFixed(2)}x`);
+        }
+
+        // Live-only metrics
         if (this._isDynamic) {
             if (metrics.liveLatency !== undefined) {
                 this._setText(`${prefix}-live-latency`, `${parseFloat(metrics.liveLatency).toFixed(2)} s`);
-            }
-            if (metrics.playbackRate !== undefined) {
-                this._setText(`${prefix}-playback-rate`, `${parseFloat(metrics.playbackRate).toFixed(2)}x`);
             }
             if (metrics.targetDelay !== undefined) {
                 this._setText(`${prefix}-target-delay`, `${parseFloat(metrics.targetDelay).toFixed(2)} s`);
@@ -274,7 +276,7 @@ export class MetricsDisplay {
     _toggleLiveMetrics(type, show) {
         const prefix = type === 'video' ? 'mv' : 'ma';
         const elements = [
-            `${prefix}-live-section`, `${prefix}-live-latency-row`, `${prefix}-playback-rate-row`
+            `${prefix}-live-section`, `${prefix}-live-latency-row`
         ];
 
         // Target delay row is video-only

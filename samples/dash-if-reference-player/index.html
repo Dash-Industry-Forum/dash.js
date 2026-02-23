@@ -526,6 +526,19 @@
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-row">
+                            <span class="metric-label">Resolution</span>
+                            <span class="metric-value" id="mv-resolution">-</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Codec</span>
+                            <span class="metric-value" id="mv-codec">-</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Buffer State</span>
+                            <span class="metric-value" id="mv-buffer-state">-</span>
+                        </div>
+                        <div class="metric-section-title">Playback Metrics</div>
+                        <div class="metric-row">
                             <span class="metric-label">Dropped Frames</span>
                             <span class="metric-value" id="mv-dropped">0</span>
                             <button class="metric-chart-toggle" data-metric="droppedFrames" data-type="video"
@@ -538,16 +551,10 @@
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-row">
-                            <span class="metric-label">Resolution</span>
-                            <span class="metric-value" id="mv-resolution">-</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Codec</span>
-                            <span class="metric-value" id="mv-codec">-</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Buffer State</span>
-                            <span class="metric-value" id="mv-buffer-state">-</span>
+                            <span class="metric-label">Playback Rate</span>
+                            <span class="metric-value" id="mv-playback-rate">1.0x</span>
+                            <button class="metric-chart-toggle" data-metric="playbackRate" data-type="video"
+                                    title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-section-title">HTTP Metrics</div>
                         <div class="metric-row">
@@ -588,12 +595,6 @@
                             <button class="metric-chart-toggle" data-metric="liveLatency" data-type="video"
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
-                        <div class="metric-row d-none" id="mv-playback-rate-row">
-                            <span class="metric-label">Playback Rate</span>
-                            <span class="metric-value" id="mv-playback-rate">1.0x</span>
-                            <button class="metric-chart-toggle" data-metric="playbackRate" data-type="video"
-                                    title="Plot on chart"><i class="bi bi-graph-up"></i></button>
-                        </div>
                         <div class="metric-row d-none" id="mv-target-delay-row">
                             <span class="metric-label">Target Delay (s)</span>
                             <span class="metric-value" id="mv-target-delay">-</span>
@@ -630,6 +631,15 @@
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-row">
+                            <span class="metric-label">Codec</span>
+                            <span class="metric-value" id="ma-codec">-</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Buffer State</span>
+                            <span class="metric-value" id="ma-buffer-state">-</span>
+                        </div>
+                        <div class="metric-section-title">Playback Metrics</div>
+                        <div class="metric-row">
                             <span class="metric-label">Dropped Frames</span>
                             <span class="metric-value" id="ma-dropped">0</span>
                             <button class="metric-chart-toggle" data-metric="droppedFrames" data-type="audio"
@@ -642,12 +652,10 @@
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-row">
-                            <span class="metric-label">Codec</span>
-                            <span class="metric-value" id="ma-codec">-</span>
-                        </div>
-                        <div class="metric-row">
-                            <span class="metric-label">Buffer State</span>
-                            <span class="metric-value" id="ma-buffer-state">-</span>
+                            <span class="metric-label">Playback Rate</span>
+                            <span class="metric-value" id="ma-playback-rate">1.0x</span>
+                            <button class="metric-chart-toggle" data-metric="playbackRate" data-type="audio"
+                                    title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                         <div class="metric-section-title">HTTP Metrics</div>
                         <div class="metric-row">
@@ -673,12 +681,6 @@
                             <span class="metric-label">Live Latency (s)</span>
                             <span class="metric-value" id="ma-live-latency">-</span>
                             <button class="metric-chart-toggle" data-metric="liveLatency" data-type="audio"
-                                    title="Plot on chart"><i class="bi bi-graph-up"></i></button>
-                        </div>
-                        <div class="metric-row d-none" id="ma-playback-rate-row">
-                            <span class="metric-label">Playback Rate</span>
-                            <span class="metric-value" id="ma-playback-rate">1.0x</span>
-                            <button class="metric-chart-toggle" data-metric="playbackRate" data-type="audio"
                                     title="Plot on chart"><i class="bi bi-graph-up"></i></button>
                         </div>
                     </div>

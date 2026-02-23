@@ -355,10 +355,12 @@ export class PlayerController extends EventEmitter {
             const httpMetrics = this._calculateHTTPMetrics(type, dashMetrics);
             Object.assign(metrics, httpMetrics);
 
+            // Playback rate (applicable to all content types)
+            metrics.playbackRate = this.player.getPlaybackRate() || 1;
+
             // Live-specific metrics
             if (this.isDynamic) {
                 metrics.liveLatency = this.player.getCurrentLiveLatency() || 0;
-                metrics.playbackRate = this.player.getPlaybackRate() || 1;
 
                 // Target live delay and DVR window (video only to avoid duplicates)
                 if (type === 'video') {
