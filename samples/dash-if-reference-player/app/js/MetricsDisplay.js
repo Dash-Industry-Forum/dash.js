@@ -176,6 +176,11 @@ export class MetricsDisplay {
             this._setText(`${prefix}-resolution`, metrics.resolution);
         }
 
+        // Framerate (video only)
+        if (type === 'video' && metrics.framerate) {
+            this._setText(`${prefix}-framerate`, `${metrics.framerate} fps`);
+        }
+
         // Codec
         if (metrics.codec) {
             this._setText(`${prefix}-codec`, metrics.codec);
@@ -263,6 +268,7 @@ export class MetricsDisplay {
         }
 
         this._setText('mv-resolution', '-');
+        this._setText('mv-framerate', '-');
         this._setText('ms-active-period', '-');
         this._setText('ms-buffering-period', '-');
         this._setText('ms-dvr-window', '-');

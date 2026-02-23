@@ -326,6 +326,11 @@ export class PlayerController extends EventEmitter {
                 if (type === 'video' && renderedRep.width && renderedRep.height) {
                     metrics.resolution = `${renderedRep.width}x${renderedRep.height}`;
                 }
+
+                // Framerate (video only)
+                if (type === 'video' && renderedRep.frameRate) {
+                    metrics.framerate = renderedRep.frameRate;
+                }
             }
 
             // Dropped frames
