@@ -1659,7 +1659,7 @@ function MediaPlayer() {
 
     /**
      * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
-     * If you want to get the unfiltered list of representations then use getUnfilteredRepresentationsByType() instead.
+     * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
      * @param {MediaType} type
      * @param {string} streamId
      * @returns {Array}
