@@ -719,10 +719,11 @@ function Stream(config) {
 
     /**
      * @param {string} type
+     * @param filterBySettings
      * @returns {Array}
      * @memberof Stream#
      */
-    function getRepresentationsByType(type) {
+    function getRepresentationsByType(type, filterBySettings = true) {
         checkConfig();
         if (type === Constants.IMAGE) {
             if (!thumbnailController) {
@@ -731,7 +732,7 @@ function Stream(config) {
             return thumbnailController.getPossibleVoRepresentations();
         }
         const mediaInfo = _getMediaInfo(type);
-        return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+        return filterBySettings ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true) : abrController.getPossibleVoRepresentations(mediaInfo, true);
     }
 
     /**
