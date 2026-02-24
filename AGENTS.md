@@ -1,167 +1,169 @@
 # AGENTS.md
 
-Guidance for agentic coding assistants working in this repo. Keep changes consistent
-with existing project conventions and tooling.
+## Project Overview
 
-## Project overview
+dash.js is the DASH Industry Forum reference client for MPEG-DASH playback in browsers.
+Pure JavaScript (ES2020), ESM modules (`"type": "module"`), no TypeScript in source code
+(TypeScript is only used to validate `index.d.ts`). Node >= 20 required.
 
-- **Repository:** dash.js — MPEG-DASH reference player by the Dash Industry Forum
-- **Language:** JavaScript (ES modules); TypeScript for type declarations only (`index.d.ts`)
-- **Node version:** >= 20 (see `package.json` engines)
-- **Package type:** `"type": "module"` — the project uses native ES modules
-- **Build tool:** Webpack (separate modern and legacy bundles)
-- **Source layout:** `src/core/`, `src/dash/`, `src/streaming/`, `src/mss/`, `src/offline/`
-
-## Build, lint, test
-
-Run all commands from the repo root.
-
-### Install
+## Build Commands
 
 ```bash
-npm install
+npm run build              # Full build: clean, typecheck, test, lint, then webpack (modern + legacy)
+npm run build-modern       # Clean + typecheck + test + lint + webpack modern only
+npm run build-legacy       # Clean + typecheck + test + lint + webpack 
+npm run dev                # Typecheck + webpack modern dev (watch mode)
+npm start                  # webpack-dev-server on port 3000 (opens samples/index.html)
+npm run lint               # ESLint on src/**/*.js and test/unit/{mocks,test}/**/*.js
+npm run doc                # Generate JSDoc documentation
 ```
 
-### Build
+## Testing
+
+**Frameworks:** Karma (runner) + Mocha (describe/it) + Chai (expect/assert) + Sinon (spy/stub/mock)
 
 ```bash
-npm run build
-```
-
-`npm run build` produces both modern and legacy bundles. The `prebuild` step
-(run by `build-modern` / `build-legacy`) does: `rimraf dist && tsc && npm test && npm lint`.
-
-Other build scripts:
-- `npm run build-modern` / `npm run build-legacy` — prebuild + single bundle
-- `npm run dev` — tsc + webpack watch (modern, development mode)
-- `npm run start` — webpack dev server
-
-### Lint
-
-```bash
-npm run lint
-```
-
-Lints `src/**/*.js`, `test/unit/mocks/*.js`, and `test/unit/test/**/*.js`.
-Config is in `eslint.config.mjs` (flat config format).
-
-### Unit tests
-
-```bash
+# Run all unit tests (ChromeHeadless + FirefoxHeadless)
 npm test
-```
 
-Tests use **Karma + Mocha + Chai** and run in ChromeHeadless and FirefoxHeadless.
-Test files live under `test/unit/test/` mirroring the `src/` structure.
-Mock files live under `test/unit/mocks/`.
+# Run a single test or subset by grep pattern (matches describe/it names)
+npx karma start test/unit/config/karma.unit.conf.cjs --grep="EventBus"
+npx karma start test/unit/config/karma.unit.conf.cjs --grep="getOptimalRepresentationForBitrate"
 
-#### Run a single unit test
-
-Pass `--grep` to filter by Mocha test/suite name:
-
-```bash
-npm test -- --grep "BufferController"
-npm test -- --grep "should return the correct value"
-```
-
-The Karma config (`test/unit/config/karma.unit.conf.cjs`) forwards `config.grep`
-to Mocha's `client.mocha.grep`.
-
-### Functional tests
-
-```bash
+# Run functional tests
 npm run test-functional
-npm run test-functional -- --configfile=local --streamsfile=smoke
 ```
 
-## Code style & conventions
+There is no per-file test runner. All unit tests are bundled by Karma/webpack and run
+together in a headless browser. Use `--grep` to filter by test name.
 
-### Formatting (enforced by ESLint + .editorconfig)
+Unit test files live in `test/unit/test/` and mirror the `src/` directory structure.
+Test file naming convention uses dot-separated module paths:
+- `core.EventBus.js` tests `src/core/EventBus.js`
+- `streaming.controllers.AbrController.js` tests `src/streaming/controllers/AbrController.js`
+- `dash.models.DashManifestModel.js` tests `src/dash/models/DashManifestModel.js`
 
-- **4-space indentation** (`indent: ['error', 4, { SwitchCase: 1 }]`)
-- **Single quotes** for strings; template literals allowed
-- **Curly braces required** for all blocks (`curly: ['error', 'all']`)
-- **Keyword spacing** before and after (`keyword-spacing`)
-- **No multi-spaces** (`no-multi-spaces`)
-- **Space around operators** (`space-infix-ops`)
-- JS files: trim trailing whitespace, insert final newline (`.editorconfig`)
+## Code Style
 
-### Imports and modules
+### Formatting (enforced by ESLint flat config in `eslint.config.mjs`)
 
-- ES modules only: `import Foo from './Foo.js'` — always use explicit `.js` extensions
-- Group imports at the top: core/library imports first, then relative imports
-- No `require()` in source (only in build/test config `.cjs` files)
+- **Indentation:** 4 spaces (including switch case bodies)
+- **Quotes:** Single quotes, template literals allowed
+- **Semicolons:** Required
+- **Curly braces:** Always required, even for single-line blocks (`curly: 'all'`)
+- **Line endings:** LF (see `.editorconfig`)
+- **Trailing whitespace:** Trimmed in `.js` files
+- **Final newline:** Required in `.js` and `.md` files
+- **Keyword spacing:** Space before and after keywords (`if`, `else`, `for`, etc.)
+- **Infix operators:** Spaces around operators (`a + b`, not `a+b`)
+- **No multi-spaces:** Only single spaces between tokens
+- **No Prettier:** Formatting is handled by ESLint rules only
 
-### Naming conventions
+### Imports
 
-- Functions and variables: `camelCase`
-- Constructors / module factory functions: `PascalCase`
-- Constants: `UPPER_SNAKE_CASE`
-- Factory names: set `MyModule.__dashjs_factory_name = 'MyModule'` (must match export name)
+- ES module `import`/`export` syntax exclusively
+- Always include `.js` extension in import paths: `import Foo from './Foo.js'`
+- Relative paths for internal imports
+- Group order: external dependencies first, then internal modules
+- Default exports are the norm; named exports are rare
 
-### Factory pattern (FactoryMaker)
+### Architecture Pattern — FactoryMaker
 
-Most modules follow the FactoryMaker pattern (`src/core/FactoryMaker.js`):
+Most modules use the **factory function pattern**, not ES classes:
 
 ```js
-function MyModule(config) {
+function MyController() {
     const context = this.context;
-    let instance;
-    // ... private functions ...
-    instance = { publicMethod };
+    let instance, logger, someState;
+
+    function setup() { /* init logic, called at bottom of factory */ }
+    function _privateMethod() { /* underscore prefix */ }
+    function publicMethod() { /* no prefix */ }
+    function reset() { /* cleanup on teardown */ }
+
+    instance = { publicMethod, reset };
+    setup();
     return instance;
 }
-MyModule.__dashjs_factory_name = 'MyModule';
-export default FactoryMaker.getSingletonFactory(MyModule);   // singleton
-// or: FactoryMaker.getClassFactory(MyModule);                // class (multiple instances)
+MyController.__dashjs_factory_name = 'MyController';
+export default FactoryMaker.getSingletonFactory(MyController);
 ```
 
-When adding new modules, follow the pattern in nearby files. The `__dashjs_factory_name`
-string must match the exported symbol name exactly.
+Key conventions:
+- **Singletons** (`getSingletonFactory`): one instance per context (controllers, models)
+- **Class factories** (`getClassFactory`): new instance each call (value objects, processors)
+- **`__dashjs_factory_name`**: required static property for registration, matches the function name
+- **`setup()`**: called at the bottom of the factory function for initialization
+- **`reset()`**: cleanup method, should restore initial state
+- **`setConfig(config)`**: dependency injection method, receives an object with dependencies
+- **`instance` object**: the public API; only methods listed here are public
 
-### Error handling and logging
+### Value Objects
 
-- Use `Debug` logger, never `console.*`:
-  ```js
-  const logger = Debug(context).getInstance().getLogger(instance);
-  logger.warn('Something went wrong');  // .fatal, .error, .warn, .info, .debug
-  ```
-- Use `ErrorHandler` (`src/streaming/utils/ErrorHandler.js`) to dispatch errors via
-  the EventBus when appropriate.
-- Catch blocks should log warnings/errors — never swallow exceptions silently.
+Simple data classes in `src/*/vo/` use ES class syntax with constructor assignments
+and `export default ClassName`. See `src/streaming/vo/DashJSError.js` for an example.
 
-### Types
+### Naming Conventions
 
-- Runtime code is JavaScript. TypeScript is used **only** for `index.d.ts` declarations.
-- `tsconfig.json` enables `strict` + `noImplicitAny`. Keep type declarations aligned
-  with runtime behavior when modifying `index.d.ts`.
+- **Files:** PascalCase for classes/factories (`AbrController.js`, `MediaPlayer.js`)
+- **Private methods:** `_underscore` prefix (`_onQualityChangeRendered`, `_commonOn`)
+- **Public methods:** camelCase, no prefix
+- **Constants:** UPPER_SNAKE_CASE for module-level constants; constant objects use PascalCase keys
+- **Events:** Class-based hierarchy extending `EventsBase`, string constant properties
+- **Loggers:** `logger = debug.getLogger(instance)` — use `logger.debug()`, `logger.info()`, `logger.warn()`, `logger.error()`
 
-### Tests
+### Error Handling
 
-- Unit test files: `test/unit/test/<module-path>/<dotted.name>.js`
-  (e.g. `streaming.controllers.BufferController.js`)
-- Tests import source directly from `src/` and mocks from `test/unit/mocks/`
-- Use `chai.expect` for assertions; `sinon` for stubs/spies
-- Functional tests: `test/functional/test/` with JSON configs in
-  `test/functional/config/test-configurations/`
+- Errors are dispatched via `EventBus` as error events, not thrown
+- Use `DashJSError` value objects (code + message + data)
+- Error codes are defined as constants in `src/core/errors/Errors.js` and `src/streaming/vo/metrics/PlayList.js`
+- Critical errors trigger `Events.ERROR`; check `error.code` to distinguish types
 
-## Licensing and headers
+### License Header
 
-New source files **must** include the BSD-3 license header. Copy from any existing
-`src/` file — it starts with `The copyright in this software is being made available
-under the BSD License...` and ends with `POSSIBILITY OF SUCH DAMAGE.`
+Every source file must include the BSD-3-Clause license header (approximately 30 lines)
+at the top of the file. See any existing source file for the exact text.
 
-Replace `YOUR_COMPANY_NAME_HERE` with the appropriate name per `CONTRIBUTING.md`.
+## Test Conventions
 
-## Repo rules and agent guidelines
+Tests follow this general pattern: import module + mocks, create `const context = {}`,
+instantiate singletons with `Module(context).getInstance()`, inject mocks via `setConfig()`,
+call `initialize()` in `beforeEach`, and call `reset()` in `afterEach`. Tests use nested
+`describe` blocks (one per method) and `it('Should ...', function () { ... })` blocks.
 
-- No Cursor rules (`.cursor/rules/` or `.cursorrules`) found.
-- No Copilot instructions (`.github/copilot-instructions.md`) found.
+- **Mocks:** Hand-written in `test/unit/mocks/`, each mirrors the real class API
+- **Helpers:** `test/unit/helpers/` — `ObjectsHelper`, `VOHelper`, `SpecHelper` create dummy objects
+- **Assertions:** Chai `expect` style preferred; `assert` also used
+- **Spying/stubbing:** Sinon (`sinon.spy()`, `sinon.stub()`)
+- **Context:** Each test suite creates `const context = {}` and instantiates singletons against it
+- **Cleanup:** Always call `reset()` on instances, settings, and eventBus in `afterEach`
+- **Test data:** Fixtures in `test/unit/data/` (XML manifests, subtitle files, etc.)
 
-### Practical workflow
+## Project Structure
 
-1. **Before committing:** run `npm run build` — it runs tests + lint as part of prebuild.
-2. **When changing runtime code:** add or update unit tests under `test/unit/test/`.
-3. **Quick validation:** run `npm test` then `npm run lint` separately for faster feedback.
-4. **Match existing style:** 4-space indent, single quotes, explicit `.js` imports,
-   FactoryMaker pattern, Debug logger.
+```
+src/
+├── core/          # EventBus, FactoryMaker, Settings, Debug, Utils, errors
+├── dash/          # DASH-specific: parser, adapter, manifest model, segment handling
+├── mss/           # Microsoft Smooth Streaming support
+├── offline/       # Offline playback / download support
+└── streaming/     # Core player: controllers, models, rules, protection (DRM), text, net
+test/
+├── unit/          # Unit tests (Karma + Mocha + Chai)
+│   ├── config/    # karma.unit.conf.cjs
+│   ├── data/      # Test fixtures (MPDs, subtitles)
+│   ├── helpers/   # ObjectsHelper, VOHelper, etc.
+│   ├── mocks/     # Hand-written mock classes
+│   └── test/      # Test files (mirrors src/ structure)
+└── functional/    # Functional/integration tests (real playback)
+build/webpack/     # Webpack configs (modern/legacy, dev/prod, UMD/ESM)
+```
+
+## CI and Contributing
+
+- PRs target the `development` branch (not `main`/`master`)
+- CI runs `npm run build` which executes: clean -> typecheck -> unit tests -> lint -> webpack
+- A pre-commit git hook runs `npm run lint` automatically
+- Functional tests run on LambdaTest/BrowserStack in CI for cross-browser validation
+- Always run `npm run build` before committing to catch test failures and lint errors
+- Include BSD-3-Clause header in new files; add/update unit tests for changes
