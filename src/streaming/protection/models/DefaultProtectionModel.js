@@ -49,6 +49,7 @@ import FactoryMaker from '../../../core/FactoryMaker.js';
 const SYSTEM_STRING_PRIORITY = {};
 SYSTEM_STRING_PRIORITY[ProtectionConstants.PLAYREADY_KEYSTEM_STRING] = [ProtectionConstants.PLAYREADY_KEYSTEM_STRING, ProtectionConstants.PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[ProtectionConstants.WIDEVINE_KEYSTEM_STRING] = [ProtectionConstants.WIDEVINE_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] = [ProtectionConstants.FAIRPLAY_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[ProtectionConstants.CLEARKEY_KEYSTEM_STRING] = [ProtectionConstants.CLEARKEY_KEYSTEM_STRING];
 
 function DefaultProtectionModel(config) {
@@ -309,8 +310,18 @@ function DefaultProtectionModel(config) {
         const mediaKeySession = mediaKeys.createSession(keySystemMetadata.sessionType);
         const sessionToken = _createSessionToken(mediaKeySession, keySystemMetadata);
 
-        // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
-        const dataType = keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) ? ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS : ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        // Determine the initDataType for generateRequest():
+        // - ClearKey with keys: use 'keyids'
+        // - FairPlay: use 'sinf'
+        // - All others: use 'cenc'
+        let dataType;
+        if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || (keySystemMetadata.protData && keySystemMetadata.protData.clearkeys))) {
+            dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_KEYIDS;
+        } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
+            dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
+        } else {
+            dataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        }
 
         mediaKeySession.generateRequest(dataType, keySystemMetadata.initData)
             .then(function () {
