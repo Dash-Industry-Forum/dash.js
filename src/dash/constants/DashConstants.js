@@ -103,6 +103,8 @@ export default {
     K: 'k',
     LA_URL: 'Laurl',
     LA_URL_LOWER_CASE: 'laurl',
+    CERT_URL: 'Certurl',
+    CERT_URL_LOWER_CASE: 'certurl',
     LABEL: 'Label',
     LANG: 'lang',
     LOCATION: 'Location',

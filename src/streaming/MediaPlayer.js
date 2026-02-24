@@ -74,6 +74,7 @@ import ThroughputController from './controllers/ThroughputController.js';
 import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
+import CertUrlUtils from './utils/CertUrlUtils.js';
 import VideoModel from './models/VideoModel.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import {checkParameterType} from './utils/SupervisorTools.js';
@@ -2050,13 +2051,15 @@ function MediaPlayer() {
      * @instance
      */
     function setProtectionData(value) {
-        protectionData = value;
-
+        const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
+        protectionData = sanitizedValue;
+        
         // Propagate changes in case StreamController is already created
         if (streamController) {
             streamController.setProtectionData(protectionData);
         }
     }
+
 
     /*
     ---------------------------------------------------------------------------
