@@ -651,7 +651,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
- * If 0, then seeking operations won't be used for fixing latency deviations.
+ * If a value less than zero is set (-1), then seeking operations won't be used for fixing latency deviations.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
