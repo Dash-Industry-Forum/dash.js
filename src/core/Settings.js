@@ -663,7 +663,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * 
  * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
  * 
- * The stop window is only applicable if a non-unity playback speed is in use. Again in In the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
  * 
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
