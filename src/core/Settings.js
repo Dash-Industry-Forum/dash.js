@@ -684,7 +684,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
  * @property {boolean} [liveThreshold=-1]
- * How far in seconds the client has to be behind the absolute target for the catchup controller to attempt catching up. Disabled by setting to -1
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
