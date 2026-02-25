@@ -284,5 +284,22 @@ describe('GapController', function () {
             expect(currentSettings.streaming.gaps.smallGapLimit).to.equal(2.0);
             expect(currentSettings.streaming.gaps.threshold).to.equal(0.5);
         });
+
+        it('should use default checkInterval of 250ms', function () {
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.gaps.checkInterval).to.equal(250);
+        });
+
+        it('should allow overriding checkInterval via settings', function () {
+            settings.update({
+                streaming: {
+                    gaps: {
+                        checkInterval: 100
+                    }
+                }
+            });
+            const currentSettings = settings.get();
+            expect(currentSettings.streaming.gaps.checkInterval).to.equal(100);
+        });
     });
 });

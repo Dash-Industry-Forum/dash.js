@@ -42,6 +42,7 @@ import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
 import CustomParametersModel from './models/CustomParametersModel.js';
 import DOMStorage from './utils/DOMStorage.js';
+import InitCache from './utils/InitCache.js';
 import DashAdapter from '../dash/DashAdapter.js';
 import DashConstants from '../dash/constants/DashConstants.js';
 import DashJSError from './vo/DashJSError.js';
@@ -73,11 +74,12 @@ import ThroughputController from './controllers/ThroughputController.js';
 import TimelineConverter from '../dash/utils/TimelineConverter.js';
 import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
+import CertUrlUtils from './utils/CertUrlUtils.js';
 import VideoModel from './models/VideoModel.js';
 import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
 import {checkParameterType} from './utils/SupervisorTools.js';
 import {getVersionString} from '../core/Version.js';
-import { Cta608Parser } from '@svta/cml-608';
+import {Cta608Parser} from '@svta/cml-608';
 
 /**
  * The media types
@@ -561,6 +563,16 @@ function MediaPlayer() {
      */
     function getDebug() {
         return debug;
+    }
+
+    /**
+     * Returns the InitCache instance for debugging/testing purposes.
+     * @returns {object} InitCache instance
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function getInitCache() {
+        return InitCache(context).getInstance();
     }
 
     /*
@@ -1647,6 +1659,8 @@ function MediaPlayer() {
     }
 
     /**
+     * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+     * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
      * @param {MediaType} type
      * @param {string} streamId
      * @returns {Array}
@@ -1655,11 +1669,29 @@ function MediaPlayer() {
      * @instance
      */
     function getRepresentationsByType(type, streamId = null) {
+        return _getRepresentations(type, streamId, true);
+    }
+
+    /**
+     * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+     * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
+     * @param {MediaType} type
+     * @param {string} streamId
+     * @returns {Array}
+     * @memberof module:MediaPlayer
+     * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @instance
+     */
+    function getRepresentationsByTypeUnfiltered(type, streamId = null) {
+        return _getRepresentations(type, streamId, false);
+    }
+
+    function _getRepresentations(type, streamId, filterBySettings = true) {
         if (!streamingInitialized) {
             throw STREAMING_NOT_INITIALIZED_ERROR;
         }
         let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
-        return stream ? stream.getRepresentationsByType(type) : [];
+        return stream ? stream.getRepresentationsByType(type, filterBySettings) : [];
     }
 
     /**
@@ -2019,13 +2051,15 @@ function MediaPlayer() {
      * @instance
      */
     function setProtectionData(value) {
-        protectionData = value;
-
+        const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
+        protectionData = sanitizedValue;
+        
         // Propagate changes in case StreamController is already created
         if (streamController) {
             streamController.setProtectionData(protectionData);
         }
     }
+
 
     /*
     ---------------------------------------------------------------------------
@@ -2860,6 +2894,7 @@ function MediaPlayer() {
         getDashAdapter,
         getDashMetrics,
         getDebug,
+        getInitCache,
         getDvrSeekOffset,
         getDvrWindow,
         getExternalSubtitles,
@@ -2871,6 +2906,7 @@ function MediaPlayer() {
         getProtectionController,
         getRawThroughputData,
         getRepresentationsByType,
+        getRepresentationsByTypeUnfiltered,
         getSafeAverageThroughput,
         getSettings,
         getSource,

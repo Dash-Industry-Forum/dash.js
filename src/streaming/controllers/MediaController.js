@@ -666,13 +666,13 @@ function MediaController() {
         return trackArr;
     }
 
-    function _getTracksWithPartialIdrSegments(trackArr) {
+    function _getL3DBootstrapTracks(trackArr) {
         return trackArr.filter((track) => {
             if (!track.segmentSequenceProperties || track.segmentSequenceProperties.length === 0) {
                 return false;
             }
             return track.segmentSequenceProperties.some((ssp) => {
-                return ssp.cadence === 1 && (ssp.sapType === 0 || ssp.sapType === 1);
+                return ssp.isBootstrapConfiguration();
             })
         });
     }
@@ -926,7 +926,7 @@ function MediaController() {
     }
 
     function _trackSelectionModeLowestStartupDelay(tracks) {
-        let tmpArr = _getTracksWithPartialIdrSegments(tracks);
+        let tmpArr = _getL3DBootstrapTracks(tracks);
         const targetTracks = tmpArr.length > 0 ? tmpArr : tracks;
 
         return _trackSelectionModeHighestEfficiency(targetTracks);

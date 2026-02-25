@@ -69,7 +69,6 @@ function TextSourceBuffer(config) {
         initializationSegmentReceived,
         timescale,
         fragmentedTracks,
-        firstFragmentedSubtitleStart,
         currFragmentedTrackIdx,
         embeddedTracks,
         embeddedTimescale,
@@ -93,7 +92,6 @@ function TextSourceBuffer(config) {
         fragmentModel = null;
         timescale = NaN;
         fragmentedTracks = [];
-        firstFragmentedSubtitleStart = null;
         initializationSegmentReceived = false;
     }
 
@@ -292,9 +290,6 @@ function TextSourceBuffer(config) {
             }
             samplesInfo = boxParser.getSamplesInfo(bytes);
             sampleList = samplesInfo.sampleList;
-            if (sampleList.length > 0) {
-                firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
-            }
 
             if (codecType.search(Constants.STPP) >= 0) {
                 _appendFragmentedSttp(bytes, sampleList, codecType);
@@ -350,7 +345,6 @@ function TextSourceBuffer(config) {
         const captionArray = [];
         for (i = 0; i < sampleList.length; i++) {
             const sample = sampleList[i];
-            sample.cts -= firstFragmentedSubtitleStart;
             const timestampOffset = _getTimestampOffset();
             const start = timestampOffset + sample.cts / timescale;
             const end = start + sample.duration / timescale;
@@ -633,18 +627,18 @@ function TextSourceBuffer(config) {
     }
 
     instance = {
-        initialize,
-        addMediaInfos,
-        resetMediaInfos,
-        getStreamId,
-        append,
         abort,
         addEmbeddedTrack,
-        resetEmbedded,
+        addMediaInfos,
+        append,
         getConfig,
-        setCurrentFragmentedTrackIdx,
+        getStreamId,
+        initialize,
         remove,
-        reset
+        reset,
+        resetEmbedded,
+        resetMediaInfos,
+        setCurrentFragmentedTrackIdx,
     };
 
     setup();

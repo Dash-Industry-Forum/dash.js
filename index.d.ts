@@ -725,6 +725,11 @@ export class CMCDParameters extends DescriptorType {
     version: number;
 }
 
+export interface CertUrlDescriptor {
+    url: string;
+    certType: string | null;
+}
+
 export class ContentProtection extends DescriptorType {
     cencDefaultKid: any;
     keyId: any;
@@ -734,6 +739,7 @@ export class ContentProtection extends DescriptorType {
     ref: any;
     refId: any;
     robustness: any;
+    certUrls: CertUrlDescriptor[];
 
     init(data: any): void;
 
@@ -868,6 +874,7 @@ export interface IContentProtection {
     "cenc:default_KID"?: string;
     value?: string;
     pssh?: IPssh | IPssh[];
+    certUrls?: CertUrlDescriptor[];
 }
 
 export interface IPssh {
@@ -1669,6 +1676,7 @@ export class MediaPlayerSettingClass {
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
         cacheInitSegments?: boolean,
+        cacheInitSegmentsLimit?: number,
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
@@ -1707,6 +1715,7 @@ export class MediaPlayerSettingClass {
             ignoreEmeEncryptedEvent?: boolean,
             detectPlayreadyMessageFormat?: boolean,
             ignoreKeyStatuses?: boolean,
+            certificateRetryAttempts?: number,
         },
         buffer?: {
             enableSeekDecorrelationFix?: boolean,
@@ -1850,6 +1859,7 @@ export class MediaPlayerSettingClass {
         abr?: {
             limitBitrateByPortal?: boolean;
             usePixelRatioInLimitBitrateByPortal?: boolean;
+            limitBitrateByPortalMinimum?: number,
             enableSupplementalPropertyAdaptationSetSwitching?: boolean,
             rules?: {
                 throughputRule?: {
@@ -2034,6 +2044,8 @@ export interface MediaPlayerClass {
 
     on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
 
+    on(type: NewTrackSelectedEvent['type'], listener: (e: NewTrackSelectedEvent) => void, scope?: object): void;
+
     on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
 
     on(type: OfflineRecordLoadedmetadataEvent['type'], listener: (e: OfflineRecordLoadedmetadataEvent) => void, scope?: object): void;
@@ -2065,6 +2077,8 @@ export interface MediaPlayerClass {
     on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
 
     on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
+
+    on(type: TrackChangeRenderedEvent['type'], listener: (e: TrackChangeRenderedEvent) => void, scope?: object): void;
 
     on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
 
@@ -2165,6 +2179,8 @@ export interface MediaPlayerClass {
     getRawThroughputData(type: MediaType): ThroughputDictValue[];
 
     getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
+
+    getRepresentationsByTypeUnfiltered(type: MediaType, streamId?: string | null): Representation[];
 
     getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
@@ -2435,6 +2451,7 @@ export interface MediaPlayerEvents {
     TRACK_CHANGE_RENDERED: 'trackChangeRendered';
     QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
     QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
+    NEW_TRACK_SELECTED: 'newTrackSelected';
     STREAM_ACTIVATED: 'streamActivated'
     STREAM_DEACTIVATED: 'streamDeactivated';
     STREAM_INITIALIZED: 'streamInitialized';
@@ -2765,6 +2782,11 @@ export interface TrackChangeRenderedEvent extends MediaPlayerEvent {
     newMediaInfo: MediaInfo;
     oldMediaInfo: MediaInfo;
     type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
+}
+
+export interface NewTrackSelectedEvent extends MediaPlayerEvent {
+    value: MediaInfo;
+    type: MediaPlayerEvents['NEW_TRACK_SELECTED'];
 }
 
 export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
@@ -4668,6 +4690,9 @@ export interface ProtectionData {
 
     /** Priority level of the key system to be selected (0 is the highest prority, -1 for undefined priority) */
     priority?: number;
+
+    /** Optional certificate URLs; entries may be raw strings or manifest-parsed objects */
+    certUrls?: Array<string | CertUrlDescriptor | { __text?: string; '@certType'?: string; certType?: string; url?: string }>;
 }
 
 export interface SessionToken {
@@ -6025,5 +6050,4 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
-
 

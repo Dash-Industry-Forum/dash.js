@@ -10,7 +10,7 @@ import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
 import DebugMock from '../../mocks/DebugMock.js';
 
 import {expect} from 'chai';
-import sinon from 'sinon';
+import {fakeXhr} from 'nise';
 
 const context = {};
 let webmSegmentBaseLoader;
@@ -19,7 +19,7 @@ const eventBus = EventBus(context).getInstance();
 describe('WebmSegmentBaseLoader', function () {
     beforeEach(function () {
 
-        XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
         this.requests = [];
         XMLHttpRequest.onCreate = function (xhr) {

@@ -3,11 +3,11 @@ import StreamMock from './StreamMock.js';
 class StreamControllerMock {
 
     constructor() {
+        this.streamId = 'DUMMY_STREAM-01';
+        this.activeStream = new StreamMock();
     }
 
     setup() {
-        this.streamId = 'DUMMY_STREAM-01';
-        this.activeStream = new StreamMock();
     }
 
     initialize(streams) {
@@ -63,12 +63,7 @@ class StreamControllerMock {
     }
 
     getStreamById() {
-        return {
-            id: this.streamId,
-            getBitrateListFor: function () {
-                return [1, 2];
-            }
-        };
+        return this.activeStream;
     }
 
     load() {

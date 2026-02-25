@@ -9,14 +9,14 @@ const context = {};
 const eventBus = EventBus(context).getInstance();
 const errHandlerMock = new ErrorHandlerMock();
 
-import sinon from 'sinon';
+import {fakeXhr} from 'nise';
 
 describe('TimeSyncController', function () {
     let timeSyncController;
     let settings = Settings(context).getInstance();
 
     beforeEach(function () {
-        window.XMLHttpRequest = sinon.useFakeXMLHttpRequest();
+        window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
         this.requests = [];
         window.XMLHttpRequest.onCreate = function (xhr) {

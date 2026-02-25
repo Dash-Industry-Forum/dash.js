@@ -37,6 +37,7 @@ import DashJSError from '../../vo/DashJSError.js';
 import LicenseRequest from '../vo/LicenseRequest.js';
 import LicenseResponse from '../vo/LicenseResponse.js';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
+import CertUrlUtils from '../../utils/CertUrlUtils.js';
 import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -48,6 +49,8 @@ const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 const LICENSE_SERVER_REQUEST_RETRIES = 3;
 const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
 const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+const CERTIFICATE_REQUEST_RETRY_INTERVAL = 500;
+const CERTIFICATE_REQUEST_DEFAULT_TIMEOUT = 8000;
 
 /**
  * @module ProtectionController
@@ -90,7 +93,8 @@ function ProtectionController(config) {
         pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
-        sessionType;
+        sessionType,
+        certificateCache;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -101,6 +105,7 @@ function ProtectionController(config) {
         licenseXhrRequest = null;
         licenseRequestRetryTimeout = null;
         keyStatusMap = new Map();
+        certificateCache = new Map();
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
     }
 
@@ -239,10 +244,195 @@ function ProtectionController(config) {
                 protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
             }
 
+            // If no explicit serverCertificate provided, attempt auto certificate acquisition via Certurl
+            _acquireCertificateFromManifest();
+
             _handlePendingMediaTypes();
         } catch (e) {
             logger.error(e);
         }
+    }
+
+    /**
+     * Attempt to acquire and set a server certificate using Certurl entries from the manifest
+     * Only runs if no certificate already applied via protData
+     * @private
+     */
+    function _acquireCertificateFromManifest() {
+        if (!selectedKeySystem) { 
+            return; 
+        }
+        const ksString = selectedKeySystem.systemString;
+        const cacheEntry = certificateCache.get(ksString);
+        if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) { 
+            return; 
+        }
+        // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
+        const certCandidates = _collectCertificateUrlsForSelectedKeySystem();
+        if (!certCandidates.length) { 
+            return; 
+        }
+        logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
+        const protData = _getProtDataForKeySystem(selectedKeySystem) || {};
+        const entry = cacheEntry || { applied: false, inProgress: true, attempts: 0 };
+        entry.inProgress = true;
+        certificateCache.set(ksString, entry);
+        _fetchAndApplyCertificateSequentially(certCandidates, 0, protData, ksString, entry);
+    }
+
+    /**
+     * Collect certificate URL objects for the selected key system from mediaInfo content protection data
+     * @param {string|null} preferredType
+     * @return {Array<{url:string, certType:string|null}>}
+     * @private
+     */
+    function _collectCertificateUrlsForSelectedKeySystem() {
+        const urls = [];
+        // 1. API-provided certUrls (protData) take priority
+        const protData = _getProtDataForKeySystem(selectedKeySystem);
+        if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
+            protData.certUrls.forEach(c => { urls.push(c); });
+        }
+        // 2. Manifest-provided certUrls
+        mediaInfoArr.forEach(mediaInfo => {
+            if (!mediaInfo || !mediaInfo.contentProtection) { return; }
+            mediaInfo.contentProtection.forEach(contentProtection => {
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
+                    contentProtection.certUrls.forEach(c => { urls.push(c); });
+                }
+            });
+        });
+        return CertUrlUtils.dedupeCertUrls(urls);
+    }
+
+    /**
+     * Sequentially try to download and apply a certificate from the candidates list.
+     * @param {Array<{url:string, certType:string|null}>} candidates
+     * @param {number} index
+     * @param {object} protData
+     * @param {string} ksString
+     * @param {object} cacheEntry
+     * @private
+     */
+    function _fetchAndApplyCertificateSequentially(candidates, index, protData, ksString, cacheEntry) {
+        if (index >= candidates.length) {
+            cacheEntry.inProgress = false;
+            cacheEntry.error = cacheEntry.error || 'All certificate candidates failed';
+            logger.warn('DRM: All certificate candidates failed for ' + ksString + '.');
+            return;
+        }
+        const candidate = candidates[index];
+        const retryAttempts = settings.get().streaming.protection.certificateRetryAttempts;
+        logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
+
+        _sendCertificateRequest(candidate.url, null, protData, retryAttempts, 'GET')
+            .then((arrayBuffer) => {
+                if (!arrayBuffer || !arrayBuffer.byteLength) {
+                    throw new Error('Empty certificate response');
+                }
+                cacheEntry.urlUsed = candidate.url;
+                cacheEntry.buffer = arrayBuffer;
+                return _applyServerCertificate(arrayBuffer, ksString, cacheEntry);
+            })
+            .then((applied) => {
+                if (applied) {
+                    cacheEntry.applied = true;
+                    cacheEntry.inProgress = false;
+                    const appliedCandidate = candidates[index];
+                    const appliedTypeSuffix = appliedCandidate && appliedCandidate.certType ? (' certType=' + appliedCandidate.certType) : '';
+                    logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + appliedTypeSuffix + ' for ' + ksString + '.');
+                } else {
+                    throw new Error('CDM rejected certificate');
+                }
+            })
+            .catch((err) => {
+                cacheEntry.attempts++;
+                cacheEntry.lastError = err && err.message ? err.message : err;
+                logger.warn('DRM: Certificate attempt failed (' + candidate.url + '): ' + cacheEntry.lastError);
+                // Try next candidate
+                _fetchAndApplyCertificateSequentially(candidates, index + 1, protData, ksString, cacheEntry);
+            });
+    }
+
+    /**
+     * Download a certificate binary with retries.
+     * @param {string} url
+     * @param {object} protData
+     * @param {number} retries
+     * @return {Promise<ArrayBuffer>}
+     * @private
+     */
+    function _sendCertificateRequest(url, body, protData, retries, method, contentType) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(method || 'GET', url, true);
+            xhr.responseType = 'arraybuffer';
+            const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
+            if (timeout > 0) { xhr.timeout = timeout; }
+            let withCredentials = false;
+            if (protData && typeof protData.withCredentials === 'boolean') { withCredentials = protData.withCredentials; }
+            xhr.withCredentials = withCredentials;
+            if (contentType) {
+                xhr.setRequestHeader('Content-Type', contentType);
+            }
+            if (protData && protData.httpRequestHeaders) {
+                Object.keys(protData.httpRequestHeaders).forEach(h => {
+                    xhr.setRequestHeader(h, protData.httpRequestHeaders[h]);
+                });
+            }
+            const attemptFail = (reason) => {
+                if (retries > 0) {
+                    const remaining = retries - 1;
+                    logger.debug('DRM: Certificate request failed (' + reason + '). Retrying... remaining=' + remaining);
+                    setTimeout(() => {
+                        _sendCertificateRequest(url, body, protData, remaining, method, contentType).then(resolve).catch(reject);
+                    }, CERTIFICATE_REQUEST_RETRY_INTERVAL);
+                } else {
+                    reject(new Error(reason));
+                }
+            };
+            xhr.onload = function () {
+                if (this.status >= 200 && this.status <= 299) {
+                    resolve(this.response);
+                } else {
+                    attemptFail('HTTP ' + this.status);
+                }
+            };
+            xhr.onerror = function () { attemptFail('network error'); };
+            xhr.ontimeout = function () { attemptFail('timeout'); };
+            xhr.onabort = function () { attemptFail('aborted'); };
+            try { xhr.send(body || null); } catch (e) { reject(e); }
+        });
+    }
+
+    /**
+     * Apply the certificate to the CDM; supports both sync and promise-returning implementations.
+     * @param {ArrayBuffer} buffer
+     * @param {string} ksString
+     * @param {object} cacheEntry
+     * @return {Promise<boolean>}
+     * @private
+     */
+    function _applyServerCertificate(buffer, ksString, cacheEntry) {
+        return new Promise((resolve, reject) => {
+            try {
+                const result = protectionModel.setServerCertificate(buffer);
+                if (result && typeof result.then === 'function') {
+                    result.then((val) => {
+                        resolve(typeof val === 'boolean' ? val : true);
+                    }).catch((e) => {
+                        cacheEntry.error = e && e.message ? e.message : e;
+                        reject(e);
+                    });
+                } else {
+                    resolve(true);
+                }
+            } catch (e) {
+                cacheEntry.error = e && e.message ? e.message : e;
+                logger.warn('DRM: setServerCertificate threw for ' + ksString + ': ' + cacheEntry.error);
+                reject(e);
+            }
+        });
     }
 
     /**

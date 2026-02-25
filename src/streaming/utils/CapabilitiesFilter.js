@@ -79,7 +79,7 @@ function CapabilitiesFilter() {
 
                     _removeMultiRepresentationPreselections(manifest);
                     _removePreselectionWithNoAdaptationSet(manifest);
-                    
+
                     return _applyCustomFilters(manifest);
                 })
                 .then(() => {
@@ -245,6 +245,7 @@ function CapabilitiesFilter() {
     }
 
     /* Build the configuration object for capability requests based on primary element (Representation or Preselection) */
+
     /* In case Preselection elements are present, attributes of this element override their counterparts from the Representation element */
     function _createConfiguration(type, primaryElement, codec, prslCommonRepresentation) {
         let config = null;
@@ -305,12 +306,12 @@ function CapabilitiesFilter() {
 
             if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
                 let prslCommonRepresentationHDRColorimetryConfig = _convertHDRColorimetryToConfig(prslCommonRep);
-                
+
                 // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
                 let isCommonRepCfgSupported = prslCommonRepresentationHDRColorimetryConfig.isSupported;
                 delete prslCommonRepresentationHDRColorimetryConfig.isSupported;
                 config.isSupported = config.isSupported && isCommonRepCfgSupported;
-                
+
                 // asign only those attributes that are not present in config
                 _assignMissing(config, prslCommonRepresentationHDRColorimetryConfig);
             }
@@ -322,7 +323,7 @@ function CapabilitiesFilter() {
 
             if (primaryElement.tagName === DashConstants.PRESELECTION && prslCommonRep) {
                 let prslCommonRepresentationHDRMetadataFormatConfig = _convertHDRMetadataFormatToConfig(prslCommonRep);
-                
+
                 // if either the properties of the Preselection or the CommonRepresentation is not supported, we can't mark the config as supported.
                 let isCommonRepCfgSupported = prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
                 delete prslCommonRepresentationHDRMetadataFormatConfig.isSupported;
@@ -473,6 +474,7 @@ function CapabilitiesFilter() {
                 const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
 
                 if (!doesSupportEssentialProperties) {
+                    logger.warn(`[CapabilitiesFilter] removed AdaptationSet (id: ${as.id}) with unsupported EssentialProperty`);
                     return false;
                 }
 
@@ -481,7 +483,11 @@ function CapabilitiesFilter() {
                     return _doesSupportEssentialProperties(essentialProperties);
                 });
 
-                return as.Representation && as.Representation.length > 0;
+                const isSupported = as.Representation && as.Representation.length > 0;
+                if (!isSupported) {
+                    logger.warn(`[CapabilitiesFilter] removed AdaptationSet (id: ${as.id}) with unsupported EssentialProperty on all Representations`);
+                }
+                return isSupported;
             });
 
             if (period.Preselection && period.Preselection.length) {
@@ -544,8 +550,12 @@ function CapabilitiesFilter() {
             if (period.Preselection) {
                 period.Preselection = period.Preselection.filter((prsl) => {
                     const prslComponents = String(prsl.preselectionComponents).split(' ');
-                    const adaptationSetIds = period.AdaptationSet.map(as => {return as.id});
-                    return prslComponents.every(c => {return adaptationSetIds.includes(c)});
+                    const adaptationSetIds = period.AdaptationSet.map(as => {
+                        return as.id
+                    });
+                    return prslComponents.every(c => {
+                        return adaptationSetIds.includes(c)
+                    });
                 });
             }
         });

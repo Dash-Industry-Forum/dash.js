@@ -296,7 +296,6 @@ function ProtectionModel_01b(config) {
     }
 
     function setServerCertificate(/*serverCertificate*/) { /* Not supported */
-        return Promise.resolve();
     }
 
     function loadKeySession(/*ksInfo*/) { /* Not supported */

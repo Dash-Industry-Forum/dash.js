@@ -1,9 +1,8 @@
 const fs = require('fs');
-const yargs = require('yargs/yargs');
-const { hideBin } = require('yargs/helpers');
-const path = require('path');
 
-module.exports = function (config) {
+module.exports = async function (config) {
+    const { default: yargs } = await import('yargs/yargs');
+    const { hideBin } = await import('yargs/helpers');
 
     const argv = yargs(hideBin(process.argv)).parse()
     // Find the settings JSON object in the command arguments
@@ -40,7 +39,7 @@ module.exports = function (config) {
         frameworks: ['mocha', 'chai', 'webpack'],
 
         plugins: [
-            'karma-*',  // default plugins
+            'karma-*', // default plugins
             '@*/karma-*', // default scoped plugins
             require('./launchers/karma-webos-launcher.cjs'),
             require('./launchers/karma-tizen-launcher.cjs')
