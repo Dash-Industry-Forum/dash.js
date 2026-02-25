@@ -754,10 +754,8 @@ function BufferController(config) {
     }
 
     function _onPlaybackProgression() {
-        if (!replacingBuffer) {
-            if (type !== Constants.TEXT || textController.isTextEnabled()) {
-                _updateBufferLevel();
-            }
+        if (!replacingBuffer && (type !== Constants.TEXT || textController.isTextEnabled())) {
+            _updateBufferLevel();
         }
     }
 
