@@ -38,6 +38,7 @@ import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
+import ObjectUtils from '../utils/ObjectUtils.js';
 
 function MediaController() {
 
@@ -368,15 +369,17 @@ function MediaController() {
             return false;
         }
 
+        let objectUtils = ObjectUtils(context).getInstance();
+
         const sameId = t1.id === t2.id;
-        const sameViewpoint = JSON.stringify(t1.viewpoint) === JSON.stringify(t2.viewpoint);
+        const sameViewpoint = objectUtils.areEqual(t1.viewpoint, t2.viewpoint);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
-        const sameRoles = JSON.stringify(t1.roles) === JSON.stringify(t2.roles);
-        const sameAccessibility = JSON.stringify(t1.accessibility) === JSON.stringify(t2.accessibility);
-        const sameAudioChannelConfiguration = JSON.stringify(t1.audioChannelConfiguration) === JSON.stringify(t2.audioChannelConfiguration);
-        const sameSupplementalProps = JSON.stringify(t1.supplementalProperties) === JSON.stringify(t2.supplementalProperties);
-        const sameEssentialProps = JSON.stringify(t1.essentialProperties) === JSON.stringify(t2.essentialProperties);
+        const sameRoles = objectUtils.areEqual(t1.roles, t2.roles);
+        const sameAccessibility = objectUtils.areEqual(t1.accessibility, t2.accessibility);
+        const sameAudioChannelConfiguration = objectUtils.areEqual(t1.audioChannelConfiguration, t2.audioChannelConfiguration);
+        const sameSupplementalProps = objectUtils.areEqual(t1.supplementalProperties, t2.supplementalProperties);
+        const sameEssentialProps = objectUtils.areEqual(t1.essentialProperties, t2.essentialProperties);
 
         return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps);
     }
