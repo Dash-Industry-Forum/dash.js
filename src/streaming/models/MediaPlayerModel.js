@@ -42,6 +42,11 @@ const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
 
+const CATCHUP_STEP_TUNING_MIN_LIMIT = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MAX = 1;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX = 1;
 
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
@@ -124,11 +129,40 @@ function MediaPlayerModel() {
     };
 
     /**
+     * Checks the supplied min value for the step algorithm is a valid value and within supported limits
+     * @param {number} value - Supplied min value (seconds)
+     * @param {boolean} log - whether to shown warning or not 
+     * @returns {number} corrected min playback rate
+    */
+    function _checkStepSettings(value, log) {
+        if (isNaN(value)) {
+            return 0;
+        }
+
+        if (value < 0) {
+            if (log) {
+                logger.warn(`Supplied step algorithm value is a negative value when it should be positive or 0. The supplied value will not be applied and set to 0.`)
+            }
+            return 0;
+        }
+
+        if (value < CATCHUP_STEP_TUNING_MIN_LIMIT) {
+            if (log) {
+                logger.warn(`Supplied step algorithm value is out of range and will be limited to ${CATCHUP_STEP_TUNING_MIN_LIMIT}`);
+            }
+            return CATCHUP_STEP_TUNING_MIN_LIMIT;
+        }
+
+        return value;
+    };
+
+    /**
      * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
      * @return {number}
      */
     function getCatchupMaxDrift() {
-        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift >= 0) {
+
+        if (!isNaN(settings.get().streaming.liveCatchup.maxDrift)) {
             return settings.get().streaming.liveCatchup.maxDrift;
         }
 
@@ -167,6 +201,40 @@ function MediaPlayerModel() {
         return {
             min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
             max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+        }
+    }
+
+    /**
+     * Returns the tuning parameters to be used when applying the catchup mode "step"
+     * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
+     * @return {number}
+     */
+    function getCatchupStepSettings(log) {
+
+        const settingsStep = settings.get().streaming.liveCatchup.step;
+
+        if (!isNaN(settingsStep.start.min) || !isNaN(settingsStep.start.max) || !isNaN(settingsStep.stop.min) || !isNaN(settingsStep.stop.max)) {
+            return {
+                start: {
+                    min: _checkStepSettings(settingsStep.start.min, log),
+                    max: _checkStepSettings(settingsStep.start.max, log),
+                },
+                stop: {
+                    min: _checkStepSettings(settingsStep.stop.min, log),
+                    max: _checkStepSettings(settingsStep.stop.max, log),
+                }
+            }
+        }
+
+        return {
+            start: {
+                min: DEFAULT_CATCHUP_STEP_TUNING_START_MIN,
+                max: DEFAULT_CATCHUP_STEP_TUNING_START_MAX
+            },
+            stop: {
+                min: DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN,
+                max: DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX
+            }
         }
     }
 
@@ -286,6 +354,7 @@ function MediaPlayerModel() {
         getCatchupMaxDrift,
         getCatchupModeEnabled,
         getCatchupPlaybackRates,
+        getCatchupStepSettings,
         getFastSwitchEnabled,
         getInitialBufferLevel,
         getRetryAttemptsForType,

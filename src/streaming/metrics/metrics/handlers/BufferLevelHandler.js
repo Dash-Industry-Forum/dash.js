@@ -95,14 +95,19 @@ function BufferLevelHandler(config) {
 
     function handleNewMetric(metric, vo, type) {
         if (metric === metricsConstants.BUFFER_LEVEL) {
-            storedVOs[type] = vo;
+            if (vo.level < 0) {
+                delete storedVOs[type]
+            }
+            else {
+                storedVOs[type] = vo;
+            }
         }
     }
 
     instance = {
-        initialize:         initialize,
-        reset:              reset,
-        handleNewMetric:    handleNewMetric
+        initialize: initialize,
+        reset: reset,
+        handleNewMetric: handleNewMetric
     };
 
     return instance;
