@@ -166,6 +166,42 @@ describe('MediaController', function () {
             let equal = mediaController.areTracksEqual(track1, track2);
             expect(equal).to.be.true;
         });
+        
+        it('should return true if tracks contain the same properties', function () {
+
+            let track1 = {
+                id: 'id',
+                supplementalProperties: [
+                    { schemeIdUri: 'urn:test:scheme:1', value: '2' }, 
+                    { schemeIdUri: 'urn:test:scheme:2', value: 'ABC' }
+                ]
+            };
+
+            let track2 = {
+                id: 'id',
+                supplementalProperties: [
+                    { schemeIdUri: 'urn:test:scheme:1', value: '2' },
+                    { schemeIdUri: 'urn:test:scheme:2', value: 'ABC' }
+                ]
+            };
+            let equal = mediaController.areTracksEqual(track1, track2);
+            expect(equal).to.be.true;
+        });
+        
+        it('should return false if tracks differ in properties', function () {
+
+            let track1 = {
+                id: 'id',
+                supplementalProperties: [{ schemeIdUri: 'urn:test:scheme:ABC', value: 'ABC' }]
+            };
+
+            let track2 = {
+                id: 'id',
+                supplementalProperties: [{ schemeIdUri: 'urn:test:scheme:ABC', value: 'ABC' }, { schemeIdUri: 'urn:test:scheme:1', value: '2' }]
+            };
+            let equal = mediaController.areTracksEqual(track1, track2);
+            expect(equal).to.be.false;
+        });
 
         it('should return false if track1 is undefined or null', function () {
 
