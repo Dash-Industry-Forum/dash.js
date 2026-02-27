@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2013, Dash Industry Forum.
+ * Copyright (c) 2026, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,25 +28,63 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 /**
- * @classdesc A media capability
- * @ignore
+ * Apple FairPlay Streaming DRM
+ *
+ * @class
+ * @implements MediaPlayer.dependencies.protection.KeySystem
  */
-class MediaCapability {
+
+import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import FactoryMaker from '../../../core/FactoryMaker.js';
+
+const uuid = ProtectionConstants.FAIRPLAY_UUID;
+const systemString = ProtectionConstants.FAIRPLAY_KEYSTEM_STRING;
+const schemeIdURI = 'urn:uuid:' + uuid;
+
+function KeySystemFairPlay() {
+
+    let instance;
+
     /**
-     * @param {string} contentType MIME type and codecs (RFC6386)
-     * @param {string} robustness
-     * @param {string} [encryptionScheme] encryption scheme (e.g. 'cenc', 'cbcs')
-     * @class
-     * @ignore
+     * FairPlay has no PSSH in the manifest. Init data comes from the encrypted event with sinf type.
      */
-    constructor(contentType, robustness, encryptionScheme) {
-        this.contentType = contentType;
-        this.robustness = robustness;
-        if (encryptionScheme) {
-            this.encryptionScheme = encryptionScheme;
-        }
+    function getInitData(/*cp*/) {
+        return null;
     }
+
+    function getRequestHeadersFromMessage( /*message*/ ) {
+        return {
+            'Content-Type': 'application/octet-stream'
+        };
+    }
+
+    function getLicenseRequestFromMessage(message) {
+        return new Uint8Array(message);
+    }
+
+    function getLicenseServerURLFromInitData( /*initData*/ ) {
+        return null;
+    }
+
+    function getCDMData(/*cdmData*/) {
+        return null;
+    }
+
+    instance = {
+        uuid,
+        schemeIdURI,
+        systemString,
+        getInitData,
+        getRequestHeadersFromMessage,
+        getLicenseRequestFromMessage,
+        getLicenseServerURLFromInitData,
+        getCDMData
+    };
+
+    return instance;
 }
 
-export default MediaCapability;
+KeySystemFairPlay.__dashjs_factory_name = 'KeySystemFairPlay';
+export default FactoryMaker.getSingletonFactory(KeySystemFairPlay);
