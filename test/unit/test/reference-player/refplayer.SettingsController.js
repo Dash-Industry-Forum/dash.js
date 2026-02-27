@@ -13,7 +13,7 @@
 
 import MediaPlayer from '../../../../src/streaming/MediaPlayer.js';
 import Settings from '../../../../src/core/Settings.js';
-import { SettingsController } from '../../../../samples/dash-if-reference-player/app/js/SettingsController.js';
+import { SettingsController } from '../../../../samples/dash-if-reference-player-new/app/js/SettingsController.js';
 
 import { expect } from 'chai';
 
@@ -114,7 +114,7 @@ describe('Reference Player - SettingsController', function () {
 
         // --- Selects / dropdowns ---
         createSelect('opt-log-level', ['0', '1', '2', '3', '4', '5'], '3');
-        createSelect('opt-catchup-mode', ['liveCatchupModeDefault', 'liveCatchupModeLoLP'], 'liveCatchupModeDefault');
+        createSelect('opt-catchup-mode', ['liveCatchupModeDefault', 'liveCatchupModeLoLP', 'liveCatchupModeStep'], 'liveCatchupModeDefault');
         createSelect('opt-cmcd-mode', ['query', 'header'], 'query');
 
         // --- Number / text inputs ---
@@ -132,6 +132,12 @@ describe('Reference Player - SettingsController', function () {
         createInput('opt-cmcd-rtp-safety', '5');
         createInput('opt-cmcd-enabled-keys', '');
         createInput('opt-cmsd-etp-weight', '0.5');
+        createInput('opt-catchup-max-drift', '');
+        createInput('opt-catchup-live-threshold', '');
+        createInput('opt-catchup-step-start-min', '');
+        createInput('opt-catchup-step-start-max', '');
+        createInput('opt-catchup-step-stop-min', '');
+        createInput('opt-catchup-step-stop-max', '');
 
         // --- Radio buttons ---
         createRadio('track-audio', 'opt-track-audio-replace', 'alwaysReplace', true);
@@ -593,6 +599,67 @@ describe('Reference Player - SettingsController', function () {
             s = setSelectAndApply('opt-catchup-mode', 'liveCatchupModeDefault');
             expect(s.streaming.liveCatchup.mode).to.equal('liveCatchupModeDefault');
         });
+
+        it('should apply streaming.liveCatchup.mode Step from dropdown', function () {
+            let s = setSelectAndApply('opt-catchup-mode', 'liveCatchupModeStep');
+            expect(s.streaming.liveCatchup.mode).to.equal('liveCatchupModeStep');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // Tests: Live Catchup numeric settings
+    // ---------------------------------------------------------------
+
+    describe('Live Catchup numeric settings', function () {
+
+        it('should apply streaming.liveCatchup.maxDrift', function () {
+            let s = setInputAndApply('opt-catchup-max-drift', '8');
+            expect(s.streaming.liveCatchup.maxDrift).to.equal(8);
+        });
+
+        it('should not set streaming.liveCatchup.maxDrift when input is empty', function () {
+            document.getElementById('opt-catchup-max-drift').value = '';
+            let s = applyConfig();
+            expect(isNaN(s.streaming.liveCatchup.maxDrift)).to.be.true;
+        });
+
+        it('should apply streaming.liveCatchup.liveThreshold', function () {
+            let s = setInputAndApply('opt-catchup-live-threshold', '5');
+            expect(s.streaming.liveCatchup.liveThreshold).to.equal(5);
+        });
+
+        it('should not set streaming.liveCatchup.liveThreshold when input is empty', function () {
+            document.getElementById('opt-catchup-live-threshold').value = '';
+            let s = applyConfig();
+            expect(s.streaming.liveCatchup.liveThreshold).to.equal(-1);
+        });
+
+        it('should apply streaming.liveCatchup.step.start.min and start.max', function () {
+            document.getElementById('opt-catchup-step-start-min').value = '0.2';
+            document.getElementById('opt-catchup-step-start-max').value = '1.5';
+            let s = applyConfig();
+            expect(s.streaming.liveCatchup.step.start.min).to.equal(0.2);
+            expect(s.streaming.liveCatchup.step.start.max).to.equal(1.5);
+        });
+
+        it('should apply streaming.liveCatchup.step.stop.min and stop.max', function () {
+            document.getElementById('opt-catchup-step-stop-min').value = '0.3';
+            document.getElementById('opt-catchup-step-stop-max').value = '1.2';
+            let s = applyConfig();
+            expect(s.streaming.liveCatchup.step.stop.min).to.equal(0.3);
+            expect(s.streaming.liveCatchup.step.stop.max).to.equal(1.2);
+        });
+
+        it('should not set streaming.liveCatchup.step when all step inputs are empty', function () {
+            document.getElementById('opt-catchup-step-start-min').value = '';
+            document.getElementById('opt-catchup-step-start-max').value = '';
+            document.getElementById('opt-catchup-step-stop-min').value = '';
+            document.getElementById('opt-catchup-step-stop-max').value = '';
+            let s = applyConfig();
+            // Step settings should remain at their defaults (NaN)
+            expect(isNaN(s.streaming.liveCatchup.step.start.min)).to.be.true;
+            expect(isNaN(s.streaming.liveCatchup.step.start.max)).to.be.true;
+        });
     });
 
     // ---------------------------------------------------------------
@@ -812,6 +879,44 @@ describe('Reference Player - SettingsController', function () {
             expect(el.value).to.equal(s.streaming.liveCatchup.mode);
         });
 
+        it('should sync catchup numeric inputs as empty when defaults are NaN', function () {
+            settingsController.init();
+
+            // maxDrift default is NaN, should sync as empty
+            expect(document.getElementById('opt-catchup-max-drift').value).to.equal('');
+            // liveThreshold default is -1, should sync as empty
+            expect(document.getElementById('opt-catchup-live-threshold').value).to.equal('');
+            // step defaults are NaN, should sync as empty
+            expect(document.getElementById('opt-catchup-step-start-min').value).to.equal('');
+            expect(document.getElementById('opt-catchup-step-start-max').value).to.equal('');
+            expect(document.getElementById('opt-catchup-step-stop-min').value).to.equal('');
+            expect(document.getElementById('opt-catchup-step-stop-max').value).to.equal('');
+        });
+
+        it('should sync catchup numeric inputs from non-default player settings on init', function () {
+            player.updateSettings({
+                streaming: {
+                    liveCatchup: {
+                        maxDrift: 8,
+                        liveThreshold: 5,
+                        step: {
+                            start: { min: 0.2, max: 1.5 },
+                            stop: { min: 0.3, max: 1.2 }
+                        }
+                    }
+                }
+            });
+
+            settingsController.init();
+
+            expect(document.getElementById('opt-catchup-max-drift').value).to.equal('8');
+            expect(document.getElementById('opt-catchup-live-threshold').value).to.equal('5');
+            expect(document.getElementById('opt-catchup-step-start-min').value).to.equal('0.2');
+            expect(document.getElementById('opt-catchup-step-start-max').value).to.equal('1.5');
+            expect(document.getElementById('opt-catchup-step-stop-min').value).to.equal('0.3');
+            expect(document.getElementById('opt-catchup-step-stop-max').value).to.equal('1.2');
+        });
+
         it('should sync track-audio radio from player defaults on init', function () {
             settingsController.init();
 
@@ -852,7 +957,13 @@ describe('Reference Player - SettingsController', function () {
                     },
                     liveCatchup: {
                         enabled: true,
-                        mode: 'liveCatchupModeLoLP'
+                        mode: 'liveCatchupModeLoLP',
+                        maxDrift: 6,
+                        liveThreshold: 3,
+                        step: {
+                            start: { min: 0.1, max: 1.8 },
+                            stop: { min: 0.4, max: 1.1 }
+                        }
                     },
                     cmcd: { rtpSafetyFactor: 10 },
                     cmsd: { abr: { etpWeightRatio: 0.9 } }
@@ -874,6 +985,12 @@ describe('Reference Player - SettingsController', function () {
             expect(parseFloat(document.getElementById('opt-stall-threshold').value)).to.equal(1.5);
             expect(parseFloat(document.getElementById('opt-cmcd-rtp-safety').value)).to.equal(10);
             expect(parseFloat(document.getElementById('opt-cmsd-etp-weight').value)).to.equal(0.9);
+            expect(document.getElementById('opt-catchup-max-drift').value).to.equal('6');
+            expect(document.getElementById('opt-catchup-live-threshold').value).to.equal('3');
+            expect(document.getElementById('opt-catchup-step-start-min').value).to.equal('0.1');
+            expect(document.getElementById('opt-catchup-step-start-max').value).to.equal('1.8');
+            expect(document.getElementById('opt-catchup-step-stop-min').value).to.equal('0.4');
+            expect(document.getElementById('opt-catchup-step-stop-max').value).to.equal('1.1');
 
             // Selects
             expect(parseInt(document.getElementById('opt-log-level').value)).to.equal(5);

@@ -41,7 +41,25 @@ const SETTINGS_DESCRIPTIONS = {
         'Use this parameter to enable the catchup mode for non low-latency streams.',
 
     'opt-catchup-mode':
-        'Use this parameter to switch between different catchup modes.\n\nOptions: "liveCatchupModeDefault" or "liveCatchupModeLOLP".\n\nNote: Catch-up mechanism is automatically applied when playing low latency live streams.',
+        'Use this parameter to switch between different catchup modes.\n\nOptions:\n- "liveCatchupModeDefault": Sigmoid-based continuous rate adjustment\n- "liveCatchupModeLoLP": LoL+ hybrid buffer/latency-based rate adjustment\n- "liveCatchupModeStep": Step-based discrete rate adjustment\n\nNote: Catch-up mechanism is automatically applied when playing low latency live streams.',
+
+    'opt-catchup-max-drift':
+        'Maximum latency deviation in seconds allowed before dash.js performs a seek back to the live position. When the absolute difference between measured latency and target latency exceeds this value, a seek to live edge occurs instead of playback rate adjustment.\n\nLeave empty to use the default value (12 seconds) or the value from the MPD ServiceDescription.',
+
+    'opt-catchup-live-threshold':
+        'When the absolute latency difference (currentLatency - targetLatency) exceeds this threshold, accelerated playback is reset to normal speed (1.0). This prevents catchup from applying rate changes when latency is too far off.\n\nLeave empty to disable this behavior.',
+
+    'opt-catchup-step-start-min':
+        'Step mode: Lower bound of the window within which catchup should begin. Defines how far below the target latency (as a ratio, where 1 = target latency) the player must be before the step algorithm starts adjusting the rate.\n\nLeave empty to use the default (0).',
+
+    'opt-catchup-step-start-max':
+        'Step mode: Upper bound of the window within which catchup should begin. Defines how far above the target latency (as a ratio, where 1 = target latency) the player must be before the step algorithm starts adjusting the rate.\n\nLeave empty to use the default (1).',
+
+    'opt-catchup-step-stop-min':
+        'Step mode: Lower bound of the stop window. When catching up by slowing down, if the delta latency falls within this range, playback returns to normal speed (1.0).\n\nLeave empty to use the default (0).',
+
+    'opt-catchup-step-stop-max':
+        'Step mode: Upper bound of the stop window. When catching up by speeding up, if the delta latency falls within this range, playback returns to normal speed (1.0).\n\nLeave empty to use the default (1).',
 
     // ---- ABR ----
 

@@ -160,15 +160,6 @@
                             <input class="form-check-input" type="checkbox" id="opt-content-steering">
                             <label class="form-check-label" for="opt-content-steering">Apply Content Steering</label>
                         </div>
-                        <div class="form-check">
-                            <input class="form-check-input" type="checkbox" id="opt-catchup-enabled">
-                            <label class="form-check-label" for="opt-catchup-enabled">Live Catchup</label>
-                        </div>
-                        <span class="option-label">Catchup Mode</span>
-                        <select id="opt-catchup-mode">
-                            <option value="liveCatchupModeDefault">Default</option>
-                            <option value="liveCatchupModeLoLP">LoL+ Based</option>
-                        </select>
                     </div>
                 </div>
 
@@ -270,6 +261,35 @@
                         </div>
                         <span class="option-label mt-2">UTC Sync Offset (ms)</span>
                         <input type="number" id="opt-utc-offset" value="0">
+                    </div>
+                </div>
+
+                <!-- Live Catchup -->
+                <div class="option-card">
+                    <div class="option-card-header">Live Catchup</div>
+                    <div class="option-card-body">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="opt-catchup-enabled">
+                            <label class="form-check-label" for="opt-catchup-enabled">Live Catchup</label>
+                        </div>
+                        <span class="option-label">Catchup Mode</span>
+                        <select id="opt-catchup-mode">
+                            <option value="liveCatchupModeDefault">Default</option>
+                            <option value="liveCatchupModeLoLP">LoL+ Based</option>
+                            <option value="liveCatchupModeStep">Step Based</option>
+                        </select>
+                        <span class="option-label mt-2">Max Drift (s)</span>
+                        <input type="number" id="opt-catchup-max-drift" step="0.1" min="0" placeholder="Auto">
+                        <span class="option-label">Live Threshold</span>
+                        <input type="number" id="opt-catchup-live-threshold" step="0.1" min="-1" placeholder="Auto">
+                        <span class="option-label mt-2">Step Start Min</span>
+                        <input type="number" id="opt-catchup-step-start-min" step="0.1" min="0" placeholder="Auto">
+                        <span class="option-label">Step Start Max</span>
+                        <input type="number" id="opt-catchup-step-start-max" step="0.1" min="0" placeholder="Auto">
+                        <span class="option-label">Step Stop Min</span>
+                        <input type="number" id="opt-catchup-step-stop-min" step="0.1" min="0" placeholder="Auto">
+                        <span class="option-label">Step Stop Max</span>
+                        <input type="number" id="opt-catchup-step-stop-max" step="0.1" min="0" placeholder="Auto">
                     </div>
                 </div>
 

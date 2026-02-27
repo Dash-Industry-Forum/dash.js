@@ -118,6 +118,40 @@ export class SettingsController {
             }
         };
 
+        // Live catchup numeric settings
+        const maxDrift = parseFloat($('#opt-catchup-max-drift').value);
+        if (!isNaN(maxDrift)) {
+            config.streaming.liveCatchup.maxDrift = maxDrift;
+        }
+        const liveThreshold = parseFloat($('#opt-catchup-live-threshold').value);
+        if (!isNaN(liveThreshold)) {
+            config.streaming.liveCatchup.liveThreshold = liveThreshold;
+        }
+
+        // Live catchup step tuning
+        const stepStartMin = parseFloat($('#opt-catchup-step-start-min').value);
+        const stepStartMax = parseFloat($('#opt-catchup-step-start-max').value);
+        const stepStopMin = parseFloat($('#opt-catchup-step-stop-min').value);
+        const stepStopMax = parseFloat($('#opt-catchup-step-stop-max').value);
+        if (!isNaN(stepStartMin) || !isNaN(stepStartMax) || !isNaN(stepStopMin) || !isNaN(stepStopMax)) {
+            config.streaming.liveCatchup.step = {
+                start: {},
+                stop: {}
+            };
+            if (!isNaN(stepStartMin)) {
+                config.streaming.liveCatchup.step.start.min = stepStartMin;
+            }
+            if (!isNaN(stepStartMax)) {
+                config.streaming.liveCatchup.step.start.max = stepStartMax;
+            }
+            if (!isNaN(stepStopMin)) {
+                config.streaming.liveCatchup.step.stop.min = stepStopMin;
+            }
+            if (!isNaN(stepStopMax)) {
+                config.streaming.liveCatchup.step.stop.max = stepStopMax;
+            }
+        }
+
         // Live delay (merge into existing delay object)
         const liveDelay = parseFloat($('#opt-live-delay').value);
         if (!isNaN(liveDelay) && liveDelay > 0) {
@@ -418,6 +452,9 @@ export class SettingsController {
 
         const settingsInputs = [
             'opt-log-level', 'opt-catchup-mode',
+            'opt-catchup-max-drift', 'opt-catchup-live-threshold',
+            'opt-catchup-step-start-min', 'opt-catchup-step-start-max',
+            'opt-catchup-step-stop-min', 'opt-catchup-step-stop-max',
             'opt-stall-threshold', 'opt-ll-stall-threshold',
             'opt-live-delay', 'opt-live-delay-frag-count', 'opt-utc-offset',
             'opt-init-bitrate-video', 'opt-min-bitrate-video', 'opt-max-bitrate-video',
@@ -565,6 +602,38 @@ export class SettingsController {
         const catchupMode = $('#opt-catchup-mode');
         if (catchupMode && s?.streaming?.liveCatchup?.mode) {
             catchupMode.value = s.streaming.liveCatchup.mode;
+        }
+
+        // ---- Catchup numeric inputs ----
+        const maxDrift = $('#opt-catchup-max-drift');
+        if (maxDrift) {
+            const v = s?.streaming?.liveCatchup?.maxDrift;
+            maxDrift.value = (v !== undefined && !isNaN(v)) ? v : '';
+        }
+        const liveThreshold = $('#opt-catchup-live-threshold');
+        if (liveThreshold) {
+            const v = s?.streaming?.liveCatchup?.liveThreshold;
+            liveThreshold.value = (v !== undefined && v !== -1) ? v : '';
+        }
+        const stepStartMin = $('#opt-catchup-step-start-min');
+        if (stepStartMin) {
+            const v = s?.streaming?.liveCatchup?.step?.start?.min;
+            stepStartMin.value = (v !== undefined && !isNaN(v)) ? v : '';
+        }
+        const stepStartMax = $('#opt-catchup-step-start-max');
+        if (stepStartMax) {
+            const v = s?.streaming?.liveCatchup?.step?.start?.max;
+            stepStartMax.value = (v !== undefined && !isNaN(v)) ? v : '';
+        }
+        const stepStopMin = $('#opt-catchup-step-stop-min');
+        if (stepStopMin) {
+            const v = s?.streaming?.liveCatchup?.step?.stop?.min;
+            stepStopMin.value = (v !== undefined && !isNaN(v)) ? v : '';
+        }
+        const stepStopMax = $('#opt-catchup-step-stop-max');
+        if (stepStopMax) {
+            const v = s?.streaming?.liveCatchup?.step?.stop?.max;
+            stepStopMax.value = (v !== undefined && !isNaN(v)) ? v : '';
         }
 
         // ---- Buffer numeric inputs ----
