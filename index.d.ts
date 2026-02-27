@@ -4189,7 +4189,7 @@ interface ProtectionController {
 
     setRobustnessLevel(level: string): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     setSessionType(value: string): void;
 
@@ -4378,7 +4378,7 @@ export interface DefaultProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 
@@ -4406,7 +4406,7 @@ export interface ProtectionModel_01b {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4434,7 +4434,7 @@ export interface ProtectionModel_3Fe2014 {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4460,7 +4460,7 @@ export interface ProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 

@@ -181,6 +181,7 @@ const ProtectionModel = function () { };
  * @instance
  * @name setServerCertificate
  * @memberof ProtectionModel
+ * @returns {Promise} an array of initialization data buffers
  * @param {ArrayBuffer} serverCertificate
  */
 

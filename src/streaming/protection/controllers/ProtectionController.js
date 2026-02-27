@@ -83,6 +83,7 @@ function ProtectionController(config) {
     let needkeyRetries = [];
 
     let applicationProvidedProtectionData,
+        certificateCache,
         instance,
         keyStatusMap,
         keySystemSelectionInProgress,
@@ -90,12 +91,11 @@ function ProtectionController(config) {
         licenseXhrRequest,
         logger,
         mediaInfoArr,
+        pendingCertificatePromise,
         pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
-        sessionType,
-        certificateCache,
-        pendingCertificatePromise;
+        sessionType;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -191,9 +191,10 @@ function ProtectionController(config) {
         else if (selectedKeySystem) {
             // FairPlay: wait for the certificate to be applied before creating sessions
             if (pendingCertificatePromise) {
-                pendingCertificatePromise.then(() => {
-                    _handlePendingMediaTypes();
-                });
+                pendingCertificatePromise
+                    .then(() => {
+                        _handlePendingMediaTypes();
+                    });
             } else {
                 _handlePendingMediaTypes();
             }
@@ -256,26 +257,34 @@ function ProtectionController(config) {
             // FairPlay requires the server certificate before generateRequest() can succeed.
             // Wait for certificate acquisition to complete before creating key sessions.
             if (selectedKeySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
-                // Store the promise so _onNeedKey can also wait for it
-                pendingCertificatePromise = _acquireCertificateFromManifest()
-                    .then(() => {
-                        pendingCertificatePromise = null;
-                        _handlePendingMediaTypes();
-                    })
-                    .catch((e) => {
-                        // Even if cert acquisition fails, proceed — the app may have set it via protData
-                        logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
-                        pendingCertificatePromise = null;
-                        _handlePendingMediaTypes();
-                    });
+                _handleFairplayCertificateRequired();
             } else {
                 // For other key systems cert is optional; fire-and-forget
-                _acquireCertificateFromManifest();
-                _handlePendingMediaTypes();
+                _handleCertificateRequired();
             }
         } catch (e) {
             logger.error(e);
         }
+    }
+
+    function _handleFairplayCertificateRequired() {
+        // Store the promise so _onNeedKey can also wait for it
+        pendingCertificatePromise = _acquireCertificateFromManifest()
+            .then(() => {
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            })
+            .catch((e) => {
+                // Even if cert acquisition fails, proceed — the app may have set it via protData
+                logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            });
+    }
+
+    function _handleCertificateRequired() {
+        _acquireCertificateFromManifest();
+        _handlePendingMediaTypes();
     }
 
     /**
@@ -316,14 +325,20 @@ function ProtectionController(config) {
         // 1. API-provided certUrls (protData) take priority
         const protData = _getProtDataForKeySystem(selectedKeySystem);
         if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
-            protData.certUrls.forEach(c => { urls.push(c); });
+            protData.certUrls.forEach(c => {
+                urls.push(c);
+            });
         }
         // 2. Manifest-provided certUrls
         mediaInfoArr.forEach(mediaInfo => {
-            if (!mediaInfo || !mediaInfo.contentProtection) { return; }
+            if (!mediaInfo || !mediaInfo.contentProtection) {
+                return;
+            }
             mediaInfo.contentProtection.forEach(contentProtection => {
                 if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
-                    contentProtection.certUrls.forEach(c => { urls.push(c); });
+                    contentProtection.certUrls.forEach(c => {
+                        urls.push(c);
+                    });
                 }
             });
         });
@@ -393,9 +408,13 @@ function ProtectionController(config) {
             xhr.open(method || 'GET', url, true);
             xhr.responseType = 'arraybuffer';
             const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
-            if (timeout > 0) { xhr.timeout = timeout; }
+            if (timeout > 0) {
+                xhr.timeout = timeout;
+            }
             let withCredentials = false;
-            if (protData && typeof protData.withCredentials === 'boolean') { withCredentials = protData.withCredentials; }
+            if (protData && typeof protData.withCredentials === 'boolean') {
+                withCredentials = protData.withCredentials;
+            }
             xhr.withCredentials = withCredentials;
             if (contentType) {
                 xhr.setRequestHeader('Content-Type', contentType);
@@ -423,10 +442,20 @@ function ProtectionController(config) {
                     attemptFail('HTTP ' + this.status);
                 }
             };
-            xhr.onerror = function () { attemptFail('network error'); };
-            xhr.ontimeout = function () { attemptFail('timeout'); };
-            xhr.onabort = function () { attemptFail('aborted'); };
-            try { xhr.send(body || null); } catch (e) { reject(e); }
+            xhr.onerror = function () {
+                attemptFail('network error');
+            };
+            xhr.ontimeout = function () {
+                attemptFail('timeout');
+            };
+            xhr.onabort = function () {
+                attemptFail('aborted');
+            };
+            try {
+                xhr.send(body || null);
+            } catch (e) {
+                reject(e);
+            }
         });
     }
 
