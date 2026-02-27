@@ -57,11 +57,20 @@ describe('MediaPlayerModel', function () {
         expect(maxDrift).to.be.equal(30);
     })
 
-    it('Should return max drift if specified in Service Description', () => {
+    it('Should return max drift if not specified in settings but specified in Service Description', () => {
+        settings.update({ streaming: { liveCatchup: { maxDrift: NaN } } });
         serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
         const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
 
         expect(maxDrift).to.be.equal(3.5);
+    })
+
+    it('Should return max drift as negative number (disabled) if specified in settings and not be overwritten by the Service Description', () => {
+        settings.update({ streaming: { liveCatchup: { maxDrift: -1 } } });
+        serviceDescriptionController.applyServiceDescription(dummyManifestInfo);
+        const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
+
+        expect(maxDrift).to.be.equal(-1);
     })
 
     it('Should return default max drift', () => {
@@ -251,11 +260,11 @@ describe('MediaPlayerModel', function () {
 
         const s = {
             streaming:
-                {
-                    retryAttempts: {
-                        lowLatencyMultiplyFactor: 10
-                    }
+            {
+                retryAttempts: {
+                    lowLatencyMultiplyFactor: 10
                 }
+            }
         };
         settings.update(s);
         playbackController.setLowLatencyModeEnabled(true);
@@ -282,11 +291,11 @@ describe('MediaPlayerModel', function () {
 
         const s = {
             streaming:
-                {
-                    retryIntervals: {
-                        lowLatencyReductionFactor: 5
-                    }
+            {
+                retryIntervals: {
+                    lowLatencyReductionFactor: 5
                 }
+            }
         };
         settings.update(s);
         playbackController.setLowLatencyModeEnabled(true);

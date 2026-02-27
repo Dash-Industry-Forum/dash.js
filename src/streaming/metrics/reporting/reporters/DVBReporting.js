@@ -33,6 +33,7 @@ import MetricSerialiser from '../../utils/MetricSerialiser.js';
 import RNG from '../../utils/RNG.js';
 import CustomParametersModel from '../../../models/CustomParametersModel.js';
 import FactoryMaker from '../../../../core/FactoryMaker.js';
+import Settings from '../../../../core/Settings.js';
 
 function DVBReporting(config) {
     config = config || {};
@@ -47,6 +48,7 @@ function DVBReporting(config) {
         reportingUrl,
         rangeController;
 
+    let settings = Settings(context).getInstance();
     let USE_DRAFT_DVB_SPEC = true;
     let allowPendingRequestsToCompleteOnReset = true;
     let pendingRequests = [];
@@ -142,13 +144,13 @@ function DVBReporting(config) {
 
         rangeController = rc;
 
-        reportingUrl = entry.dvbReportingUrl;
+        reportingUrl = settings.get().streaming.dvbReporting.reportingUrl || entry.dvbReportingUrl;
 
         // If a required attribute is missing, the Reporting descriptor may
         // be ignored by the Player
         if (!reportingUrl) {
             throw new Error(
-                'required parameter missing (dvb:reportingUrl)'
+                'MPD parameter missing "dvb:reportingUrl" or URL not provided in player settings'
             );
         }
 
@@ -187,9 +189,9 @@ function DVBReporting(config) {
     }
 
     instance = {
-        report:     report,
+        report: report,
         initialize: initialize,
-        reset:      reset
+        reset: reset
     };
 
     setup();

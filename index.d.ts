@@ -1786,14 +1786,25 @@ export class MediaPlayerSettingClass {
             }
         },
         liveCatchup?: {
-            maxDrift?: number;
+            maxDrift?: number,
+            liveThreshold?: number,
             playbackRate?: {
                 min?: number,
                 max?: number
             },
             playbackBufferMin?: number,
-            enabled?: boolean
-            mode?: string
+            enabled?: boolean,
+            mode?: string,
+            step?:{
+                start:{
+                    min?: number,
+                    max?: number
+                },
+                stop:{
+                    min?: number,
+                    max?: number
+                }
+            },
         }
         lastBitrateCachingInfo?: {
             enabled?: boolean;
@@ -1961,6 +1972,9 @@ export class MediaPlayerSettingClass {
             audioChannelConfiguration?: string,
             role?: string,
             accessibility?: string
+        },
+        dvbReporting?: {
+            reportingUrl?: string | null,
         }
     };
     errors?: {

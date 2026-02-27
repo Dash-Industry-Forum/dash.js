@@ -32,7 +32,7 @@ import FactoryMaker from './FactoryMaker.js';
 import Utils from './Utils.js';
 import Debug from '../core/Debug.js';
 import Constants from '../streaming/constants/Constants.js';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
 import Events from './events/Events.js';
 import SwitchRequest from '../streaming/rules/SwitchRequest.js';
@@ -182,6 +182,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            liveCatchup: {
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
+ *                step: {
+ *                  start: { min: NaN, max: NaN },
+ *                  stop: { min: NaN, max: NaN }
+ *                },
+ *                liveThreshold: -1,
  *                playbackBufferMin: 0.5,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -346,7 +351,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
- *            }
+ *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -648,8 +656,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
- * If 0, then seeking operations won't be used for fixing latency deviations.
+ * If a value less than zero is set (-1), then seeking operations won't be used for fixing latency deviations.
  *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
+ * This object is used for setting the window parameters for "step" mode.
+ * 
+ * It is only applicable if the Catchup mechanism used is of mode "step".
+ * 
+ * The parameters are all percentages of the target latency. Where 1 is on target.
+ * 
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ * 
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
+ * 
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
@@ -668,6 +688,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=-1]
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -675,7 +697,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ * Options: One of "liveCatchupModeDefault", "liveCatchupModeLOLP" or "liveCatchupModeStep".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -966,6 +988,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  */
 
 /**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Override DVB reporting url in manifest with a custom one
+ */
+
+/**
  * @typedef {Object} EnhancementSettings
  * @property {boolean} [enabled=false]
  * Enable or disable the scalable enhancement playback (e.g. LCEVC).
@@ -1108,6 +1136,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
+ * Settings related to DVB metrics reporting.
  */
 
 
@@ -1170,7 +1200,7 @@ function Settings() {
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
-                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI},
+                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
                         return { 'schemeIdUri': ep };
                     })
@@ -1278,6 +1308,11 @@ function Settings() {
                     min: NaN,
                     max: NaN
                 },
+                step: {
+                    start: { min: NaN, max: NaN },
+                    stop: { min: NaN, max: NaN }
+                },
+                liveThreshold: -1,
                 playbackBufferMin: 0.5,
                 enabled: null,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -1462,6 +1497,9 @@ function Settings() {
                 audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
+            },
+            dvbReporting: {
+                reportingUrl: null,
             }
         },
         errors: {
