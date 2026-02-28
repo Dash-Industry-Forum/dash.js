@@ -33,9 +33,11 @@ import KeySystemClearKey from './../drm/KeySystemClearKey.js';
 import KeySystemW3CClearKey from './../drm/KeySystemW3CClearKey.js';
 import KeySystemWidevine from './../drm/KeySystemWidevine.js';
 import KeySystemPlayReady from './../drm/KeySystemPlayReady.js';
+import KeySystemFairPlay from './../drm/KeySystemFairPlay.js';
 import DRMToday from './../servers/DRMToday.js';
 import PlayReady from './../servers/PlayReady.js';
 import Widevine from './../servers/Widevine.js';
+import FairPlay from './../servers/FairPlay.js';
 import ClearKey from './../servers/ClearKey.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
@@ -89,6 +91,10 @@ function ProtectionKeyController() {
 
         // Widevine
         keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
+        keySystems.push(keySystem);
+
+        // FairPlay
+        keySystem = KeySystemFairPlay(context).getInstance();
         keySystems.push(keySystem);
 
         // ClearKey
@@ -322,6 +328,8 @@ function ProtectionKeyController() {
             licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
+        } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
+            licenseServerData = FairPlay(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.PLAYREADY_KEYSTEM_STRING) {
             licenseServerData = PlayReady(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.CLEARKEY_KEYSTEM_STRING) {
