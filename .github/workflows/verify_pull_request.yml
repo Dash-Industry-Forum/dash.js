@@ -9,6 +9,8 @@ jobs:
     merge_build_and_unit_test:
         runs-on: ubuntu-24.04
         steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Build and run unit tests
@@ -18,6 +20,8 @@ jobs:
         if: github.event.pull_request.head.repo.fork == false
         runs-on: ubuntu-24.04
         steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Install karma-webdriver-launcher
