@@ -285,7 +285,10 @@ function ProtectionController(config) {
     }
 
     function _handleCertificateRequired() {
-        _acquireCertificateFromManifest();
+        _acquireCertificateFromManifest()
+            .catch((e) => {
+                logger.error(e);
+            })
         _handlePendingMediaTypes();
     }
 
@@ -1424,7 +1427,6 @@ function ProtectionController(config) {
 
         _handleKeySystemFromPssh(supportedKeySystemsMetadata);
     }
-
 
 
     /**
