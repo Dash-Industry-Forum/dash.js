@@ -1969,6 +1969,50 @@ function MediaPlayer() {
     }
 
     /**
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCertificateRequestFilter(filter) {
+        customParametersModel.registerCertificateRequestFilter(filter);
+    }
+
+    /**
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCertificateResponseFilter(filter) {
+        customParametersModel.registerCertificateResponseFilter(filter);
+    }
+
+    /**
+     * Unregisters a certificate request filter.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCertificateRequestFilter(filter) {
+        customParametersModel.unregisterCertificateRequestFilter(filter);
+    }
+
+    /**
+     * Unregisters a certificate response filter.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCertificateResponseFilter(filter) {
+        customParametersModel.unregisterCertificateResponseFilter(filter);
+    }
+
+    /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
@@ -2053,7 +2097,7 @@ function MediaPlayer() {
     function setProtectionData(value) {
         const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
         protectionData = sanitizedValue;
-        
+
         // Propagate changes in case StreamController is already created
         if (streamController) {
             streamController.setProtectionData(protectionData);
@@ -2894,10 +2938,10 @@ function MediaPlayer() {
         getDashAdapter,
         getDashMetrics,
         getDebug,
-        getInitCache,
         getDvrSeekOffset,
         getDvrWindow,
         getExternalSubtitles,
+        getInitCache,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
         getManifest,
@@ -2933,6 +2977,8 @@ function MediaPlayer() {
         preload,
         provideThumbnail,
         refreshManifest,
+        registerCertificateRequestFilter,
+        registerCertificateResponseFilter,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -2969,6 +3015,8 @@ function MediaPlayer() {
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,
+        unregisterCertificateRequestFilter,
+        unregisterCertificateResponseFilter,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,
