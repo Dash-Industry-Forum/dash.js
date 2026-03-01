@@ -43,6 +43,7 @@ import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
 import CertificateRequest from '../vo/CertificateRequest.js';
+import CertificateResponse from '../vo/CertificateResponse.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -309,6 +310,7 @@ function ProtectionController(config) {
         // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
         const certCandidates = _getCertificateUrlsForSelectedKeySystem();
         if (!certCandidates.length) {
+            logger.debug('DRM: No Certificate Server URLs found for ' + ksString + '. Skipping certificate acquisition.');
             return Promise.resolve();
         }
         logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
@@ -459,7 +461,17 @@ function ProtectionController(config) {
             };
             xhr.onload = function () {
                 if (this.status >= 200 && this.status <= 299) {
-                    resolve(this.response);
+                    const responseHeaders = Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+                    const certificateResponseFilters = customParametersModel.getCertificateResponseFilters();
+                    const certificateResponse = new CertificateResponse(xhr.responseURL, responseHeaders, this.response)
+                    _applyFilters(certificateResponseFilters, certificateResponse)
+                        .then(() => {
+                            resolve(this.response);
+                        })
+                        .catch(() => {
+                            resolve(this.response);
+                        })
+
                 } else {
                     _attemptFail('HTTP ' + this.status);
                 }
