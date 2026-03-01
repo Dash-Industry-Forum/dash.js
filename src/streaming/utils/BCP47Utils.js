@@ -1,4 +1,35 @@
 /**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
  * Lightweight BCP-47 tag normalization.
  *
  * Handles:
@@ -14,7 +45,7 @@
  * commonly found in broadcast/streaming content (DASH, HLS, DVB).
  * Covers both 639-2/B (bibliographic) and 639-2/T (terminological) codes.
  */
-const ISO_639_2_TO_1 = {
+const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
     aar: 'aa', abk: 'ab', afr: 'af', aka: 'ak', alb: 'sq', amh: 'am',
     ara: 'ar', arg: 'an', arm: 'hy', asm: 'as', ava: 'av', ave: 'ae',
     aym: 'ay', aze: 'az', bak: 'ba', bam: 'bm', baq: 'eu', bel: 'be',
@@ -49,7 +80,7 @@ const ISO_639_2_TO_1 = {
     uig: 'ug', ukr: 'uk', urd: 'ur', uzb: 'uz', ven: 've', vie: 'vi',
     vol: 'vo', wel: 'cy', wln: 'wa', wol: 'wo', xho: 'xh', yid: 'yi',
     yor: 'yo', zha: 'za', zho: 'zh', zul: 'zu'
-};
+}));
 
 export function normalizeBcp47(tag) {
     if (!tag || typeof tag !== 'string') {
