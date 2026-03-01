@@ -201,4 +201,48 @@ describe('Utils', () => {
             expect(modifiedUrl).to.be.equal(url);
         })
     })
+
+    describe('parseUserAgent', () => {
+
+        it('should detect Safari on macOS', () => {
+            const ua = 'mozilla/5.0 (macintosh; intel mac os x 10_15_7) applewebkit/605.1.15 (khtml, like gecko) version/17.0 safari/605.1.15';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.equal('safari');
+        })
+
+        it('should detect Edge', () => {
+            const ua = 'mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/120.0.0.0 safari/537.36 edg/120.0.0.0';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.equal('edge');
+        })
+
+        it('should not detect Safari for Chrome on iOS (CriOS)', () => {
+            const ua = 'mozilla/5.0 (iphone; cpu iphone os 17_0 like mac os x) applewebkit/605.1.15 (khtml, like gecko) crios/120.0.6099.119 mobile/15e148 safari/604.1';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.not.equal('safari');
+        })
+
+        it('should not detect Safari for Firefox on iOS (FxiOS)', () => {
+            const ua = 'mozilla/5.0 (iphone; cpu iphone os 17_0 like mac os x) applewebkit/605.1.15 (khtml, like gecko) fxios/120.0 mobile/15e148 safari/605.1.15';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.not.equal('safari');
+        })
+
+        it('should not detect Safari for Chrome on desktop', () => {
+            const ua = 'mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/120.0.0.0 safari/537.36';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.not.equal('safari');
+        })
+
+        it('should return empty browser name for unknown UA', () => {
+            const result = Utils.parseUserAgent('some-unknown-agent/1.0');
+            expect(result.browser.name).to.equal('');
+        })
+
+        it('should use navigator.userAgent when no argument is provided', () => {
+            const result = Utils.parseUserAgent();
+            expect(result).to.have.property('browser');
+            expect(result.browser).to.have.property('name');
+        })
+    })
 })

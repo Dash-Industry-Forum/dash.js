@@ -228,12 +228,20 @@ class Utils {
 
     static parseUserAgent(ua = null) {
         try {
-            const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
+            const uaString = typeof ua === 'string'
+                ? ua.toLowerCase()
+                : (typeof navigator !== 'undefined' && navigator.userAgent
+                    ? navigator.userAgent.toLowerCase()
+                    : '');
             const browser = { name: '' };
 
             if (/edg/i.test(uaString)) {
                 browser.name = 'edge';
-            } else if (/safari/i.test(uaString) && !/chrome/i.test(uaString)) {
+            } else if (
+                /safari/i.test(uaString) &&
+                !/chrome/i.test(uaString) &&
+                !/(crios|fxios|edgios|opr|opios)/i.test(uaString)
+            ) {
                 browser.name = 'safari';
             }
 
