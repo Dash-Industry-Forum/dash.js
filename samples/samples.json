@@ -347,6 +347,19 @@
         ]
       },
       {
+        "title": "Fairplay",
+        "description": "This example shows how to use dash.js to play streams with Fairplay DRM protection.",
+        "href": "drm/fairplay.html",
+        "image": "lib/img/livesim-1.jpg",
+        "labels": [
+          "VoD",
+          "DRM",
+          "Fairplay",
+          "Video",
+          "Audio"
+        ]
+      },
+      {
         "title": "ClearKey",
         "description": "This example shows how to use dash.js to play streams with ClearKey protection.",
         "href": "drm/clearkey.html",
