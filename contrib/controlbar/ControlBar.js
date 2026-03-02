@@ -693,10 +693,11 @@ export class ControlBar {
             const width = thumbnail.width * scale;
             const height = thumbnail.height * scale;
 
-            this.thumbnailElem.style.width = `${width}px`;
-            this.thumbnailElem.style.height = `${height}px`;
-            this.thumbnailElem.style.background = `url("${thumbnail.url}") -${thumbnail.x * scale}px -${thumbnail.y * scale}px`;
-            this.thumbnailElem.style.backgroundSize = `${thumbnail.width * scale}px auto`;
+            this.thumbnailElem.style.width = `${thumbnail.width}px`;
+            this.thumbnailElem.style.height = `${thumbnail.height}px`;
+            this.thumbnailElem.style.background = `url("${thumbnail.url}") -${thumbnail.x}px -${thumbnail.y}px`;
+            this.thumbnailElem.style.backgroundSize = '';
+            this.thumbnailElem.style.transform = `scale(${scale})`;
 
             // Position horizontally centered on mouse
             let left = clientX - containerRect.left - width / 2;

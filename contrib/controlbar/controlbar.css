@@ -238,6 +238,7 @@
     border: 2px solid #fff;
     border-radius: 4px;
     overflow: hidden;
+    transform-origin: center bottom;
 }
 
 .cb-thumbnail-time {
