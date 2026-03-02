@@ -154,6 +154,9 @@ describe('Reference Player - SettingsController', function () {
         optionsPanel.id = 'options-panel';
         testContainer.appendChild(optionsPanel);
 
+        // --- Elements needed by applyFromUrl() ---
+        createInput('stream-url', '');
+
         // --- Elements needed by _syncFromPlayer() / applyInitialMediaSettings() ---
         createInput('opt-init-role-video', '');
         createInput('opt-init-lang-audio', '');
@@ -999,6 +1002,344 @@ describe('Reference Player - SettingsController', function () {
             // Radios
             expect(document.querySelector('input[name="track-audio"]:checked').value).to.equal('neverReplace');
             expect(document.querySelector('input[name="track-video"]:checked').value).to.equal('alwaysReplace');
+        });
+    });
+
+    // ---------------------------------------------------------------
+    // Tests: applyFromUrl() - URL parameters update player + UI
+    // ---------------------------------------------------------------
+
+    describe('applyFromUrl() - URL parameters to UI fields', function () {
+
+        // These tests use history.replaceState to set URL query parameters,
+        // then call applyFromUrl() and verify that both the dash.js player
+        // settings and the corresponding UI elements are updated correctly.
+
+        let originalSearch;
+
+        beforeEach(function () {
+            originalSearch = window.location.search;
+            settingsController.init();
+        });
+
+        afterEach(function () {
+            // Restore original URL
+            history.replaceState(null, '', window.location.pathname + originalSearch);
+        });
+
+        function setUrlAndApply(queryString) {
+            history.replaceState(null, '', window.location.pathname + '?' + queryString);
+            return settingsController.applyFromUrl();
+        }
+
+        // ---- Stream URL ----
+
+        it('should set stream-url input from URL parameter', function () {
+            setUrlAndApply('stream=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            expect(document.getElementById('stream-url').value).to.equal('https://example.com/test.mpd');
+        });
+
+        // ---- External settings (autoplay, loop, muted) ----
+
+        it('should set opt-autoplay checked and _autoPlay from URL', function () {
+            document.getElementById('opt-autoplay').checked = false;
+            setUrlAndApply('autoplay=true');
+            expect(document.getElementById('opt-autoplay').checked).to.be.true;
+            expect(settingsController.autoPlay).to.be.true;
+        });
+
+        it('should set opt-loop checked and _loop from URL', function () {
+            document.getElementById('opt-loop').checked = false;
+            setUrlAndApply('loop=true');
+            expect(document.getElementById('opt-loop').checked).to.be.true;
+            expect(settingsController.loop).to.be.true;
+        });
+
+        it('should set opt-muted checked from URL', function () {
+            document.getElementById('opt-muted').checked = false;
+            setUrlAndApply('muted=true');
+            expect(document.getElementById('opt-muted').checked).to.be.true;
+        });
+
+        // ---- DRM protection data ----
+
+        it('should decode and store restoredProtData from URL', function () {
+            const protData = { 'com.widevine.alpha': { serverURL: 'https://license.example.com' } };
+            const encoded = btoa(JSON.stringify(protData));
+            setUrlAndApply('protData=' + encodeURIComponent(encoded));
+            expect(settingsController.restoredProtData).to.deep.equal(protData);
+        });
+
+        it('should ignore invalid base64 protData gracefully', function () {
+            setUrlAndApply('protData=not-valid-base64!!!');
+            expect(settingsController.restoredProtData).to.be.null;
+        });
+
+        // ---- autoLoad return value ----
+
+        it('should return true when autoLoad=true and stream is set', function () {
+            const result = setUrlAndApply('autoLoad=true&stream=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            expect(result).to.be.true;
+        });
+
+        it('should return false when autoLoad is not set', function () {
+            const result = setUrlAndApply('stream=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            expect(result).to.be.false;
+        });
+
+        it('should return false when autoLoad=true but no stream', function () {
+            const result = setUrlAndApply('autoLoad=true');
+            expect(result).to.be.false;
+        });
+
+        // ---- Boolean checkbox settings via URL ----
+
+        it('should apply and sync streaming.buffer.fastSwitchEnabled=true from URL', function () {
+            setUrlAndApply('streaming.buffer.fastSwitchEnabled=true');
+            expect(player.getSettings().streaming.buffer.fastSwitchEnabled).to.be.true;
+            expect(document.getElementById('opt-fast-switch').checked).to.be.true;
+        });
+
+        it('should apply and sync streaming.gaps.jumpGaps=false from URL', function () {
+            setUrlAndApply('streaming.gaps.jumpGaps=false');
+            expect(player.getSettings().streaming.gaps.jumpGaps).to.be.false;
+            expect(document.getElementById('opt-jump-gaps').checked).to.be.false;
+        });
+
+        it('should apply and sync streaming.abr.autoSwitchBitrate.video=false from URL', function () {
+            setUrlAndApply('streaming.abr.autoSwitchBitrate.video=false');
+            expect(player.getSettings().streaming.abr.autoSwitchBitrate.video).to.be.false;
+            expect(document.getElementById('opt-auto-switch-video').checked).to.be.false;
+        });
+
+        it('should apply and sync streaming.liveCatchup.enabled=true from URL', function () {
+            setUrlAndApply('streaming.liveCatchup.enabled=true');
+            expect(player.getSettings().streaming.liveCatchup.enabled).to.be.true;
+            expect(document.getElementById('opt-catchup-enabled').checked).to.be.true;
+        });
+
+        it('should apply and sync streaming.abr.rules.throughputRule.active=false from URL', function () {
+            setUrlAndApply('streaming.abr.rules.throughputRule.active=false');
+            expect(player.getSettings().streaming.abr.rules.throughputRule.active).to.be.false;
+            expect(document.getElementById('opt-rule-throughput').checked).to.be.false;
+        });
+
+        it('should apply and sync streaming.abr.rules.l2ARule.active=true from URL', function () {
+            setUrlAndApply('streaming.abr.rules.l2ARule.active=true');
+            expect(player.getSettings().streaming.abr.rules.l2ARule.active).to.be.true;
+            expect(document.getElementById('opt-rule-l2a').checked).to.be.true;
+        });
+
+        it('should apply and sync streaming.applyContentSteering=false from URL', function () {
+            setUrlAndApply('streaming.applyContentSteering=false');
+            expect(player.getSettings().streaming.applyContentSteering).to.be.false;
+            expect(document.getElementById('opt-content-steering').checked).to.be.false;
+        });
+
+        it('should apply and sync streaming.text.defaultEnabled=false from URL', function () {
+            setUrlAndApply('streaming.text.defaultEnabled=false');
+            expect(player.getSettings().streaming.text.defaultEnabled).to.be.false;
+            expect(document.getElementById('opt-text-default-enabled').checked).to.be.false;
+        });
+
+        it('should apply and sync streaming.enhancement.enabled=true from URL', function () {
+            setUrlAndApply('streaming.enhancement.enabled=true');
+            expect(player.getSettings().streaming.enhancement.enabled).to.be.true;
+            expect(document.getElementById('opt-enhancement-enabled').checked).to.be.true;
+        });
+
+        // ---- Numeric settings via URL ----
+
+        it('should apply and sync streaming.buffer.stallThreshold from URL', function () {
+            setUrlAndApply('streaming.buffer.stallThreshold=1.5');
+            expect(player.getSettings().streaming.buffer.stallThreshold).to.equal(1.5);
+            expect(parseFloat(document.getElementById('opt-stall-threshold').value)).to.equal(1.5);
+        });
+
+        it('should apply and sync streaming.buffer.lowLatencyStallThreshold from URL', function () {
+            setUrlAndApply('streaming.buffer.lowLatencyStallThreshold=0.8');
+            expect(player.getSettings().streaming.buffer.lowLatencyStallThreshold).to.equal(0.8);
+            expect(parseFloat(document.getElementById('opt-ll-stall-threshold').value)).to.equal(0.8);
+        });
+
+        it('should apply and sync streaming.abr.initialBitrate.video from URL', function () {
+            setUrlAndApply('streaming.abr.initialBitrate.video=3000');
+            expect(player.getSettings().streaming.abr.initialBitrate.video).to.equal(3000);
+            expect(document.getElementById('opt-init-bitrate-video').value).to.equal('3000');
+        });
+
+        it('should apply and sync streaming.abr.minBitrate.video from URL', function () {
+            setUrlAndApply('streaming.abr.minBitrate.video=500');
+            expect(player.getSettings().streaming.abr.minBitrate.video).to.equal(500);
+            expect(document.getElementById('opt-min-bitrate-video').value).to.equal('500');
+        });
+
+        it('should apply and sync streaming.abr.maxBitrate.video from URL', function () {
+            setUrlAndApply('streaming.abr.maxBitrate.video=8000');
+            expect(player.getSettings().streaming.abr.maxBitrate.video).to.equal(8000);
+            expect(document.getElementById('opt-max-bitrate-video').value).to.equal('8000');
+        });
+
+        it('should apply and sync streaming.delay.liveDelay from URL', function () {
+            setUrlAndApply('streaming.delay.liveDelay=4');
+            expect(player.getSettings().streaming.delay.liveDelay).to.equal(4);
+            expect(document.getElementById('opt-live-delay').value).to.equal('4');
+        });
+
+        it('should apply and sync streaming.delay.liveDelayFragmentCount from URL', function () {
+            setUrlAndApply('streaming.delay.liveDelayFragmentCount=3');
+            expect(player.getSettings().streaming.delay.liveDelayFragmentCount).to.equal(3);
+            expect(document.getElementById('opt-live-delay-frag-count').value).to.equal('3');
+        });
+
+        it('should apply and sync streaming.liveCatchup.maxDrift from URL', function () {
+            setUrlAndApply('streaming.liveCatchup.maxDrift=8');
+            expect(player.getSettings().streaming.liveCatchup.maxDrift).to.equal(8);
+            expect(document.getElementById('opt-catchup-max-drift').value).to.equal('8');
+        });
+
+        it('should apply and sync streaming.liveCatchup.liveThreshold from URL', function () {
+            setUrlAndApply('streaming.liveCatchup.liveThreshold=5');
+            expect(player.getSettings().streaming.liveCatchup.liveThreshold).to.equal(5);
+            expect(document.getElementById('opt-catchup-live-threshold').value).to.equal('5');
+        });
+
+        it('should apply and sync streaming.liveCatchup.step values from URL', function () {
+            setUrlAndApply('streaming.liveCatchup.step.start.min=0.2&streaming.liveCatchup.step.start.max=1.5&streaming.liveCatchup.step.stop.min=0.3&streaming.liveCatchup.step.stop.max=1.2');
+            const s = player.getSettings();
+            expect(s.streaming.liveCatchup.step.start.min).to.equal(0.2);
+            expect(s.streaming.liveCatchup.step.start.max).to.equal(1.5);
+            expect(s.streaming.liveCatchup.step.stop.min).to.equal(0.3);
+            expect(s.streaming.liveCatchup.step.stop.max).to.equal(1.2);
+            expect(document.getElementById('opt-catchup-step-start-min').value).to.equal('0.2');
+            expect(document.getElementById('opt-catchup-step-start-max').value).to.equal('1.5');
+            expect(document.getElementById('opt-catchup-step-stop-min').value).to.equal('0.3');
+            expect(document.getElementById('opt-catchup-step-stop-max').value).to.equal('1.2');
+        });
+
+        // ---- String / select / dropdown settings via URL ----
+
+        it('should apply and sync debug.logLevel from URL', function () {
+            setUrlAndApply('debug.logLevel=5');
+            expect(player.getSettings().debug.logLevel).to.equal(5);
+            expect(parseInt(document.getElementById('opt-log-level').value)).to.equal(5);
+        });
+
+        it('should apply and sync streaming.liveCatchup.mode from URL', function () {
+            setUrlAndApply('streaming.liveCatchup.mode=liveCatchupModeLoLP');
+            expect(player.getSettings().streaming.liveCatchup.mode).to.equal('liveCatchupModeLoLP');
+            expect(document.getElementById('opt-catchup-mode').value).to.equal('liveCatchupModeLoLP');
+        });
+
+        it('should apply and sync streaming.trackSwitchMode.audio from URL', function () {
+            setUrlAndApply('streaming.trackSwitchMode.audio=neverReplace');
+            expect(player.getSettings().streaming.trackSwitchMode.audio).to.equal('neverReplace');
+            expect(document.querySelector('input[name="track-audio"]:checked').value).to.equal('neverReplace');
+        });
+
+        it('should apply and sync streaming.trackSwitchMode.video from URL', function () {
+            setUrlAndApply('streaming.trackSwitchMode.video=neverReplace');
+            expect(player.getSettings().streaming.trackSwitchMode.video).to.equal('neverReplace');
+            expect(document.querySelector('input[name="track-video"]:checked').value).to.equal('neverReplace');
+        });
+
+        // ---- CMCD settings via URL ----
+
+        it('should apply and sync CMCD settings from URL', function () {
+            setUrlAndApply('streaming.cmcd.enabled=true&streaming.cmcd.mode=header&streaming.cmcd.sid=test-session&streaming.cmcd.cid=test-content&streaming.cmcd.rtp=5000');
+            const s = player.getSettings();
+            expect(s.streaming.cmcd.enabled).to.be.true;
+            expect(s.streaming.cmcd.mode).to.equal('header');
+            expect(s.streaming.cmcd.sid).to.equal('test-session');
+            expect(s.streaming.cmcd.cid).to.equal('test-content');
+            expect(s.streaming.cmcd.rtp).to.equal(5000);
+
+            expect(document.getElementById('opt-cmcd-enabled').checked).to.be.true;
+            expect(document.getElementById('opt-cmcd-mode').value).to.equal('header');
+            expect(document.getElementById('opt-cmcd-session-id').value).to.equal('test-session');
+            expect(document.getElementById('opt-cmcd-content-id').value).to.equal('test-content');
+            expect(document.getElementById('opt-cmcd-rtp').value).to.equal('5000');
+        });
+
+        it('should apply and sync streaming.cmcd.rtpSafetyFactor from URL', function () {
+            setUrlAndApply('streaming.cmcd.rtpSafetyFactor=10');
+            expect(player.getSettings().streaming.cmcd.rtpSafetyFactor).to.equal(10);
+            expect(parseFloat(document.getElementById('opt-cmcd-rtp-safety').value)).to.equal(10);
+        });
+
+        // ---- CMSD settings via URL ----
+
+        it('should apply and sync CMSD settings from URL', function () {
+            setUrlAndApply('streaming.cmsd.enabled=true&streaming.cmsd.abr.applyMb=true&streaming.cmsd.abr.etpWeightRatio=0.8');
+            const s = player.getSettings();
+            expect(s.streaming.cmsd.enabled).to.be.true;
+            expect(s.streaming.cmsd.abr.applyMb).to.be.true;
+            expect(s.streaming.cmsd.abr.etpWeightRatio).to.equal(0.8);
+
+            expect(document.getElementById('opt-cmsd-enabled').checked).to.be.true;
+            expect(document.getElementById('opt-cmsd-apply-mb').checked).to.be.true;
+            expect(parseFloat(document.getElementById('opt-cmsd-etp-weight').value)).to.equal(0.8);
+        });
+
+        // ---- Combined / round-trip scenario ----
+
+        it('should correctly apply multiple settings from URL and preserve them on subsequent buildConfig', function () {
+            setUrlAndApply(
+                'streaming.buffer.fastSwitchEnabled=true' +
+                '&streaming.gaps.jumpGaps=false' +
+                '&streaming.abr.initialBitrate.video=3000' +
+                '&streaming.delay.liveDelay=4' +
+                '&streaming.liveCatchup.mode=liveCatchupModeLoLP' +
+                '&debug.logLevel=5' +
+                '&streaming.trackSwitchMode.audio=neverReplace'
+            );
+
+            // Verify player state
+            const s = player.getSettings();
+            expect(s.streaming.buffer.fastSwitchEnabled).to.be.true;
+            expect(s.streaming.gaps.jumpGaps).to.be.false;
+            expect(s.streaming.abr.initialBitrate.video).to.equal(3000);
+            expect(s.streaming.delay.liveDelay).to.equal(4);
+            expect(s.streaming.liveCatchup.mode).to.equal('liveCatchupModeLoLP');
+            expect(s.debug.logLevel).to.equal(5);
+            expect(s.streaming.trackSwitchMode.audio).to.equal('neverReplace');
+
+            // Verify UI state
+            expect(document.getElementById('opt-fast-switch').checked).to.be.true;
+            expect(document.getElementById('opt-jump-gaps').checked).to.be.false;
+            expect(document.getElementById('opt-init-bitrate-video').value).to.equal('3000');
+            expect(document.getElementById('opt-live-delay').value).to.equal('4');
+            expect(document.getElementById('opt-catchup-mode').value).to.equal('liveCatchupModeLoLP');
+            expect(parseInt(document.getElementById('opt-log-level').value)).to.equal(5);
+            expect(document.querySelector('input[name="track-audio"]:checked').value).to.equal('neverReplace');
+
+            // Now simulate a subsequent UI interaction: buildConfig + updateSettings
+            // This verifies that _syncFromPlayer() correctly populated the UI so that
+            // a later buildConfig() preserves the URL-provided values.
+            const config = settingsController.buildConfig();
+            player.updateSettings(config);
+            const s2 = player.getSettings();
+
+            expect(s2.streaming.buffer.fastSwitchEnabled).to.be.true;
+            expect(s2.streaming.gaps.jumpGaps).to.be.false;
+            expect(s2.streaming.abr.initialBitrate.video).to.equal(3000);
+            expect(s2.streaming.delay.liveDelay).to.equal(4);
+            expect(s2.streaming.liveCatchup.mode).to.equal('liveCatchupModeLoLP');
+            expect(s2.debug.logLevel).to.equal(5);
+            expect(s2.streaming.trackSwitchMode.audio).to.equal('neverReplace');
+        });
+
+        it('should not modify player settings when URL has no recognized parameters', function () {
+            const before = JSON.stringify(player.getSettings());
+            setUrlAndApply('stream=https%3A%2F%2Fexample.com%2Ftest.mpd');
+            const after = JSON.stringify(player.getSettings());
+            expect(after).to.equal(before);
+        });
+
+        it('should handle empty query string without errors', function () {
+            history.replaceState(null, '', window.location.pathname);
+            const result = settingsController.applyFromUrl();
+            expect(result).to.be.undefined;
         });
     });
 });
