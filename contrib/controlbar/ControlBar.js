@@ -298,7 +298,7 @@ export class ControlBar {
         // Bitrate menu
         this.bitrateMenu = createElement('div', { className: 'cb-menu cb-hidden-element' });
         this.bitrateBtn = createElement('button', { className: 'cb-btn cb-hidden-element', title: 'Quality' },
-            createElement('i', { className: 'bi bi-gear' })
+            createElement('i', { className: 'bi bi-sliders' })
         );
         const bitrateAnchor = createElement('div', { className: 'cb-menu-anchor' },
             this.bitrateBtn,
@@ -950,7 +950,7 @@ export class ControlBar {
         for (const type of ['video', 'audio']) {
             try {
                 const reps = this.player.getRepresentationsByType(type);
-                if (!reps || reps.length <= 1) {
+                if (!reps || reps.length < 1) {
                     continue;
                 }
 
@@ -1024,7 +1024,7 @@ export class ControlBar {
         for (const type of ['audio', 'video']) {
             try {
                 const tracks = this.player.getTracksFor(type);
-                if (!tracks || tracks.length <= 1) {
+                if (!tracks || tracks.length < 1) {
                     continue;
                 }
 
@@ -1045,9 +1045,9 @@ export class ControlBar {
                         }
                     }
 
-                    // Fall back to language
+                    // Fall back to language, then to media type name
                     if (!label) {
-                        label = track.lang || 'Unknown';
+                        label = track.lang || type.charAt(0).toUpperCase() + type.slice(1);
                     }
 
                     // Build descriptive details (role, channels, codec)
