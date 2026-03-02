@@ -1715,7 +1715,6 @@ export class MediaPlayerSettingClass {
             ignoreEmeEncryptedEvent?: boolean,
             detectPlayreadyMessageFormat?: boolean,
             ignoreKeyStatuses?: boolean,
-            certificateRetryAttempts?: number,
         },
         buffer?: {
             enableSeekDecorrelationFix?: boolean,
@@ -1795,12 +1794,12 @@ export class MediaPlayerSettingClass {
             playbackBufferMin?: number,
             enabled?: boolean,
             mode?: string,
-            step?:{
-                start:{
+            step?: {
+                start: {
                     min?: number,
                     max?: number
                 },
-                stop:{
+                stop: {
                     min?: number,
                     max?: number
                 }
@@ -1841,6 +1840,7 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyReductionFactor'?: number;
         };
@@ -1853,6 +1853,7 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyMultiplyFactor'?: number;
         };
@@ -3088,6 +3089,7 @@ export interface ProtectionConstants {
     INITIALIZATION_DATA_TYPE_WEBM: 'webm',
     ENCRYPTION_SCHEME_CENC: 'cenc',
     ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    FAIRPLAY_KEYSTEM_STRING: 'com.apple.fps',
     MEDIA_KEY_MESSAGE_TYPES: {
         LICENSE_REQUEST: 'license-request',
         LICENSE_RENEWAL: 'license-renewal',
@@ -3486,6 +3488,8 @@ export interface StreamController {
     getInitialPlayback(): any;
 
     getIsStreamSwitchInProgress(): boolean;
+
+    getProtectionData(): object;
 
     getStreamById(id: string): object | null;
 
@@ -4545,6 +4549,18 @@ export interface Widevine {
     getServerURLFromMessage(url: string): string;
 }
 
+export interface Fairplay {
+    getErrorResponse(serverResponse: object): string;
+
+    getHTTPMethod(): 'POST';
+
+    getLicenseMessage(serverResponse: object): object;
+
+    getResponseType(): 'arraybuffer';
+
+    getServerURLFromMessage(url: string): string;
+}
+
 /**
  * Streaming - Protection - Vo
  **/
@@ -4692,7 +4708,12 @@ export interface ProtectionData {
     priority?: number;
 
     /** Optional certificate URLs; entries may be raw strings or manifest-parsed objects */
-    certUrls?: Array<string | CertUrlDescriptor | { __text?: string; '@certType'?: string; certType?: string; url?: string }>;
+    certUrls?: Array<string | CertUrlDescriptor | {
+        __text?: string;
+        '@certType'?: string;
+        certType?: string;
+        url?: string
+    }>;
 }
 
 export interface SessionToken {
