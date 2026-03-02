@@ -76,10 +76,10 @@ import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
 import CertUrlUtils from './utils/CertUrlUtils.js';
 import VideoModel from './models/VideoModel.js';
-import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
-import {checkParameterType} from './utils/SupervisorTools.js';
-import {getVersionString} from '../core/Version.js';
-import {Cta608Parser} from '@svta/cml-608';
+import { HTTPRequest } from './vo/metrics/HTTPRequest.js';
+import { checkParameterType } from './utils/SupervisorTools.js';
+import { getVersionString } from '../core/Version.js';
+import { Cta608Parser } from '@svta/cml-608';
 
 /**
  * The media types
@@ -2104,12 +2104,16 @@ function MediaPlayer() {
         }
     }
 
+    function getProtectionData() {
+        return streamController ? streamController.getProtectionData() : null;
+    }
+
 
     /*
     ---------------------------------------------------------------------------
-
+ 
         THUMBNAILS MANAGEMENT
-
+ 
     ---------------------------------------------------------------------------
     */
 
@@ -2147,9 +2151,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
-
+ 
         TOOLS AND OTHERS FUNCTIONS
-
+ 
     ---------------------------------------------------------------------------
     */
     /**
@@ -2948,6 +2952,7 @@ function MediaPlayer() {
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
+        getProtectionData,
         getRawThroughputData,
         getRepresentationsByType,
         getRepresentationsByTypeUnfiltered,
