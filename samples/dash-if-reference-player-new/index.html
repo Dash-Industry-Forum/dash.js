@@ -229,6 +229,12 @@
                         <span class="option-label">Priority</span>
                         <input type="number" id="drm-wv-priority" value="0" min="0" max="5">
 
+                        <div class="option-section">FairPlay</div>
+                        <span class="option-label">License URL</span>
+                        <input type="text" id="drm-fp-url" placeholder="FairPlay URL">
+                        <span class="option-label">Priority</span>
+                        <input type="number" id="drm-fp-priority" value="0" min="0" max="5">
+
                         <div class="option-section">ClearKey</div>
                         <span class="option-label">License URL or KID:KEY</span>
                         <input type="text" id="drm-ck-url" placeholder="ClearKey URL or KID:KEY">
@@ -295,7 +301,7 @@
 
                 <!-- Text / IMSC -->
                 <div class="option-card">
-                    <div class="option-card-header">Text (IMSC)</div>
+                    <div class="option-card-header">Text</div>
                     <div class="option-card-body">
                         <div class="form-check">
                             <input class="form-check-input" type="checkbox" id="opt-text-default-enabled">
@@ -888,6 +894,37 @@
                     <label class="form-label small">Request Headers</label>
                     <div id="drm-wv-headers"></div>
                     <button class="btn btn-sm btn-outline-secondary mt-1" id="drm-wv-add-header">
+                        <i class="bi bi-plus"></i> Add Header
+                    </button>
+                </div>
+                <hr class="border-secondary">
+
+                <!-- FairPlay Advanced -->
+                <h6 class="text-info">FairPlay</h6>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Server Certificate URL</label>
+                        <input type="text" class="form-control form-control-sm" id="drm-fp-cert-url">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">HTTP Timeout (ms)</label>
+                        <input type="number" class="form-control form-control-sm" id="drm-fp-timeout">
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Video Robustness</label>
+                        <input type="text" class="form-control form-control-sm" id="drm-fp-video-robustness">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Audio Robustness</label>
+                        <input type="text" class="form-control form-control-sm" id="drm-fp-audio-robustness">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label small">Request Headers</label>
+                    <div id="drm-fp-headers"></div>
+                    <button class="btn btn-sm btn-outline-secondary mt-1" id="drm-fp-add-header">
                         <i class="bi bi-plus"></i> Add Header
                     </button>
                 </div>

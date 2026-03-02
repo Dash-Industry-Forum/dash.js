@@ -8,6 +8,7 @@ export class DrmController {
     constructor() {
         this._prHeaders = [];
         this._wvHeaders = [];
+        this._fpHeaders = [];
         this._ckHeaders = [];
         this._ckPairs = [];
     }
@@ -28,6 +29,7 @@ export class DrmController {
         // Add header buttons
         this._bindAddHeader('drm-pr-add-header', 'drm-pr-headers', this._prHeaders);
         this._bindAddHeader('drm-wv-add-header', 'drm-wv-headers', this._wvHeaders);
+        this._bindAddHeader('drm-fp-add-header', 'drm-fp-headers', this._fpHeaders);
         this._bindAddHeader('drm-ck-add-header', 'drm-ck-headers', this._ckHeaders);
 
         // Add ClearKey pair button
@@ -67,6 +69,16 @@ export class DrmController {
             hasData = true;
         }
 
+        // FairPlay
+        const fpUrl = $('#drm-fp-url')?.value.trim();
+        if (fpUrl) {
+            protData['com.apple.fps'] = {
+                serverURL: fpUrl
+            };
+            this._addAdvancedDrmFields(protData['com.apple.fps'], 'fp');
+            hasData = true;
+        }
+
         // ClearKey
         const ckUrl = $('#drm-ck-url')?.value.trim();
         if (ckUrl) {
@@ -96,11 +108,15 @@ export class DrmController {
         if (this._isChecked('drm-prioritize')) {
             const prPriority = parseInt($('#drm-pr-priority')?.value);
             const wvPriority = parseInt($('#drm-wv-priority')?.value);
+            const fpPriority = parseInt($('#drm-fp-priority')?.value);
             if (protData['com.microsoft.playready'] && !isNaN(prPriority)) {
                 protData['com.microsoft.playready'].priority = prPriority;
             }
             if (protData['com.widevine.alpha'] && !isNaN(wvPriority)) {
                 protData['com.widevine.alpha'].priority = wvPriority;
+            }
+            if (protData['com.apple.fps'] && !isNaN(fpPriority)) {
+                protData['com.apple.fps'].priority = fpPriority;
             }
         }
 
@@ -122,7 +138,7 @@ export class DrmController {
         const pr = protData['com.microsoft.playready'] || protData['com.microsoft.playready.recommendation'];
         if (pr) {
             this._setVal('drm-pr-url', pr.serverURL);
-            this._setVal('drm-pr-cert-url', pr.serverCertificateUrl);
+            this._setVal('drm-pr-cert-url', this._getCertUrlFromArray(pr.certUrls));
             this._setVal('drm-pr-timeout', pr.httpTimeout);
             this._setVal('drm-pr-video-robustness', pr.videoRobustness);
             this._setVal('drm-pr-audio-robustness', pr.audioRobustness);
@@ -134,12 +150,24 @@ export class DrmController {
         const wv = protData['com.widevine.alpha'];
         if (wv) {
             this._setVal('drm-wv-url', wv.serverURL);
-            this._setVal('drm-wv-cert-url', wv.serverCertificateUrl);
+            this._setVal('drm-wv-cert-url', this._getCertUrlFromArray(wv.certUrls));
             this._setVal('drm-wv-timeout', wv.httpTimeout);
             this._setVal('drm-wv-video-robustness', wv.videoRobustness);
             this._setVal('drm-wv-audio-robustness', wv.audioRobustness);
             this._extractHeaders(wv.httpRequestHeaders, this._wvHeaders, 'drm-wv-headers');
             this._applyPriority('drm-wv-priority', wv.priority);
+        }
+
+        // FairPlay
+        const fp = protData['com.apple.fps'];
+        if (fp) {
+            this._setVal('drm-fp-url', fp.serverURL);
+            this._setVal('drm-fp-cert-url', this._getCertUrlFromArray(fp.certUrls));
+            this._setVal('drm-fp-timeout', fp.httpTimeout);
+            this._setVal('drm-fp-video-robustness', fp.videoRobustness);
+            this._setVal('drm-fp-audio-robustness', fp.audioRobustness);
+            this._extractHeaders(fp.httpRequestHeaders, this._fpHeaders, 'drm-fp-headers');
+            this._applyPriority('drm-fp-priority', fp.priority);
         }
 
         // ClearKey
@@ -165,10 +193,11 @@ export class DrmController {
      * Clear all DRM fields
      */
     clearAll() {
-        const fields = ['drm-pr-url', 'drm-wv-url', 'drm-ck-url',
-            'drm-pr-cert-url', 'drm-wv-cert-url',
-            'drm-pr-timeout', 'drm-wv-timeout',
-            'drm-pr-video-robustness', 'drm-pr-audio-robustness'];
+        const fields = ['drm-pr-url', 'drm-wv-url', 'drm-fp-url', 'drm-ck-url',
+            'drm-pr-cert-url', 'drm-wv-cert-url', 'drm-fp-cert-url',
+            'drm-pr-timeout', 'drm-wv-timeout', 'drm-fp-timeout',
+            'drm-pr-video-robustness', 'drm-pr-audio-robustness',
+            'drm-fp-video-robustness', 'drm-fp-audio-robustness'];
 
         for (const id of fields) {
             const el = $(`#${id}`);
@@ -187,10 +216,12 @@ export class DrmController {
 
         this._prHeaders = [];
         this._wvHeaders = [];
+        this._fpHeaders = [];
         this._ckHeaders = [];
         this._ckPairs = [];
         this._renderHeaders('drm-pr-headers', this._prHeaders);
         this._renderHeaders('drm-wv-headers', this._wvHeaders);
+        this._renderHeaders('drm-fp-headers', this._fpHeaders);
         this._renderHeaders('drm-ck-headers', this._ckHeaders);
         this._renderKeyPairs();
 
@@ -200,6 +231,7 @@ export class DrmController {
         }
         $('#drm-pr-priority').value = '0';
         $('#drm-wv-priority').value = '0';
+        $('#drm-fp-priority').value = '0';
     }
 
     // ---- Private ----
@@ -226,6 +258,20 @@ export class DrmController {
         this._renderHeaders(containerId, headerArray);
     }
 
+    _getCertUrlFromArray(certUrls) {
+        if (!Array.isArray(certUrls) || certUrls.length === 0) {
+            return undefined;
+        }
+        const first = certUrls[0];
+        if (typeof first === 'string') {
+            return first;
+        }
+        if (first && typeof first === 'object') {
+            return first.url || first.__text || undefined;
+        }
+        return undefined;
+    }
+
     _applyPriority(inputId, value) {
         if (value !== undefined && value !== null) {
             this._setVal(inputId, value);
@@ -235,7 +281,7 @@ export class DrmController {
     _addAdvancedDrmFields(target, prefix) {
         const certUrl = $(`#drm-${prefix}-cert-url`)?.value.trim();
         if (certUrl) {
-            target.serverCertificateUrl = certUrl;
+            target.certUrls = [certUrl];
         }
 
         const timeout = parseInt($(`#drm-${prefix}-timeout`)?.value);
@@ -254,7 +300,7 @@ export class DrmController {
         }
 
         // Headers
-        const headerArray = prefix === 'pr' ? this._prHeaders : this._wvHeaders;
+        const headerArray = prefix === 'pr' ? this._prHeaders : prefix === 'wv' ? this._wvHeaders : this._fpHeaders;
         this._addHeaders(target, headerArray);
     }
 
