@@ -16,7 +16,7 @@ angular.module('DashSourcesService', ['ngResource']).factory('sources', function
 });
 
 angular.module('DashContributorsService', ['ngResource']).factory('contributors', function ($resource) {
-    return $resource('app/contributors.json', {}, {
+    return $resource('../dash-if-reference-player/app/data/contributors.json', {}, {
         query: {
             method: 'GET',
             isArray: false

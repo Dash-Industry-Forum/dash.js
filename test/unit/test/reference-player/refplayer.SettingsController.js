@@ -13,7 +13,7 @@
 
 import MediaPlayer from '../../../../src/streaming/MediaPlayer.js';
 import Settings from '../../../../src/core/Settings.js';
-import { SettingsController } from '../../../../samples/dash-if-reference-player-new/app/js/SettingsController.js';
+import { SettingsController } from '../../../../samples/dash-if-reference-player/app/js/SettingsController.js';
 
 import { expect } from 'chai';
 

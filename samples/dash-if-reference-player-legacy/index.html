@@ -76,7 +76,7 @@
     <div class="row title-header">
 
         <div class="branding">
-            <a href="http://dashif.org/" target="_blank"><img class="image" src="app/img/if.png"/></a>
+            <a href="http://dashif.org/" target="_blank"><img class="image" src="../dash-if-reference-player/img/if.png"/></a>
             <span id="big-title">Reference Client</span>
             <span ng-bind="version"></span>
             <span id="commit-info"><!-- commit-info --></span>
@@ -1469,7 +1469,7 @@
             <div class="col-md-12">
                 <h3 class="footer-text">Contributors:</h3>
                 <a ng-repeat="item in contributors" class="footer-text" href="{{item.link}}" target="_blank">
-                    <img ng-show="hasLogo(item)" ng-src="{{item.logo}}" alt="{{item.link}}"/>
+                    <img ng-show="hasLogo(item)" ng-src="../dash-if-reference-player/{{item.logo}}" alt="{{item.link}}"/>
                     <span class="contributor" ng-show="!hasLogo(item)">{{item.name}}</span>
                 </a>
             </div>
