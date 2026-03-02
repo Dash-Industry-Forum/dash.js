@@ -2,77 +2,78 @@
     "items": [
         {
             "name": "Digital Primates",
-            "logo": "app/img/dp.png",
+            "logo": "img/dp.png",
             "link": "http://www.digitalprimates.net"
         },
         {
             "name": "Akamai",
-            "logo": "app/img/akamai.png",
+            "logo": "img/akamai.png",
             "link": "http://www.akamai.com"
         },
         {
             "name": "Microsoft Open Technologies",
-            "logo": "app/img/MSOpenTech.jpg",
+            "logo": "img/MSOpenTech.jpg",
             "link": "http://msopentech.com"
         },
         {
             "name": "Fraunhofer Fokus",
-            "logo": "app/img/fh_fokus.png",
+            "logo": "img/fh_fokus.png",
             "link": "https://www.fokus.fraunhofer.de/go/fame"
         },
         {
             "name": "CableLabs",
-            "logo": "app/img/cablelabs.png",
+            "logo": "img/cablelabs.png",
             "link": "http://www.cablelabs.com"
         },
         {
             "name": "YouTube",
-            "logo": "app/img/youtube.png",
+            "logo": "img/youtube.png",
             "link": "http://www.youtube.com"
         },
         {
-            "name": "Senthil",
-            "link": "https://github.com/senthil-codr"
-        },
-        {
             "name": "Brightcove",
-            "logo": "app/img/brightcove.png",
+            "logo": "img/brightcove.png",
             "link": "https://www.brightcove.com"
         },
         {
             "name": "Eyevinn",
-            "logo": "app/img/eyevinn.png",
+            "logo": "img/eyevinn.png",
             "link": "https://www.eyevinn.se/"
         },
         {
             "name": "Epic Labs",
-            "logo": "app/img/epiclabs.png",
+            "logo": "img/epiclabs.png",
             "link": "https://www.epiclabs.io/"
         },
         {
             "name": "National University of Singapore",
-            "logo": "app/img/National_University_of_Singapore_logo_NUS.png",
+            "logo": "img/National_University_of_Singapore_logo_NUS.png",
             "link": "https://nus.edu.sg/"
         },
         {
             "name": "Özyeğin University",
-            "logo": "app/img/OzU_logo_eng.png",
+            "logo": "img/OzU_logo_eng.png",
             "link": "https://www.ozyegin.edu.tr/"
         },
         {
             "name": "Unified Streaming",
-            "logo": "app/img/US-logo-petrol-rgb.jpg",
+            "logo": "img/US-logo-petrol-rgb.jpg",
             "link": "https://www.unified-streaming.com/"
         },
         {
             "name": "Broadpeak",
-            "logo": "app/img/broadpeak.png",
+            "logo": "img/broadpeak.png",
             "link": "https://broadpeak.tv/"
         },
         {
             "name": "V-Nova",
-            "logo": "app/img/v-nova.png",
+            "logo": "img/v-nova.png",
             "link": "https://v-nova.com/"
+        },
+        {
+            "name": "Qualabs",
+            "logo": "img/qualabs.png",
+            "link": "https://www.qualabs.com/"
         }
     ]
 }
