@@ -2237,6 +2237,10 @@ export interface MediaPlayerClass {
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
+    registerCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    registerCertificateResponseFilter(filter: CertificateResponseFilter): void;
+
     registerLicenseRequestFilter(filter: RequestFilter): void;
 
     registerLicenseResponseFilter(filter: ResponseFilter): void;
@@ -2308,6 +2312,10 @@ export interface MediaPlayerClass {
     triggerSteeringRequest(): Promise<any>;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    unregisterCertificateResponseFilter(filter: CertificateResponseFilter): void;
 
     unregisterLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -3867,6 +3875,10 @@ export interface CustomParametersModel {
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
+    registerCertificateRequestFilter(filter: Function): void;
+
+    registerCertificateResponseFilter(filter: Function): void;
+
     removeExternalSubtitleById(id: string): void;
 
     removeExternalSubtitleByUrl(url: string): void;
@@ -3897,6 +3909,10 @@ export interface CustomParametersModel {
     setXHRWithCredentialsForType(type: string, value: string): void;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: Function): void;
+
+    unregisterCertificateResponseFilter(filter: Function): void;
 
     unregisterLicenseRequestFilter(filter: Function): void;
 
@@ -4635,6 +4651,25 @@ export class LicenseRequestComplete {
 }
 
 export class LicenseResponse {
+    constructor(url: string, headers: object, data: ArrayBuffer)
+
+    data: ArrayBuffer;
+    headers: object;
+    url: string;
+}
+
+export class CertificateRequest {
+    constructor(url: string, headers: { [key: string]: string }, withCredentials: boolean)
+
+    url: string;
+    method: 'GET';
+    responseType: 'arraybuffer';
+    headers: { [key: string]: string };
+    body: null;
+    withCredentials: boolean;
+}
+
+export class CertificateResponse {
     constructor(url: string, headers: object, data: ArrayBuffer)
 
     data: ArrayBuffer;
@@ -6071,4 +6106,6 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
+export type CertificateRequestFilter = (request: CertificateRequest) => Promise<any>;
+export type CertificateResponseFilter = (response: CertificateResponse) => Promise<any>;
 
