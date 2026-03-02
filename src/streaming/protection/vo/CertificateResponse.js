@@ -29,22 +29,32 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc A media capability
- * @ignore
+ * @classdesc Defines a license response
  */
-class MediaCapability {
+class CertificateResponse {
     /**
-     * @param {string} contentType MIME type and codecs (RFC6386)
-     * @param {string} robustness
-     * @param {string | null} [encryptionScheme] encryption scheme (e.g. 'cenc', 'cbcs')
+     * Defines a license response
+     *
      * @class
      * @ignore
      */
-    constructor(contentType, robustness, encryptionScheme = null) {
-        this.contentType = contentType;
-        this.robustness = robustness;
-        this.encryptionScheme = encryptionScheme;
+    constructor(url, headers, data) {
+
+        /**
+         * The url that was loaded, that can be redirected from original request url
+         */
+        this.url = url;
+
+        /**
+         * The HTP response headers
+         */
+        this.headers = headers;
+
+        /**
+         * The certificate response data
+         */
+        this.data = data;
     }
 }
 
-export default MediaCapability;
+export default CertificateResponse;

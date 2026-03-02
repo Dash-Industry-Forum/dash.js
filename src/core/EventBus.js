@@ -100,7 +100,7 @@ function EventBus() {
         if (idx < 0) {
             return;
         }
-        handlers[type][idx] = null;
+        handlers[type].splice(idx, 1);
     }
 
     function trigger(type, payload = {}, filters = {}) {

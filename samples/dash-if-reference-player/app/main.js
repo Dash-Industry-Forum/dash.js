@@ -232,8 +232,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.widevineServerCertificateURLs = '';
 
-    $scope.clearkeyServerCertificateURLs = '';
-
     $scope.additionalClearkeyPairs = [];
 
     $scope.protData = {};
@@ -1066,7 +1064,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         $scope.clearkeyRequestHeaders = [];
         $scope.playreadyServerCertificateURLs = '';
         $scope.widevineServerCertificateURLs = '';
-        $scope.clearkeyServerCertificateURLs = '';
         $scope.clearkeys = [];
         $scope.additionalClearkeyPairs = [];
     }
@@ -1192,8 +1189,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                 function handleBufferUpdates(event) {
                     if (event.request === 'appendBuffer') {
                         player.LCEVCdec.appendBuffer(event.data, 'video', abrIndex, 0, /* isMuxed */ false);
-                    }
-                    else if (event.request === 'remove') {
+                    } else if (event.request === 'remove') {
                         player.LCEVCdec.flushBuffer(event.start, event.end);
                     }
                 }
@@ -1532,7 +1528,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                 key !== 'kid' &&
                                 key !== 'key' &&
                                 key !== 'serverCertificateURLs' &&
-                                key !== 'inputMode'&&
+                                key !== 'inputMode' &&
                                 key !== 'isCustomRobustness') {
                                 protectionData[input.drmKeySystem][key] = input[key];
                             }
@@ -1690,8 +1686,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
 
     $scope.handleServerCertificateURLs = function () {
         $scope.drmPlayready.serverCertificateURLs = $scope.playreadyServerCertificateURLs.split(/\s+/);
-        $scope.drmWidevine.serverCertificateURLs  = $scope.widevineServerCertificateURLs.split(/\s+/);
-        $scope.drmClearkey.serverCertificateURLs  = $scope.clearkeyServerCertificateURLs.split(/\s+/);
+        $scope.drmWidevine.serverCertificateURLs = $scope.widevineServerCertificateURLs.split(/\s+/);
     }
 
     /** Handle multiple clearkeys */
@@ -1708,7 +1703,7 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
             $scope.drmClearkey.clearkeys[clearkey.kid] = clearkey.key;
         }
         // if clearkey property is empty, alert
-        if (!Object.keys($scope.drmClearkey.clearkeys).length) {
+        if ($scope.additionalClearkeyPairs === {}) {
             alert('You must specify at least one KID=KEY pair!');
         }
     }
@@ -1815,11 +1810,6 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
                                 }
                             }
                         }
-                    }
-                    const clearkeyCertUrls = protectionData[data].certUrls || protectionData[data].serverCertificateURLs;
-                    if (Array.isArray(clearkeyCertUrls) && clearkeyCertUrls.length) {
-                        $scope.drmClearkey.serverCertificateURLs = clearkeyCertUrls;
-                        $scope.clearkeyServerCertificateURLs = clearkeyCertUrls.join(' ');
                     }
                     // Add any additional parameters
                     for (let parameter in protectionData[data]) {
@@ -2278,8 +2268,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
         else if (value === 'null') typedValue = null;
         else if (value === 'undefined') typedValue = undefined;
         else integerRegEx.test(value) ? typedValue = parseInt(value) :
-            (floatRegEx.test(value) ? typedValue = parseFloat(value) :
-                typedValue = value);
+                (floatRegEx.test(value) ? typedValue = parseFloat(value) :
+                    typedValue = value);
 
         return typedValue;
     }
@@ -2596,7 +2586,8 @@ app.controller('DashController', ['$scope', '$window', 'sources', 'contributors'
     }
 
     function setUtcTimeSyncOptions() {
-        var currentConfig = $scope.player.getSettings();;
+        var currentConfig = $scope.player.getSettings();
+        ;
         $scope.utcTimeSyncOffset = currentConfig.streaming.utcSynchronization.artificialTimeOffsetToApply;
     }
 
