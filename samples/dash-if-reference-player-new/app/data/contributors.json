@@ -31,10 +31,6 @@
             "link": "http://www.youtube.com"
         },
         {
-            "name": "Senthil",
-            "link": "https://github.com/senthil-codr"
-        },
-        {
             "name": "Brightcove",
             "logo": "img/brightcove.png",
             "link": "https://www.brightcove.com"
@@ -73,6 +69,11 @@
             "name": "V-Nova",
             "logo": "img/v-nova.png",
             "link": "https://v-nova.com/"
+        },
+        {
+            "name": "Qualabs",
+            "logo": "img/qualabs.png",
+            "link": "https://www.qualabs.com/"
         }
     ]
 }
