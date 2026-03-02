@@ -347,6 +347,19 @@
         ]
       },
       {
+        "title": "Fairplay",
+        "description": "This example shows how to use dash.js to play streams with Fairplay DRM protection.",
+        "href": "drm/fairplay.html",
+        "image": "lib/img/livesim-1.jpg",
+        "labels": [
+          "VoD",
+          "DRM",
+          "Fairplay",
+          "Video",
+          "Audio"
+        ]
+      },
+      {
         "title": "ClearKey",
         "description": "This example shows how to use dash.js to play streams with ClearKey protection.",
         "href": "drm/clearkey.html",
@@ -363,6 +376,20 @@
         "description": "This example shows how to use dash.js to filter and wrap license requests and responses",
         "href": "drm/license-wrapping.html",
         "image": "lib/img/tos-1.jpg",
+        "labels": [
+          "VoD",
+          "DRM",
+          "Widevine",
+          "Playready",
+          "Video",
+          "Audio"
+        ]
+      },
+      {
+        "title": "License certificate wrapping",
+        "description": "This example shows how to use dash.js to filter and wrap license certificate requests and responses",
+        "href": "drm/certificate-wrapping.html",
+        "image": "lib/img/livesim-1.jpg",
         "labels": [
           "VoD",
           "DRM",

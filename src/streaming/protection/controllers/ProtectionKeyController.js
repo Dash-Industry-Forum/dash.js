@@ -86,11 +86,11 @@ function ProtectionKeyController() {
         let keySystem;
 
         // PlayReady
-        keySystem = KeySystemPlayReady(context).getInstance({BASE64: BASE64, settings: settings});
+        keySystem = KeySystemPlayReady(context).getInstance({ BASE64: BASE64, settings: settings });
         keySystems.push(keySystem);
 
         // Widevine
-        keySystem = KeySystemWidevine(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemWidevine(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
 
         // FairPlay
@@ -98,12 +98,12 @@ function ProtectionKeyController() {
         keySystems.push(keySystem);
 
         // ClearKey
-        keySystem = KeySystemClearKey(context).getInstance({BASE64: BASE64});
+        keySystem = KeySystemClearKey(context).getInstance({ BASE64: BASE64 });
         keySystems.push(keySystem);
         clearkeyKeySystem = keySystem;
 
         // W3C ClearKey
-        keySystem = KeySystemW3CClearKey(context).getInstance({BASE64: BASE64, debug: debug});
+        keySystem = KeySystemW3CClearKey(context).getInstance({ BASE64: BASE64, debug: debug });
         keySystems.push(keySystem);
         clearkeyW3CKeySystem = keySystem;
     }
@@ -299,6 +299,82 @@ function ProtectionKeyController() {
     }
 
     /**
+     * Build key system metadata for sinf (FairPlay) initData.
+     * Since sinf data has no PSSH UUIDs, we match against the FairPlay key system directly.
+     * @param {ArrayBuffer} initData
+     * @return {Array}
+     * @private
+     */
+    function getSupportedKeySystemMetadataForSinf(initData, applicationProvidedProtectionData, sessionType) {
+        const fairplayKs = getKeySystemBySystemString(ProtectionConstants.FAIRPLAY_KEYSTEM_STRING);
+        if (!fairplayKs) {
+            return [];
+        }
+        const keyId = _extractKeyIdFromSinf(initData);
+        const protData = applicationProvidedProtectionData ? applicationProvidedProtectionData[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] || null : null;
+        return [{
+            ks: fairplayKs,
+            keyId: keyId,
+            initData: initData,
+            protData: protData,
+            cdmData: fairplayKs.getCDMData(protData ? protData.cdmData : null),
+            sessionType: sessionType
+        }];
+    }
+
+    /**
+     * Extract the defaultKID from the tenc box inside a sinf initData.
+     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
+     * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
+     * @param {ArrayBuffer} initData
+     * @return {string|null} key ID as UUID string, or null if not found
+     * @private
+     */
+    function _extractKeyIdFromSinf(initData) {
+        if (!initData || initData.byteLength < 12) {
+            return null;
+        }
+
+        let sinfBytes;
+        try {
+            // Safari wraps sinf in JSON: {"sinf": ["<base64>"]}
+            const text = String.fromCharCode.apply(null, new Uint8Array(initData));
+            const json = JSON.parse(text);
+            if (json.sinf && json.sinf.length > 0) {
+                const binaryString = atob(json.sinf[0]);
+                sinfBytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    sinfBytes[i] = binaryString.charCodeAt(i);
+                }
+            }
+        } catch (e) {
+            // Not JSON — treat as raw binary sinf
+            sinfBytes = new Uint8Array(initData);
+        }
+
+        if (!sinfBytes || sinfBytes.length < 12) {
+            return null;
+        }
+
+        // Search for 'tenc' fourcc (0x74 0x65 0x6E 0x63)
+        for (let i = 0; i < sinfBytes.length - 28; i++) {
+            if (sinfBytes[i] === 0x74 && sinfBytes[i + 1] === 0x65 && sinfBytes[i + 2] === 0x6E && sinfBytes[i + 3] === 0x63) {
+                // tenc found: KID is 12 bytes after the fourcc
+                // [tenc fourcc (4)] [version (1) + flags (3)] [reserved/crypt (1) + reserved/skip (1)] [isProtected (1) + ivSize (1)] = 12 bytes
+                const kidOffset = i + 12;
+                if (kidOffset + 16 > sinfBytes.length) {
+                    return null;
+                }
+                const kid = sinfBytes.subarray(kidOffset, kidOffset + 16);
+                // Format as UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+                const hex = Array.from(kid).map(b => b.toString(16).padStart(2, '0')).join('');
+                return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20, 32);
+            }
+        }
+        return null;
+    }
+
+    /**
      * Returns the license server implementation data that should be used for this request.
      *
      * @param {KeySystem} keySystem the key system
@@ -325,7 +401,7 @@ function ProtectionKeyController() {
 
         let licenseServerData = null;
         if (protData && protData.hasOwnProperty('drmtoday')) {
-            licenseServerData = DRMToday(context).getInstance({BASE64: BASE64});
+            licenseServerData = DRMToday(context).getInstance({ BASE64: BASE64 });
         } else if (keySystem.systemString === ProtectionConstants.WIDEVINE_KEYSTEM_STRING) {
             licenseServerData = Widevine(context).getInstance();
         } else if (keySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
@@ -402,6 +478,7 @@ function ProtectionKeyController() {
         getKeySystemBySystemString,
         getKeySystems,
         getLicenseServerModelInstance,
+        getSupportedKeySystemMetadataForSinf,
         getSupportedKeySystemMetadataFromContentProtection,
         getSupportedKeySystemMetadataFromSegmentPssh,
         initDataEquals,

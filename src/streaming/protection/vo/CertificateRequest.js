@@ -29,22 +29,23 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 /**
- * @classdesc A media capability
+ * @classdesc Defines a Certificate request
  * @ignore
  */
-class MediaCapability {
+class CertificateRequest {
     /**
-     * @param {string} contentType MIME type and codecs (RFC6386)
-     * @param {string} robustness
-     * @param {string | null} [encryptionScheme] encryption scheme (e.g. 'cenc', 'cbcs')
+     * Defines a certificate request
+     *
      * @class
-     * @ignore
      */
-    constructor(contentType, robustness, encryptionScheme = null) {
-        this.contentType = contentType;
-        this.robustness = robustness;
-        this.encryptionScheme = encryptionScheme;
+    constructor(url, headers, withCredentials) {
+        this.url = url;
+        this.method = 'GET';
+        this.responseType = 'arraybuffer';
+        this.headers = headers;
+        this.body = null;
+        this.withCredentials = withCredentials;
     }
 }
 
-export default MediaCapability;
+export default CertificateRequest;
