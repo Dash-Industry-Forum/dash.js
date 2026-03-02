@@ -673,6 +673,66 @@ export class SettingsController {
                 videoRadio.checked = true;
             }
         }
+
+        // ---- ABR bitrate inputs ----
+        const initBitrate = $('#opt-init-bitrate-video');
+        if (initBitrate) {
+            const v = s?.streaming?.abr?.initialBitrate?.video;
+            initBitrate.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+        const minBitrate = $('#opt-min-bitrate-video');
+        if (minBitrate) {
+            const v = s?.streaming?.abr?.minBitrate?.video;
+            minBitrate.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+        const maxBitrate = $('#opt-max-bitrate-video');
+        if (maxBitrate) {
+            const v = s?.streaming?.abr?.maxBitrate?.video;
+            maxBitrate.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+
+        // ---- Live delay inputs ----
+        const liveDelay = $('#opt-live-delay');
+        if (liveDelay) {
+            const v = s?.streaming?.delay?.liveDelay;
+            liveDelay.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+        const fragCount = $('#opt-live-delay-frag-count');
+        if (fragCount) {
+            const v = s?.streaming?.delay?.liveDelayFragmentCount;
+            fragCount.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+
+        // ---- UTC offset ----
+        const utcOffset = $('#opt-utc-offset');
+        if (utcOffset) {
+            const v = s?.streaming?.utcSynchronization?.defaultTimingSource?.value;
+            utcOffset.value = (v !== undefined && !isNaN(v) && v !== 0) ? v : '';
+        }
+
+        // ---- CMCD inputs ----
+        const cmcdMode = $('#opt-cmcd-mode');
+        if (cmcdMode && s?.streaming?.cmcd?.mode) {
+            cmcdMode.value = s.streaming.cmcd.mode;
+        }
+        const cmcdSid = $('#opt-cmcd-session-id');
+        if (cmcdSid) {
+            cmcdSid.value = s?.streaming?.cmcd?.sid || '';
+        }
+        const cmcdCid = $('#opt-cmcd-content-id');
+        if (cmcdCid) {
+            cmcdCid.value = s?.streaming?.cmcd?.cid || '';
+        }
+        const cmcdRtp = $('#opt-cmcd-rtp');
+        if (cmcdRtp) {
+            const v = s?.streaming?.cmcd?.rtp;
+            cmcdRtp.value = (v !== undefined && !isNaN(v) && v > 0) ? v : '';
+        }
+        const cmcdEnabledKeys = $('#opt-cmcd-enabled-keys');
+        if (cmcdEnabledKeys) {
+            const v = s?.streaming?.cmcd?.enabledKeys;
+            cmcdEnabledKeys.value = Array.isArray(v) ? v.join(', ') : '';
+        }
     }
 
     _setChecked(id, value) {
