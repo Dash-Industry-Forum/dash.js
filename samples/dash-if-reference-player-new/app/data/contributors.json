@@ -31,14 +31,18 @@
             "link": "http://www.youtube.com"
         },
         {
+            "name": "Senthil",
+            "link": "https://github.com/senthil-codr"
+        },
+        {
             "name": "Brightcove",
             "logo": "img/brightcove.png",
             "link": "https://www.brightcove.com"
         },
         {
-            "name": "Edgeware",
-            "logo": "img/edgeware.png",
-            "link": "http://www.edgeware.tv/"
+            "name": "Eyevinn",
+            "logo": "img/eyevinn.png",
+            "link": "https://www.eyevinn.se/"
         },
         {
             "name": "Epic Labs",
