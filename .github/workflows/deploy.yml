@@ -41,7 +41,7 @@ jobs:
                 with:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
-                    include: "samples/dash-if-reference-player/index.html"
+                    include: "samples/dash-if-reference-player*/index.html"
             -   name: Build all samples
                 if: inputs.deploy_type == 'samples'
                 run: |
