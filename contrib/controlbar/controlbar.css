@@ -301,7 +301,7 @@
     padding: 0.35rem 0.75rem;
     font-size: 0.7rem;
     font-weight: 600;
-    color: var(--cb-accent);
+    color: rgba(255, 255, 255, 0.5);
     text-transform: uppercase;
     letter-spacing: 0.03em;
 }
