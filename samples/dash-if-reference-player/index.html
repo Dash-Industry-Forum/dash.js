@@ -482,6 +482,36 @@
                 <div id="video-caption"></div>
                 <!-- Controlbar is injected here by ControlBar.js from contrib/controlbar -->
             </div>
+
+            <!-- Notification Panel (errors, warnings, conformance violations) -->
+            <div class="notification-panel" id="notification-panel">
+                <div class="notification-header">
+                    <div class="notification-header-row">
+                        <h6 class="mb-0">
+                            <i class="bi bi-bell"></i> Notifications
+                            <span class="badge bg-secondary ms-1" id="notification-count">0</span>
+                        </h6>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-notification-clear">
+                            <i class="bi bi-trash"></i> Clear
+                        </button>
+                    </div>
+                    <div class="notification-header-row">
+                        <div class="notification-filters" id="notification-filters">
+                            <button class="btn btn-sm notification-filter-btn active"
+                                    data-filter="error">Error</button>
+                            <button class="btn btn-sm notification-filter-btn active"
+                                    data-filter="warning">Warning</button>
+                            <button class="btn btn-sm notification-filter-btn active"
+                                    data-filter="suggestion">Suggestion</button>
+                        </div>
+                        <input type="text" class="form-control form-control-sm notification-search"
+                               id="notification-search" placeholder="Search messages...">
+                    </div>
+                </div>
+                <div class="notification-list" id="notification-list">
+                    <div class="notification-empty" id="notification-empty">No messages</div>
+                </div>
+            </div>
         </div>
 
         <!-- Stats Column -->
@@ -775,16 +805,6 @@
         </div>
     </div>
 
-    <!-- ============ CONFORMANCE PANEL ============ -->
-    <div class="conformance-panel d-none" id="conformance-panel">
-        <div class="card bg-transparent border border-secondary">
-            <div class="card-header">
-                <h6 class="mb-0"><i class="bi bi-exclamation-diamond"></i> Conformance Violations</h6>
-            </div>
-            <div class="card-body p-0" id="conformance-list"></div>
-        </div>
-    </div>
-
     <!-- ============ FOOTER ============ -->
     <div class="footer-area">
         <h6>Contributors</h6>
@@ -794,24 +814,6 @@
 </div>
 
 <!-- ============ MODALS ============ -->
-
-<!-- Error Modal -->
-<div class="modal fade" id="errorModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content error-modal">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="bi bi-exclamation-triangle"></i> Error</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="error-modal-body">
-                <p id="error-message"></p>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
 
 <!-- DRM Advanced Modal -->
 <div class="modal fade" id="drmAdvancedModal" tabindex="-1" aria-hidden="true">

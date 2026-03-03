@@ -187,6 +187,15 @@ export class DrmController {
             }
             this._extractHeaders(ck.httpRequestHeaders, this._ckHeaders, 'drm-ck-headers');
         }
+
+        // Enable DRM prioritization checkbox if any system has a priority set
+        const hasPriority = [pr, wv, fp].some(d => d && d.priority !== undefined && d.priority !== null);
+        if (hasPriority) {
+            const prioritize = $('#drm-prioritize');
+            if (prioritize) {
+                prioritize.checked = true;
+            }
+        }
     }
 
     /**

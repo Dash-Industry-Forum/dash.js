@@ -12,7 +12,7 @@ import {SettingsController} from './SettingsController.js';
 import {DrmController} from './DrmController.js';
 import {MetricsDisplay} from './MetricsDisplay.js';
 import {ChartController} from './ChartController.js';
-import {ConformancePanel} from './ConformancePanel.js';
+import {NotificationPanel} from './NotificationPanel.js';
 
 // ---- State ----
 let playerController;
@@ -22,7 +22,7 @@ let settingsController;
 let drmController;
 let metricsDisplay;
 let chartController;
-let conformancePanel;
+let notificationPanel;
 
 // ---- Initialization ----
 async function init() {
@@ -84,8 +84,8 @@ async function init() {
     metricsDisplay = new MetricsDisplay(playerController, chartController);
     metricsDisplay.init();
 
-    conformancePanel = new ConformancePanel(playerController);
-    conformancePanel.init();
+    notificationPanel = new NotificationPanel(playerController);
+    notificationPanel.init();
 
     // 5. Wire up button handlers
     $('#btn-load').addEventListener('click', doLoad);
@@ -106,7 +106,6 @@ async function init() {
     });
 
     // 6. Register player events for UI
-    playerController.on('error', onPlayerError);
     playerController.on('playbackEnded', onPlaybackEnded);
     playerController.on('streamInitialized', () => {
         controlBar.enable();
@@ -228,34 +227,6 @@ function doStop() {
     controlBar.reset();
     playerController.stop();
     chartController.clearAllData();
-}
-
-// ---- Error handling ----
-let _errorModal = null;
-
-function onPlayerError(e) {
-    let message = 'An error occurred during playback.';
-
-    if (e && e.error) {
-        const err = e.error;
-        if (err.message) {
-            message = err.message;
-        }
-        if (err.code) {
-            message = `[Error ${err.code}] ${message}`;
-        }
-    }
-
-    const errorMsg = $('#error-message');
-    if (errorMsg) {
-        errorMsg.textContent = message;
-    }
-
-    // Reuse a single modal instance to prevent stale backdrops
-    if (!_errorModal) {
-        _errorModal = new bootstrap.Modal($('#errorModal'));
-    }
-    _errorModal.show();
 }
 
 // ---- Playback ended (loop) ----
