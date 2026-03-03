@@ -20,8 +20,6 @@ on:
                 required: true
             private_key:
                 required: true
-            known_hosts:
-                required: true
 
 jobs:
     deploy:
@@ -74,7 +72,9 @@ jobs:
                 uses: shimataro/ssh-key-action@v2
                 with:
                     key: ${{ secrets.private_key }}
-                    known_hosts: ${{ secrets.known_hosts }}
+                    known_hosts: unnecessary
+            -   name: Fetch host keys
+                run: ssh-keyscan -H ${{ secrets.host }} >> ~/.ssh/known_hosts
             -   name: Deploy with scp
                 env:
                     DEPLOY_USER: ${{ secrets.user }}

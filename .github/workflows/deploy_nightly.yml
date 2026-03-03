@@ -17,4 +17,3 @@ jobs:
             host: ${{secrets.HOST}}
             user: ${{secrets.USER}}
             private_key: ${{secrets.PRIVATE_KEY}}
-            known_hosts: ${{secrets.KNOWN_HOSTS}}
