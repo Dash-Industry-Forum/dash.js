@@ -205,3 +205,5 @@ samples/modules/typescript/package-lock.json
 samples/modules/typescript/dist
 samples/modules/typescript/node_modules
 test/functional/apps/webos/test-app/com.dashjs.app_1.0.0_all.ipk
+
+test-results
