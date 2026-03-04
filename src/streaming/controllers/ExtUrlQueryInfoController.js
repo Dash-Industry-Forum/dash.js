@@ -117,6 +117,10 @@ function ExtUrlQueryInfoController() {
     }
 
     function createFinalQueryStrings(manifest) {
+        if (!manifest || !manifest.url) {
+            return;
+        }
+
         mpdQueryStringInformation = {
             origin: new URL(manifest.url).origin,
             period: []
