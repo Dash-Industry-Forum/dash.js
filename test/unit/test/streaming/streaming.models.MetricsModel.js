@@ -1,11 +1,16 @@
 import MetricsModel from '../../../../src/streaming/models/MetricsModel.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
 import MetricsConstants from '../../../../src/streaming/constants/MetricsConstants.js';
 
 import chai from 'chai';
+import spies from 'chai-spies';
+
+Events.extend(MediaPlayerEvents);
+chai.use(spies);
 const expect = chai.expect;
 
 describe('MetricsModel', function () {

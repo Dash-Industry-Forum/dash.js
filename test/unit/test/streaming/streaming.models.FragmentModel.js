@@ -2,6 +2,7 @@ import SpecHelper from '../../helpers/SpecHelper.js';
 import VoHelper from '../../helpers/VOHelper.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import FragmentModel from '../../../../src/streaming/models/FragmentModel.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import Debug from '../../../../src/core/Debug.js';
@@ -11,6 +12,7 @@ import chai from 'chai';
 import spies from 'chai-spies';
 import sinon from 'sinon';
 
+Events.extend(MediaPlayerEvents);
 const expect = chai.expect;
 
 chai.use(spies);

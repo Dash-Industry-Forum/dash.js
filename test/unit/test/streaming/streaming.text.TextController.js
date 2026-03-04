@@ -6,8 +6,13 @@ import MediaControllerMock from '../../mocks/MediaControllerMock.js';
 import BaseURLControllerMock from '../../mocks/BaseURLControllerMock.js';
 import AdapterMock from '../../mocks/AdapterMock.js';
 import Settings from '../../../../src/core/Settings.js';
+import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 import {expect} from 'chai';
+
+Events.extend(MediaPlayerEvents);
+
 const context = {};
 
 describe('TextController', function () {

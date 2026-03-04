@@ -1,6 +1,7 @@
 import GapController from '../../../../src/streaming/controllers/GapController.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import Settings from '../../../../src/core/Settings.js';
 
 import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
@@ -10,6 +11,7 @@ import VideoModelMock from '../../mocks/VideoModelMock.js';
 import chai from 'chai';
 import sinon from 'sinon';
 
+Events.extend(MediaPlayerEvents);
 const expect = chai.expect;
 
 const context = {};

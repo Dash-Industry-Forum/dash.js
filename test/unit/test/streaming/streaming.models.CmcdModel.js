@@ -715,7 +715,7 @@ describe('CmcdModel', function () {
                     it('getHeadersParameters() should return cmcd v2 data if version is 2', function () {
                         const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                         const MEDIA_TYPE = 'video';
-        
+
                         let request = {
                             type: REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
@@ -729,45 +729,45 @@ describe('CmcdModel', function () {
                                 }
                             }
                         });
-        
+
                         let headers = cmcdModel.getHeaderParameters(request);
                         let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.have.property('ltc');
 
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-        
+
                         headers = cmcdModel.getHeaderParameters(request);
                         metrics = decodeCmcd(headers[SESSION_HEADER_NAME]);
                         expect(metrics).to.have.property('msd');
                     });
-        
+
                     it('getHeadersParameters() should not return cmcd v2 data if the cmcd version is 1', function () {
                         const REQUEST_TYPE = HTTPRequest.MEDIA_SEGMENT_TYPE;
                         const MEDIA_TYPE = 'video';
-        
+
                         let request = {
                             type: REQUEST_TYPE,
                             mediaType: MEDIA_TYPE
                         };
-                        
+
                         settings.update({
                             streaming: {
                                 cmcd: {
                                     enabled: true,
-                                    version: 1
+                                    version: 1,
+                                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                                 },
-                                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd', 'ltc', 'msd', 'ltc'],
                             }
                         });
-        
+
                         let headers = cmcdModel.getHeaderParameters(request);
                         let metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.not.have.property('ltc');
-                
+
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_STARTED);
                         eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
-        
+
                         headers = cmcdModel.getHeaderParameters(request);
                         metrics = decodeCmcd(headers[REQUEST_HEADER_NAME]);
                         expect(metrics).to.not.have.property('msd');

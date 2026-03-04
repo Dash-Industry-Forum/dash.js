@@ -9,7 +9,10 @@ import ErrorHandlerMock from '../../mocks/ErrorHandlerMock.js';
 import ContentSteeringControllerMock from '../../mocks/ContentSteeringControllerMock.js';
 
 import chai from 'chai';
+import spies from 'chai-spies';
 import sinon from 'sinon';
+
+chai.use(spies);
 const expect = chai.expect;
 
 describe('ManifestUpdater', function () {

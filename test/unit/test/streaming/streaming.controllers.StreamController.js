@@ -1,5 +1,6 @@
 import StreamController from '../../../../src/streaming/controllers/StreamController.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import ProtectionEvents from '../../../../src/streaming/protection/ProtectionEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
@@ -50,6 +51,7 @@ const textControllerMock = new TextControllerMock();
 const contentSteeringControllerMock = new ContentSteeringControllerMock();
 const manifestUpdaterMock = new ManifestUpdaterMock();
 
+Events.extend(MediaPlayerEvents);
 Events.extend(ProtectionEvents);
 
 describe('StreamController', function () {

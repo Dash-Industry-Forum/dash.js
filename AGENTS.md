@@ -20,22 +20,30 @@ npm run doc                # Generate JSDoc documentation
 
 ## Testing
 
-**Frameworks:** Karma (runner) + Mocha (describe/it) + Chai (expect/assert) + Sinon (spy/stub/mock)
+**Unit tests:** Web Test Runner (runner) + Mocha (describe/it) + Chai (expect/assert) + Sinon (spy/stub/mock)
+**Functional tests:** Karma (runner) + Mocha + Chai + webpack
 
 ```bash
-# Run all unit tests (ChromeHeadless + FirefoxHeadless)
+# Run all unit tests (Chromium + Firefox via Playwright)
 npm test
 
 # Run a single test or subset by grep pattern (matches describe/it names)
-npx karma start test/unit/config/karma.unit.conf.cjs --grep="EventBus"
-npx karma start test/unit/config/karma.unit.conf.cjs --grep="getOptimalRepresentationForBitrate"
+GREP="EventBus" npm test
+GREP="getOptimalRepresentationForBitrate" npm test
+
+# Run a specific test file
+npx web-test-runner --config test/unit/config/web-test-runner.config.mjs --files 'test/unit/test/core/core.EventBus.js'
 
 # Run functional tests
 npm run test-functional
 ```
 
-There is no per-file test runner. All unit tests are bundled by Karma/webpack and run
-together in a headless browser. Use `--grep` to filter by test name.
+Each unit test file runs in its own isolated browser page (unlike Karma which bundled
+all files into one page). Use the `GREP` environment variable to filter by test name.
+
+**Note:** `GREP` passes a pattern to Mocha's grep, which filters `it` blocks across
+**all** 118 test files. Non-matching tests are reported as failures (exit code 1).
+For CI or targeted runs, prefer `--files` to load only the specific test file(s).
 
 Unit test files live in `test/unit/test/` and mirror the `src/` directory structure.
 Test file naming convention uses dot-separated module paths:
@@ -139,6 +147,18 @@ call `initialize()` in `beforeEach`, and call `reset()` in `afterEach`. Tests us
 - **Cleanup:** Always call `reset()` on instances, settings, and eventBus in `afterEach`
 - **Test data:** Fixtures in `test/unit/data/` (XML manifests, subtitle files, etc.)
 
+### Test Isolation (important for new tests)
+
+Each unit test file runs in its **own isolated browser page**. This means:
+- **Events.extend():** If production code uses `MediaPlayerEvents` properties (like
+  `PLAYBACK_SEEKING`, `CAN_PLAY`, `METRIC_ADDED`, etc.), the test file must call
+  `Events.extend(MediaPlayerEvents)` at the top level. The `Events` singleton only has
+  `CoreEvents` by default; `MediaPlayerEvents` are added at runtime by `MediaPlayer.js`.
+- **chai-spies:** If using `chai.spy()`, each test file must import and register
+  `chai-spies` itself: `import spies from 'chai-spies'; chai.use(spies);`
+- **No cross-file shared state:** Unlike the previous Karma setup, singletons and globals
+  are not shared across test files.
+
 ## Project Structure
 
 ```
@@ -149,8 +169,8 @@ src/
 ├── offline/       # Offline playback / download support
 └── streaming/     # Core player: controllers, models, rules, protection (DRM), text, net
 test/
-├── unit/          # Unit tests (Karma + Mocha + Chai)
-│   ├── config/    # karma.unit.conf.cjs
+├── unit/          # Unit tests (Web Test Runner + Mocha + Chai)
+│   ├── config/    # web-test-runner.config.mjs
 │   ├── data/      # Test fixtures (MPDs, subtitles)
 │   ├── helpers/   # ObjectsHelper, VOHelper, etc.
 │   ├── mocks/     # Hand-written mock classes

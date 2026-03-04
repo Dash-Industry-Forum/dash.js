@@ -1,5 +1,6 @@
 import PlaybackController from '../../../../src/streaming/controllers/PlaybackController.js';
 import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import VideoModelMock from '../../mocks/VideoModelMock.js';
@@ -11,8 +12,10 @@ import AdapterMock from '../../mocks/AdapterMock.js';
 import ServiceDescriptionController from '../../../../src/dash/controllers/ServiceDescriptionController.js';
 
 import {expect} from 'chai';
-const context = {};
 import sinon from 'sinon';
+
+Events.extend(MediaPlayerEvents);
+const context = {};
 
 const eventBus = EventBus(context).getInstance();
 

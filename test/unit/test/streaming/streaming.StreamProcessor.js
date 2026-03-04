@@ -1,5 +1,9 @@
 import StreamProcessor from '../../../../src/streaming/StreamProcessor.js';
+import Events from '../../../../src/core/events/Events.js';
+import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import {expect} from 'chai';
+
+Events.extend(MediaPlayerEvents);
 
 const context = {};
 
