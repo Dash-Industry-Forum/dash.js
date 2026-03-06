@@ -1874,6 +1874,8 @@ function MediaPlayer() {
     /**
      * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
      * @param {function} customFunc - the custom function that returns the initial track
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function setCustomInitialTrackSelectionFunction(customFunc) {
         customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
@@ -1881,6 +1883,8 @@ function MediaPlayer() {
 
     /**
      * Resets the custom initial track selection
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function resetCustomInitialTrackSelectionFunction() {
         customParametersModel.resetCustomInitialTrackSelectionFunction(null);
