@@ -419,6 +419,7 @@ function MediaController() {
             }
         });
         if (tracksAfterMatcher.length !== 0) {
+            logger.info('Filter-Function (' + filterFn.name + ') resulted in ' + tracksAfterMatcher.length + ' tracks');
             return tracksAfterMatcher;
         }
 
