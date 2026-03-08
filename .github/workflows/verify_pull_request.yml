@@ -24,8 +24,6 @@ jobs:
                 uses: actions/checkout@v4
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
-            -   name: Install karma-webdriver-launcher
-                run: npm install karma-webdriver-launcher
             -   name: Build modern bundle
                 run: npm run webpack-build-modern
             -   name: Start Tunnel
@@ -39,4 +37,6 @@ jobs:
                 env:
                     LT_USERNAME: ${{ secrets.LT_USERNAME }}
                     LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
-                run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
+                    CONFIGFILE: lambdatest
+                    STREAMSFILE: single
+                run: npx web-test-runner --config test/functional/config/web-test-runner.functional.mjs

@@ -1,38 +1,37 @@
 {
+  "headless": false,
   "browsers": [
-    "chrome_custom",
-    "firefox_custom",
-    "safari_custom"
-  ],
-  "hostname": "localhost",
-  "port": 4200,
-  "protocol": "http",
-  "concurrency": 3,
-  "customLaunchers": {
-    "chrome_custom": {
-      "base": "Chrome",
-      "flags": [
-        "--disable-web-security",
-        "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking",
-        "--disable-search-engine-choice-screen"
-      ]
+    {
+      "name": "Chrome",
+      "capabilities": {
+        "browserName": "chrome",
+        "goog:chromeOptions": {
+          "channel": "chrome",
+          "args": [
+            "--disable-web-security",
+            "--autoplay-policy=no-user-gesture-required",
+            "--disable-popup-blocking",
+            "--disable-search-engine-choice-screen"
+          ]
+        }
+      }
     },
-    "firefox_custom": {
-      "base": "Firefox",
-      "prefs": {}
+    {
+      "name": "Firefox",
+      "capabilities": {
+        "browserName": "firefox",
+        "moz:firefoxOptions": {
+          "prefs": {}
+        }
+      }
     },
-    "safari_custom": {
-      "base": "SafariNative",
-      "flags": [
-        "--disable-popup-blocking"
-      ]
+    {
+      "name": "Safari",
+      "capabilities": {
+        "browserName": "safari"
+      }
     }
-  },
-  "reporters": [
-    "junit",
-    "mocha",
-    "html",
-    "coverage"
-  ]
+  ],
+  "parallelTestFiles": 1,
+  "parallelBrowsers": 1
 }

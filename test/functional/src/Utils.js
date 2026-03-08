@@ -3,7 +3,7 @@ import {UAParser} from 'ua-parser-js'
 class Utils {
 
     static getTestvectorsForTestcase(testcase) {
-        const testvectors = window.__karma__.config.testvectors
+        const testvectors = window.__testvectors__
 
         if (!testvectors || testvectors.length === 0) {
             return []

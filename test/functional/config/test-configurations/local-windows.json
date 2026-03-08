@@ -1,41 +1,46 @@
 {
+  "headless": true,
   "browsers": [
-    "edge_custom",
-    "firefox_custom",
-    "chrome_custom"
-  ],
-  "hostname": "localhost",
-  "port": 4200,
-  "protocol": "http",
-  "concurrency": 3,
-  "customLaunchers": {
-    "chrome_custom": {
-      "base": "Chrome",
-      "flags": [
-        "--disable-web-security",
-        "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking",
-        "--disable-search-engine-choice-screen"
-      ]
+    {
+      "name": "Edge",
+      "capabilities": {
+        "browserName": "MicrosoftEdge",
+        "ms:edgeOptions": {
+          "channel": "msedge",
+          "args": [
+            "--disable-web-security",
+            "--autoplay-policy=no-user-gesture-required",
+            "--disable-popup-blocking",
+            "--disable-search-engine-choice-screen"
+          ]
+        }
+      }
     },
-    "edge_custom": {
-      "base": "Edge",
-      "flags": [
-        "--disable-web-security",
-        "--autoplay-policy=no-user-gesture-required",
-        "--disable-popup-blocking",
-        "--disable-search-engine-choice-screen"
-      ]
+    {
+      "name": "Firefox",
+      "capabilities": {
+        "browserName": "firefox",
+        "moz:firefoxOptions": {
+          "prefs": {}
+        }
+      }
     },
-    "firefox_custom": {
-      "base": "Firefox",
-      "prefs": {}
+    {
+      "name": "Chrome",
+      "capabilities": {
+        "browserName": "chrome",
+        "goog:chromeOptions": {
+          "channel": "chrome",
+          "args": [
+            "--disable-web-security",
+            "--autoplay-policy=no-user-gesture-required",
+            "--disable-popup-blocking",
+            "--disable-search-engine-choice-screen"
+          ]
+        }
+      }
     }
-  },
-  "reporters": [
-    "junit",
-    "mocha",
-    "html",
-    "coverage"
-  ]
+  ],
+  "parallelTestFiles": 3,
+  "parallelBrowsers": 3
 }
