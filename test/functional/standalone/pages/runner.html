@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dash.js - Running Tests</title>
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/standalone/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="main-container">
+
+    <!-- ============ HEADER ============ -->
+    <div class="header-bar">
+        <div class="logo-area">
+            <img src="/img/if.png" alt="DASH-IF">
+            <h1>Functional Tests</h1>
+            <span class="version-badge" id="test-config-info">Loading...</span>
+        </div>
+        <div class="header-right">
+            <select class="theme-select" id="theme-select" aria-label="Theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+            <a href="/standalone/landing.html" class="btn btn-outline-secondary btn-sm">
+                <i class="bi bi-arrow-left"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="row g-3 mx-0">
+
+        <!-- Left: Video + Status -->
+        <div class="col-lg-8">
+            <div id="video-wrapper">
+                <video id="video-element" controls muted></video>
+            </div>
+            <div id="ttml-rendering-div"></div>
+            <div id="ad-ui"></div>
+
+            <!-- Current test status -->
+            <div class="current-test-bar">
+                <i class="bi bi-arrow-repeat spin" id="status-icon"></i>
+                <span class="current-test-text" id="current-test">Initializing...</span>
+            </div>
+        </div>
+
+        <!-- Right: Progress + Results -->
+        <div class="col-lg-4">
+            <!-- Progress Panel -->
+            <div class="stats-panel">
+                <div class="panel-header">
+                    <i class="bi bi-graph-up"></i> Progress
+                </div>
+                <div class="panel-body">
+                    <div class="stat-cards">
+                        <div class="stat-card">
+                            <div class="stat-card-value text-success-themed" id="stat-passed">0</div>
+                            <div class="stat-card-label">Passed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-value text-danger-themed" id="stat-failed">0</div>
+                            <div class="stat-card-label">Failed</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-value text-warning-themed" id="stat-pending">0</div>
+                            <div class="stat-card-label">Pending</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-card-value text-accent-themed" id="stat-total">0</div>
+                            <div class="stat-card-label">Total</div>
+                        </div>
+                    </div>
+
+                    <div class="metric-section-title">Progress</div>
+                    <div class="metric-buffer-bar">
+                        <div class="metric-buffer-bar-fill" id="progress-bar" style="width: 0%"></div>
+                    </div>
+
+                    <div class="metric-section-title">Details</div>
+                    <div class="metric-row">
+                        <span class="metric-label">Stream Config</span>
+                        <span class="metric-value" id="detail-streams">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Session ID</span>
+                        <span class="metric-value" id="detail-session" style="font-family: monospace; font-size: 0.7rem;">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Test Files</span>
+                        <span class="metric-value" id="detail-files">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Duration</span>
+                        <span class="metric-value" id="detail-duration">-</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Panel -->
+            <div class="stats-panel" style="margin-top: 0.75rem;">
+                <div class="panel-header">
+                    <i class="bi bi-list-check"></i> Results
+                </div>
+                <div class="panel-body" style="padding: 0;">
+                    <div id="results-list" class="results-scroll">
+                        <div class="empty-state" id="results-empty">
+                            <i class="bi bi-clock-history"></i>
+                            Waiting for test results...
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Mocha container (hidden) -->
+<div id="mocha" style="display: none;"></div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<!-- Mocha browser build -->
+<script src="/node_modules/mocha/mocha.js"></script>
+<script>
+    mocha.setup({
+        ui: 'bdd',
+        timeout: 200000,
+        reporter: 'spec',
+        color: false
+    });
+</script>
+
+<!-- Google IMA DAI SDK -->
+<script src="/test/functional/lib/ima3_dai.js"></script>
+
+<!-- Runner orchestrator -->
+<script type="module" src="/standalone/js/runner.js"></script>
+</body>
+</html>

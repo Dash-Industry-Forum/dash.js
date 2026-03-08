@@ -1,0 +1,761 @@
+/* ============================================================
+   dash.js Standalone Test Runner — Styles
+   Matches the dash-if-reference-player design language.
+   Uses the same --rp-* CSS variable system and component patterns.
+   ============================================================ */
+
+/* ---- Light theme (default) ---- */
+:root {
+    --rp-bg-primary: #f5f6fa;
+    --rp-bg-secondary: #ffffff;
+    --rp-bg-card: #ffffff;
+    --rp-bg-card-header: #f0f1f5;
+    --rp-accent: #0d6efd;
+    --rp-accent-hover: #3d8bfd;
+    --rp-text: #1a1a2e;
+    --rp-text-muted: #6c757d;
+    --rp-border: #dee2e6;
+    --rp-success: #198754;
+    --rp-warning: #ffc107;
+    --rp-danger: #dc3545;
+    --rp-info: #0dcaf0;
+    --rp-transition: 0.3s ease;
+    --rp-separator: rgba(0, 0, 0, 0.06);
+    --rp-hover: rgba(0, 0, 0, 0.04);
+    --rp-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    --rp-logo-bg: transparent;
+    --rp-accent-subtle: rgba(13, 110, 253, 0.08);
+    --rp-tag-bg: rgba(0, 0, 0, 0.04);
+    --rp-buffer-bar-bg: rgba(0, 0, 0, 0.08);
+}
+
+/* ---- Dark theme ---- */
+[data-bs-theme="dark"] {
+    --rp-bg-primary: #0f0f1a;
+    --rp-bg-secondary: #1a1a2e;
+    --rp-bg-card: #1e1e36;
+    --rp-bg-card-header: #16213e;
+    --rp-text: #e0e0e0;
+    --rp-text-muted: #8a8aa0;
+    --rp-border: #2d2d50;
+    --rp-separator: rgba(255, 255, 255, 0.05);
+    --rp-hover: rgba(255, 255, 255, 0.06);
+    --rp-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    --rp-logo-bg: rgba(255, 255, 255, 0.92);
+    --rp-accent-subtle: rgba(13, 110, 253, 0.1);
+    --rp-tag-bg: rgba(255, 255, 255, 0.06);
+    --rp-buffer-bar-bg: rgba(255, 255, 255, 0.1);
+
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+[data-bs-theme="light"] {
+    --bs-body-bg: var(--rp-bg-primary);
+    --bs-body-color: var(--rp-text);
+    --bs-border-color: var(--rp-border);
+    --bs-tertiary-bg: var(--rp-bg-secondary);
+    --bs-secondary-bg: var(--rp-bg-card);
+}
+
+/* ---- Base ---- */
+body {
+    background-color: var(--rp-bg-primary);
+    color: var(--rp-text);
+    font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    min-height: 100vh;
+}
+
+.main-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+/* ---- Header Bar ---- */
+.header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--rp-border);
+    margin-bottom: 1rem;
+}
+
+.header-bar .logo-area {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.header-bar .logo-area img {
+    height: 48px;
+    background: var(--rp-logo-bg);
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+.header-bar .logo-area h1 {
+    font-size: 1.25rem;
+    margin: 0;
+    font-weight: 600;
+    color: var(--rp-text);
+}
+
+.version-badge {
+    font-size: 0.75rem;
+    color: var(--rp-text-muted);
+    background: var(--rp-bg-secondary);
+    padding: 2px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--rp-border);
+}
+
+.header-right {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.theme-select {
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    color: var(--rp-text);
+    font-size: 0.8rem;
+    padding: 0.25rem 0.45rem;
+    border-radius: 6px;
+    cursor: pointer;
+    height: 30px;
+}
+
+.theme-select:focus {
+    outline: none;
+    border-color: var(--rp-accent);
+    box-shadow: 0 0 0 2px rgba(13, 110, 253, 0.15);
+}
+
+/* ---- Config Bar (styled as URL bar) ---- */
+.config-bar {
+    margin-bottom: 1rem;
+    position: relative;
+}
+
+.config-bar .input-group {
+    background: var(--rp-bg-secondary);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.config-bar .form-select,
+.config-bar .form-control {
+    background-color: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    color: var(--rp-text);
+}
+
+.config-bar .form-select:focus,
+.config-bar .form-control:focus {
+    background-color: var(--rp-bg-secondary);
+    border-color: var(--rp-accent);
+    color: var(--rp-text);
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+.config-bar .btn {
+    white-space: nowrap;
+}
+
+/* ---- Options Panel (horizontal scroll cards) ---- */
+.options-panel {
+    background: var(--rp-bg-secondary);
+    border-radius: 8px;
+    margin-bottom: 1rem;
+    overflow: hidden;
+    transition: max-height var(--rp-transition), opacity var(--rp-transition), padding var(--rp-transition);
+}
+
+.options-panel.collapsed {
+    max-height: 0;
+    opacity: 0;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0;
+}
+
+.options-panel:not(.collapsed) {
+    max-height: 500px;
+    opacity: 1;
+    padding: 1rem;
+}
+
+.options-scroll-wrapper {
+    position: relative;
+}
+
+.options-title {
+    font-size: 0.7rem;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--rp-separator);
+}
+
+.options-scroll {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    padding-bottom: 0.25rem;
+}
+
+/* ---- Option Cards ---- */
+.option-card {
+    flex: 0 0 220px;
+    background: var(--rp-bg-card);
+    border-radius: 6px;
+    border: 1px solid var(--rp-border);
+    scroll-snap-align: start;
+    overflow: hidden;
+}
+
+.option-card-header {
+    background: var(--rp-bg-card-header);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--rp-border);
+}
+
+.option-card-body {
+    padding: 0.75rem;
+    font-size: 0.8rem;
+    max-height: 350px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.option-card-body .form-check {
+    margin-bottom: 0.25rem;
+}
+
+.option-card-body .form-check-label {
+    font-size: 0.8rem;
+    cursor: pointer;
+}
+
+/* ---- Stats Panel ---- */
+.stats-panel {
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.stats-panel .nav-tabs {
+    border-bottom: 1px solid var(--rp-border);
+    background: var(--rp-bg-secondary);
+    padding: 0 0.5rem;
+}
+
+.stats-panel .nav-tabs .nav-link {
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--rp-text-muted);
+    font-size: 0.8rem;
+    padding: 0.5rem 0.75rem;
+    background: transparent;
+    cursor: pointer;
+    transition: color 0.15s, border-color 0.15s;
+}
+
+.stats-panel .nav-tabs .nav-link:hover {
+    color: var(--rp-text);
+}
+
+.stats-panel .nav-tabs .nav-link.active {
+    color: var(--rp-accent);
+    border-bottom-color: var(--rp-accent);
+    background: transparent;
+}
+
+.stats-panel .tab-content {
+    padding: 0.75rem;
+}
+
+.panel-header {
+    background: var(--rp-bg-card-header);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--rp-border);
+}
+
+.panel-body {
+    padding: 0.75rem;
+}
+
+/* ---- Metric Rows ---- */
+.metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--rp-separator);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    color: var(--rp-text-muted);
+    font-size: 0.75rem;
+    flex: 1;
+}
+
+.metric-value {
+    font-size: 0.8rem;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+}
+
+.metric-section-title {
+    font-size: 0.7rem;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    padding: 0.5rem 0 0.2rem;
+    border-bottom: 1px solid var(--rp-separator);
+    font-weight: 600;
+    margin-top: 0.25rem;
+}
+
+/* ---- Buffer / Progress Bar (same as reference player) ---- */
+.metric-buffer-bar {
+    width: 100%;
+    height: 6px;
+    background: var(--rp-buffer-bar-bg);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 0.5rem 0;
+}
+
+.metric-buffer-bar-fill {
+    height: 100%;
+    background: var(--rp-accent);
+    border-radius: 3px;
+    transition: width 0.5s;
+}
+
+.metric-buffer-bar-fill.success {
+    background: var(--rp-success);
+}
+
+.metric-buffer-bar-fill.danger {
+    background: var(--rp-danger);
+}
+
+/* ---- Video Wrapper (same as reference player) ---- */
+#video-wrapper {
+    position: relative;
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    aspect-ratio: 16 / 9;
+}
+
+#video-wrapper video {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+/* ---- Current Test Status Bar ---- */
+.current-test-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    margin-top: 0.75rem;
+    font-size: 0.8rem;
+    color: var(--rp-text-muted);
+    min-height: 38px;
+    overflow: hidden;
+}
+
+.current-test-bar .current-test-text {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+}
+
+/* ---- Report Link ---- */
+.report-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+    padding: 0.35rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--rp-accent);
+    background: var(--rp-accent-subtle);
+    border: 1px solid var(--rp-accent);
+    border-radius: 6px;
+    text-decoration: none;
+    transition: background 0.15s, color 0.15s;
+}
+
+.report-link:hover {
+    background: var(--rp-accent);
+    color: #fff;
+}
+
+/* ---- Spin animation for loading icon ---- */
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ---- Stream Item List ---- */
+.stream-list {
+    max-height: 500px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rp-border) transparent;
+}
+
+.stream-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--rp-separator);
+    font-size: 0.8rem;
+    transition: background 0.1s;
+    cursor: default;
+}
+
+.stream-item:last-child {
+    border-bottom: none;
+}
+
+.stream-item:hover {
+    background: var(--rp-hover);
+}
+
+.stream-name {
+    flex: 1;
+    line-height: 1.3;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.stream-tag {
+    font-size: 0.6rem;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.stream-tag-vod {
+    background: rgba(13, 110, 253, 0.12);
+    color: var(--rp-accent);
+}
+
+.stream-tag-live {
+    background: rgba(25, 135, 84, 0.12);
+    color: var(--rp-success);
+}
+
+.stream-tag-drm {
+    background: rgba(111, 66, 193, 0.12);
+    color: #6f42c1;
+}
+
+.stream-tag-mss {
+    background: rgba(253, 126, 20, 0.12);
+    color: #e67312;
+}
+
+/* ---- QR Code Container ---- */
+.qr-container {
+    text-align: center;
+    padding: 1rem;
+}
+
+.qr-container canvas {
+    background: #fff;
+    padding: 12px;
+    border-radius: 6px;
+    max-width: 100%;
+}
+
+.qr-url {
+    font-size: 0.7rem;
+    color: var(--rp-text-muted);
+    margin-top: 0.5rem;
+    word-break: break-all;
+    line-height: 1.3;
+}
+
+/* ---- Connection Status ---- */
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    color: var(--rp-text-muted);
+    border-top: 1px solid var(--rp-separator);
+}
+
+.status-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.status-connected {
+    background: var(--rp-success);
+}
+
+.status-disconnected {
+    background: var(--rp-danger);
+}
+
+.status-waiting {
+    background: var(--rp-warning);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+/* ---- Results List ---- */
+.results-scroll {
+    max-height: 450px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rp-border) transparent;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    padding: 0.3rem 0;
+    border-bottom: 1px solid var(--rp-separator);
+    font-size: 0.8rem;
+}
+
+.result-item:last-child {
+    border-bottom: none;
+}
+
+.result-icon {
+    width: 18px;
+    flex-shrink: 0;
+    text-align: center;
+    font-size: 0.75rem;
+    margin-right: 0.5rem;
+}
+
+.result-pass .result-icon { color: var(--rp-success); }
+.result-fail .result-icon { color: var(--rp-danger); }
+.result-pending .result-icon { color: var(--rp-warning); }
+
+.result-title {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-size: 0.75rem;
+}
+
+.result-duration {
+    color: var(--rp-text-muted);
+    font-size: 0.7rem;
+    margin-left: 0.5rem;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Result Groups ---- */
+.result-group {
+    border: 1px solid var(--rp-border);
+    border-radius: 6px;
+    margin-bottom: 0.5rem;
+    overflow: hidden;
+}
+
+.result-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.4rem 0.75rem;
+    background: var(--rp-bg-card-header);
+    border-bottom: 1px solid var(--rp-border);
+    position: sticky;
+    top: 0;
+    z-index: 1;
+}
+
+.result-group-name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: capitalize;
+    color: var(--rp-text);
+}
+
+.result-group-count {
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--rp-success);
+    font-weight: 600;
+}
+
+.result-group-count.has-failures {
+    color: var(--rp-danger);
+}
+
+.result-group-items {
+    padding: 0 0.5rem;
+}
+
+/* ---- Info Callout (same as reference player) ---- */
+.info-callout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: rgba(13, 202, 240, 0.05);
+    border-left: 4px solid var(--rp-info);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--rp-text-muted);
+    margin-bottom: 0.75rem;
+}
+
+/* ---- Toast Notification (same animation as reference player) ---- */
+.copy-notification {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    z-index: 9999;
+    animation: fadeInOut 2.5s ease forwards;
+}
+
+@keyframes fadeInOut {
+    0% { opacity: 0; transform: translateY(-10px); }
+    15% { opacity: 1; transform: translateY(0); }
+    85% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-10px); }
+}
+
+/* ---- Stat Cards (large numbers) ---- */
+.stat-cards {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 0.5rem 0.25rem;
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    border-radius: 6px;
+}
+
+.stat-card-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1.2;
+}
+
+.stat-card-label {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.text-success-themed { color: var(--rp-success); }
+.text-danger-themed { color: var(--rp-danger); }
+.text-warning-themed { color: var(--rp-warning); }
+.text-accent-themed { color: var(--rp-accent); }
+
+/* ---- Empty state ---- */
+.empty-state {
+    text-align: center;
+    padding: 2rem 1rem;
+    color: var(--rp-text-muted);
+    font-size: 0.85rem;
+}
+
+.empty-state i {
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 0.5rem;
+    opacity: 0.4;
+}
+
+/* ---- Utility ---- */
+.d-none { display: none !important; }
+
+.gap-3 { gap: 1rem; }
+
+/* ---- Responsive ---- */
+@media (max-width: 991.98px) {
+    .header-bar .logo-area h1 {
+        font-size: 1rem;
+    }
+
+    .option-card {
+        flex: 0 0 180px;
+    }
+
+    .stat-cards {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 575.98px) {
+    .header-bar .logo-area .version-badge {
+        display: none;
+    }
+
+    .stat-card-value {
+        font-size: 1.25rem;
+    }
+}

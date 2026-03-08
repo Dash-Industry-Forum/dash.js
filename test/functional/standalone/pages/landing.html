@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dash.js - Functional Tests</title>
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/standalone/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="main-container">
+
+    <!-- ============ HEADER ============ -->
+    <div class="header-bar">
+        <div class="logo-area">
+            <img src="/img/if.png" alt="DASH-IF">
+            <h1>Functional Tests</h1>
+            <span class="version-badge">Standalone Runner</span>
+        </div>
+        <div class="header-right">
+            <select class="theme-select" id="theme-select" aria-label="Theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- ============ CONFIG BAR ============ -->
+    <div class="config-bar">
+        <div class="input-group">
+            <button class="btn btn-outline-primary" id="btn-options" type="button" title="Show/Hide Test Categories">
+                <i class="bi bi-gear"></i> Options
+            </button>
+            <select class="form-select" id="stream-config">
+                <option value="">Loading stream configurations...</option>
+            </select>
+            <button class="btn btn-success" id="btn-start" type="button" title="Start Tests" disabled>
+                <i class="bi bi-play-fill"></i> Start
+            </button>
+        </div>
+    </div>
+
+    <!-- ============ OPTIONS PANEL (test categories) ============ -->
+    <div class="options-panel" id="options-panel">
+        <div class="options-title">Test Categories</div>
+        <div class="options-scroll-wrapper">
+            <div class="options-scroll" id="options-scroll">
+                <!-- Populated dynamically: inline checkboxes per test category -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ MAIN CONTENT ============ -->
+    <div class="row g-3 mx-0">
+
+        <!-- Left: Testvector Details -->
+        <div class="col-lg-8">
+            <div class="stats-panel">
+                <div class="panel-header">
+                    <i class="bi bi-collection-play"></i> Testvectors
+                    <span id="testvector-count" style="float: right; font-weight: 400; text-transform: none; letter-spacing: normal;"></span>
+                </div>
+                <div class="panel-body">
+                    <div id="testvector-list" class="stream-list">
+                        <div class="empty-state">
+                            <i class="bi bi-collection-play"></i>
+                            Select a stream configuration above to see available testvectors.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: QR Code + Session -->
+        <div class="col-lg-4">
+            <div class="stats-panel">
+                <div class="panel-header">
+                    <i class="bi bi-qr-code"></i> Remote Control
+                </div>
+                <div class="panel-body" style="padding: 0;">
+                    <div class="qr-container">
+                        <canvas id="qr-canvas"></canvas>
+                        <div id="qr-url" class="qr-url"></div>
+                    </div>
+                    <div class="connection-status">
+                        <span id="status-dot" class="status-dot status-waiting"></span>
+                        <span id="status-text">Waiting for remote device...</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stats-panel" style="margin-top: 0.75rem;">
+                <div class="panel-header">
+                    <i class="bi bi-info-circle"></i> Session
+                </div>
+                <div class="panel-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Session ID</span>
+                        <span class="metric-value" id="session-id" style="font-family: monospace; font-size: 0.75rem;"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="info-callout" style="margin-top: 0.75rem;">
+                <i class="bi bi-info-circle"></i>
+                Scan the QR code with a phone to configure and control tests remotely. Or configure directly on this device using the controls above.
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="/standalone/lib/qrcode.min.js"></script>
+<script src="/standalone/js/landing.js"></script>
+</body>
+</html>

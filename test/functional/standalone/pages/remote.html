@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dash.js - Remote Control</title>
+    <link href="/vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/vendor/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="/standalone/styles.css" rel="stylesheet">
+</head>
+<body>
+<div class="main-container">
+
+    <!-- ============ HEADER ============ -->
+    <div class="header-bar">
+        <div class="logo-area">
+            <img src="/img/if.png" alt="DASH-IF">
+            <h1>Remote Control</h1>
+        </div>
+        <div class="header-right">
+            <select class="theme-select" id="theme-select" aria-label="Theme">
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="stats-panel" style="margin-bottom: 0.75rem;">
+        <div class="connection-status" style="border-top: none;">
+            <span id="status-dot" class="status-dot status-waiting"></span>
+            <span id="status-text">Connecting...</span>
+            <span style="margin-left: auto; font-size: 0.7rem; font-family: monospace;" id="session-display"></span>
+        </div>
+    </div>
+
+    <!-- ============ CONFIG SECTION ============ -->
+    <div id="config-section">
+        <div class="stats-panel">
+            <div class="panel-header">
+                <i class="bi bi-gear"></i> Test Configuration
+            </div>
+            <div class="panel-body">
+                <div style="margin-bottom: 0.75rem;">
+                    <label for="stream-config" style="font-size: 0.75rem; color: var(--rp-text-muted); margin-bottom: 0.25rem; display: block;">Stream Configuration</label>
+                    <select class="form-select form-select-sm" id="stream-config">
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+
+                <label style="font-size: 0.75rem; color: var(--rp-text-muted); margin-bottom: 0.25rem; display: block;">Test Categories</label>
+                <div id="test-categories" style="margin-bottom: 0.75rem;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <div style="display: flex; gap: 0.5rem;">
+                    <button class="btn btn-outline-secondary btn-sm" id="btn-send-config" disabled>
+                        <i class="bi bi-send"></i> Send Config
+                    </button>
+                    <button class="btn btn-success btn-sm" id="btn-start" disabled>
+                        <i class="bi bi-play-fill"></i> Start Tests
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ RESULTS SECTION ============ -->
+    <div id="results-section" class="d-none">
+        <div class="stats-panel" style="margin-bottom: 0.75rem;">
+            <div class="panel-body">
+                <div class="stat-cards">
+                    <div class="stat-card">
+                        <div class="stat-card-value text-success-themed" id="stat-passed">0</div>
+                        <div class="stat-card-label">Passed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value text-danger-themed" id="stat-failed">0</div>
+                        <div class="stat-card-label">Failed</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value text-warning-themed" id="stat-pending">0</div>
+                        <div class="stat-card-label">Pending</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-value text-accent-themed" id="stat-total">0</div>
+                        <div class="stat-card-label">Total</div>
+                    </div>
+                </div>
+                <div class="metric-buffer-bar">
+                    <div class="metric-buffer-bar-fill" id="progress-bar" style="width: 0%"></div>
+                </div>
+                <div class="current-test-bar" style="margin-top: 0.5rem; border: none; background: transparent; padding: 0;">
+                    <span class="current-test-text" id="current-test" style="font-size: 0.75rem;">Waiting for tests to start...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-panel">
+            <div class="panel-header">
+                <i class="bi bi-list-check"></i> Results
+            </div>
+            <div class="panel-body">
+                <div id="results-list" class="results-scroll">
+                    <div class="empty-state" id="results-empty">
+                        <i class="bi bi-clock-history"></i>
+                        Waiting for test results...
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Toast -->
+<div id="toast-container"></div>
+
+<script src="/standalone/js/remote.js"></script>
+</body>
+</html>
