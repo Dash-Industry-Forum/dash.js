@@ -235,6 +235,8 @@ function saveResults(session) {
  * Generate a fully self-contained HTML report.
  * All CSS is inlined — the file works standalone (filesystem, email, CI artifact).
  * Fixed light theme. No external dependencies.
+ * Results grouped by testcase (e.g. playback/play, buffer/initial-buffer-target).
+ * Includes an interactive filter bar (All / Passed / Failed / Skipped).
  */
 function generateHtmlReport(results, summary, sessionId) {
     const escapeHtml = (str) => {
@@ -255,59 +257,68 @@ function generateHtmlReport(results, summary, sessionId) {
     const pct = total > 0 ? ((passes + failures + pending) / total * 100).toFixed(1) : '0.0';
     const barColor = failures > 0 ? '#dc3545' : '#198754';
 
-    // Group results by suite
-    const suites = {};
-    const suiteOrder = [];
-    for (const result of results) {
-        const suiteName = result.suite || 'Unknown Suite';
-        if (!suites[suiteName]) {
-            suites[suiteName] = { tests: [], passes: 0, failures: 0, pending: 0 };
-            suiteOrder.push(suiteName);
-        }
-        suites[suiteName].tests.push(result);
-        if (result.status === 'passed') suites[suiteName].passes++;
-        else if (result.status === 'failed') suites[suiteName].failures++;
-        else suites[suiteName].pending++;
+    // Extract testcase from suite name: "playback/play - stream - url" → "playback/play"
+    function extractTestcase(suite) {
+        if (!suite) return 'unknown';
+        const idx = suite.indexOf(' - ');
+        return idx > 0 ? suite.substring(0, idx) : suite;
     }
 
-    // Build suite HTML
-    let suitesHtml = '';
-    for (const suiteName of suiteOrder) {
-        const suite = suites[suiteName];
-        const suiteStatus = suite.failures > 0 ? 'fail' : 'pass';
-        const suiteIcon = suite.failures > 0 ? '\u2717' : '\u2713';
-        const suiteIconColor = suite.failures > 0 ? '#dc3545' : '#198754';
-        const suiteTestCount = suite.tests.length;
-        const openAttr = suite.failures > 0 ? ' open' : '';
+    // Group results by testcase
+    const testcases = {};
+    const testcaseOrder = [];
+    for (const result of results) {
+        const tc = extractTestcase(result.suite);
+        if (!testcases[tc]) {
+            testcases[tc] = { tests: [], passes: 0, failures: 0, pending: 0 };
+            testcaseOrder.push(tc);
+        }
+        testcases[tc].tests.push(result);
+        if (result.status === 'passed') testcases[tc].passes++;
+        else if (result.status === 'failed') testcases[tc].failures++;
+        else testcases[tc].pending++;
+    }
+
+    // Build testcase HTML
+    let testcasesHtml = '';
+    for (const tcName of testcaseOrder) {
+        const tc = testcases[tcName];
+        const tcIcon = tc.failures > 0 ? '\u2717' : '\u2713';
+        const tcIconColor = tc.failures > 0 ? '#dc3545' : '#198754';
+        const tcTestCount = tc.tests.length;
+        const openAttr = tc.failures > 0 ? ' open' : '';
+        const countColor = tc.failures > 0 ? 'var(--danger)' : 'var(--text-muted)';
 
         let testsHtml = '';
-        for (const test of suite.tests) {
-            let icon, iconColor;
+        for (const test of tc.tests) {
+            let icon, iconColor, statusClass;
             if (test.status === 'passed') {
-                icon = '\u2713'; iconColor = '#198754';
+                icon = '\u2713'; iconColor = '#198754'; statusClass = 'passed';
             } else if (test.status === 'failed') {
-                icon = '\u2717'; iconColor = '#dc3545';
+                icon = '\u2717'; iconColor = '#dc3545'; statusClass = 'failed';
             } else {
-                icon = '\u2014'; iconColor = '#ffc107';
+                icon = '\u2014'; iconColor = '#ffc107'; statusClass = 'pending';
             }
             const dur = test.duration ? ((test.duration || 0) / 1000).toFixed(1) + 's' : '';
 
-            testsHtml += `        <div class="test-row">
-          <span class="test-icon" style="color:${iconColor}">${icon}</span>
-          <span class="test-title">${escapeHtml(test.title)}</span>
-          <span class="test-duration">${dur}</span>
-        </div>\n`;
+            testsHtml += `        <div class="test-item" data-status="${statusClass}">
+          <div class="test-row">
+            <span class="test-icon" style="color:${iconColor}">${icon}</span>
+            <span class="test-title">${escapeHtml(test.fullTitle || test.title)}</span>
+            <span class="test-duration">${dur}</span>
+          </div>\n`;
 
             if (test.status === 'failed' && test.error) {
-                testsHtml += `        <div class="test-error">${escapeHtml(test.error)}</div>\n`;
+                testsHtml += `          <div class="test-error">${escapeHtml(test.error)}</div>\n`;
             }
+            testsHtml += '        </div>\n';
         }
 
-        suitesHtml += `    <details class="suite"${openAttr}>
+        testcasesHtml += `    <details class="suite" data-tc="${escapeHtml(tcName)}"${openAttr}>
       <summary class="suite-header">
-        <span class="suite-icon" style="color:${suiteIconColor}">${suiteIcon}</span>
-        <span class="suite-name">${escapeHtml(suiteName)}</span>
-        <span class="suite-count">${suite.passes}/${suiteTestCount}</span>
+        <span class="suite-icon" style="color:${tcIconColor}">${tcIcon}</span>
+        <span class="suite-name">${escapeHtml(tcName)}</span>
+        <span class="suite-count" style="color:${countColor}">${tc.passes}/${tcTestCount}</span>
       </summary>
       <div class="suite-body">
 ${testsHtml}      </div>
@@ -373,7 +384,7 @@ body {
   width: 100%; height: 8px; background: rgba(0,0,0,0.08); border-radius: 4px;
   overflow: hidden; margin-bottom: 0.25rem;
 }
-.progress-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s; }
+.progress-bar-fill { height: 100%; border-radius: 4px; }
 
 /* Info row */
 .info-row {
@@ -381,7 +392,27 @@ body {
   color: var(--text-muted); margin-bottom: 1.25rem;
 }
 
-/* Suites */
+/* Filter bar */
+.filter-bar {
+  display: flex; align-items: center; gap: 0.25rem; margin-bottom: 1rem;
+}
+.filter-bar-label {
+  font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
+  margin-right: 0.5rem; text-transform: uppercase; letter-spacing: 0.03em;
+}
+.filter-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 4px;
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.03em;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.filter-btn:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+.filter-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.filter-btn[data-filter="passed"].active { background: var(--success); border-color: var(--success); }
+.filter-btn[data-filter="failed"].active { background: var(--danger); border-color: var(--danger); }
+.filter-btn[data-filter="pending"].active { background: var(--warning); border-color: var(--warning); color: #000; }
+
+/* Suites (testcase groups) */
 .suite {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
   margin-bottom: 0.5rem; overflow: hidden;
@@ -399,7 +430,7 @@ body {
 details[open] > .suite-header::before { transform: rotate(90deg); }
 .suite-icon { font-weight: 700; flex-shrink: 0; }
 .suite-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.suite-count { font-size: 0.7rem; color: var(--text-muted); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+.suite-count { font-size: 0.7rem; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
 .suite-body { padding: 0 0.75rem 0.5rem; }
 
 /* Test rows */
@@ -407,7 +438,7 @@ details[open] > .suite-header::before { transform: rotate(90deg); }
   display: flex; align-items: center; padding: 0.25rem 0;
   border-bottom: 1px solid var(--separator); font-size: 0.8rem;
 }
-.test-row:last-child { border-bottom: none; }
+.test-item:last-child .test-row { border-bottom: none; }
 .test-icon { width: 18px; text-align: center; font-weight: 700; flex-shrink: 0; margin-right: 0.5rem; font-size: 0.75rem; }
 .test-title { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .test-duration { color: var(--text-muted); font-size: 0.7rem; margin-left: 0.5rem; flex-shrink: 0; font-variant-numeric: tabular-nums; }
@@ -417,6 +448,14 @@ details[open] > .suite-header::before { transform: rotate(90deg); }
   border-radius: 0 4px 4px 0; font-size: 0.75rem; color: var(--danger);
   white-space: pre-wrap; word-break: break-word;
 }
+
+/* Footer */
+.report-footer {
+  margin-top: 2rem; padding: 0.75rem 0; border-top: 1px solid var(--border);
+  text-align: center; font-size: 0.75rem; color: var(--text-muted);
+}
+.report-footer a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.report-footer a:hover { text-decoration: underline; }
 
 /* Responsive */
 @media (max-width: 600px) {
@@ -444,7 +483,7 @@ details[open] > .suite-header::before { transform: rotate(90deg); }
     </div>
     <div class="stat-card">
       <div class="stat-card-value c-pend">${pending}</div>
-      <div class="stat-card-label">Pending</div>
+      <div class="stat-card-label">Skipped</div>
     </div>
     <div class="stat-card">
       <div class="stat-card-value c-accent">${total}</div>
@@ -460,8 +499,48 @@ details[open] > .suite-header::before { transform: rotate(90deg); }
     <span>Duration: ${duration}s</span>
   </div>
 
-${suitesHtml}
+  <div class="filter-bar">
+    <span class="filter-bar-label">Filter:</span>
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="passed">Passed</button>
+    <button class="filter-btn" data-filter="failed">Failed</button>
+    <button class="filter-btn" data-filter="pending">Skipped</button>
+  </div>
+
+${testcasesHtml}
+  <div class="report-footer">
+    dash.js &mdash; DASH Industry Forum Reference Client
+    &middot; <a href="https://dashif.org" target="_blank" rel="noopener">dashif.org</a>
+    &middot; <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank" rel="noopener">GitHub</a>
+  </div>
+
 </div>
+<script>
+(function () {
+  var activeFilter = 'all';
+  var btns = document.querySelectorAll('.filter-btn');
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener('click', function () {
+      var filter = this.getAttribute('data-filter');
+      activeFilter = filter;
+      for (var b = 0; b < btns.length; b++) {
+        btns[b].classList.toggle('active', btns[b].getAttribute('data-filter') === filter);
+      }
+      var suites = document.querySelectorAll('.suite');
+      for (var s = 0; s < suites.length; s++) {
+        var items = suites[s].querySelectorAll('.test-item');
+        var visible = 0;
+        for (var t = 0; t < items.length; t++) {
+          var match = filter === 'all' || items[t].getAttribute('data-status') === filter;
+          items[t].style.display = match ? '' : 'none';
+          if (match) visible++;
+        }
+        suites[s].style.display = visible > 0 ? '' : 'none';
+      }
+    });
+  }
+})();
+</script>
 </body>
 </html>`;
 }
@@ -688,7 +767,7 @@ app.use('/test/functional', express.static(path.join(projectRoot, 'test/function
 // Landing page redirect
 // ---------------------------------------------------------------------------
 app.get('/', (req, res) => {
-    res.redirect('/standalone/landing.html');
+    res.redirect('/standalone/index.html');
 });
 
 // ---------------------------------------------------------------------------

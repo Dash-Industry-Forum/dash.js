@@ -858,6 +858,53 @@ body {
     50% { opacity: 0.3; }
 }
 
+/* ---- Result Filter Bar ---- */
+.result-filter-bar {
+    display: flex;
+    gap: 0.25rem;
+}
+
+.result-filter-btn {
+    background: transparent;
+    border: 1px solid var(--rp-border);
+    color: var(--rp-text-muted);
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+
+.result-filter-btn:hover {
+    background: var(--rp-hover);
+    color: var(--rp-text);
+}
+
+.result-filter-btn.active {
+    background: var(--rp-accent);
+    border-color: var(--rp-accent);
+    color: #fff;
+}
+
+.result-filter-btn[data-filter="pass"].active {
+    background: var(--rp-success);
+    border-color: var(--rp-success);
+}
+
+.result-filter-btn[data-filter="fail"].active {
+    background: var(--rp-danger);
+    border-color: var(--rp-danger);
+}
+
+.result-filter-btn[data-filter="pending"].active {
+    background: var(--rp-warning);
+    border-color: var(--rp-warning);
+    color: #000;
+}
+
 /* ---- Results List ---- */
 .results-scroll {
     max-height: 450px;
@@ -866,16 +913,16 @@ body {
     scrollbar-color: var(--rp-border) transparent;
 }
 
+.result-item-wrapper:last-child .result-item {
+    border-bottom: none;
+}
+
 .result-item {
     display: flex;
     align-items: center;
     padding: 0.3rem 0;
     border-bottom: 1px solid var(--rp-separator);
     font-size: 0.8rem;
-}
-
-.result-item:last-child {
-    border-bottom: none;
 }
 
 .result-icon {
@@ -944,7 +991,6 @@ body {
 .result-group-name {
     font-size: 0.75rem;
     font-weight: 600;
-    text-transform: capitalize;
     color: var(--rp-text);
 }
 

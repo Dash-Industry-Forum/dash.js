@@ -148,9 +148,15 @@ function getOrCreateGroup(category) {
     return resultGroups[category];
 }
 
+function extractTestcase(suiteName) {
+    if (!suiteName) { return 'unknown'; }
+    var dashIdx = suiteName.indexOf(' - ');
+    return dashIdx > 0 ? suiteName.substring(0, dashIdx) : suiteName;
+}
+
 function addResultItem(title, status, duration, suiteName, errorMsg) {
-    var category = suiteName ? suiteName.split('/')[0] : 'unknown';
-    var grp = getOrCreateGroup(category);
+    var testcase = extractTestcase(suiteName);
+    var grp = getOrCreateGroup(testcase);
 
     grp.total++;
     if (status === 'pass') { grp.passed++; }
@@ -160,6 +166,10 @@ function addResultItem(title, status, duration, suiteName, errorMsg) {
     if (grp.failed > 0) {
         grp.countEl.classList.add('has-failures');
     }
+
+    var wrapper = document.createElement('div');
+    wrapper.className = 'result-item-wrapper';
+    wrapper.setAttribute('data-status', status);
 
     var item = document.createElement('div');
     item.className = 'result-item result-' + status;
@@ -187,16 +197,61 @@ function addResultItem(title, status, duration, suiteName, errorMsg) {
     item.appendChild(titleSpan);
     item.appendChild(durationSpan);
 
-    grp.items.appendChild(item);
+    wrapper.appendChild(item);
 
     // Show error message for failed tests
     if (status === 'fail' && errorMsg) {
         var errEl = document.createElement('div');
         errEl.className = 'result-error';
         errEl.textContent = errorMsg;
-        grp.items.appendChild(errEl);
+        wrapper.appendChild(errEl);
+    }
+
+    grp.items.appendChild(wrapper);
+
+    // Re-apply current filter
+    if (activeFilter !== 'all') {
+        applyFilter(activeFilter);
     }
 }
+
+// ---- Result filtering ----
+var activeFilter = 'all';
+
+function applyFilter(status) {
+    activeFilter = status;
+
+    // Update active button
+    var btns = document.querySelectorAll('.result-filter-btn');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].classList.toggle('active', btns[i].getAttribute('data-filter') === status);
+    }
+
+    // Filter items and groups
+    var groups = document.querySelectorAll('.result-group');
+    for (var g = 0; g < groups.length; g++) {
+        var items = groups[g].querySelectorAll('.result-item-wrapper');
+        var visibleCount = 0;
+        for (var j = 0; j < items.length; j++) {
+            var match = status === 'all' || items[j].getAttribute('data-status') === status;
+            items[j].style.display = match ? '' : 'none';
+            if (match) { visibleCount++; }
+        }
+        groups[g].style.display = visibleCount > 0 ? '' : 'none';
+    }
+}
+
+// Bind filter buttons (called after DOM is ready)
+function initFilterButtons() {
+    var btns = document.querySelectorAll('.result-filter-btn');
+    for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener('click', function () {
+            applyFilter(this.getAttribute('data-filter'));
+        });
+    }
+}
+
+initFilterButtons();
 
 function showToast(message, type) {
     var el = document.createElement('div');

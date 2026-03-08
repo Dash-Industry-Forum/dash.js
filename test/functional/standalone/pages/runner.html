@@ -23,7 +23,7 @@
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
             </select>
-            <a href="/standalone/landing.html" class="btn btn-outline-secondary btn-sm">
+            <a href="/standalone/index.html" class="btn btn-outline-secondary btn-sm">
                 <i class="bi bi-arrow-left"></i> Back
             </a>
         </div>
@@ -101,8 +101,14 @@
 
             <!-- Results Panel -->
             <div class="stats-panel" style="margin-top: 0.75rem;">
-                <div class="panel-header">
-                    <i class="bi bi-list-check"></i> Results
+                <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+                    <span><i class="bi bi-list-check"></i> Results</span>
+                    <div class="result-filter-bar">
+                        <button class="result-filter-btn active" data-filter="all">All</button>
+                        <button class="result-filter-btn" data-filter="pass">Passed</button>
+                        <button class="result-filter-btn" data-filter="fail">Failed</button>
+                        <button class="result-filter-btn" data-filter="pending">Skipped</button>
+                    </div>
                 </div>
                 <div class="panel-body" style="padding: 0;">
                     <div id="results-list" class="results-scroll">
