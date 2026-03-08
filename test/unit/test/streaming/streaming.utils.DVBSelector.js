@@ -158,7 +158,7 @@ describe('BaseURLResolution/DVBSelector', function () {
         stub.restore();
     });
 
-    it('should select all equal-weight baseUrls with fair distribution (RFC 2782)', () => {
+    it('should be able to select both equal-weight baseUrls (RFC 2782)', () => {
         const baseUrls = [
             { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-a' },
             { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-b' }
