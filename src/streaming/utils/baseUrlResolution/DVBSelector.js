@@ -111,7 +111,7 @@ function DVBSelector(config) {
                 });
 
                 // pick a random number between zero and totalWeight
-                rn = Math.floor(Math.random() * (totalWeight - 1));
+                rn = Math.floor(Math.random() * totalWeight);
 
                 // select the index for the range rn falls within
                 cumulWeights.every((limit, index) => {

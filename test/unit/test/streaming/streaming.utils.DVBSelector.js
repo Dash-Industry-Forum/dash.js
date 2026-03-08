@@ -154,6 +154,63 @@ describe('BaseURLResolution/DVBSelector', function () {
 
         const fourthSelection = dvbSelector.select(baseUrls);
         expect(fourthSelection).to.be.undefined;
+
+        stub.restore();
+    });
+
+    it('should select all equal-weight baseUrls with fair distribution (RFC 2782)', () => {
+        const baseUrls = [
+            { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-a' },
+            { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-b' }
+        ];
+
+        const stub = sinon.stub(Math, 'random');
+        const dvbSelector = DVBSelector(context).create(defaultConfig);
+
+        // With totalWeight=2 and cumulWeights=[1,2]:
+        // Math.random()=0.0 → rn=0 → 0<1 → cdn-a
+        stub.returns(0.0);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-a');
+
+        // Math.random()=0.4 → rn=0 → 0<1 → cdn-a
+        stub.returns(0.4);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-a');
+
+        // Math.random()=0.5 → rn=1 → 1<2 → cdn-b
+        stub.returns(0.5);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-b');
+
+        // Math.random()=0.99 → rn=1 → 1<2 → cdn-b
+        stub.returns(0.99);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-b');
+
+        stub.restore();
+    });
+
+    it('should select all three equal-weight baseUrls (multi-CDN without dvb:weight)', () => {
+        const baseUrls = [
+            { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-a' },
+            { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-b' },
+            { dvbPriority: 1, dvbWeight: 1, serviceLocation: 'cdn-c' }
+        ];
+
+        const stub = sinon.stub(Math, 'random');
+        const dvbSelector = DVBSelector(context).create(defaultConfig);
+
+        // With totalWeight=3 and cumulWeights=[1,2,3]:
+        // Math.random()=0.0 → rn=0 → 0<1 → cdn-a
+        stub.returns(0.0);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-a');
+
+        // Math.random()=0.5 → rn=1 → 1<2 → cdn-b
+        stub.returns(0.5);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-b');
+
+        // Math.random()=0.8 → rn=2 → 2<3 → cdn-c
+        stub.returns(0.8);
+        expect(dvbSelector.select(baseUrls).serviceLocation).to.equal('cdn-c');
+
+        stub.restore();
     });
 
     it('should not select baseUrls with invalid priority when there is another option', () => {
