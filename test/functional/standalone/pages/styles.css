@@ -474,6 +474,14 @@ body {
     background: var(--rp-danger);
 }
 
+.progress-text {
+    font-size: 0.7rem;
+    color: var(--rp-text-muted);
+    text-align: right;
+    margin-top: 0.15rem;
+    font-variant-numeric: tabular-nums;
+}
+
 /* ---- Video Wrapper (same as reference player) ---- */
 #video-wrapper {
     position: relative;

@@ -392,9 +392,11 @@ body {
   color: var(--text-muted); margin-bottom: 1.25rem;
 }
 
-/* Filter bar */
+/* Filter & controls bar */
 .filter-bar {
   display: flex; align-items: center; gap: 0.25rem; margin-bottom: 1rem;
+  background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
+  padding: 0.5rem 0.75rem;
 }
 .filter-bar-label {
   font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
@@ -411,26 +413,42 @@ body {
 .filter-btn[data-filter="passed"].active { background: var(--success); border-color: var(--success); }
 .filter-btn[data-filter="failed"].active { background: var(--danger); border-color: var(--danger); }
 .filter-btn[data-filter="pending"].active { background: var(--warning); border-color: var(--warning); color: #000; }
+.expand-controls {
+  margin-left: auto; display: flex; gap: 0.25rem;
+}
+.expand-btn {
+  background: transparent; border: 1px solid var(--border); color: var(--text-muted);
+  font-size: 0.7rem; font-weight: 500; padding: 0.2rem 0.6rem; border-radius: 4px;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.expand-btn:hover { background: rgba(0,0,0,0.04); color: var(--text); }
 
 /* Suites (testcase groups) */
 .suite {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
   margin-bottom: 0.5rem; overflow: hidden;
+  border-left: 3px solid var(--accent);
 }
 .suite-header {
   display: flex; align-items: center; gap: 0.5rem;
   padding: 0.5rem 0.75rem; font-size: 0.8rem; cursor: pointer;
   background: var(--bg-card-header); user-select: none; list-style: none;
+  transition: background 0.15s;
 }
+.suite-header:hover { background: rgba(0,0,0,0.06); }
 .suite-header::-webkit-details-marker { display: none; }
 .suite-header::before {
-  content: '\u25B8'; font-size: 0.7rem; color: var(--text-muted);
-  transition: transform 0.15s; display: inline-block; width: 12px; text-align: center;
+  content: '\u25B8'; font-size: 0.85rem; color: var(--accent);
+  transition: transform 0.15s; display: inline-block; width: 14px; text-align: center;
+  flex-shrink: 0;
 }
 details[open] > .suite-header::before { transform: rotate(90deg); }
 .suite-icon { font-weight: 700; flex-shrink: 0; }
 .suite-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.suite-count { font-size: 0.7rem; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600; }
+.suite-count {
+  font-size: 0.7rem; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600;
+  background: rgba(0,0,0,0.06); padding: 0.1rem 0.5rem; border-radius: 3px;
+}
 .suite-body { padding: 0 0.75rem 0.5rem; }
 
 /* Test rows */
@@ -505,6 +523,10 @@ details[open] > .suite-header::before { transform: rotate(90deg); }
     <button class="filter-btn" data-filter="passed">Passed</button>
     <button class="filter-btn" data-filter="failed">Failed</button>
     <button class="filter-btn" data-filter="pending">Skipped</button>
+    <div class="expand-controls">
+      <button class="expand-btn" id="btn-expand-all">Expand All</button>
+      <button class="expand-btn" id="btn-collapse-all">Collapse All</button>
+    </div>
   </div>
 
 ${testcasesHtml}
@@ -517,12 +539,11 @@ ${testcasesHtml}
 </div>
 <script>
 (function () {
-  var activeFilter = 'all';
+  // Filter logic
   var btns = document.querySelectorAll('.filter-btn');
   for (var i = 0; i < btns.length; i++) {
     btns[i].addEventListener('click', function () {
       var filter = this.getAttribute('data-filter');
-      activeFilter = filter;
       for (var b = 0; b < btns.length; b++) {
         btns[b].classList.toggle('active', btns[b].getAttribute('data-filter') === filter);
       }
@@ -539,6 +560,16 @@ ${testcasesHtml}
       }
     });
   }
+
+  // Expand / Collapse all
+  document.getElementById('btn-expand-all').addEventListener('click', function () {
+    var suites = document.querySelectorAll('.suite');
+    for (var i = 0; i < suites.length; i++) { suites[i].open = true; }
+  });
+  document.getElementById('btn-collapse-all').addEventListener('click', function () {
+    var suites = document.querySelectorAll('.suite');
+    for (var i = 0; i < suites.length; i++) { suites[i].open = false; }
+  });
 })();
 </script>
 </body>

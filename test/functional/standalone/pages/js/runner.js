@@ -37,8 +37,9 @@ var configInfo = document.getElementById('test-config-info');
 var statPassed = document.getElementById('stat-passed');
 var statFailed = document.getElementById('stat-failed');
 var statPending = document.getElementById('stat-pending');
-var statTotal = document.getElementById('stat-total');
+var statRemaining = document.getElementById('stat-remaining');
 var progressBar = document.getElementById('progress-bar');
+var progressText = document.getElementById('progress-text');
 var currentTestEl = document.getElementById('current-test');
 var statusIcon = document.getElementById('status-icon');
 var resultsList = document.getElementById('results-list');
@@ -94,11 +95,14 @@ function updateStats() {
     statPassed.textContent = counts.passed;
     statFailed.textContent = counts.failed;
     statPending.textContent = counts.pending;
-    statTotal.textContent = counts.total;
 
-    var completed = counts.passed + counts.failed + counts.pending;
-    var pct = counts.total > 0 ? (completed / counts.total * 100) : 0;
+    var executed = counts.passed + counts.failed + counts.pending;
+    var remaining = counts.total - executed;
+    statRemaining.textContent = remaining < 0 ? 0 : remaining;
+
+    var pct = counts.total > 0 ? (executed / counts.total * 100) : 0;
     progressBar.style.width = pct + '%';
+    progressText.textContent = executed + ' / ' + counts.total + ' executed';
 
     if (counts.failed > 0) {
         progressBar.classList.add('danger');
