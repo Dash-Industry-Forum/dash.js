@@ -28,6 +28,7 @@
 var params = new URLSearchParams(window.location.search);
 var sessionId = params.get('session') || 'default';
 var streamsName = params.get('streams') || 'smoke';
+var mode = params.get('mode') || 'preset';
 var categoriesParam = params.get('categories') || '';
 var selectedCategories = categoriesParam ? categoriesParam.split(',') : [];
 
@@ -49,8 +50,8 @@ var detailDuration = document.getElementById('detail-duration');
 var toastContainer = document.getElementById('toast-container');
 
 // Set details
-configInfo.textContent = streamsName;
-detailStreams.textContent = streamsName;
+configInfo.textContent = mode === 'custom' ? 'Custom' : streamsName;
+detailStreams.textContent = mode === 'custom' ? 'Custom' : streamsName;
 detailSession.textContent = sessionId;
 
 // ---- Counters ----
@@ -147,7 +148,7 @@ function getOrCreateGroup(category) {
     return resultGroups[category];
 }
 
-function addResultItem(title, status, duration, suiteName) {
+function addResultItem(title, status, duration, suiteName, errorMsg) {
     var category = suiteName ? suiteName.split('/')[0] : 'unknown';
     var grp = getOrCreateGroup(category);
 
@@ -170,7 +171,7 @@ function addResultItem(title, status, duration, suiteName) {
     } else if (status === 'fail') {
         icon.innerHTML = '<i class="bi bi-x-circle-fill"></i>';
     } else {
-        icon.innerHTML = '<i class="bi bi-dash-circle"></i>';
+        icon.innerHTML = '<i class="bi bi-skip-forward-circle"></i>';
     }
 
     var titleSpan = document.createElement('span');
@@ -187,6 +188,14 @@ function addResultItem(title, status, duration, suiteName) {
     item.appendChild(durationSpan);
 
     grp.items.appendChild(item);
+
+    // Show error message for failed tests
+    if (status === 'fail' && errorMsg) {
+        var errEl = document.createElement('div');
+        errEl.className = 'result-error';
+        errEl.textContent = errorMsg;
+        grp.items.appendChild(errEl);
+    }
 }
 
 function showToast(message, type) {
@@ -222,18 +231,34 @@ async function run() {
 
         // Step 1: Load testvectors
         currentTestEl.textContent = 'Loading testvectors...';
-        var tvResponse = await fetch('/testvectors.js?streams=' + encodeURIComponent(streamsName));
-        var tvScript = await tvResponse.text();
-        var scriptEl = document.createElement('script');
-        scriptEl.textContent = tvScript;
-        document.head.appendChild(scriptEl);
+        if (mode === 'custom') {
+            // Custom config mode: fetch from session API
+            var configResponse = await fetch('/api/custom-config/' + encodeURIComponent(sessionId));
+            if (!configResponse.ok) {
+                currentTestEl.textContent = 'Error: Custom config not found for session';
+                statusIcon.className = 'bi bi-exclamation-triangle';
+                return;
+            }
+            var customCfg = await configResponse.json();
+            window.__testvectors__ = customCfg.testvectors;
+        } else {
+            // Preset mode: load via testvectors.js script
+            var tvResponse = await fetch('/testvectors.js?streams=' + encodeURIComponent(streamsName));
+            var tvScript = await tvResponse.text();
+            var scriptEl = document.createElement('script');
+            scriptEl.textContent = tvScript;
+            document.head.appendChild(scriptEl);
+        }
 
         if (!window.__testvectors__ || window.__testvectors__.length === 0) {
-            currentTestEl.textContent = 'Error: No testvectors loaded for "' + streamsName + '"';
+            currentTestEl.textContent = 'Error: No testvectors loaded' + (mode === 'custom' ? '' : ' for "' + streamsName + '"');
             statusIcon.className = 'bi bi-exclamation-triangle';
             return;
         }
 
+        if (mode === 'custom') {
+            detailStreams.textContent = 'Custom (' + window.__testvectors__.length + ' streams)';
+        }
         currentTestEl.textContent = 'Loaded ' + window.__testvectors__.length + ' testvectors. Loading dash.js...';
 
         // Step 2: Import dash.js
@@ -288,29 +313,42 @@ async function run() {
         });
 
         runner.on('pass', function (test) {
-            counts.passed++;
-            updateStats();
-            var suite = test.parent ? test.parent.fullTitle() : '';
-            addResultItem(test.fullTitle(), 'pass', test.duration, suite);
-            wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'passed', duration: test.duration } });
-            wsSend({ action: 'progress', data: { passed: counts.passed, failed: counts.failed, pending: counts.pending, total: counts.total, currentTest: test.fullTitle() } });
+            try {
+                counts.passed++;
+                updateStats();
+                var suite = test.parent ? test.parent.fullTitle() : '';
+                addResultItem(test.fullTitle(), 'pass', test.duration, suite);
+                wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'passed', duration: test.duration } });
+                wsSend({ action: 'progress', data: { passed: counts.passed, failed: counts.failed, pending: counts.pending, total: counts.total, currentTest: test.fullTitle() } });
+            } catch (e) {
+                console.error('Error handling pass event:', e);
+            }
         });
 
         runner.on('fail', function (test, err) {
-            counts.failed++;
-            updateStats();
-            var suite = test.parent ? test.parent.fullTitle() : '';
-            addResultItem(test.fullTitle(), 'fail', test.duration, suite);
-            wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'failed', duration: test.duration, error: err ? err.message : 'Unknown error' } });
-            wsSend({ action: 'progress', data: { passed: counts.passed, failed: counts.failed, pending: counts.pending, total: counts.total, currentTest: test.fullTitle() } });
+            try {
+                counts.failed++;
+                updateStats();
+                var suite = test.parent ? test.parent.fullTitle() : '';
+                var errorMsg = err ? err.message : 'Unknown error';
+                addResultItem(test.fullTitle(), 'fail', test.duration, suite, errorMsg);
+                wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'failed', duration: test.duration, error: errorMsg } });
+                wsSend({ action: 'progress', data: { passed: counts.passed, failed: counts.failed, pending: counts.pending, total: counts.total, currentTest: test.fullTitle() } });
+            } catch (e) {
+                console.error('Error handling fail event:', e);
+            }
         });
 
         runner.on('pending', function (test) {
-            counts.pending++;
-            updateStats();
-            var suite = test.parent ? test.parent.fullTitle() : '';
-            addResultItem(test.fullTitle(), 'pending', 0, suite);
-            wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'pending', duration: 0 } });
+            try {
+                counts.pending++;
+                updateStats();
+                var suite = test.parent ? test.parent.fullTitle() : '';
+                addResultItem(test.fullTitle(), 'pending', 0, suite);
+                wsSend({ action: 'result', data: { title: test.title, fullTitle: test.fullTitle(), suite: suite, status: 'pending', duration: 0 } });
+            } catch (e) {
+                console.error('Error handling pending event:', e);
+            }
         });
 
         runner.on('end', function () {

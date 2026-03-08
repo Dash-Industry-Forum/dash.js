@@ -499,6 +499,28 @@ app.get('/api/test-categories', (req, res) => {
     res.json(getAvailableTestCategories());
 });
 
+// List all testcase identifiers grouped by category
+app.get('/api/all-testcases', (req, res) => {
+    const testDir = path.join(projectRoot, 'test/functional/test');
+    const categories = {};
+    if (!fs.existsSync(testDir)) {
+        res.json(categories);
+        return;
+    }
+    const dirs = fs.readdirSync(testDir, { withFileTypes: true })
+        .filter((d) => d.isDirectory() && d.name !== 'common');
+    for (const dir of dirs) {
+        const catDir = path.join(testDir, dir.name);
+        const files = fs.readdirSync(catDir)
+            .filter((f) => f.endsWith('.js'))
+            .map((f) => dir.name + '/' + f.replace('.js', ''));
+        if (files.length > 0) {
+            categories[dir.name] = files;
+        }
+    }
+    res.json(categories);
+});
+
 // Get the list of bundled test files for a given stream config
 app.get('/api/test-files', (req, res) => {
     const streamsName = req.query.streams || cliArgs.streams;
@@ -525,6 +547,23 @@ app.get('/api/server-info', async (req, res) => {
         interfaces,
         baseUrl: `http://${host}:${port}`,
     });
+});
+
+// Store custom test configuration for a session
+app.post('/api/custom-config/:sessionId', (req, res) => {
+    const session = getOrCreateSession(req.params.sessionId);
+    session.customConfig = req.body;
+    res.json({ ok: true });
+});
+
+// Retrieve custom test configuration for a session
+app.get('/api/custom-config/:sessionId', (req, res) => {
+    const session = sessions.get(req.params.sessionId);
+    if (!session || !session.customConfig) {
+        res.status(404).json({ error: 'No custom config for session' });
+        return;
+    }
+    res.json(session.customConfig);
 });
 
 // Get results for a session
@@ -571,6 +610,17 @@ app.use('/results', express.static(path.join(resultsDir, 'html')));
 // Serve testvectors as a JavaScript file (dynamic based on query param)
 // ---------------------------------------------------------------------------
 app.get('/testvectors.js', (req, res) => {
+    // Custom config mode: serve testvectors from session
+    if (req.query.session) {
+        const session = sessions.get(req.query.session);
+        if (session && session.customConfig) {
+            res.type('application/javascript');
+            res.send(`window.__testvectors__ = ${JSON.stringify(session.customConfig.testvectors)};`);
+            return;
+        }
+    }
+
+    // Preset mode
     const streamsName = req.query.streams || cliArgs.streams;
     try {
         const streamsConfig = loadStreamsConfig(streamsName);

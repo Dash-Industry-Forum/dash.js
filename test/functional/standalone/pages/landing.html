@@ -9,7 +9,7 @@
     <link href="/standalone/styles.css" rel="stylesheet">
 </head>
 <body>
-<div class="main-container">
+<div class="main-container layout-fixed">
 
     <!-- ============ HEADER ============ -->
     <div class="header-bar">
@@ -29,21 +29,75 @@
     <!-- ============ CONFIG BAR ============ -->
     <div class="config-bar">
         <div class="input-group">
-            <button class="btn btn-outline-primary" id="btn-options" type="button" title="Show/Hide Test Categories">
-                <i class="bi bi-gear"></i> Options
-            </button>
             <select class="form-select" id="stream-config">
-                <option value="">Loading stream configurations...</option>
+                <option value="">Select a stream configuration...</option>
             </select>
-            <button class="btn btn-success" id="btn-start" type="button" title="Start Tests" disabled>
+            <button class="btn btn-outline-primary" id="btn-add-stream" type="button"
+                    title="Add Custom Stream">
+                <i class="bi bi-plus-lg"></i> Add Stream
+            </button>
+            <button class="btn btn-success" id="btn-start" type="button"
+                    title="Start Tests" disabled>
                 <i class="bi bi-play-fill"></i> Start
             </button>
         </div>
     </div>
 
-    <!-- ============ OPTIONS PANEL (test categories) ============ -->
+    <!-- ============ ADD STREAM PANEL (hidden by default) ============ -->
+    <div class="add-stream-panel d-none" id="add-stream-panel">
+        <div class="options-title">Add Custom Stream</div>
+        <div class="add-stream-fields">
+            <div class="add-stream-row">
+                <input type="text" class="form-control form-control-sm"
+                       id="custom-url" placeholder="MPD / ISM URL">
+            </div>
+            <div class="add-stream-row">
+                <input type="text" class="form-control form-control-sm"
+                       id="custom-name" placeholder="Name (optional)">
+                <select class="form-select form-select-sm" id="custom-type"
+                        style="max-width: 100px;">
+                    <option value="vod">VOD</option>
+                    <option value="live">LIVE</option>
+                </select>
+            </div>
+            <details class="drm-section" id="drm-section">
+                <summary class="drm-summary">DRM Configuration</summary>
+                <div class="drm-fields">
+                    <input type="text" class="form-control form-control-sm"
+                           id="drm-widevine" placeholder="Widevine License Server URL">
+                    <input type="text" class="form-control form-control-sm"
+                           id="drm-playready" placeholder="PlayReady License Server URL">
+                    <div class="clearkey-section">
+                        <div class="options-title" style="margin-top: 0.5rem;">ClearKey</div>
+                        <div id="clearkey-pairs">
+                            <div class="clearkey-row">
+                                <input type="text" class="form-control form-control-sm"
+                                       placeholder="Key ID">
+                                <input type="text" class="form-control form-control-sm"
+                                       placeholder="Key">
+                            </div>
+                        </div>
+                        <button class="btn btn-link btn-sm" id="btn-add-clearkey"
+                                type="button">+ Add key pair</button>
+                    </div>
+                </div>
+            </details>
+            <div class="add-stream-actions">
+                <button class="btn btn-primary btn-sm" id="btn-confirm-add" type="button">
+                    <i class="bi bi-plus-lg"></i> Add
+                </button>
+                <button class="btn btn-outline-secondary btn-sm" id="btn-cancel-add"
+                        type="button">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ TEST CATEGORIES (global toggle) ============ -->
     <div class="options-panel" id="options-panel">
-        <div class="options-title">Test Categories</div>
+        <div class="options-title">
+            Test Categories
+            <span class="options-subtitle">applies to all streams</span>
+        </div>
         <div class="options-scroll-wrapper">
             <div class="options-scroll" id="options-scroll">
                 <!-- Populated dynamically: inline checkboxes per test category -->
@@ -52,20 +106,20 @@
     </div>
 
     <!-- ============ MAIN CONTENT ============ -->
-    <div class="row g-3 mx-0">
+    <div class="row g-3 mx-0 main-content-row">
 
-        <!-- Left: Testvector Details -->
+        <!-- Left: Testvector Configuration -->
         <div class="col-lg-8">
             <div class="stats-panel">
                 <div class="panel-header">
-                    <i class="bi bi-collection-play"></i> Testvectors
+                    <i class="bi bi-collection-play"></i> Streams &amp; Tests
                     <span id="testvector-count" style="float: right; font-weight: 400; text-transform: none; letter-spacing: normal;"></span>
                 </div>
-                <div class="panel-body">
+                <div class="panel-body" style="padding: 0;">
                     <div id="testvector-list" class="stream-list">
                         <div class="empty-state">
                             <i class="bi bi-collection-play"></i>
-                            Select a stream configuration above to see available testvectors.
+                            Select a stream configuration or add a custom stream to start.
                         </div>
                     </div>
                 </div>
@@ -105,6 +159,21 @@
             <div class="info-callout" style="margin-top: 0.75rem;">
                 <i class="bi bi-info-circle"></i>
                 Scan the QR code with a phone to configure and control tests remotely. Or configure directly on this device using the controls above.
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="footer-bar">
+        <div class="footer-inner">
+            <img src="/img/if.png" alt="DASH-IF" class="footer-logo">
+            <div class="footer-text">
+                <span class="footer-title">dash.js &mdash; DASH Industry Forum Reference Client</span>
+                <span class="footer-links">
+                    <a href="https://dashif.org" target="_blank" rel="noopener">dashif.org</a>
+                    <span class="footer-sep">&middot;</span>
+                    <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank" rel="noopener">GitHub</a>
+                </span>
             </div>
         </div>
     </div>
