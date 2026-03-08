@@ -236,8 +236,17 @@ function saveResults(session) {
  * Generate a fully self-contained HTML report.
  * All CSS is inlined — the file works standalone (filesystem, email, CI artifact).
  * Fixed light theme. No external dependencies.
- * Results grouped by testcase (e.g. playback/play, buffer/initial-buffer-target).
- * Includes an interactive filter bar (All / Passed / Failed / Skipped).
+ *
+ * Results are grouped in two levels:
+ *   1. Testcase (e.g. playback/play, buffer/initial-buffer-target)
+ *   2. Testvector / stream (e.g. "Segment Base", "1080p with PlayReady")
+ *
+ * Features:
+ *   - Interactive filter bar (All / Passed / Failed / Skipped)
+ *   - Filters auto-open relevant <details> so results are immediately visible
+ *   - Expand All / Collapse All buttons
+ *   - Clear arrow (chevron) indicators on collapsible sections
+ *   - Both testcase and testvector levels are collapsible
  */
 function generateHtmlReport(results, summary, sessionId) {
     const escapeHtml = (str) => {
@@ -258,71 +267,116 @@ function generateHtmlReport(results, summary, sessionId) {
     const pct = total > 0 ? ((passes + failures + pending) / total * 100).toFixed(1) : '0.0';
     const barColor = failures > 0 ? '#dc3545' : '#198754';
 
-    // Extract testcase from suite name: "playback/play - stream - url" → "playback/play"
+    // Extract testcase and testvector from suite name:
+    // "playback/play - Segment Base - https://..." → testcase: "playback/play", tv: "Segment Base"
     function extractTestcase(suite) {
         if (!suite) return 'unknown';
         const idx = suite.indexOf(' - ');
         return idx > 0 ? suite.substring(0, idx) : suite;
     }
 
-    // Group results by testcase
-    const testcases = {};
-    const testcaseOrder = [];
-    for (const result of results) {
-        const tc = extractTestcase(result.suite);
-        if (!testcases[tc]) {
-            testcases[tc] = { tests: [], passes: 0, failures: 0, pending: 0 };
-            testcaseOrder.push(tc);
-        }
-        testcases[tc].tests.push(result);
-        if (result.status === 'passed') testcases[tc].passes++;
-        else if (result.status === 'failed') testcases[tc].failures++;
-        else testcases[tc].pending++;
+    function extractTestvector(suite) {
+        if (!suite) return 'unknown';
+        const parts = suite.split(' - ');
+        return parts.length >= 2 ? parts[1] : suite;
     }
 
-    // Build testcase HTML
+    // Group results: testcase → testvector → tests[]
+    // Preserves insertion order for both levels
+    const testcases = {};        // { [tc]: { testvectors: { [tv]: { tests, passes, failures, pending } }, passes, failures, pending } }
+    const testcaseOrder = [];
+    const testvectorOrders = {}; // { [tc]: [tvName, ...] }
+
+    for (const result of results) {
+        const tc = extractTestcase(result.suite);
+        const tv = extractTestvector(result.suite);
+
+        if (!testcases[tc]) {
+            testcases[tc] = { testvectors: {}, passes: 0, failures: 0, pending: 0 };
+            testcaseOrder.push(tc);
+            testvectorOrders[tc] = [];
+        }
+
+        if (!testcases[tc].testvectors[tv]) {
+            testcases[tc].testvectors[tv] = { tests: [], passes: 0, failures: 0, pending: 0 };
+            testvectorOrders[tc].push(tv);
+        }
+
+        testcases[tc].testvectors[tv].tests.push(result);
+
+        if (result.status === 'passed') {
+            testcases[tc].passes++;
+            testcases[tc].testvectors[tv].passes++;
+        } else if (result.status === 'failed') {
+            testcases[tc].failures++;
+            testcases[tc].testvectors[tv].failures++;
+        } else {
+            testcases[tc].pending++;
+            testcases[tc].testvectors[tv].pending++;
+        }
+    }
+
+    // Build 2-level HTML
     let testcasesHtml = '';
     for (const tcName of testcaseOrder) {
         const tc = testcases[tcName];
-        const tcIcon = tc.failures > 0 ? '\u2717' : '\u2713';
+        const tcTotal = tc.passes + tc.failures + tc.pending;
         const tcIconColor = tc.failures > 0 ? '#dc3545' : '#198754';
-        const tcTestCount = tc.tests.length;
-        const openAttr = tc.failures > 0 ? ' open' : '';
-        const countColor = tc.failures > 0 ? 'var(--danger)' : 'var(--text-muted)';
+        const tcCountColor = tc.failures > 0 ? '#dc3545' : 'var(--text-muted)';
+        const tcOpenAttr = tc.failures > 0 ? ' open' : '';
 
-        let testsHtml = '';
-        for (const test of tc.tests) {
-            let icon, iconColor, statusClass;
-            if (test.status === 'passed') {
-                icon = '\u2713'; iconColor = '#198754'; statusClass = 'passed';
-            } else if (test.status === 'failed') {
-                icon = '\u2717'; iconColor = '#dc3545'; statusClass = 'failed';
-            } else {
-                icon = '\u2014'; iconColor = '#ffc107'; statusClass = 'pending';
+        let testvectorsHtml = '';
+        for (const tvName of testvectorOrders[tcName]) {
+            const tvData = tc.testvectors[tvName];
+            const tvTotal = tvData.tests.length;
+            const tvIconColor = tvData.failures > 0 ? '#dc3545' : '#198754';
+            const tvCountColor = tvData.failures > 0 ? '#dc3545' : 'var(--text-muted)';
+            const tvOpenAttr = tvData.failures > 0 ? ' open' : '';
+
+            let testsHtml = '';
+            for (const test of tvData.tests) {
+                let icon, iconColor, statusClass;
+                if (test.status === 'passed') {
+                    icon = '\u2713'; iconColor = '#198754'; statusClass = 'passed';
+                } else if (test.status === 'failed') {
+                    icon = '\u2717'; iconColor = '#dc3545'; statusClass = 'failed';
+                } else {
+                    icon = '\u2014'; iconColor = '#ffc107'; statusClass = 'pending';
+                }
+                const dur = test.duration ? ((test.duration || 0) / 1000).toFixed(1) + 's' : '';
+
+                testsHtml += `            <div class="test-item" data-status="${statusClass}">
+              <div class="test-row">
+                <span class="test-icon" style="color:${iconColor}">${icon}</span>
+                <span class="test-title">${escapeHtml(test.fullTitle || test.title)}</span>
+                <span class="test-duration">${dur}</span>
+              </div>\n`;
+
+                if (test.status === 'failed' && test.error) {
+                    testsHtml += `              <div class="test-error">${escapeHtml(test.error)}</div>\n`;
+                }
+                testsHtml += '            </div>\n';
             }
-            const dur = test.duration ? ((test.duration || 0) / 1000).toFixed(1) + 's' : '';
 
-            testsHtml += `        <div class="test-item" data-status="${statusClass}">
-          <div class="test-row">
-            <span class="test-icon" style="color:${iconColor}">${icon}</span>
-            <span class="test-title">${escapeHtml(test.fullTitle || test.title)}</span>
-            <span class="test-duration">${dur}</span>
-          </div>\n`;
-
-            if (test.status === 'failed' && test.error) {
-                testsHtml += `          <div class="test-error">${escapeHtml(test.error)}</div>\n`;
-            }
-            testsHtml += '        </div>\n';
+            testvectorsHtml += `        <details class="tv-suite" data-tv="${escapeHtml(tvName)}"${tvOpenAttr}>
+          <summary class="tv-header">
+            <span class="tv-icon" style="color:${tvIconColor}">${tvData.failures > 0 ? '\u2717' : '\u2713'}</span>
+            <span class="tv-name">${escapeHtml(tvName)}</span>
+            <span class="tv-count" style="color:${tvCountColor}">${tvData.passes}/${tvTotal}</span>
+          </summary>
+          <div class="tv-body">
+${testsHtml}          </div>
+        </details>\n`;
         }
 
-        testcasesHtml += `    <details class="suite" data-tc="${escapeHtml(tcName)}"${openAttr}>
-      <summary class="suite-header">
-        <span class="suite-icon" style="color:${tcIconColor}">${tcIcon}</span>
-        <span class="suite-name">${escapeHtml(tcName)}</span>
-        <span class="suite-count" style="color:${countColor}">${tc.passes}/${tcTestCount}</span>
+        testcasesHtml += `    <details class="tc-suite" data-tc="${escapeHtml(tcName)}"${tcOpenAttr}>
+      <summary class="tc-header">
+        <span class="tc-icon" style="color:${tcIconColor}">${tc.failures > 0 ? '\u2717' : '\u2713'}</span>
+        <span class="tc-name">${escapeHtml(tcName)}</span>
+        <span class="tc-count" style="color:${tcCountColor}">${tc.passes}/${tcTotal}</span>
       </summary>
-      <div class="suite-body">
-${testsHtml}      </div>
+      <div class="tc-body">
+${testvectorsHtml}      </div>
     </details>\n`;
     }
 
@@ -338,6 +392,7 @@ ${testsHtml}      </div>
   --bg-secondary: #ffffff;
   --bg-card: #ffffff;
   --bg-card-header: #f0f1f5;
+  --bg-tv-header: #f8f9fb;
   --accent: #0d6efd;
   --text: #1a1a2e;
   --text-muted: #6c757d;
@@ -397,7 +452,7 @@ body {
 .filter-bar {
   display: flex; align-items: center; gap: 0.25rem; margin-bottom: 1rem;
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
-  padding: 0.5rem 0.75rem;
+  padding: 0.5rem 0.75rem; flex-wrap: wrap;
 }
 .filter-bar-label {
   font-size: 0.75rem; font-weight: 600; color: var(--text-muted);
@@ -424,33 +479,60 @@ body {
 }
 .expand-btn:hover { background: rgba(0,0,0,0.04); color: var(--text); }
 
-/* Suites (testcase groups) */
-.suite {
+/* ---- Outer level: Testcase groups ---- */
+.tc-suite {
   background: var(--bg-card); border: 1px solid var(--border); border-radius: 6px;
   margin-bottom: 0.5rem; overflow: hidden;
   border-left: 3px solid var(--accent);
 }
-.suite-header {
+.tc-header {
   display: flex; align-items: center; gap: 0.5rem;
-  padding: 0.5rem 0.75rem; font-size: 0.8rem; cursor: pointer;
+  padding: 0.55rem 0.75rem; font-size: 0.85rem; cursor: pointer;
   background: var(--bg-card-header); user-select: none; list-style: none;
   transition: background 0.15s;
 }
-.suite-header:hover { background: rgba(0,0,0,0.06); }
-.suite-header::-webkit-details-marker { display: none; }
-.suite-header::before {
-  content: '\u25B8'; font-size: 0.85rem; color: var(--accent);
-  transition: transform 0.15s; display: inline-block; width: 14px; text-align: center;
+.tc-header:hover { background: rgba(0,0,0,0.06); }
+.tc-header::-webkit-details-marker { display: none; }
+.tc-header::before {
+  content: '\\25B8'; font-size: 1rem; color: var(--accent);
+  transition: transform 0.2s ease; display: inline-block; width: 16px; text-align: center;
   flex-shrink: 0;
 }
-details[open] > .suite-header::before { transform: rotate(90deg); }
-.suite-icon { font-weight: 700; flex-shrink: 0; }
-.suite-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.suite-count {
+details.tc-suite[open] > .tc-header::before { transform: rotate(90deg); }
+.tc-icon { font-weight: 700; flex-shrink: 0; font-size: 0.85rem; }
+.tc-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; }
+.tc-count {
   font-size: 0.7rem; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600;
   background: rgba(0,0,0,0.06); padding: 0.1rem 0.5rem; border-radius: 3px;
 }
-.suite-body { padding: 0 0.75rem 0.5rem; }
+.tc-body { padding: 0.25rem 0.5rem 0.5rem; }
+
+/* ---- Inner level: Testvector groups ---- */
+.tv-suite {
+  background: var(--bg-secondary); border: 1px solid var(--border); border-radius: 4px;
+  margin-bottom: 0.35rem; overflow: hidden;
+}
+.tv-suite:last-child { margin-bottom: 0; }
+.tv-header {
+  display: flex; align-items: center; gap: 0.4rem;
+  padding: 0.4rem 0.6rem; font-size: 0.8rem; cursor: pointer;
+  background: var(--bg-tv-header); user-select: none; list-style: none;
+  transition: background 0.15s;
+}
+.tv-header:hover { background: rgba(0,0,0,0.04); }
+.tv-header::-webkit-details-marker { display: none; }
+.tv-header::before {
+  content: '\\25B8'; font-size: 0.8rem; color: var(--text-muted);
+  transition: transform 0.2s ease; display: inline-block; width: 14px; text-align: center;
+  flex-shrink: 0;
+}
+details.tv-suite[open] > .tv-header::before { transform: rotate(90deg); }
+.tv-icon { font-weight: 700; flex-shrink: 0; font-size: 0.75rem; }
+.tv-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.tv-count {
+  font-size: 0.65rem; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600;
+}
+.tv-body { padding: 0 0.6rem 0.35rem; }
 
 /* Test rows */
 .test-row {
@@ -540,36 +622,66 @@ ${testcasesHtml}
 </div>
 <script>
 (function () {
-  // Filter logic
+  // Filter logic — works on both testcase (.tc-suite) and testvector (.tv-suite) levels
   var btns = document.querySelectorAll('.filter-btn');
   for (var i = 0; i < btns.length; i++) {
     btns[i].addEventListener('click', function () {
       var filter = this.getAttribute('data-filter');
+
+      // Update active button
       for (var b = 0; b < btns.length; b++) {
         btns[b].classList.toggle('active', btns[b].getAttribute('data-filter') === filter);
       }
-      var suites = document.querySelectorAll('.suite');
-      for (var s = 0; s < suites.length; s++) {
-        var items = suites[s].querySelectorAll('.test-item');
-        var visible = 0;
-        for (var t = 0; t < items.length; t++) {
-          var match = filter === 'all' || items[t].getAttribute('data-status') === filter;
-          items[t].style.display = match ? '' : 'none';
-          if (match) visible++;
+
+      // Iterate: tc-suite > tv-suite > test-item
+      var tcSuites = document.querySelectorAll('.tc-suite');
+      for (var tc = 0; tc < tcSuites.length; tc++) {
+        var tcEl = tcSuites[tc];
+        var tvSuites = tcEl.querySelectorAll('.tv-suite');
+        var tcVisibleTvs = 0;
+
+        for (var tv = 0; tv < tvSuites.length; tv++) {
+          var tvEl = tvSuites[tv];
+          var items = tvEl.querySelectorAll('.test-item');
+          var visibleCount = 0;
+
+          for (var t = 0; t < items.length; t++) {
+            var match = filter === 'all' || items[t].getAttribute('data-status') === filter;
+            items[t].style.display = match ? '' : 'none';
+            if (match) { visibleCount++; }
+          }
+
+          // Hide empty testvector groups; auto-open those with visible items when filtering
+          if (visibleCount > 0) {
+            tvEl.style.display = '';
+            tcVisibleTvs++;
+            if (filter !== 'all') { tvEl.open = true; }
+          } else {
+            tvEl.style.display = 'none';
+          }
         }
-        suites[s].style.display = visible > 0 ? '' : 'none';
+
+        // Hide empty testcase groups; auto-open those with visible testvectors when filtering
+        if (tcVisibleTvs > 0) {
+          tcEl.style.display = '';
+          if (filter !== 'all') { tcEl.open = true; }
+        } else {
+          tcEl.style.display = 'none';
+        }
       }
     });
   }
 
-  // Expand / Collapse all
+  // Expand All — opens all tc-suite and tv-suite details
   document.getElementById('btn-expand-all').addEventListener('click', function () {
-    var suites = document.querySelectorAll('.suite');
-    for (var i = 0; i < suites.length; i++) { suites[i].open = true; }
+    var all = document.querySelectorAll('.tc-suite, .tv-suite');
+    for (var i = 0; i < all.length; i++) { all[i].open = true; }
   });
+
+  // Collapse All — closes all tc-suite and tv-suite details
   document.getElementById('btn-collapse-all').addEventListener('click', function () {
-    var suites = document.querySelectorAll('.suite');
-    for (var i = 0; i < suites.length; i++) { suites[i].open = false; }
+    var all = document.querySelectorAll('.tc-suite, .tv-suite');
+    for (var i = 0; i < all.length; i++) { all[i].open = false; }
   });
 })();
 </script>

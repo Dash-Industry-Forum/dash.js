@@ -501,6 +501,27 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
+/* ---- Runner Page Layout ---- */
+.runner-top-row {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.runner-video-col {
+    flex: 0 0 40%;
+    min-width: 0;
+}
+
+.runner-stats-col {
+    flex: 1;
+    min-width: 0;
+}
+
+.runner-results-row {
+    margin-bottom: 1rem;
+}
+
 /* ---- Video Wrapper (same as reference player) ---- */
 #video-wrapper {
     position: relative;
@@ -934,10 +955,11 @@ body {
 
 /* ---- Results List ---- */
 .results-scroll {
-    max-height: 450px;
+    max-height: 80vh;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: var(--rp-border) transparent;
+    padding: 0.5rem;
 }
 
 .result-item-wrapper:last-child .result-item {
@@ -984,7 +1006,7 @@ body {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
 }
 
 .result-duration {
@@ -995,45 +1017,142 @@ body {
     font-variant-numeric: tabular-nums;
 }
 
-/* ---- Result Groups ---- */
-.result-group {
+/* ---- 2-Level Result Groups (Testcase > Testvector) ---- */
+
+/* Outer: Testcase group */
+.result-testcase-group {
     border: 1px solid var(--rp-border);
     border-radius: 6px;
     margin-bottom: 0.5rem;
     overflow: hidden;
+    border-left: 3px solid var(--rp-accent);
 }
 
-.result-group-header {
+.result-testcase-header {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0.4rem 0.75rem;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
     background: var(--rp-bg-card-header);
     border-bottom: 1px solid var(--rp-border);
-    position: sticky;
-    top: 0;
-    z-index: 1;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
 }
 
-.result-group-name {
-    font-size: 0.75rem;
+.result-testcase-header:hover {
+    background: var(--rp-hover);
+}
+
+.result-testcase-name {
+    font-size: 0.8rem;
     font-weight: 600;
     color: var(--rp-text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
-.result-group-count {
+.result-testcase-count {
     font-size: 0.7rem;
     font-variant-numeric: tabular-nums;
     color: var(--rp-success);
     font-weight: 600;
+    background: var(--rp-tag-bg);
+    padding: 0.1rem 0.5rem;
+    border-radius: 3px;
+    flex-shrink: 0;
 }
 
-.result-group-count.has-failures {
+.result-testcase-count.has-failures {
     color: var(--rp-danger);
 }
 
-.result-group-items {
+.result-testcase-body {
+    padding: 0.25rem 0.5rem;
+}
+
+.result-testcase-group.collapsed > .result-testcase-body {
+    display: none;
+}
+
+/* Inner: Testvector group */
+.result-testvector-group {
+    border: 1px solid var(--rp-border);
+    border-radius: 4px;
+    margin-bottom: 0.35rem;
+    overflow: hidden;
+    background: var(--rp-bg-card);
+}
+
+.result-testvector-group:last-child {
+    margin-bottom: 0;
+}
+
+.result-testvector-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.35rem 0.6rem;
+    background: var(--rp-bg-secondary);
+    border-bottom: 1px solid var(--rp-separator);
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+}
+
+.result-testvector-header:hover {
+    background: var(--rp-hover);
+}
+
+.result-testvector-name {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--rp-text);
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-testvector-count {
+    font-size: 0.65rem;
+    font-variant-numeric: tabular-nums;
+    color: var(--rp-success);
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.result-testvector-count.has-failures {
+    color: var(--rp-danger);
+}
+
+.result-testvector-items {
     padding: 0 0.5rem;
+}
+
+.result-testvector-group.collapsed > .result-testvector-items {
+    display: none;
+}
+
+/* Collapse chevrons */
+.result-collapse-chevron {
+    font-size: 0.75rem;
+    color: var(--rp-accent);
+    flex-shrink: 0;
+    width: 16px;
+    text-align: center;
+    transition: transform 0.15s;
+}
+
+.result-collapse-chevron-sm {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    flex-shrink: 0;
+    width: 14px;
+    text-align: center;
+    transition: transform 0.15s;
 }
 
 /* ---- Info Callout (same as reference player) ---- */
@@ -1156,6 +1275,15 @@ body {
 
     .stream-list {
         max-height: 70vh;
+    }
+
+    /* Runner top row stacks vertically on small screens */
+    .runner-top-row {
+        flex-direction: column;
+    }
+
+    .runner-video-col {
+        flex: none;
     }
 }
 

@@ -29,11 +29,11 @@
         </div>
     </div>
 
-    <!-- ============ MAIN CONTENT ============ -->
-    <div class="row g-3 mx-0">
+    <!-- ============ TOP ROW: Video + Stats ============ -->
+    <div class="runner-top-row">
 
         <!-- Left: Video + Status -->
-        <div class="col-lg-8">
+        <div class="runner-video-col">
             <div id="video-wrapper">
                 <video id="video-element" controls muted></video>
             </div>
@@ -47,9 +47,8 @@
             </div>
         </div>
 
-        <!-- Right: Progress + Results -->
-        <div class="col-lg-4">
-            <!-- Progress Panel -->
+        <!-- Right: Progress -->
+        <div class="runner-stats-col">
             <div class="stats-panel">
                 <div class="panel-header">
                     <i class="bi bi-graph-up"></i> Progress
@@ -99,24 +98,27 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Results Panel -->
-            <div class="stats-panel" style="margin-top: 0.75rem;">
-                <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="bi bi-list-check"></i> Results</span>
-                    <div class="result-filter-bar">
-                        <button class="result-filter-btn active" data-filter="all">All</button>
-                        <button class="result-filter-btn" data-filter="pass">Passed</button>
-                        <button class="result-filter-btn" data-filter="fail">Failed</button>
-                        <button class="result-filter-btn" data-filter="pending">Skipped</button>
-                    </div>
+    </div>
+
+    <!-- ============ RESULTS (full width) ============ -->
+    <div class="runner-results-row">
+        <div class="stats-panel">
+            <div class="panel-header" style="display: flex; align-items: center; justify-content: space-between;">
+                <span><i class="bi bi-list-check"></i> Results</span>
+                <div class="result-filter-bar">
+                    <button class="result-filter-btn active" data-filter="all">All</button>
+                    <button class="result-filter-btn" data-filter="pass">Passed</button>
+                    <button class="result-filter-btn" data-filter="fail">Failed</button>
+                    <button class="result-filter-btn" data-filter="pending">Skipped</button>
                 </div>
-                <div class="panel-body" style="padding: 0;">
-                    <div id="results-list" class="results-scroll">
-                        <div class="empty-state" id="results-empty">
-                            <i class="bi bi-clock-history"></i>
-                            Waiting for test results...
-                        </div>
+            </div>
+            <div class="panel-body" style="padding: 0;">
+                <div id="results-list" class="results-scroll">
+                    <div class="empty-state" id="results-empty">
+                        <i class="bi bi-clock-history"></i>
+                        Waiting for test results...
                     </div>
                 </div>
             </div>

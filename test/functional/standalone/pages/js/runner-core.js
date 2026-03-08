@@ -8,9 +8,15 @@
  * - Query parameter parsing
  * - DOM references
  * - WebSocket connection
- * - UI update functions (stats, result groups, filtering)
+ * - UI update functions (stats, 2-level result groups, filtering)
  * - loadScript() helper for legacy mode
  * - runMocha() to wire up Mocha event handlers
+ *
+ * Results are grouped in two levels:
+ *   1. Testcase (e.g. "playback/play")
+ *   2. Testvector / stream (e.g. "Segment Base")
+ *
+ * Both levels are collapsible via click on the header.
  *
  * The actual run() function is defined in either runner.js (ESM) or
  * runner-legacy.js (classic), loaded after this file.
@@ -66,8 +72,18 @@ detailSession.textContent = sessionId;
 
 // ---- Counters ----
 var counts = { passed: 0, failed: 0, pending: 0, total: 0 };
-var resultGroups = {};
 var startTime = Date.now();
+
+// ---- 2-level result group data ----
+// testcaseGroups[testcaseName] = {
+//   el: DOM element (.result-testcase-group),
+//   headerCountEl: DOM element for aggregate count,
+//   testvectors: {
+//     [tvName]: { el, itemsEl, countEl, passed, failed, pending, total }
+//   },
+//   passed, failed, pending, total
+// }
+var testcaseGroups = {};
 
 // ---- WebSocket ----
 var ws = null;
@@ -135,43 +151,9 @@ function updateStats() {
     detailDuration.textContent = elapsed + 's';
 }
 
-function getOrCreateGroup(category) {
-    if (resultGroups[category]) {
-        return resultGroups[category];
-    }
-
-    if (resultsEmpty) {
-        resultsEmpty.remove();
-        resultsEmpty = null;
-    }
-
-    var group = document.createElement('div');
-    group.className = 'result-group';
-
-    var header = document.createElement('div');
-    header.className = 'result-group-header';
-
-    var nameSpan = document.createElement('span');
-    nameSpan.className = 'result-group-name';
-    nameSpan.textContent = category;
-
-    var countSpan = document.createElement('span');
-    countSpan.className = 'result-group-count';
-    countSpan.textContent = '0 / 0';
-
-    header.appendChild(nameSpan);
-    header.appendChild(countSpan);
-
-    var items = document.createElement('div');
-    items.className = 'result-group-items';
-
-    group.appendChild(header);
-    group.appendChild(items);
-    resultsList.appendChild(group);
-
-    resultGroups[category] = { el: group, items: items, countEl: countSpan, passed: 0, failed: 0, pending: 0, total: 0 };
-    return resultGroups[category];
-}
+// ---- Name extraction from Mocha suite names ----
+// Suite names follow: "<testcase> - <testvector name> - <mpd url>"
+// e.g. "playback/play - Segment Base - https://..."
 
 function extractTestcase(suiteName) {
     if (!suiteName) { return 'unknown'; }
@@ -179,18 +161,183 @@ function extractTestcase(suiteName) {
     return dashIdx > 0 ? suiteName.substring(0, dashIdx) : suiteName;
 }
 
+function extractTestvectorName(suiteName) {
+    if (!suiteName) { return 'unknown'; }
+    var parts = suiteName.split(' - ');
+    if (parts.length >= 3) {
+        return parts[1];
+    }
+    if (parts.length === 2) {
+        return parts[1];
+    }
+    return suiteName;
+}
+
+// ---- 2-level collapsible result groups ----
+
+function getOrCreateTestcaseGroup(testcase) {
+    if (testcaseGroups[testcase]) {
+        return testcaseGroups[testcase];
+    }
+
+    if (resultsEmpty) {
+        resultsEmpty.remove();
+        resultsEmpty = null;
+    }
+
+    // Create outer testcase group
+    var group = document.createElement('div');
+    group.className = 'result-testcase-group';
+    group.setAttribute('data-testcase', testcase);
+
+    var header = document.createElement('div');
+    header.className = 'result-testcase-header';
+
+    var chevron = document.createElement('i');
+    chevron.className = 'bi bi-chevron-down result-collapse-chevron';
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'result-testcase-name';
+    nameSpan.textContent = testcase;
+
+    var countSpan = document.createElement('span');
+    countSpan.className = 'result-testcase-count';
+    countSpan.textContent = '0 / 0';
+
+    header.appendChild(chevron);
+    header.appendChild(nameSpan);
+    header.appendChild(countSpan);
+
+    var body = document.createElement('div');
+    body.className = 'result-testcase-body';
+
+    group.appendChild(header);
+    group.appendChild(body);
+    resultsList.appendChild(group);
+
+    // Toggle collapse on header click
+    header.addEventListener('click', function () {
+        var isCollapsed = group.classList.toggle('collapsed');
+        chevron.className = isCollapsed
+            ? 'bi bi-chevron-right result-collapse-chevron'
+            : 'bi bi-chevron-down result-collapse-chevron';
+    });
+
+    testcaseGroups[testcase] = {
+        el: group,
+        bodyEl: body,
+        headerCountEl: countSpan,
+        testvectors: {},
+        passed: 0,
+        failed: 0,
+        pending: 0,
+        total: 0
+    };
+
+    return testcaseGroups[testcase];
+}
+
+function getOrCreateTestvectorGroup(testcase, tvName) {
+    var tcGroup = getOrCreateTestcaseGroup(testcase);
+
+    if (tcGroup.testvectors[tvName]) {
+        return tcGroup.testvectors[tvName];
+    }
+
+    var group = document.createElement('div');
+    group.className = 'result-testvector-group';
+    group.setAttribute('data-testvector', tvName);
+
+    var header = document.createElement('div');
+    header.className = 'result-testvector-header';
+
+    var chevron = document.createElement('i');
+    chevron.className = 'bi bi-chevron-down result-collapse-chevron-sm';
+
+    var nameSpan = document.createElement('span');
+    nameSpan.className = 'result-testvector-name';
+    nameSpan.textContent = tvName;
+
+    var countSpan = document.createElement('span');
+    countSpan.className = 'result-testvector-count';
+    countSpan.textContent = '0 / 0';
+
+    header.appendChild(chevron);
+    header.appendChild(nameSpan);
+    header.appendChild(countSpan);
+
+    var items = document.createElement('div');
+    items.className = 'result-testvector-items';
+
+    group.appendChild(header);
+    group.appendChild(items);
+    tcGroup.bodyEl.appendChild(group);
+
+    // Toggle collapse on header click
+    header.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var isCollapsed = group.classList.toggle('collapsed');
+        chevron.className = isCollapsed
+            ? 'bi bi-chevron-right result-collapse-chevron-sm'
+            : 'bi bi-chevron-down result-collapse-chevron-sm';
+    });
+
+    tcGroup.testvectors[tvName] = {
+        el: group,
+        itemsEl: items,
+        countEl: countSpan,
+        passed: 0,
+        failed: 0,
+        pending: 0,
+        total: 0
+    };
+
+    return tcGroup.testvectors[tvName];
+}
+
+function updateGroupCounts(testcase, tvName) {
+    var tcGroup = testcaseGroups[testcase];
+    if (!tcGroup) { return; }
+
+    var tvGroup = tcGroup.testvectors[tvName];
+    if (tvGroup) {
+        tvGroup.countEl.textContent = tvGroup.passed + ' / ' + tvGroup.total;
+        if (tvGroup.failed > 0) {
+            tvGroup.countEl.classList.add('has-failures');
+        }
+    }
+
+    // Recalculate testcase totals from all testvectors
+    tcGroup.passed = 0;
+    tcGroup.failed = 0;
+    tcGroup.pending = 0;
+    tcGroup.total = 0;
+    var keys = Object.keys(tcGroup.testvectors);
+    for (var i = 0; i < keys.length; i++) {
+        var tv = tcGroup.testvectors[keys[i]];
+        tcGroup.passed += tv.passed;
+        tcGroup.failed += tv.failed;
+        tcGroup.pending += tv.pending;
+        tcGroup.total += tv.total;
+    }
+
+    tcGroup.headerCountEl.textContent = tcGroup.passed + ' / ' + tcGroup.total;
+    if (tcGroup.failed > 0) {
+        tcGroup.headerCountEl.classList.add('has-failures');
+    }
+}
+
 function addResultItem(title, status, duration, suiteName, errorMsg) {
     var testcase = extractTestcase(suiteName);
-    var grp = getOrCreateGroup(testcase);
+    var tvName = extractTestvectorName(suiteName);
+    var tvGroup = getOrCreateTestvectorGroup(testcase, tvName);
 
-    grp.total++;
-    if (status === 'pass') { grp.passed++; }
-    else if (status === 'fail') { grp.failed++; }
-    else { grp.pending++; }
-    grp.countEl.textContent = grp.passed + ' / ' + grp.total;
-    if (grp.failed > 0) {
-        grp.countEl.classList.add('has-failures');
-    }
+    tvGroup.total++;
+    if (status === 'pass') { tvGroup.passed++; }
+    else if (status === 'fail') { tvGroup.failed++; }
+    else { tvGroup.pending++; }
+
+    updateGroupCounts(testcase, tvName);
 
     var wrapper = document.createElement('div');
     wrapper.className = 'result-item-wrapper';
@@ -232,7 +379,7 @@ function addResultItem(title, status, duration, suiteName, errorMsg) {
         wrapper.appendChild(errEl);
     }
 
-    grp.items.appendChild(wrapper);
+    tvGroup.itemsEl.appendChild(wrapper);
 
     // Re-apply current filter
     if (activeFilter !== 'all') {
@@ -252,17 +399,29 @@ function applyFilter(status) {
         btns[i].classList.toggle('active', btns[i].getAttribute('data-filter') === status);
     }
 
-    // Filter items and groups
-    var groups = document.querySelectorAll('.result-group');
-    for (var g = 0; g < groups.length; g++) {
-        var items = groups[g].querySelectorAll('.result-item-wrapper');
-        var visibleCount = 0;
-        for (var j = 0; j < items.length; j++) {
-            var match = status === 'all' || items[j].getAttribute('data-status') === status;
-            items[j].style.display = match ? '' : 'none';
-            if (match) { visibleCount++; }
+    // Filter: iterate testcase groups > testvector groups > items
+    var tcGroups = document.querySelectorAll('.result-testcase-group');
+    for (var tc = 0; tc < tcGroups.length; tc++) {
+        var tcEl = tcGroups[tc];
+        var tvGroups = tcEl.querySelectorAll('.result-testvector-group');
+        var tcVisibleTvs = 0;
+
+        for (var tv = 0; tv < tvGroups.length; tv++) {
+            var tvEl = tvGroups[tv];
+            var items = tvEl.querySelectorAll('.result-item-wrapper');
+            var visibleCount = 0;
+
+            for (var j = 0; j < items.length; j++) {
+                var match = status === 'all' || items[j].getAttribute('data-status') === status;
+                items[j].style.display = match ? '' : 'none';
+                if (match) { visibleCount++; }
+            }
+
+            tvEl.style.display = visibleCount > 0 ? '' : 'none';
+            if (visibleCount > 0) { tcVisibleTvs++; }
         }
-        groups[g].style.display = visibleCount > 0 ? '' : 'none';
+
+        tcEl.style.display = tcVisibleTvs > 0 ? '' : 'none';
     }
 }
 
