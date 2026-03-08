@@ -722,6 +722,10 @@
             if (categories.length > 0) {
                 params.set('categories', categories.join(','));
             }
+            var legacyCheckbox = document.getElementById('legacy-mode');
+            if (legacyCheckbox && legacyCheckbox.checked) {
+                params.set('legacy', 'true');
+            }
             window.location.href = '/standalone/runner.html?' + params.toString();
         })
         .catch(function (err) {

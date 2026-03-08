@@ -42,6 +42,7 @@ const configDir = path.resolve(__dirname, '../config/test-configurations');
 const streamsDir = path.join(configDir, 'streams');
 const standaloneDir = __dirname;
 const bundleOutputDir = path.join(standaloneDir, '.bundled-tests');
+const bundleOutputDirLegacy = path.join(standaloneDir, '.bundled-tests-legacy');
 const resultsDir = path.join(standaloneDir, 'results');
 
 // ---------------------------------------------------------------------------
@@ -751,6 +752,13 @@ app.use('/bundled-tests', express.static(bundleOutputDir, {
     },
 }));
 
+// Serve legacy IIFE-bundled test files
+app.use('/bundled-tests-legacy', express.static(bundleOutputDirLegacy, {
+    setHeaders: (res) => {
+        res.set('Content-Type', 'application/javascript');
+    },
+}));
+
 // ---------------------------------------------------------------------------
 // Serve standalone pages
 // ---------------------------------------------------------------------------
@@ -946,23 +954,38 @@ async function start() {
     console.log(`Project root: ${projectRoot}`);
     console.log(`Stream config: ${cliArgs.streams}`);
 
-    // Bundle test files
+    // Bundle test files (both ESM and IIFE formats)
     if (!cliArgs.skipBundle) {
         console.log('\n[bundler] Bundling test files...');
         const streamsConfig = loadStreamsConfig(cliArgs.streams);
         const testFiles = getTestFiles(projectRoot, streamsConfig);
         console.log(`[bundler] Found ${testFiles.length} test files to bundle`);
 
-        const bundled = await bundleTestFiles(
+        // ESM bundles (for modern browsers)
+        console.log('[bundler] Bundling ESM format...');
+        const bundledEsm = await bundleTestFiles(
             projectRoot,
             testFiles,
             bundleOutputDir,
             (file, index, total) => {
-                process.stdout.write(`\r[bundler] Bundling ${index + 1}/${total}: ${file}          `);
-            }
+                process.stdout.write(`\r[bundler] ESM ${index + 1}/${total}: ${file}          `);
+            },
+            'es'
         );
+        console.log(`\n[bundler] ESM: ${bundledEsm.length} files bundled`);
 
-        console.log(`\n[bundler] Successfully bundled ${bundled.length} test files`);
+        // IIFE bundles (for legacy browsers / Smart TVs without ESM support)
+        console.log('[bundler] Bundling IIFE format (legacy)...');
+        const bundledIife = await bundleTestFiles(
+            projectRoot,
+            testFiles,
+            bundleOutputDirLegacy,
+            (file, index, total) => {
+                process.stdout.write(`\r[bundler] IIFE ${index + 1}/${total}: ${file}          `);
+            },
+            'iife'
+        );
+        console.log(`\n[bundler] IIFE: ${bundledIife.length} files bundled`);
     } else {
         console.log('\n[bundler] Skipping bundling (--skip-bundle)');
     }

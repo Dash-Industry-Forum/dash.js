@@ -145,7 +145,18 @@
 <!-- Google IMA DAI SDK -->
 <script src="/test/functional/lib/ima3_dai.js"></script>
 
-<!-- Runner orchestrator -->
-<script type="module" src="/standalone/js/runner.js"></script>
+<!-- Runner core (shared logic, classic script — works on all browsers) -->
+<script src="/standalone/js/runner-core.js"></script>
+
+<!-- Load ESM or legacy runner based on ?legacy= query param -->
+<script>
+(function () {
+    var legacy = new URLSearchParams(location.search).get('legacy') === 'true';
+    var s = document.createElement('script');
+    s.src = legacy ? '/standalone/js/runner-legacy.js' : '/standalone/js/runner.js';
+    if (!legacy) { s.type = 'module'; }
+    document.body.appendChild(s);
+})();
+</script>
 </body>
 </html>

@@ -275,6 +275,25 @@ body {
     white-space: nowrap;
 }
 
+.legacy-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    margin-top: 0.4rem;
+    font-size: 0.75rem;
+    color: var(--rp-text-muted);
+}
+
+.legacy-toggle .form-check-input {
+    margin: 0;
+    cursor: pointer;
+}
+
+.legacy-toggle .form-check-label {
+    cursor: pointer;
+    white-space: nowrap;
+}
+
 /* ---- Options Panel (horizontal scroll cards) ---- */
 .options-panel {
     background: var(--rp-bg-secondary);

@@ -1,9 +1,15 @@
 /**
  * Rollup-based bundler for functional test files.
  *
- * Bundles each test file into a self-contained ES module that can be loaded
- * in a browser via dynamic import(). The dash.js dist files are marked as
- * external so they are loaded separately via <script type="module"> tags.
+ * Bundles each test file into a self-contained module that can be loaded
+ * in a browser. Supports two output formats:
+ *
+ * - 'es' (default): ES modules loaded via dynamic import(). dash.js dist
+ *   files are external imports rewritten to absolute server paths.
+ *
+ * - 'iife': Immediately-invoked function expressions loaded via <script>
+ *   tags. dash.js dist files are mapped to the window.dashjs global (UMD).
+ *   This mode works on browsers that do not support ES modules.
  *
  * This replicates the same Rollup configuration used by the WTR functional
  * test config (web-test-runner.functional.mjs) but runs standalone.
@@ -108,9 +114,10 @@ export function getTestFiles(projectRoot, streamsConfig) {
  * @param {string[]} testFiles - Array of absolute test file paths
  * @param {string} outputDir - Directory to write bundled files to
  * @param {function} [onProgress] - Optional callback(file, index, total)
+ * @param {'es'|'iife'} [format='es'] - Output format: 'es' for ESM, 'iife' for legacy
  * @returns {Promise<string[]>} Array of relative output paths
  */
-export async function bundleTestFiles(projectRoot, testFiles, outputDir, onProgress) {
+export async function bundleTestFiles(projectRoot, testFiles, outputDir, onProgress, format = 'es') {
     // Ensure output directory exists
     fs.mkdirSync(outputDir, { recursive: true });
 
@@ -143,7 +150,8 @@ export async function bundleTestFiles(projectRoot, testFiles, outputDir, onProgr
                 makeAbsoluteExternalsRelative: false,
                 onwarn: (warning) => {
                     // Suppress circular dependency warnings (common.js <-> DashJsAdapter.js)
-                    if (warning.code === 'CIRCULAR_DEPENDENCY') {
+                    // and IIFE missing name warnings (test files don't export anything)
+                    if (warning.code === 'CIRCULAR_DEPENDENCY' || warning.code === 'MISSING_NAME_OPTION_FOR_IIFE_EXPORT') {
                         return;
                     }
                     console.warn(`  [rollup] ${warning.message}`);
@@ -153,22 +161,39 @@ export async function bundleTestFiles(projectRoot, testFiles, outputDir, onProgr
             const outputPath = path.join(outputDir, relPath);
             fs.mkdirSync(path.dirname(outputPath), { recursive: true });
 
-            await bundle.write({
-                file: outputPath,
-                format: 'es',
-                // Rewrite external imports to absolute server paths.
-                // Rollup passes the resolved absolute filesystem path to paths(),
-                // e.g. /Users/.../dash.js/dist/modern/esm/dash.all.min.js
-                paths: (id) => {
-                    if (id.includes('dash.all.min.js')) {
-                        return '/dist/modern/esm/dash.all.min.js';
-                    }
-                    if (id.includes('dash.mss.min.js')) {
-                        return '/dist/modern/esm/dash.mss.min.js';
-                    }
-                    return id;
-                },
-            });
+            var writeOptions;
+            if (format === 'iife') {
+                // IIFE mode: externals become global variable references.
+                // dash.js UMD exposes window.dashjs with properties like
+                // dashjs.MediaPlayer, dashjs.Debug, etc.
+                writeOptions = {
+                    file: outputPath,
+                    format: 'iife',
+                    globals: function (id) {
+                        if (id.includes('dist/modern/esm/')) {
+                            return 'dashjs';
+                        }
+                        return id;
+                    },
+                };
+            } else {
+                // ESM mode: rewrite external imports to absolute server paths.
+                writeOptions = {
+                    file: outputPath,
+                    format: 'es',
+                    paths: function (id) {
+                        if (id.includes('dash.all.min.js')) {
+                            return '/dist/modern/esm/dash.all.min.js';
+                        }
+                        if (id.includes('dash.mss.min.js')) {
+                            return '/dist/modern/esm/dash.mss.min.js';
+                        }
+                        return id;
+                    },
+                };
+            }
+
+            await bundle.write(writeOptions);
 
             await bundle.close();
             outputPaths.push(relPath);
