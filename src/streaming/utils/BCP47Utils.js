@@ -45,7 +45,7 @@
  * commonly found in broadcast/streaming content (DASH, HLS, DVB).
  * Covers both 639-2/B (bibliographic) and 639-2/T (terminological) codes.
  */
-const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
+export const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
     aar: 'aa', abk: 'ab', afr: 'af', aka: 'ak', alb: 'sq', amh: 'am',
     ara: 'ar', arg: 'an', arm: 'hy', asm: 'as', ava: 'av', ave: 'ae',
     aym: 'ay', aze: 'az', bak: 'ba', bam: 'bm', baq: 'eu', bel: 'be',
