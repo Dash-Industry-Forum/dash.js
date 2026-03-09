@@ -141,8 +141,8 @@ describe('BaseURLResolution/DVBSelector', function () {
         expect(secondSelection.dvbPriority).to.equal(3);
         expect(secondSelection.serviceLocation).to.equal('C');
 
-        // Math.random (called in select()) will return 1
-        stub.returns(1);
+        // Math.random (called in select()) will return 0.99 (valid range: [0, 1))
+        stub.returns(0.99);
 
         blacklist.push(secondSelection.serviceLocation);
 
