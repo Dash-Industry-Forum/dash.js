@@ -11,6 +11,8 @@ function StreamMock() {
         new StreamProcessorMock(TYPE_VIDEO),
         new StreamProcessorMock(TYPE_AUDIO)
     ];
+    this._representations = {};
+    this._unfilteredRepresentations = {};
 }
 
 StreamMock.prototype.initialize = function (streamInfo) {
@@ -59,5 +61,20 @@ StreamMock.prototype.getCurrentRepresentationForType = function () {
 StreamMock.prototype.getRepresentationsByType = function () {
     return null;
 }
+StreamMock.prototype.setRepresentationsByType = function (type, filtered, unfiltered) {
+    this._representations[type] = filtered;
+    this._unfilteredRepresentations[type] = unfiltered;
+};
+
+StreamMock.prototype.getRepresentationsByType = function (type, filterBySettings) {
+    if (filterBySettings) {
+        return this._representations[type] || [];
+    }
+    return this._unfilteredRepresentations[type] || [];
+};
+
+StreamMock.prototype.getBitrateListFor = function () {
+    return [1, 2];
+};
 
 export default StreamMock;

@@ -46,6 +46,8 @@ function CustomParametersModel() {
         requestInterceptors,
         responseInterceptors,
         licenseRequestFilters,
+        certificateRequestFilters,
+        certificateResponseFilters,
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
@@ -66,6 +68,8 @@ function CustomParametersModel() {
     function _resetInitialSettings() {
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        certificateRequestFilters = [];
+        certificateResponseFilters = [];
         customCapabilitiesFilters = [];
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
@@ -113,6 +117,58 @@ function CustomParametersModel() {
      */
     function getCustomInitialTrackSelectionFunction() {
         return customInitialTrackSelectionFunction;
+    }
+
+    /**
+     * Returns all certificate request filters
+     * @return {array}
+     */
+    function getCertificateRequestFilters() {
+        return certificateRequestFilters;
+    }
+
+    /**
+     * Returns all certificate response filters
+     * @return {array}
+     */
+    function getCertificateResponseFilters() {
+        return certificateResponseFilters;
+    }
+
+    /**
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     */
+    function registerCertificateRequestFilter(filter) {
+        certificateRequestFilters.push(filter);
+    }
+
+    /**
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     */
+    function registerCertificateResponseFilter(filter) {
+        certificateResponseFilters.push(filter);
+    }
+
+    /**
+     * Unregisters a certificate request filter.
+     * @param {function} filter - the license request filter callback
+     */
+    function unregisterCertificateRequestFilter(filter) {
+        _unregisterFilter(certificateRequestFilters, filter);
+    }
+
+    /**
+     * Unregisters a certificate response filter.
+     * @param {function} filter - the license response filter callback
+     */
+    function unregisterCertificateResponseFilter(filter) {
+        _unregisterFilter(certificateResponseFilters, filter);
     }
 
     /**
@@ -458,6 +514,8 @@ function CustomParametersModel() {
         addUTCTimingSource,
         clearDefaultUTCTimingSources,
         getAbrCustomRules,
+        getCertificateRequestFilters,
+        getCertificateResponseFilters,
         getCustomCapabilitiesFilters,
         getCustomInitialTrackSelectionFunction,
         getExternalSubtitles,
@@ -467,6 +525,8 @@ function CustomParametersModel() {
         getResponseInterceptors,
         getUTCTimingSources,
         getXHRWithCredentialsForType,
+        registerCertificateRequestFilter,
+        registerCertificateResponseFilter,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -484,6 +544,8 @@ function CustomParametersModel() {
         setConfig,
         setCustomInitialTrackSelectionFunction,
         setXHRWithCredentialsForType,
+        unregisterCertificateRequestFilter,
+        unregisterCertificateResponseFilter,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,

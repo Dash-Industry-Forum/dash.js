@@ -88,8 +88,12 @@ function XHRLoader() {
 
     function abort() {
         if (xhr) {
-            xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null; // Remove event listeners
+            // Clear most handlers before abort to prevent unwanted callbacks
+            xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null;
+            // Call abort - this will trigger onabort callback if set
             xhr.abort();
+            // Clear remaining handlers after abort to prevent memory leaks
+            xhr.onabort = xhr.ontimeout = null;
             xhr = null;
         }
     }

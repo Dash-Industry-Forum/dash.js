@@ -36,12 +36,14 @@ class MediaCapability {
     /**
      * @param {string} contentType MIME type and codecs (RFC6386)
      * @param {string} robustness
+     * @param {string | null} [encryptionScheme] encryption scheme (e.g. 'cenc', 'cbcs')
      * @class
      * @ignore
      */
-    constructor(contentType, robustness) {
+    constructor(contentType, robustness, encryptionScheme = null) {
         this.contentType = contentType;
         this.robustness = robustness;
+        this.encryptionScheme = encryptionScheme;
     }
 }
 

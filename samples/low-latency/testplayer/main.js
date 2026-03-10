@@ -30,9 +30,16 @@ App.prototype.init = function () {
 App.prototype._setDomElements = function () {
     this.domElements.settings.targetLatency = document.getElementById('target-latency');
     this.domElements.settings.maxDrift = document.getElementById('max-drift');
+    this.domElements.settings.liveThreshold = document.getElementById('live-threshold');
     this.domElements.settings.maxCatchupPlaybackRate = document.getElementById('max-catchup-playback-rate');
     this.domElements.settings.minCatchupPlaybackRate = document.getElementById('min-catchup-playback-rate');
     this.domElements.settings.catchupEnabled = document.getElementById('live-catchup-enabled');
+
+    this.domElements.settings.minStartStepParameters = document.getElementById('step-start-min');
+    this.domElements.settings.maxStartStepParameters = document.getElementById('step-start-max');
+    this.domElements.settings.minStopStepParameters = document.getElementById('step-stop-min');
+    this.domElements.settings.maxStopStepParameters = document.getElementById('step-stop-max');
+
     this.domElements.settings.abrThroughputRule = document.getElementById('abr-throughput')
     this.domElements.settings.abrBolaRule = document.getElementById('abr-bola')
     this.domElements.settings.abrInsufficientBufferRule = document.getElementById('abr-insufficient')
@@ -90,6 +97,9 @@ App.prototype._applyParameters = function () {
     var settings = this._getCurrentSettings();
 
     this.player.updateSettings({
+        debug: {
+            logLevel: dashjs.Debug.LOG_LEVEL_DEBUG
+        },
         streaming: {
             delay: {
                 liveDelay: settings.targetLatency
@@ -97,9 +107,14 @@ App.prototype._applyParameters = function () {
             liveCatchup: {
                 enabled: settings.catchupEnabled,
                 maxDrift: settings.maxDrift,
+                liveThreshold: settings.liveThreshold,
                 playbackRate: {
                     min: settings.minCatchupPlaybackRate,
                     max: settings.maxCatchupPlaybackRate
+                },
+                step: {
+                    start: { min: settings.minStartStepParameters, max: settings.maxStartStepParameters },
+                    stop: { min: settings.minStopStepParameters, max: settings.maxStopStepParameters }
                 },
                 mode: settings.catchupMechanism
             },
@@ -181,11 +196,26 @@ App.prototype._adjustSettingsByUrlParameters = function () {
         if (params.maxDrift !== undefined) {
             this.domElements.settings.maxDrift.value = parseFloat(params.maxDrift).toFixed(1);
         }
+        if (params.liveThreshold !== undefined) {
+            this.domElements.settings.liveThreshold.value = parseFloat(params.liveThreshold).toFixed(1);
+        }
         if (params.minCatchupPlaybackRate !== undefined) {
             this.domElements.settings.minCatchupPlaybackRate.value = parseFloat(params.minCatchupPlaybackRate).toFixed(2);
         }
         if (params.maxCatchupPlaybackRate !== undefined) {
             this.domElements.settings.maxCatchupPlaybackRate.value = parseFloat(params.maxCatchupPlaybackRate).toFixed(2);
+        }
+        if (params.minStartStepParameters !== undefined) {
+            this.domElements.settings.minStartStepParameters.value = parseFloat(params.minStartStepParameters).toFixed(2);
+        }
+        if (params.maxStartStepParameters !== undefined) {
+            this.domElements.settings.maxStartStepParameters.value = parseFloat(params.maxStartStepParameters).toFixed(2);
+        }
+        if (params.minStopStepParameters !== undefined) {
+            this.domElements.settings.minStopStepParameters.value = parseFloat(params.minStopStepParameters).toFixed(2);
+        }
+        if (params.maxStopStepParameters !== undefined) {
+            this.domElements.settings.maxStopStepParameters.value = parseFloat(params.maxStopStepParameters).toFixed(2);
         }
         if (params.abrThroughputRule !== undefined) {
             this.domElements.settings.abrThroughputRule.checked = params.abrThroughputRule === 'true';
@@ -233,8 +263,13 @@ App.prototype._adjustSettingsByUrlParameters = function () {
 App.prototype._getCurrentSettings = function () {
     var targetLatency = parseFloat(this.domElements.settings.targetLatency.value, 10);
     var maxDrift = parseFloat(this.domElements.settings.maxDrift.value, 10);
+    var liveThreshold = parseFloat(this.domElements.settings.liveThreshold.value, 10);
     var minCatchupPlaybackRate = parseFloat(this.domElements.settings.minCatchupPlaybackRate.value, 10);
     var maxCatchupPlaybackRate = parseFloat(this.domElements.settings.maxCatchupPlaybackRate.value, 10);
+    var minStartStepParameters = parseFloat(this.domElements.settings.minStartStepParameters.value, 10);
+    var maxStartStepParameters = parseFloat(this.domElements.settings.maxStartStepParameters.value, 10);
+    var minStopStepParameters = parseFloat(this.domElements.settings.minStopStepParameters.value, 10);
+    var maxStopStepParameters = parseFloat(this.domElements.settings.maxStopStepParameters.value, 10);
     var abrThroughputRule = this.domElements.settings.abrThroughputRule.checked;
     var abrBolaRule = this.domElements.settings.abrBolaRule.checked;
     var abrInsufficientBufferRule = this.domElements.settings.abrInsufficientBufferRule.checked;
@@ -251,9 +286,14 @@ App.prototype._getCurrentSettings = function () {
 
     return {
         targetLatency,
+        liveThreshold,
         maxDrift,
         minCatchupPlaybackRate,
         maxCatchupPlaybackRate,
+        minStartStepParameters,
+        maxStartStepParameters,
+        minStopStepParameters,
+        maxStopStepParameters,
         abrThroughputRule,
         abrBolaRule,
         abrInsufficientBufferRule,

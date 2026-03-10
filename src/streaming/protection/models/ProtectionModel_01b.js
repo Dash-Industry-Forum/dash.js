@@ -295,7 +295,7 @@ function ProtectionModel_01b(config) {
         }
     }
 
-    function setServerCertificate(/*serverCertificate*/) { /* Not supported */
+    function setServerCertificate(/*serverCertificate*/) {
         return Promise.resolve();
     }
 

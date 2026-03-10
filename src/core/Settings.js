@@ -32,7 +32,7 @@ import FactoryMaker from './FactoryMaker.js';
 import Utils from './Utils.js';
 import Debug from '../core/Debug.js';
 import Constants from '../streaming/constants/Constants.js';
-import {HTTPRequest} from '../streaming/vo/metrics/HTTPRequest.js';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest.js';
 import EventBus from './EventBus.js';
 import Events from './events/Events.js';
 import SwitchRequest from '../streaming/rules/SwitchRequest.js';
@@ -65,6 +65,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
+ *            cacheInitSegmentsLimit: 50,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -83,8 +84,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
  *               useMediaCapabilitiesApi: true,
- *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterVideoColorimetryEssentialProperties: true,
+ *               filterHDRMetadataFormatEssentialProperties: true,
  *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
@@ -108,7 +109,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false
+ *                ignoreKeyStatuses: false,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -181,6 +182,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            liveCatchup: {
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
+ *                step: {
+ *                  start: { min: NaN, max: NaN },
+ *                  stop: { min: NaN, max: NaN }
+ *                },
+ *                liveThreshold: -1,
  *                playbackBufferMin: 0.5,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -211,6 +217,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.LICENSE]: 1000,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 1000,
  *                [HTTPRequest.OTHER_TYPE]: 1000,
  *                lowLatencyReductionFactor: 10
  *            },
@@ -223,6 +230,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.LICENSE]: 3,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 3,
  *                [HTTPRequest.OTHER_TYPE]: 3,
  *                lowLatencyMultiplyFactor: 5
  *            },
@@ -343,7 +351,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
- *            }
+ *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -561,6 +572,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Value to be used in case enableStallFix is set to true
  * @property {number} [seekOffset=0]
  * An additional offset in seconds that is applied when performing a seek to jump a gap.
+ * @property {number} [checkInterval=250]
+ * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster but increase CPU usage. Default is 250ms.
  */
 
 /**
@@ -643,8 +656,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
- * If 0, then seeking operations won't be used for fixing latency deviations.
+ * If a value less than zero is set (-1), then seeking operations won't be used for fixing latency deviations.
  *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
+ * This object is used for setting the window parameters for "step" mode.
+ * 
+ * It is only applicable if the Catchup mechanism used is of mode "step".
+ * 
+ * The parameters are all percentages of the target latency. Where 1 is on target.
+ * 
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ * 
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
+ * 
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
@@ -663,6 +688,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=-1]
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -670,7 +697,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ * Options: One of "liveCatchupModeDefault", "liveCatchupModeLOLP" or "liveCatchupModeStep".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -721,7 +748,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
- */
+ *
 
 /**
  * @typedef {Object} Capabilities
@@ -731,10 +758,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
- * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
+ * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
- * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
+ * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
  * @property {boolean} [filterAudioChannelConfiguration=false]
  * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
@@ -746,6 +773,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If true, the size of the video portal will limit the max chosen video resolution.
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ * @property {number} [limitBitrateByPortalMinimum=0]
+ * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AbrRules} [rules]
@@ -983,6 +1012,12 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  */
 
 /**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Override DVB reporting url in manifest with a custom one
+ */
+
+/**
  * @typedef {Object} EnhancementSettings
  * @property {boolean} [enabled=false]
  * Enable or disable the scalable enhancement playback (e.g. LCEVC).
@@ -1012,6 +1047,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
+ * @property {number} [cacheInitSegmentsLimit=50]
+ * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently used entries are evicted.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
@@ -1123,6 +1160,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
+ * Settings related to DVB metrics reporting.
  */
 
 
@@ -1169,6 +1208,7 @@ function Settings() {
             manifestUpdateRetryInterval: 100,
             liveUpdateTimeThresholdInMilliseconds: 0,
             cacheInitSegments: false,
+            cacheInitSegmentsLimit: 50,
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
@@ -1184,14 +1224,14 @@ function Settings() {
                     { schemeIdUri: Constants.EXT_URL_QUERY_INFO_SCHEME },
                     { schemeIdUri: Constants.MATRIX_COEFFICIENTS_SCHEME_ID_URI, value: /0|1|5|6/ },
                     { schemeIdUri: Constants.TRANSFER_CHARACTERISTICS_SCHEME_ID_URI, value: /1|6|13|14|15/ },
-                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI},
+                    { schemeIdUri: Constants.SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI },
                     ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => {
                         return { 'schemeIdUri': ep };
                     })
                 ],
                 useMediaCapabilitiesApi: true,
-                filterVideoColorimetryEssentialProperties: false,
-                filterHDRMetadataFormatEssentialProperties: false,
+                filterVideoColorimetryEssentialProperties: true,
+                filterHDRMetadataFormatEssentialProperties: true,
                 filterAudioChannelConfiguration: false
             },
             events: {
@@ -1215,7 +1255,7 @@ function Settings() {
                 keepProtectionMediaKeysMaximumOpenSessions: -1,
                 ignoreEmeEncryptedEvent: false,
                 detectPlayreadyMessageFormat: true,
-                ignoreKeyStatuses: false
+                ignoreKeyStatuses: false,
             },
             buffer: {
                 enableSeekDecorrelationFix: false,
@@ -1250,7 +1290,8 @@ function Settings() {
                 enableSeekFix: true,
                 enableStallFix: false,
                 stallSeek: 0.1,
-                seekOffset: 0
+                seekOffset: 0,
+                checkInterval: 250
             },
             utcSynchronization: {
                 enabled: true,
@@ -1291,6 +1332,11 @@ function Settings() {
                     min: NaN,
                     max: NaN
                 },
+                step: {
+                    start: { min: NaN, max: NaN },
+                    stop: { min: NaN, max: NaN }
+                },
+                liveThreshold: -1,
                 playbackBufferMin: 0.5,
                 enabled: null,
                 mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -1330,6 +1376,7 @@ function Settings() {
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
                 [HTTPRequest.LICENSE]: 1000,
+                [HTTPRequest.LICENSE_CERTIFICATE]: 1000,
                 [HTTPRequest.OTHER_TYPE]: 1000,
                 lowLatencyReductionFactor: 10
             },
@@ -1342,12 +1389,14 @@ function Settings() {
                 [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
                 [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
                 [HTTPRequest.LICENSE]: 3,
+                [HTTPRequest.LICENSE_CERTIFICATE]: 3,
                 [HTTPRequest.OTHER_TYPE]: 3,
                 lowLatencyMultiplyFactor: 5
             },
             abr: {
                 limitBitrateByPortal: false,
                 usePixelRatioInLimitBitrateByPortal: false,
+                limitBitrateByPortalMinimum: 0,
                 enableSupplementalPropertyAdaptationSetSwitching: true,
                 rules: {
                     throughputRule: {
@@ -1473,6 +1522,9 @@ function Settings() {
                 audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
                 role: 'urn:mpeg:dash:role:2011',
                 accessibility: 'urn:mpeg:dash:role:2011'
+            },
+            dvbReporting: {
+                reportingUrl: null,
             }
         },
         errors: {

@@ -165,25 +165,30 @@ function MssFragmentMoofProcessor(config) {
                 // Remove segments prior to availability start time
                 segment = segments[0];
                 endTime = (segment.t + segment.d) / timescale;
-                while (endTime < availabilityStartTime) {
+                while (segments.length > 0 && endTime < availabilityStartTime) {
                     // Check if not currently playing the segment to be removed
                     if (!playbackController.isPaused() && playbackController.getTime() < endTime) {
                         break;
                     }
                     // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
                     segments.splice(0, 1);
+                    if (segments.length === 0) {
+                        break;
+                    }
                     segment = segments[0];
                     endTime = (segment.t + segment.d) / timescale;
                 }
             }
 
             // Update DVR window range => set range end to end time of current segment
-            range = {
-                start: segments[0].t / timescale,
-                end: (tfdt.baseMediaDecodeTime / timescale) + request.duration
-            };
+            if (segments.length > 0) {
+                range = {
+                    start: segments[0].t / timescale,
+                    end: (tfdt.baseMediaDecodeTime / timescale) + request.duration
+                };
 
-            updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
+                updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
+            }
         }
 
     }

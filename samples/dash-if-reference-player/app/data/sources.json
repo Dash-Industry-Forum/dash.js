@@ -107,128 +107,256 @@
                 {
                     "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
                     "name": "SegmentBase, ondemand profile",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "segmentbase",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
                     "name": "SegmentTemplate/Number, live profile, 250kbps up to 15Mbps@4K.",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "segmenttemplate",
+                        "4k",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://dash.akamaized.net/dash264/TestCases/2c/qualcomm/1/MultiResMPEG2.mpd",
                     "name": "SegmentTemplate/SegmentTimeline $time, ondemand profile",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "segmenttimeline",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://dash.akamaized.net/dash264/TestCases/5a/nomor/1.mpd",
                     "name": "Multiperiod, 2 periods, SegmentTemplate $number",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "segmenttemplate",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://dash.akamaized.net/envivio/EnvivioDash3/manifest.mpd",
                     "name": "SegmentTemplate, live profile",
-                    "provider": "envivio"
+                    "provider": "envivio",
+                    "tags": [
+                        "vod",
+                        "segmenttemplate",
+                        "envivio"
+                    ]
                 },
                 {
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-full.mpd",
                     "name": "On-demand Testcard - Multiple Languages, AAC Stereo and Surround, Audio Description, AVC Video",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "vod",
+                        "avc",
+                        "multi-audio",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, no encryption",
                     "url": "https://media.axprod.net/TestVectors/Cmaf/clear_1080p_h264/manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "avc",
+                        "1080p",
+                        "cmaf",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, CMAF, no encryption",
                     "url": "https://media.axprod.net/TestVectors/H265/clear_cmaf_1080p_h265/manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "hevc",
+                        "1080p",
+                        "cmaf",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, DASH, no encryption",
                     "url": "https://media.axprod.net/TestVectors/Dash/not_protected_dash_1080p_h264/manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "avc",
+                        "1080p",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, DASH, no encryption",
                     "url": "https://media.axprod.net/TestVectors/H265/clear_dash_1080p_h265/manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "hevc",
+                        "1080p",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "2160p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "4k",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 1080p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_1080p.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "1080p",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 2160p without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "4k",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Complex multi-period with different content, clear",
                     "url": "https://media.axprod.net/TestVectors/v8-MultiContent/Clear/Manifest.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "vod",
+                        "multiperiod",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "4K SegmentBase ",
                     "url": "https://dash.akamaized.net/akamai/streamroot/050714/Spring_4Ktest.mpd",
-                    "provider": "streamroot"
+                    "provider": "streamroot",
+                    "tags": [
+                        "vod",
+                        "segmentbase",
+                        "4k",
+                        "streamroot"
+                    ]
                 },
                 {
                     "name": "Caminandes 01, Llama Drama (25fps, 75gop, 1080p) ",
                     "url": "http://refapp.hbbtv.org/videos/01_llama_drama_1080p_25f75g6sv3/manifest.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236, subob,evtib) v5 ",
                     "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_25f75g6sv5/manifest_subob_evtib.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Tears of Steel (25fps, 75gop, 1080p, KID=1237) v3",
                     "url": "http://refapp.hbbtv.org/videos/tears_of_steel_1080p_25f75g6sv3/manifest.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236), multiaudio v4",
                     "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv4/manifest_subob_evtib.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "multi-audio",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Caminandes 02, Gran Dillama (25fps, 75gop, 1080p, KID=1236), multiaudio v5",
                     "url": "http://refapp.hbbtv.org/videos/02_gran_dillama_1080p_ma_25f75g6sv5/manifest.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "1080p",
+                        "multi-audio",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Spring (25fps, 75gop, 1920x804(2.40) h264, KID=148D) v1",
                     "url": "http://refapp.hbbtv.org/videos/spring_804p_v1/manifest.mpd",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "vod",
+                        "avc",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Multiple AdaptationSets",
-                    "url": "https://webapi.streaming.dolby.com/v0_9/sources/media/v01/dash/lesson_8.mpd",
+                    "url": "https://ott.dolby.com/webapi/testasset_dashjs/multiAudio.mpd",
                     "moreInfo": "",
-                    "provider": "dolby"
+                    "provider": "dolby",
+                    "tags": [
+                        "vod",
+                        "dolby"
+                    ]
                 }
             ]
         },
@@ -238,105 +366,217 @@
                 {
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest.mpd",
                     "name": "SegmentTemplate without manifest updates (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttemplate",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/mup_30/testpic_2s/Manifest.mpd",
                     "name": "SegmentTemplate with manifest updates every 30s (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttemplate",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/testpic_2s/Manifest.mpd",
                     "name": "SegmentTimeline with $time (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttimeline",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/testpic_2s/Manifest.mpd",
                     "name": "SegmentTimeline with $number (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttimeline",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
                     "name": "Multiperiod SegmentTemplate. New period every minute (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttemplate",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/segtimeline_1/patch_60/testpic_2s/Manifest.mpd",
                     "name": "SegmentTimeline with manifest updates provided via MPD patches",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "segmenttimeline",
+                        "mpd-patch",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/segtimeline_0/patch_60/periods_60/testpic_2s/Manifest.mpd",
                     "name": "Multiperiod SegmentTemplate with manifest updates provided via MPD patches",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttemplate",
+                        "mpd-patch",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": " https://livesim2.dashif.org/livesim2/ato_10/testpic_2s/Manifest.mpd",
                     "name": "10 seconds availabilityTimeOffset (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/ato_inf/testpic_2s/Manifest.mpd",
                     "name": "Infinite offset - all segments available at availability start (livesim)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/scte35_2/testpic_2s/Manifest.mpd",
                     "name": "SCTE35 events",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "events",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim.dashif.org/livesim2/annexI_dashjs=rocks/testpic_6s/Manifest.mpd?dashjs=rocks",
                     "name": "Annex I query parameters in the Video AdaptationSet",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://demo.unified-streaming.com/k8s/live/scte35.isml/.mpd",
                     "name": "Unified Streaming reference stream with scte35 markers",
                     "moreInfo": "http://demo.unified-streaming.com/features.html",
-                    "provider": "unified"
+                    "provider": "unified",
+                    "tags": [
+                        "live",
+                        "events",
+                        "unified"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/4577dca5f8a44756875ab5cc913cd1f1/index.mpd",
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Number + Timeline - Full manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/ee565ea510cb4b4d8df5f48918c3d6dc/index.mpd",
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Time + Timeline - Compact manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/91d37b0389de47e0b5266736d3633077/index.mpd",
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Time + Timeline - Full manifest - Thumbnails (1 track) - In-the-clear",
                     "url": "https://d24rwxnt7vw9qb.cloudfront.net/v1/dash/e6d234965645b411ad572802b6c9d5a10799c9c1/All_Reference_Streams/6ba06d17f65b4e1cbd1238eaa05c02c1/index.mpd",
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Single period - Number + Duration - Full manifest - Thumbnails (2 tracks: 174p/1080p) - In-the-clear",
                     "url": "https://d10gktn8v7end7.cloudfront.net/out/v1/6ee19df3afa24fe190a8ae16c2c88560/index.mpd",
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "live",
+                        "1080p",
+                        "thumbnails",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Main (3 video bitrates, 2 audio languages,3 subtitle languages) + Advertisement, Multiperiod",
                     "url": "https://refapp.hbbtv.org/videos/multiperiod_v8.php?drm=0&advert=1&emsg=0&video=v1,v2,v3&audiolang=eng,fin&sublang=eng,fin,swe&mup=2&spd=8",
-                    "provider": "hbbtv"
+                    "provider": "hbbtv",
+                    "tags": [
+                        "live",
+                        "multiperiod",
+                        "hbbtv"
+                    ]
                 },
                 {
                     "name": "Live Testcard - Multiple Languages, AVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-full.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "live",
+                        "avc",
+                        "multi-audio",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Live Testcard - Multiple Languages, HEVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/hevc-ctv.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "live",
+                        "hevc",
+                        "multi-audio",
+                        "bbc"
+                    ]
                 }
             ]
         },
@@ -346,44 +586,92 @@
                 {
                     "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
                     "name": "Akamai Low Latency Stream (Single Rate)",
-                    "provider": "akamai"
+                    "provider": "akamai",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "akamai"
+                    ]
                 },
                 {
                     "url": "https://cmafref.akamaized.net/cmaf/live-ull/2006350/akambr/out.mpd",
                     "name": "Akamai Low Latency Stream (Multi Rate)",
-                    "provider": "akamai"
+                    "provider": "akamai",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "akamai"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/chunkdur_1/ato_7/testpic4_8s/Manifest300.mpd",
                     "name": "Low Latency (Single-Rate) (livesim-chunked)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/chunkdur_1/ato_7/testpic4_8s/Manifest.mpd",
                     "name": "Low Latency (Multi-Rate) (livesim-chunked)",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://explo.broadpeak.tv:8343/bpk-tv/spring/lowlat/index.mpd",
                     "name": "Live low latency (SegmentTemplate, CMSD)",
-                    "provider": "broadpeak"
+                    "provider": "broadpeak",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "segmenttemplate",
+                        "cmsd",
+                        "broadpeak"
+                    ]
                 },
                 {
                     "url": "https://explo.broadpeak.tv:8343/bpk-tv/spring/lowlat/index_timeline.mpd",
                     "name": "Live low latency (SegmentTimeline, CMSD)",
-                    "provider": "broadpeak"
+                    "provider": "broadpeak",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "segmenttimeline",
+                        "cmsd",
+                        "broadpeak"
+                    ]
                 },
                 {
                     "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, AVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-avc-full.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "avc",
+                        "multi-audio",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Low-Latency Live Testcard - 4 Chunks per Segment, Multiple Languages, HEVC Video",
                     "url": "https://rdmedia.bbc.co.uk/testcard/lowlatency/manifests/ll-hevc-ctv.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/lowlatency/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "live",
+                        "low-latency",
+                        "hevc",
+                        "multi-audio",
+                        "bbc"
+                    ]
                 }
             ]
         },
@@ -393,106 +681,196 @@
                 {
                     "url": "https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd",
                     "name": "External VTT subtitle file",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "webvtt",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "TTML Segmented Subtitles VoD",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/multi_subs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "TTML Segmented Subtitles Live (livesim)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/multi_subs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "TTML Sideloaded XML Subtitles",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/ttml_subs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "cea-608",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions (livesim)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "cea-608",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions and TTML segments VoD",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/cea608_and_segs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "cea-608",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Embedded CEA-608 Closed Captions and TTML segments Live (livesim)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/cea608_and_segs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "cea-608",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/imsc1_img.mpd",
                     "name": "IMSC1 (CMAF) Image Subtitles",
                     "moreInfo": "https://livesim2.dashif.org/vod/testpic_2s/imsc1_img_subs_info.html",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "cmaf",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "TTML Image Subtitles embedded (VoD)",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/img_subs.mpd",
                     "moreInfo": "https://livesim2.dashif.org/vod/testpic_2s/img_subs_info.html",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "On-demand Elephant's Dream - with EBU-TT-D Subtitle Track in English",
                     "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-all.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "On-demand Elephant's Dream - with EBU-TT-D 'Snaking' Subtitle Track (random text) - lines grow over time simulating live subtitles",
                     "url": "https://rdmedia.bbc.co.uk/elephants_dream/1/client_manifest-snake.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/elephants_dream/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Live Testcard - Multiple Subtitle Languages and Downloadable Font Signalling",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "On-demand Testcard - WOFF Font Download signalled with supplemental property descriptor",
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-sfdt-woff.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "On-demand Testcard - WOFF Font Download signalled with essential property descriptor",
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/avc-ctv-stereo-en-efdt-woff.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/#feature-tests-font-downloads-for-subtitles",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Live Testcard - WOFF Font Download signalled with supplemental property descriptor",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-sfdt-woff.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Live Testcard - WOFF Font Download signalled with essential property descriptor",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/avc-ctv-stereo-en-efdt-woff.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/#feature-tests-font-downloads-for-subtitles",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "subtitles",
+                        "bbc"
+                    ]
                 },
                 {
                     "url": "https://dash.akamaized.net/dash264/CTA/imsc1/IT1-20171027_dash.mpd",
                     "name": "IMSC1 Text Subtitles via sidecar file",
-                    "provider": "cta"
+                    "provider": "cta",
+                    "tags": [
+                        "subtitles",
+                        "ttml",
+                        "cta"
+                    ]
                 },
                 {
                     "name": "Arte forced-subtitles",
                     "url": "https://arteamd1.akamaized.net/GPU/034000/034700/034755-230-A/221125154117/034755-230-A_8_DA_v20221125.mpd",
-                    "provider": "arte"
+                    "provider": "arte",
+                    "tags": [
+                        "subtitles",
+                        "arte"
+                    ]
                 }
             ]
         },
@@ -510,7 +888,13 @@
                             }
                         }
                     },
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "widevine",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Supplemental Property \"urn:mpeg:dash:adaptation-set-switching:2016\" ",
@@ -523,7 +907,13 @@
                             }
                         }
                     },
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "widevine",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (1 key) PlayReady/Widevine (DRMtoday) - Key rotation (60s)",
@@ -542,7 +932,16 @@
                             }
                         }
                     },
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "widevine",
+                        "playready",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Multiperiod - Number + Timeline - Compact manifest - Thumbnails (1 track) - Encryption (2 keys : audio + video) - No key rotation",
@@ -561,7 +960,16 @@
                             }
                         }
                     },
-                    "provider": "aws"
+                    "provider": "aws",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "segmenttimeline",
+                        "thumbnails",
+                        "widevine",
+                        "playready",
+                        "aws"
+                    ]
                 },
                 {
                     "name": "Shaka Demo Assets: Angel-One Widevine",
@@ -572,7 +980,12 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "google"
+                    "provider": "google",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "google"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
@@ -594,7 +1007,16 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "1080p",
+                        "cmaf",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, multi key, Widevine+PlayReady",
@@ -616,7 +1038,16 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "1080p",
+                        "cmaf",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, single key, Widevine+PlayReady",
@@ -638,7 +1069,16 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "hevc",
+                        "1080p",
+                        "cmaf",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, CMAF, cbcs encryption, multi key, Widevine+PlayReady",
@@ -660,7 +1100,16 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "hevc",
+                        "1080p",
+                        "cmaf",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, DASH, cenc encryption, single key, Widevine+PlayReady",
@@ -682,7 +1131,15 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.264, 5 video, 3 audio, 3 text tracks, DASH, cenc encryption, multi key, Widevine+PlayReady",
@@ -704,7 +1161,15 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Single-period, 1080p, H.265, 5 video, 3 audio, 3 text tracks, DASH, cenc encryption, single key, Widevine+PlayReady",
@@ -726,7 +1191,15 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/public-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "hevc",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p with Widevine DRM, license expired after 60s",
@@ -741,7 +1214,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "1080p",
+                        "widevine",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p with PlayReady and Widevine DRM, single key",
@@ -763,7 +1242,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p with PlayReady and Widevine DRM, multiple keys",
@@ -785,7 +1271,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p with W3C Clear Key, single key",
@@ -798,7 +1291,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "1080p",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "1080p with W3C Clear Key, multiple keys",
@@ -815,7 +1314,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "1080p",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "2160p with PlayReady and Widevine DRM, single key",
@@ -837,7 +1342,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "4k",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "2160p with PlayReady and Widevine DRM, multiple keys",
@@ -859,7 +1371,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "4k",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "2160p with W3C Clear Key, single key",
@@ -872,7 +1391,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "4k",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "2160p with W3C Clear Key, multiple keys",
@@ -889,7 +1414,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "4k",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Audio with PlayReady and Widevine DRM, single key",
@@ -911,7 +1442,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Audio with PlayReady and Widevine DRM, multiple keys",
@@ -933,7 +1470,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Audio with W3C Clear Key, single key",
@@ -946,7 +1489,12 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Audio with W3C Clear Key, multiple keys",
@@ -963,7 +1511,12 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 1080p with PlayReady and Widevine DRM, multiple keys",
@@ -985,7 +1538,15 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "1080p",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 1080p with W3C Clear Key, multiple keys",
@@ -1004,7 +1565,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "1080p",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 2160p with PlayReady and Widevine DRM, multiple keys",
@@ -1026,7 +1594,15 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "4k",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period 2160p with W3C Clear Key, multiple keys",
@@ -1045,7 +1621,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "4k",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period audio with PlayReady and Widevine DRM, multiple keys",
@@ -1067,7 +1650,14 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period audio with W3C Clear Key, multiple keys",
@@ -1086,7 +1676,13 @@
                         }
                     },
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "clearkey",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Complex multi-period with different content, encrypted",
@@ -1108,27 +1704,50 @@
                             },
                             "httpTimeout": 5000
                         }
-                    }
+                    },
+                    "tags": [
+                        "drm",
+                        "multiperiod",
+                        "widevine",
+                        "playready",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Livesim 2 DRM EZDRM-2-keys-cbcs",
                     "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-2-keys-cbcs/testpic_2s/Manifest.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "drm",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Livesim 2 DRM EZDRM-1-key-cbcs",
                     "url": "https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "drm",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Livesim 2 ECCP with CBCS encryption and dashif:Laurl",
                     "url": "https://livesim2.dashif.org/livesim2/eccp_cbcs/testpic_2s/Manifest.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "drm",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Livesim 2 ECCP with CENC encryption and dashif:Laurl",
                     "url": "https://livesim2.dashif.org/livesim2/eccp_cenc/testpic_2s/Manifest.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "drm",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0",
@@ -1138,7 +1757,14 @@
                             "serverURL": "https://test.playready.microsoft.com/service/rightsmanager.asmx"
                         }
                     },
-                    "provider": "microsoft"
+                    "provider": "microsoft",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "4k",
+                        "playready",
+                        "microsoft"
+                    ]
                 },
                 {
                     "name": "Microsoft AZURE MEDIA SERVICES ON DEMAND H264 AAC 4K CENC PLAYREADY 2.0 (persistent)",
@@ -1149,7 +1775,14 @@
                             "sessionType": "persistent-license"
                         }
                     },
-                    "provider": "microsoft"
+                    "provider": "microsoft",
+                    "tags": [
+                        "drm",
+                        "avc",
+                        "4k",
+                        "playready",
+                        "microsoft"
+                    ]
                 },
                 {
                     "name": "Unified Streaming (Widevine, persistent)",
@@ -1160,7 +1793,12 @@
                             "sessionType": "persistent-license"
                         }
                     },
-                    "provider": "unified"
+                    "provider": "unified",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "unified"
+                    ]
                 },
                 {
                     "name": "Live Dash WV and PR with unencrypted ad breaks -- Always starts in encrypted content - Keys never change",
@@ -1175,7 +1813,13 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "provider": "vdms"
+                    "provider": "vdms",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "playready",
+                        "vdms"
+                    ]
                 },
                 {
                     "name": "Live Dash WV and PR - Starting in unencrypted ad (preroll) - Moving into encrypted content - Keys never change",
@@ -1190,7 +1834,13 @@
                             "httpTimeout": 5000
                         }
                     },
-                    "provider": "vdms"
+                    "provider": "vdms",
+                    "tags": [
+                        "drm",
+                        "widevine",
+                        "playready",
+                        "vdms"
+                    ]
                 }
             ]
         },
@@ -1200,37 +1850,66 @@
                 {
                     "name": "Single adaption set, 7 tiles at 10x1, each thumb 320x180",
                     "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "thumbnails",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Single adaption set, 4 tiles at 10x1, each thumb 205x115",
                     "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_4_tiles_thumbnails.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "thumbnails",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Single adaption set, 1 tile at 10x20, each thumb 102x58",
                     "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_tiled_thumbnails_2.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "thumbnails",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Two adaption sets with different thumb resolutions",
                     "url": "//dash.akamaized.net/akamai/bbb_30fps/bbb_with_multiple_tiled_thumbnails.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "thumbnails",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Live stream, Single adaptation set, 1x1 tiles (livesim)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/Manifest_thumbs.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "thumbnails",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "SegmentTemplate with SegmentTimeline",
                     "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-tiled-thumbnails-timeline.ism/.mpd",
-                    "provider": "unified"
+                    "provider": "unified",
+                    "tags": [
+                        "thumbnails",
+                        "segmenttimeline",
+                        "unified"
+                    ]
                 },
                 {
                     "name": "SegmentNumber",
                     "url": "https://demo.unified-streaming.com/k8s/features/stable/video/tears-of-steel/tears-of-steel-tiled-thumbnails-numbered.ism/.mpd",
-                    "provider": "unified"
+                    "provider": "unified",
+                    "tags": [
+                        "thumbnails",
+                        "unified"
+                    ]
                 }
             ]
         },
@@ -1240,42 +1919,71 @@
                 {
                     "name": "48k AAC-LC Stereo Beeps (Live)",
                     "url": "https://livesim2.dashif.org/livesim2/testpic_2s/audio.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "audio-only",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "48k AAC-LC Stereo Beeps (Ondemand)",
                     "url": "https://livesim2.dashif.org/vod/testpic_2s/audio.mpd",
-                    "provider": "dashif"
+                    "provider": "dashif",
+                    "tags": [
+                        "audio-only",
+                        "dashif"
+                    ]
                 },
                 {
                     "name": "Live Testcard Audio - AAC-LC Stereo in English",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-lc-en.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "audio-only",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Live Testcard Audio - HE-AAC Stereo in English",
                     "url": "https://rdmedia.bbc.co.uk/testcard/simulcast/manifests/radio-he-en.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/simulcast/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "audio-only",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "On-demand Testcard Audio - AAC-LC Surround (4 active channels) in English",
                     "url": "https://rdmedia.bbc.co.uk/testcard/vod/manifests/radio-surround-en.mpd",
                     "moreInfo": "https://rdmedia.bbc.co.uk/testcard/vod/",
-                    "provider": "bbc"
+                    "provider": "bbc",
+                    "tags": [
+                        "audio-only",
+                        "bbc"
+                    ]
                 },
                 {
                     "name": "Audio without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_AudioOnly.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "audio-only",
+                        "axinom"
+                    ]
                 },
                 {
                     "name": "Multi-period audio without encryption",
                     "url": "https://media.axprod.net/TestVectors/v7-Clear/Manifest_MultiPeriod_AudioOnly.mpd",
                     "moreInfo": "https://github.com/Axinom/dash-test-vectors",
-                    "provider": "axinom"
+                    "provider": "axinom",
+                    "tags": [
+                        "audio-only",
+                        "multiperiod",
+                        "axinom"
+                    ]
                 }
             ]
         },
@@ -1285,16 +1993,25 @@
                 {
                     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264/SuperSpeedway_720.ism/Manifest",
                     "name": "Super Speedway",
-                    "provider": "microsoft"
+                    "provider": "microsoft",
+                    "tags": [
+                        "mss",
+                        "microsoft"
+                    ]
                 },
                 {
                     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
                     "name": "Super Speedway + PlayReady DRM",
                     "protData": {
-                        "com.microsoft.playready": {
-                        }
+                        "com.microsoft.playready": {}
                     },
-                    "provider": "microsoft"
+                    "provider": "microsoft",
+                    "tags": [
+                        "mss",
+                        "drm",
+                        "playready",
+                        "microsoft"
+                    ]
                 },
                 {
                     "url": "https://playready.directtaps.net/smoothstreaming/SSWSS720H264PR/SuperSpeedway_720.ism/Manifest",
@@ -1305,7 +2022,13 @@
                             "sessionType": "persistent-license"
                         }
                     },
-                    "provider": "microsoft"
+                    "provider": "microsoft",
+                    "tags": [
+                        "mss",
+                        "drm",
+                        "playready",
+                        "microsoft"
+                    ]
                 }
             ]
         },
@@ -1315,12 +2038,20 @@
                 {
                     "url": "https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_no_dR/master.mpd",
                     "name": "Scalable Carriage",
-                    "provider": "v-nova"
+                    "provider": "v-nova",
+                    "tags": [
+                        "lcevc",
+                        "v-nova"
+                    ]
                 },
                 {
                     "url": "https://s3.eu-west-1.amazonaws.com/origin-prod-lon-v-nova.com/lcevcDualTrack/1080p30_4Mbps_with_dR/master.mpd",
                     "name": "Scalable with Debug Residuals",
-                    "provider": "v-nova"
+                    "provider": "v-nova",
+                    "tags": [
+                        "lcevc",
+                        "v-nova"
+                    ]
                 }
             ]
         }

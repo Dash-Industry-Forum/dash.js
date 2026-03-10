@@ -725,6 +725,11 @@ export class CMCDParameters extends DescriptorType {
     version: number;
 }
 
+export interface CertUrlDescriptor {
+    url: string;
+    certType: string | null;
+}
+
 export class ContentProtection extends DescriptorType {
     cencDefaultKid: any;
     keyId: any;
@@ -734,6 +739,7 @@ export class ContentProtection extends DescriptorType {
     ref: any;
     refId: any;
     robustness: any;
+    certUrls: CertUrlDescriptor[];
 
     init(data: any): void;
 
@@ -868,6 +874,7 @@ export interface IContentProtection {
     "cenc:default_KID"?: string;
     value?: string;
     pssh?: IPssh | IPssh[];
+    certUrls?: CertUrlDescriptor[];
 }
 
 export interface IPssh {
@@ -1669,6 +1676,7 @@ export class MediaPlayerSettingClass {
         manifestUpdateRetryInterval?: number,
         liveUpdateTimeThresholdInMilliseconds?: number,
         cacheInitSegments?: boolean,
+        cacheInitSegmentsLimit?: number,
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
@@ -1777,14 +1785,25 @@ export class MediaPlayerSettingClass {
             }
         },
         liveCatchup?: {
-            maxDrift?: number;
+            maxDrift?: number,
+            liveThreshold?: number,
             playbackRate?: {
                 min?: number,
                 max?: number
             },
             playbackBufferMin?: number,
-            enabled?: boolean
-            mode?: string
+            enabled?: boolean,
+            mode?: string,
+            step?: {
+                start: {
+                    min?: number,
+                    max?: number
+                },
+                stop: {
+                    min?: number,
+                    max?: number
+                }
+            },
         }
         lastBitrateCachingInfo?: {
             enabled?: boolean;
@@ -1821,6 +1840,7 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyReductionFactor'?: number;
         };
@@ -1833,12 +1853,14 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyMultiplyFactor'?: number;
         };
         abr?: {
             limitBitrateByPortal?: boolean;
             usePixelRatioInLimitBitrateByPortal?: boolean;
+            limitBitrateByPortalMinimum?: number,
             enableSupplementalPropertyAdaptationSetSwitching?: boolean,
             rules?: {
                 throughputRule?: {
@@ -1951,6 +1973,9 @@ export class MediaPlayerSettingClass {
             audioChannelConfiguration?: string,
             role?: string,
             accessibility?: string
+        },
+        dvbReporting?: {
+            reportingUrl?: string | null,
         }
     };
     errors?: {
@@ -2020,6 +2045,8 @@ export interface MediaPlayerClass {
 
     on(type: MetricChangedEvent['type'], listener: (e: MetricChangedEvent) => void, scope?: object): void;
 
+    on(type: NewTrackSelectedEvent['type'], listener: (e: NewTrackSelectedEvent) => void, scope?: object): void;
+
     on(type: OfflineRecordEvent['type'], listener: (e: OfflineRecordEvent) => void, scope?: object): void;
 
     on(type: OfflineRecordLoadedmetadataEvent['type'], listener: (e: OfflineRecordLoadedmetadataEvent) => void, scope?: object): void;
@@ -2051,6 +2078,8 @@ export interface MediaPlayerClass {
     on(type: StreamInitializedEvent['type'], listener: (e: StreamInitializedEvent) => void, scope?: object): void;
 
     on(type: TextTracksAddedEvent['type'], listener: (e: TextTracksAddedEvent) => void, scope?: object): void;
+
+    on(type: TrackChangeRenderedEvent['type'], listener: (e: TrackChangeRenderedEvent) => void, scope?: object): void;
 
     on(type: TtmlParsedEvent['type'], listener: (e: TtmlParsedEvent) => void, scope?: object): void;
 
@@ -2152,6 +2181,8 @@ export interface MediaPlayerClass {
 
     getRepresentationsByType(type: MediaType, streamId?: string | null): Representation[];
 
+    getRepresentationsByTypeUnfiltered(type: MediaType, streamId?: string | null): Representation[];
+
     getSafeAverageThroughput(type: MediaType, calculationMode?: string | null, sampleSize?: number): number;
 
     getSettings(): MediaPlayerSettingClass;
@@ -2205,6 +2236,10 @@ export interface MediaPlayerClass {
     refreshManifest(callback: (manifest: object | null, error: unknown) => void): void;
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    registerCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    registerCertificateResponseFilter(filter: CertificateResponseFilter): void;
 
     registerLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -2277,6 +2312,10 @@ export interface MediaPlayerClass {
     triggerSteeringRequest(): Promise<any>;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    unregisterCertificateResponseFilter(filter: CertificateResponseFilter): void;
 
     unregisterLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -2421,6 +2460,7 @@ export interface MediaPlayerEvents {
     TRACK_CHANGE_RENDERED: 'trackChangeRendered';
     QUALITY_CHANGE_RENDERED: 'qualityChangeRendered';
     QUALITY_CHANGE_REQUESTED: 'qualityChangeRequested';
+    NEW_TRACK_SELECTED: 'newTrackSelected';
     STREAM_ACTIVATED: 'streamActivated'
     STREAM_DEACTIVATED: 'streamDeactivated';
     STREAM_INITIALIZED: 'streamInitialized';
@@ -2753,6 +2793,11 @@ export interface TrackChangeRenderedEvent extends MediaPlayerEvent {
     type: MediaPlayerEvents['TRACK_CHANGE_RENDERED'];
 }
 
+export interface NewTrackSelectedEvent extends MediaPlayerEvent {
+    value: MediaInfo;
+    type: MediaPlayerEvents['NEW_TRACK_SELECTED'];
+}
+
 export interface QualityChangeRenderedEvent extends MediaPlayerEvent {
     mediaType: MediaType;
     newRepresentation: Representation;
@@ -3052,6 +3097,7 @@ export interface ProtectionConstants {
     INITIALIZATION_DATA_TYPE_WEBM: 'webm',
     ENCRYPTION_SCHEME_CENC: 'cenc',
     ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    FAIRPLAY_KEYSTEM_STRING: 'com.apple.fps',
     MEDIA_KEY_MESSAGE_TYPES: {
         LICENSE_REQUEST: 'license-request',
         LICENSE_RENEWAL: 'license-renewal',
@@ -3450,6 +3496,8 @@ export interface StreamController {
     getInitialPlayback(): any;
 
     getIsStreamSwitchInProgress(): boolean;
+
+    getProtectionData(): object;
 
     getStreamById(id: string): object | null;
 
@@ -3861,6 +3909,10 @@ export interface CustomParametersModel {
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
+    registerCertificateRequestFilter(filter: Function): void;
+
+    registerCertificateResponseFilter(filter: Function): void;
+
     removeExternalSubtitleById(id: string): void;
 
     removeExternalSubtitleByUrl(url: string): void;
@@ -3891,6 +3943,10 @@ export interface CustomParametersModel {
     setXHRWithCredentialsForType(type: string, value: string): void;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: Function): void;
+
+    unregisterCertificateResponseFilter(filter: Function): void;
 
     unregisterLicenseRequestFilter(filter: Function): void;
 
@@ -4201,7 +4257,7 @@ interface ProtectionController {
 
     setRobustnessLevel(level: string): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     setSessionType(value: string): void;
 
@@ -4390,7 +4446,7 @@ export interface DefaultProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 
@@ -4418,7 +4474,7 @@ export interface ProtectionModel_01b {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4446,7 +4502,7 @@ export interface ProtectionModel_3Fe2014 {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4472,7 +4528,7 @@ export interface ProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 
@@ -4532,6 +4588,18 @@ export interface PlayReady {
 }
 
 export interface Widevine {
+    getErrorResponse(serverResponse: object): string;
+
+    getHTTPMethod(): 'POST';
+
+    getLicenseMessage(serverResponse: object): object;
+
+    getResponseType(): 'arraybuffer';
+
+    getServerURLFromMessage(url: string): string;
+}
+
+export interface Fairplay {
     getErrorResponse(serverResponse: object): string;
 
     getHTTPMethod(): 'POST';
@@ -4624,6 +4692,25 @@ export class LicenseResponse {
     url: string;
 }
 
+export class CertificateRequest {
+    constructor(url: string, headers: { [key: string]: string }, withCredentials: boolean)
+
+    url: string;
+    method: 'GET';
+    responseType: 'arraybuffer';
+    headers: { [key: string]: string };
+    body: null;
+    withCredentials: boolean;
+}
+
+export class CertificateResponse {
+    constructor(url: string, headers: object, data: ArrayBuffer)
+
+    data: ArrayBuffer;
+    headers: object;
+    url: string;
+}
+
 export class MediaCapability {
     constructor(contentType: string, robustness: string)
 
@@ -4688,6 +4775,14 @@ export interface ProtectionData {
 
     /** Priority level of the key system to be selected (0 is the highest prority, -1 for undefined priority) */
     priority?: number;
+
+    /** Optional certificate URLs; entries may be raw strings or manifest-parsed objects */
+    certUrls?: Array<string | CertUrlDescriptor | {
+        __text?: string;
+        '@certType'?: string;
+        certType?: string;
+        url?: string
+    }>;
 }
 
 export interface SessionToken {
@@ -6045,4 +6140,5 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
-
+export type CertificateRequestFilter = (request: CertificateRequest) => Promise<any>;
+export type CertificateResponseFilter = (response: CertificateResponse) => Promise<any>;

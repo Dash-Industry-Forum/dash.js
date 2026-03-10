@@ -597,12 +597,10 @@ function HTTPLoader(cfg) {
     function _addPathwayCloningParameters(request) {
         // Add queryParams that came from pathway cloning
         if (request.queryParams) {
-            const queryParams = Object.keys(request.queryParams).map((key) => {
-                return {
-                    key,
-                    value: request.queryParams[key]
-                }
-            })
+            const queryParams = [];
+            for (const key in request.queryParams) {
+                queryParams.push({ key, value: request.queryParams[key] });
+            }
             request.url = Utils.addAdditionalQueryParameterToUrl(request.url, queryParams);
         }
     }

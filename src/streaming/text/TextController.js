@@ -39,7 +39,7 @@ import EventBus from '../../core/EventBus.js';
 import Debug from '../../core/Debug.js';
 import Events from '../../core/events/Events.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
-import {checkParameterType} from '../utils/SupervisorTools.js';
+import { checkParameterType } from '../utils/SupervisorTools.js';
 import DVBFonts from './DVBFonts.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 
@@ -383,6 +383,10 @@ function TextController(config) {
         // For external time text file, the only action needed to change a track is marking the track mode to showing.
         // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
         allTracksAreDisabled = idx === -1;
+
+        if (allTracksAreDisabled) {
+            eventBus.trigger(Events.BUFFER_LEVEL_UPDATED, { mediaType: Constants.TEXT, bufferLevel: -1 }, { streamId, mediaType: Constants.TEXT });
+        }
 
         if (allTracksAreDisabled && mediaController) {
             mediaController.saveTextSettingsDisabled();
