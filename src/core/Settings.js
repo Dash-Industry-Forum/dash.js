@@ -205,6 +205,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+ *            blacklistExpiryTime: -1,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -1106,6 +1107,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
  * This mode makes the player select the track with a widest range of bitrates.
  *
+ * @property {number} [blacklistExpiryTime=-1]
+ * Time in seconds that a Service Location should be added to the blacklist for. After this time has passed the Service Location will be available for selection when failing over a second time, but it will not actively return to it.
+ * This is ignored when using Content Steering, as the blacklist expiry will be set to the TTL value, and Service Locations may be actively switched back to according to the steering algorithm.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -1340,6 +1344,7 @@ function Settings() {
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+            blacklistExpiryTime: -1,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,

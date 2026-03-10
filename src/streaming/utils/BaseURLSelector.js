@@ -132,7 +132,6 @@ function BaseURLSelector() {
     }
 
     function reset() {
-        contentSteeringSelector.reset();
         serviceLocationBlacklistController.reset();
     }
 

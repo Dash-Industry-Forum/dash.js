@@ -1828,6 +1828,7 @@ export class MediaPlayerSettingClass {
         prioritizeRoleMain?: boolean;
         assumeDefaultRoleAsMain?: boolean;
         selectionModeForInitialTrack?: TrackSelectionMode;
+        blacklistExpiryTime?: number;
         fragmentRequestTimeout?: number;
         fragmentRequestProgressTimeout?: number;
         manifestRequestTimeout?: number;

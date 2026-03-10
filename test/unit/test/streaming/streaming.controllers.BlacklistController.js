@@ -1,7 +1,9 @@
 import BlacklistController from '../../../../src/streaming/controllers/BlacklistController.js';
 import EventBus from '../../../../src/core/EventBus.js';
+import Settings from '../../../../src/core/Settings.js';
 import chai from 'chai';
 import spies from 'chai-spies';
+import sinon from 'sinon';
 
 const expect = chai.expect;
 
@@ -9,12 +11,27 @@ chai.use(spies);
 
 describe('BlacklistController', function () {
     const context = {};
+    const settings = Settings(context).getInstance();
     const eventBus = EventBus(context).getInstance();
 
     const SERVICE_LOCATION = 'testServiceLocation';
     const EVENT_NAME = 'blacklistControllerTestEvent';
 
     const defaultConfig = { updateEventName: '' };
+
+    let clock;
+
+    this.beforeEach(() => {
+        clock = sinon.useFakeTimers();
+    });
+
+    this.afterEach(() => {
+        if (clock) {
+            clock.restore();
+            clock = null;
+        }
+        settings.reset();
+    });
 
     it('should return false when calling contains after initialisation', () => {
         const blacklistController = BlacklistController(context).create(defaultConfig);
@@ -106,5 +123,31 @@ describe('BlacklistController', function () {
 
         expect(containsBeforeReset).to.be.true; // jshint ignore:line
         expect(containsAfterReset).to.be.false; // jshint ignore:line
+    });
+
+    it('should remove an entry after a content steering TTL blacklist expiry time has passed', () => {
+        const config = { updateEventName: '' };
+        const blacklistController = BlacklistController(context).create(config);
+        blacklistController.setContentSteeringBlacklistExpiry(60);
+
+        blacklistController.add(SERVICE_LOCATION);
+        clock.tick(30 * 1000);
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.true;
+
+        clock.tick(30 * 1000);
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.false;
+    });
+
+    it('should remove an entry after a blacklist expiry time from settings has passed', () => {
+        const config = { updateEventName: '' };
+        const blacklistController = BlacklistController(context).create(config);
+        settings.update({streaming: { blacklistExpiryTime: 60 }});
+
+        blacklistController.add(SERVICE_LOCATION);
+        clock.tick(30 * 1000);
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.true;
+
+        clock.tick(30 * 1000);
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.false;
     });
 });
