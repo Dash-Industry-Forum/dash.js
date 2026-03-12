@@ -29,7 +29,7 @@
     if (params.get('from')) { filterFrom.value = params.get('from'); }
     if (params.get('to')) { filterTo.value = params.get('to'); }
 
-    // Load devices for filter dropdown
+    // Load devices for filter dropdown, then load runs
     apiFetch('/api/dashboard/devices')
         .then(function (devices) {
             devices.forEach(function (d) {
@@ -38,12 +38,13 @@
                 opt.textContent = d.name || d.deviceId;
                 filterDevice.appendChild(opt);
             });
-            // Re-apply from URL
+            // Re-apply from URL now that options exist
             if (params.get('deviceId')) { filterDevice.value = params.get('deviceId'); }
         })
-        .catch(function () { /* ignore */ });
-
-    loadRuns(currentPage);
+        .catch(function () { /* ignore */ })
+        .finally(function () {
+            loadRuns(currentPage);
+        });
 
     // ---- Events ----
 
