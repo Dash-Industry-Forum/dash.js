@@ -9,7 +9,7 @@
  * Features:
  * - Pre-bundles test files with Rollup on startup
  * - Serves a landing page with test configuration UI
- * - WebSocket server for TV <-> Remote device communication
+ * - WebSocket server for test device <-> Remote device communication
  * - QR code for remote configuration from a second device
  * - Results stored as JSON + JUnit XML on the server
  *
