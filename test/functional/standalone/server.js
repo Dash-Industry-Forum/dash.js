@@ -22,13 +22,19 @@
  *   --streams=<name>      Stream config file name without .json (default: smoke)
  *   --host=<address>      Bind address (default: 0.0.0.0)
  *   --skip-bundle         Skip test file bundling (use previously bundled files)
+ *   --https               Enable HTTPS (auto-generates self-signed cert if no cert/key provided)
+ *   --cert=<path>         Path to PEM certificate file (requires --https)
+ *   --key=<path>          Path to PEM private key file (requires --https)
  */
 
 import express from 'express';
 import { WebSocketServer } from 'ws';
 import http from 'http';
+import https from 'https';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import os from 'os';
 import { fileURLToPath } from 'url';
 import { getTestFiles, bundleTestFiles } from './bundler.js';
 import db from './db.js';
@@ -55,6 +61,9 @@ function parseArgs() {
         streams: 'smoke',
         host: '0.0.0.0',
         skipBundle: false,
+        https: false,
+        cert: null,
+        key: null,
     };
 
     for (const arg of process.argv.slice(2)) {
@@ -66,6 +75,12 @@ function parseArgs() {
             args.host = arg.split('=')[1];
         } else if (arg === '--skip-bundle') {
             args.skipBundle = true;
+        } else if (arg === '--https') {
+            args.https = true;
+        } else if (arg.startsWith('--cert=')) {
+            args.cert = arg.split('=')[1];
+        } else if (arg.startsWith('--key=')) {
+            args.key = arg.split('=')[1];
         }
     }
 
@@ -73,6 +88,292 @@ function parseArgs() {
 }
 
 const cliArgs = parseArgs();
+
+// ---------------------------------------------------------------------------
+// HTTPS / TLS support
+// ---------------------------------------------------------------------------
+
+/**
+ * Generate a self-signed certificate with SAN entries for localhost and all
+ * local network IPs.  The generated key/cert are cached in the data directory
+ * so the browser only needs to trust the certificate once.
+ *
+ * Uses only Node.js built-in crypto APIs (no external dependencies).
+ */
+function generateSelfSignedCert(dataDir) {
+    const certPath = path.join(dataDir, 'server.cert');
+    const keyPath = path.join(dataDir, 'server.key');
+
+    // Reuse cached cert if it exists
+    if (fs.existsSync(certPath) && fs.existsSync(keyPath)) {
+        console.log('[https] Reusing cached self-signed certificate from data/');
+        return {
+            cert: fs.readFileSync(certPath),
+            key: fs.readFileSync(keyPath),
+            generated: false,
+        };
+    }
+
+    console.log('[https] Generating self-signed certificate...');
+
+    // Ensure data directory exists
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    // Collect SAN IPs
+    const interfaces = os.networkInterfaces();
+    const ipAddresses = ['127.0.0.1'];
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                ipAddresses.push(iface.address);
+            }
+        }
+    }
+
+    // Generate RSA key pair
+    const { privateKey, publicKey } = crypto.generateKeyPairSync('rsa', {
+        modulusLength: 2048,
+        publicKeyEncoding: { type: 'spki', format: 'pem' },
+        privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+    });
+
+    // Build SAN extension value (DER-encoded)
+    // Each SAN entry: dNSName [2] or iPAddress [7]
+    const sanEntries = [];
+
+    // DNS names
+    const dnsNames = ['localhost'];
+    for (const dns of dnsNames) {
+        const buf = Buffer.from(dns, 'ascii');
+        // Context tag [2] (dNSName), length, value
+        sanEntries.push(Buffer.from([0x82, buf.length]), buf);
+    }
+
+    // IP addresses
+    for (const ip of ipAddresses) {
+        const octets = ip.split('.').map(Number);
+        // Context tag [7] (iPAddress), length 4, 4 octets
+        sanEntries.push(Buffer.from([0x87, 0x04, ...octets]));
+    }
+
+    const sanBody = Buffer.concat(sanEntries);
+
+    // Wrap in SEQUENCE
+    const sanSequence = Buffer.concat([
+        Buffer.from([0x30, ...derLength(sanBody.length)]),
+        sanBody,
+    ]);
+
+    // Build the subjectAltName extension:
+    //   SEQUENCE { OID 2.5.29.17, OCTET STRING { sanSequence } }
+    const sanOid = Buffer.from([0x06, 0x03, 0x55, 0x1d, 0x11]); // OID 2.5.29.17
+    const sanOctetString = Buffer.concat([
+        Buffer.from([0x04, ...derLength(sanSequence.length)]),
+        sanSequence,
+    ]);
+    const sanExtension = Buffer.concat([
+        Buffer.from([0x30, ...derLength(sanOid.length + sanOctetString.length)]),
+        sanOid,
+        sanOctetString,
+    ]);
+
+    // Build basicConstraints extension (CA:FALSE)
+    const bcOid = Buffer.from([0x06, 0x03, 0x55, 0x1d, 0x13]); // OID 2.5.29.19
+    const bcValue = Buffer.from([0x30, 0x00]); // empty SEQUENCE = CA:FALSE
+    const bcOctetString = Buffer.concat([
+        Buffer.from([0x04, ...derLength(bcValue.length)]),
+        bcValue,
+    ]);
+    const bcExtension = Buffer.concat([
+        Buffer.from([0x30, ...derLength(bcOid.length + bcOctetString.length)]),
+        bcOid,
+        bcOctetString,
+    ]);
+
+    // Extensions wrapper: [3] { SEQUENCE { extensions... } }
+    const extensionsBody = Buffer.concat([sanExtension, bcExtension]);
+    const extensionsSequence = Buffer.concat([
+        Buffer.from([0x30, ...derLength(extensionsBody.length)]),
+        extensionsBody,
+    ]);
+    const extensionsContext = Buffer.concat([
+        Buffer.from([0xa3, ...derLength(extensionsSequence.length)]),
+        extensionsSequence,
+    ]);
+
+    // Subject / Issuer: CN=dash.js Test Server
+    const cnValue = Buffer.from('dash.js Test Server', 'utf8');
+    const cnAttrValue = Buffer.concat([
+        Buffer.from([0x13, cnValue.length]), // PrintableString
+        cnValue,
+    ]);
+    const cnOid = Buffer.from([0x06, 0x03, 0x55, 0x04, 0x03]); // OID 2.5.4.3 (commonName)
+    const cnAttrTypeAndValue = Buffer.concat([
+        Buffer.from([0x30, ...derLength(cnOid.length + cnAttrValue.length)]),
+        cnOid,
+        cnAttrValue,
+    ]);
+    const cnRdn = Buffer.concat([
+        Buffer.from([0x31, ...derLength(cnAttrTypeAndValue.length)]),
+        cnAttrTypeAndValue,
+    ]);
+    const subject = Buffer.concat([
+        Buffer.from([0x30, ...derLength(cnRdn.length)]),
+        cnRdn,
+    ]);
+
+    // Serial number (random 16 bytes)
+    const serial = crypto.randomBytes(16);
+    serial[0] &= 0x7f; // ensure positive
+    const serialDer = Buffer.concat([
+        Buffer.from([0x02, serial.length]),
+        serial,
+    ]);
+
+    // Validity: notBefore = now, notAfter = now + 365 days
+    const now = new Date();
+    const notAfter = new Date(now);
+    notAfter.setFullYear(notAfter.getFullYear() + 1);
+    const validity = Buffer.concat([
+        Buffer.from([0x30, ...derLength(30)]), // 2 x UTCTime(15 bytes each)
+        encodeUTCTime(now),
+        encodeUTCTime(notAfter),
+    ]);
+
+    // Algorithm identifier: sha256WithRSAEncryption (OID 1.2.840.113549.1.1.11)
+    const algOid = Buffer.from([
+        0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x0b,
+    ]);
+    const algId = Buffer.concat([
+        Buffer.from([0x30, ...derLength(algOid.length + 2)]),
+        algOid,
+        Buffer.from([0x05, 0x00]), // NULL parameters
+    ]);
+
+    // SubjectPublicKeyInfo (from the PEM public key)
+    const spkiDer = pemToDer(publicKey);
+
+    // Version: v3 (explicitly tagged [0] INTEGER 2)
+    const version = Buffer.from([0xa0, 0x03, 0x02, 0x01, 0x02]);
+
+    // TBSCertificate
+    const tbsBody = Buffer.concat([
+        version, serialDer, algId, subject, validity, subject, spkiDer, extensionsContext,
+    ]);
+    const tbsCertificate = Buffer.concat([
+        Buffer.from([0x30, ...derLength(tbsBody.length)]),
+        tbsBody,
+    ]);
+
+    // Sign
+    const signer = crypto.createSign('SHA256');
+    signer.update(tbsCertificate);
+    const signature = signer.sign(privateKey);
+
+    // Wrap signature in BIT STRING (prepend 0x00 unused-bits byte)
+    const sigBitString = Buffer.concat([
+        Buffer.from([0x03, ...derLength(signature.length + 1), 0x00]),
+        signature,
+    ]);
+
+    // Final Certificate: SEQUENCE { tbsCertificate, algId, signature }
+    const certBody = Buffer.concat([tbsCertificate, algId, sigBitString]);
+    const certDer = Buffer.concat([
+        Buffer.from([0x30, ...derLength(certBody.length)]),
+        certBody,
+    ]);
+
+    // PEM-encode
+    const certPem = derToPem(certDer, 'CERTIFICATE');
+
+    // Write to data directory
+    fs.writeFileSync(keyPath, privateKey);
+    fs.writeFileSync(certPath, certPem);
+
+    const sanDesc = [...dnsNames, ...ipAddresses].join(', ');
+    console.log(`[https] Self-signed certificate generated (SAN: ${sanDesc})`);
+    console.log(`[https] Certificate cached at: ${certPath}`);
+
+    return {
+        cert: certPem,
+        key: privateKey,
+        generated: true,
+    };
+}
+
+/** Encode a DER length (supports lengths > 127). */
+function derLength(len) {
+    if (len < 0x80) {
+        return [len];
+    }
+    const bytes = [];
+    let tmp = len;
+    while (tmp > 0) {
+        bytes.unshift(tmp & 0xff);
+        tmp >>= 8;
+    }
+    return [0x80 | bytes.length, ...bytes];
+}
+
+/** Encode a Date as DER UTCTime (YYMMDDHHMMSSZ). */
+function encodeUTCTime(date) {
+    const str =
+        String(date.getUTCFullYear()).slice(-2).padStart(2, '0') +
+        String(date.getUTCMonth() + 1).padStart(2, '0') +
+        String(date.getUTCDate()).padStart(2, '0') +
+        String(date.getUTCHours()).padStart(2, '0') +
+        String(date.getUTCMinutes()).padStart(2, '0') +
+        String(date.getUTCSeconds()).padStart(2, '0') +
+        'Z';
+    const buf = Buffer.from(str, 'ascii');
+    return Buffer.concat([Buffer.from([0x17, buf.length]), buf]);
+}
+
+/** Strip PEM headers and base64-decode to DER Buffer. */
+function pemToDer(pem) {
+    const b64 = pem.replace(/-----[A-Z ]+-----/g, '').replace(/\s+/g, '');
+    return Buffer.from(b64, 'base64');
+}
+
+/** DER Buffer to PEM string. */
+function derToPem(der, label) {
+    const b64 = der.toString('base64');
+    const lines = [];
+    for (let i = 0; i < b64.length; i += 64) {
+        lines.push(b64.slice(i, i + 64));
+    }
+    return `-----BEGIN ${label}-----\n${lines.join('\n')}\n-----END ${label}-----\n`;
+}
+
+/**
+ * Resolve TLS options from CLI args.
+ * - If --cert and --key are provided, use those files.
+ * - Otherwise, auto-generate a self-signed certificate.
+ * Returns { key, cert } suitable for https.createServer().
+ */
+function getTlsOptions(dataDir) {
+    if (cliArgs.cert && cliArgs.key) {
+        const certPath = path.resolve(cliArgs.cert);
+        const keyPath = path.resolve(cliArgs.key);
+        if (!fs.existsSync(certPath)) {
+            throw new Error(`Certificate file not found: ${certPath}`);
+        }
+        if (!fs.existsSync(keyPath)) {
+            throw new Error(`Key file not found: ${keyPath}`);
+        }
+        console.log(`[https] Using provided certificate: ${certPath}`);
+        console.log(`[https] Using provided key: ${keyPath}`);
+        return {
+            cert: fs.readFileSync(certPath),
+            key: fs.readFileSync(keyPath),
+        };
+    }
+
+    const result = generateSelfSignedCert(dataDir);
+    return { cert: result.cert, key: result.key };
+}
 
 // ---------------------------------------------------------------------------
 // Load stream configurations
@@ -698,7 +999,17 @@ ${testcasesHtml}
 // Express app setup
 // ---------------------------------------------------------------------------
 const app = express();
-const server = http.createServer(app);
+
+let tlsOptions = null;
+if (cliArgs.https) {
+    const dataDir = path.join(standaloneDir, 'data');
+    tlsOptions = getTlsOptions(dataDir);
+}
+
+const server = tlsOptions
+    ? https.createServer(tlsOptions, app)
+    : http.createServer(app);
+const protocol = tlsOptions ? 'https' : 'http';
 
 // Parse JSON bodies for API routes
 app.use(express.json());
@@ -773,7 +1084,7 @@ app.get('/api/server-info', async (req, res) => {
         host,
         port,
         interfaces,
-        baseUrl: `http://${host}:${port}`,
+        baseUrl: `${protocol}://${host}:${port}`,
     });
 });
 
@@ -1296,12 +1607,17 @@ async function start() {
     // Start server
     const interfaces = await getNetworkInterfaces();
     server.listen(cliArgs.port, cliArgs.host, () => {
-        console.log(`\n[server] Server running on:`);
-        console.log(`  Local:   http://localhost:${cliArgs.port}`);
+        console.log(`\n[server] Server running on (${protocol.toUpperCase()}):`);
+        console.log(`  Local:   ${protocol}://localhost:${cliArgs.port}`);
         for (const iface of interfaces) {
-            console.log(`  Network: http://${iface}:${cliArgs.port}`);
+            console.log(`  Network: ${protocol}://${iface}:${cliArgs.port}`);
         }
-        console.log(`\nOpen http://localhost:${cliArgs.port} in your browser to start.`);
+        if (tlsOptions) {
+            console.log(`\n[https] Browsers will show a certificate warning for self-signed certs.`);
+            console.log(`[https] Click "Advanced" > "Proceed" to accept (one-time per device).`);
+            console.log(`[https] To avoid warnings, use --cert and --key with a trusted certificate (e.g. from mkcert).`);
+        }
+        console.log(`\nOpen ${protocol}://localhost:${cliArgs.port} in your browser to start.`);
     });
 }
 
@@ -1309,7 +1625,6 @@ async function start() {
  * Get LAN IP addresses for display.
  */
 async function getNetworkInterfaces() {
-    const os = await import('os');
     const interfaces = os.networkInterfaces();
     const addresses = [];
     for (const name of Object.keys(interfaces)) {

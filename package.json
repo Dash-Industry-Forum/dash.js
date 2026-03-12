@@ -41,6 +41,7 @@
     "test-refplayer": "web-test-runner --config test/unit/config/web-test-runner.config.mjs --files 'test/unit/test/reference-player/**/*.js'",
     "test-functional": "CONFIGFILE=local STREAMSFILE=single web-test-runner --config test/functional/config/web-test-runner.functional.mjs",
     "test-standalone": "node test/functional/standalone/server.js",
+    "test-standalone-https": "node test/functional/standalone/server.js --https",
     "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
     "webpack-build-modern": "webpack --config build/webpack/modern/webpack.modern.prod.cjs"
   },
