@@ -962,6 +962,15 @@ app.get('/api/dashboard/runs/:id', requireDb, (req, res) => {
     res.json(run);
 });
 
+// Delete a device and all its test runs
+app.delete('/api/dashboard/devices/:deviceId', requireDb, (req, res) => {
+    const deleted = db.deleteDevice(req.params.deviceId);
+    if (!deleted) {
+        return res.status(404).json({ error: 'Device not found' });
+    }
+    res.json({ ok: true });
+});
+
 // List all devices with computed status and run counts
 app.get('/api/dashboard/devices', requireDb, (req, res) => {
     res.json(db.getDevices());
@@ -1143,9 +1152,24 @@ wss.on('connection', (ws) => {
                     const configStr = session.customConfig ? JSON.stringify(session.customConfig) : null;
                     session.dbRunId = db.insertRun(session.id, session.deviceId, configStr, 'running');
                 }
-                // Persist individual result to DB
+                // Persist individual result to DB and update running counts
                 if (session.dbRunId) {
                     db.insertResult(session.dbRunId, msg.data);
+
+                    // Track running counts on the session (O(1) per result)
+                    if (!session.runCounts) {
+                        session.runCounts = { passes: 0, failures: 0, pending: 0 };
+                    }
+                    if (msg.data.status === 'passed') { session.runCounts.passes++; }
+                    else if (msg.data.status === 'failed') { session.runCounts.failures++; }
+                    else { session.runCounts.pending++; }
+
+                    db.updateRunProgress(session.dbRunId, {
+                        passes: session.runCounts.passes,
+                        failures: session.runCounts.failures,
+                        pending: session.runCounts.pending,
+                        total: session.runCounts.passes + session.runCounts.failures + session.runCounts.pending,
+                    });
                 }
 
                 // Relay to remote

@@ -49,14 +49,27 @@
     // ---- Render run metadata ----
 
     function renderRunMeta(run) {
+        var shortDeviceId = run.deviceId ? run.deviceId.substring(0, 8) : '-';
         runMeta.style.display = '';
         runMetaGrid.innerHTML =
             '<div class="run-meta-item"><span class="run-meta-label">Device</span><span class="run-meta-value">' + escapeHtml(run.deviceName || run.deviceId || '-') + '</span></div>' +
+            '<div class="run-meta-item"><span class="run-meta-label">Device ID</span><span class="run-meta-value"><code>' + escapeHtml(shortDeviceId) + '</code>' + (run.deviceId ? ' <button class="btn btn-outline-secondary btn-sm btn-copy-id" data-copy="' + escapeHtml(run.deviceId) + '" title="Copy full Device ID"><i class="bi bi-clipboard"></i></button>' : '') + '</span></div>' +
+            '<div class="run-meta-item"><span class="run-meta-label">Session ID</span><span class="run-meta-value"><code>' + escapeHtml(run.sessionId) + '</code> <button class="btn btn-outline-secondary btn-sm btn-copy-id" data-copy="' + escapeHtml(run.sessionId) + '" title="Copy Session ID"><i class="bi bi-clipboard"></i></button></span></div>' +
             '<div class="run-meta-item"><span class="run-meta-label">Started</span><span class="run-meta-value">' + formatTimestamp(run.startedAt) + '</span></div>' +
             '<div class="run-meta-item"><span class="run-meta-label">Duration</span><span class="run-meta-value">' + formatDuration(run.duration) + '</span></div>' +
             '<div class="run-meta-item"><span class="run-meta-label">Status</span><span class="run-meta-value">' + runStatusBadge(run) + '</span></div>' +
-            '<div class="run-meta-item"><span class="run-meta-label">Session</span><span class="run-meta-value"><code>' + escapeHtml(run.sessionId) + '</code></span></div>' +
             '<div class="run-meta-item run-meta-actions"><button class="btn btn-outline-danger btn-sm" id="btn-delete-run"><i class="bi bi-trash"></i> Delete Run</button></div>';
+
+        runMetaGrid.querySelectorAll('.btn-copy-id').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var text = btn.getAttribute('data-copy');
+                navigator.clipboard.writeText(text).then(function () {
+                    showToast('Copied to clipboard', 'success');
+                }).catch(function () {
+                    showToast('Failed to copy', 'danger');
+                });
+            });
+        });
 
         document.getElementById('btn-delete-run').addEventListener('click', function () {
             if (!window.confirm('Delete run #' + run.id + '? This cannot be undone.')) { return; }

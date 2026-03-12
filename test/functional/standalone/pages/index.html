@@ -163,6 +163,27 @@
                 </div>
             </div>
 
+            <div class="stats-panel" style="margin-top: 0.75rem;">
+                <div class="panel-header">
+                    <i class="bi bi-display"></i> This Device
+                </div>
+                <div class="panel-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Name</span>
+                        <span class="metric-value" id="device-name-display"></span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Device ID</span>
+                        <span class="metric-value device-id-display">
+                            <code id="device-id-display" title="Click to copy"></code>
+                            <button class="btn-copy-id" id="btn-copy-device-id" title="Copy device ID">
+                                <i class="bi bi-clipboard"></i>
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
             <div class="info-callout" style="margin-top: 0.75rem;">
                 <i class="bi bi-info-circle"></i>
                 Scan the QR code with a phone to configure and control tests remotely. Or configure directly on this device using the controls above.

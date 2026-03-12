@@ -199,6 +199,29 @@ function insertRun(sessionId, deviceId, configJson, status) {
 }
 
 /**
+ * Update a run's progress (counts + status) while it's still running.
+ * Called after each individual test result to keep the DB current.
+ */
+function updateRunProgress(runId, counts) {
+    if (!available || !runId) return;
+    db.prepare(`
+        UPDATE test_runs
+        SET passes   = ?,
+            failures = ?,
+            pending  = ?,
+            total    = ?,
+            status   = 'running'
+        WHERE id = ?
+    `).run(
+        counts.passes || 0,
+        counts.failures || 0,
+        counts.pending || 0,
+        counts.total || 0,
+        runId
+    );
+}
+
+/**
  * Complete a run — update summary counts and status.
  */
 function completeRun(runId, summary) {
@@ -400,6 +423,20 @@ function deleteRun(runId) {
     return result.changes > 0;
 }
 
+/**
+ * Delete a device and all its associated test runs (and their results).
+ * Returns true if the device existed and was deleted.
+ */
+function deleteDevice(deviceId) {
+    if (!available || !deviceId) return false;
+
+    // Delete all runs for this device first (CASCADE handles test_results)
+    db.prepare('DELETE FROM test_runs WHERE device_id = ?').run(deviceId);
+    // Delete the device record
+    const result = db.prepare('DELETE FROM devices WHERE device_id = ?').run(deviceId);
+    return result.changes > 0;
+}
+
 // ---------------------------------------------------------------------------
 // Comparison
 // ---------------------------------------------------------------------------
@@ -464,6 +501,7 @@ export default {
     // Runs
     insertRun,
     completeRun,
+    updateRunProgress,
     updateRunStatus,
     getRuns,
     getRunById,
@@ -472,6 +510,7 @@ export default {
     insertResult,
     // Deletion
     deleteRun,
+    deleteDevice,
     // Comparison
     compareRuns,
 };

@@ -89,6 +89,22 @@ configInfo.textContent = mode === 'custom' ? 'Custom' : streamsName;
 detailStreams.textContent = mode === 'custom' ? 'Custom' : streamsName;
 detailSession.textContent = sessionId;
 
+// Set device ID display
+var detailDeviceId = document.getElementById('detail-device-id');
+var btnCopyDeviceIdRunner = document.getElementById('btn-copy-device-id-runner');
+if (detailDeviceId) { detailDeviceId.textContent = deviceId; }
+if (btnCopyDeviceIdRunner) {
+    btnCopyDeviceIdRunner.addEventListener('click', function () {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(deviceId).then(function () {
+                showToast('Device ID copied', 'success');
+            });
+        } else {
+            showToast(deviceId, 'info');
+        }
+    });
+}
+
 // ---- Counters ----
 var counts = { passed: 0, failed: 0, pending: 0, total: 0 };
 var startTime = Date.now();

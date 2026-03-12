@@ -57,11 +57,17 @@
                         <span class="agent-status-label" id="agent-status-text">Connecting...</span>
                     </div>
 
-                    <div class="agent-info-grid">
-                        <div class="agent-info-item">
-                            <span class="agent-info-label">Device ID</span>
-                            <code class="agent-info-value" id="agent-device-id">—</code>
+                    <div class="agent-device-id-block">
+                        <span class="agent-device-id-label">Device ID</span>
+                        <div class="agent-device-id-row">
+                            <code class="agent-device-id-value" id="agent-device-id">—</code>
+                            <button class="btn-copy-id btn-copy-id-lg" id="btn-copy-agent-id" title="Copy device ID">
+                                <i class="bi bi-clipboard"></i> Copy
+                            </button>
                         </div>
+                    </div>
+
+                    <div class="agent-info-grid">
                         <div class="agent-info-item">
                             <span class="agent-info-label">Device Name</span>
                             <span class="agent-info-value" id="agent-device-name">—</span>
@@ -209,6 +215,20 @@
 
         agentDeviceId.textContent = deviceId;
         agentDeviceName.textContent = deviceName;
+
+        var btnCopyAgentId = document.getElementById('btn-copy-agent-id');
+        if (btnCopyAgentId) {
+            btnCopyAgentId.addEventListener('click', function () {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(deviceId).then(function () {
+                        btnCopyAgentId.innerHTML = '<i class="bi bi-check"></i> Copied';
+                        setTimeout(function () {
+                            btnCopyAgentId.innerHTML = '<i class="bi bi-clipboard"></i> Copy';
+                        }, 2000);
+                    });
+                }
+            });
+        }
 
         var heartbeatCount = 0;
         var dispatchCount = 0;

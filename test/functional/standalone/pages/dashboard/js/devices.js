@@ -45,15 +45,18 @@
         html += '<th>User Agent</th>';
         html += '<th>Last Seen</th>';
         html += '<th class="text-center">Runs</th>';
+        html += '<th style="width:36px"></th>';
         html += '</tr></thead><tbody>';
 
         devices.forEach(function (d) {
+            var shortId = d.deviceId ? d.deviceId.substring(0, 8) : '';
             html += '<tr class="runs-table-row" data-device-id="' + escapeHtml(d.deviceId) + '">';
             html += '<td class="text-center">' + deviceStatusDot(d.status) + '</td>';
-            html += '<td><strong>' + escapeHtml(d.name || 'Unnamed') + '</strong></td>';
+            html += '<td><strong>' + escapeHtml(d.name || 'Unnamed') + '</strong> <code class="device-card-id">' + escapeHtml(shortId) + '</code></td>';
             html += '<td class="text-muted" style="font-size:0.75rem;max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + escapeHtml(d.userAgent) + '</td>';
             html += '<td title="' + formatTimestamp(d.lastSeen) + '">' + relativeTime(d.lastSeen) + '</td>';
             html += '<td class="text-center">' + d.runCount + '</td>';
+            html += '<td><button class="btn-delete-run" data-device-id="' + escapeHtml(d.deviceId) + '" title="Delete device and all its runs"><i class="bi bi-trash"></i></button></td>';
             html += '</tr>';
         });
 
@@ -63,9 +66,28 @@
         // Click to view device runs
         var rows = devicesContainer.querySelectorAll('.runs-table-row');
         for (var i = 0; i < rows.length; i++) {
-            rows[i].addEventListener('click', function () {
+            rows[i].addEventListener('click', function (e) {
+                if (e.target.closest('.btn-delete-run')) { return; }
                 var devId = this.getAttribute('data-device-id');
                 window.location.href = '/dashboard/runs.html?deviceId=' + encodeURIComponent(devId);
+            });
+        }
+
+        // Delete buttons
+        var delBtns = devicesContainer.querySelectorAll('.btn-delete-run');
+        for (var d = 0; d < delBtns.length; d++) {
+            delBtns[d].addEventListener('click', function (e) {
+                e.stopPropagation();
+                var devId = this.getAttribute('data-device-id');
+                if (!window.confirm('Delete this device and all its test runs? The device will re-register if still connected.')) { return; }
+                apiDelete('/api/dashboard/devices/' + encodeURIComponent(devId))
+                    .then(function () {
+                        showToast('Device deleted', 'success');
+                        loadDevices();
+                    })
+                    .catch(function (err) {
+                        showToast('Error deleting device: ' + err.message, 'danger');
+                    });
             });
         }
     }

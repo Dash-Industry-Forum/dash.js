@@ -68,6 +68,24 @@
     connectWebSocket();
     generateQRCode();
 
+    // ---- Populate device info ----
+    var deviceNameDisplay = document.getElementById('device-name-display');
+    var deviceIdDisplay = document.getElementById('device-id-display');
+    var btnCopyDeviceId = document.getElementById('btn-copy-device-id');
+    if (deviceNameDisplay) { deviceNameDisplay.textContent = getDeviceName(); }
+    if (deviceIdDisplay) { deviceIdDisplay.textContent = deviceId; }
+    if (btnCopyDeviceId) {
+        btnCopyDeviceId.addEventListener('click', function () {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(deviceId).then(function () {
+                    showToast('Device ID copied', 'success');
+                });
+            } else {
+                showToast(deviceId, 'info');
+            }
+        });
+    }
+
     // ---- Event listeners ----
     themeSelect.addEventListener('change', function () {
         applyTheme(this.value);

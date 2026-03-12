@@ -127,17 +127,17 @@ function renderEmptyState(container, icon, message) {
 // ---- Status badge ----
 
 function runStatusBadge(run) {
-    if (run.failures > 0) {
-        return '<span class="badge bg-danger">Failed</span>';
-    }
-    if (run.status === 'completed') {
-        return '<span class="badge bg-success">Passed</span>';
-    }
     if (run.status === 'running') {
         return '<span class="badge bg-primary">Running</span>';
     }
     if (run.status === 'dispatched') {
         return '<span class="badge bg-info">Dispatched</span>';
+    }
+    if (run.status === 'completed' && run.failures > 0) {
+        return '<span class="badge bg-danger">Failed</span>';
+    }
+    if (run.status === 'completed') {
+        return '<span class="badge bg-success">Passed</span>';
     }
     return '<span class="badge bg-secondary">' + (run.status || 'unknown') + '</span>';
 }

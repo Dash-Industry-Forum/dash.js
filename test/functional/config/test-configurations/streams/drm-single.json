@@ -1,0 +1,33 @@
+{
+  "testfiles": {
+    "included": [
+    ],
+    "excluded": [
+      "buffer/buffer-to-keep-seek",
+      "vendor/google-ad-manager-emsg"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "Shaka Demo Assets: Angel-One Widevine",
+      "type": "vod",
+      "url": "https://storage.googleapis.com/shaka-demo-assets/angel-one-widevine/dash.mpd",
+      "drm": {
+        "com.widevine.alpha": {
+          "serverURL": "https://cwip-shaka-proxy.appspot.com/no_auth"
+        }
+      },
+      "includedTestfiles": [
+        "playback/*",
+        "audio/*",
+        "video/*",
+        "text/*"
+      ],
+      "excludedPlatforms": [
+        {
+          "browser": "safari"
+        }
+      ]
+    }
+  ]
+}

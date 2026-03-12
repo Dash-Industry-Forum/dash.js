@@ -147,10 +147,11 @@
 
         var html = '';
         devices.forEach(function (d) {
+            var shortId = d.deviceId ? d.deviceId.substring(0, 8) : '';
             html += '<div class="device-card">';
             html += deviceStatusDot('online');
             html += '<div class="device-card-info">';
-            html += '<div class="device-card-name">' + escapeHtml(d.name || d.deviceId) + '</div>';
+            html += '<div class="device-card-name">' + escapeHtml(d.name || d.deviceId) + ' <code class="device-card-id">' + escapeHtml(shortId) + '</code></div>';
             html += '<div class="device-card-meta">' + escapeHtml(d.userAgent).substring(0, 60) + '</div>';
             html += '</div>';
             html += '<span class="device-card-runs">' + d.runCount + ' runs</span>';
@@ -168,9 +169,10 @@
             return;
         }
         online.forEach(function (d) {
+            var shortId = d.deviceId ? d.deviceId.substring(0, 8) : '';
             var opt = document.createElement('option');
             opt.value = d.deviceId;
-            opt.textContent = d.name || d.deviceId;
+            opt.textContent = (d.name || 'Unnamed') + ' (' + shortId + ')';
             dispatchDevice.appendChild(opt);
         });
         dispatchBtn.disabled = false;

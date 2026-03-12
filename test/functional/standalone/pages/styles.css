@@ -1235,6 +1235,45 @@ body {
     opacity: 0.4;
 }
 
+/* ---- Device ID Display ---- */
+.device-id-display {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.device-id-display code {
+    font-size: 0.7rem;
+    background: var(--rp-tag-bg);
+    padding: 1px 5px;
+    border-radius: 3px;
+    word-break: break-all;
+}
+
+.btn-copy-id {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.2rem;
+    padding: 0;
+    width: 22px;
+    height: 22px;
+    border: 1px solid var(--rp-border);
+    border-radius: 4px;
+    background: var(--rp-bg-card);
+    color: var(--rp-text-muted);
+    cursor: pointer;
+    font-size: 0.65rem;
+    transition: color 0.15s, border-color 0.15s, background 0.15s;
+    flex-shrink: 0;
+}
+
+.btn-copy-id:hover {
+    color: var(--rp-accent);
+    border-color: var(--rp-accent);
+    background: var(--rp-accent-subtle);
+}
+
 /* ---- Utility ---- */
 .d-none { display: none !important; }
 

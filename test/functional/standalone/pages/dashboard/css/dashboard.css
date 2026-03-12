@@ -263,6 +263,15 @@
     white-space: nowrap;
 }
 
+.device-card-id {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    background: var(--rp-tag-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
+    font-weight: 400;
+}
+
 .device-card-meta {
     font-size: 0.65rem;
     color: var(--rp-text-muted);
@@ -471,6 +480,51 @@
 .agent-status-label {
     font-size: 0.9rem;
     font-weight: 600;
+}
+
+.agent-device-id-block {
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.agent-device-id-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.agent-device-id-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.agent-device-id-value {
+    font-size: 0.9rem;
+    font-family: monospace;
+    font-weight: 600;
+    color: var(--rp-text);
+    background: var(--rp-tag-bg);
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    word-break: break-all;
+    flex: 1;
+}
+
+.btn-copy-id-lg {
+    width: auto;
+    height: auto;
+    padding: 0.3rem 0.6rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    gap: 0.3rem;
 }
 
 .agent-info-grid {
