@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Run Detail — dash.js Test Dashboard</title>
+    <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/vendor/bootstrap-icons/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="/standalone/styles.css">
+    <link rel="stylesheet" href="/dashboard/css/dashboard.css">
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <div class="header-bar">
+            <div class="logo-area">
+                <img src="/img/if.png" alt="DASH-IF">
+                <h1 id="page-title">Run Detail</h1>
+            </div>
+            <div class="header-right">
+                <select id="theme-select" class="theme-select">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="dashboard-nav">
+            <a href="/dashboard/" class="dashboard-nav-item">
+                <i class="bi bi-speedometer2"></i> Overview
+            </a>
+            <a href="/dashboard/runs.html" class="dashboard-nav-item">
+                <i class="bi bi-list-check"></i> Runs
+            </a>
+            <a href="/dashboard/devices.html" class="dashboard-nav-item">
+                <i class="bi bi-display"></i> Devices
+            </a>
+            <a href="/dashboard/agent.html" class="dashboard-nav-item">
+                <i class="bi bi-broadcast"></i> Agent
+            </a>
+            <a href="/standalone/index.html" class="dashboard-nav-item dashboard-nav-back">
+                <i class="bi bi-arrow-left"></i> Test Runner
+            </a>
+        </nav>
+
+        <!-- Run metadata -->
+        <div id="run-meta" class="dashboard-card mb-3" style="display:none">
+            <div class="dashboard-card-body">
+                <div class="run-meta-grid" id="run-meta-grid"></div>
+            </div>
+        </div>
+
+        <!-- Stat cards -->
+        <div id="stat-cards" class="stat-cards mb-3" style="display:none">
+            <div class="stat-card">
+                <div class="stat-card-value text-success-themed" id="sc-passed">0</div>
+                <div class="stat-card-label">Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value text-danger-themed" id="sc-failed">0</div>
+                <div class="stat-card-label">Failed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value text-warning-themed" id="sc-skipped">0</div>
+                <div class="stat-card-label">Skipped</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-card-value text-accent-themed" id="sc-total">0</div>
+                <div class="stat-card-label">Total</div>
+            </div>
+        </div>
+
+        <!-- Filter bar -->
+        <div id="filter-bar" class="result-filter-bar mb-3" style="display:none">
+            <button class="result-filter-btn active" data-filter="all">All</button>
+            <button class="result-filter-btn" data-filter="passed">Passed</button>
+            <button class="result-filter-btn" data-filter="failed">Failed</button>
+            <button class="result-filter-btn" data-filter="pending">Skipped</button>
+        </div>
+
+        <!-- Results / Comparison -->
+        <div id="results-container">
+            <div class="empty-state"><i class="bi bi-hourglass-split spin"></i>Loading...</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer-bar mt-3">
+            <div class="footer-inner">
+                <img src="/img/if.png" alt="DASH-IF" class="footer-logo">
+                <div class="footer-text">
+                    <span class="footer-title">dash.js — DASH Industry Forum Reference Client</span>
+                    <div class="footer-links">
+                        <a href="https://dashif.org" target="_blank" rel="noopener">dashif.org</a>
+                        <span class="footer-sep">|</span>
+                        <a href="https://github.com/Dash-Industry-Forum/dash.js" target="_blank" rel="noopener">GitHub</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast-container"></div>
+
+    <script src="/dashboard/js/dashboard-common.js"></script>
+    <script src="/dashboard/js/run-detail.js"></script>
+</body>
+</html>

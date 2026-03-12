@@ -1,0 +1,606 @@
+/* ============================================================
+   dash.js Test Dashboard — Styles
+   Extends the standalone runner design system (--rp-* variables).
+   ============================================================ */
+
+/* ---- Dashboard Navigation ---- */
+.dashboard-nav {
+    display: flex;
+    gap: 0.25rem;
+    margin-bottom: 1rem;
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    padding: 0.35rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--rp-text-muted);
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+    white-space: nowrap;
+}
+
+.dashboard-nav-item:hover {
+    background: var(--rp-hover);
+    color: var(--rp-text);
+    text-decoration: none;
+}
+
+.dashboard-nav-item.active {
+    background: var(--rp-accent);
+    color: #fff;
+}
+
+.dashboard-nav-item.active:hover {
+    background: var(--rp-accent-hover);
+    color: #fff;
+}
+
+.dashboard-nav-back {
+    margin-left: auto;
+}
+
+/* ---- Dashboard Cards ---- */
+.dashboard-card {
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.dashboard-card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--rp-bg-card-header);
+    border-bottom: 1px solid var(--rp-border);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.dashboard-card-header .dashboard-card-link {
+    margin-left: auto;
+    font-size: 0.7rem;
+    text-transform: none;
+    letter-spacing: normal;
+    font-weight: 500;
+    color: var(--rp-accent);
+    text-decoration: none;
+}
+
+.dashboard-card-header .dashboard-card-link:hover {
+    text-decoration: underline;
+}
+
+.dashboard-card-body {
+    padding: 0.75rem;
+}
+
+.dashboard-card-body.p-0 {
+    padding: 0;
+}
+
+/* ---- Runs Table ---- */
+.runs-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.runs-table thead th {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rp-text-muted);
+    border-bottom: 2px solid var(--rp-border);
+    background: var(--rp-bg-card-header);
+    white-space: nowrap;
+}
+
+.runs-table tbody td {
+    padding: 0.45rem 0.75rem;
+    border-bottom: 1px solid var(--rp-separator);
+    vertical-align: middle;
+}
+
+.runs-table-row {
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.runs-table-row:hover {
+    background: var(--rp-hover);
+}
+
+.runs-table-row:last-child td {
+    border-bottom: none;
+}
+
+/* ---- Delete Button (in table rows) ---- */
+.btn-delete-run {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    background: transparent;
+    color: var(--rp-text-muted);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+
+.btn-delete-run:hover {
+    color: var(--rp-danger);
+    background: rgba(220, 53, 69, 0.08);
+    border-color: rgba(220, 53, 69, 0.2);
+}
+
+/* ---- Run Meta Actions (delete button alignment) ---- */
+.run-meta-actions {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+}
+
+/* ---- Compare Table ---- */
+.compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.compare-table thead th {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--rp-text-muted);
+    border-bottom: 2px solid var(--rp-border);
+    background: var(--rp-bg-card-header);
+    white-space: nowrap;
+}
+
+.compare-table tbody td {
+    padding: 0.4rem 0.75rem;
+    border-bottom: 1px solid var(--rp-separator);
+    vertical-align: middle;
+}
+
+.compare-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.compare-test-name {
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.compare-regression {
+    background: rgba(220, 53, 69, 0.06);
+}
+
+.compare-fixed {
+    background: rgba(25, 135, 84, 0.06);
+}
+
+[data-bs-theme="dark"] .compare-regression {
+    background: rgba(220, 53, 69, 0.1);
+}
+
+[data-bs-theme="dark"] .compare-fixed {
+    background: rgba(25, 135, 84, 0.1);
+}
+
+/* ---- Device Status Dot ---- */
+.device-status-dot {
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.device-status-online {
+    background: var(--rp-success);
+    box-shadow: 0 0 4px rgba(25, 135, 84, 0.4);
+}
+
+.device-status-offline {
+    background: var(--rp-text-muted);
+    opacity: 0.5;
+}
+
+/* ---- Device Card (overview page) ---- */
+.device-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--rp-separator);
+    transition: background 0.1s;
+}
+
+.device-card:last-child {
+    border-bottom: none;
+}
+
+.device-card:hover {
+    background: var(--rp-hover);
+}
+
+.device-card-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.device-card-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.device-card-meta {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.device-card-runs {
+    font-size: 0.7rem;
+    color: var(--rp-text-muted);
+    background: var(--rp-tag-bg);
+    padding: 1px 6px;
+    border-radius: 3px;
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+}
+
+/* ---- Dispatch Form ---- */
+.dispatch-form .form-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+}
+
+.dispatch-form .form-select,
+.dispatch-form .form-control {
+    background-color: var(--rp-bg-card);
+    border-color: var(--rp-border);
+    color: var(--rp-text);
+}
+
+.dispatch-form .form-select:focus,
+.dispatch-form .form-control:focus {
+    background-color: var(--rp-bg-card);
+    border-color: var(--rp-accent);
+    color: var(--rp-text);
+    box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.25);
+}
+
+/* ---- Run Meta Grid ---- */
+.run-meta-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem 2rem;
+}
+
+.run-meta-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.run-meta-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.run-meta-value {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.run-meta-value code {
+    font-size: 0.7rem;
+    background: var(--rp-tag-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
+}
+
+/* ---- Testvector URL in header ---- */
+.result-testvector-header-text {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.result-testvector-url {
+    font-size: 0.65rem;
+    color: var(--rp-text-muted);
+    font-family: monospace;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    margin-top: 0.1rem;
+}
+
+/* ---- Badges ---- */
+.badge {
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 0.15rem 0.45rem;
+    border-radius: 3px;
+}
+
+/* ---- Pagination ---- */
+.pagination-controls {
+    margin-bottom: 1rem;
+}
+
+.pagination-info {
+    font-size: 0.75rem;
+    color: var(--rp-text-muted);
+}
+
+/* ---- Form tweaks ---- */
+.form-label-sm {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin-bottom: 0.2rem;
+}
+
+.form-select-sm,
+.form-control-sm {
+    font-size: 0.8rem;
+}
+
+/* Override Bootstrap dark mode for form controls */
+[data-bs-theme="dark"] .form-select,
+[data-bs-theme="dark"] .form-control {
+    background-color: var(--rp-bg-card);
+    border-color: var(--rp-border);
+    color: var(--rp-text);
+}
+
+[data-bs-theme="dark"] .form-select:focus,
+[data-bs-theme="dark"] .form-control:focus {
+    background-color: var(--rp-bg-card);
+    border-color: var(--rp-accent);
+    color: var(--rp-text);
+}
+
+/* ---- Empty State Help Text ---- */
+.empty-state-help {
+    margin-top: 0.5rem;
+    font-size: 0.8rem;
+    color: var(--rp-text-muted);
+    line-height: 1.5;
+}
+
+.empty-state-help a {
+    color: var(--rp-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.empty-state-help a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Agent Page ---- */
+.agent-status-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.agent-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    background: var(--rp-bg-card);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+}
+
+.agent-status-dot {
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    transition: background 0.3s, box-shadow 0.3s;
+}
+
+.agent-status-dot-connecting {
+    background: var(--rp-warning);
+    animation: pulse 1.5s infinite;
+}
+
+.agent-status-dot-online {
+    background: var(--rp-success);
+    box-shadow: 0 0 8px rgba(25, 135, 84, 0.5);
+}
+
+.agent-status-dot-offline {
+    background: var(--rp-danger);
+}
+
+.agent-status-dot-dispatch {
+    background: var(--rp-accent);
+    box-shadow: 0 0 8px rgba(13, 110, 253, 0.5);
+    animation: pulse 0.8s infinite;
+}
+
+.agent-status-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.agent-info-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+}
+
+.agent-info-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+}
+
+.agent-info-label {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: var(--rp-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.agent-info-value {
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.agent-info-value code {
+    font-size: 0.7rem;
+    background: var(--rp-tag-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
+    word-break: break-all;
+}
+
+.agent-instructions {
+    font-size: 0.8rem;
+    line-height: 1.6;
+    color: var(--rp-text);
+}
+
+.agent-instructions ol {
+    padding-left: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.agent-instructions li {
+    margin-bottom: 0.25rem;
+}
+
+.agent-instructions a {
+    color: var(--rp-accent);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.agent-instructions a:hover {
+    text-decoration: underline;
+}
+
+/* ---- Agent Activity Log ---- */
+.agent-log {
+    max-height: 250px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--rp-border) transparent;
+    font-family: monospace;
+    font-size: 0.7rem;
+}
+
+.agent-log-entry {
+    padding: 0.25rem 0.75rem;
+    border-bottom: 1px solid var(--rp-separator);
+    line-height: 1.4;
+}
+
+.agent-log-entry:last-child {
+    border-bottom: none;
+}
+
+.agent-log-info {
+    color: var(--rp-text-muted);
+}
+
+.agent-log-success {
+    color: var(--rp-success);
+}
+
+.agent-log-error {
+    color: var(--rp-danger);
+}
+
+.agent-log-dispatch {
+    color: var(--rp-accent);
+    font-weight: 600;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 991.98px) {
+    .dashboard-nav {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dashboard-nav-back {
+        margin-left: 0;
+    }
+
+    .run-meta-grid {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .compare-test-name {
+        max-width: 200px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .runs-table {
+        font-size: 0.75rem;
+    }
+
+    .runs-table thead th,
+    .runs-table tbody td {
+        padding: 0.35rem 0.5rem;
+    }
+
+    .compare-table {
+        font-size: 0.75rem;
+    }
+}

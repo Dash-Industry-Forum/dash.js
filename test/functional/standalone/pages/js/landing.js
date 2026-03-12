@@ -14,6 +14,24 @@
 (function () {
     'use strict';
 
+    // ---- Device ID (persistent across sessions via localStorage) ----
+    var deviceId = (function () {
+        try {
+            var stored = localStorage.getItem('dashjs-device-id');
+            if (stored) { return stored; }
+            var id = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+                var r = Math.random() * 16 | 0;
+                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+            });
+            localStorage.setItem('dashjs-device-id', id);
+            return id;
+        } catch (e) {
+            return 'session-' + Math.random().toString(36).substring(2, 10);
+        }
+    })();
+
+    var heartbeatInterval = null;
+
     // ---- State ----
     var sessionId = generateSessionId();
     var ws = null;
@@ -741,6 +759,22 @@
 
         ws.onopen = function () {
             ws.send(JSON.stringify({ type: 'tv', sessionId: sessionId }));
+            // Register device for dashboard tracking
+            ws.send(JSON.stringify({
+                action: 'register-device',
+                data: {
+                    deviceId: deviceId,
+                    name: getDeviceName(),
+                    userAgent: navigator.userAgent
+                }
+            }));
+            // Start heartbeat
+            if (heartbeatInterval) { clearInterval(heartbeatInterval); }
+            heartbeatInterval = setInterval(function () {
+                if (ws && ws.readyState === 1) {
+                    ws.send(JSON.stringify({ action: 'heartbeat', data: { deviceId: deviceId } }));
+                }
+            }, 30000);
         };
 
         ws.onmessage = function (event) {
@@ -772,12 +806,71 @@
                         startTests();
                     }
                     break;
+
+                case 'dispatch':
+                    // Dashboard dispatched a test run to this device
+                    handleDispatch(msg.data);
+                    break;
             }
         };
 
         ws.onclose = function () {
+            if (heartbeatInterval) { clearInterval(heartbeatInterval); heartbeatInterval = null; }
             setTimeout(connectWebSocket, 3000);
         };
+    }
+
+    function handleDispatch(data) {
+        if (!data || !data.sessionId || !data.config) { return; }
+        fetch('/api/custom-config/' + data.sessionId, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data.config)
+        }).then(function () {
+            var p = new URLSearchParams();
+            p.set('session', data.sessionId);
+            p.set('mode', 'custom');
+            if (data.config.testvectors) {
+                var cats = {};
+                data.config.testvectors.forEach(function (tv) {
+                    (tv.includedTestfiles || []).forEach(function (tf) {
+                        cats[tf.split('/')[0]] = true;
+                    });
+                });
+                var catList = Object.keys(cats);
+                if (catList.length > 0) { p.set('categories', catList.join(',')); }
+            }
+            var legacyCheckbox = document.getElementById('legacy-mode');
+            if (legacyCheckbox && legacyCheckbox.checked) { p.set('legacy', 'true'); }
+            window.location.href = '/standalone/runner.html?' + p.toString();
+        }).catch(function (err) {
+            showToast('Dispatch error: ' + err.message, 'danger');
+        });
+    }
+
+    function getDeviceName() {
+        var ua = navigator.userAgent;
+        var platform = 'Device';
+        if (ua.indexOf('Smart') >= 0 || ua.indexOf('Tizen') >= 0) { platform = 'Smart TV'; }
+        else if (ua.indexOf('webOS') >= 0 || ua.indexOf('Web0S') >= 0) { platform = 'LG TV'; }
+        else if (ua.indexOf('PlayStation') >= 0) { platform = 'PlayStation'; }
+        else if (ua.indexOf('Xbox') >= 0) { platform = 'Xbox'; }
+        else if (ua.indexOf('iPhone') >= 0) { platform = 'iPhone'; }
+        else if (ua.indexOf('iPad') >= 0) { platform = 'iPad'; }
+        else if (ua.indexOf('Android') >= 0) { platform = 'Android'; }
+        else if (ua.indexOf('Mac') >= 0) { platform = 'Mac'; }
+        else if (ua.indexOf('Windows') >= 0) { platform = 'Windows'; }
+        else if (ua.indexOf('Linux') >= 0) { platform = 'Linux'; }
+
+        var browser = 'Browser';
+        if (ua.indexOf('Edg/') >= 0) { browser = 'Edge'; }
+        else if (ua.indexOf('OPR/') >= 0 || ua.indexOf('Opera') >= 0) { browser = 'Opera'; }
+        else if (ua.indexOf('SamsungBrowser') >= 0) { browser = 'Samsung Browser'; }
+        else if (ua.indexOf('Firefox/') >= 0) { browser = 'Firefox'; }
+        else if (ua.indexOf('Chrome/') >= 0) { browser = 'Chrome'; }
+        else if (ua.indexOf('Safari/') >= 0) { browser = 'Safari'; }
+
+        return platform + ' \u2014 ' + browser;
     }
 
     // ---- QR Code ----

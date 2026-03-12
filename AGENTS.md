@@ -196,10 +196,13 @@ test/
     ├── content/   # Local MPD fixtures
     ├── lib/       # External libraries (ima3_dai.js)
     └── standalone/# Standalone test runner (browser-only, no Selenium/WebDriver needed)
-        ├── server.js    # Express server + WebSocket + Rollup bundler
+        ├── server.js    # Express server + WebSocket + Rollup bundler + dashboard APIs
         ├── bundler.js   # Rollup bundling logic for test files
+        ├── db.js        # SQLite database module (better-sqlite3) for persistent results
         ├── pages/       # Landing page, runner page, remote control page
-        └── results/     # Test result output (JSON + JUnit XML)
+        │   └── dashboard/ # Test dashboard (overview, runs, run detail, devices)
+        ├── data/        # SQLite database file (gitignored, auto-created)
+        └── results/     # Test result output (JSON + JUnit XML + HTML)
 build/webpack/     # Webpack configs (modern/legacy, dev/prod, UMD/ESM)
 ```
 

@@ -199,6 +199,7 @@ test/functional/config/selenium/jars
 test/functional/standalone/.bundled-tests
 test/functional/standalone/.bundled-tests-legacy
 test/functional/standalone/results
+test/functional/standalone/data
 samples/custom
 samples/mpds/
 samples/modules/webpack/package-lock.json

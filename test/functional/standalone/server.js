@@ -31,6 +31,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { getTestFiles, bundleTestFiles } from './bundler.js';
+import db from './db.js';
 
 // ---------------------------------------------------------------------------
 // Paths
@@ -107,6 +108,7 @@ function getAvailableTestCategories() {
 // Session management (TV <-> Remote device pairing)
 // ---------------------------------------------------------------------------
 const sessions = new Map();
+const deviceSockets = new Map();  // deviceId → WebSocket
 
 function createSession(sessionId) {
     const session = {
@@ -114,9 +116,12 @@ function createSession(sessionId) {
         tvSocket: null,
         remoteSocket: null,
         config: null,
+        customConfig: null,
         results: [],
         summary: null,
         createdAt: Date.now(),
+        deviceId: null,
+        dbRunId: null,
     };
     sessions.set(sessionId, session);
     return session;
@@ -915,6 +920,118 @@ app.use('/test/functional', express.static(path.join(projectRoot, 'test/function
 }));
 
 // ---------------------------------------------------------------------------
+// Dashboard API routes
+// ---------------------------------------------------------------------------
+
+// Middleware: check DB availability
+function requireDb(req, res, next) {
+    if (!db.isAvailable()) {
+        return res.status(503).json({ error: 'Database not available' });
+    }
+    next();
+}
+
+// List test runs with pagination and filters
+app.get('/api/dashboard/runs', requireDb, (req, res) => {
+    const result = db.getRuns({
+        page: parseInt(req.query.page, 10) || 1,
+        limit: parseInt(req.query.limit, 10) || 20,
+        deviceId: req.query.deviceId || undefined,
+        from: req.query.from || undefined,
+        to: req.query.to || undefined,
+        status: req.query.status || undefined,
+    });
+    res.json(result);
+});
+
+// Delete a test run (and cascaded results)
+app.delete('/api/dashboard/runs/:id', requireDb, (req, res) => {
+    const deleted = db.deleteRun(parseInt(req.params.id, 10));
+    if (!deleted) {
+        return res.status(404).json({ error: 'Run not found' });
+    }
+    res.json({ ok: true });
+});
+
+// Get a single run with all test results
+app.get('/api/dashboard/runs/:id', requireDb, (req, res) => {
+    const run = db.getRunById(parseInt(req.params.id, 10));
+    if (!run) {
+        return res.status(404).json({ error: 'Run not found' });
+    }
+    res.json(run);
+});
+
+// List all devices with computed status and run counts
+app.get('/api/dashboard/devices', requireDb, (req, res) => {
+    res.json(db.getDevices());
+});
+
+// Compare two runs side-by-side
+app.get('/api/dashboard/compare', requireDb, (req, res) => {
+    const ids = (req.query.runs || '').split(',').map((s) => parseInt(s.trim(), 10)).filter(Boolean);
+    if (ids.length !== 2) {
+        return res.status(400).json({ error: 'Provide exactly two run IDs: ?runs=id1,id2' });
+    }
+    const comparison = db.compareRuns(ids[0], ids[1]);
+    if (!comparison) {
+        return res.status(404).json({ error: 'One or both runs not found' });
+    }
+    res.json(comparison);
+});
+
+// Dispatch a test configuration to a connected device
+app.post('/api/dashboard/dispatch', requireDb, (req, res) => {
+    const { deviceId, config } = req.body;
+    if (!deviceId || !config) {
+        return res.status(400).json({ error: 'deviceId and config are required' });
+    }
+
+    // Check if the device exists
+    const devices = db.getDevices();
+    const device = devices.find((d) => d.deviceId === deviceId);
+    if (!device) {
+        return res.status(404).json({ error: 'Device not found' });
+    }
+
+    // Check if the device is connected
+    const deviceWs = deviceSockets.get(deviceId);
+    if (!deviceWs || deviceWs.readyState !== 1) {
+        return res.status(409).json({ error: 'Device is not connected' });
+    }
+
+    // Create a new session for this dispatch
+    const dispatchSessionId = `dispatch-${Date.now().toString(36)}-${Math.random().toString(36).substring(2, 6)}`;
+    const session = getOrCreateSession(dispatchSessionId);
+    session.deviceId = deviceId;
+    session.customConfig = config;
+
+    // Create a DB run record with status 'dispatched'
+    const configStr = JSON.stringify(config);
+    const runId = db.insertRun(dispatchSessionId, deviceId, configStr, 'dispatched');
+    session.dbRunId = runId;
+
+    // Send dispatch message to the device
+    deviceWs.send(JSON.stringify({
+        action: 'dispatch',
+        data: { sessionId: dispatchSessionId, config },
+    }));
+
+    console.log(`[dispatch] Sent test config to device ${deviceId} (session: ${dispatchSessionId})`);
+    res.json({ ok: true, sessionId: dispatchSessionId, runId });
+});
+
+// List available stream presets (reuse existing logic)
+app.get('/api/dashboard/stream-presets', (req, res) => {
+    res.json(getAvailableStreamConfigs());
+});
+
+// ---------------------------------------------------------------------------
+// Serve dashboard pages
+// ---------------------------------------------------------------------------
+app.use('/dashboard', express.static(path.join(standaloneDir, 'pages/dashboard')));
+
+// ---------------------------------------------------------------------------
 // Landing page redirect
 // ---------------------------------------------------------------------------
 app.get('/', (req, res) => {
@@ -978,6 +1095,27 @@ wss.on('connection', (ws) => {
         if (!session) return;
 
         switch (msg.action) {
+            case 'register-device': {
+                // Device registers with persistent ID
+                const devId = msg.data && msg.data.deviceId;
+                if (devId) {
+                    session.deviceId = devId;
+                    db.upsertDevice(devId, msg.data.name || '', msg.data.userAgent || '');
+                    deviceSockets.set(devId, ws);
+                    ws._deviceId = devId;
+                    console.log(`[ws] Device registered: ${devId} (${msg.data.name || 'unnamed'})`);
+                }
+                break;
+            }
+
+            case 'heartbeat': {
+                const hbDevId = msg.data && msg.data.deviceId;
+                if (hbDevId) {
+                    db.updateDeviceHeartbeat(hbDevId);
+                }
+                break;
+            }
+
             case 'configure':
                 // Remote -> Server -> TV: send configuration
                 session.config = msg.data;
@@ -999,6 +1137,17 @@ wss.on('connection', (ws) => {
             case 'result':
                 // TV -> Server: individual test result
                 session.results.push(msg.data);
+
+                // Create DB run record on first result if not yet created
+                if (!session.dbRunId && db.isAvailable()) {
+                    const configStr = session.customConfig ? JSON.stringify(session.customConfig) : null;
+                    session.dbRunId = db.insertRun(session.id, session.deviceId, configStr, 'running');
+                }
+                // Persist individual result to DB
+                if (session.dbRunId) {
+                    db.insertResult(session.dbRunId, msg.data);
+                }
+
                 // Relay to remote
                 if (session.remoteSocket && session.remoteSocket.readyState === 1) {
                     session.remoteSocket.send(JSON.stringify({
@@ -1021,6 +1170,10 @@ wss.on('connection', (ws) => {
             case 'complete':
                 // TV -> Server: tests complete
                 session.summary = msg.data;
+                // Persist completion to DB
+                if (session.dbRunId) {
+                    db.completeRun(session.dbRunId, msg.data);
+                }
                 const reportUrl = saveResults(session);
                 // Send report URL back to TV
                 if (session.tvSocket && session.tvSocket.readyState === 1) {
@@ -1042,6 +1195,13 @@ wss.on('connection', (ws) => {
     });
 
     ws.on('close', () => {
+        // Handle device offline tracking
+        if (ws._deviceId) {
+            db.setDeviceOffline(ws._deviceId);
+            deviceSockets.delete(ws._deviceId);
+            console.log(`[ws] Device offline: ${ws._deviceId}`);
+        }
+
         if (sessionId && sessions.has(sessionId)) {
             const session = sessions.get(sessionId);
             if (clientType === 'tv') {
@@ -1065,6 +1225,13 @@ async function start() {
     console.log('=== dash.js Standalone Functional Test Runner ===');
     console.log(`Project root: ${projectRoot}`);
     console.log(`Stream config: ${cliArgs.streams}`);
+
+    // Initialise database
+    const dataDir = path.join(standaloneDir, 'data');
+    const dbReady = db.init(dataDir);
+    if (!dbReady) {
+        console.warn('[server] Database unavailable — dashboard features will be limited');
+    }
 
     // Bundle test files (both ESM and IIFE formats)
     if (!cliArgs.skipBundle) {
