@@ -144,7 +144,9 @@ function TTMLParser() {
             if (isd.contents.some(topLevelContents => topLevelContents.contents.length)) {
                 //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
                 startTime = mediaTimeEvents[i] + offsetTime;
-                endTime = mediaTimeEvents[i + 1] + offsetTime;
+                endTime = (i + 1 < mediaTimeEvents.length)
+                    ? mediaTimeEvents[i + 1] + offsetTime
+                    : endTimeSegment;
 
                 if (startTime < endTime) {
                     captionArray.push({
