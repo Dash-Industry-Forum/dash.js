@@ -90,6 +90,14 @@ describe('DashParser', function () {
             expect(rawRepresentation.SupplementalProperty.length).to.equal(4);
         });
 
+        it('should map allowed SegmentTemplate from AdaptationSet to Representation', async () => {
+            let parsedMpd = dashParser.parse(manifest_prop);
+            let rawAdaptationSet = parsedMpd.Period[0].AdaptationSet[0];
+            let rawRepresentation = rawAdaptationSet.Representation[0];
+
+            expect(rawRepresentation.SegmentTemplate).to.be.instanceOf(Object);
+        });
+
     });
 })
 
