@@ -1,0 +1,14 @@
+{
+    "id": "org.dashif.dashjs.testrunner",
+    "title": "dash.js Test Runner",
+    "type": "web",
+    "main": "index.html",
+    "icon": "icon.png",
+    "largeIcon": "largeIcon.png",
+    "version": "1.0.0",
+    "vendor": "DASH Industry Forum",
+    "appDescription": "dash.js functional test runner agent",
+    "resolution": "1920x1080",
+    "disableBackHistoryAPI": true,
+    "handlesRelaunch": true
+}

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920">
+    <title>dash.js Test Runner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #1a1a2e; color: #e0e0e0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+        }
+        .container {
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            height: 100%; padding: 40px; text-align: center;
+        }
+        h1 { font-size: 48px; margin-bottom: 20px; color: #fff; }
+        .subtitle { font-size: 24px; color: #aaa; margin-bottom: 40px; }
+        .status { font-size: 20px; color: #4fc3f7; margin-bottom: 20px; }
+        .url-display {
+            font-family: monospace; font-size: 18px;
+            background: rgba(255,255,255,0.1); padding: 16px 32px;
+            border-radius: 8px; margin-bottom: 40px;
+            word-break: break-all;
+        }
+        .error { color: #ef5350; }
+        .instructions {
+            font-size: 16px; color: #888; max-width: 800px; line-height: 1.6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>dash.js Test Runner</h1>
+        <p class="subtitle">DASH Industry Forum</p>
+        <p class="status" id="status">Connecting to server...</p>
+        <div class="url-display" id="server-url"></div>
+        <p class="instructions" id="instructions"></p>
+    </div>
+
+    <script>
+        /**
+         * dash.js Test Runner — Tizen TV App
+         *
+         * Configuration:
+         * Set SERVER_URL to the base URL of your standalone test server.
+         * The app will navigate to the Device Agent page and register this
+         * TV as a test device.
+         *
+         * Replace the URL below before packaging the app.
+         */
+        var SERVER_URL = '__SERVER_URL__';
+
+        var statusEl = document.getElementById('status');
+        var urlEl = document.getElementById('server-url');
+        var instructionsEl = document.getElementById('instructions');
+
+        // Handle Tizen Back button (keyCode 10009) to prevent accidental app exit
+        document.addEventListener('keydown', function (e) {
+            if (e.keyCode === 10009) {
+                // Back button — confirm exit
+                if (window.confirm('Exit dash.js Test Runner?')) {
+                    try {
+                        tizen.application.getCurrentApplication().exit();
+                    } catch (err) {
+                        window.close();
+                    }
+                }
+                e.preventDefault();
+            }
+        });
+
+        function init() {
+            // Validate server URL
+            if (!SERVER_URL || SERVER_URL === '__SERVER_URL__') {
+                statusEl.textContent = 'Server URL not configured';
+                statusEl.classList.add('error');
+                urlEl.textContent = 'SERVER_URL = "__SERVER_URL__"';
+                instructionsEl.innerHTML =
+                    'Edit <strong>index.html</strong> and set the <code>SERVER_URL</code> variable ' +
+                    'to your standalone test server address.<br><br>' +
+                    'Example: <code>https://testrunner.yourdomain.com</code> or ' +
+                    '<code>https://192.168.1.100:3001</code>';
+                return;
+            }
+
+            urlEl.textContent = SERVER_URL;
+            statusEl.textContent = 'Connecting...';
+
+            // Navigate to the Device Agent page
+            var agentUrl = SERVER_URL.replace(/\/+$/, '') + '/dashboard/agent.html';
+            window.location.href = agentUrl;
+        }
+
+        // Start after a short delay to let the TV app container initialize
+        setTimeout(init, 500);
+    </script>
+</body>
+</html>

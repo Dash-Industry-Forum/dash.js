@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets"
+        xmlns:tizen="http://tizen.org/ns/widgets"
+        id="http://dashif.org/DashJSTestRunner"
+        version="1.0.0"
+        viewmodes="maximized">
+
+    <!--
+        dash.js Functional Test Runner — Samsung Tizen TV App
+
+        Before packaging, replace __SERVER_URL__ with the actual server URL,
+        e.g. https://testrunner.yourdomain.com or https://192.168.1.100:3001
+
+        The app loads the Device Agent page which registers the TV as a test
+        device, maintains a persistent WebSocket connection, and automatically
+        navigates to the test runner when a test is dispatched from the dashboard.
+    -->
+
+    <tizen:application id="DashIF0001.DashJSTestRunner"
+                       package="DashIF0001"
+                       required_version="4.0"/>
+
+    <content src="index.html"/>
+    <icon src="icon.png"/>
+    <name>dash.js Test Runner</name>
+    <tizen:profile name="tv"/>
+
+    <!-- Privileges -->
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+
+    <!-- Network access — allow all origins for development -->
+    <access origin="*" subdomains="true"/>
+
+    <!-- Permissive CSP for development (external scripts, WebSocket, etc.) -->
+    <tizen:content-security-policy>
+        default-src * 'unsafe-inline' 'unsafe-eval' data: blob: ws: wss:;
+        connect-src * ws: wss:;
+        media-src * blob:;
+    </tizen:content-security-policy>
+
+    <!-- App settings -->
+    <tizen:setting screen-orientation="landscape"
+                   context-menu="enable"
+                   background-support="enable"
+                   encryption="disable"
+                   install-location="auto"
+                   hwkey-event="enable"/>
+
+</widget>
