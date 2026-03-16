@@ -181,6 +181,7 @@ export class PlayerController extends EventEmitter {
         this.player.on(events.KEY_SYSTEM_SELECTED, (e) => this._onKeySystemSelected(e));
         this.player.on(events.KEY_SESSION_CREATED, (e) => this._onKeySessionCreated(e));
         this.player.on(events.CONFORMANCE_VIOLATION, (e) => this._onConformanceViolation(e));
+        this.player.on(events.LOG, (e) => this._onLog(e));
     }
 
     _onError(e) {
@@ -252,6 +253,13 @@ export class PlayerController extends EventEmitter {
                 this.conformanceViolations.push(e);
                 this.emit('conformanceViolation', e);
             }
+        }
+    }
+
+    _onLog(e) {
+        // Only forward warning (3), error (2), and fatal (1) log messages
+        if (e && e.level <= 3) {
+            this.emit('log', { level: e.level, message: e.message });
         }
     }
 

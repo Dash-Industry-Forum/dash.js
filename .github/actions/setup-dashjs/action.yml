@@ -1,5 +1,5 @@
 name: 'Setup dash.js'
-description: 'Checkout, setup Node.js, cache and install dependencies'
+description: 'Setup Node.js, cache and install dependencies'
 
 runs:
     using: 'composite'

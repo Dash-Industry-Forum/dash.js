@@ -1,6 +1,7 @@
 {
   "debug": {
-    "logLevel": 5
+    "logLevel": 5,
+    "dispatchEvent": true
   },
   "streaming": {
     "buffer": {

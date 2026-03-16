@@ -9,6 +9,10 @@ on:
             deploy_path:
                 required: true
                 type: string
+            deploy_type:
+                required: true
+                type: string
+                description: 'Type of deployment: "samples" (reference player + samples) or "build" (dist artifacts + JSDoc)'
         secrets:
             host:
                 required: true
@@ -23,15 +27,12 @@ jobs:
 
         steps:
             -   uses: actions/checkout@v4
-            -   name: Use Node.js
-                uses: actions/setup-node@v4
-                with:
-                    node-version: "20.x"
-            -   name: Install dependencies
-                run: npm install
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
             -   name: Run build
                 run: npm run build
             -   name: Find and Replace
+                if: inputs.deploy_type == 'samples'
                 uses: jacobtomlinson/gha-find-replace@v2
                 env:
                     replacement_string: ${{ format('{0} - commit <a href="https://github.com/Dash-Industry-Forum/dash.js/commit/{1}">{2}</a>', github.ref_name, github.sha, github.sha)}}
@@ -40,6 +41,7 @@ jobs:
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player*/index.html"
             -   name: Build all samples
+                if: inputs.deploy_type == 'samples'
                 run: |
                     for sample in "network-interceptor"; do
                       echo "Building sample: $sample"
@@ -48,16 +50,37 @@ jobs:
                       npm run build
                       rm -rf node_modules
                     done
-            -   name: Copy to deploy directory for deployment
+            -   name: Build JSDoc
+                if: inputs.deploy_type == 'build'
+                run: npm run doc
+                continue-on-error: true
+            -   name: Copy samples to deploy directory
+                if: inputs.deploy_type == 'samples'
+                env:
+                    ENVNAME: ${{ inputs.envname }}
                 run: |
-                    mkdir -p ${{inputs.envname}}
-                    cp -R contrib dist samples ${{inputs.envname}}
+                    mkdir -p "$ENVNAME"
+                    cp -R contrib dist samples "$ENVNAME"
+            -   name: Copy build artifacts to deploy directory
+                if: inputs.deploy_type == 'build'
+                env:
+                    ENVNAME: ${{ inputs.envname }}
+                run: |
+                    mkdir -p "$ENVNAME"
+                    cp -R docs/jsdoc "$ENVNAME/jsdoc" && cp -R dist/modern/umd/* "$ENVNAME" && cp -R dist/* index.d.ts "$ENVNAME"
             -   name: Install SSH Key
                 uses: shimataro/ssh-key-action@v2
                 with:
                     key: ${{ secrets.private_key }}
                     known_hosts: unnecessary
+            -   name: Fetch host keys
+                run: ssh-keyscan -H ${{ secrets.host }} >> ~/.ssh/known_hosts
             -   name: Deploy with scp
+                env:
+                    DEPLOY_USER: ${{ secrets.user }}
+                    DEPLOY_HOST: ${{ secrets.host }}
+                    DEPLOY_PATH: ${{ inputs.deploy_path }}
+                    ENVNAME: ${{ inputs.envname }}
                 run: |
-                    ssh -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{ secrets.USER }}@${{ secrets.HOST }} "mkdir -p ${{ inputs.deploy_path }}/${{inputs.envname}}"
-                    scp -r -o StrictHostKeyChecking=no -oHostKeyAlgorithms=+ssh-dss ${{inputs.envname}} ${{ secrets.user }}@${{ secrets.host }}:${{ inputs.deploy_path }}
+                    ssh "$DEPLOY_USER@$DEPLOY_HOST" "mkdir -p \"$DEPLOY_PATH/$ENVNAME\""
+                    scp -r "$ENVNAME" "$DEPLOY_USER@$DEPLOY_HOST:$DEPLOY_PATH"
