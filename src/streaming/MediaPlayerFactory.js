@@ -103,32 +103,36 @@ function MediaPlayerFactory() {
 }
 
 let instance = MediaPlayerFactory();
-let loadInterval;
 
-function loadHandler() {
-    window.removeEventListener('load', loadHandler);
-    instance.createAll();
-}
+// Only execute auto-creation logic in browser environment (SSR-safe)
+if (typeof window !== 'undefined' && window) {
+    let loadInterval;
 
-function loadIntervalHandler() {
-    if (window.dashjs) {
-        window.clearInterval(loadInterval);
+    function loadHandler() {
+        window.removeEventListener('load', loadHandler);
         instance.createAll();
     }
-}
 
-let avoidAutoCreate = typeof window !== 'undefined' && window && window.dashjs && window.dashjs.skipAutoCreate;
-
-if (!avoidAutoCreate && typeof window !== 'undefined' && window && window.addEventListener) {
-    if (window.document.readyState === 'complete') {
+    function loadIntervalHandler() {
         if (window.dashjs) {
+            window.clearInterval(loadInterval);
             instance.createAll();
-        } else {
-            // If loaded asynchronously, window.readyState may be 'complete' even if dashjs hasn't loaded yet
-            loadInterval = window.setInterval(loadIntervalHandler, 500);
         }
-    } else {
-        window.addEventListener('load', loadHandler);
+    }
+
+    let avoidAutoCreate = window.dashjs && window.dashjs.skipAutoCreate;
+
+    if (!avoidAutoCreate && window.addEventListener) {
+        if (window.document.readyState === 'complete') {
+            if (window.dashjs) {
+                instance.createAll();
+            } else {
+                // If loaded asynchronously, window.readyState may be 'complete' even if dashjs hasn't loaded yet
+                loadInterval = window.setInterval(loadIntervalHandler, 500);
+            }
+        } else {
+            window.addEventListener('load', loadHandler);
+        }
     }
 }
 
