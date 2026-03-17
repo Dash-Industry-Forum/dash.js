@@ -46,37 +46,39 @@ function ObjectIron(mappers) {
         return allowMapping;
     }
     
-    function _conditionallyMapProperty(exception, propertyParentElement, parentIsArray, parentEl, child) {
-        if (_mappingAllowed(parentEl, exception)) {
-            if (child[propertyParentElement]) {
+    function _conditionallyMapProperty(exception, propertyName, propertyIsArray, propertyElementFromParent, childNode) {
+        if (_mappingAllowed(propertyElementFromParent, exception)) {
+            if (childNode[propertyName]) {
                 // property already exists
-                if (parentIsArray) {
-                    child[propertyParentElement].push(parentEl);
+                if (propertyIsArray) {
+                    childNode[propertyName].push(propertyElementFromParent);
                 }
+                // if the propertyElementFromParent is not array and an element with same name is already present on child, 
+                // we don't want to overwrite this already existing version
             } else {
                 // just add the property
-                if (parentIsArray) {
-                    child[propertyParentElement] = [parentEl];
+                if (propertyIsArray) {
+                    childNode[propertyName] = [propertyElementFromParent];
                 } else {
-                    child[propertyParentElement] = parentEl;
+                    childNode[propertyName] = propertyElementFromParent;
                 }
             }
         }
     }
 
-    function mapProperties(properties, exceptions, parent, child) {
+    function mapProperties(properties, exceptions, parentNode, childNode) {
         for (let i = 0, len = properties.length; i < len; ++i) {
-            const property = properties[i];
+            const propertyName = properties[i];
 
-            if (parent[property]) {
-                const propertyParentElement = parent[property];
+            if (parentNode[propertyName]) {
+                const propertyFromParentElement = parentNode[propertyName];
 
-                if (Array.isArray(propertyParentElement)) {
-                    propertyParentElement.forEach(propParentEl => {
-                        _conditionallyMapProperty(exceptions[property], property, true, propParentEl, child);
+                if (Array.isArray(propertyFromParentElement)) {
+                    propertyFromParentElement.forEach(propParentEl => {
+                        _conditionallyMapProperty(exceptions[propertyName], propertyName, true, propParentEl, childNode);
                     });
                 } else {
-                    _conditionallyMapProperty(exceptions[property], property, false, propertyParentElement, child);
+                    _conditionallyMapProperty(exceptions[propertyName], propertyName, false, propertyFromParentElement, childNode);
                 }
             }
         }
