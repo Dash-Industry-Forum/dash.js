@@ -90,12 +90,16 @@ describe('DashParser', function () {
             expect(rawRepresentation.SupplementalProperty.length).to.equal(4);
         });
 
-        it('should map allowed SegmentTemplate from AdaptationSet to Representation', async () => {
+        it('should map only allowed attributes SegmentTemplate from AdaptationSet to Representation', async () => {
             let parsedMpd = dashParser.parse(manifest_prop);
             let rawAdaptationSet = parsedMpd.Period[0].AdaptationSet[0];
             let rawRepresentation = rawAdaptationSet.Representation[0];
 
             expect(rawRepresentation.SegmentTemplate).to.be.instanceOf(Object);
+
+            expect(rawRepresentation.SegmentTemplate.initialization).to.equal('$RepresentationID$.m4a');
+            expect(rawRepresentation.SegmentTemplate.media).to.equal('$Number$.m4a');
+            expect(rawRepresentation.SegmentTemplate.duration).to.equal(300000);
         });
 
     });

@@ -10,9 +10,10 @@
             <SupplementalProperty schemeIdUri="urn:XYZ" value="OK" />
             <SupplementalProperty schemeIdUri="urn:mpeg:dash:state:lang#audio" />
             <Role schemeIdUri="urn:mpeg:dash:role:2011" value="main"/>
-            <SegmentTemplate duration="192512" timescale="48000" media="$RepresentationID$/$RepresentationID$_$Number$.m4a" startNumber="1" initialization="$RepresentationID$/$RepresentationID$_0.m4a"/>
+            <SegmentTemplate duration="200000" timescale="48000" initialization="$RepresentationID$.m4a"/>
             <Representation id="bbb_a64k" codecs="mp4a.40.5" bandwidth="67071" audioSamplingRate="48000">
                 <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011" value="2"/>
+                <SegmentTemplate duration="300000" timescale="48000" media="$Number$.m4a" startNumber="1"/>
                 <SupplementalProperty schemeIdUri="urn:ABC" value="Instance2" />
                 <SupplementalProperty schemeIdUri="urn:ABC" value="Instance3" />
             </Representation>

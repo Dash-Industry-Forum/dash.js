@@ -32,6 +32,14 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ObjectIron(mappers) {
 
+    function _mergeValues(parentItem, childItem) {
+        for (let name in parentItem) {
+            if (!childItem.hasOwnProperty(name)) {
+                childItem[name] = parentItem[name];
+            }
+        }
+    }
+    
     function _mappingAllowed (element, exception) {
         let allowMapping = true;
         if (exception) {
@@ -52,9 +60,10 @@ function ObjectIron(mappers) {
                 // property already exists
                 if (propertyIsArray) {
                     childNode[propertyName].push(propertyElementFromParent);
+                } else {
+                    // see ISO 23009-1 (6th ed), clause 5.3.9.1
+                    _mergeValues(propertyElementFromParent, childNode[propertyName]);
                 }
-                // if the propertyElementFromParent is not array and an element with same name is already present on child, 
-                // we don't want to overwrite this already existing version
             } else {
                 // just add the property
                 if (propertyIsArray) {
