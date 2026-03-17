@@ -36,7 +36,7 @@ import ProtectionErrors from '../errors/ProtectionErrors.js';
 import DashJSError from '../../vo/DashJSError.js';
 import LicenseRequest from '../vo/LicenseRequest.js';
 import LicenseResponse from '../vo/LicenseResponse.js';
-import { HTTPRequest } from '../../vo/metrics/HTTPRequest.js';
+import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
 import CertUrlUtils from '../../utils/CertUrlUtils.js';
 import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
@@ -342,7 +342,7 @@ function ProtectionController(config) {
                 return;
             }
             mediaInfo.contentProtection.forEach(contentProtection => {
-                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri === selectedKeySystem.schemeIdURI) {
                     contentProtection.certUrls.forEach(c => {
                         urls.push(c);
                     });
@@ -945,12 +945,12 @@ function ProtectionController(config) {
     }
 
     /**
-    * Returns the protection data set by the application for use in license acquisition with EME
-    *
-    * @memberof module:ProtectionController
-    * @instance
-    * @ignore
-    */
+     * Returns the protection data set by the application for use in license acquisition with EME
+     *
+     * @memberof module:ProtectionController
+     * @instance
+     * @ignore
+     */
     function getProtectionData() {
         return applicationProvidedProtectionData
     }
