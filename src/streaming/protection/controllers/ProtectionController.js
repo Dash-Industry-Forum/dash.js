@@ -342,7 +342,7 @@ function ProtectionController(config) {
                 return;
             }
             mediaInfo.contentProtection.forEach(contentProtection => {
-                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri === selectedKeySystem.schemeIdURI) {
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri.toLowerCase() === selectedKeySystem.schemeIdURI) {
                     contentProtection.certUrls.forEach(c => {
                         urls.push(c);
                     });
