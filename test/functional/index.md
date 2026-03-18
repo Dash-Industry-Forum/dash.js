@@ -1,8 +1,9 @@
 # Description
 
-The functional test suite implements integration tests using Web Test Runner with WebDriver browser launchers.
-Functional tests validate player functionality such as play, pause, seek, DRM, text tracks, and more against
-real media streams.
+The functional test suite implements integration tests that validate player functionality such as
+play, pause, seek, DRM, text tracks, and more against real media streams. Tests run in any browser
+via the standalone test runner — a self-contained Express server with WebSocket communication,
+Rollup bundling, and a dashboard for device management and result tracking.
 
 # Structure
 
@@ -10,37 +11,57 @@ The source files are placed in multiple folders:
 
 * `adapter`: Adapter classes that implement additional logic to run a test. For instance the `DashJsAdapter.js` serves
   as a wrapper around dash.js functionality.
-* `config`: Test runner configuration (`web-test-runner.functional.mjs`) and test configuration files
-  (`test-configurations/`) that define browser settings and stream definitions.
+* `config/test-configurations/streams`: Stream preset JSON files that define which testvectors to run.
 * `content`: Contains static MPDs that serve as input for testcases.
 * `lib`: External libraries (e.g. `ima3_dai.js` for Google Ad Manager tests).
-* `results`: The summary of the test results is placed in this folder.
 * `src`: Helper classes (`Constants.js`, `Utils.js`) that define constant values and filter testvectors.
 * `test`: The implementation of the testcases, organized by category.
-
-# Configuration
-
-The main configuration for the test execution is defined in `config/web-test-runner.functional.mjs`.
-Two environment variables control which configuration is used:
-
-* `CONFIGFILE`: Name of a JSON file in `config/test-configurations/` (default: `local`)
-* `STREAMSFILE`: Name of a JSON file in `config/test-configurations/streams/` (default: `smoke`)
-
-Available configurations:
-* `local` / `local-windows` / `local-ubuntu`: Local browser testing via WebDriver
-* `lambdatest` / `lambdatest-smoke` / `lambdatest-full`: LambdaTest cloud testing
+* `standalone`: The standalone test runner server, dashboard, bundler, and Smart TV sample apps.
 
 # Test Execution
 
-To execute the functional tests run the following steps:
+## Standalone Test Runner
 
-1. `npm install` to install all dependencies
-2. `npm run build` to build the `dist` files of dash.js
-3. Start a WebDriver server (e.g. `chromedriver --port=4444` or Selenium Grid)
-4. `npm run test-functional` to execute the tests
-5. The results will be available after the test execution in `test/functional/results/`
+The standalone runner hosts a landing page for configuring and running tests directly in any browser,
+including Smart TVs, game consoles, and mobile devices.
 
-For LambdaTest CI execution:
 ```bash
-CONFIGFILE=lambdatest STREAMSFILE=single npx web-test-runner --config test/functional/config/web-test-runner.functional.mjs
+# Start the standalone test runner
+npm run test-standalone
+
+# With specific stream configuration
+npm run test-standalone -- --streams=single
+
+# With HTTPS (auto-generates self-signed certificate)
+npm run test-standalone-https
+
+# With a custom trusted certificate
+npm run test-standalone-https -- --cert=./cert.pem --key=./key.pem
+
+# Skip rebundling (use previously bundled test files)
+npm run test-standalone -- --skip-bundle
+
+# Custom port and host
+npm run test-standalone -- --port=8080 --host=0.0.0.0
 ```
+
+Open the printed URL in any browser to configure and run tests. Results are stored as
+JSON, JUnit XML, and HTML in `standalone/results/`, and in the SQLite dashboard database
+at `standalone/data/dashjs-tests.db`.
+
+## Dashboard
+
+The standalone runner includes a test dashboard at `/dashboard/` for:
+
+* Browsing historical test runs with filtering and pagination
+* Viewing run details with 2-level collapsible result grouping
+* Managing registered devices (Smart TVs, phones, desktops)
+* Dispatching tests to connected devices
+* Comparing two test runs side-by-side
+
+## Smart TV Apps
+
+Sample apps for Samsung Tizen and LG webOS are provided in `standalone/apps/`.
+These apps load the Device Agent page and register the TV as a test device that
+can receive dispatched tests from the dashboard. See the README in each app
+directory for build and deployment instructions.

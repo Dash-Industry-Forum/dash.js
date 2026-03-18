@@ -21,7 +21,8 @@ npm run doc                # Generate JSDoc documentation
 ## Testing
 
 **Unit tests:** Web Test Runner (runner) + Mocha (describe/it) + Chai (expect/assert) + Sinon (spy/stub/mock)
-**Functional tests:** Web Test Runner (runner) + Mocha + Chai + Playwright (local) / WebDriver (LambdaTest CI)
+**Functional tests:** Standalone test runner (Express + WebSocket + Mocha + Chai) — works on any
+browser including Smart TVs, game consoles, and mobile devices.
 
 ```bash
 # Run all unit tests (Chromium + Firefox via Playwright)
@@ -34,21 +35,13 @@ GREP="getOptimalRepresentationForBitrate" npm test
 # Run a specific test file
 npx web-test-runner --config test/unit/config/web-test-runner.config.mjs --files 'test/unit/test/core/core.EventBus.js'
 
-# Run functional tests (local: Playwright auto-launches Chromium + Firefox + WebKit)
-npm run test-functional
-
-# Run functional tests with specific config and streams
-CONFIGFILE=local STREAMSFILE=smoke npm run test-functional
-CONFIGFILE=lambdatest STREAMSFILE=single npx web-test-runner --config test/functional/config/web-test-runner.functional.mjs
-
-# Run functional tests with visible browser windows (set "headless": false in local.json)
-# Edit test/functional/config/test-configurations/local.json to toggle headless mode
-
-# Run standalone functional test runner (works on any device including Smart TVs)
+# Run standalone functional test runner
 npm run test-standalone                          # Default: smoke streams, port 3001
 npm run test-standalone -- --streams=single      # Use a specific stream config
 npm run test-standalone -- --port=8080           # Custom port
 npm run test-standalone -- --skip-bundle         # Skip rebundling (use previously bundled files)
+npm run test-standalone-https                    # HTTPS mode (auto-generates self-signed cert)
+npm run test-standalone-https -- --cert=./c.pem --key=./k.pem  # HTTPS with custom cert
 ```
 
 Each unit test file runs in its own isolated browser page (unlike Karma which bundled
@@ -189,16 +182,19 @@ test/
 │   ├── mocks/     # Hand-written mock classes
 │   └── test/      # Test files (mirrors src/ structure)
 └── functional/    # Functional/integration tests
-    ├── config/    # web-test-runner.functional.mjs + test-configurations/
+    ├── config/    # Stream configuration files
+    │   └── test-configurations/
+    │       └── streams/   # Stream preset JSONs (smoke.json, single.json, etc.)
     ├── adapter/   # DashJsAdapter.js, GoogleAdManagerAdapter.js
     ├── src/       # Constants.js, Utils.js
-    ├── test/      # Test files organized by category (shared by WTR + standalone)
+    ├── test/      # Test files organized by category
     ├── content/   # Local MPD fixtures
     ├── lib/       # External libraries (ima3_dai.js)
-    └── standalone/# Standalone test runner (browser-only, no Selenium/WebDriver needed)
+    └── standalone/# Standalone test runner (Express + WebSocket + Rollup)
         ├── server.js    # Express server + WebSocket + Rollup bundler + dashboard APIs
         ├── bundler.js   # Rollup bundling logic for test files
         ├── db.js        # SQLite database module (better-sqlite3) for persistent results
+        ├── apps/        # Sample Smart TV apps (Tizen, webOS)
         ├── pages/       # Landing page, runner page, remote control page
         │   └── dashboard/ # Test dashboard (overview, runs, run detail, devices)
         ├── data/        # SQLite database file (gitignored, auto-created)
@@ -211,6 +207,6 @@ build/webpack/     # Webpack configs (modern/legacy, dev/prod, UMD/ESM)
 - PRs target the `development` branch (not `main`/`master`)
 - CI runs `npm run build` which executes: clean -> typecheck -> unit tests -> lint -> webpack
 - A pre-commit git hook runs `npm run lint` automatically
-- Functional tests run on LambdaTest in CI for cross-browser validation
+- Functional tests use the standalone test runner (see `npm run test-standalone`)
 - Always run `npm run build` before committing to catch test failures and lint errors
 - Include BSD-3-Clause header in new files; add/update unit tests for changes

@@ -25,7 +25,6 @@
       ],
       "excludedPlatforms": [
         {
-          "browser": "safari"
         }
       ]
     }
