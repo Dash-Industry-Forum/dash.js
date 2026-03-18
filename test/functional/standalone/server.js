@@ -1200,17 +1200,12 @@ app.use('/vendor', express.static(path.join(projectRoot, 'samples/dash-if-refere
 app.use('/img', express.static(path.join(projectRoot, 'samples/dash-if-reference-player/img')));
 
 // ---------------------------------------------------------------------------
-// Serve node_modules (for Mocha browser bundle)
+// Serve only the Mocha browser bundle (not the entire node_modules tree)
 // ---------------------------------------------------------------------------
-app.use('/node_modules', express.static(path.join(projectRoot, 'node_modules'), {
-    setHeaders: (res, filePath) => {
-        if (filePath.endsWith('.js')) {
-            res.set('Content-Type', 'application/javascript');
-        } else if (filePath.endsWith('.css')) {
-            res.set('Content-Type', 'text/css');
-        }
-    },
-}));
+app.get('/vendor/mocha/mocha.js', (req, res) => {
+    res.set('Content-Type', 'application/javascript');
+    res.sendFile(path.join(projectRoot, 'node_modules/mocha/mocha.js'));
+});
 
 // ---------------------------------------------------------------------------
 // Serve project root files (dist/, test/functional/lib/, test/functional/content/)
