@@ -235,13 +235,15 @@ class Utils {
                     : '');
             const browser = { name: '' };
 
-            if (/edg/i.test(uaString)) {
+            if (/edg/.test(uaString)) {
                 browser.name = 'edge';
-            } else if (
-                /safari/i.test(uaString) &&
-                !/chrome/i.test(uaString) &&
-                !/(crios|fxios|edgios|opr|opios)/i.test(uaString)
-            ) {
+            } else if (/opr|opios/.test(uaString)) {
+                browser.name = 'opera';
+            } else if (/chrome|crios/.test(uaString)) {
+                browser.name = 'chrome';
+            } else if (/firefox|fxios/.test(uaString)) {
+                browser.name = 'firefox';
+            } else if (/safari/.test(uaString)) {
                 browser.name = 'safari';
             }
 

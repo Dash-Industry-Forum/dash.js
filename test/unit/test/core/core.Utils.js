@@ -216,22 +216,34 @@ describe('Utils', () => {
             expect(result.browser.name).to.equal('edge');
         })
 
-        it('should not detect Safari for Chrome on iOS (CriOS)', () => {
+        it('should detect Chrome on iOS (CriOS)', () => {
             const ua = 'mozilla/5.0 (iphone; cpu iphone os 17_0 like mac os x) applewebkit/605.1.15 (khtml, like gecko) crios/120.0.6099.119 mobile/15e148 safari/604.1';
             const result = Utils.parseUserAgent(ua);
-            expect(result.browser.name).to.not.equal('safari');
+            expect(result.browser.name).to.equal('chrome');
         })
 
-        it('should not detect Safari for Firefox on iOS (FxiOS)', () => {
+        it('should detect Firefox on iOS (FxiOS)', () => {
             const ua = 'mozilla/5.0 (iphone; cpu iphone os 17_0 like mac os x) applewebkit/605.1.15 (khtml, like gecko) fxios/120.0 mobile/15e148 safari/605.1.15';
             const result = Utils.parseUserAgent(ua);
-            expect(result.browser.name).to.not.equal('safari');
+            expect(result.browser.name).to.equal('firefox');
         })
 
-        it('should not detect Safari for Chrome on desktop', () => {
+        it('should detect Chrome on desktop (Windows)', () => {
             const ua = 'mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/120.0.0.0 safari/537.36';
             const result = Utils.parseUserAgent(ua);
-            expect(result.browser.name).to.not.equal('safari');
+            expect(result.browser.name).to.equal('chrome');
+        })
+
+        it('should detect Chrome on desktop (macOS)', () => {
+            const ua = 'mozilla/5.0 (macintosh; intel mac os x 10_15_7) applewebkit/537.36 (khtml, like gecko) chrome/145.0.0.0 safari/537.36';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.equal('chrome');
+        })
+
+        it('should detect Firefox on desktop (macOS)', () => {
+            const ua = 'mozilla/5.0 (macintosh; intel mac os x 10.15; rv:148.0) gecko/20100101 firefox/148.0';
+            const result = Utils.parseUserAgent(ua);
+            expect(result.browser.name).to.equal('firefox');
         })
 
         it('should detect Safari on iOS (real Safari, not CriOS/FxiOS)', () => {
@@ -252,16 +264,16 @@ describe('Utils', () => {
             expect(result.browser.name).to.equal('edge');
         })
 
-        it('should not detect Safari for Opera (OPR)', () => {
+        it('should detect Opera (OPR)', () => {
             const ua = 'mozilla/5.0 (windows nt 10.0; win64; x64) applewebkit/537.36 (khtml, like gecko) chrome/120.0.0.0 safari/537.36 opr/106.0.0.0';
             const result = Utils.parseUserAgent(ua);
-            expect(result.browser.name).to.not.equal('safari');
+            expect(result.browser.name).to.equal('opera');
         })
 
-        it('should return empty browser name for Firefox desktop', () => {
+        it('should detect Firefox on desktop', () => {
             const ua = 'mozilla/5.0 (windows nt 10.0; win64; x64; rv:121.0) gecko/20100101 firefox/121.0';
             const result = Utils.parseUserAgent(ua);
-            expect(result.browser.name).to.equal('');
+            expect(result.browser.name).to.equal('firefox');
         })
 
         it('should return empty browser name for empty string', () => {
