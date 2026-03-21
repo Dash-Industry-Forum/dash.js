@@ -383,8 +383,8 @@ function HTTPLoader(cfg) {
     function _getRequestTimeout(request) {
         if (request.type === HTTPRequest.MPD_TYPE) {
             return settings.get().streaming.manifestRequestTimeout || 0;
-        } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
         }
+
         return settings.get().streaming.fragmentRequestTimeout || 0;
     }
 
