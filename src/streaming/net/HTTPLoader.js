@@ -61,7 +61,6 @@ function HTTPLoader(cfg) {
     const requestModifier = cfg.requestModifier;
     const boxParser = cfg.boxParser;
     const errors = cfg.errors;
-    const requestTimeout = cfg.requestTimeout || 0;
     const eventBus = EventBus(context).getInstance();
     const settings = Settings(context).getInstance();
 
@@ -327,7 +326,7 @@ function HTTPLoader(cfg) {
             onabort: onabort,
             ontimeout: ontimeout,
             loader: loader,
-            timeout: requestTimeout,
+            timeout: _getRequestTimeout(request),
             headers: headers
         };
 
@@ -372,6 +371,21 @@ function HTTPLoader(cfg) {
         } catch (e) {
             return [];
         }
+    }
+
+    /**
+     * Returns the request timeout value from Settings based on the request type.
+     * This reads the value dynamically so that runtime changes via updateSettings() take effect.
+     * @param {Object} request
+     * @returns {number}
+     * @private
+     */
+    function _getRequestTimeout(request) {
+        if (request.type === HTTPRequest.MPD_TYPE) {
+            return settings.get().streaming.manifestRequestTimeout || 0;
+        } else if (request.type === HTTPRequest.INIT_SEGMENT_TYPE) {
+        }
+        return settings.get().streaming.fragmentRequestTimeout || 0;
     }
 
     /**

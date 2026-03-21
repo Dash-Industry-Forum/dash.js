@@ -57,8 +57,7 @@ function FragmentLoader(config) {
             urlUtils: urlUtils,
             constants: Constants,
             boxParser: config.boxParser,
-            dashConstants: config.dashConstants,
-            requestTimeout: config.settings.get().streaming.fragmentRequestTimeout
+            dashConstants: config.dashConstants
         });
     }
 
