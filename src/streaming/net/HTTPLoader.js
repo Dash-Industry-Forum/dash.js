@@ -385,7 +385,19 @@ function HTTPLoader(cfg) {
             return settings.get().streaming.manifestRequestTimeout || 0;
         }
 
-        return settings.get().streaming.fragmentRequestTimeout || 0;
+        if (request.checkExistenceOnly || _isFragmentRequest(request)) {
+            return settings.get().streaming.fragmentRequestTimeout || 0;
+        }
+
+        return 0;
+    }
+
+    function _isFragmentRequest(request) {
+        return request.type === HTTPRequest.INIT_SEGMENT_TYPE ||
+            request.type === HTTPRequest.INDEX_SEGMENT_TYPE ||
+            request.type === HTTPRequest.MEDIA_SEGMENT_TYPE ||
+            request.type === HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE ||
+            request.type === HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE;
     }
 
     /**

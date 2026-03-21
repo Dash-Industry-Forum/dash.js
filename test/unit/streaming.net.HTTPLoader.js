@@ -158,7 +158,122 @@ describe('HTTPLoader', function () {
         expect(self.requests.length).to.equal(1);
         self.requests[0].respond(200);
     });
-});
 
+    it('should use manifest timeout for MPD requests', () => {
+        let self = this.ctx;
+
+        settings.update({
+            streaming: {
+                manifestRequestTimeout: 4321,
+                fragmentRequestTimeout: 9876
+            }
+        });
+
+        httpLoader = HTTPLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            requestModifier: requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
+        });
+
+        httpLoader.load({
+            request: {
+                type: HTTPRequest.MPD_TYPE,
+                responseType: ''
+            }
+        });
+
+        expect(self.requests.length).to.equal(1);
+        expect(self.requests[0].timeout).to.equal(4321);
+    });
+
+    it('should use fragment timeout for media requests', () => {
+        let self = this.ctx;
+
+        settings.update({
+            streaming: {
+                manifestRequestTimeout: 4321,
+                fragmentRequestTimeout: 9876
+            }
+        });
+
+        httpLoader = HTTPLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            requestModifier: requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
+        });
+
+        httpLoader.load({
+            request: {
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                responseType: 'arraybuffer'
+            }
+        });
+
+        expect(self.requests.length).to.equal(1);
+        expect(self.requests[0].timeout).to.equal(9876);
+    });
+
+    it('should preserve no timeout for XLink requests', () => {
+        let self = this.ctx;
+
+        settings.update({
+            streaming: {
+                manifestRequestTimeout: 4321,
+                fragmentRequestTimeout: 9876
+            }
+        });
+
+        httpLoader = HTTPLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            requestModifier: requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
+        });
+
+        httpLoader.load({
+            request: {
+                type: HTTPRequest.XLINK_EXPANSION_TYPE,
+                responseType: ''
+            }
+        });
+
+        expect(self.requests.length).to.equal(1);
+        expect(self.requests[0].timeout).to.equal(0);
+    });
+
+    it('should preserve no timeout for content steering requests', () => {
+        let self = this.ctx;
+
+        settings.update({
+            streaming: {
+                manifestRequestTimeout: 4321,
+                fragmentRequestTimeout: 9876
+            }
+        });
+
+        httpLoader = HTTPLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            requestModifier: requestModifier,
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
+        });
+
+        httpLoader.load({
+            request: {
+                type: HTTPRequest.CONTENT_STEERING_TYPE,
+                responseType: 'json'
+            }
+        });
+
+        expect(self.requests.length).to.equal(1);
+        expect(self.requests[0].timeout).to.equal(0);
+    });
+});
 
 
