@@ -76,10 +76,10 @@ import URIFragmentModel from './models/URIFragmentModel.js';
 import URLUtils from '../streaming/utils/URLUtils.js';
 import CertUrlUtils from './utils/CertUrlUtils.js';
 import VideoModel from './models/VideoModel.js';
-import {HTTPRequest} from './vo/metrics/HTTPRequest.js';
-import {checkParameterType} from './utils/SupervisorTools.js';
-import {getVersionString} from '../core/Version.js';
-import {Cta608Parser} from '@svta/cml-608';
+import { HTTPRequest } from './vo/metrics/HTTPRequest.js';
+import { checkParameterType } from './utils/SupervisorTools.js';
+import { getVersionString } from '../core/Version.js';
+import { Cta608Parser } from '@svta/cml-608';
 
 /**
  * The media types
@@ -1874,6 +1874,8 @@ function MediaPlayer() {
     /**
      * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
      * @param {function} customFunc - the custom function that returns the initial track
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function setCustomInitialTrackSelectionFunction(customFunc) {
         customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
@@ -1881,6 +1883,8 @@ function MediaPlayer() {
 
     /**
      * Resets the custom initial track selection
+     * @memberof module:MediaPlayer
+     * @instance
      */
     function resetCustomInitialTrackSelectionFunction() {
         customParametersModel.resetCustomInitialTrackSelectionFunction(null);
@@ -1969,6 +1973,50 @@ function MediaPlayer() {
     }
 
     /**
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCertificateRequestFilter(filter) {
+        customParametersModel.registerCertificateRequestFilter(filter);
+    }
+
+    /**
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function registerCertificateResponseFilter(filter) {
+        customParametersModel.registerCertificateResponseFilter(filter);
+    }
+
+    /**
+     * Unregisters a certificate request filter.
+     * @param {function} filter - the license request filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCertificateRequestFilter(filter) {
+        customParametersModel.unregisterCertificateRequestFilter(filter);
+    }
+
+    /**
+     * Unregisters a certificate response filter.
+     * @param {function} filter - the license response filter callback
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function unregisterCertificateResponseFilter(filter) {
+        customParametersModel.unregisterCertificateResponseFilter(filter);
+    }
+
+    /**
      * Registers a license request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
      * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
      * The filters are applied in the order they are registered.
@@ -2053,19 +2101,23 @@ function MediaPlayer() {
     function setProtectionData(value) {
         const sanitizedValue = CertUrlUtils.sanitizeProtectionDataCertUrls(value);
         protectionData = sanitizedValue;
-        
+
         // Propagate changes in case StreamController is already created
         if (streamController) {
             streamController.setProtectionData(protectionData);
         }
     }
 
+    function getProtectionData() {
+        return streamController ? streamController.getProtectionData() : null;
+    }
+
 
     /*
     ---------------------------------------------------------------------------
-
+ 
         THUMBNAILS MANAGEMENT
-
+ 
     ---------------------------------------------------------------------------
     */
 
@@ -2103,9 +2155,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
-
+ 
         TOOLS AND OTHERS FUNCTIONS
-
+ 
     ---------------------------------------------------------------------------
     */
     /**
@@ -2894,16 +2946,17 @@ function MediaPlayer() {
         getDashAdapter,
         getDashMetrics,
         getDebug,
-        getInitCache,
         getDvrSeekOffset,
         getDvrWindow,
         getExternalSubtitles,
+        getInitCache,
         getInitialMediaSettingsFor,
         getLowLatencyModeEnabled,
         getManifest,
         getOfflineController,
         getPlaybackRate,
         getProtectionController,
+        getProtectionData,
         getRawThroughputData,
         getRepresentationsByType,
         getRepresentationsByTypeUnfiltered,
@@ -2933,6 +2986,8 @@ function MediaPlayer() {
         preload,
         provideThumbnail,
         refreshManifest,
+        registerCertificateRequestFilter,
+        registerCertificateResponseFilter,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -2969,6 +3024,8 @@ function MediaPlayer() {
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,
+        unregisterCertificateRequestFilter,
+        unregisterCertificateResponseFilter,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,

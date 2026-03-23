@@ -1715,7 +1715,6 @@ export class MediaPlayerSettingClass {
             ignoreEmeEncryptedEvent?: boolean,
             detectPlayreadyMessageFormat?: boolean,
             ignoreKeyStatuses?: boolean,
-            certificateRetryAttempts?: number,
         },
         buffer?: {
             enableSeekDecorrelationFix?: boolean,
@@ -1795,12 +1794,12 @@ export class MediaPlayerSettingClass {
             playbackBufferMin?: number,
             enabled?: boolean,
             mode?: string,
-            step?:{
-                start:{
+            step?: {
+                start: {
                     min?: number,
                     max?: number
                 },
-                stop:{
+                stop: {
                     min?: number,
                     max?: number
                 }
@@ -1841,6 +1840,7 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyReductionFactor'?: number;
         };
@@ -1853,6 +1853,7 @@ export class MediaPlayerSettingClass {
             'IndexSegment'?: number;
             'FragmentInfoSegment'?: number;
             'license'?: number;
+            'licenseCertificate'?: number;
             'other'?: number;
             'lowLatencyMultiplyFactor'?: number;
         };
@@ -2236,6 +2237,10 @@ export interface MediaPlayerClass {
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
+    registerCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    registerCertificateResponseFilter(filter: CertificateResponseFilter): void;
+
     registerLicenseRequestFilter(filter: RequestFilter): void;
 
     registerLicenseResponseFilter(filter: ResponseFilter): void;
@@ -2307,6 +2312,10 @@ export interface MediaPlayerClass {
     triggerSteeringRequest(): Promise<any>;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: CertificateRequestFilter): void;
+
+    unregisterCertificateResponseFilter(filter: CertificateResponseFilter): void;
 
     unregisterLicenseRequestFilter(filter: RequestFilter): void;
 
@@ -3088,6 +3097,7 @@ export interface ProtectionConstants {
     INITIALIZATION_DATA_TYPE_WEBM: 'webm',
     ENCRYPTION_SCHEME_CENC: 'cenc',
     ENCRYPTION_SCHEME_CBCS: 'cbcs',
+    FAIRPLAY_KEYSTEM_STRING: 'com.apple.fps',
     MEDIA_KEY_MESSAGE_TYPES: {
         LICENSE_REQUEST: 'license-request',
         LICENSE_RENEWAL: 'license-renewal',
@@ -3487,6 +3497,8 @@ export interface StreamController {
 
     getIsStreamSwitchInProgress(): boolean;
 
+    getProtectionData(): object;
+
     getStreamById(id: string): object | null;
 
     getStreamForTime(time: number): object | null;
@@ -3863,6 +3875,10 @@ export interface CustomParametersModel {
 
     registerCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
 
+    registerCertificateRequestFilter(filter: Function): void;
+
+    registerCertificateResponseFilter(filter: Function): void;
+
     removeExternalSubtitleById(id: string): void;
 
     removeExternalSubtitleByUrl(url: string): void;
@@ -3893,6 +3909,10 @@ export interface CustomParametersModel {
     setXHRWithCredentialsForType(type: string, value: string): void;
 
     unregisterCustomCapabilitiesFilter(filter: CapabilitiesFilterFunction): void;
+
+    unregisterCertificateRequestFilter(filter: Function): void;
+
+    unregisterCertificateResponseFilter(filter: Function): void;
 
     unregisterLicenseRequestFilter(filter: Function): void;
 
@@ -4203,7 +4223,7 @@ interface ProtectionController {
 
     setRobustnessLevel(level: string): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     setSessionType(value: string): void;
 
@@ -4392,7 +4412,7 @@ export interface DefaultProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 
@@ -4420,7 +4440,7 @@ export interface ProtectionModel_01b {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4448,7 +4468,7 @@ export interface ProtectionModel_3Fe2014 {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(): void;
+    setServerCertificate(): Promise<any>;
 
     stop(): void;
 
@@ -4474,7 +4494,7 @@ export interface ProtectionModel {
 
     setMediaElement(mediaElement: HTMLMediaElement): void;
 
-    setServerCertificate(serverCertificate: ArrayBuffer): void;
+    setServerCertificate(serverCertificate: ArrayBuffer): Promise<any>;
 
     stop(): void;
 
@@ -4534,6 +4554,18 @@ export interface PlayReady {
 }
 
 export interface Widevine {
+    getErrorResponse(serverResponse: object): string;
+
+    getHTTPMethod(): 'POST';
+
+    getLicenseMessage(serverResponse: object): object;
+
+    getResponseType(): 'arraybuffer';
+
+    getServerURLFromMessage(url: string): string;
+}
+
+export interface Fairplay {
     getErrorResponse(serverResponse: object): string;
 
     getHTTPMethod(): 'POST';
@@ -4626,6 +4658,25 @@ export class LicenseResponse {
     url: string;
 }
 
+export class CertificateRequest {
+    constructor(url: string, headers: { [key: string]: string }, withCredentials: boolean)
+
+    url: string;
+    method: 'GET';
+    responseType: 'arraybuffer';
+    headers: { [key: string]: string };
+    body: null;
+    withCredentials: boolean;
+}
+
+export class CertificateResponse {
+    constructor(url: string, headers: object, data: ArrayBuffer)
+
+    data: ArrayBuffer;
+    headers: object;
+    url: string;
+}
+
 export class MediaCapability {
     constructor(contentType: string, robustness: string)
 
@@ -4675,6 +4726,9 @@ export interface ProtectionData {
     /** Distinctive identifier (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier) */
     distinctiveIdentifier?: string;
 
+    /** Persistent state requirement (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate) */
+    persistentState?: string;
+
     /** The session type (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysessiontype) */
     sessionType?: string;
 
@@ -4692,7 +4746,27 @@ export interface ProtectionData {
     priority?: number;
 
     /** Optional certificate URLs; entries may be raw strings or manifest-parsed objects */
-    certUrls?: Array<string | CertUrlDescriptor | { __text?: string; '@certType'?: string; certType?: string; url?: string }>;
+    certUrls?: Array<string | CertUrlDescriptor | {
+        __text?: string;
+        '@certType'?: string;
+        certType?: string;
+        url?: string
+    }>;
+
+    /** CDM-specific data passed during key system access request */
+    cdmData?: string;
+
+    /** Legacy/alternative license acquisition URL */
+    laURL?: string;
+
+    /** Flag indicating DRMToday vendor-specific handling */
+    drmtoday?: boolean;
+
+    /** Preferred key system string ordering */
+    systemStringPriority?: string[];
+
+    /** Initialization data types (e.g. "cenc", "sinf") */
+    initDataTypes?: string[];
 }
 
 export interface SessionToken {
@@ -6050,4 +6124,6 @@ export interface KeySystemInfo {
 
 export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
+export type CertificateRequestFilter = (request: CertificateRequest) => Promise<any>;
+export type CertificateResponseFilter = (response: CertificateResponse) => Promise<any>;
 

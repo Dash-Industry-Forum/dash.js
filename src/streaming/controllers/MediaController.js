@@ -33,7 +33,7 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
-import {bcp47Normalize} from 'bcp-47-normalize';
+import {normalizeBcp47} from '../utils/BCP47Utils.js';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
@@ -419,6 +419,7 @@ function MediaController() {
             }
         });
         if (tracksAfterMatcher.length !== 0) {
+            logger.info('Filter-Function (' + filterFn.name + ') resulted in ' + tracksAfterMatcher.length + ' tracks');
             return tracksAfterMatcher;
         }
 
@@ -442,7 +443,7 @@ function MediaController() {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
         } catch (e) {
             return false
         }
@@ -518,7 +519,7 @@ function MediaController() {
 
             // If the track has a language and we can normalize the target language check if we got a match
             else if (track.lang !== '') {
-                const normalizedSettingsLang = bcp47Normalize(settings.lang);
+                const normalizedSettingsLang = normalizeBcp47(settings.lang);
                 if (normalizedSettingsLang) {
                     matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
                 }

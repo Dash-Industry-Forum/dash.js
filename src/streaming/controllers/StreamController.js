@@ -35,7 +35,7 @@ import ManifestUpdater from '../ManifestUpdater.js';
 import EventBus from '../../core/EventBus.js';
 import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
-import {PlayList, PlayListTrace} from '../vo/metrics/PlayList.js';
+import { PlayList, PlayListTrace } from '../vo/metrics/PlayList.js';
 import Debug from '../../core/Debug.js';
 import InitCache from '../utils/InitCache.js';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
@@ -1649,6 +1649,10 @@ function StreamController() {
         }
     }
 
+    function getProtectionData() {
+        return protectionController ? protectionController.getProtectionData() : null;
+    }
+
     function resetInitialSettings() {
         streams = [];
         providedStartTime = NaN;
@@ -1743,6 +1747,7 @@ function StreamController() {
         getHasMediaOrInitialisationError,
         getInitialPlayback,
         getIsStreamSwitchInProgress,
+        getProtectionData,
         getStreamById,
         getStreamForTime,
         getStreams,

@@ -4,7 +4,10 @@ const TYPES = {
     BLOB: 'BLOB',
     ARRAY_BUFFER: 'ARRAY_BUFFER'
 }
-const HTTP_SERVER = 'http://localhost:9999/base/test/unit';
+// Use the actual Karma server origin (window.location.origin) so the port is
+// always correct even when Karma picks a different port than the configured
+// default (e.g. when port 9999 is already in use).
+const HTTP_SERVER = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:9999') + '/base/test/unit';
 
 class FileLoader {
     static async loadTextFile(url, options) {

@@ -42,6 +42,8 @@ import Utils from '../../../core/Utils.js';
 import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import CertificateRequest from '../vo/CertificateRequest.js';
+import CertificateResponse from '../vo/CertificateResponse.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -49,6 +51,7 @@ const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 const LICENSE_SERVER_REQUEST_RETRIES = 3;
 const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
 const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+const CERTIFICATE_REQUEST_RETRIES = 3;
 const CERTIFICATE_REQUEST_RETRY_INTERVAL = 500;
 const CERTIFICATE_REQUEST_DEFAULT_TIMEOUT = 8000;
 
@@ -83,6 +86,7 @@ function ProtectionController(config) {
     let needkeyRetries = [];
 
     let applicationProvidedProtectionData,
+        certificateCache,
         instance,
         keyStatusMap,
         keySystemSelectionInProgress,
@@ -90,12 +94,11 @@ function ProtectionController(config) {
         licenseXhrRequest,
         logger,
         mediaInfoArr,
+        pendingCertificatePromise,
         pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
-        sessionType,
-        certificateCache,
-        pendingCertificatePromise;
+        sessionType;
 
     function setup() {
         logger = debug.getLogger(instance);
@@ -191,9 +194,10 @@ function ProtectionController(config) {
         else if (selectedKeySystem) {
             // FairPlay: wait for the certificate to be applied before creating sessions
             if (pendingCertificatePromise) {
-                pendingCertificatePromise.then(() => {
-                    _handlePendingMediaTypes();
-                });
+                pendingCertificatePromise
+                    .then(() => {
+                        _handlePendingMediaTypes();
+                    });
             } else {
                 _handlePendingMediaTypes();
             }
@@ -256,26 +260,37 @@ function ProtectionController(config) {
             // FairPlay requires the server certificate before generateRequest() can succeed.
             // Wait for certificate acquisition to complete before creating key sessions.
             if (selectedKeySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
-                // Store the promise so _onNeedKey can also wait for it
-                pendingCertificatePromise = _acquireCertificateFromManifest()
-                    .then(() => {
-                        pendingCertificatePromise = null;
-                        _handlePendingMediaTypes();
-                    })
-                    .catch((e) => {
-                        // Even if cert acquisition fails, proceed — the app may have set it via protData
-                        logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
-                        pendingCertificatePromise = null;
-                        _handlePendingMediaTypes();
-                    });
+                _handleFairplayCertificateRequired();
             } else {
                 // For other key systems cert is optional; fire-and-forget
-                _acquireCertificateFromManifest();
-                _handlePendingMediaTypes();
+                _handleCertificateRequired();
             }
         } catch (e) {
             logger.error(e);
         }
+    }
+
+    function _handleFairplayCertificateRequired() {
+        // Store the promise so _onNeedKey can also wait for it
+        pendingCertificatePromise = _acquireCertificateFromManifest()
+            .then(() => {
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            })
+            .catch((e) => {
+                // Even if cert acquisition fails, proceed — the app may have set it via protData
+                logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            });
+    }
+
+    function _handleCertificateRequired() {
+        _acquireCertificateFromManifest()
+            .catch((e) => {
+                logger.error(e);
+            })
+        _handlePendingMediaTypes();
     }
 
     /**
@@ -293,8 +308,9 @@ function ProtectionController(config) {
             return Promise.resolve();
         }
         // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
-        const certCandidates = _collectCertificateUrlsForSelectedKeySystem();
+        const certCandidates = _getCertificateUrlsForSelectedKeySystem();
         if (!certCandidates.length) {
+            logger.debug('DRM: No Certificate Server URLs found for ' + ksString + '. Skipping certificate acquisition.');
             return Promise.resolve();
         }
         logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
@@ -311,122 +327,169 @@ function ProtectionController(config) {
      * @return {Array<{url:string, certType:string|null}>}
      * @private
      */
-    function _collectCertificateUrlsForSelectedKeySystem() {
+    function _getCertificateUrlsForSelectedKeySystem() {
         const urls = [];
         // 1. API-provided certUrls (protData) take priority
         const protData = _getProtDataForKeySystem(selectedKeySystem);
         if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
-            protData.certUrls.forEach(c => { urls.push(c); });
+            protData.certUrls.forEach(c => {
+                urls.push(c);
+            });
         }
         // 2. Manifest-provided certUrls
         mediaInfoArr.forEach(mediaInfo => {
-            if (!mediaInfo || !mediaInfo.contentProtection) { return; }
+            if (!mediaInfo || !mediaInfo.contentProtection) {
+                return;
+            }
             mediaInfo.contentProtection.forEach(contentProtection => {
-                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length) {
-                    contentProtection.certUrls.forEach(c => { urls.push(c); });
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri.toLowerCase() === selectedKeySystem.schemeIdURI) {
+                    contentProtection.certUrls.forEach(c => {
+                        urls.push(c);
+                    });
                 }
             });
         });
         return CertUrlUtils.dedupeCertUrls(urls);
     }
 
-    /**
-     * Sequentially try to download and apply a certificate from the candidates list.
-     * @param {Array<{url:string, certType:string|null}>} candidates
-     * @param {number} index
-     * @param {object} protData
-     * @param {string} ksString
-     * @param {object} cacheEntry
-     * @private
-     */
     function _fetchAndApplyCertificateSequentially(candidates, index, protData, ksString, cacheEntry) {
         if (index >= candidates.length) {
-            cacheEntry.inProgress = false;
-            cacheEntry.error = cacheEntry.error || 'All certificate candidates failed';
-            logger.warn('DRM: All certificate candidates failed for ' + ksString + '.');
-            return Promise.reject(new Error(cacheEntry.error));
+            return _handleAllCertificateRequestsFailed(cacheEntry, ksString);
         }
         const candidate = candidates[index];
-        const retryAttempts = settings.get().streaming.protection.certificateRetryAttempts;
+        const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE_CERTIFICATE])
+            ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE_CERTIFICATE]
+            : CERTIFICATE_REQUEST_RETRIES;
         logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
-
-        return _sendCertificateRequest(candidate.url, null, protData, retryAttempts, 'GET')
-            .then((arrayBuffer) => {
-                if (!arrayBuffer || !arrayBuffer.byteLength) {
-                    throw new Error('Empty certificate response');
-                }
-                cacheEntry.urlUsed = candidate.url;
-                cacheEntry.buffer = arrayBuffer;
-                return _applyServerCertificate(arrayBuffer, ksString, cacheEntry);
+        return _buildCertificateRequest(candidate, protData)
+            .then((certificateRequest) => {
+                return _sendCertificateRequest(certificateRequest, protData, retryAttempts);
             })
-            .then((applied) => {
-                if (applied) {
-                    cacheEntry.applied = true;
-                    cacheEntry.inProgress = false;
-                    const appliedCandidate = candidates[index];
-                    const appliedTypeSuffix = appliedCandidate && appliedCandidate.certType ? (' certType=' + appliedCandidate.certType) : '';
-                    logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + appliedTypeSuffix + ' for ' + ksString + '.');
-                } else {
-                    throw new Error('CDM rejected certificate');
-                }
+            .then((arrayBuffer) => {
+                return _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry);
+            })
+            .then(() => {
+                _logCertificateSuccess(candidate, ksString, cacheEntry);
             })
             .catch((err) => {
                 cacheEntry.attempts++;
                 cacheEntry.lastError = err && err.message ? err.message : err;
                 logger.warn('DRM: Certificate attempt failed (' + candidate.url + '): ' + cacheEntry.lastError);
-                // Try next candidate
                 return _fetchAndApplyCertificateSequentially(candidates, index + 1, protData, ksString, cacheEntry);
             });
     }
 
+    function _buildCertificateRequest(candidate, protData) {
+        const certificateRequestFilters = customParametersModel.getCertificateRequestFilters();
+        let withCredentials = false;
+        if (protData && typeof protData.withCredentials === 'boolean') {
+            withCredentials = protData.withCredentials;
+        }
+        const reqHeaders = {};
+        if (protData) {
+            _updateHeaders(reqHeaders, protData.httpRequestHeaders);
+        }
+        const certificateRequest = new CertificateRequest(candidate.url, reqHeaders, withCredentials);
+        return _applyFilters(certificateRequestFilters, certificateRequest)
+            .then(() => certificateRequest);
+    }
+
+    function _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry) {
+        if (!arrayBuffer || !arrayBuffer.byteLength) {
+            throw new Error('Empty certificate response');
+        }
+        cacheEntry.urlUsed = candidate.url;
+        cacheEntry.buffer = arrayBuffer;
+        return _applyServerCertificate(arrayBuffer, ksString, cacheEntry)
+            .then((applied) => {
+                if (!applied) {
+                    throw new Error('CDM rejected certificate');
+                }
+                cacheEntry.applied = true;
+                cacheEntry.inProgress = false;
+            });
+    }
+
+    function _logCertificateSuccess(candidate, ksString, cacheEntry) {
+        const typeSuffix = candidate.certType ? (' certType=' + candidate.certType) : '';
+        logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + typeSuffix + ' for ' + ksString + '.');
+    }
+
+    function _handleAllCertificateRequestsFailed(cacheEntry, ksString) {
+        cacheEntry.inProgress = false;
+        cacheEntry.error = cacheEntry.error || 'All certificate candidates failed';
+        logger.warn('DRM: All certificate candidates failed for ' + ksString + '.');
+        return Promise.reject(new Error(cacheEntry.error));
+    }
+
     /**
      * Download a certificate binary with retries.
-     * @param {string} url
+     * @param {CertificateRequest} certificateRequest
      * @param {object} protData
      * @param {number} retries
      * @return {Promise<ArrayBuffer>}
      * @private
      */
-    function _sendCertificateRequest(url, body, protData, retries, method, contentType) {
+    function _sendCertificateRequest(certificateRequest, protData, retries) {
         return new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
-            xhr.open(method || 'GET', url, true);
-            xhr.responseType = 'arraybuffer';
+            xhr.open(certificateRequest.method, certificateRequest.url, true);
+            xhr.responseType = certificateRequest.responseType;
             const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
-            if (timeout > 0) { xhr.timeout = timeout; }
-            let withCredentials = false;
-            if (protData && typeof protData.withCredentials === 'boolean') { withCredentials = protData.withCredentials; }
-            xhr.withCredentials = withCredentials;
-            if (contentType) {
-                xhr.setRequestHeader('Content-Type', contentType);
+            if (timeout > 0) {
+                xhr.timeout = timeout;
             }
-            if (protData && protData.httpRequestHeaders) {
-                Object.keys(protData.httpRequestHeaders).forEach(h => {
-                    xhr.setRequestHeader(h, protData.httpRequestHeaders[h]);
-                });
+
+            xhr.withCredentials = certificateRequest.withCredentials;
+            for (const key of Object.keys(certificateRequest.headers)) {
+                xhr.setRequestHeader(key, certificateRequest.headers[key]);
             }
-            const attemptFail = (reason) => {
+
+            const _attemptFail = (reason) => {
                 if (retries > 0) {
                     const remaining = retries - 1;
+                    const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE_CERTIFICATE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE_CERTIFICATE] : CERTIFICATE_REQUEST_RETRY_INTERVAL;
                     logger.debug('DRM: Certificate request failed (' + reason + '). Retrying... remaining=' + remaining);
                     setTimeout(() => {
-                        _sendCertificateRequest(url, body, protData, remaining, method, contentType).then(resolve).catch(reject);
-                    }, CERTIFICATE_REQUEST_RETRY_INTERVAL);
+                        _sendCertificateRequest(certificateRequest, protData, remaining)
+                            .then(resolve)
+                            .catch(reject);
+                    }, retryInterval);
                 } else {
                     reject(new Error(reason));
                 }
             };
             xhr.onload = function () {
                 if (this.status >= 200 && this.status <= 299) {
-                    resolve(this.response);
+                    const responseHeaders = Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+                    const certificateResponseFilters = customParametersModel.getCertificateResponseFilters();
+                    const certificateResponse = new CertificateResponse(xhr.responseURL, responseHeaders, this.response)
+                    _applyFilters(certificateResponseFilters, certificateResponse)
+                        .then(() => {
+                            resolve(this.response);
+                        })
+                        .catch(() => {
+                            resolve(this.response);
+                        })
+
                 } else {
-                    attemptFail('HTTP ' + this.status);
+                    _attemptFail('HTTP ' + this.status);
                 }
             };
-            xhr.onerror = function () { attemptFail('network error'); };
-            xhr.ontimeout = function () { attemptFail('timeout'); };
-            xhr.onabort = function () { attemptFail('aborted'); };
-            try { xhr.send(body || null); } catch (e) { reject(e); }
+            xhr.onerror = function () {
+                _attemptFail('network error');
+            };
+            xhr.ontimeout = function () {
+                _attemptFail('timeout');
+            };
+            xhr.onabort = function () {
+                _attemptFail('aborted');
+            };
+            try {
+                xhr.send(certificateRequest.body);
+            } catch (e) {
+                reject(e);
+            }
         });
     }
 
@@ -882,6 +945,17 @@ function ProtectionController(config) {
     }
 
     /**
+     * Returns the protection data set by the application for use in license acquisition with EME
+     *
+     * @memberof module:ProtectionController
+     * @instance
+     * @ignore
+     */
+    function getProtectionData() {
+        return applicationProvidedProtectionData
+    }
+
+    /**
      * Stop method is called when current playback is stopped/resetted.
      *
      * @memberof module:ProtectionController
@@ -917,6 +991,7 @@ function ProtectionController(config) {
         keySystemSelectionInProgress = false;
 
         keyStatusMap = new Map();
+        certificateCache = new Map();
 
         if (protectionModel) {
             protectionModel.reset();
@@ -1351,20 +1426,11 @@ function ProtectionController(config) {
 
         const isSinf = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
 
-        // If key system has already been selected and initData already seen, then do nothing
         if (selectedKeySystem) {
-            if (isSinf) {
-                // For sinf (FairPlay), use raw initData for duplicate detection (no PSSH)
-                if (_isInitDataDuplicate(abInitData)) {
-                    return;
-                }
-            } else {
-                const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
-                if (initDataForKS) {
-                    if (_isInitDataDuplicate(initDataForKS)) {
-                        return;
-                    }
-                }
+            const initDataForCheck = isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+
+            if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
+                return;
             }
         }
 
@@ -1373,7 +1439,7 @@ function ProtectionController(config) {
         let supportedKeySystemsMetadata;
         if (isSinf) {
             // sinf data is FairPlay-specific; match against the FairPlay key system directly
-            supportedKeySystemsMetadata = _getSupportedKeySystemMetadataForSinf(abInitData);
+            supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForSinf(abInitData, applicationProvidedProtectionData, sessionType);
         } else {
             supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
         }
@@ -1385,81 +1451,6 @@ function ProtectionController(config) {
         _handleKeySystemFromPssh(supportedKeySystemsMetadata);
     }
 
-    /**
-     * Build key system metadata for sinf (FairPlay) initData.
-     * Since sinf data has no PSSH UUIDs, we match against the FairPlay key system directly.
-     * @param {ArrayBuffer} initData
-     * @return {Array}
-     * @private
-     */
-    function _getSupportedKeySystemMetadataForSinf(initData) {
-        const fairplayKs = protectionKeyController.getKeySystemBySystemString(ProtectionConstants.FAIRPLAY_KEYSTEM_STRING);
-        if (!fairplayKs) {
-            return [];
-        }
-        const keyId = _extractKeyIdFromSinf(initData);
-        const protData = applicationProvidedProtectionData ? applicationProvidedProtectionData[ProtectionConstants.FAIRPLAY_KEYSTEM_STRING] || null : null;
-        return [{
-            ks: fairplayKs,
-            keyId: keyId,
-            initData: initData,
-            protData: protData,
-            cdmData: fairplayKs.getCDMData(protData ? protData.cdmData : null),
-            sessionType: sessionType
-        }];
-    }
-
-    /**
-     * Extract the defaultKID from the tenc box inside a sinf initData.
-     * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
-     * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
-     * @param {ArrayBuffer} initData
-     * @return {string|null} key ID as UUID string, or null if not found
-     * @private
-     */
-    function _extractKeyIdFromSinf(initData) {
-        if (!initData || initData.byteLength < 12) {
-            return null;
-        }
-
-        let sinfBytes;
-        try {
-            // Safari wraps sinf in JSON: {"sinf": ["<base64>"]}
-            const text = String.fromCharCode.apply(null, new Uint8Array(initData));
-            const json = JSON.parse(text);
-            if (json.sinf && json.sinf.length > 0) {
-                const binaryString = atob(json.sinf[0]);
-                sinfBytes = new Uint8Array(binaryString.length);
-                for (let i = 0; i < binaryString.length; i++) {
-                    sinfBytes[i] = binaryString.charCodeAt(i);
-                }
-            }
-        } catch (e) {
-            // Not JSON — treat as raw binary sinf
-            sinfBytes = new Uint8Array(initData);
-        }
-
-        if (!sinfBytes || sinfBytes.length < 12) {
-            return null;
-        }
-
-        // Search for 'tenc' fourcc (0x74 0x65 0x6E 0x63)
-        for (let i = 0; i < sinfBytes.length - 28; i++) {
-            if (sinfBytes[i] === 0x74 && sinfBytes[i + 1] === 0x65 && sinfBytes[i + 2] === 0x6E && sinfBytes[i + 3] === 0x63) {
-                // tenc found: KID is 12 bytes after the fourcc
-                // [tenc fourcc (4)] [version (1) + flags (3)] [reserved/crypt (1) + reserved/skip (1)] [isProtected (1) + ivSize (1)] = 12 bytes
-                const kidOffset = i + 12;
-                if (kidOffset + 16 > sinfBytes.length) {
-                    return null;
-                }
-                const kid = sinfBytes.subarray(kidOffset, kidOffset + 16);
-                // Format as UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-                const hex = Array.from(kid).map(b => b.toString(16).padStart(2, '0')).join('');
-                return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20, 32);
-            }
-        }
-        return null;
-    }
 
     /**
      * Returns all available key systems
@@ -1587,6 +1578,7 @@ function ProtectionController(config) {
         closeKeySession,
         createKeySession,
         getKeySystems,
+        getProtectionData,
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
         initializeForMedia,

@@ -1,0 +1,14 @@
+{
+  "debug": {
+    "logLevel": 5,
+    "dispatchEvent": true
+  },
+  "streaming": {
+    "buffer": {
+      "fastSwitchEnabled": true
+    },
+    "liveCatchup": {
+      "enabled": true
+    }
+  }
+}

@@ -123,11 +123,11 @@ function FairPlay() {
     }
 
     instance = {
-        getServerURLFromMessage,
+        getErrorResponse,
         getHTTPMethod,
-        getResponseType,
         getLicenseMessage,
-        getErrorResponse
+        getResponseType,
+        getServerURLFromMessage,
     };
 
     return instance;

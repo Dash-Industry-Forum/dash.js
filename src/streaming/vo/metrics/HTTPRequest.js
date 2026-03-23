@@ -166,18 +166,19 @@ class HTTPRequestTrace {
     }
 }
 
+HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
+HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
 HTTPRequest.GET = 'GET';
 HTTPRequest.HEAD = 'HEAD';
-HTTPRequest.MPD_TYPE = 'MPD';
-HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
-HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
 HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
-HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
-HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
-HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
-HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
+HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
 HTTPRequest.LICENSE = 'license';
-HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
+HTTPRequest.LICENSE_CERTIFICATE = 'licenseCertificate';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
 HTTPRequest.OTHER_TYPE = 'other';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 
 export {HTTPRequest, HTTPRequestTrace};
