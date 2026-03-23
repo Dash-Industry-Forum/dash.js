@@ -138,6 +138,8 @@ class DashConstants {
         this.SERVICE_DESCRIPTION_PLAYBACK_RATE = 'PlaybackRate';
         this.SERVICE_DESCRIPTION_OPERATING_QUALITY = 'OperatingQuality';
         this.SERVICE_DESCRIPTION_OPERATING_BANDWIDTH = 'OperatingBandwidth';
+        this.SUPPLEMENTAL_PROPERTY = 'SupplementalProperty';
+        this.SUPPLEMENTAL_CODECS = 'scte214:supplementalCodecs';
         this.PATCH_LOCATION = 'PatchLocation';
         this.PUBLISH_TIME = 'publishTime';
         this.ORIGINAL_PUBLISH_TIME = 'originalPublishTime';

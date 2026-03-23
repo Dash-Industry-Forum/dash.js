@@ -3,6 +3,7 @@ import Debug from '../../core/Debug';
 import Constants from '../constants/Constants';
 import EventBus from '../../core/EventBus';
 import Events from '../../core/events/Events';
+import DashConstants from '../../dash/constants/DashConstants';
 
 function CapabilitiesFilter() {
 
@@ -126,28 +127,48 @@ function CapabilitiesFilter() {
                 return;
             }
 
-            const promises = [];
-            const configurations = [];
+            const reps = as.Representation_asArray;
 
-            as.Representation_asArray.forEach((rep, i) => {
-                const codec = adapter.getCodec(as, i, false);
-                const config = _createConfiguration(type, rep, codec);
+            const checkPromises = reps.map((rep, i) => {
+                // If supplemental codecs exist, prefer them: test first supplemental, then fallback to base
+                const supplementalCodecs = adapter.getSupplementalCodecs(rep);
+                if (supplementalCodecs && supplementalCodecs.length > 0) {
+                    if (supplementalCodecs.length > 1) {
+                        logger.warn('[CapabilitiesFilter] Multiple supplemental codecs not supported; using first in list');
+                    }
+                    const supplementalCodec = supplementalCodecs[0];
+                    const supplementalConfig = _createConfiguration(type, rep, supplementalCodec);
+                    return Promise.resolve(capabilities.supportsCodec(supplementalConfig, type))
+                        .then((suppOk) => {
+                            if (suppOk) {
+                                reps[i].codecs = reps[i][DashConstants.SUPPLEMENTAL_CODECS];
+                                return true;
+                            }
+                            // Fallback to base codec
+                            const baseCodec = adapter.getCodec(as, i, false);
+                            const baseConfig = _createConfiguration(type, rep, baseCodec);
+                            return Promise.resolve(capabilities.supportsCodec(baseConfig, type));
+                        });
+                }
 
-                configurations.push(config);
-                promises.push(capabilities.supportsCodec(config, type));
+                // No supplemental codecs — just test base codec
+                const baseCodec = adapter.getCodec(as, i, false);
+                const baseConfig = _createConfiguration(type, rep, baseCodec);
+                return Promise.resolve(capabilities.supportsCodec(baseConfig, type));
             });
 
-            Promise.all(promises)
+            Promise.all(checkPromises)
                 .then((supported) => {
-                    as.Representation_asArray = as.Representation_asArray.filter((_, i) => {
+                    as.Representation_asArray = reps.filter((_, i) => {
                         if (!supported[i]) {
-                            logger.debug(`[Stream] Codec ${configurations[i].codec} not supported `);
+                            logger.debug(`[CapabilitiesFilter] Representation at index ${i} removed because codec not supported`);
                         }
                         return supported[i];
                     });
                     resolve();
                 })
                 .catch(() => {
+                    // On error, don't filter
                     resolve();
                 });
         });
