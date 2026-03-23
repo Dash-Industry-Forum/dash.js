@@ -16,7 +16,7 @@ dash.js — DASH Industry Forum reference client. Pure JS (ES2020), ESM, Node >=
 
 ### Architecture
 - **Context = DI container.** Each `MediaPlayer` creates its own `context` object. All singletons are scoped to it: `EventBus(context).getInstance()`. This enables multiple independent players on one page.
-- **Errors are events, never thrown.** Use `DashJSError` + `EventBus` (`Events.ERROR`). Codes in `src/core/errors/Errors.js`.
+- **Playback errors are events, API misuse throws.** Runtime/media errors use `DashJSError` + `EventBus` (`Events.ERROR`). Calling `MediaPlayer` methods before `initialize()`/`attachSource()` or with bad arguments throws synchronously. Codes in `src/core/errors/Errors.js`.
 - **Protection/DRM is opt-in.** Call `player.setProtectionData()` explicitly.
 - **`player.extend()` must be called BEFORE `initialize()`.**
 
