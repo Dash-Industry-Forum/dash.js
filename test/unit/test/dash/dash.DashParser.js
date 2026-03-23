@@ -28,14 +28,18 @@ describe('DashParser', function () {
         expect(dashParser.parse.bind(manifest)).to.be.instanceOf(Object);
     });
 
-    describe('DashParser matchers', async () => {
+    describe('DashParser matchers', function () {
+        let manifest;
+
+        before(async function () {
+            manifest = await FileLoader.loadTextFile('/data/dash/manifest.xml');
+        });
+
         beforeEach(function () {
             dashManifestModel.setConfig({
                 errHandler: errorHandlerMock
             });
         });
-
-        let manifest = await FileLoader.loadTextFile('/data/dash/manifest.xml');
 
         it('should return normalized language tag', async () => {
             let parsedMpd = dashParser.parse(manifest);
