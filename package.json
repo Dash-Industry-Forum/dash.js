@@ -85,6 +85,7 @@
     "typescript": "^5.9.3",
     "webpack": "5.94.0",
     "webpack-cli": "^6.0.1",
+    "ua-parser-js": "^2.0.6",
     "webpack-dev-server": "^5.2.2",
     "webpack-merge": "^6.0.1",
     "yargs": "^18.0.0"
@@ -103,8 +104,7 @@
     "html-entities": "^2.6.0",
     "imsc": "^1.1.5",
     "localforage": "^1.10.0",
-    "path-browserify": "^1.0.1",
-    "ua-parser-js": "^2.0.6"
+    "path-browserify": "^1.0.1"
   },
   "repository": {
     "type": "git",

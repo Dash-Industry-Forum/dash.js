@@ -35,7 +35,6 @@
  */
 
 import path from 'path-browserify'
-import {UAParser} from 'ua-parser-js'
 import Constants from '../streaming/constants/Constants.js';
 
 class Utils {
@@ -229,9 +228,26 @@ class Utils {
 
     static parseUserAgent(ua = null) {
         try {
-            const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
+            const uaString = typeof ua === 'string'
+                ? ua.toLowerCase()
+                : (typeof navigator !== 'undefined' && navigator.userAgent
+                    ? navigator.userAgent.toLowerCase()
+                    : '');
+            const browser = { name: '' };
 
-            return UAParser(uaString);
+            if (/edg/.test(uaString)) {
+                browser.name = 'edge';
+            } else if (/opr|opios/.test(uaString)) {
+                browser.name = 'opera';
+            } else if (/chrome|crios/.test(uaString)) {
+                browser.name = 'chrome';
+            } else if (/firefox|fxios/.test(uaString)) {
+                browser.name = 'firefox';
+            } else if (/safari/.test(uaString)) {
+                browser.name = 'safari';
+            }
+
+            return { browser };
         } catch (e) {
             return {};
         }
