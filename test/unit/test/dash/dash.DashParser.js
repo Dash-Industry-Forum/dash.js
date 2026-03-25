@@ -90,7 +90,7 @@ describe('DashParser', function () {
             expect(rawRepresentation.SupplementalProperty.length).to.equal(4);
         });
 
-        it('should map only allowed attributes SegmentTemplate from AdaptationSet to Representation', async () => {
+        it('should map only allowed non-Array attributes from AdaptationSet to Representation', async () => {
             let parsedMpd = dashParser.parse(manifest_prop);
             let rawAdaptationSet = parsedMpd.Period[0].AdaptationSet[0];
             let rawRepresentation = rawAdaptationSet.Representation[0];
@@ -100,6 +100,14 @@ describe('DashParser', function () {
             expect(rawRepresentation.SegmentTemplate.initialization).to.equal('$RepresentationID$.m4a');
             expect(rawRepresentation.SegmentTemplate.media).to.equal('$Number$.m4a');
             expect(rawRepresentation.SegmentTemplate.duration).to.equal(300000);
+        });
+
+        it('should not map attributes', async () => {
+            let parsedMpd = dashParser.parse(manifest_prop);
+            let rawAdaptationSet = parsedMpd.Period[0].AdaptationSet[0];
+            let rawRepresentation = rawAdaptationSet.Representation[0];
+
+            expect(rawRepresentation.codecs).to.equal('mp4a.40.5');
         });
 
     });

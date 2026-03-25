@@ -33,9 +33,11 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 function ObjectIron(mappers) {
 
     function _mergeValues(parentItem, childItem) {
-        for (let name in parentItem) {
-            if (!childItem.hasOwnProperty(name)) {
-                childItem[name] = parentItem[name];
+        if (typeof parentItem === 'object') {
+            for (let name in parentItem) {
+                if (!childItem.hasOwnProperty(name)) {
+                    childItem[name] = parentItem[name];
+                }
             }
         }
     }
@@ -61,7 +63,9 @@ function ObjectIron(mappers) {
                 if (propertyIsArray) {
                     childNode[propertyName].push(propertyElementFromParent);
                 } else {
-                    // see ISO 23009-1 (6th ed), clause 5.3.9.1
+                    // non-Array Properties can be:
+                    // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or 
+                    // - attributes (e.g. codecs)
                     _mergeValues(propertyElementFromParent, childNode[propertyName]);
                 }
             } else {
