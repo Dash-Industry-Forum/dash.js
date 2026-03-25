@@ -223,5 +223,42 @@ describe('HTTPLoader', function () {
                 expect(requests[0].timeout).to.equal(expectedTimeout);
             });
         });
+
+        it('should pick up timeout changes made via settings.update() after loader creation', async () => {
+            settings.update({
+                streaming: {
+                    manifestRequestTimeout: 1000,
+                    fragmentRequestTimeout: 2000
+                }
+            });
+
+            httpLoader = _createHttpLoader();
+
+            await httpLoader.load({
+                request: {
+                    type: HTTPRequest.MPD_TYPE,
+                    responseType: ''
+                }
+            });
+
+            expect(requests.length).to.equal(1);
+            expect(requests[0].timeout).to.equal(1000);
+
+            settings.update({
+                streaming: {
+                    manifestRequestTimeout: 5555
+                }
+            });
+
+            await httpLoader.load({
+                request: {
+                    type: HTTPRequest.MPD_TYPE,
+                    responseType: ''
+                }
+            });
+
+            expect(requests.length).to.equal(2);
+            expect(requests[1].timeout).to.equal(5555);
+        });
     });
 });
