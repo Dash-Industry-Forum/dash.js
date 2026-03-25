@@ -24,8 +24,25 @@ let settings = Settings(context).getInstance();
 describe('HTTPLoader', function () {
     let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
     let clientDataReportingController,
-        cmcdModel;
+        cmcdModel,
+        requests;
 
+    function _createHttpLoader() {
+        return HTTPLoader(context).create({
+            errHandler: errHandler,
+            dashMetrics: dashMetrics,
+            mediaPlayerModel: mediaPlayerModelMock,
+            errors: Errors
+        });
+    }
+
+    function _createCallbacks(overrides = {}) {
+        return {
+            success: overrides.success || sinon.spy(),
+            complete: overrides.complete || sinon.spy(),
+            error: overrides.error || sinon.spy()
+        };
+    }
 
     beforeEach(function () {
         settings.reset();
@@ -42,24 +59,21 @@ describe('HTTPLoader', function () {
         cmcdModel.setConfig({
             serviceDescriptionController: serviceDescriptionControllerMock,
         });
-    });
 
-    beforeEach(function () {
         window.XMLHttpRequest = fakeXhr.useFakeXMLHttpRequest();
 
-        this.requests = [];
+        requests = [];
         window.XMLHttpRequest.onCreate = function (xhr) {
-            this.requests.push(xhr);
-        }.bind(this);
+            requests.push(xhr);
+        };
     });
 
     afterEach(function () {
         serviceDescriptionControllerMock.reset();
         window.XMLHttpRequest.restore();
-    });
-
-    afterEach(function () {
         mediaPlayerModelMock = null;
+        httpLoader = null;
+        requests = null;
     });
 
     it('should throw an exception when attempting to call load and config parameter has not been set properly', () => {
@@ -67,111 +81,147 @@ describe('HTTPLoader', function () {
         expect(httpLoader.load.bind(httpLoader, {request: {}})).to.throw('config object is not correct or missing');
     });
 
-    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', () => {
-        let self = this.ctx;
-        const callbackSucceeded = sinon.spy();
-        const callbackCompleted = sinon.spy();
-        const callbackError = sinon.spy();
+    it('should use XHRLoader if it is not an arraybuffer request even if availabilityTimeComplete is set to false', async () => {
+        const callbacks = _createCallbacks();
 
-        httpLoader = HTTPLoader(context).create({
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModelMock,
-            errors: Errors
-        });
+        httpLoader = _createHttpLoader();
 
-        httpLoader.load({
+        await httpLoader.load({
             request: {
                 responseType: 'json',
                 type: HTTPRequest.MEDIA_SEGMENT_TYPE,
                 availabilityTimeComplete: false
-            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
-        }).then(() => {
-            expect(self.requests.length).to.equal(1);
-            self.requests[0].respond(200);
+            },
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
         });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(200);
     });
 
-    it('should use XHRLoader and call success and complete callback when load is called successfully', () => {
-        let self = this.ctx;
-        const callbackSucceeded = sinon.spy();
-        const callbackCompleted = sinon.spy();
-        const callbackError = sinon.spy();
-
-        httpLoader = HTTPLoader(context).create({
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModelMock,
-            errors: Errors
+    it('should use XHRLoader and call success and complete callback when load is called successfully', async () => {
+        let resolveOnComplete;
+        const completePromise = new Promise((resolve) => {
+            resolveOnComplete = resolve;
         });
+        const callbacks = _createCallbacks();
+        callbacks.complete = sinon.spy(() => resolveOnComplete());
 
-        httpLoader.load({
+        httpLoader = _createHttpLoader();
+
+        await httpLoader.load({
             request: {},
-            success: callbackSucceeded,
-            complete: callbackCompleted,
-            error: callbackError
-        }).then(() => {
-            expect(self.requests.length).to.equal(1);
-            self.requests[0].respond(200);
-            sinon.assert.calledOnce(callbackSucceeded);
-            sinon.assert.calledOnce(callbackCompleted);
-            expect(callbackSucceeded.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
         });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(200, {}, 'ok');
+        await completePromise;
+
+        sinon.assert.calledOnce(callbacks.success);
+        sinon.assert.calledOnce(callbacks.complete);
+        expect(callbacks.success.calledBefore(callbacks.complete)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader and call error and complete callback when load is called with error', () => {
-        let self = this.ctx;
-        const callbackSucceeded = sinon.spy();
-        const callbackCompleted = sinon.spy();
-        const callbackError = sinon.spy();
-
-        httpLoader = HTTPLoader(context).create({
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModelMock,
-            errors: Errors
+    it('should use XHRLoader and call error and complete callback when load is called with error', async () => {
+        let resolveOnError;
+        const errorPromise = new Promise((resolve) => {
+            resolveOnError = resolve;
+        });
+        const callbacks = _createCallbacks({
+            error: sinon.spy(() => resolveOnError())
         });
 
-        httpLoader.load({
+        httpLoader = _createHttpLoader();
+
+        await httpLoader.load({
             request: {},
-            success: callbackSucceeded,
-            complete: callbackCompleted,
-            error: callbackError
-        }).then(() => {
-            expect(self.requests.length).to.equal(1);
-            setTimeout(() => self.requests[0].respond(404), 1);
-            sinon.assert.calledOnce(callbackError);
-            sinon.assert.calledOnce(callbackCompleted);
-            sinon.assert.notCalled(callbackSucceeded);
-            expect(callbackError.calledBefore(callbackCompleted)).to.be.true; // jshint ignore:line
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
         });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(404);
+        await errorPromise;
+
+        sinon.assert.calledOnce(callbacks.error);
+        sinon.assert.calledOnce(callbacks.complete);
+        sinon.assert.notCalled(callbacks.success);
+        expect(callbacks.error.calledBefore(callbacks.complete)).to.be.true; // jshint ignore:line
     });
 
-    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', () => {
-        let self = this.ctx;
-        const callbackSucceeded = sinon.spy();
-        const callbackCompleted = sinon.spy();
-        const callbackError = sinon.spy();
+    it('should use XHRLoader if it is not a MEDIA_SEGMENT_TYPE request even if availabilityTimeComplete is set to false and it is an arraybuffer request', async () => {
+        const callbacks = _createCallbacks();
 
-        httpLoader = HTTPLoader(context).create({
-            errHandler: errHandler,
-            dashMetrics: dashMetrics,
-            mediaPlayerModel: mediaPlayerModelMock,
-            errors: Errors
-        });
+        httpLoader = _createHttpLoader();
 
-        httpLoader.load({
+        await httpLoader.load({
             request: {
                 responseType: 'arraybuffer',
                 type: HTTPRequest.INIT_SEGMENT_TYPE,
                 availabilityTimeComplete: false
-            }, success: callbackSucceeded, complete: callbackCompleted, error: callbackError
-        }).then(() => {
-            expect(self.requests.length).to.equal(1);
-            self.requests[0].respond(200);
+            },
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
+        });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(200);
+    });
+
+    describe('request timeout selection', function () {
+        [
+            {
+                title: 'should use manifest timeout for MPD requests',
+                type: HTTPRequest.MPD_TYPE,
+                responseType: '',
+                expectedTimeout: 4321
+            },
+            {
+                title: 'should use fragment timeout for media requests',
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                responseType: 'arraybuffer',
+                expectedTimeout: 9876
+            },
+            {
+                title: 'should preserve no timeout for XLink requests',
+                type: HTTPRequest.XLINK_EXPANSION_TYPE,
+                responseType: '',
+                expectedTimeout: 0
+            },
+            {
+                title: 'should preserve no timeout for content steering requests',
+                type: HTTPRequest.CONTENT_STEERING_TYPE,
+                responseType: 'json',
+                expectedTimeout: 0
+            }
+        ].forEach(({title, type, responseType, expectedTimeout}) => {
+            it(title, async () => {
+                settings.update({
+                    streaming: {
+                        manifestRequestTimeout: 4321,
+                        fragmentRequestTimeout: 9876
+                    }
+                });
+
+                httpLoader = _createHttpLoader();
+
+                await httpLoader.load({
+                    request: {
+                        type,
+                        responseType
+                    }
+                });
+
+                expect(requests.length).to.equal(1);
+                expect(requests[0].timeout).to.equal(expectedTimeout);
+            });
         });
     });
 });
-
-
-
