@@ -59,7 +59,7 @@ function BlackListController(config) {
         }
 
         const expiry = blacklistExpiry || settings.get().streaming.blacklistExpiryTime;
-        if (expiry && expiry > 0) {
+        if (config.enableExpiry && expiry && expiry > 0) {
             const timeoutId = setTimeout(() => {
                 remove(entry);
             }, expiry * 1000);

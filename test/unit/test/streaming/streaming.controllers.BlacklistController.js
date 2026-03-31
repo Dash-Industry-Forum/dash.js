@@ -126,7 +126,7 @@ describe('BlacklistController', function () {
     });
 
     it('should remove an entry after a content steering TTL blacklist expiry time has passed', () => {
-        const config = { updateEventName: '' };
+        const config = { updateEventName: '', enableExpiry: true };
         const blacklistController = BlacklistController(context).create(config);
         blacklistController.setContentSteeringBlacklistExpiry(60);
 
@@ -139,7 +139,7 @@ describe('BlacklistController', function () {
     });
 
     it('should remove an entry after a blacklist expiry time from settings has passed', () => {
-        const config = { updateEventName: '' };
+        const config = { updateEventName: '', enableExpiry: true };
         const blacklistController = BlacklistController(context).create(config);
         settings.update({streaming: { blacklistExpiryTime: 60 }});
 
@@ -149,5 +149,15 @@ describe('BlacklistController', function () {
 
         clock.tick(30 * 1000);
         expect(blacklistController.contains(SERVICE_LOCATION)).to.be.false;
+    });
+
+    it('should not remove any entry if enableExpiry is not set', () => {
+        const config = { updateEventName: '' };
+        const blacklistController = BlacklistController(context).create(config);
+        settings.update({streaming: { blacklistExpiryTime: 60 }});
+
+        blacklistController.add(SERVICE_LOCATION);
+        clock.tick(60 * 1000);
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.true;
     });
 });
