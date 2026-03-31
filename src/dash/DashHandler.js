@@ -456,12 +456,22 @@ function DashHandler(config) {
         mediaHasFinished = true;
     }
 
+    // Stubs for DodgeDashHandlerOverride. FactoryMaker.merge() only replaces
+    // functions that hasOwnProperty on parent, so these must be present here.
+    function updateDefendedStreamInfo() { return false; }
+    function getIsTrailing() { return false; }
+    function getNextExpectedIndex() { return -1; }
+    function getRemainingInitCycles() { return -1; }
+
     instance = {
         getCurrentIndex,
         getInitRequest,
+        getIsTrailing,
         getLastSegment,
+        getNextExpectedIndex,
         getNextSegmentRequest,
         getNextSegmentRequestIdempotent,
+        getRemainingInitCycles,
         getSegmentRequestForTime,
         getStreamId,
         getStreamInfo,
@@ -471,6 +481,7 @@ function DashHandler(config) {
         isLastSegmentRequested,
         repeatSegmentRequest,
         reset,
+        updateDefendedStreamInfo,
     };
 
     setup();
