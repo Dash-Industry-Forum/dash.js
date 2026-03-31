@@ -1108,8 +1108,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This mode makes the player select the track with a widest range of bitrates.
  *
  * @property {number} [blacklistExpiryTime=-1]
- * Time in seconds that a Service Location should be added to the blacklist for. After this time has passed the Service Location will be available for selection when failing over a second time, but it will not actively return to it.
- * This is ignored when using Content Steering, as the blacklist expiry will be set to the TTL value, and Service Locations may be actively switched back to according to the steering algorithm.
+ * The time in seconds that a Service Location remains on the blacklist.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
