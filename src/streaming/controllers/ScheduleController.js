@@ -123,7 +123,7 @@ function ScheduleController(config) {
     function _schedule() {
         const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
-            if (_shouldClearScheduleTimer()) {
+            if (instance._shouldClearScheduleTimer()) {
                 clearScheduleTimer();
                 return;
             }
@@ -468,6 +468,7 @@ function ScheduleController(config) {
         getType,
         initialize,
         reset,
+        _shouldClearScheduleTimer,
         setShouldCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,

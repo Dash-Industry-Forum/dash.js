@@ -65,6 +65,7 @@ function BufferController(config) {
         logger,
         isBufferingCompleted,
         bufferLevel,
+        mockBuffer,
         criticalBufferLevel,
         mediaSource,
         maxAppendedIndex,
@@ -877,7 +878,7 @@ function BufferController(config) {
                 referenceTime = !isNaN(seekTarget) ? seekTarget : 0;
             }
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
-            bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0);
+            bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0) + (mockBuffer || 0);
             _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
@@ -1251,6 +1252,7 @@ function BufferController(config) {
         isPruningInProgress = false;
         isQuotaExceeded = false;
         bufferLevel = 0;
+        mockBuffer = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
         seekTarget = NaN;
@@ -1290,6 +1292,15 @@ function BufferController(config) {
         resetInitialSettings(errored, keepBuffers);
     }
 
+    function setMockBuffer(value) {
+        mockBuffer = value;
+    }
+
+    // Stubs for DodgeBufferControllerOverride. FactoryMaker.merge() only replaces
+    // functions that hasOwnProperty on parent, so these must be present here.
+    function onPaddingLoaded() { }
+    function onBufferCycleLoaded() { }
+
     instance = {
         appendInitSegmentFromCache,
         clearBuffers,
@@ -1317,9 +1328,12 @@ function BufferController(config) {
         prepareForReplacementTrackSwitch,
         pruneAllSafely,
         pruneBuffer,
+        onBufferCycleLoaded,
+        onPaddingLoaded,
         reset,
         segmentRequestingCompleted,
         setIsBufferingCompleted,
+        setMockBuffer,
         setMediaSource,
         setSeekTarget,
         updateAppendWindow,
