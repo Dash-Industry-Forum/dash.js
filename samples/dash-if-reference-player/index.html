@@ -848,6 +848,26 @@
                                placeholder="e.g. 3000">
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Persistent State</label>
+                        <select class="form-select form-select-sm" id="drm-pr-persistent-state">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Distinctive Identifier</label>
+                        <select class="form-select form-select-sm" id="drm-pr-distinctive-identifier">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label small">Request Headers</label>
                     <div id="drm-pr-headers"></div>
@@ -893,6 +913,26 @@
                         </select>
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Persistent State</label>
+                        <select class="form-select form-select-sm" id="drm-wv-persistent-state">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Distinctive Identifier</label>
+                        <select class="form-select form-select-sm" id="drm-wv-distinctive-identifier">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label small">Request Headers</label>
                     <div id="drm-wv-headers"></div>
@@ -924,6 +964,26 @@
                         <input type="text" class="form-control form-control-sm" id="drm-fp-audio-robustness">
                     </div>
                 </div>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label small">Persistent State</label>
+                        <select class="form-select form-select-sm" id="drm-fp-persistent-state">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label small">Distinctive Identifier</label>
+                        <select class="form-select form-select-sm" id="drm-fp-distinctive-identifier">
+                            <option value="">Default</option>
+                            <option value="required">required</option>
+                            <option value="optional">optional</option>
+                            <option value="not-allowed">not-allowed</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="mb-3">
                     <label class="form-label small">Request Headers</label>
                     <div id="drm-fp-headers"></div>
@@ -950,10 +1010,6 @@
                     </button>
                 </div>
 
-                <div class="form-check mb-3">
-                    <input class="form-check-input" type="checkbox" id="drm-prioritize">
-                    <label class="form-check-label" for="drm-prioritize">Enable DRM Prioritization</label>
-                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Done</button>
