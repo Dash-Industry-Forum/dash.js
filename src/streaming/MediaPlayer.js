@@ -146,6 +146,7 @@ function MediaPlayer() {
         protectionController,
         metricsReportingController,
         mssHandler,
+        dodgeHandler,
         offlineController,
         adapter,
         mediaPlayerModel,
@@ -477,6 +478,11 @@ function MediaPlayer() {
         if (offlineController) {
             offlineController.reset();
             offlineController = null;
+        }
+
+        if (dodgeHandler) {
+            dodgeHandler.reset();
+            dodgeHandler = null;
         }
     }
 
@@ -1498,6 +1504,7 @@ function MediaPlayer() {
             _detectProtection();
             _detectMetricsReporting();
             _detectMss();
+            _detectDodge();
 
             if (streamController) {
                 streamController.switchToVideoElement(providedStartTime);
@@ -2665,6 +2672,7 @@ function MediaPlayer() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             mssHandler: mssHandler,
+            dodgeHandler: dodgeHandler,
             settings: settings
         });
     }
@@ -2733,6 +2741,28 @@ function MediaPlayer() {
                 constants: Constants,
                 metricsConstants: MetricsConstants
             });
+        }
+    }
+
+    function _detectDodge() {
+        if (dodgeHandler || typeof dashjs === 'undefined') {
+            return;
+        }
+
+        let detectedDodgeHandler = dashjs.DodgeHandler;
+        if (typeof detectedDodgeHandler === 'function') {
+            if (detectedDodgeHandler.events) {
+                Events.extend(detectedDodgeHandler.events);
+            }
+            dodgeHandler = detectedDodgeHandler(context).create({
+                eventBus: eventBus,
+                events: Events,
+                settings: settings,
+                streamController: streamController,
+                mediaPlayer: instance
+            });
+            dodgeHandler.registerExtensions();
+            dodgeHandler.registerEvents();
         }
     }
 
