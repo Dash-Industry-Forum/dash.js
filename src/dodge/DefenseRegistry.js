@@ -1,0 +1,424 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+import Debug from '../core/Debug.js';
+import FactoryMaker from '../core/FactoryMaker.js';
+
+/**
+ * Validate init cycles in a stream entry. Check that each range, if
+ * present, is a string of the form "<start>-<end>" with start <= end.
+ * @param {Object} stream - The stream entry from an extended manifest.
+ * @param {Object} [logger] - Optional logger for rejection messages.
+ * @returns {boolean} True if all init cycles are valid.
+ */
+function checkInitCycles(stream, logger) {
+    for (let i = 0; i < stream['init'].length; i++) {
+        const range = stream['init'][i].range;
+
+        // range is optional
+        let rs = 0;
+        let re = Number.MAX_SAFE_INTEGER;
+
+        if (range) {
+            // range MUST be a string of the form "<start>-<end>". Either bound MAY
+            // be omitted (e.g. "-855" or "44-"), in which case it defaults to 0 or
+            // the end of the resource, respectively.
+            if (typeof range !== 'string' && !(range instanceof String)) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+
+            const rangeTokens = range.split('-');
+            if (rangeTokens.length != 2 || isNaN(rangeTokens[0]) || isNaN(rangeTokens[1])) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+            rs = parseInt(rangeTokens[0], 10);
+            re = parseInt(rangeTokens[1], 10);
+            if (isNaN(rs)) {
+                rs = 0;
+            }
+            if (isNaN(re)) {
+                re = Number.MAX_SAFE_INTEGER;
+            }
+
+            // Range start MUST NOT exceed range end.
+            if (rs > re) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Validate data cycles in a stream entry. Check that segment indices are
+ * non-negative, non-padding cycles are monotonically non-decreasing and do not
+ * contain duplicate segment downloads, ranges are well-formed, and consecutive
+ * partial ranges do not skip bytes. Set `stream.maxNoPad` to the index of the
+ * last non-padding cycle.
+ * @param {Object} stream - The stream entry from an extended manifest.
+ * @param {Object} [logger] - Optional logger for rejection messages.
+ * @returns {boolean} True if all data cycles are valid.
+ */
+function checkDataCycles(stream, logger) {
+    let rangeEnd = -1; // end of current partial segment range
+    let maxIndex = -1; // maximum segment index encountered so far
+    let maxNoPad = -1; // maximum non-padding cycle index found
+
+    for (let i = 0; i < stream['data'].length; i++) {
+        const index = stream['data'][i].index;
+        const range = stream['data'][i].range;
+        const padding = stream['data'][i].padding;
+
+        // Every data cycle MUST have a non-negative segment index.
+        if (isNaN(index) || index < 0) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid index');
+            }
+            return false;
+        }
+
+        // While a partial sequence is in progress for segment maxIndex (rangeEnd >= 0),
+        // the next non-padding cycle MUST have index >= maxIndex.
+        //
+        // Once a segment is complete (rangeEnd == -1), the next non-padding cycle MUST
+        // have index > maxIndex; revisiting a completed segment is not allowed.
+        //
+        // Padding cycles may have any index; they have no requirements.
+        if (!padding) {
+            if (maxIndex >= 0 && ((rangeEnd == -1 && index <= maxIndex) || (rangeEnd >= 0 && index < maxIndex))) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', non-sequential index');
+                }
+                return false;
+            }
+
+            if (index > maxIndex) {
+                rangeEnd = -1;
+                maxIndex = index;
+            }
+
+            maxNoPad = i;
+        }
+
+        // range is optional
+        let rs;
+        let re;
+
+        if (range) {
+            if (typeof range !== 'string' && !(range instanceof String)) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+
+            const rangeTokens = range.split('-');
+            if (rangeTokens.length != 2 || isNaN(rangeTokens[0]) || isNaN(rangeTokens[1])) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+            rs = parseInt(rangeTokens[0], 10);
+            re = parseInt(rangeTokens[1], 10);
+            if (isNaN(rs)) {
+                rs = 0;
+            }
+            if (isNaN(re)) {
+                re = Number.MAX_SAFE_INTEGER;
+            }
+
+            // Range start MUST NOT exceed range end.
+            if (rs > re) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+        }
+
+        if (!padding) {
+            // When continuing a partial sequence (rangeEnd >= 0), the start of the new
+            // range MUST NOT skip bytes. Overlap (rs <= rangeEnd) is permitted.
+            if (rangeEnd >= 0 && rs > rangeEnd + 1) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', partial with non-sequential range ' + rs + '-' + re + ' (segment ' + index + '), rangeEnd is ' + rangeEnd);
+                }
+                return false;
+            }
+
+            // A cycle without a range is a full download; it completes the segment.
+            // A cycle with a range leaves the segment open for further cycles.
+            rangeEnd = range ? re : -1;
+        }
+    }
+
+    stream.maxNoPad = maxNoPad;
+
+    return true;
+}
+
+/**
+ * Validate the structure of an extended manifest object. Check for `start.mpd`
+ * and `start.base_uri` which should be strings, that `streams` is a non-empty
+ * array of well-formed entries, and validate cycles with `checkInitCycles`
+ * and `checkDataCycles`. The manifest is not allowed to be dynamic. Also set
+ * `stream.maxNoPad` on each stream entry, a side effect of `checkDataCycles`.
+ * @param {Object} manifest - The parsed extended manifest JSON object.
+ * @param {Object} [logger] - Optional logger for rejection messages.
+ * @returns {boolean} True if the extended manifest is valid.
+ */
+function isValidExtendedManifest(manifest, logger) {
+    if (!manifest) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: null');
+        }
+        return false;
+    }
+
+    // An extended manifest MUST contain the start object.
+    if (!manifest['start']) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: no start data');
+        }
+        return false;
+    }
+
+    // An extended manifest MUST contain the video's original MPD.
+    if (typeof manifest['start']['mpd'] !== 'string' && !(manifest['start']['mpd'] instanceof String)) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: incomplete start data, missing mpd');
+        }
+        return false;
+    }
+
+    // An extended manifest MUST contain a base URI for segments.
+    if (typeof manifest['start']['base_uri'] !== 'string' && !(manifest['start']['base_uri'] instanceof String)) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: incomplete start data, missing base URI');
+        }
+        return false;
+    }
+
+    // Extended manifests are only valid for static (on-demand) content. Live
+    // MPDs continuously add new segments that have no corresponding cycles in
+    // the fixed cycle array, so the behavior would be undefined.
+    if (manifest['start']['mpd'].includes('type="dynamic"')) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: dynamic MPDs are not supported');
+        }
+        return false;
+    }
+
+    // An extended manifest MUST contain defended stream info.
+    if (!manifest['streams']) {
+        if (logger) {
+            logger.warn('Extended manifest rejected: no defended stream info');
+        }
+        return false;
+    }
+
+    // [check the list of defended stream info objects]
+    for (let i = 0; i < manifest['streams'].length; i++) {
+        const stream = manifest['streams'][i];
+
+        // Defended stream info MUST be labeled with a representation.
+        // Here, we only check that the label is present, not that it
+        // corresponds to a valid representation.
+        if (typeof stream['label'] !== 'string' && !(stream['label'] instanceof String)) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info at index ' + i + ', missing label');
+            }
+            return false;
+        }
+
+        // Defended stream info MUST contain at least one init cycle.
+        if (!stream['init'] || stream['init'].length == 0) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing init cycles');
+            }
+            return false;
+        }
+
+        // Defended stream info MUST contain at least one data cycle.
+        if (!stream['data'] || stream['data'].length == 0) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing data cycles');
+            }
+            return false;
+        }
+
+        // [check init cycles]
+        if (!checkInitCycles(stream, logger)) {
+            return false;
+        }
+
+        // [check data cycles]
+        if (!checkDataCycles(stream, logger)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Return the index of the first non-padding data cycle for the given segment
+ * index in the given stream entry, or -1 if no such cycle is found.
+ * @param {Object} stream - The stream entry from an extended manifest.
+ * @param {number} segmentIndex - The segment index to look up.
+ * @returns {number}
+ */
+export function getCycleIndexBySegmentIndex(stream, segmentIndex) {
+    const data = stream['data'];
+
+    for (let i = 0; i < data.length; i++) {
+        if (segmentIndex == data[i].index && !data[i].padding) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+/**
+ * Return the index of the first non-padding data cycle for the segment that
+ * contains the given playback time in the given stream entry, or -1 if no such
+ * cycle is found.
+ * @param {Object} stream - The stream entry from an extended manifest.
+ * @param {number} playbackTime - Target playback position in seconds.
+ * @param {number} segmentDuration - Duration of each segment in seconds.
+ * @returns {number}
+ */
+export function getCycleIndexByPlaybackTime(stream, playbackTime, segmentDuration) {
+    const segmentIndex = Math.floor(playbackTime / segmentDuration);
+    return getCycleIndexBySegmentIndex(stream, segmentIndex);
+}
+
+/**
+ * Singleton that stores and provides access to extended manifests for the
+ * lifetime of a media session.
+ */
+function DefenseRegistry() {
+
+    const context = this.context;
+
+    let instance,
+        logger,
+        manifestData;
+    
+    function setup() {
+        logger = Debug(context).getInstance().getLogger(instance);
+        manifestData = [];
+    }
+
+    // Discard all manifest data currently stored.
+    function reset() {
+        manifestData = [];
+    }
+
+    /**
+     * Validate and store an extended manifest. Assigns a unique `manifestId`
+     * and associates the extended manifest with the given `streamId`.
+     * @param {Object} content - The parsed extended manifest JSON object.
+     * @param {string|null} [streamId] - The stream ID to associate with this extended manifest.
+     * @returns {boolean} True if the extended manifest was accepted.
+     */
+    function addExtendedManifest(content, streamId = null) {
+        // Validate the extended manifest.
+        if (!isValidExtendedManifest(content, logger)) {
+            return false;
+        }
+
+        // Each extended manifest receives a unique ID.
+        content['manifestId'] = manifestData.length;
+        content['streamId'] = streamId;
+
+        // Add the extended manifest to manifestData.
+        logger.info('Extended manifest accepted, stream id ' + streamId);
+        manifestData.push(content);
+
+        return true;
+    }
+
+    /**
+     * Find the first stream entry whose `label` matches the given label across
+     * all registered extended manifests. If `streamId` is provided, only
+     * extended manifests associated with that stream ID are searched.
+     * @param {string} label - The representation ID to search for.
+     * @param {string|null} [streamId] - Optional stream ID to narrow the search.
+     * @returns {Object|null} The matching stream entry, or null if not found.
+     */
+    function getDefendedStreamInfo(label, streamId = null) {
+        for (let i = 0; i < manifestData.length; i++) {
+            const manifest = manifestData[i];
+
+            if (streamId && streamId != manifest['streamId']) {
+                continue;
+            }
+
+            for (let j = 0; j < manifest['streams'].length; j++) {
+                const stream = manifest['streams'][j];
+
+                if (label === stream['label']) {
+                    return stream;
+                }
+            }
+        }
+
+        return null;
+    }
+
+    instance = {
+        addExtendedManifest,
+        getDefendedStreamInfo,
+        reset,
+        setup
+    };
+
+    setup();
+
+    return instance;
+}
+
+DefenseRegistry.__dashjs_factory_name = 'DefenseRegistry';
+export default FactoryMaker.getSingletonFactory(DefenseRegistry);
+export {isValidExtendedManifest};

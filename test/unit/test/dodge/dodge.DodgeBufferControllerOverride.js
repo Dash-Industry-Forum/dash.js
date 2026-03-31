@@ -1,0 +1,156 @@
+import DodgeBufferControllerOverride from '../../../../src/dodge/overrides/DodgeBufferControllerOverride.js';
+import Debug from '../../../../src/core/Debug.js';
+
+import sinon from 'sinon';
+import { expect } from 'chai';
+
+// ************************************************************************
+// TESTS
+// ************************************************************************
+
+describe('DodgeBufferControllerOverride', function () {
+    let context, override, mockParent, dashHandler, playbackController;
+
+    beforeEach(function () {
+        context = {};
+
+        // Debug must be present because the override calls Debug(context).getInstance()
+        Debug(context).getInstance();
+
+        mockParent = {
+            setMockBuffer: sinon.stub(),
+            updateBufferLevel: sinon.stub(),
+            resetInitialSettings: sinon.stub(),
+        };
+
+        dashHandler = {
+            getIsTrailing: sinon.stub().returns(false),
+        };
+
+        playbackController = {
+            getTimeSinceStreamEnd: sinon.stub().returns(0),
+        };
+
+        override = DodgeBufferControllerOverride.call(
+            { context, parent: mockParent, factory: {} },
+            { dashHandler, playbackController }
+        );
+    });
+
+    // onBufferCycleLoaded
+
+    describe('onBufferCycleLoaded', function () {
+
+        it('increments mockBuffer by (segmentDuration - actualDuration) and syncs to parent', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.97 });
+            expect(mockParent.setMockBuffer.calledOnce).to.be.true; // jshint ignore:line
+            expect(mockParent.setMockBuffer.firstCall.args[0]).to.be.closeTo(0.03, 1e-9);
+        });
+
+        it('can produce a negative mockBuffer when actualDuration exceeds segmentDuration', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 4.03 });
+            expect(mockParent.setMockBuffer.firstCall.args[0]).to.be.closeTo(-0.03, 1e-9);
+        });
+
+        it('accumulates across multiple calls', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.97 });
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.97 });
+            expect(mockParent.setMockBuffer.lastCall.args[0]).to.be.closeTo(0.06, 1e-9);
+        });
+
+    });
+
+    // onPaddingLoaded
+
+    describe('onPaddingLoaded', function () {
+
+        it('e.trail = false, does not call parent.setMockBuffer()', function () {
+            override.onPaddingLoaded({ trail: false, buffer: false, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+        });
+
+        it('e.trail = true, e.buffer = false, does not increment mockBuffer', function () {
+            override.onPaddingLoaded({ trail: true, buffer: false, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+        });
+
+        it('e.trail = true, e.buffer = true, increments mockBuffer by segmentDuration and syncs to parent', function () {
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.calledOnceWith(4)).to.be.true; // jshint ignore:line
+        });
+
+        it('accumulates mockBuffer across calls', function () {
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.lastCall.args[0]).to.equal(8);
+        });
+
+        it('e.trail = false with non-zero lastTimeSinceStreamEnd, resets mockBuffer to 0', function () {
+            // Build up trailing state via updateBufferLevel
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(5);
+            override.updateBufferLevel(); // advances lastTimeSinceStreamEnd to 5
+            mockParent.setMockBuffer.reset();
+
+            // A non-trailing padding cycle should now trigger the reset
+            override.onPaddingLoaded({ trail: false, buffer: false, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.calledOnceWith(0)).to.be.true; // jshint ignore:line
+        });
+    });
+
+    // updateBufferLevel
+
+    describe('updateBufferLevel', function () {
+
+        it('when not trailing, delegates to parent.updateBufferLevel()', function () {
+            dashHandler.getIsTrailing.returns(false);
+            override.updateBufferLevel();
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+            expect(mockParent.updateBufferLevel.calledOnce).to.be.true; // jshint ignore:line
+        });
+
+        it('when trailing, decrements mockBuffer by elapsed time and syncs to parent', function () {
+            // Load 8s into mockBuffer via two trailing padding events
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            mockParent.setMockBuffer.reset();
+
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(3);
+            override.updateBufferLevel(); // diffInTime = 3; currentMockBuffer = 8 - 3 = 5
+
+            expect(mockParent.setMockBuffer.calledOnceWith(5)).to.be.true; // jshint ignore:line
+            expect(mockParent.updateBufferLevel.calledOnce).to.be.true; // jshint ignore:line
+        });
+
+        it('when trailing, clamps mockBuffer to 0 when elapsed time exceeds accumulated value', function () {
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            mockParent.setMockBuffer.reset();
+
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(10); // more than the 4s in mockBuffer
+            override.updateBufferLevel();
+
+            expect(mockParent.setMockBuffer.calledOnceWith(0)).to.be.true; // jshint ignore:line
+        });
+    });
+
+    // resetInitialSettings
+
+    describe('resetInitialSettings', function () {
+
+        it('resets internal state and delegates to parent.resetInitialSettings()', function () {
+            // Add some state first
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            mockParent.setMockBuffer.reset();
+
+            override.resetInitialSettings(false, false);
+
+            expect(mockParent.resetInitialSettings.calledOnceWith(false, false)).to.be.true; // jshint ignore:line
+            // After reset, a non-trailing updateBufferLevel should not call setMockBuffer
+            dashHandler.getIsTrailing.returns(false);
+            override.updateBufferLevel();
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+        });
+    });
+});

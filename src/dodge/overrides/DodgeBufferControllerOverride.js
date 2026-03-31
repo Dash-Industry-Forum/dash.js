@@ -1,0 +1,160 @@
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+import Debug from '../../core/Debug.js';
+
+/**
+ * Dodge override, adds mock buffer support to BufferController.
+ *
+ * `currentMockBuffer` accumulates over time and is synced to the vanilla
+ * BufferController via parent.setMockBuffer(). The parent's updateBufferLevel()
+ * adds mockBuffer to the reported buffer level.
+ *
+ * Two separate mechanisms update it:
+ *  - onBufferCycleLoaded: increments by (segmentDuration - actualDuration) after
+ *    each non-trailing buffer cycle, absorbing variance in segment durations.
+ *    This value can be negative if a segment is longer than expected.
+ *  - onPaddingLoaded: increments by segmentDuration for each trailing buffer
+ *    cycle, covering the virtual buffer time after all playable content.
+ *
+ * During the trailing phase, updateBufferLevel drains mockBuffer over time so
+ * the reported buffer level falls naturally to zero as playback finishes.
+ */
+function DodgeBufferControllerOverride(config) {
+
+    config = config || {};
+    const context = this.context;
+    const parent = this.parent;
+
+    const dashHandler = config.dashHandler;
+    const playbackController = config.playbackController;
+
+    const debug = Debug(context).getInstance();
+
+    let logger,
+        currentMockBuffer,
+        lastTimeSinceStreamEnd;
+
+    function setup() {
+        logger = debug.getLogger({ __dashjs_factory_name: 'DodgeBufferControllerOverride' });
+        currentMockBuffer = 0;
+        lastTimeSinceStreamEnd = 0;
+    }
+
+    function resetInitialSettings(errored, keepBuffers) {
+        currentMockBuffer = 0;
+        lastTimeSinceStreamEnd = 0;
+        // parent.resetInitialSettings resets mockBuffer
+        parent.resetInitialSettings(errored, keepBuffers);
+    }
+
+    /**
+     * Called after a non-trailing buffer cycle completes. Increments the mock
+     * buffer by the difference between the nominal and actual segment duration,
+     * absorbing variance. The value can be negative when a segment is slightly
+     * longer than segmentDuration.
+     * @param {Object} e
+     * @param {Object} e.representation
+     * @param {number} e.actualDuration - Actual segment duration from the timeline.
+     */
+    function onBufferCycleLoaded(e) {
+        if (lastTimeSinceStreamEnd != 0) {
+            logger.debug('trailing reset');
+            currentMockBuffer = 0;
+            lastTimeSinceStreamEnd = 0;
+            parent.setMockBuffer(0);
+        }
+        
+        currentMockBuffer += e.representation.segmentDuration - e.actualDuration;
+        parent.setMockBuffer(currentMockBuffer);
+    }
+
+    /**
+     * Called when a padding cycle is finished. Increment the mock buffer for
+     * trailing cycles; reset it if trailing ended unexpectedly.
+     */
+    function onPaddingLoaded(e) {
+        if (!e.trail) {
+            if (lastTimeSinceStreamEnd != 0) {
+                logger.debug('trailing reset');
+                currentMockBuffer = 0;
+                lastTimeSinceStreamEnd = 0;
+                parent.setMockBuffer(0);
+            }
+            return;
+        }
+
+        if (e.buffer) {
+            currentMockBuffer += e.representation.segmentDuration;
+            parent.setMockBuffer(currentMockBuffer);
+        }
+    }
+
+    /**
+     * Update the buffer level. During the trailing phase, drain mockBuffer by
+     * time elapsed since stream end so the reported buffer level falls naturally
+     * to zero. Outside the trailing phase, mockBuffer is not drained here; it
+     * only changes via onBufferCycleLoaded and onPaddingLoaded.
+     */
+    function updateBufferLevel() {
+        if (playbackController) {
+            if (dashHandler.getIsTrailing()) {
+                const timeSinceStreamEnd = playbackController.getTimeSinceStreamEnd();
+                const diffInTime = Math.max(0, timeSinceStreamEnd - lastTimeSinceStreamEnd);
+
+                currentMockBuffer -= diffInTime;
+                lastTimeSinceStreamEnd += diffInTime;
+
+                // Sync the decremented mockBuffer to parent before it computes buffer level.
+                parent.setMockBuffer(Math.max(currentMockBuffer, 0));
+            } else if (lastTimeSinceStreamEnd != 0) {
+                logger.debug('trailing reset');
+                currentMockBuffer = 0;
+                lastTimeSinceStreamEnd = 0;
+                parent.setMockBuffer(0);
+            }
+        }
+
+        // Delegate to parent: it will compute buffer level.
+        parent.updateBufferLevel();
+    }
+
+    setup();
+
+    return {
+        resetInitialSettings,
+        onBufferCycleLoaded,
+        onPaddingLoaded,
+        updateBufferLevel,
+    };
+}
+
+export default DodgeBufferControllerOverride;

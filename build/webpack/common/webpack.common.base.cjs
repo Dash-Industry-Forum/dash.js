@@ -29,6 +29,7 @@ const commonBaseConfig = {
 const prodEntries = {
     'dash.all': './index.js',
     'dash.mss': './src/mss/index.js',
+    'dash.dodge': './src/dodge/index.js',
     'dash.mediaplayer': './index_mediaplayerOnly.js',
     'dash.protection': './src/streaming/protection/Protection.js',
     'dash.reporting': './src/streaming/metrics/MetricsReporting.js',
@@ -38,6 +39,7 @@ const prodEntries = {
 const devEntries = {
     'dash.all': './index.js',
     'dash.mss': './src/mss/index.js',
+    'dash.dodge': './src/dodge/index.js',
     'dash.offline': './src/offline/index.js'
 }
 

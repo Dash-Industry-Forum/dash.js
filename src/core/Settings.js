@@ -51,6 +51,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Error related settings
  * @property {module:Settings~StreamingSettings} [streaming]
  * Streaming related settings.
+ * @property {module:Settings~DodgeSettings} [dodge]
+ * Dodge extension settings.
  * @example
  *
  * // Full settings object
@@ -360,6 +362,13 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            recoverAttempts: {
  *                mediaErrorDecode: 5
  *             }
+ *          },
+ *          dodge: {
+ *            scheduleWaitBase: 100,
+ *            scheduleWaitRandom: 50,
+ *            maxIdLength: 32,
+ *            queryParam: 'padding',
+ *            paddingLength: 0
  *          }
  * }
  */
@@ -540,6 +549,20 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Defines the maximum number of recover attempts for specific media errors.
  *
  * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The resulting gap will be handled by the GapController.
+ */
+
+/**
+ * @typedef {Object} module:Settings~DodgeSettings
+ * @property {number} [scheduleWaitBase=100]
+ * Base interval in milliseconds between segment requests for random-walk scheduling.
+ * @property {number} [scheduleWaitRandom=50]
+ * Maximum additional random delay in milliseconds added to scheduleWaitBase per request.
+ * @property {number} [maxIdLength=32]
+ * Maximum expected length of a representation ID string, required for proper URL padding.
+ * @property {string} [queryParam='padding']
+ * Name of the query parameter appended to segment URLs to normalize their lengths.
+ * @property {number} [paddingLength=0]
+ * Target HTTP/1.1 wire size in bytes (URL + request headers) for Dodge requests.
  */
 
 /**
@@ -1506,6 +1529,13 @@ function Settings() {
             recoverAttempts: {
                 mediaErrorDecode: 5
             }
+        },
+        dodge: {
+            scheduleWaitBase: 100,
+            scheduleWaitRandom: 50,
+            maxIdLength: 32,
+            queryParam: 'padding',
+            paddingLength: 0
         }
     };
 
