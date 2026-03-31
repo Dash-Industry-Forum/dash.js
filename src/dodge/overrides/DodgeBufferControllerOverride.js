@@ -35,7 +35,7 @@ import Debug from '../../core/Debug.js';
  * Dodge override, adds mock buffer support to BufferController.
  *
  * `currentMockBuffer` accumulates over time and is synced to the vanilla
- * BufferController via parent.setMockBuffer(). The parent's updateBufferLevel()
+ * BufferController via _parentSetMockBuffer.call(parent,). The parent's updateBufferLevel()
  * adds mockBuffer to the reported buffer level.
  *
  * Two separate mechanisms update it:
@@ -53,6 +53,9 @@ function DodgeBufferControllerOverride(config) {
     config = config || {};
     const context = this.context;
     const parent = this.parent;
+    const _parentResetInitialSettings = parent.resetInitialSettings;
+    const _parentSetMockBuffer = parent.setMockBuffer;
+    const _parentUpdateBufferLevel = parent.updateBufferLevel;
 
     const dashHandler = config.dashHandler;
     const playbackController = config.playbackController;
@@ -73,7 +76,7 @@ function DodgeBufferControllerOverride(config) {
         currentMockBuffer = 0;
         lastTimeSinceStreamEnd = 0;
         // parent.resetInitialSettings resets mockBuffer
-        parent.resetInitialSettings(errored, keepBuffers);
+        _parentResetInitialSettings.call(parent, errored, keepBuffers);
     }
 
     /**
@@ -90,11 +93,11 @@ function DodgeBufferControllerOverride(config) {
             logger.debug('trailing reset');
             currentMockBuffer = 0;
             lastTimeSinceStreamEnd = 0;
-            parent.setMockBuffer(0);
+            _parentSetMockBuffer.call(parent,0);
         }
         
         currentMockBuffer += e.representation.segmentDuration - e.actualDuration;
-        parent.setMockBuffer(currentMockBuffer);
+        _parentSetMockBuffer.call(parent,currentMockBuffer);
     }
 
     /**
@@ -107,14 +110,14 @@ function DodgeBufferControllerOverride(config) {
                 logger.debug('trailing reset');
                 currentMockBuffer = 0;
                 lastTimeSinceStreamEnd = 0;
-                parent.setMockBuffer(0);
+                _parentSetMockBuffer.call(parent,0);
             }
             return;
         }
 
         if (e.buffer) {
             currentMockBuffer += e.representation.segmentDuration;
-            parent.setMockBuffer(currentMockBuffer);
+            _parentSetMockBuffer.call(parent,currentMockBuffer);
         }
     }
 
@@ -134,17 +137,17 @@ function DodgeBufferControllerOverride(config) {
                 lastTimeSinceStreamEnd += diffInTime;
 
                 // Sync the decremented mockBuffer to parent before it computes buffer level.
-                parent.setMockBuffer(Math.max(currentMockBuffer, 0));
+                _parentSetMockBuffer.call(parent,Math.max(currentMockBuffer, 0));
             } else if (lastTimeSinceStreamEnd != 0) {
                 logger.debug('trailing reset');
                 currentMockBuffer = 0;
                 lastTimeSinceStreamEnd = 0;
-                parent.setMockBuffer(0);
+                _parentSetMockBuffer.call(parent,0);
             }
         }
 
         // Delegate to parent: it will compute buffer level.
-        parent.updateBufferLevel();
+        _parentUpdateBufferLevel.call(parent);
     }
 
     setup();

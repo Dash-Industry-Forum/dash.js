@@ -42,11 +42,12 @@
 function DodgeScheduleControllerOverride(config) {
     config = config || {};
     const parent = this.parent;
+    const _parentShouldClearScheduleTimer = parent._shouldClearScheduleTimer;
 
     const dashHandler = config.dashHandler;
 
     function _shouldClearScheduleTimer() {
-        const parentResult = parent._shouldClearScheduleTimer();
+        const parentResult = _parentShouldClearScheduleTimer.call(parent);
         if (!parentResult) {
             return false;
         }

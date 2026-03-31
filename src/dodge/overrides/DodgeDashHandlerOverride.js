@@ -50,6 +50,12 @@ function DodgeDashHandlerOverride(config) {
     config = config || {};
     const context = this.context;
     const parent = this.parent;
+    const _parentInitialize = parent.initialize;
+    const _parentResetInitialSettings = parent.resetInitialSettings;
+    const _parentGetInitRequest = parent.getInitRequest;
+    const _parentGetNextSegmentRequest = parent.getNextSegmentRequest;
+    const _parentGetSegmentRequestForTime = parent.getSegmentRequestForTime;
+    const _parentIsLastSegmentRequested = parent.isLastSegmentRequested;
 
     const defenseRegistry = DefenseRegistry(context).getInstance();
     const settings = Settings(context).getInstance();
@@ -83,12 +89,12 @@ function DodgeDashHandlerOverride(config) {
 
     function resetInitialSettings() {
         _resetState();
-        parent.resetInitialSettings();
+        _parentResetInitialSettings.call(parent);
     }
 
     function initialize(isDynamic) {
         mediaHasFinished = false;
-        parent.initialize(isDynamic);
+        _parentInitialize.call(parent, isDynamic);
     }
 
     // ************************************************************************
@@ -189,7 +195,7 @@ function DodgeDashHandlerOverride(config) {
     function getInitRequest(mediaInfo, representation) {
         if (!representation || !defendedStreamInfo) {
             // No extended manifest loaded, fall back to vanilla DashHandler.
-            return parent.getInitRequest(mediaInfo, representation);
+            return _parentGetInitRequest.call(parent, mediaInfo, representation);
         }
 
         const initIndex = lastInitIndex + 1;
@@ -313,7 +319,7 @@ function DodgeDashHandlerOverride(config) {
     function getSegmentRequestForTime(mediaInfo, representation, time) {
         if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
             // No extended manifest, fall back to vanilla DashHandler.
-            return parent.getSegmentRequestForTime(mediaInfo, representation, time);
+            return _parentGetSegmentRequestForTime.call(parent, mediaInfo, representation, time);
         }
 
         // If we are trailing and a spurious seek occurs (it shouldn't),
@@ -365,7 +371,7 @@ function DodgeDashHandlerOverride(config) {
     function getNextSegmentRequest(mediaInfo, representation) {
         if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
             // No extended manifest, fall back to vanilla DashHandler.
-            return parent.getNextSegmentRequest(mediaInfo, representation);
+            return _parentGetNextSegmentRequest.call(parent, mediaInfo, representation);
         }
 
         // Advance to next cycle.
@@ -414,7 +420,7 @@ function DodgeDashHandlerOverride(config) {
     function isLastSegmentRequested(representation, bufferingTime) {
         if (!defendedStreamInfo) {
             // Fall back to vanilla DashHandler.
-            return parent.isLastSegmentRequested(representation, bufferingTime);
+            return _parentIsLastSegmentRequested.call(parent, representation, bufferingTime);
         }
 
         if (!representation || !lastSegment || lastCycleIndex < 0) {

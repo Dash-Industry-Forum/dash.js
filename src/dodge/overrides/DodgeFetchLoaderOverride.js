@@ -45,6 +45,7 @@ function DodgeFetchLoaderOverride() {
 
     const context = this.context;
     const parent = this.parent;
+    const _parentLoad = parent.load;
 
     const settings = Settings(context).getInstance();
     const logger = Debug(context).getInstance().getLogger(this);
@@ -56,7 +57,7 @@ function DodgeFetchLoaderOverride() {
      */
     function load(commonMediaRequest, commonMediaResponse) {
         applyRequestPadding(commonMediaRequest, settings, logger);
-        return parent.load(commonMediaRequest, commonMediaResponse);
+        return _parentLoad.call(parent, commonMediaRequest, commonMediaResponse);
     }
 
     return { load };
