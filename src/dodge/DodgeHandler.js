@@ -30,10 +30,12 @@
  */
 
 import DataChunk from '../streaming/vo/DataChunk.js';
+import DashJSError from '../streaming/vo/DashJSError.js';
 import Debug from '../core/Debug.js';
 import DefenseRegistry from './DefenseRegistry.js';
 import DodgeBufferControllerOverride from './overrides/DodgeBufferControllerOverride.js';
 import DodgeDashHandlerOverride from './overrides/DodgeDashHandlerOverride.js';
+import DodgeErrors from './errors/DodgeErrors.js';
 import DodgeEvents from './events/DodgeEvents.js';
 import DodgeFetchLoaderOverride from './overrides/DodgeFetchLoaderOverride.js';
 import DodgeScheduleControllerOverride from './overrides/DodgeScheduleControllerOverride.js';
@@ -127,18 +129,34 @@ function DodgeHandler(config) {
     /**
      * Called by ManifestLoader before parsing. If `bytes` is a valid extended
      * manifest JSON, register it with DefenseRegistry and return the embedded
-     * MPD string and base URI. If not a valid extended manifest, return null.
+     * MPD string and base URI. If not a valid extended manifest, returns null
+     * (graceful degradation). If strict mode 'manifest' is enabled and no
+     * defense can be applied, generates and error and returns false to
+     * signal an abort to ManifestLoader.
+     * @param {string} bytes - Raw response body.
+     * @param {string} [url] - Original request URL, included in error messages.
+     * @returns {{ mpd: string, baseUri: string }|null|false}
      */
-    function tryProcessExtendedManifest(bytes) {
+    function tryProcessExtendedManifest(bytes, url) {
+        const strict = (settings.get().dodge || {}).strictMode === 'manifest';
+
         let extended;
         try {
             extended = JSON.parse(bytes);
         } catch (e) {
+            if (strict) {
+                _triggerStrictModeError(url);
+                return false;
+            }
             return null; // not valid JSON
         }
 
         if (!defenseRegistry.addExtendedManifest(extended)) {
             logger.debug('Extended manifest rejected by DefenseRegistry');
+            if (strict) {
+                _triggerStrictModeError(url);
+                return false;
+            }
             return null;
         }
 
@@ -146,6 +164,17 @@ function DodgeHandler(config) {
             mpd: extended['start']['mpd'],
             baseUri: extended['start']['base_uri'],
         };
+    }
+
+    function _triggerStrictModeError(url) {
+        logger.error('Dodge strict mode is enabled and no valid extended manifest at ' + (url || '(unknown URL)') + ', blocking playback');
+        eventBus.trigger(events.INTERNAL_MANIFEST_LOADED, {
+            manifest: null,
+            error: new DashJSError(
+                DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE,
+                DodgeErrors.DODGE_STRICT_MODE_ERROR_MESSAGE + (url || '')
+            )
+        });
     }
 
     /**
@@ -500,4 +529,5 @@ function DodgeHandler(config) {
 DodgeHandler.__dashjs_factory_name = 'DodgeHandler';
 const factory = FactoryMaker.getClassFactory(DodgeHandler);
 factory.events = DodgeEvents;
+factory.errors = DodgeErrors;
 export default factory;

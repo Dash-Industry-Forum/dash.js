@@ -87,6 +87,13 @@ function DodgeDashHandlerOverride(config) {
         mediaHasFinished = false;
     }
 
+    // Return true if strict mode is 'representation' or 'manifest' (both
+    // enforce per-representation defense requirements).
+    function _isRepresentationStrict() {
+        const mode = (settings.get().dodge || {}).strictMode;
+        return mode === 'representation' || mode === 'manifest';
+    }
+
     function resetInitialSettings() {
         _resetState();
         _parentResetInitialSettings.call(parent);
@@ -194,6 +201,9 @@ function DodgeDashHandlerOverride(config) {
 
     function getInitRequest(mediaInfo, representation) {
         if (!representation || !defendedStreamInfo) {
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                return null; // block undefended request
+            }
             // No extended manifest loaded, fall back to vanilla DashHandler.
             return _parentGetInitRequest.call(parent, mediaInfo, representation);
         }
@@ -318,6 +328,9 @@ function DodgeDashHandlerOverride(config) {
 
     function getSegmentRequestForTime(mediaInfo, representation, time) {
         if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                return null; // block undefended request
+            }
             // No extended manifest, fall back to vanilla DashHandler.
             return _parentGetSegmentRequestForTime.call(parent, mediaInfo, representation, time);
         }
@@ -370,6 +383,9 @@ function DodgeDashHandlerOverride(config) {
 
     function getNextSegmentRequest(mediaInfo, representation) {
         if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                return null; // block undefended request
+            }
             // No extended manifest, fall back to vanilla DashHandler.
             return _parentGetNextSegmentRequest.call(parent, mediaInfo, representation);
         }
@@ -419,6 +435,9 @@ function DodgeDashHandlerOverride(config) {
 
     function isLastSegmentRequested(representation, bufferingTime) {
         if (!defendedStreamInfo) {
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                return false; // stall rather than report "last segment" for undefended stream
+            }
             // Fall back to vanilla DashHandler.
             return _parentIsLastSegmentRequested.call(parent, representation, bufferingTime);
         }
@@ -486,6 +505,9 @@ function DodgeDashHandlerOverride(config) {
             logger.debug('Defended stream info set for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);
         } else {
             logger.debug('Defended stream info not found for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                logger.error('Dodge strict mode is enabled and no defended stream info for label ' + label + ', blocking requests');
+            }
         }
 
         return !!defendedStreamInfo;

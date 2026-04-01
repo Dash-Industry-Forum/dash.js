@@ -1,4 +1,5 @@
 import { DodgeHandler } from '../../../../src/dodge/index.js';
+import DodgeErrors from '../../../../src/dodge/errors/DodgeErrors.js';
 import DodgeEvents from '../../../../src/dodge/events/DodgeEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
@@ -102,6 +103,74 @@ describe('DodgeHandler', function () {
             expect(r1.baseUri).to.equal('https://server1.example.com/');
             expect(r2.mpd).to.equal('<MPD2/>');
             expect(r2.baseUri).to.equal('https://server2.example.com/');
+        });
+    });
+
+    // Strict mode
+
+    describe('tryProcessExtendedManifest with strictMode = manifest', function () {
+        let eventBus, settings, errorSpy, listener;
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'manifest' } });
+
+            listener = {};
+            errorSpy = sinon.spy();
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
+        });
+
+        afterEach(function () {
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('non-JSON input: returns false and fires INTERNAL_MANIFEST_LOADED with error', function () {
+            const result = dodgeHandler.tryProcessExtendedManifest('<MPD/>', 'http://example.com/video.mpd');
+            expect(result).to.be.false; // jshint ignore:line
+            expect(errorSpy.calledOnce).to.be.true; // jshint ignore:line
+            const payload = errorSpy.firstCall.args[0];
+            expect(payload.manifest).to.be.null; // jshint ignore:line
+            expect(payload.error).to.exist; // jshint ignore:line
+            expect(payload.error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
+        });
+
+        it('invalid extended manifest JSON: returns false and fires INTERNAL_MANIFEST_LOADED with error', function () {
+            const bad = JSON.stringify({ start: { mpd: '<MPD/>', base_uri: 'https://example.com/' } });
+            const result = dodgeHandler.tryProcessExtendedManifest(bad, 'http://example.com/video.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            expect(errorSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(errorSpy.firstCall.args[0].error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
+        });
+
+        it('error message includes the URL', function () {
+            const url = 'http://example.com/test.exmfst.json';
+            dodgeHandler.tryProcessExtendedManifest('<not-json>', url);
+            const msg = errorSpy.firstCall.args[0].error.message;
+            expect(msg).to.include(url);
+        });
+
+        it('valid extended manifest: returns { mpd, baseUri } and does not fire error', function () {
+            const result = dodgeHandler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'http://example.com/valid.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.equal('<MPD/>');
+            expect(errorSpy.called).to.be.false; // jshint ignore:line
+        });
+    });
+
+    describe('tryProcessExtendedManifest without strictMode = manifest', function () {
+        it('non-JSON input: returns null (no error)', function () {
+            const eventBus = EventBus(context).getInstance();
+            const errorSpy = sinon.spy();
+            const listener = {};
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
+
+            const result = dodgeHandler.tryProcessExtendedManifest('<MPD/>');
+            expect(result).to.be.null; // jshint ignore:line
+            expect(errorSpy.called).to.be.false; // jshint ignore:line
+
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
         });
     });
 

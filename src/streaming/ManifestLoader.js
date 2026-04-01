@@ -171,7 +171,10 @@ function ManifestLoader(config) {
                 // Dodge: intercept extended manifest before parser selection
                 let dodgeResult = null;
                 if (dodgeHandler) {
-                    dodgeResult = dodgeHandler.tryProcessExtendedManifest(data);
+                    dodgeResult = dodgeHandler.tryProcessExtendedManifest(data, url);
+                    if (dodgeResult === false) {
+                        return; // strict mode abort, error event already fired by DodgeHandler
+                    }
                     if (dodgeResult) {
                         data = dodgeResult.mpd;
                         baseUri = urlUtils.parseBaseUrl(dodgeResult.baseUri);

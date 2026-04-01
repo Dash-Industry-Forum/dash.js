@@ -368,7 +368,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            scheduleWaitRandom: 50,
  *            maxIdLength: 32,
  *            queryParam: 'padding',
- *            paddingLength: 0
+ *            paddingLength: 0,
+ *            strictMode: 'representation'
  *          }
  * }
  */
@@ -563,6 +564,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Name of the query parameter appended to segment URLs to normalize their lengths.
  * @property {number} [paddingLength=0]
  * Target HTTP/1.1 wire size in bytes (URL + request headers) for Dodge requests.
+ * @property {false|'representation'|'manifest'} [strictMode='representation']
+ * Controls fallback behavior when defense info is not available. Note that it is risky to
+ * set strictMode to false; this allows representations that don't appear in the extended
+ * manifest to play undefended. For almost all use cases, a properly constructed extended
+ * manifest should not exclude any representations from the original MPD. Use with care.
+ * 
+ * 'representation': block undefended representations when an extended manifest is active
+ * 'manifest': block undefended representations and refuse to play vanilla MPDs (default)
+ * false: fall back to normal dash.js behavior on a per-representation basis
  */
 
 /**
@@ -1535,7 +1545,8 @@ function Settings() {
             scheduleWaitRandom: 50,
             maxIdLength: 32,
             queryParam: 'padding',
-            paddingLength: 0
+            paddingLength: 0,
+            strictMode: 'representation'
         }
     };
 

@@ -356,6 +356,14 @@ function DefenseRegistry() {
     }
 
     /**
+     * Return true if at least one extended manifest has been stored.
+     * @returns {boolean}
+     */
+    function hasContent() {
+        return manifestData.length > 0;
+    }
+
+    /**
      * Validate and store an extended manifest. Assigns a unique `manifestId`
      * and associates the extended manifest with the given `streamId`.
      * @param {Object} content - The parsed extended manifest JSON object.
@@ -410,6 +418,7 @@ function DefenseRegistry() {
     instance = {
         addExtendedManifest,
         getDefendedStreamInfo,
+        hasContent,
         reset,
         setup
     };

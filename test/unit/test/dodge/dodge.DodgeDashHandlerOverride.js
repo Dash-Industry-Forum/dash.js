@@ -1,6 +1,7 @@
 import DodgeDashHandlerOverride from '../../../../src/dodge/overrides/DodgeDashHandlerOverride.js';
 import DefenseRegistry from '../../../../src/dodge/DefenseRegistry.js';
 import Debug from '../../../../src/core/Debug.js';
+import Settings from '../../../../src/core/Settings.js';
 import URLUtils from '../../../../src/streaming/utils/URLUtils.js';
 import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 
@@ -235,12 +236,20 @@ describe('DodgeDashHandlerOverride', function () {
             expect(override.isLastSegmentRequested(rep, NaN)).to.be.true; // jshint ignore:line
         });
 
-        it('resetInitialSettings() clears state so subsequent getInitRequest() falls back to parent', function () {
+        it('resetInitialSettings() clears state; with strictMode=false, subsequent getInitRequest() falls back to parent', function () {
+            // Explicitly disable strict mode so fallback-to-parent behavior is exercised.
+            // (With the default strictMode='representation' and a loaded manifest, the
+            // override would block instead of falling back.)
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+
             override.resetInitialSettings();
             expect(mockParent.resetInitialSettings.calledOnce).to.be.true; // jshint ignore:line
             // defendedStreamInfo = null after reset, delegates to parent
             override.getInitRequest({}, rep);
             expect(mockParent.getInitRequest.calledOnce).to.be.true; // jshint ignore:line
+
+            settings.update({ dodge: { strictMode: 'representation' } });
         });
     });
 
@@ -340,6 +349,129 @@ describe('DodgeDashHandlerOverride', function () {
             override.updateDefendedStreamInfo(rep);
             const request = override.getNextSegmentRequest({}, rep);
             expect(request.queryParams.padding).to.be.undefined; // jshint ignore:line
+        });
+    });
+
+    // Strict mode
+
+    describe('strictMode = representation', function () {
+        let settings;
+
+        beforeEach(function () {
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
+
+        afterEach(function () {
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('with no extended manifest loaded, falls back to parent (hasContent() = false)', function () {
+            // Registry is empty, we should fall back
+            const result = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentInit: true });
+        });
+
+        it('with extended manifest loaded but unknown label, getInitRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getInitRequest({}, unknownRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getNextSegmentRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getNextSegmentRequest({}, unknownRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getSegmentRequestForTime returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getSegmentRequestForTime({}, unknownRep, 0);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.isLastSegmentRequested(unknownRep, NaN);
+            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded and known label, defense still works normally', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            const request = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+    });
+
+    describe('strictMode = manifest', function () {
+        let settings;
+
+        beforeEach(function () {
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'manifest' } });
+        });
+
+        afterEach(function () {
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('with extended manifest loaded but unknown label, getInitRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getInitRequest({}, unknownRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getNextSegmentRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getNextSegmentRequest({}, unknownRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getSegmentRequestForTime returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getSegmentRequestForTime({}, unknownRep, 0);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.isLastSegmentRequested(unknownRep, NaN);
+            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded and known label, defense still works normally', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            const request = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
         });
     });
 });
