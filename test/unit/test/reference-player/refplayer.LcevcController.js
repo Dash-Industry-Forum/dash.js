@@ -1,5 +1,9 @@
 /**
  * Tests for the Reference Player LcevcController.
+ *
+ * Covers the UI-side LCEVC lifecycle only:
+ * initialization for known LCEVC streams, decoder attachment,
+ * video/canvas visibility switching, and decoder/event-listener cleanup on stop.
  */
 
 import {expect} from 'chai';
