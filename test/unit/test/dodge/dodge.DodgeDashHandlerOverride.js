@@ -474,4 +474,74 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request).to.exist; // jshint ignore:line
         });
     });
+
+    // Text track disabling
+
+    describe('Text track disabling', function () {
+        let settings, textRep, unknownTextRep;
+
+        beforeEach(function () {
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'representation' } });
+
+            textRep = Object.assign({}, makeRepresentation(), {
+                mediaInfo: { type: 'text', streamInfo: { id: 'stream-1' } }
+            });
+
+            unknownTextRep = Object.assign({}, textRep, { id: 'unknown_text_label' });
+        });
+
+        afterEach(function () {
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('isTextTrackBlockedByDodge() returns false when no extended manifest loaded', function () {
+            override.updateDefendedStreamInfo(unknownTextRep);
+            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
+        });
+
+        it('isTextTrackBlockedByDodge() returns false for video rep with no defense in strict mode', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownVideoRep = Object.assign({}, rep, { id: 'unknown_video_label' });
+            override.updateDefendedStreamInfo(unknownVideoRep);
+            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
+        });
+
+        it('isTextTrackBlockedByDodge() returns true for text rep with no defense in strict mode', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(unknownTextRep);
+            expect(override.isTextTrackBlockedByDodge()).to.be.true; // jshint ignore:line
+        });
+
+        it('isTextTrackBlockedByDodge() returns false for text rep that is defended', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            // textRep.id is 'rep0', which is in the extended manifest
+            override.updateDefendedStreamInfo(textRep);
+            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
+        });
+
+        it('isTextTrackBlockedByDodge() returns false when strictMode is false', function () {
+            settings.update({ dodge: { strictMode: false } });
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(unknownTextRep);
+            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end)', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(unknownTextRep);
+            const result = override.isLastSegmentRequested(unknownTextRep, NaN);
+            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.true; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged)', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownVideoRep = Object.assign({}, rep, { id: 'unknown_video_label' });
+            override.updateDefendedStreamInfo(unknownVideoRep);
+            const result = override.isLastSegmentRequested(unknownVideoRep, NaN);
+            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.false; // jshint ignore:line
+        });
+    });
 });
