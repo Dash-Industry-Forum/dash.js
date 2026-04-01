@@ -141,6 +141,7 @@ function StreamProcessor(config) {
             eventBus,
             events: Events,
             mediaPlayerModel,
+            playbackController,
             segmentsController,
             settings,
             streamInfo,
@@ -416,6 +417,9 @@ function StreamProcessor(config) {
                     return;
                 }
                 // Init segment not in cache, send new request
+                if (dashHandler) {
+                    dashHandler.updateDefendedStreamInfo(rep);
+                }
                 const request = dashHandler ? dashHandler.getInitRequest(currentMediaInfo, rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);
@@ -588,6 +592,7 @@ function StreamProcessor(config) {
 
         if (dashHandler) {
             const representation = getRepresentation();
+            dashHandler.updateDefendedStreamInfo(representation);
 
             if (shouldUseExplicitTimeForRequest) {
                 request = dashHandler.getSegmentRequestForTime(currentMediaInfo, representation, bufferingTime);
