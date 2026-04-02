@@ -407,7 +407,7 @@ function DodgeHandler(config) {
         // Fire the primary event. Do not suppress it; it causes scheduling.
         if (primaryEvent.event === events.INIT_FRAGMENT_LOADED || primaryEvent.event === events.MEDIA_FRAGMENT_LOADED) {
             eventBus.trigger(primaryEvent.event,
-                { chunk: primaryEvent.chunk, suppress: false },
+                { chunk: primaryEvent.chunk, request: request, suppress: false },
                 { streamId: strInfo.id, mediaType: request.mediaType }
             );
 

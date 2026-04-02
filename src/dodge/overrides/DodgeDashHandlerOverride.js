@@ -260,6 +260,8 @@ function DodgeDashHandlerOverride(config) {
 
         if (_setRequestUrlWithPadding(request, representation.initialization, representation, replacements)) {
             request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
+            request.url = replaceIDForTemplate(request.url, representation.id);
+            request.url = unescapeDollarsInTemplate(request.url);
             return request;
         }
     }

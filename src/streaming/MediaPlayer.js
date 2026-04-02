@@ -2754,6 +2754,9 @@ function MediaPlayer() {
             if (detectedDodgeHandler.events) {
                 Events.extend(detectedDodgeHandler.events);
             }
+            if (detectedDodgeHandler.errors) {
+                Errors.extend(detectedDodgeHandler.errors);
+            }
             dodgeHandler = detectedDodgeHandler(context).create({
                 eventBus: eventBus,
                 events: Events,

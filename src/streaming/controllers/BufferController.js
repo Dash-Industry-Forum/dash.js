@@ -376,7 +376,7 @@ function BufferController(config) {
             return;
         }
 
-        _updateBufferLevel();
+        instance.updateBufferLevel();
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
@@ -777,7 +777,7 @@ function BufferController(config) {
 
     function _onPlaybackProgression() {
         if (!replacingBuffer && (type !== Constants.TEXT || textController.isTextEnabled())) {
-            _updateBufferLevel();
+            instance.updateBufferLevel();
         }
     }
 
@@ -891,6 +891,10 @@ function BufferController(config) {
         return length;
     }
 
+    function updateBufferLevel() {
+        _updateBufferLevel();
+    }
+
     function _updateBufferLevel() {
         if (playbackController) {
             let referenceTime = playbackController.getTime() || 0;
@@ -999,7 +1003,7 @@ function BufferController(config) {
     function clearBuffers(ranges) {
         return new Promise((resolve, reject) => {
             if (!ranges || !sourceBufferSink || ranges.length === 0) {
-                _updateBufferLevel();
+                instance.updateBufferLevel();
                 resolve();
                 return;
             }
@@ -1085,7 +1089,7 @@ function BufferController(config) {
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
-            _updateBufferLevel();
+            instance.updateBufferLevel();
         }
 
         if (e.unintended) {
@@ -1097,7 +1101,7 @@ function BufferController(config) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                _updateBufferLevel();
+                instance.updateBufferLevel();
             } else {
                 replacingBuffer = false;
             }
@@ -1352,6 +1356,7 @@ function BufferController(config) {
         onBufferCycleLoaded,
         onPaddingLoaded,
         reset,
+        updateBufferLevel,
         segmentRequestingCompleted,
         setIsBufferingCompleted,
         setMockBuffer,
