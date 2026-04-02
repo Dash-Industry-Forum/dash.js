@@ -181,6 +181,7 @@ function StreamProcessor(config) {
             abrController,
             adapter,
             bufferController,
+            dashHandler,
             dashMetrics,
             fragmentModel,
             mediaController,

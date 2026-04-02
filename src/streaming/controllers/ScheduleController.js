@@ -43,6 +43,7 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const bufferController = config.bufferController;
     const context = this.context;
+    const dashHandler = config.dashHandler;
     const dashMetrics = config.dashMetrics;
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
@@ -162,16 +163,17 @@ function ScheduleController(config) {
      */
     function _getNextFragment() {
         const currentRepresentation = representationController.getCurrentRepresentation();
+        const remainingInitCycles = dashHandler ? dashHandler.getRemainingInitCycles() : -1;
 
         // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
-            _initFragmentNeeded(currentRepresentation)
+        if (remainingInitCycles && (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack)) {
+            _initFragmentNeeded(currentRepresentation, remainingInitCycles)
         } else {
             _mediaFragmentNeeded()
         }
     }
 
-    function _initFragmentNeeded(currentRepresentation) {
+    function _initFragmentNeeded(currentRepresentation, remainingInitCycles) {
         if (switchTrack) {
             logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
             switchTrack = false;
@@ -184,6 +186,9 @@ function ScheduleController(config) {
         );
         shouldCheckPlaybackQuality = false;
         initSegmentRequired = false;
+        if (remainingInitCycles == 1) {
+            setLastInitializedRepresentationId(currentRepresentation.id);
+        }
     }
 
     function _mediaFragmentNeeded() {

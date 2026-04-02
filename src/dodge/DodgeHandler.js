@@ -411,18 +411,6 @@ function DodgeHandler(config) {
                 { streamId: strInfo.id, mediaType: request.mediaType }
             );
 
-            // Route to buffer controllers for mock buffer update after non-trailing
-            // buffer cycles. Trailing padding cycles are routed via onPaddingLoaded.
-            if (!isInit && request.buffer && !request.trail && streamController) {
-                streamController.getActiveStreamProcessors().forEach(sp => {
-                    if (sp.getType() === request.mediaType) {
-                        const bc = sp.getBufferController();
-                        if (bc && bc.onBufferCycleLoaded) {
-                            bc.onBufferCycleLoaded({ representation: request.representation, actualDuration: request.duration });
-                        }
-                    }
-                });
-            }
         } else {
             eventBus.trigger(primaryEvent.event,
                 {

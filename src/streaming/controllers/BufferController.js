@@ -397,6 +397,27 @@ function BufferController(config) {
             _adjustSeekTarget();
         }
 
+        // Compute actual buffer increment from trace and notify Dodge mock buffer.
+        if (e.trace && e.request && e.request.buffer && !e.request.trail &&
+                appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            const desiredDuration = appendedBytesInfo.representation.segmentDuration;
+            let actualDuration = 0;
+            if (e.trace.length >= 2) {
+                let idx = 1;
+                while (idx < e.trace.length) {
+                    const d = e.trace[idx] - e.trace[idx - 1];
+                    if (d > 0.0 && (isNaN(desiredDuration) || d < 2.0 * desiredDuration)) {
+                        actualDuration = d;
+                        break;
+                    }
+                    idx++;
+                }
+            }
+            if (actualDuration > 0) {
+                instance.onBufferCycleLoaded({ representation: appendedBytesInfo.representation, actualDuration });
+            }
+        }
+
         let suppressAppendedEvent = false;
         if (dischargeFragments) {
             if (dischargeFragments.indexOf(appendedBytesInfo) > 0) {
