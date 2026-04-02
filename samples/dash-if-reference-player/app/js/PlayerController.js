@@ -322,7 +322,9 @@ export class PlayerController extends EventEmitter {
             }
 
             // Index (playing) — from QUALITY_CHANGE_RENDERED event
-            const renderedRep = this._currentRenderedRep[type];
+            const renderedRep = type === 'video'
+                ? this._getCurrentCompositeVideoRepresentation()
+                : this._currentRenderedRep[type];
             if (renderedRep) {
                 const currentIdx = reps
                     ? reps.findIndex(r => r.id === renderedRep.id)
@@ -355,7 +357,9 @@ export class PlayerController extends EventEmitter {
 
             // Codec
             try {
-                const currentTrack = this.player.getCurrentTrackFor(type);
+                const currentTrack = type === 'video'
+                    ? this._getCurrentCompositeVideoRepresentation()?.mediaInfo
+                    : this.player.getCurrentTrackFor(type);
                 if (currentTrack && currentTrack.codec) {
                     metrics.codec = currentTrack.codec;
                 }
@@ -398,6 +402,18 @@ export class PlayerController extends EventEmitter {
         }
 
         return metrics;
+    }
+
+    /**
+     * Get the effective active video representation, including scalable selections.
+     * @returns {Representation|null}
+     */
+    _getCurrentCompositeVideoRepresentation() {
+        return this.player?.getActiveStream?.()
+            ?.getStreamProcessors?.()
+            ?.find((processor) => processor.getType() === 'video')
+            ?.getRepresentationController?.()
+            ?.getCurrentCompositeRepresentation?.() ?? null;
     }
 
     _calculateHTTPMetrics(type, dashMetrics) {

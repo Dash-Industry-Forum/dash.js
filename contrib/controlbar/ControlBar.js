@@ -975,6 +975,9 @@ export class ControlBar {
                 const settings = this.player.getSettings();
                 const autoSwitch = settings?.streaming?.abr?.autoSwitchBitrate?.[type] !== false;
                 const currentRep = this.player.getCurrentRepresentationForType(type);
+                const selectedRep = type === 'video'
+                    ? this._getCurrentCompositeVideoRepresentation() || currentRep
+                    : currentRep;
 
                 reps.forEach((rep, idx) => {
                     const bitrate = Math.round(rep.bandwidth / 1000);
@@ -983,7 +986,7 @@ export class ControlBar {
                         label += ` (${rep.width}x${rep.height})`;
                     }
 
-                    const isCurrent = !autoSwitch && currentRep && currentRep.id === rep.id;
+                    const isCurrent = !autoSwitch && selectedRep && selectedRep.id === rep.id;
                     const item = createElement('div', {
                         className: `cb-menu-item ${isCurrent ? 'cb-menu-item-selected' : ''}`,
                         textContent: label,
@@ -1124,6 +1127,18 @@ export class ControlBar {
         default:
             return value ? `${value}ch` : null;
         }
+    }
+
+    /**
+     * Get the effective active video representation, including scalable selections.
+     * @returns {Representation|null}
+     */
+    _getCurrentCompositeVideoRepresentation() {
+        return this.player?.getActiveStream?.()
+            ?.getStreamProcessors?.()
+            ?.find((processor) => processor.getType() === 'video')
+            ?.getRepresentationController?.()
+            ?.getCurrentCompositeRepresentation?.() ?? null;
     }
 
     _rebuildCaptionMenu() {
