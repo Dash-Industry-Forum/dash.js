@@ -40,8 +40,14 @@ import DodgeEvents from './events/DodgeEvents.js';
 import DodgeFetchLoaderOverride from './overrides/DodgeFetchLoaderOverride.js';
 import DodgeScheduleControllerOverride from './overrides/DodgeScheduleControllerOverride.js';
 import DodgeXHRLoaderOverride from './overrides/DodgeXHRLoaderOverride.js';
+import Constants from '../streaming/constants/Constants.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import EventBus from '../core/EventBus.js';
+
+// ABR rules that are compatible with Dodge's cycle-based download model.
+// All built-in rules not in these sets are disabled at module load time.
+const SUPPORTED_QUALITY_SWITCH_RULES = new Set(['bolaRule', 'throughputRule', 'insufficientBufferRule', 'switchHistoryRule', 'droppedFramesRule']);
+const SUPPORTED_ABANDON_FRAGMENT_RULES = new Set();
 
 /**
  * The main orchestrator for the Dodge module. Dodge is a framework that
@@ -108,6 +114,7 @@ function DodgeHandler(config) {
         mediaPlayer.extend('ScheduleController', DodgeScheduleControllerOverride, true);
         mediaPlayer.extend('FetchLoader', DodgeFetchLoaderOverride, true);
         mediaPlayer.extend('XHRLoader', DodgeXHRLoaderOverride, true);
+        _applyAbrRules();
     }
 
     /**
@@ -499,6 +506,26 @@ function DodgeHandler(config) {
         chunk.representation = request.representation;
         chunk.endFragment = endFragment;
         return chunk;
+    }
+
+    function _applyAbrRules() {
+        const rules = {};
+
+        Object.values(Constants.QUALITY_SWITCH_RULES).forEach(name => {
+            const key = name.charAt(0).toLowerCase() + name.slice(1);
+            if (!SUPPORTED_QUALITY_SWITCH_RULES.has(key)) {
+                rules[key] = { active: false };
+            }
+        });
+
+        Object.values(Constants.ABANDON_FRAGMENT_RULES).forEach(name => {
+            const key = name.charAt(0).toLowerCase() + name.slice(1);
+            if (!SUPPORTED_ABANDON_FRAGMENT_RULES.has(key)) {
+                rules[key] = { active: false };
+            }
+        });
+
+        mediaPlayer.updateSettings({ streaming: { abr: { rules } } });
     }
 
     instance = {

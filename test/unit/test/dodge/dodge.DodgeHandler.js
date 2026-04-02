@@ -339,6 +339,53 @@ describe('DodgeHandler', function () {
         });
     });
 
+    // ABR rule disabling in registerExtensions
+
+    describe('ABR rule disabling in registerExtensions', function () {
+        let handler, updateSettingsSpy;
+
+        beforeEach(function () {
+            const eventBus = EventBus(context).getInstance();
+            const settings = Settings(context).getInstance();
+            updateSettingsSpy = sinon.spy();
+
+            handler = DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: updateSettingsSpy }
+            });
+        });
+
+        afterEach(function () {
+            handler.reset();
+        });
+
+        it('calls updateSettings once', function () {
+            handler.registerExtensions();
+            expect(updateSettingsSpy.calledOnce).to.be.true; // jshint ignore:line
+        });
+
+        it('disables l2ARule, loLPRule, and abandonRequestsRule', function () {
+            handler.registerExtensions();
+            const rules = updateSettingsSpy.firstCall.args[0].streaming.abr.rules;
+            expect(rules.l2ARule).to.deep.equal({ active: false });
+            expect(rules.loLPRule).to.deep.equal({ active: false });
+            expect(rules.abandonRequestsRule).to.deep.equal({ active: false });
+        });
+
+        it('does not disable supported rules', function () {
+            handler.registerExtensions();
+            const rules = updateSettingsSpy.firstCall.args[0].streaming.abr.rules;
+            expect(rules.bolaRule).to.be.undefined; // jshint ignore:line
+            expect(rules.throughputRule).to.be.undefined; // jshint ignore:line
+            expect(rules.insufficientBufferRule).to.be.undefined; // jshint ignore:line
+            expect(rules.switchHistoryRule).to.be.undefined; // jshint ignore:line
+            expect(rules.droppedFramesRule).to.be.undefined; // jshint ignore:line
+        });
+    });
+
     // Scheduling logic
 
     describe('Scheduling logic, _onPartialSegment and _onPaddingLoaded', function () {
