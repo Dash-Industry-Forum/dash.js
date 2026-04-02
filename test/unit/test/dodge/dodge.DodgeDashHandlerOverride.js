@@ -545,6 +545,55 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Data-only streams (self-initialized)
+
+    describe('Data-only streams (self-initialized)', function () {
+        const dataOnlyManifest = {
+            start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+            streams: [{
+                label: 'rep0',
+                data: [
+                    { index: 0, buffer: false }, // cycle 0, non-padding
+                    { index: 1, buffer: true }, // cycle 1, last non-padding, maxNoPad = 1
+                    { index: 2, padding: true }, // cycle 2, trailing padding
+                ]
+            }]
+        };
+
+        beforeEach(function () {
+            defenseController.addExtendedManifest(dataOnlyManifest);
+            override.updateDefendedStreamInfo(rep);
+        });
+
+        it('getRemainingInitCycles() returns 0 (scheduler skips init entirely)', function () {
+            expect(override.getRemainingInitCycles()).to.equal(0);
+        });
+
+        it('getInitRequest() returns null without calling parent', function () {
+            const result = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest() returns a request object normally', function () {
+            const result = override.getNextSegmentRequest({}, rep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.exist; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns false while cycles remain', function () {
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.false; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns true after all cycles consumed', function () {
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.getNextSegmentRequest({}, rep); // cycle 1
+            override.getNextSegmentRequest({}, rep); // cycle 2 (padding)
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.true; // jshint ignore:line
+        });
+    });
+
     // Init-only streams (non-fragmented text)
 
     describe('Init-only streams (non-fragmented text)', function () {

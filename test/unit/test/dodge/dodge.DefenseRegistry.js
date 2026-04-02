@@ -64,18 +64,34 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
-        it('stream missing init, false', function () {
+        it('stream missing init (data-only stream), true', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
                 streams: [{ label: 'a', data: [{ index: 0, buffer: true }] }]
             };
-            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
         });
 
-        it('stream missing data key, false', function () {
+        it('stream missing data (init-only stream), true', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
                 streams: [{ label: 'a', init: [{}] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('stream with both init and data absent, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a' }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('stream with empty init and empty data, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [], data: [] }]
             };
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });

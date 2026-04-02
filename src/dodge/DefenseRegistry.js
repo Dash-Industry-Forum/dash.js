@@ -270,20 +270,38 @@ function isValidExtendedManifest(manifest, logger) {
             return false;
         }
 
-        // Defended stream info MUST contain at least one init cycle.
-        if (!stream['init'] || stream['init'].length == 0) {
+        // init is optional for self-initialized streams (no init segment needed)
+        // data is optional for init-only streams (e.g. non-fragmented text)
+        // At least one of init or data must be non-empty.
+        if (stream['init'] !== undefined && stream['init'] !== null && !Array.isArray(stream['init'])) {
             if (logger) {
-                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing init cycles');
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init is not an array');
+            }
+            return false;
+        }
+        if (stream['data'] !== undefined && stream['data'] !== null && !Array.isArray(stream['data'])) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data is not an array');
             }
             return false;
         }
 
-        // data may be empty for init-only streams (e.g. non-fragmented text)
-        if (!stream['data'] || !Array.isArray(stream['data'])) {
+        const hasInit = Array.isArray(stream['init']) && stream['init'].length > 0;
+        const hasData = Array.isArray(stream['data']) && stream['data'].length > 0;
+        if (!hasInit && !hasData) {
             if (logger) {
-                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing data array');
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', stream has no init or data cycles');
             }
             return false;
+        }
+
+        // Normalize absent arrays so downstream code always sees arrays.
+        if (!stream['init']) {
+            stream['init'] = [];
+        }
+        
+        if (!stream['data']) {
+            stream['data'] = [];
         }
 
         // [check init cycles]
@@ -308,7 +326,7 @@ function isValidExtendedManifest(manifest, logger) {
  * @returns {number}
  */
 export function getCycleIndexBySegmentIndex(stream, segmentIndex) {
-    const data = stream['data'];
+    const data = stream['data'] || [];
 
     for (let i = 0; i < data.length; i++) {
         if (segmentIndex == data[i].index && !data[i].padding) {
