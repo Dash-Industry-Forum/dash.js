@@ -278,10 +278,10 @@ function isValidExtendedManifest(manifest, logger) {
             return false;
         }
 
-        // Defended stream info MUST contain at least one data cycle.
-        if (!stream['data'] || stream['data'].length == 0) {
+        // data may be empty for init-only streams (e.g. non-fragmented text)
+        if (!stream['data'] || !Array.isArray(stream['data'])) {
             if (logger) {
-                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing data cycles');
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', missing data array');
             }
             return false;
         }

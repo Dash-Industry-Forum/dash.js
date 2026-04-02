@@ -72,12 +72,20 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
-        it('stream missing data, false', function () {
+        it('stream missing data key, false', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
                 streams: [{ label: 'a', init: [{}] }]
             };
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('stream with empty data array (init-only stream), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-499' }], data: [] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
         });
 
         it('init cycle with non-string range, false', function () {

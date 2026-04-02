@@ -393,6 +393,12 @@ function DodgeDashHandlerOverride(config) {
             return _parentGetNextSegmentRequest.call(parent, mediaInfo, representation);
         }
 
+        // Init-only defended stream (e.g. non-fragmented text): no data cycles to serve.
+        if (defendedStreamInfo['data'].length === 0) {
+            mediaHasFinished = true;
+            return null;
+        }
+
         // Advance to next cycle.
         const cycleIndex = lastCycleIndex + 1;
         const cycle = defendedStreamInfo['data'][cycleIndex];
@@ -446,6 +452,11 @@ function DodgeDashHandlerOverride(config) {
             }
             // Fall back to vanilla DashHandler.
             return _parentIsLastSegmentRequested.call(parent, representation, bufferingTime);
+        }
+
+        // Init-only defended stream: finished once getNextSegmentRequest has been called.
+        if (defendedStreamInfo['data'].length === 0) {
+            return mediaHasFinished;
         }
 
         if (!representation || !lastSegment || lastCycleIndex < 0) {

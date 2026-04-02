@@ -544,4 +544,48 @@ describe('DodgeDashHandlerOverride', function () {
             expect(result).to.be.false; // jshint ignore:line
         });
     });
+
+    // Init-only streams (non-fragmented text)
+
+    describe('Init-only streams (non-fragmented text)', function () {
+        const initOnlyManifest = {
+            start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+            streams: [{
+                label: 'rep0',
+                init: [{ range: '0-499' }, { range: '500-999', buffer: true }],
+                data: []
+            }]
+        };
+
+        beforeEach(function () {
+            defenseController.addExtendedManifest(initOnlyManifest);
+            override.updateDefendedStreamInfo(rep);
+        });
+
+        it('getInitRequest() advances through init cycles normally', function () {
+            const r1 = override.getInitRequest({}, rep);
+            expect(r1).to.exist; // jshint ignore:line
+            expect(r1.full).to.be.false; // jshint ignore:line
+            const r2 = override.getInitRequest({}, rep);
+            expect(r2).to.exist; // jshint ignore:line
+            expect(r2.full).to.be.true; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest() returns null without calling parent', function () {
+            const result = override.getNextSegmentRequest({}, rep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns false before getNextSegmentRequest() is called', function () {
+            const result = override.isLastSegmentRequested(rep, NaN);
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested() returns true after getNextSegmentRequest() sets mediaHasFinished', function () {
+            override.getNextSegmentRequest({}, rep);
+            const result = override.isLastSegmentRequested(rep, NaN);
+            expect(result).to.be.true; // jshint ignore:line
+        });
+    });
 });
