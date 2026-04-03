@@ -30,7 +30,7 @@ jobs:
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
             -   name: Run build
-                run: npm run build
+                run: npm run build:dist
             -   name: Find and Replace
                 if: inputs.deploy_type == 'samples'
                 uses: jacobtomlinson/gha-find-replace@v2
