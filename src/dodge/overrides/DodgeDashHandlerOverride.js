@@ -452,6 +452,10 @@ function DodgeDashHandlerOverride(config) {
      */
     function getNextSegmentRequestIdempotent(mediaInfo, representation) {
         if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
+            if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
+                return null;
+            }
+            // Fall back to vanilla DashHandler.
             return _parentGetNextSegmentRequestIdempotent.call(parent, mediaInfo, representation);
         }
 

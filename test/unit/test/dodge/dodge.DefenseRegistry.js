@@ -96,6 +96,14 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
+        it('stream with empty init array (self-initializing stream), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [], data: [{ index: 0, range: '0-999' }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
         it('stream with empty data array (init-only stream), true', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
@@ -120,6 +128,30 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
+        it('init cycle buffer flag on non-last cycle, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: true }, { range: '100-199' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle buffer flag on last cycle only, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99' }, { range: '100-199', buffer: true }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycles with no buffer flags at all, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99' }, { range: '100-199' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
         it('data cycle with negative index, false', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
@@ -141,6 +173,102 @@ describe('DefenseRegistry', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
                 streams: [{ label: 'a', init: [{}], data: [{ index: 0, range: '0-99' }, { index: 0, range: '200-299', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with non-integer index, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 1.5, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with string integer index, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: '0', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with non-numeric string index, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 'abc', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with non-string range, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, range: 123, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with range start > end, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, range: '500-100', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with valid range, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, range: '0-999', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with padding = true, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: true }, { index: 0, padding: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with padding = false, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, padding: false, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with padding string "true", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: true }, { index: 0, padding: 'true' }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with padding string "false", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, padding: 'false', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with non-boolean padding, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, padding: 1, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with non-parseable string padding, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, padding: 'yes', buffer: true }] }]
             };
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });

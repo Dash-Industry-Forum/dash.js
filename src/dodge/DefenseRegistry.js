@@ -115,12 +115,35 @@ function checkDataCycles(stream, logger) {
     let maxNoPad = -1; // maximum non-padding cycle index found
 
     for (let i = 0; i < stream['data'].length; i++) {
-        const index = stream['data'][i].index;
         const range = stream['data'][i].range;
-        const padding = stream['data'][i].padding;
+        let padding = stream['data'][i].padding;
 
-        // Every data cycle MUST have a non-negative segment index.
-        if (isNaN(index) || index < 0) {
+        // padding MUST be a boolean (or a string parseable to boolean), or absent.
+        if (padding !== undefined && padding !== null) {
+            if (typeof padding === 'string') {
+                if (padding === 'true') {
+                    padding = true;
+                } else if (padding === 'false') {
+                    padding = false;
+                } else {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid padding value');
+                    }
+                    return false;
+                }
+                stream['data'][i].padding = padding;
+            } else if (typeof padding !== 'boolean') {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid padding value');
+                }
+                return false;
+            }
+        }
+
+        // Every data cycle MUST have a non-negative integer segment index.
+        // Strings are accepted if they parse to a non-negative integer.
+        const idx = Number(stream['data'][i].index);
+        if (isNaN(idx) || idx < 0 || !Number.isInteger(idx)) {
             if (logger) {
                 logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid index');
             }
@@ -135,16 +158,16 @@ function checkDataCycles(stream, logger) {
         //
         // Padding cycles may have any index; they have no requirements.
         if (!padding) {
-            if (maxIndex >= 0 && ((rangeEnd == -1 && index <= maxIndex) || (rangeEnd >= 0 && index < maxIndex))) {
+            if (maxIndex >= 0 && ((rangeEnd == -1 && idx <= maxIndex) || (rangeEnd >= 0 && idx < maxIndex))) {
                 if (logger) {
                     logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', non-sequential index');
                 }
                 return false;
             }
 
-            if (index > maxIndex) {
+            if (idx > maxIndex) {
                 rangeEnd = -1;
-                maxIndex = index;
+                maxIndex = idx;
             }
 
             maxNoPad = i;
@@ -192,7 +215,7 @@ function checkDataCycles(stream, logger) {
             // range MUST NOT skip bytes. Overlap (rs <= rangeEnd) is permitted.
             if (rangeEnd >= 0 && rs > rangeEnd + 1) {
                 if (logger) {
-                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', partial with non-sequential range ' + rs + '-' + re + ' (segment ' + index + '), rangeEnd is ' + rangeEnd);
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', partial with non-sequential range ' + rs + '-' + re + ' (segment ' + idx + '), rangeEnd is ' + rangeEnd);
                 }
                 return false;
             }

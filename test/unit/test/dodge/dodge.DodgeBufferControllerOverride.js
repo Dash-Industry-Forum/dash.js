@@ -85,6 +85,11 @@ describe('DodgeBufferControllerOverride', function () {
             expect(mockParent.setMockBuffer.lastCall.args[0]).to.equal(8);
         });
 
+        it('trailing padding cycle where pending real segments were flushed (e.buffer = false due to secondary events): mock buffer is NOT incremented', function () {
+            override.onPaddingLoaded({ trail: true, buffer: false, representation: { segmentDuration: 4 } });
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+        });
+
         it('e.trail = false with non-zero lastTimeSinceStreamEnd, resets mockBuffer to 0', function () {
             // Build up trailing state via updateBufferLevel
             dashHandler.getIsTrailing.returns(true);

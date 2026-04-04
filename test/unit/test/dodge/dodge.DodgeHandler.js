@@ -481,5 +481,221 @@ describe('DodgeHandler', function () {
             eventBus.trigger(Events.PADDING_LOADED, e, { streamId: 'stream-1', mediaType: 'video' });
             expect(onPaddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
         });
+
+        it('vanilla request: startScheduleTimer is never called', function () {
+            // A vanilla FRAGMENT_LOADING_COMPLETED request has full = undefined and
+            // padding = undefined. DodgeHandler must pass it through without triggering
+            // random walk scheduling.
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+                sender: { context: 'test' },
+                request: {
+                    full: undefined,
+                    padding: undefined,
+                    type: 'MediaSegment',
+                    mediaType: 'video',
+                    representation: {
+                        id: 'rep0',
+                        mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                    },
+                    isInitializationRequest: () => false,
+                },
+                response: new ArrayBuffer(8),
+                error: null,
+            }, { streamId: 'stream-1' });
+
+            expect(startTimerSpy.called).to.be.false; // jshint ignore:line
+        });
+
+        it('INIT_FRAGMENT_PARTIAL: startScheduleTimer called, quality check disabled', function () {
+            // Init partial cycles (non-buffer init downloads) are events emitted
+            // by DodgeHandler when full = false on an init segment. _onPartialSegment
+            // is registered for INIT_FRAGMENT_PARTIAL just as it is for
+            // MEDIA_FRAGMENT_PARTIAL, and must disable quality checks.
+            eventBus.trigger(Events.INIT_FRAGMENT_PARTIAL,
+                { index: NaN, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                { streamId: 'stream-1', mediaType: 'video' }
+            );
+            expect(startTimerSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(setQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
+        });
+
+        it('INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge', function () {
+            // When the last init cycle fires (full = true, buffer = true),
+            // DodgeHandler emits INIT_FRAGMENT_LOADED, not INIT_FRAGMENT_PARTIAL.
+            // _onPartialSegment is not registered for INIT_FRAGMENT_LOADED, so
+            // _scheduleAll must not be called; the vanilla scheduler is used.
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+                sender: { context: 'test' },
+                request: {
+                    full: true,
+                    buffer: true,
+                    padding: false,
+                    trail: false,
+                    index: NaN,
+                    mediaType: 'video',
+                    quality: 0,
+                    duration: 0,
+                    startTime: 0,
+                    mediaStartTime: 0,
+                    originalRange: null,
+                    range: null,
+                    bandwidth: 1000,
+                    adaptationIndex: 0,
+                    timescale: 1,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    availabilityTimeComplete: true,
+                    wallStartTime: 0,
+                    replacementNumber: 0,
+                    replacementTime: 0,
+                    representation: {
+                        id: 'rep0',
+                        bandwidth: 1000,
+                        adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                        mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                    },
+                    isInitializationRequest: () => true,
+                },
+                response: new ArrayBuffer(8),
+                error: null,
+            }, { streamId: 'stream-1' });
+
+            expect(startTimerSpy.called).to.be.false; // jshint ignore:line
+            expect(setQualitySpy.called).to.be.false; // jshint ignore:line
+        });
+
+        it('MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge', function () {
+            // When a full cycle with buffer completes (full = true, buffer = true),
+            // DodgeHandler emits MEDIA_FRAGMENT_LOADED, not MEDIA_FRAGMENT_PARTIAL.
+            // _onPartialSegment is not registered for MEDIA_FRAGMENT_LOADED, so
+            // _scheduleAll must not be called; the vanilla scheduler is used.
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+                sender: { context: 'test' },
+                request: {
+                    full: true,
+                    buffer: true,
+                    padding: false,
+                    trail: false,
+                    index: 0,
+                    mediaType: 'video',
+                    type: 'MediaSegment',
+                    quality: 0,
+                    duration: 4,
+                    startTime: 0,
+                    mediaStartTime: 0,
+                    originalRange: null,
+                    range: null,
+                    bandwidth: 1000,
+                    adaptationIndex: 0,
+                    timescale: 1,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    availabilityTimeComplete: true,
+                    wallStartTime: 0,
+                    replacementNumber: 0,
+                    replacementTime: 0,
+                    representation: {
+                        id: 'rep0',
+                        bandwidth: 1000,
+                        adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                        mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                    },
+                    isInitializationRequest: () => false,
+                },
+                response: new ArrayBuffer(8),
+                error: null,
+            }, { streamId: 'stream-1' });
+
+            expect(startTimerSpy.called).to.be.false; // jshint ignore:line
+            expect(setQualitySpy.called).to.be.false; // jshint ignore:line
+        });
+    });
+
+    // Random walk scheduling
+
+    describe('Random walk scheduling, _getScheduleWait and _scheduleAll', function () {
+        let handler, eventBus, settings;
+
+        function makeHandler(streamProcessors) {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+
+            handler = DodgeHandler(context).create({
+                eventBus: eventBus,
+                events: Events,
+                settings: settings,
+                streamController: { getActiveStreamProcessors: () => streamProcessors },
+                mediaPlayer: { extend: () => {} }
+            });
+            handler.registerEvents();
+        }
+
+        afterEach(function () {
+            handler.reset();
+        });
+
+        it('delay passed to startScheduleTimer is within [scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom]', function () {
+            const timerSpy = sinon.spy();
+            makeHandler([{
+                getScheduleController: () => ({ startScheduleTimer: timerSpy, setShouldCheckPlaybackQuality: sinon.spy() }),
+                getType: () => 'video',
+                getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+            }]);
+
+            settings.update({ dodge: { scheduleWaitBase: 100, scheduleWaitRandom: 50 } });
+            eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                { index: 0, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                { streamId: 'stream-1', mediaType: 'video' }
+            );
+
+            const delay = timerSpy.firstCall.args[0];
+            expect(delay).to.be.at.least(100);
+            expect(delay).to.be.at.most(150);
+        });
+
+        it('with scheduleWaitRandom = 0, delay is always exactly scheduleWaitBase', function () {
+            const timerSpy = sinon.spy();
+            makeHandler([{
+                getScheduleController: () => ({ startScheduleTimer: timerSpy, setShouldCheckPlaybackQuality: sinon.spy() }),
+                getType: () => 'video',
+                getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+            }]);
+
+            settings.update({ dodge: { scheduleWaitBase: 200, scheduleWaitRandom: 0 } });
+            for (let i = 0; i < 5; i++) {
+                timerSpy.resetHistory();
+                eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                    { index: i, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                    { streamId: 'stream-1', mediaType: 'video' }
+                );
+                expect(timerSpy.firstCall.args[0]).to.equal(200);
+            }
+        });
+
+        it('_scheduleAll calls startScheduleTimer on all active stream processors', function () {
+            const timerSpy1 = sinon.spy();
+            const timerSpy2 = sinon.spy();
+
+            makeHandler([
+                {
+                    getScheduleController: () => ({ startScheduleTimer: timerSpy1, setShouldCheckPlaybackQuality: sinon.spy() }),
+                    getType: () => 'video',
+                    getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+                },
+                {
+                    getScheduleController: () => ({ startScheduleTimer: timerSpy2, setShouldCheckPlaybackQuality: sinon.spy() }),
+                    getType: () => 'audio',
+                    getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+                },
+            ]);
+
+            eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                { index: 0, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                { streamId: 'stream-1', mediaType: 'video' }
+            );
+
+            expect(timerSpy1.calledOnce).to.be.true; // jshint ignore:line
+            expect(timerSpy2.calledOnce).to.be.true; // jshint ignore:line
+        });
     });
 });

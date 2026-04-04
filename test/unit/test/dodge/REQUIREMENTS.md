@@ -1,0 +1,582 @@
+# Dodge Unit Test Requirements
+
+This document maps critical defense requirements to the unit tests that verify them.
+
+---
+
+## 1. ABR Rule Management
+
+### R1.1 - Unsupported ABR rules are disabled at module load time
+
+`registerExtensions()` calls `mediaPlayer.updateSettings()` once, disabling every built-in rule that is not in the `SUPPORTED_QUALITY_SWITCH_RULES` set (`l2ARule`, `loLPRule`) and every abandon fragment rule (`abandonRequestsRule`). Supported rules (`bolaRule`, `throughputRule`, `insufficientBufferRule`, `switchHistoryRule`, `droppedFramesRule`) are left untouched.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | ABR rule disabling in registerExtensions | calls updateSettings once |
+| `dodge.DodgeHandler.js` | ABR rule disabling in registerExtensions | disables l2ARule, loLPRule, and abandonRequestsRule |
+| `dodge.DodgeHandler.js` | ABR rule disabling in registerExtensions | does not disable supported rules |
+
+### R1.2 - ABR quality check is enabled only at buffer events; it is disabled during all other downloads
+
+After each partial segment download (init or data), `_scheduleAll(false, delay)` is called - quality check disabled. After a cycle with the buffer flag, `_scheduleAll(true, delay)` is called - quality check enabled (for PADDING_LOADED buffer events only). When a cycle that requests a full segment results in INIT/MEDIA_FRAGMENT_LOADED, the vanilla scheduler resumes, and Dodge does not call `_scheduleAll`. Vanilla fragment loads bypass `_scheduleAll` entirely.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | MEDIA_FRAGMENT_PARTIAL: startScheduleTimer called, quality check disabled |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | INIT_FRAGMENT_PARTIAL: startScheduleTimer called, quality check disabled |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED with buffer flag: startScheduleTimer called, quality check enabled |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED without buffer flag: startScheduleTimer called, quality check disabled |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | last init cycle (INIT_FRAGMENT_LOADED): startScheduleTimer not called by Dodge |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | full Dodge media segment (MEDIA_FRAGMENT_LOADED): startScheduleTimer not called by Dodge |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | vanilla request: startScheduleTimer is never called |
+
+---
+
+## 2. Cycle-Based Downloading
+
+### R2.1 - Init cycles are downloaded in sequence with correct flags
+
+Each call to `getInitRequest()` advances `lastInitIndex` and sets `full = false, buffer = false` until the last init cycle, which sets `full = true, buffer = true`. Returns `null` without calling the parent for data-only (self-initialized) streams.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getInitRequest() does not call parent, returns a request object |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getInitRequest() sets full = false and buffer = false when more init cycles remain |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getInitRequest() sets full = true and buffer = true on the last init cycle |
+| `dodge.DodgeDashHandlerOverride.js` | Init-only streams (non-fragmented text) | getInitRequest() advances through init cycles normally |
+| `dodge.DodgeDashHandlerOverride.js` | Data-only streams (self-initialized) | getInitRequest() returns null without calling parent |
+
+### R2.2 - Data cycles are downloaded in sequence with correct flags
+
+Each call to `getNextSegmentRequest()` advances `lastCycleIndex` and reflects the cycle's `buffer`, `padding`, and `trail` fields on the returned request. `getSegmentRequestForTime()` also returns cycle requests for the matching segment.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() does not call parent, returns a request for cycle 0 segment |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a cycle without buffer, sets buffer = false on the request |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a cycle with buffer flag, sets buffer = true on the request |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a cycle with padding flag, sets padding = true on the request |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a trailing padding cycle sets trail = true |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getSegmentRequestForTime() in normal (non-trailing) state returns cycle request |
+
+### R2.3 - Init-only (non-fragmented text) streams work correctly
+
+Streams with no data array: `getNextSegmentRequest()` returns `null` without calling the parent and sets `mediaHasFinished = true`; `isLastSegmentRequested()` reflects that.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Init-only streams (non-fragmented text) | getNextSegmentRequest() returns null without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Init-only streams (non-fragmented text) | isLastSegmentRequested() returns false before getNextSegmentRequest() is called |
+| `dodge.DodgeDashHandlerOverride.js` | Init-only streams (non-fragmented text) | isLastSegmentRequested() returns true after getNextSegmentRequest() sets mediaHasFinished |
+
+### R2.4 - Data-only (self-initialized) streams work correctly
+
+Streams with no init array: `getRemainingInitCycles()` returns 0 so the scheduler skips init; `getNextSegmentRequest()` and `isLastSegmentRequested()` behave normally.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Data-only streams (self-initialized) | getRemainingInitCycles() returns 0 (scheduler skips init entirely) |
+| `dodge.DodgeDashHandlerOverride.js` | Data-only streams (self-initialized) | getNextSegmentRequest() returns a request object normally |
+| `dodge.DodgeDashHandlerOverride.js` | Data-only streams (self-initialized) | isLastSegmentRequested() returns false while cycles remain |
+| `dodge.DodgeDashHandlerOverride.js` | Data-only streams (self-initialized) | isLastSegmentRequested() returns true after all cycles consumed |
+
+### R2.5 - All request methods delegate to the parent when no defense is active
+
+When no extended manifest is loaded and strict mode does not apply, every request-generation method calls through to the parent DashHandler and returns its result. `getIsTrailing()` returns `false`.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | getInitRequest() with null representation, delegates to parent |
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | getInitRequest() with representation but no defended stream info, calls parent and returns its result |
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | getNextSegmentRequest() with no defended stream info, calls parent and returns its result |
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | getSegmentRequestForTime() with no defended stream info, calls parent and returns its result |
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | isLastSegmentRequested() with no defended stream info, calls parent and returns its result |
+| `dodge.DodgeDashHandlerOverride.js` | Fallback with no extended manifest | getIsTrailing() with no defended stream info, returns false |
+
+### R2.6 - `getNextSegmentRequestIdempotent` suppresses CMCD `nor`/`nrr` during defended playback
+
+`DodgeDashHandlerOverride` overrides `getNextSegmentRequestIdempotent` to return `null` during defended playback. This function is called by `StreamProcessor.probeNextRequest()` -> `CmcdModel._probeNextRequest()` to populate the CMCD `nor` (Next Object Request) and `nrr` (Next Range Request) fields. Advertising the next cycle's URL or byte range is not desirable during defended playback. Returning `null` causes `CmcdModel` to omit both fields. Falls back to the parent when no extended manifest is active.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | with no defended stream info, delegates to parent |
+| `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | with defended stream info, returns null to suppress CMCD nor/nrr leak |
+
+### R2.7 - `getLastSegment()` returns the override's segment during defended playback
+
+The parent DashHandler's `lastSegment` is never updated during defended playback (the override's `getNextSegmentRequest` updates only the override's closure variable). Without this override, callers like `AbrController` and `StreamProcessor._handleDifferentSwitchTypes` receive `null`. The override's `getLastSegment()` returns the most recent non-padding segment from the cycle sequence.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | getLastSegment during defended playback | before any cycles consumed, returns null |
+| `dodge.DodgeDashHandlerOverride.js` | getLastSegment during defended playback | after non-padding cycle, returns that cycle's segment |
+| `dodge.DodgeDashHandlerOverride.js` | getLastSegment during defended playback | after padding cycle, returns the last non-padding segment |
+
+### R2.8 - Defense state management
+
+`updateDefendedStreamInfo()` looks up the representation's ID in the defense registry. Returns `true` when found. `resetInitialSettings()` clears override state and delegates to the parent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | updateDefendedStreamInfo() returns true when stream is found |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | resetInitialSettings() clears state; with strictMode = false, subsequent getInitRequest() falls back to parent |
+
+---
+
+## 3. Media Type Coverage
+
+### R3.1 - Video streams
+
+All core cycle tests use video representations, implicitly covering the video media type throughout the test suite. No additional tests here.
+
+### R3.2 - Audio streams
+
+Defended audio streams behave identically to video across all request generation functions. When no extended manifest is loaded, they fall back to the parent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | defended audio stream: getNextSegmentRequest() returns cycle request without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | defended audio stream: isLastSegmentRequested() returns false while cycles remain |
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | defended audio stream: isLastSegmentRequested() returns true after all cycles consumed |
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | defended audio stream: getInitRequest() returns cycle request without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | audio stream with no defended stream info (no extended manifest loaded): getNextSegmentRequest() delegates to parent |
+| `dodge.DodgeDashHandlerOverride.js` | Audio streams | audio stream with no defended stream info (no extended manifest loaded): getInitRequest() delegates to parent |
+
+### R3.3 - Fragmented text streams
+
+Defended fragmented text streams (with both init and data cycles) behave identically to video.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | defended fragmented text stream: getNextSegmentRequest() returns cycle request without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | defended fragmented text stream: isLastSegmentRequested() returns false while cycles remain |
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | defended fragmented text stream: isLastSegmentRequested() returns true after all cycles consumed |
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | defended fragmented text stream: getInitRequest() returns cycle request without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | fragmented text stream with no defended stream info (no extended manifest): getNextSegmentRequest() delegates to parent |
+| `dodge.DodgeDashHandlerOverride.js` | Fragmented text streams | fragmented text stream with no defended stream info (no extended manifest): getInitRequest() delegates to parent |
+
+### R3.4 - Non-fragmented text streams (init-only)
+
+Covered by R2.3 above.
+
+### R3.5 - Self-initialized streams (data-only, no init segment)
+
+Covered by R2.4 above.
+
+### R3.6 - Undefended text tracks in strict mode
+
+`isTextTrackBlockedByDodge()` returns `true` only when strict mode is active, an extended manifest is loaded, and the representation is a text track with no defended stream info. When a text track is blocked, `isLastSegmentRequested()` returns `true` (graceful end) rather than stalling, preventing undefended subtitles from blocking playback.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false when no extended manifest loaded |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false for video rep with no defense in strict mode |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns true for text rep with no defense in strict mode |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false for text rep that is defended |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false when strictMode is false |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end) |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged) |
+
+---
+
+## 4. Trailing Phase
+
+### R4.1 - No spurious seeks during trailing
+
+Two complementary mechanisms prevent spurious seeks during the trailing phase:
+
+1. **`DodgeGapControllerOverride.shouldJumpGap`** returns `false` when trailing is active, preventing GapController from seeking to stream end. This is the primary prevention mechanism.
+2. **`DodgeDashHandlerOverride.getSegmentRequestForTime`** intercepts any seek that does reach it (time within one segment duration of stream end, with `getTimeSinceStreamEnd() > 0`) and routes to `getNextSegmentRequest()` instead. This is a defense-in-depth fallback.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | during trailing: returns false (suppresses gap jump to avoid spurious seek) |
+| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | not trailing: returns true (gap jump proceeds normally) |
+| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | dashHandler absent: returns true (jumping unaffected) |
+| `dodge.DodgeDashHandlerOverride.js` | getSegmentRequestForTime during trailing phase | seek near stream end during trailing returns next padding cycle |
+
+### R4.2 - Segment downloading is not marked complete during trailing
+
+`isLastSegmentRequested()` returns `false` while padding cycles remain, preventing the player from declaring the stream finished prematurely.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | isLastSegmentRequested() returns false when cycles remain |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | isLastSegmentRequested() returns true when lastCycleIndex reaches the last cycle |
+
+### R4.3 - Schedule timer continues during trailing; player appears to be buffering
+
+`_shouldClearScheduleTimer()` returns `false` when the parent would clear the timer but `dashHandler.getIsTrailing()` is true, keeping the schedule loop alive so padding cycles continue to be requested.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeScheduleControllerOverride.js` | _shouldClearScheduleTimer | parent returns true (clear timer), during trailing: returns false (keeps timer for padding downloads) |
+| `dodge.DodgeScheduleControllerOverride.js` | _shouldClearScheduleTimer | parent returns true (clear timer), not trailing: returns true (clears normally) |
+| `dodge.DodgeScheduleControllerOverride.js` | _shouldClearScheduleTimer | parent returns false (keep timer), not trailing: returns false without checking trailing state |
+| `dodge.DodgeScheduleControllerOverride.js` | _shouldClearScheduleTimer | parent returns false (keep timer), during trailing: still returns false |
+| `dodge.DodgeScheduleControllerOverride.js` | _shouldClearScheduleTimer | dashHandler absent: falls back to parent result |
+
+### R4.4 - `getIsTrailing()` correctly reflects the trailing phase
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getIsTrailing() returns false before any cycles are consumed |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getIsTrailing() returns true when lastCycleIndex == maxNoPad and trailing cycles remain |
+
+---
+
+## 5. Mock Buffer
+
+### R5.1 - Mock buffer accumulates duration variance for each non-trailing cycle
+
+`onBufferCycleLoaded()` adds `segmentDuration - actualDuration` to `mockBuffer` after each non-trailing cycle, accounting for the difference between MPD segment duration and actual content duration (significant for the last segment).
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | increments mockBuffer by (segmentDuration - actualDuration) and syncs to parent |
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | can produce a negative mockBuffer when actualDuration exceeds segmentDuration |
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | accumulates across multiple calls |
+
+### R5.2 - Mock buffer is incremented only when the trailing padding cycle itself contributes simulated time
+
+`onPaddingLoaded()` increments `currentMockBuffer` by `segmentDuration` when `e.buffer = true`. DodgeHandler sets `e.buffer = request.buffer && secondaryEvents.length == 0`: if the trailing padding cycle with the buffer flag caused pending segments to be flushed (secondary events), `e.buffer` is set to `false` and the mock buffer is not incremented, since the real buffer received content. Only trailing cycles with no secondary events (pure padding) cause the mock buffer to grow. Non-trailing padding events (`e.trail = false`) do not affect mock buffer state.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | e.trail = true, e.buffer = true, increments mockBuffer by segmentDuration and syncs to parent |
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | e.trail = true, e.buffer = false, does not increment mockBuffer |
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | trailing padding cycle where pending real segments were flushed (e.buffer = false due to secondary events): mock buffer is not incremented |
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | accumulates mockBuffer across calls |
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | e.trail = false, does not call parent.setMockBuffer() |
+
+### R5.3 - Mock buffer drains during trailing to simulate buffer state
+
+`updateBufferLevel()` decrements `mockBuffer` by elapsed time since stream end when trailing is active, clamping to zero. This causes the reported buffer level to shrink toward the real buffer level.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | when not trailing, delegates to parent.updateBufferLevel() |
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | when trailing, decrements mockBuffer by elapsed time and syncs to parent |
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | when trailing, clamps mockBuffer to 0 when elapsed time exceeds accumulated value |
+
+### R5.4 - Mock buffer resets when exiting trailing
+
+Cycles that are not trailing padding with non-zero `lastTimeSinceStreamEnd` reset `mockBuffer` to zero, clearing stale trailing state.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | onPaddingLoaded | e.trail = false with non-zero lastTimeSinceStreamEnd, resets mockBuffer to 0 |
+
+### R5.5 - `resetInitialSettings` clears buffer override state
+
+Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to the parent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets internal state and delegates to parent.resetInitialSettings() |
+
+---
+
+## 6. Random Walk Scheduling
+
+### R6.1 - Schedule delay is bounded to `[scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom]`
+
+`_getScheduleWait()` returns `scheduleWaitBase + Math.round(Math.random() * scheduleWaitRandom)`. With `scheduleWaitRandom = 0`, the delay is deterministically equal to `scheduleWaitBase`.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | delay passed to startScheduleTimer is within [scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom] |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom = 0, delay is always exactly scheduleWaitBase |
+
+### R6.2 - All active stream processors receive the scheduling signal
+
+`_scheduleAll()` iterates through every stream processor returned by `streamController.getActiveStreamProcessors()` and calls `startScheduleTimer` and `setShouldCheckPlaybackQuality` on each.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | _scheduleAll calls startScheduleTimer on all active stream processors |
+
+### R6.3 - Suppressed events skip scheduling
+
+Suppressed partial segments and padding cycles do not trigger `startScheduleTimer`.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | MEDIA_FRAGMENT_PARTIAL (suppressed): startScheduleTimer not called |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED (suppressed): startScheduleTimer not called |
+
+### R6.4 - `_onPaddingLoaded` routes the event to the buffer controller
+
+After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream processor's buffer controller so the mock buffer state is updated.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED: routes event to buffer controller onPaddingLoaded |
+
+---
+
+## 7. URL and Request Padding
+
+### R7.1 - URL padding normalizes template URL lengths across representations
+
+`_setRequestUrlWithPadding()` adds a `queryParams.padding` value sized to equalize URL lengths across all numeric token values (e.g., single-digit vs multi-digit segment numbers). Absolute URLs are not padded (no template expansion, so `queryParams.padding` is not set).
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | relative template URL, queryParams.padding is set on the request |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | Number padding is longer for a 1-digit index than for a 2-digit index |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | absolute URL (no template expansion), queryParams has no padding key |
+
+### R7.2 - Request padding normalizes HTTP wire size to `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`
+
+`applyRequestPadding()` measures the URL + headers wire size and extends a query parameter (configurable via `dodge.queryParam`, default `'padding'`) so that the total equals `paddingLengthBase + Math.round(Math.random() * paddingLengthRandom)`. Disabled when `paddingLengthBase ≤ 0`. When the padding query param doesn't already exist in the URL, it is added and the overhead of `?key=` / `&key=` is accounted for. Invalid URLs are handled gracefully with a warning.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.RequestPadding.js` | applyRequestPadding | paddingLengthBase = 0: URL is not modified |
+| `dodge.RequestPadding.js` | applyRequestPadding | paddingLengthBase < 0: URL is not modified |
+| `dodge.RequestPadding.js` | applyRequestPadding | request with pad > 0: URL is extended by exactly pad bytes |
+| `dodge.RequestPadding.js` | applyRequestPadding | after padding, wire size equals paddingLengthBase (when paddingLengthRandom = 0) |
+| `dodge.RequestPadding.js` | applyRequestPadding | headers contribute to the measured size |
+| `dodge.RequestPadding.js` | applyRequestPadding | existing padding value is preserved as prefix of the extended value |
+| `dodge.RequestPadding.js` | applyRequestPadding | with paddingLengthRandom > 0, wire size is in [paddingLengthBase, paddingLengthBase + paddingLengthRandom] |
+| `dodge.RequestPadding.js` | applyRequestPadding | with paddingLengthRandom = 0, wire size is deterministically paddingLengthBase |
+| `dodge.RequestPadding.js` | applyRequestPadding | pad = 0 (already at paddingLengthBase): URL is not modified |
+| `dodge.RequestPadding.js` | applyRequestPadding | request already exceeds padding length: warns and does not modify URL |
+| `dodge.RequestPadding.js` | applyRequestPadding | custom queryParam name: padding applied to the correct parameter |
+| `dodge.RequestPadding.js` | applyRequestPadding | custom queryParam: padding uses the configured param name, not the default |
+| `dodge.RequestPadding.js` | applyRequestPadding | invalid URL: warns and does not throw |
+
+### R7.3 - FetchLoader applies request padding before dispatching the request
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | delegates to parent.load() |
+| `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | extends URL before calling parent.load() when paddingLengthBase is set |
+
+### R7.4 - XHRLoader applies request padding before dispatching the request
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | delegates to parent.load() |
+| `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | extends URL before calling parent.load() when paddingLengthBase is set |
+
+---
+
+## 8. Extended Manifest Validation and Registry
+
+### R8.1 - Structural validation rejects malformed manifests
+
+`isValidExtendedManifest()` validates the top-level structure of extended manifest files: `start.mpd` and `start.base_uri` must be present and strings, `streams` must be a non-empty array where each entry has a `label` and at least one of `init` or `data`. Dynamic MPDs (containing `type="dynamic"`) are rejected. Data cycle fields are validated: `index` must parse to a non-negative integer, `range` must be a well-formed string, and `padding` must be a boolean (or a string parseable to boolean) or absent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | null, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing start, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing start.mpd, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing start.base_uri, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | dynamic MPD, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing streams, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing label, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing init (data-only stream), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing data (init-only stream), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with both init and data absent, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with empty init and empty data, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with empty init array (self-initializing stream), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with empty data array (init-only stream), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-integer index, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with string integer index, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-numeric string index, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-string range, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with range start > end, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with valid range, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with padding = true, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with padding = false, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with padding string "true", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with padding string "false", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-boolean padding, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-parseable string padding, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | valid manifest, true |
+
+### R8.2 - Init cycle validation enforces range and buffer flag rules
+
+`checkInitCycles()` validates that each init cycle has a valid range string (`"start-end"` where start ≤ end) and that the `buffer` flag only appears on the last init cycle.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-string range, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with range start > end, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle buffer flag on non-last cycle, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle buffer flag on last cycle only, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycles with no buffer flags at all, true |
+
+### R8.3 - Data cycle validation enforces index sequencing, range continuity, and computes `maxNoPad`
+
+`checkDataCycles()` validates that data cycle indices are non-negative and non-decreasing for non-padding cycles, that partial byte ranges within the same segment index do not skip bytes, and computes `stream.maxNoPad` as the index of the last non-padding cycle.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with negative index, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-sequential index, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with skipped bytes in a partial range sequence, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | sets stream.maxNoPad to the last non-padding cycle index |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | sets stream.maxNoPad excluding trailing padding cycles |
+
+### R8.4 - Cycle index lookup
+
+`getCycleIndexBySegmentIndex()` returns the index of the first non-padding cycle matching a given segment index, or `-1` if not found. `getCycleIndexByPlaybackTime()` converts time to a segment index and delegates.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | getCycleIndexBySegmentIndex | returns the first cycle index for segment 0 |
+| `dodge.DefenseRegistry.js` | getCycleIndexBySegmentIndex | returns the first cycle index for segment 1 (skipping earlier cycles for segment 0) |
+| `dodge.DefenseRegistry.js` | getCycleIndexBySegmentIndex | returns -1 when segment index is not in the stream |
+| `dodge.DefenseRegistry.js` | getCycleIndexBySegmentIndex | skips padding cycles when searching by index |
+| `dodge.DefenseRegistry.js` | getCycleIndexByPlaybackTime | time 0 with segmentDuration 4, segment index 0, first cycle at position 0 |
+| `dodge.DefenseRegistry.js` | getCycleIndexByPlaybackTime | time 5 with segmentDuration 4, segment index 1, first cycle at position 2 |
+
+### R8.5 - Registry stores and retrieves extended manifests by label and stream ID
+
+`addExtendedManifest()` validates and stores manifests. `getDefendedStreamInfo()` retrieves a stream entry by label, optionally filtered by stream ID. `hasContent()` reflects whether any manifests are stored. `reset()` clears all state.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | instance | addExtendedManifest with a valid manifest, returns true |
+| `dodge.DefenseRegistry.js` | instance | addExtendedManifest with null, returns false |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo finds a registered stream by label |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo returns null for an unknown label |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns null when streamId does not match |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns the entry when streamId matches |
+| `dodge.DefenseRegistry.js` | instance | reset clears all manifests, getDefendedStreamInfo returns null after reset |
+
+---
+
+## 9. Extended Manifest Processing
+
+### R9.1 - `tryProcessExtendedManifest` parses JSON and returns MPD data or gracefully degrades
+
+Without strict mode, invalid JSON or invalid extended manifests return `null` (graceful degradation). Valid extended manifests return `{ mpd, baseUri }`. Successive calls are independent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest | input that is not valid JSON returns null |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest | valid JSON with invalid extended manifest returns null |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest | valid extended manifest JSON returns { mpd, baseUri } matching embedded values |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest | two successive valid manifests: each returns its own mpd and baseUri independently |
+
+### R9.2 - `tryProcessExtendedManifest` with `strictMode = manifest` fires an error for non-extended manifest sources
+
+When `strictMode` is `'manifest'`, non-JSON or invalid extended manifest input causes `tryProcessExtendedManifest` to return `false` and fire `INTERNAL_MANIFEST_LOADED` with `DODGE_STRICT_MODE_ERROR_CODE`. The error message includes the source URL. Valid extended manifests still succeed normally.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | non-JSON input: returns false and fires INTERNAL_MANIFEST_LOADED with error |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | invalid extended manifest JSON: returns false and fires INTERNAL_MANIFEST_LOADED with error |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | error message includes the URL |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | valid extended manifest: returns { mpd, baseUri } and does not fire error |
+
+### R9.3 - `tryProcessExtendedManifest` without `strictMode = manifest` does not fire errors
+
+When strict mode is not `'manifest'`, non-JSON input returns `null` without firing any error event.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest without strictMode = manifest | non-JSON input: returns null (no error) |
+
+### R9.4 - `_onFragmentLoadingCompleted` routes events based on cycle type
+
+The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla and errored requests pass through unchanged (sender stays non-null). For Dodge cycles: full segments with `buffer` fire `MEDIA_FRAGMENT_LOADED`; full segments without `buffer` fire `MEDIA_FRAGMENT_PARTIAL` and queue `MEDIA_FRAGMENT_LOADED`; partial segments fire `MEDIA_FRAGMENT_PARTIAL` and queue data; padding cycles fire `PADDING_LOADED`. When a buffer cycle has pending full segments, they are flushed as secondary events before the primary event fires.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | vanilla request: sender stays non-null, no Dodge events fired |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | errored request: sender stays non-null, no Dodge events fired |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | full segment with buffer flag: MEDIA_FRAGMENT_LOADED fires |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | full segment without buffer flag: MEDIA_FRAGMENT_PARTIAL fires, MEDIA_FRAGMENT_LOADED queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | partial segment: MEDIA_FRAGMENT_PARTIAL fires, segment data queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | padding cycle: PADDING_LOADED fires |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | buffer with two full segments: flushes pending as secondary, then fires primary |
+
+---
+
+## 10. Strict Mode Enforcement
+
+### R10.1 - `strictMode = representation` blocks undefended representations when an extended manifest is active
+
+When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is true, request-generation methods return `null` and `isLastSegmentRequested` returns `false` for representations without a matching defended stream info entry. When no extended manifest is loaded (`hasContent() = false`), all methods fall back to the parent. When the label is known, defense works normally.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with no extended manifest loaded, falls back to parent (hasContent() = false) |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with no extended manifest loaded, getNextSegmentRequestIdempotent falls back to parent (hasContent() = false) |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded but unknown label, getInitRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded but unknown label, getNextSegmentRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded but unknown label, getSegmentRequestForTime returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = representation | with extended manifest loaded and known label, defense still works normally |
+
+### R10.2 - `strictMode = manifest` blocks undefended representations identically
+
+`strictMode = manifest` behaves the same as `representation` at the per-representation level (the manifest-level check is in `tryProcessExtendedManifest`, see R9.2). All request-generation methods return `null` for unknown labels, and defense works normally for known labels.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getInitRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getNextSegmentRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getSegmentRequestForTime returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded and known label, defense still works normally |
+
+---
+
+## Summary
+
+| Requirement | Tests |
+|---|---|
+| R1.1 Unsupported ABR rules disabled at load | 3 |
+| R1.2 ABR quality check only at buffer events | 7 |
+| R2.1 Init cycle sequence and flags | 5 |
+| R2.2 Data cycle sequence and flags | 6 |
+| R2.3 Init-only (non-fragmented text) streams | 3 |
+| R2.4 Data-only (self-initialized) streams | 4 |
+| R2.5 Fallback to parent | 6 |
+| R2.6 CMCD nor/nrr suppressed during defense | 2 |
+| R2.7 getLastSegment returns override's segment | 3 |
+| R2.8 Defense state management | 2 |
+| R3.1 Video streams | (implicit) |
+| R3.2 Audio streams | 6 |
+| R3.3 Fragmented text streams | 6 |
+| R3.4 Non-fragmented text streams | (see R2.3) |
+| R3.5 Self-initialized streams | (see R2.4) |
+| R3.6 Undefended text tracks in strict mode | 7 |
+| R4.1 No spurious seeks during trailing | 4 |
+| R4.2 Segment downloading not complete early | 2 |
+| R4.3 Schedule timer continues (buffering icon) | 5 |
+| R4.4 getIsTrailing correct | 2 |
+| R5.1 Mock buffer accumulates duration variance | 3 |
+| R5.2 Mock buffer incremented only for trailing padding | 5 |
+| R5.3 Mock buffer drains during trailing | 3 |
+| R5.4 Mock buffer resets on trailing exit | 1 |
+| R5.5 Buffer controller state reset | 1 |
+| R6.1 Random walk delay bounded | 2 |
+| R6.2 All stream processors scheduled | 1 |
+| R6.3 Suppressed events skip scheduling | 2 |
+| R6.4 Padding event routing | 1 |
+| R7.1 URL padding normalizes template lengths | 3 |
+| R7.2 Request padding normalizes wire size | 13 |
+| R7.3 FetchLoader applies padding | 2 |
+| R7.4 XHRLoader applies padding | 2 |
+| R8.1 Structural validation rejects malformed manifests | 26 |
+| R8.2 Init cycle validation | 5 |
+| R8.3 Data cycle validation and maxNoPad | 5 |
+| R8.4 Cycle index lookup | 6 |
+| R8.5 Registry stores and retrieves manifests | 7 |
+| R9.1 Manifest parsing and graceful degradation | 4 |
+| R9.2 Strict mode manifest error firing | 4 |
+| R9.3 Non-strict mode no error | 1 |
+| R9.4 Partial segment combination event routing | 7 |
+| R10.1 strictMode = representation enforcement | 8 |
+| R10.2 strictMode = manifest enforcement | 6 |
+| **Total** | **191** |

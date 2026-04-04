@@ -79,6 +79,7 @@ describe('DodgeDashHandlerOverride', function () {
         mockParent = {
             getInitRequest: sinon.stub().returns({ parentInit: true }),
             getNextSegmentRequest: sinon.stub().returns({ parentNext: true }),
+            getNextSegmentRequestIdempotent: sinon.stub().returns({ idempotent: true }),
             getSegmentRequestForTime: sinon.stub().returns({ parentForTime: true }),
             isLastSegmentRequested: sinon.stub().returns(false),
             resetInitialSettings: sinon.stub(),
@@ -209,6 +210,23 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request.padding).to.be.true; // jshint ignore:line
         });
 
+        it('getNextSegmentRequest() at a trailing padding cycle sets trail = true', function () {
+            // maxNoPad = 1; cycle 2 is at index 2 > maxNoPad=1, so trail must be true
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.getNextSegmentRequest({}, rep); // cycle 1
+            const request = override.getNextSegmentRequest({}, rep); // cycle 2 (padding, trailing)
+            expect(request.trail).to.be.true; // jshint ignore:line
+        });
+
+        it('getSegmentRequestForTime() in non-trailing state returns cycle request', function () {
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+            // time = 4, segment index 1, first cycle with index 1 is cycle 1
+            const request = override.getSegmentRequestForTime({}, rep, 4);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.index).to.equal(1);
+        });
+
         it('getIsTrailing() returns false before any cycles are consumed', function () {
             // lastCycleIndex = -1, maxNoPad = 1, -1 >= 1 is false
             expect(override.getIsTrailing()).to.be.false; // jshint ignore:line
@@ -236,8 +254,8 @@ describe('DodgeDashHandlerOverride', function () {
             expect(override.isLastSegmentRequested(rep, NaN)).to.be.true; // jshint ignore:line
         });
 
-        it('resetInitialSettings() clears state; with strictMode=false, subsequent getInitRequest() falls back to parent', function () {
-            // Explicitly disable strict mode so fallback-to-parent behavior is exercised.
+        it('resetInitialSettings() clears state; with strictMode = false, subsequent getInitRequest() falls back to parent', function () {
+            // Explicitly disable strict mode so fallback behavior is exercised.
             // (With the default strictMode='representation' and a loaded manifest, the
             // override would block instead of falling back.)
             const settings = Settings(context).getInstance();
@@ -373,6 +391,12 @@ describe('DodgeDashHandlerOverride', function () {
             expect(result).to.deep.equal({ parentInit: true });
         });
 
+        it('with no extended manifest loaded, getNextSegmentRequestIdempotent falls back to parent (hasContent() = false)', function () {
+            const result = override.getNextSegmentRequestIdempotent({}, rep);
+            expect(mockParent.getNextSegmentRequestIdempotent.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ idempotent: true });
+        });
+
         it('with extended manifest loaded but unknown label, getInitRequest returns null', function () {
             defenseController.addExtendedManifest(makeManifest());
             const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
@@ -407,6 +431,15 @@ describe('DodgeDashHandlerOverride', function () {
             const result = override.isLastSegmentRequested(unknownRep, NaN);
             expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
             expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getNextSegmentRequestIdempotent({}, unknownRep);
+            expect(mockParent.getNextSegmentRequestIdempotent.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
         });
 
         it('with extended manifest loaded and known label, defense still works normally', function () {
@@ -464,6 +497,15 @@ describe('DodgeDashHandlerOverride', function () {
             const result = override.isLastSegmentRequested(unknownRep, NaN);
             expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
             expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getNextSegmentRequestIdempotent({}, unknownRep);
+            expect(mockParent.getNextSegmentRequestIdempotent.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
         });
 
         it('with extended manifest loaded and known label, defense still works normally', function () {
@@ -565,7 +607,7 @@ describe('DodgeDashHandlerOverride', function () {
             override.updateDefendedStreamInfo(rep);
         });
 
-        it('getRemainingInitCycles() returns 0 (scheduler skips init entirely)', function () {
+        it('getRemainingInitCycles() returns 0', function () {
             expect(override.getRemainingInitCycles()).to.equal(0);
         });
 
@@ -635,6 +677,256 @@ describe('DodgeDashHandlerOverride', function () {
             override.getNextSegmentRequest({}, rep);
             const result = override.isLastSegmentRequested(rep, NaN);
             expect(result).to.be.true; // jshint ignore:line
+        });
+    });
+
+    // Audio streams
+
+    describe('Audio streams', function () {
+        function makeAudioRep() {
+            return Object.assign({}, makeRepresentation(), {
+                mediaInfo: { type: 'audio', streamInfo: { id: 'stream-1' } }
+            });
+        }
+
+        it('defended audio stream: getNextSegmentRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            const request = override.getNextSegmentRequest({}, audioRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.index).to.equal(0);
+        });
+
+        it('defended audio stream: isLastSegmentRequested() returns false while cycles remain', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            override.getNextSegmentRequest({}, audioRep); // cycle 0
+            expect(override.isLastSegmentRequested(audioRep, NaN)).to.be.false; // jshint ignore:line
+        });
+
+        it('defended audio stream: isLastSegmentRequested() returns true after all cycles consumed', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            override.getNextSegmentRequest({}, audioRep); // cycle 0
+            override.getNextSegmentRequest({}, audioRep); // cycle 1
+            override.getNextSegmentRequest({}, audioRep); // cycle 2 (padding)
+            expect(override.isLastSegmentRequested(audioRep, NaN)).to.be.true; // jshint ignore:line
+        });
+
+        it('defended audio stream: getInitRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            const request = override.getInitRequest({}, audioRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+
+        it('audio stream with no defended stream info (no extended manifest loaded): getNextSegmentRequest() delegates to parent', function () {
+            // No manifest in defenseController, updateDefendedStreamInfo returns false, fallback
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            const result = override.getNextSegmentRequest({}, audioRep);
+            expect(mockParent.getNextSegmentRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentNext: true });
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
+
+        it('audio stream with no defended stream info (no extended manifest loaded): getInitRequest() delegates to parent', function () {
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            const result = override.getInitRequest({}, audioRep);
+            expect(mockParent.getInitRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentInit: true });
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
+    });
+
+    // Fragmented text streams
+
+    describe('Fragmented text streams', function () {
+        function makeFragmentedTextRep() {
+            return Object.assign({}, makeRepresentation(), {
+                mediaInfo: { type: 'text', streamInfo: { id: 'stream-1' } }
+            });
+        }
+
+        const fragmentedTextManifest = {
+            start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+            streams: [{
+                label: 'rep0',
+                init: [{ range: '0-855' }, { range: '856-1711' }],
+                data: [
+                    { index: 0, buffer: false },
+                    { index: 1, buffer: true },
+                    { index: 2, padding: true },
+                ]
+            }]
+        };
+
+        it('defended fragmented text stream: getNextSegmentRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(fragmentedTextManifest);
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            const request = override.getNextSegmentRequest({}, textRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+
+        it('defended fragmented text stream: isLastSegmentRequested() returns false while cycles remain', function () {
+            defenseController.addExtendedManifest(fragmentedTextManifest);
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            override.getNextSegmentRequest({}, textRep); // cycle 0
+            expect(override.isLastSegmentRequested(textRep, NaN)).to.be.false; // jshint ignore:line
+        });
+
+        it('defended fragmented text stream: isLastSegmentRequested() returns true after all cycles consumed', function () {
+            defenseController.addExtendedManifest(fragmentedTextManifest);
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            override.getNextSegmentRequest({}, textRep); // cycle 0
+            override.getNextSegmentRequest({}, textRep); // cycle 1
+            override.getNextSegmentRequest({}, textRep); // cycle 2 (padding)
+            expect(override.isLastSegmentRequested(textRep, NaN)).to.be.true; // jshint ignore:line
+        });
+
+        it('defended fragmented text stream: getInitRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(fragmentedTextManifest);
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            const request = override.getInitRequest({}, textRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+
+        it('fragmented text stream with no defended stream info (no extended manifest): getNextSegmentRequest() delegates to parent', function () {
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            const result = override.getNextSegmentRequest({}, textRep);
+            expect(mockParent.getNextSegmentRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentNext: true });
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
+
+        it('fragmented text stream with no defended stream info (no extended manifest): getInitRequest() delegates to parent', function () {
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            const result = override.getInitRequest({}, textRep);
+            expect(mockParent.getInitRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentInit: true });
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
+    });
+
+    // getNextSegmentRequestIdempotent during defended playback
+
+    describe('getNextSegmentRequestIdempotent during defended playback', function () {
+
+        // mockParent.getNextSegmentRequestIdempotent is set up in the outer beforeEach.
+
+        it('with no defended stream, delegates to parent', function () {
+            // No manifest loaded; updateDefendedStreamInfo was not called.
+            const result = override.getNextSegmentRequestIdempotent({}, rep);
+            expect(mockParent.getNextSegmentRequestIdempotent.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ idempotent: true });
+        });
+
+        it('with defended stream, returns null to suppress CMCD nor/nrr leak', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep); // cycle 0
+
+            const result = override.getNextSegmentRequestIdempotent({}, rep);
+            expect(mockParent.getNextSegmentRequestIdempotent.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+    });
+
+    // getSegmentRequestForTime during trailing phase
+
+    describe('getSegmentRequestForTime during trailing phase', function () {
+        let trailingOverride, timeSinceStreamEndStub;
+
+        beforeEach(function () {
+            timeSinceStreamEndStub = sinon.stub().returns(1); // stream has ended
+
+            trailingOverride = DodgeDashHandlerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                {
+                    debug: Debug(context).getInstance(),
+                    urlUtils: URLUtils(context).getInstance(),
+                    segmentsController: {
+                        getSegmentByIndex: sinon.stub().callsFake((r, idx) => makeSegment(r, idx)),
+                        getSegmentByTime: sinon.stub().callsFake((r, time) => makeSegment(r, Math.floor(time / 4))),
+                    },
+                    baseURLController: objectsHelper.getDummyBaseURLController(),
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: timeSinceStreamEndStub,
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+
+            defenseController.addExtendedManifest(makeManifest());
+            trailingOverride.updateDefendedStreamInfo(rep);
+
+            // Advance to trailing: maxNoPad = 1, consume cycles 0 and 1.
+            trailingOverride.getNextSegmentRequest({}, rep); // cycle 0, lastCycleIndex = 0
+            trailingOverride.getNextSegmentRequest({}, rep); // cycle 1, lastCycleIndex = 1 = maxNoPad, trailing
+        });
+
+        it('seek near stream end during trailing returns next padding cycle, not vanilla parent request', function () {
+            // timeSinceStreamEnd > 0 AND streamEndTime(100) - time(97) = 3 < segmentDuration(4)
+            // routes to getNextSegmentRequest, which advances to cycle 2 (padding)
+            const request = trailingOverride.getSegmentRequestForTime({}, rep, 97);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.padding).to.be.true; // jshint ignore:line
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+        });
+    });
+
+    // getLastSegment during defended playback
+
+    describe('getLastSegment during defended playback', function () {
+
+        it('before any cycles consumed, returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            expect(override.getLastSegment()).to.be.null; // jshint ignore:line
+        });
+
+        it('after non-padding cycle, returns that cycle\'s segment', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep); // cycle 0, non-padding, index 0
+            const segment = override.getLastSegment();
+            expect(segment).to.exist; // jshint ignore:line
+            expect(segment.index).to.equal(0);
+        });
+
+        it('after padding cycle, returns the last non-padding segment', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep); // cycle 0, non-padding, index 0
+            override.getNextSegmentRequest({}, rep); // cycle 1, non-padding, index 1
+            override.getNextSegmentRequest({}, rep); // cycle 2, padding, index 2
+            const segment = override.getLastSegment();
+            expect(segment).to.exist; // jshint ignore:line
+            expect(segment.index).to.equal(1); // padding cycles don't update lastSegment
         });
     });
 });
