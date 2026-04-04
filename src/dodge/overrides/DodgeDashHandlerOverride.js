@@ -55,6 +55,7 @@ function DodgeDashHandlerOverride(config) {
     const _parentResetInitialSettings = parent.resetInitialSettings;
     const _parentGetInitRequest = parent.getInitRequest;
     const _parentGetNextSegmentRequest = parent.getNextSegmentRequest;
+    const _parentGetNextSegmentRequestIdempotent = parent.getNextSegmentRequestIdempotent;
     const _parentGetSegmentRequestForTime = parent.getSegmentRequestForTime;
     const _parentIsLastSegmentRequested = parent.isLastSegmentRequested;
 
@@ -444,6 +445,19 @@ function DodgeDashHandlerOverride(config) {
         return request;
     }
 
+    /**
+     * CMCD probing: return null during defended playback so that nor/nrr
+     * headers are not emitted - advertising the next cycle's URL or byte
+     * range is not desirable.
+     */
+    function getNextSegmentRequestIdempotent(mediaInfo, representation) {
+        if (!representation || !representation.segmentInfoType || !defendedStreamInfo) {
+            return _parentGetNextSegmentRequestIdempotent.call(parent, mediaInfo, representation);
+        }
+
+        return null;
+    }
+
     function isLastSegmentRequested(representation, bufferingTime) {
         if (!defendedStreamInfo) {
             if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
@@ -493,6 +507,10 @@ function DodgeDashHandlerOverride(config) {
 
     function getCurrentIndex() {
         return lastSegment ? lastSegment.index : -1;
+    }
+
+    function getLastSegment() {
+        return lastSegment;
     }
 
     function getNextExpectedIndex() {
@@ -550,10 +568,12 @@ function DodgeDashHandlerOverride(config) {
         resetInitialSettings,
         getInitRequest,
         getNextSegmentRequest,
+        getNextSegmentRequestIdempotent,
         getSegmentRequestForTime,
         isLastSegmentRequested,
         repeatSegmentRequest,
         getCurrentIndex,
+        getLastSegment,
         getNextExpectedIndex,
         getRemainingInitCycles,
         updateDefendedStreamInfo,
