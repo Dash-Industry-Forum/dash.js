@@ -18,7 +18,7 @@ This document maps critical defense requirements to the unit tests that verify t
 
 ### R1.2 - ABR quality check is enabled only at buffer events; it is disabled during all other downloads
 
-After each partial segment download (init or data), `_scheduleAll(false, delay)` is called - quality check disabled. After a padding cycle, `_onPaddingLoaded` uses `e.bufferFlag` (not `e.buffer`) to control quality checks: `_scheduleAll(e.bufferFlag, delay)`. `bufferFlag` is true whenever the cycle's buffer field is active (boolean `true` or non-empty array), regardless of whether secondary events were flushed. This ensures quality checks run whenever anything is buffered, including with selective buffering. When a cycle that requests a full segment results in INIT/MEDIA_FRAGMENT_LOADED, the vanilla scheduler resumes, and Dodge does not call `_scheduleAll`. Vanilla fragment loads bypass `_scheduleAll` entirely.
+After each partial segment download (init or data), `_scheduleAll(false, delay)` is called - quality check disabled. After a padding cycle, `_onPaddingLoaded` uses `e.bufferFlag` (not `e.buffer`) to control quality checks: `_scheduleAll(e.bufferFlag, delay)`. `bufferFlag` is true whenever the cycle's buffer field is active (boolean `true` or non-empty array), regardless of whether secondary events were flushed. This ensures quality checks run whenever anything is buffered, including with selective buffering. When a full segment with buffer results in INIT/MEDIA_FRAGMENT_LOADED, `_setQualityCheckAll(true)` is called before firing the event to enable quality checks; scheduling is left to the vanilla `_onBytesAppended` path (with random delay enforced by the ScheduleController override). Vanilla fragment loads bypass `_scheduleAll` entirely.
 
 | File | Description | Test |
 |---|---|---|
@@ -26,8 +26,8 @@ After each partial segment download (init or data), `_scheduleAll(false, delay)`
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | INIT_FRAGMENT_PARTIAL: startScheduleTimer called, quality check disabled |
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED with buffer flag: startScheduleTimer called, quality check enabled |
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED without buffer flag: startScheduleTimer called, quality check disabled |
-| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | last init cycle (INIT_FRAGMENT_LOADED): startScheduleTimer not called by Dodge |
-| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | full Dodge media segment (MEDIA_FRAGMENT_LOADED): startScheduleTimer not called by Dodge |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled |
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | vanilla request: startScheduleTimer is never called |
 
 ---

@@ -658,11 +658,11 @@ describe('DodgeHandler', function () {
             expect(setQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
         });
 
-        it('INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge', function () {
+        it('INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled', function () {
             // When the last init cycle fires (full = true, buffer = true),
             // DodgeHandler emits INIT_FRAGMENT_LOADED, not INIT_FRAGMENT_PARTIAL.
-            // _onPartialSegment is not registered for INIT_FRAGMENT_LOADED, so
-            // _scheduleAll must not be called; the vanilla scheduler is used.
+            // _scheduleAll is not called (scheduling is left to the vanilla path),
+            // but quality checks are enabled via _setQualityCheckAll(true).
             eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
                 sender: { context: 'test' },
                 request: {
@@ -700,14 +700,14 @@ describe('DodgeHandler', function () {
             }, { streamId: 'stream-1' });
 
             expect(startTimerSpy.called).to.be.false; // jshint ignore:line
-            expect(setQualitySpy.called).to.be.false; // jshint ignore:line
+            expect(setQualitySpy.calledOnceWith(true)).to.be.true; // jshint ignore:line
         });
 
-        it('MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge', function () {
+        it('MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled', function () {
             // When a full cycle with buffer completes (full = true, buffer = true),
             // DodgeHandler emits MEDIA_FRAGMENT_LOADED, not MEDIA_FRAGMENT_PARTIAL.
-            // _onPartialSegment is not registered for MEDIA_FRAGMENT_LOADED, so
-            // _scheduleAll must not be called; the vanilla scheduler is used.
+            // _scheduleAll is not called (scheduling is left to the vanilla path),
+            // but quality checks are enabled via _setQualityCheckAll(true).
             eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
                 sender: { context: 'test' },
                 request: {
@@ -746,7 +746,7 @@ describe('DodgeHandler', function () {
             }, { streamId: 'stream-1' });
 
             expect(startTimerSpy.called).to.be.false; // jshint ignore:line
-            expect(setQualitySpy.called).to.be.false; // jshint ignore:line
+            expect(setQualitySpy.calledOnceWith(true)).to.be.true; // jshint ignore:line
         });
     });
 

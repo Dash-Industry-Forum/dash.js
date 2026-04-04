@@ -219,6 +219,19 @@ function DodgeHandler(config) {
         return dodgeSettings.scheduleWaitBase + Math.round(Math.random() * dodgeSettings.scheduleWaitRandom);
     }
 
+    function _setQualityCheckAll(checkQuality) {
+        if (!streamController) {
+            return;
+        }
+
+        streamController.getActiveStreamProcessors().forEach(sp => {
+            const sc = sp.getScheduleController();
+            if (sc) {
+                sc.setShouldCheckPlaybackQuality(checkQuality);
+            }
+        });
+    }
+
     function _scheduleAll(checkQuality, delay) {
         if (!streamController) {
             return;
@@ -437,6 +450,11 @@ function DodgeHandler(config) {
 
         // Fire the primary event. Do not suppress it; it causes scheduling.
         if (primaryEvent.event === events.INIT_FRAGMENT_LOADED || primaryEvent.event === events.MEDIA_FRAGMENT_LOADED) {
+            // Enable quality checks before the event fires. The normal dash.js
+            // path (_onBytesAppended) does not call setShouldCheckPlaybackQuality,
+            // so we must set it here.
+            _setQualityCheckAll(true);
+
             eventBus.trigger(primaryEvent.event,
                 { chunk: primaryEvent.chunk, request: request, suppress: false },
                 { streamId: strInfo.id, mediaType: request.mediaType }
