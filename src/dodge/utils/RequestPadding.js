@@ -39,9 +39,7 @@
  * for each header. This covers the request line and all headers, capturing the
  * two components that vary across Dodge cycles (URL and Range header length).
  *
- * Only runs when the original FragmentRequest has `queryParams[queryParam]`
- * set, which DodgeDashHandlerOverride._setRequestUrlWithPadding() does for
- * all Dodge requests. Non-Dodge requests are left untouched.
+ * When the Dodge module is loaded, this runs on all requests.
  *
  * @param {Object} commonMediaRequest - The CommonMediaRequest about to be sent.
  * @param {Object} settings - dash.js Settings instance.
@@ -57,13 +55,6 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
         return;
     }
 
-    // Only apply to Dodge requests. The original FragmentRequest (before it
-    // was converted to a CommonMediaRequest) has queryParams[queryParam] set
-    // by DodgeDashHandlerOverride._setRequestUrlWithPadding().
-    const originalRequest = commonMediaRequest.customData && commonMediaRequest.customData.request;
-    if (!originalRequest || !originalRequest.queryParams || originalRequest.queryParams[queryParam] === undefined) {
-        return;
-    }
 
     // Approximate the HTTP/1.1 wire size: URL length (request line) plus all
     // headers. Each header contributes key.length + ': '.length + value.length
@@ -82,18 +73,29 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
     const paddingLength = paddingLengthBase + Math.round(Math.random() * paddingLengthRandom);
     const pad = paddingLength - size;
     if (pad < 0) {
-        logger.warn('add request padding: request size ' + size + ' exceeds paddingLength ' + paddingLength);
+        logger.warn('add request padding: original request size ' + size + ' exceeds paddingLength ' + paddingLength);
         return;
     }
     if (pad == 0) {
         return;
     }
 
-    // Extend the padding query param already in the URL by appending zeros.
+    // Extend the padding query param in the URL by appending zeros.
+    // When the param doesn't already exist (e.g. absolute URL Dodge
+    // requests), adding it introduces overhead (?key= or &key=) that
+    // must be subtracted from the zeros count.
     try {
         const url = new URL(commonMediaRequest.url);
         const current = url.searchParams.get(queryParam) || '';
-        url.searchParams.set(queryParam, current + '0'.repeat(pad));
+        url.searchParams.set(queryParam, current);
+
+        const overhead = url.toString().length - commonMediaRequest.url.length;
+        const zeros = pad - overhead;
+        if (zeros <= 0) {
+            logger.warn('add request padding: updated request size ' + size + ' exceeds paddingLength ' + paddingLength);
+            return;
+        }
+        url.searchParams.set(queryParam, current + '0'.repeat(zeros));
         commonMediaRequest.url = url.toString();
     } catch (e) {
         logger.warn('add request padding: failed to extend URL, ' + e.message);
