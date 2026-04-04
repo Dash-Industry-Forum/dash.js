@@ -18,7 +18,7 @@ This document maps critical defense requirements to the unit tests that verify t
 
 ### R1.2 - ABR quality check is enabled only at buffer events; it is disabled during all other downloads
 
-After each partial segment download (init or data), `_scheduleAll(false, delay)` is called - quality check disabled. After a cycle with the buffer flag, `_scheduleAll(true, delay)` is called - quality check enabled (for PADDING_LOADED buffer events only). When a cycle that requests a full segment results in INIT/MEDIA_FRAGMENT_LOADED, the vanilla scheduler resumes, and Dodge does not call `_scheduleAll`. Vanilla fragment loads bypass `_scheduleAll` entirely.
+After each partial segment download (init or data), `_scheduleAll(false, delay)` is called - quality check disabled. After a padding cycle, `_onPaddingLoaded` uses `e.bufferFlag` (not `e.buffer`) to control quality checks: `_scheduleAll(e.bufferFlag, delay)`. `bufferFlag` is true whenever the cycle's buffer field is active (boolean `true` or non-empty array), regardless of whether secondary events were flushed. This ensures quality checks run whenever anything is buffered, including with selective buffering. When a cycle that requests a full segment results in INIT/MEDIA_FRAGMENT_LOADED, the vanilla scheduler resumes, and Dodge does not call `_scheduleAll`. Vanilla fragment loads bypass `_scheduleAll` entirely.
 
 | File | Description | Test |
 |---|---|---|
@@ -125,7 +125,7 @@ The parent DashHandler's `lastSegment` is never updated during defended playback
 
 ### R2.9 - Selective buffer: array buffer on data cycles flushes only matching pending segments
 
-When `buffer` on a data cycle is an array of segment indices, only pending media events whose segment index is in the array are flushed as secondary events. Non-matching pending media events remain queued. The current segment itself is only buffered (fires `MEDIA_FRAGMENT_LOADED`) if its index is in the array; otherwise, it is queued and fires `MEDIA_FRAGMENT_PARTIAL`. Pending init events are never flushed by selective buffer (no index to match). An empty array behaves as `buffer: false` (no flush, full segment queued). The event `buffer` flag on padding events is always `false` when the request buffer is an array (no mock buffer increment). Boolean `buffer: true` continues to flush all pending segments as before.
+When `buffer` on a data cycle is an array of segment indices, only pending media events whose segment index is in the array are flushed as secondary events. Non-matching pending media events remain queued. The current segment itself is only buffered (fires `MEDIA_FRAGMENT_LOADED`) if its index is in the array; otherwise, it is queued and fires `MEDIA_FRAGMENT_PARTIAL`. Pending init events are never flushed by selective buffer (no index to match). An empty array behaves as `buffer: false` (no flush, full segment queued). Boolean `buffer: true` continues to flush all pending segments as before. On padding events, two separate fields are set: `bufferFlag` is `_isBufferActive(request.buffer)` (true for boolean `true` or non-empty array - used for quality check control), while `buffer` is `request.buffer === true && secondaryEvents.length == 0` (only true for boolean `true` with no secondary events flushed - used for mock buffer increment). With selective buffering (array), `buffer` is always `false` on padding events since the strict `=== true` check fails.
 
 | File | Description | Test |
 |---|---|---|
@@ -135,7 +135,8 @@ When `buffer` on a data cycle is an array of segment indices, only pending media
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [0, 2]: current segment index 2 is in array, so it is buffered |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [99]: no pending segments match, current segment not in array, queued |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer []: empty array behaves as buffer = false |
-| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: event buffer flag is always false on padding events |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: padding event has bufferFlag true but buffer false (array buffer is not boolean true) |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: padding event has bufferFlag true but buffer false when secondary events flushed |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: pending init events are not flushed |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | boolean buffer true still flushes all pending segments |
 
@@ -596,7 +597,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R2.6 CMCD nor/nrr suppressed during defense | 2 |
 | R2.7 getLastSegment returns override's segment | 3 |
 | R2.8 Defense state management | 2 |
-| R2.9 Selective buffer | 9 |
+| R2.9 Selective buffer | 10 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 6 |
 | R3.3 Fragmented text streams | 6 |
@@ -632,4 +633,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **228** |
+| **Total** | **229** |

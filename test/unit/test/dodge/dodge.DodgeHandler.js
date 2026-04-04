@@ -426,10 +426,27 @@ describe('DodgeHandler', function () {
             expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
         });
 
-        it('selective buffer: event buffer flag is always false on padding events', function () {
-            // Fire a padding request with array buffer
+        it('selective buffer: padding event has bufferFlag true but buffer false (array buffer is not boolean true)', function () {
+            // Fire a padding request with array buffer and no pending segments
             triggerFragmentLoaded(makeRequest({ full: false, padding: true, buffer: [0] }));
             expect(paddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(paddingLoadedSpy.firstCall.args[0].bufferFlag).to.be.true; // jshint ignore:line
+            expect(paddingLoadedSpy.firstCall.args[0].buffer).to.be.false; // jshint ignore:line
+        });
+
+        it('selective buffer: padding event has bufferFlag true but buffer false when secondary events flushed', function () {
+            // Queue a pending segment
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
+
+            paddingLoadedSpy.resetHistory();
+            mediaLoadedSpy.resetHistory();
+
+            // Fire padding with selective buffer [0] — flushes pending index 0
+            triggerFragmentLoaded(makeRequest({ full: false, padding: true, buffer: [0] }));
+            expect(mediaLoadedSpy.calledOnce).to.be.true; // jshint ignore:line (secondary flush)
+            expect(paddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(paddingLoadedSpy.firstCall.args[0].bufferFlag).to.be.true; // jshint ignore:line
             expect(paddingLoadedSpy.firstCall.args[0].buffer).to.be.false; // jshint ignore:line
         });
 
@@ -565,7 +582,7 @@ describe('DodgeHandler', function () {
 
         it('PADDING_LOADED with buffer flag: startScheduleTimer called, quality check enabled', function () {
             eventBus.trigger(Events.PADDING_LOADED,
-                { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: true },
+                { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: true, bufferFlag: true },
                 { streamId: 'stream-1', mediaType: 'video' }
             );
             expect(startTimerSpy.calledOnce).to.be.true; // jshint ignore:line
@@ -574,7 +591,7 @@ describe('DodgeHandler', function () {
 
         it('PADDING_LOADED without buffer flag: startScheduleTimer called, quality check disabled', function () {
             eventBus.trigger(Events.PADDING_LOADED,
-                { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: false },
+                { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: false, bufferFlag: false },
                 { streamId: 'stream-1', mediaType: 'video' }
             );
             expect(startTimerSpy.calledOnce).to.be.true; // jshint ignore:line

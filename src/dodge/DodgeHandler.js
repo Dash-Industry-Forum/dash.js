@@ -245,7 +245,7 @@ function DodgeHandler(config) {
     function _onPaddingLoaded(e) {
         if (!e.suppress) {
             // Only allow quality switches if the buffer flag is set
-            _scheduleAll(e.buffer || false, _getScheduleWait());
+            _scheduleAll(e.bufferFlag || false, _getScheduleWait());
         }
 
         // Route to buffer controllers for mock buffer management
@@ -451,6 +451,7 @@ function DodgeHandler(config) {
                     byteLength: bytes.byteLength,
                     trail: request.trail,
                     buffer: request.buffer === true && secondaryEvents.length == 0,
+                    bufferFlag: _isBufferActive(request.buffer),
                     suppress: false
                 },
                 { streamId: strInfo.id, mediaType: request.mediaType }
