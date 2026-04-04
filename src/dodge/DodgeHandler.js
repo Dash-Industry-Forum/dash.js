@@ -38,6 +38,7 @@ import DodgeDashHandlerOverride from './overrides/DodgeDashHandlerOverride.js';
 import DodgeErrors from './errors/DodgeErrors.js';
 import DodgeEvents from './events/DodgeEvents.js';
 import DodgeFetchLoaderOverride from './overrides/DodgeFetchLoaderOverride.js';
+import DodgeGapControllerOverride from './overrides/DodgeGapControllerOverride.js';
 import DodgeScheduleControllerOverride from './overrides/DodgeScheduleControllerOverride.js';
 import DodgeXHRLoaderOverride from './overrides/DodgeXHRLoaderOverride.js';
 import Constants from '../streaming/constants/Constants.js';
@@ -112,6 +113,7 @@ function DodgeHandler(config) {
         mediaPlayer.extend('DashHandler', DodgeDashHandlerOverride, true);
         mediaPlayer.extend('BufferController', DodgeBufferControllerOverride, true);
         mediaPlayer.extend('ScheduleController', DodgeScheduleControllerOverride, true);
+        mediaPlayer.extend('GapController', DodgeGapControllerOverride, true);
         mediaPlayer.extend('FetchLoader', DodgeFetchLoaderOverride, true);
         mediaPlayer.extend('XHRLoader', DodgeXHRLoaderOverride, true);
         _applyAbrRules();
