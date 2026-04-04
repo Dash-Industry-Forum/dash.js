@@ -84,6 +84,18 @@ function checkInitCycles(stream, logger) {
         }
     }
 
+    // Buffer flags on init cycles are ignored by getInitRequest() (it always
+    // sets buffer = full on the last init cycle). But for correctness, either
+    // no init cycle should carry a buffer flag, or only the last one.
+    for (let i = 0; i < stream['init'].length - 1; i++) {
+        if (stream['init'][i].buffer) {
+            if (logger) {
+                logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', unexpected buffer flag');
+            }
+            return false;
+        }
+    }
+
     return true;
 }
 
