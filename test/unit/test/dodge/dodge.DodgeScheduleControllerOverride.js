@@ -9,19 +9,27 @@ import { expect } from 'chai';
 
 describe('DodgeScheduleControllerOverride', function () {
 
-    function makeOverride({ parentResult, isTrailing, hasDashHandler = true }) {
+    function makeOverride({ parentResult, isTrailing, hasDashHandler = true, isDefended = false, scheduleWaitBase = 100, scheduleWaitRandom = 50 }) {
         const parentShouldClearStub = sinon.stub().returns(parentResult);
+        const parentStartScheduleTimerStub = sinon.stub();
         const getIsTrailingStub = sinon.stub().returns(isTrailing);
+        const getIsDefendedStub = sinon.stub().returns(isDefended);
 
-        const parent = { _shouldClearScheduleTimer: parentShouldClearStub };
-        const dashHandler = hasDashHandler ? { getIsTrailing: getIsTrailingStub } : undefined;
+        const parent = {
+            _shouldClearScheduleTimer: parentShouldClearStub,
+            startScheduleTimer: parentStartScheduleTimerStub,
+        };
+        const dashHandler = hasDashHandler ? { getIsTrailing: getIsTrailingStub, getIsDefended: getIsDefendedStub } : undefined;
+        const settings = {
+            get: () => ({ dodge: { scheduleWaitBase, scheduleWaitRandom } })
+        };
 
         const override = DodgeScheduleControllerOverride.call(
             { context: {}, parent, factory: {} },
-            { dashHandler }
+            { dashHandler, settings }
         );
 
-        return { override, parentShouldClearStub, getIsTrailingStub };
+        return { override, parentShouldClearStub, parentStartScheduleTimerStub, getIsTrailingStub, getIsDefendedStub };
     }
 
     describe('_shouldClearScheduleTimer', function () {
@@ -53,6 +61,64 @@ describe('DodgeScheduleControllerOverride', function () {
         it('dashHandler absent: falls back to parent result without crashing', function () {
             const { override } = makeOverride({ parentResult: true, isTrailing: false, hasDashHandler: false });
             expect(override._shouldClearScheduleTimer()).to.be.true; // jshint ignore:line
+        });
+    });
+
+    describe('startScheduleTimer', function () {
+
+        it('not defended: passes value through to parent unchanged', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({ parentResult: false, isTrailing: false, isDefended: false });
+            override.startScheduleTimer(0);
+            expect(parentStartScheduleTimerStub.calledOnce).to.be.true; // jshint ignore:line
+            expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(0);
+        });
+
+        it('defended with value = 0: enforces minimum random delay', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: 50
+            });
+            override.startScheduleTimer(0);
+            expect(parentStartScheduleTimerStub.calledOnce).to.be.true; // jshint ignore:line
+            const delay = parentStartScheduleTimerStub.firstCall.args[0];
+            expect(delay).to.be.at.least(100);
+            expect(delay).to.be.at.most(150);
+        });
+
+        it('defended with value larger than max delay: keeps the larger value', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: 50
+            });
+            override.startScheduleTimer(500);
+            expect(parentStartScheduleTimerStub.calledOnce).to.be.true; // jshint ignore:line
+            expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(500);
+        });
+
+        it('defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: 0
+            });
+            override.startScheduleTimer(0);
+            expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(100);
+        });
+
+        it('defended with undefined value: treats as 0 and enforces minimum delay', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: 0
+            });
+            override.startScheduleTimer(undefined);
+            expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(100);
+        });
+
+        it('dashHandler absent: passes value through to parent unchanged', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, hasDashHandler: false
+            });
+            override.startScheduleTimer(0);
+            expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(0);
         });
     });
 });

@@ -331,6 +331,19 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 |---|---|---|
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED: routes event to buffer controller onPaddingLoaded |
 
+### R6.5 - Random walk delay is enforced on all scheduling paths during defended playback
+
+`DodgeScheduleControllerOverride.startScheduleTimer(value)` enforces a minimum delay of `_getScheduleWait()` whenever `dashHandler.getIsDefended()` returns true. This ensures that buffered segment loads - which go through the normal dash.js `_onBytesAppended → startScheduleTimer(0)` path rather than Dodge's `_scheduleAll` - still receive a random walk delay. When the requested delay already exceeds the minimum, the larger value is preserved. When no defense is active, the value passes through unchanged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | not defended: passes value through to parent unchanged |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value = 0: enforces minimum random delay |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value larger than max delay: keeps the larger value |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with undefined value: treats as 0 and enforces minimum delay |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | dashHandler absent: passes value through to parent unchanged |
+
 ---
 
 ## 7. URL and Request Padding
@@ -603,6 +616,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R6.2 All stream processors scheduled | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
 | R6.4 Padding event routing | 1 |
+| R6.5 Random walk delay on all scheduling paths | 6 |
 | R7.1 URL padding normalizes template lengths | 3 |
 | R7.2 Request padding normalizes wire size | 13 |
 | R7.3 FetchLoader applies padding | 2 |
@@ -618,4 +632,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **222** |
+| **Total** | **228** |

@@ -459,6 +459,7 @@ function DashHandler(config) {
     // Stubs for DodgeDashHandlerOverride. FactoryMaker.merge() only replaces
     // functions that hasOwnProperty on parent, so these must be present here.
     function updateDefendedStreamInfo() { return false; }
+    function getIsDefended() { return false; }
     function getIsTrailing() { return false; }
     function getNextExpectedIndex() { return -1; }
     function getRemainingInitCycles() { return -1; }
@@ -467,6 +468,7 @@ function DashHandler(config) {
     instance = {
         getCurrentIndex,
         getInitRequest,
+        getIsDefended,
         getIsTrailing,
         getLastSegment,
         getNextExpectedIndex,

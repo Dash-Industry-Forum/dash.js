@@ -30,12 +30,14 @@
  */
 
 /**
- * Dodge override, keeps the schedule timer running during the trailing phase
- * (padding cycles after all playable content).
+ * Dodge override for ScheduleController:
  *
- * The vanilla ScheduleController stops scheduling when paused. During Dodge's
- * trailing phase, playback may have ended but padding cycles still need to be
- * downloaded, so the timer must continue.
+ * 1. Keeps the schedule timer running during the trailing phase (padding
+ *    cycles after all playable content).
+ * 2. Enforces a random-walk delay on every schedule timer start when a
+ *    Dodge defense is active, so that buffered-segment loads (which go
+ *    through the normal dash.js _onBytesAppended → startScheduleTimer(0)
+ *    path) still get the same random delay as partial and padding events.
  *
  * Registered via mediaPlayer.extend('ScheduleController', DodgeScheduleControllerOverride, true).
  */
@@ -43,15 +45,22 @@ function DodgeScheduleControllerOverride(config) {
     config = config || {};
     const parent = this.parent;
     const _parentShouldClearScheduleTimer = parent._shouldClearScheduleTimer;
+    const _parentStartScheduleTimer = parent.startScheduleTimer;
 
     const dashHandler = config.dashHandler;
+    const settings = config.settings;
+
+    function _getScheduleWait() {
+        const dodgeSettings = (settings.get().dodge) || {};
+        return dodgeSettings.scheduleWaitBase + Math.round(Math.random() * dodgeSettings.scheduleWaitRandom);
+    }
 
     function _shouldClearScheduleTimer() {
         const parentResult = _parentShouldClearScheduleTimer.call(parent);
         if (!parentResult) {
             return false;
         }
-        
+
         // Keep scheduling during trailing phase even if the parent would stop.
         if (dashHandler && dashHandler.getIsTrailing && dashHandler.getIsTrailing()) {
             return false;
@@ -59,8 +68,18 @@ function DodgeScheduleControllerOverride(config) {
         return true;
     }
 
+    function startScheduleTimer(value) {
+        if (dashHandler && dashHandler.getIsDefended && dashHandler.getIsDefended()) {
+            const minDelay = _getScheduleWait();
+            _parentStartScheduleTimer.call(parent, Math.max(value || 0, minDelay));
+        } else {
+            _parentStartScheduleTimer.call(parent, value);
+        }
+    }
+
     return {
         _shouldClearScheduleTimer,
+        startScheduleTimer,
     };
 }
 

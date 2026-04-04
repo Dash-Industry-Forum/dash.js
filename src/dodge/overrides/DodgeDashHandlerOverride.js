@@ -556,6 +556,10 @@ function DodgeDashHandlerOverride(config) {
         return !!defendedStreamInfo;
     }
 
+    function getIsDefended() {
+        return !!defendedStreamInfo;
+    }
+
     function getIsTrailing() {
         return !!(defendedStreamInfo && lastCycleIndex >= defendedStreamInfo['maxNoPad'] && lastCycleIndex < defendedStreamInfo['data'].length - 1);
     }
@@ -581,6 +585,7 @@ function DodgeDashHandlerOverride(config) {
         getNextExpectedIndex,
         getRemainingInitCycles,
         updateDefendedStreamInfo,
+        getIsDefended,
         getIsTrailing,
         isTextTrackBlockedByDodge,
     };
