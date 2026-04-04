@@ -152,6 +152,166 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
         });
 
+        it('init cycle with array buffer, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: [0] }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle with buffer string "true", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: 'true' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle with buffer string "false", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: 'false' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle with non-parseable string buffer, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: 'yes' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle with non-boolean buffer (number), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: 1 }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle with padding = true, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', padding: true }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle with padding string "true", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', padding: 'true' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle with padding string "false", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', padding: 'false' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle with non-parseable string padding, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', padding: 'yes' }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle with non-boolean padding (number), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: '0-99', padding: 1 }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('init cycle with non-string range (number), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{ range: 99 }], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = [0, 2] (array of non-negative integers), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0 }, { index: 1 }, { index: 2, buffer: [0, 2] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = [] (empty array), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: [] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = [1, -1] (negative index in array), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: [1, -1] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = [1.5] (non-integer in array), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: [1.5] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = ["abc"] (non-numeric in array), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: ['abc'] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer string "true", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: 'true' }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with buffer string "false", true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: 'false' }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with non-parseable string buffer, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: 'yes' }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = 1 (number), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: 1 }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
         it('data cycle with negative index, false', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },

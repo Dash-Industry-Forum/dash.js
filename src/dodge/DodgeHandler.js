@@ -275,6 +275,13 @@ function DodgeHandler(config) {
         return streamState.get(streamId);
     }
 
+    function _isBufferActive(buffer) {
+        if (Array.isArray(buffer)) {
+            return buffer.length > 0;
+        }
+        return !!buffer;
+    }
+
     function _onFragmentLoadingCompleted(e) {
         // Event propagation may have been stopped.
         if (!e.sender) {
@@ -314,28 +321,39 @@ function DodgeHandler(config) {
         let primaryEvent = null;
         let secondaryEvents = [];
 
-        // If the buffer flag is set, flush pendingMedia and pendingInit and
+        // If the buffer flag is active, flush pendingMedia and pendingInit and
         // populate secondaryEvents with the pending events.
-        if (request.buffer) {
+        // When buffer is an array of segment indices (selective buffer), only
+        // pending media events whose index is in the array are flushed; others
+        // stay queued. Pending init events are only flushed for boolean true.
+        if (_isBufferActive(request.buffer)) {
+            const selectiveIndices = Array.isArray(request.buffer) ? new Set(request.buffer) : null;
+
             // [data segments] Flush pending media events for same
             // stream, mediaType, and representation
             for (let i = pendingMedia.length - 1; i >= 0; i--) {
                 const event = pendingMedia[i];
                 if (event.streamId == strInfo.id && event.mediaType == request.mediaType) {
                     if (event.representationId == request.representation.id) {
-                        secondaryEvents.push(event);
+                        if (!selectiveIndices || selectiveIndices.has(event.index)) {
+                            secondaryEvents.push(event);
+                            pendingMedia.splice(i, 1);
+                        }
+                    } else {
+                        pendingMedia.splice(i, 1);
                     }
-                    pendingMedia.splice(i, 1);
                 }
             }
 
             // [init segments] Flush pending init events for same
-            // stream and mediaType
-            for (let i = pendingInit.length - 1; i >= 0; i--) {
-                const event = pendingInit[i];
-                if (event.streamId == strInfo.id && event.mediaType == request.mediaType) {
-                    secondaryEvents.push(event);
-                    pendingInit.splice(i, 1);
+            // stream and mediaType (boolean buffer only)
+            if (!selectiveIndices) {
+                for (let i = pendingInit.length - 1; i >= 0; i--) {
+                    const event = pendingInit[i];
+                    if (event.streamId == strInfo.id && event.mediaType == request.mediaType) {
+                        secondaryEvents.push(event);
+                        pendingInit.splice(i, 1);
+                    }
                 }
             }
         }
@@ -360,7 +378,11 @@ function DodgeHandler(config) {
             const response = _concatPartialSegments(partialSegments, request.index, request.representation.id, request.mediaType);
             const chunk = _createDataChunk(response, request, strInfo.id, true);
 
-            if (request.buffer) {
+            // Buffer the current segment when buffer is boolean true, or when
+            // buffer is an array that includes this segment's index.
+            const bufferCurrent = request.buffer === true
+                || (Array.isArray(request.buffer) && request.buffer.indexOf(request.index) !== -1);
+            if (bufferCurrent) {
                 primaryEvent = {
                     chunk: chunk,
                     event: isInit ? events.INIT_FRAGMENT_LOADED : events.MEDIA_FRAGMENT_LOADED,
@@ -428,7 +450,7 @@ function DodgeHandler(config) {
                     quality: request.quality,
                     byteLength: bytes.byteLength,
                     trail: request.trail,
-                    buffer: request.buffer && secondaryEvents.length == 0,
+                    buffer: request.buffer === true && secondaryEvents.length == 0,
                     suppress: false
                 },
                 { streamId: strInfo.id, mediaType: request.mediaType }

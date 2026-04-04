@@ -48,7 +48,7 @@ Each call to `getInitRequest()` advances `lastInitIndex` and sets `full = false,
 
 ### R2.2 - Data cycles are downloaded in sequence with correct flags
 
-Each call to `getNextSegmentRequest()` advances `lastCycleIndex` and reflects the cycle's `buffer`, `padding`, and `trail` fields on the returned request. `getSegmentRequestForTime()` also returns cycle requests for the matching segment.
+Each call to `getNextSegmentRequest()` advances `lastCycleIndex` and reflects the cycle's `buffer`, `padding`, and `trail` fields on the returned request. When `buffer` is a boolean, `request.buffer` is coerced to boolean. When `buffer` is an array of segment indices (selective buffer), `request.buffer` preserves the array value. `getSegmentRequestForTime()` also returns cycle requests for the matching segment.
 
 | File | Description | Test |
 |---|---|---|
@@ -58,6 +58,8 @@ Each call to `getNextSegmentRequest()` advances `lastCycleIndex` and reflects th
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a cycle with padding flag, sets padding = true on the request |
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() at a trailing padding cycle sets trail = true |
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getSegmentRequestForTime() in normal (non-trailing) state returns cycle request |
+| `dodge.DodgeDashHandlerOverride.js` | Selective buffer (array buffer on data cycles) | getNextSegmentRequest() at a cycle with buffer = [0], sets buffer = [0] on the request |
+| `dodge.DodgeDashHandlerOverride.js` | Selective buffer (array buffer on data cycles) | getNextSegmentRequest() at a cycle with buffer = [], sets buffer = [] on the request |
 
 ### R2.3 - Init-only (non-fragmented text) streams work correctly
 
@@ -120,6 +122,22 @@ The parent DashHandler's `lastSegment` is never updated during defended playback
 |---|---|---|
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | updateDefendedStreamInfo() returns true when stream is found |
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | resetInitialSettings() clears state; with strictMode = false, subsequent getInitRequest() falls back to parent |
+
+### R2.9 - Selective buffer: array buffer on data cycles flushes only matching pending segments
+
+When `buffer` on a data cycle is an array of segment indices, only pending media events whose segment index is in the array are flushed as secondary events. Non-matching pending media events remain queued. The current segment itself is only buffered (fires `MEDIA_FRAGMENT_LOADED`) if its index is in the array; otherwise, it is queued and fires `MEDIA_FRAGMENT_PARTIAL`. Pending init events are never flushed by selective buffer (no index to match). An empty array behaves as `buffer: false` (no flush, full segment queued). The event `buffer` flag on padding events is always `false` when the request buffer is an array (no mock buffer increment). Boolean `buffer: true` continues to flush all pending segments as before.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [0]: flushes only pending index 0, leaves index 1 queued; current segment (not in array) also queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [1]: flushes only pending index 1, leaves index 0 queued; current segment (not in array) also queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [0, 1]: flushes both pending segments; current segment index 2 (not in array) queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [0, 2]: current segment index 2 is in array, so it is buffered |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer [99]: no pending segments match, current segment not in array, queued |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer []: empty array behaves as buffer = false |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: event buffer flag is always false on padding events |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: pending init events are not flushed |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | boolean buffer true still flushes all pending segments |
 
 ---
 
@@ -367,7 +385,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 
 ### R8.1 - Structural validation rejects malformed manifests
 
-`isValidExtendedManifest()` validates the top-level structure of extended manifest files: `start.mpd` and `start.base_uri` must be present and strings, `streams` must be a non-empty array where each entry has a `label` and at least one of `init` or `data`. Dynamic MPDs (containing `type="dynamic"`) are rejected. Data cycle fields are validated: `index` must parse to a non-negative integer, `range` must be a well-formed string, and `padding` must be a boolean (or a string parseable to boolean) or absent.
+`isValidExtendedManifest()` validates the top-level structure of extended manifest files: `start.mpd` and `start.base_uri` must be present and strings, `streams` must be a non-empty array where each entry has a `label` and at least one of `init` or `data`. Dynamic MPDs (containing `type="dynamic"`) are rejected. Data cycle fields are validated: `index` must parse to a non-negative integer, `range` must be a well-formed string, `padding` must be a boolean (or a string parseable to boolean) or absent, and `buffer` must be a boolean (or a string parseable to boolean), an array of non-negative integers (selective buffer), or absent.
 
 | File | Description | Test |
 |---|---|---|
@@ -396,19 +414,39 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with padding string "false", true |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-boolean padding, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-parseable string padding, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = [0, 2] (array of non-negative integers), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = [] (empty array), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = [1, -1] (negative index in array), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = [1.5] (non-integer in array), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = ["abc"] (non-numeric in array), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer string "true", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer string "false", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-parseable string buffer, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = 1 (number), false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | valid manifest, true |
 
 ### R8.2 - Init cycle validation enforces range and buffer flag rules
 
-`checkInitCycles()` validates that each init cycle has a valid range string (`"start-end"` where start ≤ end) and that the `buffer` flag only appears on the last init cycle.
+`checkInitCycles()` validates that each init cycle has a valid range string (`"start-end"` where start ≤ end) or absent, that `padding` is a boolean (or a string parseable to boolean) or absent, that `buffer` is a boolean (or a string parseable to boolean) or absent (array buffer is never valid on init cycles), and that the `buffer` flag only appears on the last init cycle.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-string range, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with range start > end, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-string range (number), false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle buffer flag on non-last cycle, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle buffer flag on last cycle only, true |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycles with no buffer flags at all, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with array buffer, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with buffer string "true", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with buffer string "false", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-parseable string buffer, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-boolean buffer (number), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with padding = true, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with padding string "true", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with padding string "false", true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-parseable string padding, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-boolean padding (number), false |
 
 ### R8.3 - Data cycle validation enforces index sequencing, range continuity, and computes `maxNoPad`
 
@@ -538,13 +576,14 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R1.1 Unsupported ABR rules disabled at load | 3 |
 | R1.2 ABR quality check only at buffer events | 7 |
 | R2.1 Init cycle sequence and flags | 5 |
-| R2.2 Data cycle sequence and flags | 6 |
+| R2.2 Data cycle sequence and flags | 8 |
 | R2.3 Init-only (non-fragmented text) streams | 3 |
 | R2.4 Data-only (self-initialized) streams | 4 |
 | R2.5 Fallback to parent | 6 |
 | R2.6 CMCD nor/nrr suppressed during defense | 2 |
 | R2.7 getLastSegment returns override's segment | 3 |
 | R2.8 Defense state management | 2 |
+| R2.9 Selective buffer | 9 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 6 |
 | R3.3 Fragmented text streams | 6 |
@@ -568,8 +607,8 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R7.2 Request padding normalizes wire size | 13 |
 | R7.3 FetchLoader applies padding | 2 |
 | R7.4 XHRLoader applies padding | 2 |
-| R8.1 Structural validation rejects malformed manifests | 26 |
-| R8.2 Init cycle validation | 5 |
+| R8.1 Structural validation rejects malformed manifests | 35 |
+| R8.2 Init cycle validation | 16 |
 | R8.3 Data cycle validation and maxNoPad | 5 |
 | R8.4 Cycle index lookup | 6 |
 | R8.5 Registry stores and retrieves manifests | 7 |
@@ -579,4 +618,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **191** |
+| **Total** | **222** |

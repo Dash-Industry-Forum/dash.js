@@ -271,6 +271,44 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Selective buffer (array buffer on data cycles)
+
+    describe('Selective buffer (array buffer on data cycles)', function () {
+
+        function makeSelectiveManifest() {
+            return {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }, { range: '856-1711' }],
+                    data: [
+                        { index: 0 }, // cycle 0
+                        { index: 1, buffer: [0] }, // cycle 1, selective buffer
+                        { index: 2, buffer: [] }, // cycle 2, empty array
+                    ]
+                }]
+            };
+        }
+
+        beforeEach(function () {
+            defenseController.addExtendedManifest(makeSelectiveManifest());
+            override.updateDefendedStreamInfo(rep);
+        });
+
+        it('getNextSegmentRequest() at a cycle with buffer = [0], sets buffer = [0] on the request', function () {
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            const request = override.getNextSegmentRequest({}, rep); // cycle 1 { index: 1, buffer: [0] }
+            expect(request.buffer).to.deep.equal([0]);
+        });
+
+        it('getNextSegmentRequest() at a cycle with buffer = [], sets buffer = [] on the request', function () {
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.getNextSegmentRequest({}, rep); // cycle 1
+            const request = override.getNextSegmentRequest({}, rep); // cycle 2 { index: 2, buffer: [] }
+            expect(request.buffer).to.deep.equal([]);
+        });
+    });
+
     // URL padding
 
     describe('URL padding', function () {

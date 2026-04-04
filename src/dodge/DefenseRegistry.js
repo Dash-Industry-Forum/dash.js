@@ -43,14 +43,10 @@ function checkInitCycles(stream, logger) {
     for (let i = 0; i < stream['init'].length; i++) {
         const range = stream['init'][i].range;
 
-        // range is optional
-        let rs = 0;
-        let re = Number.MAX_SAFE_INTEGER;
-
-        if (range) {
-            // range MUST be a string of the form "<start>-<end>". Either bound MAY
-            // be omitted (e.g. "-855" or "44-"), in which case it defaults to 0 or
-            // the end of the resource, respectively.
+        // range is optional but, when present, MUST be a string of the form
+        // "<start>-<end>". Either bound MAY be omitted (e.g. "-855" or "44-"),
+        // in which case it defaults to 0 or the end of the resource.
+        if (range !== undefined && range !== null) {
             if (typeof range !== 'string' && !(range instanceof String)) {
                 if (logger) {
                     logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid range');
@@ -65,8 +61,8 @@ function checkInitCycles(stream, logger) {
                 }
                 return false;
             }
-            rs = parseInt(rangeTokens[0], 10);
-            re = parseInt(rangeTokens[1], 10);
+            let rs = parseInt(rangeTokens[0], 10);
+            let re = parseInt(rangeTokens[1], 10);
             if (isNaN(rs)) {
                 rs = 0;
             }
@@ -78,6 +74,58 @@ function checkInitCycles(stream, logger) {
             if (rs > re) {
                 if (logger) {
                     logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+        }
+
+        // padding MUST be a boolean (or a string parseable to boolean), or absent.
+        let padding = stream['init'][i].padding;
+        if (padding !== undefined && padding !== null) {
+            if (typeof padding === 'string') {
+                if (padding === 'true') {
+                    padding = true;
+                } else if (padding === 'false') {
+                    padding = false;
+                } else {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid padding value');
+                    }
+                    return false;
+                }
+                stream['init'][i].padding = padding;
+            } else if (typeof padding !== 'boolean') {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid padding value');
+                }
+                return false;
+            }
+        }
+
+        // buffer MUST be a boolean (or a string parseable to boolean), or absent.
+        // Array buffer is NOT valid on init cycles.
+        let buffer = stream['init'][i].buffer;
+        if (buffer !== undefined && buffer !== null) {
+            if (Array.isArray(buffer)) {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', buffer must not be an array');
+                }
+                return false;
+            } else if (typeof buffer === 'string') {
+                if (buffer === 'true') {
+                    buffer = true;
+                } else if (buffer === 'false') {
+                    buffer = false;
+                } else {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
+                    }
+                    return false;
+                }
+                stream['init'][i].buffer = buffer;
+            } else if (typeof buffer !== 'boolean') {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
                 }
                 return false;
             }
@@ -135,6 +183,42 @@ function checkDataCycles(stream, logger) {
             } else if (typeof padding !== 'boolean') {
                 if (logger) {
                     logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid padding value');
+                }
+                return false;
+            }
+        }
+
+        // buffer MUST be a boolean (or a string parseable to boolean), an array
+        // of non-negative integers, or absent.
+        let buffer = stream['data'][i].buffer;
+        if (buffer !== undefined && buffer !== null) {
+            if (Array.isArray(buffer)) {
+                for (let j = 0; j < buffer.length; j++) {
+                    const elem = Number(buffer[j]);
+                    if (isNaN(elem) || elem < 0 || !Number.isInteger(elem)) {
+                        if (logger) {
+                            logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid buffer array element at position ' + j);
+                        }
+                        return false;
+                    }
+                    buffer[j] = elem;
+                }
+                stream['data'][i].buffer = buffer;
+            } else if (typeof buffer === 'string') {
+                if (buffer === 'true') {
+                    buffer = true;
+                } else if (buffer === 'false') {
+                    buffer = false;
+                } else {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid buffer value');
+                    }
+                    return false;
+                }
+                stream['data'][i].buffer = buffer;
+            } else if (typeof buffer !== 'boolean') {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid buffer value');
                 }
                 return false;
             }

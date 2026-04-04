@@ -337,6 +337,128 @@ describe('DodgeHandler', function () {
             // MEDIA_FRAGMENT_LOADED should fire twice: once for A (suppressed), once for B (primary)
             expect(mediaLoadedSpy.callCount).to.equal(2);
         });
+
+        // Selective buffer (array buffer)
+
+        it('selective buffer [0]: flushes only pending index 0, leaves index 1 queued; current segment (not in array) also queued', function () {
+            // Queue two full segments without buffer
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 1 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            // Selective buffer [0]: flushes pending index 0, current segment index 2 not in array so queued
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [0], index: 2 }));
+            expect(mediaLoadedSpy.callCount).to.equal(1); // secondary for index 0 only
+            expect(partialSegmentSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2); // index 1 + index 2
+        });
+
+        it('selective buffer [1]: flushes only pending index 1, leaves index 0 queued; current segment (not in array) also queued', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 1 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [1], index: 2 }));
+            expect(mediaLoadedSpy.callCount).to.equal(1); // secondary for index 1 only
+            expect(partialSegmentSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2); // index 0 + index 2
+        });
+
+        it('selective buffer [0, 1]: flushes both pending segments; current segment index 2 (not in array) queued', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 1 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [0, 1], index: 2 }));
+            expect(mediaLoadedSpy.callCount).to.equal(2); // 2 secondary
+            expect(partialSegmentSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1); // index 2
+        });
+
+        it('selective buffer [0, 2]: current segment index 2 is in array, so it is buffered', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            // buffer: [0, 2], current segment index 2 is in the array
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [0, 2], index: 2 }));
+            expect(mediaLoadedSpy.callCount).to.equal(2); // secondary for index 0 + primary for index 2
+            expect(partialSegmentSpy.called).to.be.false; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(0);
+        });
+
+        it('selective buffer [99]: no pending segments match, current segment not in array, queued', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            // buffer: [99] matches nothing in pending and current index 1 is not in array
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [99], index: 1 }));
+            expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
+            expect(partialSegmentSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2); // index 0 + index 1
+        });
+
+        it('selective buffer []: empty array behaves as buffer = false', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
+
+            mediaLoadedSpy.resetHistory();
+            partialSegmentSpy.resetHistory();
+
+            // Empty array = no flush, full segment queued
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [], index: 1 }));
+            expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
+            expect(partialSegmentSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
+        });
+
+        it('selective buffer: event buffer flag is always false on padding events', function () {
+            // Fire a padding request with array buffer
+            triggerFragmentLoaded(makeRequest({ full: false, padding: true, buffer: [0] }));
+            expect(paddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(paddingLoadedSpy.firstCall.args[0].buffer).to.be.false; // jshint ignore:line
+        });
+
+        it('selective buffer: pending init events are not flushed', function () {
+            // Queue a full init segment without buffer
+            triggerFragmentLoaded(makeRequest({
+                full: true, buffer: false, index: 0,
+                isInitializationRequest: () => true,
+            }));
+            expect(handler.getStreamStats('stream-1').pendingInit).to.equal(1);
+
+            mediaLoadedSpy.resetHistory();
+
+            // Selective buffer on a data request should not flush pending init
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: [0], index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingInit).to.equal(1);
+        });
+
+        it('boolean buffer true still flushes all pending segments', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 1 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
+
+            mediaLoadedSpy.resetHistory();
+
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, index: 2 }));
+            expect(mediaLoadedSpy.callCount).to.equal(3); // 2 secondary + 1 primary
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(0);
+        });
     });
 
     // ABR rule disabling in registerExtensions

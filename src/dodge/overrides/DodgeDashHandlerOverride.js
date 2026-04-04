@@ -380,7 +380,7 @@ function DodgeDashHandlerOverride(config) {
         const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
         if (request) {
             request.full = !cycle.padding && (!nextCycle || nextCycle.index != cycle.index);
-            request.buffer = !!cycle.buffer;
+            request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
             request.padding = !!cycle.padding;
             request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
         }
@@ -438,7 +438,7 @@ function DodgeDashHandlerOverride(config) {
         const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
         if (request) {
             request.full = !cycle.padding && (!nextCycle || nextCycle.index != cycle.index);
-            request.buffer = !!cycle.buffer;
+            request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
             request.padding = !!cycle.padding;
             request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
         }
