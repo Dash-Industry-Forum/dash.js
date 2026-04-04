@@ -30,9 +30,10 @@
  */
 
 /**
- * If this is a Dodge request and `dodge.paddingLength` is non-zero, extend
+ * If this is a Dodge request and `dodge.paddingLengthBase` is non-zero, extend
  * the `padding` query parameter that was already merged into the URL so that
- * the approximate HTTP/1.1 wire size of the request equals `paddingLength`.
+ * the approximate HTTP/1.1 wire size of the request equals
+ * `paddingLengthBase + Math.round(Math.random() * paddingLengthRandom)`.
  *
  * Wire size is approximated as: URL length + sum of header char counts
  * for each header. This covers the request line and all headers, capturing the
@@ -48,10 +49,11 @@
  */
 export function applyRequestPadding(commonMediaRequest, settings, logger) {
     const dodgeSettings = settings.get().dodge || {};
-    const paddingLength = dodgeSettings.paddingLength || 0;
+    const paddingLengthBase = dodgeSettings.paddingLengthBase || 0;
+    const paddingLengthRandom = dodgeSettings.paddingLengthRandom || 0;
     const queryParam = dodgeSettings.queryParam || 'padding';
 
-    if (paddingLength <= 0) {
+    if (paddingLengthBase <= 0) {
         return;
     }
 
@@ -77,6 +79,7 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
         }
     }
 
+    const paddingLength = paddingLengthBase + Math.round(Math.random() * paddingLengthRandom);
     const pad = paddingLength - size;
     if (pad < 0) {
         logger.warn('add request padding: request size ' + size + ' exceeds paddingLength ' + paddingLength);

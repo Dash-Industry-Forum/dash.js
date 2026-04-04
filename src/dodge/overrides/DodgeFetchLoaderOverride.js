@@ -37,9 +37,9 @@ import { applyRequestPadding } from '../utils/RequestPadding.js';
  * Overrides FetchLoader.load() to apply request-level padding for Dodge
  * requests before delegating to the parent implementation.
  *
- * When `dodge.paddingLength` is set, all Dodge requests are padded so
- * the approximate HTTP/1.1 wire size (URL + all request headers) equals
- * `paddingLength`.
+ * When `dodge.paddingLengthBase` is set, all Dodge requests are padded so
+ * the approximate HTTP/1.1 wire size (URL + all request headers) falls in
+ * `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`.
  */
 function DodgeFetchLoaderOverride() {
 

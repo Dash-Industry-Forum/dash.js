@@ -368,7 +368,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            scheduleWaitRandom: 50,
  *            maxIdLength: 32,
  *            queryParam: 'padding',
- *            paddingLength: 0,
+ *            paddingLengthBase: 0,
+ *            paddingLengthRandom: 0,
  *            strictMode: 'representation'
  *          }
  * }
@@ -562,8 +563,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Maximum expected length of a representation ID string, required for proper URL padding.
  * @property {string} [queryParam='padding']
  * Name of the query parameter appended to segment URLs to normalize their lengths.
- * @property {number} [paddingLength=0]
- * Target HTTP/1.1 wire size in bytes (URL + request headers) for Dodge requests.
+ * @property {number} [paddingLengthBase=0]
+ * Base target HTTP/1.1 wire size in bytes (URL + request headers) for Dodge requests.
+ * @property {number} [paddingLengthRandom=0]
+ * Maximum additional random bytes added to paddingLengthBase per request.
  * @property {false|'representation'|'manifest'} [strictMode='representation']
  * Controls fallback behavior when defense info is not available. Note that it is risky to
  * set strictMode to false; this allows representations that don't appear in the extended
@@ -1545,7 +1548,8 @@ function Settings() {
             scheduleWaitRandom: 50,
             maxIdLength: 32,
             queryParam: 'padding',
-            paddingLength: 0,
+            paddingLengthBase: 0,
+            paddingLengthRandom: 0,
             strictMode: 'representation'
         }
     };
