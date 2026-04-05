@@ -643,5 +643,28 @@ describe('DefenseRegistry', function () {
             registry.reset();
             expect(registry.getDefendedStreamInfo('video_1000k')).to.be.null; // jshint ignore:line
         });
+
+        it('getMaxLabelLength returns 0 when no manifests are loaded', function () {
+            expect(registry.getMaxLabelLength()).to.equal(0);
+        });
+
+        it('getMaxLabelLength returns the longest stream label across multiple streams and manifests', function () {
+            // First manifest: two streams with labels of different lengths.
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'v', init: [{}], data: [{ index: 0, buffer: true }] }, //  1
+                    { label: 'video_mid', init: [{}], data: [{ index: 0, buffer: true }] }, //  9
+                ]
+            });
+            // Second manifest: one stream with an even longer label.
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'video_very_long_label', init: [{}], data: [{ index: 0, buffer: true }] }, // 21
+                ]
+            });
+            expect(registry.getMaxLabelLength()).to.equal('video_very_long_label'.length);
+        });
     });
 });

@@ -77,7 +77,8 @@ function DodgeDashHandlerOverride(config) {
         lastSegment,
         mediaHasFinished,
         lastRepresentationMediaType,
-        reportedLabels;
+        reportedLabels,
+        warnedInvalidMaxIdLength;
 
     function setup() {
         logger = debug.getLogger({ __dashjs_factory_name: 'DodgeDashHandlerOverride' });
@@ -92,6 +93,7 @@ function DodgeDashHandlerOverride(config) {
         mediaHasFinished = false;
         lastRepresentationMediaType = null;
         reportedLabels = new Set();
+        warnedInvalidMaxIdLength = false;
     }
 
     // Return true if strict mode is 'representation' or 'manifest' (both
@@ -173,7 +175,7 @@ function DodgeDashHandlerOverride(config) {
                 if (replacements['ID'] > 0) {
                     let count = replacements['ID'];
                     let chars = request.representation.id.toString().length;
-                    const maxId = (settings.get().dodge || {}).maxIdLength || 32;
+                    const maxId = _getValidatedMaxIdLength();
                     let pad = maxId - chars;
                     if (pad > 0) {
                         random += '0'.repeat(count * pad);
@@ -273,6 +275,33 @@ function DodgeDashHandlerOverride(config) {
     // ************************************************************************
     // DATA REQUEST GENERATION
     // ************************************************************************
+
+    /**
+     * Validate dodge.maxIdLength. Returns the configured value when it is a
+     * positive number. Invalid values (0, negative, non-numeric) fall back
+     * to the largest label length across all currently loaded extended
+     * manifests (0 if none are loaded yet) and are logged once per
+     * override instance so misconfiguration is visible.
+     */
+    function _getValidatedMaxIdLength() {
+        const raw = (settings.get().dodge || {}).maxIdLength;
+        const fallback = defenseRegistry.getMaxLabelLength();
+        if (raw === undefined || raw === null) {
+            if (!warnedInvalidMaxIdLength) {
+                logger.warn('dodge.maxIdLength is unset (' + raw + '), treating as ' + fallback + ' (largest label length across loaded extended manifests)');
+                warnedInvalidMaxIdLength = true;
+            }
+            return fallback;
+        }
+        if (typeof raw === 'number' && raw > 0) {
+            return raw;
+        }
+        if (!warnedInvalidMaxIdLength) {
+            logger.warn('dodge.maxIdLength is invalid (' + raw + '), treating as ' + fallback + ' (largest label length across loaded extended manifests)');
+            warnedInvalidMaxIdLength = true;
+        }
+        return fallback;
+    }
 
     /**
      * Resolve the effective representation for a data cycle. When cycle.quality

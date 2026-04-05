@@ -374,13 +374,14 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 
 ### R7.1 - URL padding normalizes template URL lengths across representations
 
-`_setRequestUrlWithPadding()` adds a `queryParams.padding` value sized to equalize URL lengths across all numeric token values (e.g., single-digit vs multi-digit segment numbers). Absolute URLs are not padded (no template expansion, so `queryParams.padding` is not set).
+`_setRequestUrlWithPadding()` adds a `queryParams.padding` value sized to equalize URL lengths across all numeric token values (e.g., single-digit vs multi-digit segment numbers) and across `$RepresentationID$` values up to `dodge.maxIdLength` (default 32). Absolute URLs are not padded (no template expansion, so `queryParams.padding` is not set). Invalid values of `dodge.maxIdLength` (non-positive or non-numeric) fall back to the largest stream label length across all currently loaded extended manifests (0 if none are loaded) and are logged once per override instance.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | relative template URL, queryParams.padding is set on the request |
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | Number padding is longer for a 1-digit index than for a 2-digit index |
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | absolute URL (no template expansion), queryParams has no padding key |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | maxIdLength invalid (negative): falls back to max loaded label length and warns exactly once across requests |
 
 ### R7.2 - Request padding normalizes HTTP wire size to `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`
 
@@ -522,7 +523,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 
 ### R8.5 - Registry stores and retrieves extended manifests by label and stream ID
 
-`addExtendedManifest()` validates and stores manifests. `getDefendedStreamInfo()` retrieves a stream entry by label, optionally filtered by stream ID. `hasContent()` reflects whether any manifests are stored. `reset()` clears all state.
+`addExtendedManifest()` validates and stores manifests. `getDefendedStreamInfo()` retrieves a stream entry by label, optionally filtered by stream ID. `hasContent()` reflects whether any manifests are stored. `getMaxLabelLength()` returns the longest stream label across all loaded manifests (0 if none) and is used as a fallback for a misconfigured `dodge.maxIdLength`. `reset()` clears all state.
 
 | File | Description | Test |
 |---|---|---|
@@ -533,6 +534,8 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns null when streamId does not match |
 | `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns the entry when streamId matches |
 | `dodge.DefenseRegistry.js` | instance | reset clears all manifests, getDefendedStreamInfo returns null after reset |
+| `dodge.DefenseRegistry.js` | instance | getMaxLabelLength returns 0 when no manifests are loaded |
+| `dodge.DefenseRegistry.js` | instance | getMaxLabelLength returns the longest stream label across multiple streams and manifests |
 
 ---
 
@@ -652,7 +655,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R6.3 Suppressed events skip scheduling | 2 |
 | R6.4 Padding event routing | 1 |
 | R6.5 Random walk delay on all scheduling paths | 8 |
-| R7.1 URL padding normalizes template lengths | 3 |
+| R7.1 URL padding normalizes template lengths | 4 |
 | R7.2 Request padding normalizes wire size | 14 |
 | R7.3 FetchLoader applies padding | 2 |
 | R7.4 XHRLoader applies padding | 2 |
@@ -660,11 +663,11 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R8.2 Init cycle validation | 16 |
 | R8.3 Data cycle validation and maxNoPad | 5 |
 | R8.4 Cycle index lookup | 6 |
-| R8.5 Registry stores and retrieves manifests | 7 |
+| R8.5 Registry stores and retrieves manifests | 9 |
 | R9.1 Manifest parsing and graceful degradation | 4 |
 | R9.2 Strict mode manifest error firing | 4 |
 | R9.3 Non-strict mode no error | 1 |
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **253** |
+| **Total** | **256** |

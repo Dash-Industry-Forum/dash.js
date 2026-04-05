@@ -544,6 +544,27 @@ function DefenseRegistry() {
     }
 
     /**
+     * Return the maximum length of any stream label across all extended
+     * manifests currently registered, or 0 if none are registered. Used by
+     * DodgeDashHandlerOverride to derive a sensible fallback for
+     * dodge.maxIdLength when the setting is misconfigured.
+     * @returns {number}
+     */
+    function getMaxLabelLength() {
+        let max = 0;
+        for (let i = 0; i < manifestData.length; i++) {
+            const streams = manifestData[i]['streams'] || [];
+            for (let j = 0; j < streams.length; j++) {
+                const label = streams[j] && streams[j]['label'];
+                if (typeof label === 'string' && label.length > max) {
+                    max = label.length;
+                }
+            }
+        }
+        return max;
+    }
+
+    /**
      * Validate and store an extended manifest. Assigns a unique `manifestId`
      * and associates the extended manifest with the given `streamId`.
      * @param {Object} content - The parsed extended manifest JSON object.
@@ -598,6 +619,7 @@ function DefenseRegistry() {
     instance = {
         addExtendedManifest,
         getDefendedStreamInfo,
+        getMaxLabelLength,
         hasContent,
         reset,
         setup

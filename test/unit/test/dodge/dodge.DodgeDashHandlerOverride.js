@@ -643,6 +643,114 @@ describe('DodgeDashHandlerOverride', function () {
             const request = override.getNextSegmentRequest({}, rep);
             expect(request.queryParams.padding).to.be.undefined; // jshint ignore:line
         });
+
+        it('maxIdLength invalid (negative): falls back to max loaded label length and warns exactly once across requests', function () {
+            const ctx = {};
+            const loggerSpy = { fatal: sinon.spy(), error: sinon.spy(), warn: sinon.spy(), info: sinon.spy(), debug: sinon.spy() };
+            sinon.stub(Debug(ctx).getInstance(), 'getLogger').returns(loggerSpy);
+
+            const registry = DefenseRegistry(ctx).getInstance();
+            registry.reset();
+
+            const localSettings = Settings(ctx).getInstance();
+            localSettings.update({ dodge: { maxIdLength: -5 } });
+
+            const localRep = makeRepresentation(); // id = 'rep0' (4 chars)
+
+            const localParent = {
+                getInitRequest: sinon.stub().returns(null),
+                getNextSegmentRequest: sinon.stub().returns(null),
+                resetInitialSettings: sinon.stub(),
+                initialize: sinon.stub(),
+                getStreamInfo: sinon.stub().returns({ manifestInfo: { isDynamic: false } }),
+                getType: sinon.stub().returns('video'),
+            };
+
+            const localBaseURLController = {
+                resolve: () => ({ url: 'https://example.com/', serviceLocation: 'example.com', queryParams: {} })
+            };
+
+            // Template contains $RepresentationID$ so the ID branch fires.
+            const localSegmentsController = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => ({
+                    index: idx,
+                    media: 'seg_$RepresentationID$.m4s',
+                    presentationStartTime: idx * 4,
+                    duration: 4,
+                    representation: r,
+                    replacementNumber: idx,
+                    replacementTime: 0,
+                    mediaRange: null,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    wallStartTime: 0,
+                    mediaStartTime: 0,
+                    replacements: null,
+                })),
+                getSegmentByTime: sinon.stub().returns(null),
+            };
+
+            const localOverride = DodgeDashHandlerOverride.call(
+                { context: ctx, parent: localParent, factory: {} },
+                {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
+                    debug: Debug(ctx).getInstance(),
+                    urlUtils: URLUtils(ctx).getInstance(),
+                    segmentsController: localSegmentsController,
+                    baseURLController: localBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: sinon.stub().returns(0),
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+
+            // Two streams so the fallback resolves to a non-trivial max label
+            // length. `rep0` is 4 chars; `rep_longer` is 10 chars.
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    {
+                        label: 'rep0',
+                        init: [{}],
+                        // Ten data cycles so 10 sequential getNextSegmentRequest calls resolve.
+                        data: [
+                            { index: 0, buffer: true }, { index: 1, buffer: true },
+                            { index: 2, buffer: true }, { index: 3, buffer: true },
+                            { index: 4, buffer: true }, { index: 5, buffer: true },
+                            { index: 6, buffer: true }, { index: 7, buffer: true },
+                            { index: 8, buffer: true }, { index: 9, buffer: true },
+                        ]
+                    },
+                    {
+                        label: 'rep_longer',
+                        init: [{}],
+                        data: [{ index: 0, buffer: true }]
+                    }
+                ]
+            });
+            localOverride.updateDefendedStreamInfo(localRep);
+
+            for (let i = 0; i < 10; i++) {
+                const req = localOverride.getNextSegmentRequest({}, localRep);
+                expect(req).to.exist; // jshint ignore:line
+                expect(req.queryParams.padding).to.be.a('string');
+                // Fallback maxId = 10 ('rep_longer'), chars = 4 ('rep0'), pad = 6,
+                // the padding string contains at least 6 zeros from the ID branch
+                // (one $RepresentationID$ in the template). Total length is the
+                // cache-busting prefix + at least 6 zeros.
+                expect(req.queryParams.padding.length).to.be.at.least(6);
+            }
+
+            // Warn once: exactly one warning despite 10 requests, and the warning
+            // text carries the dynamically computed fallback value (10).
+            const invalidWarnings = loggerSpy.warn.getCalls().filter(
+                c => c.args[0] && c.args[0].indexOf('maxIdLength is invalid') !== -1
+            );
+            expect(invalidWarnings.length).to.equal(1);
+            expect(invalidWarnings[0].args[0]).to.include('treating as 10');
+        });
     });
 
     // Strict mode
