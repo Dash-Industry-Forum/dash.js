@@ -319,13 +319,14 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 
 ### R6.1 - Schedule delay is bounded to `[scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom]`
 
-`_getScheduleWait()` returns `scheduleWaitBase + Math.round(Math.random() * scheduleWaitRandom)`. With `scheduleWaitRandom = 0`, the delay is deterministically equal to `scheduleWaitBase`. A negative `scheduleWaitRandom` is clamped to 0 and logged once per DodgeHandler / DodgeScheduleControllerOverride instance.
+`_getScheduleWait()` returns `scheduleWaitBase + Math.round(Math.random() * scheduleWaitRandom)`. With `scheduleWaitRandom = 0`, the delay is deterministically equal to `scheduleWaitBase`. A negative `scheduleWaitRandom` or `scheduleWaitBase` is clamped to 0 and logged once per DodgeHandler / DodgeScheduleControllerOverride instance.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | delay passed to startScheduleTimer is within [scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom] |
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom = 0, delay is always exactly scheduleWaitBase |
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom < 0, delay is clamped to scheduleWaitBase and warns exactly once |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitBase < 0, delay is clamped to 0 + random and warns exactly once |
 
 ### R6.2 - Scheduling is scoped to the event's media type
 
@@ -363,6 +364,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value larger than max delay: keeps the larger value |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom < 0: clamps to scheduleWaitBase and warns exactly once |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitBase < 0: clamps to 0 and warns exactly once |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with undefined value: treats as 0 and enforces minimum delay |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | dashHandler absent: passes value through to parent unchanged |
 
@@ -645,11 +647,11 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 1 |
-| R6.1 Random walk delay bounded | 3 |
+| R6.1 Random walk delay bounded | 4 |
 | R6.2 Scheduling is scoped to correct stream processor | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
 | R6.4 Padding event routing | 1 |
-| R6.5 Random walk delay on all scheduling paths | 7 |
+| R6.5 Random walk delay on all scheduling paths | 8 |
 | R7.1 URL padding normalizes template lengths | 3 |
 | R7.2 Request padding normalizes wire size | 14 |
 | R7.3 FetchLoader applies padding | 2 |
@@ -665,4 +667,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **251** |
+| **Total** | **253** |

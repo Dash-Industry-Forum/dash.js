@@ -132,6 +132,24 @@ describe('DodgeScheduleControllerOverride', function () {
             expect(negativeWarnings.length).to.equal(1);
         });
 
+        it('defended with scheduleWaitBase < 0: clamps to 0 and warns exactly once', function () {
+            const { override, parentStartScheduleTimerStub, loggerSpy } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: -100, scheduleWaitRandom: 0
+            });
+            for (let i = 0; i < 20; i++) {
+                override.startScheduleTimer(0);
+            }
+            // With base clamped to 0 and random = 0, every delay is exactly 0.
+            for (const call of parentStartScheduleTimerStub.getCalls()) {
+                expect(call.args[0]).to.equal(0);
+            }
+            const negativeWarnings = loggerSpy.warn.getCalls().filter(
+                c => c.args[0] && c.args[0].indexOf('scheduleWaitBase is negative') !== -1
+            );
+            expect(negativeWarnings.length).to.equal(1);
+        });
+
         it('defended with undefined value: treats as 0 and enforces minimum delay', function () {
             const { override, parentStartScheduleTimerStub } = makeOverride({
                 parentResult: false, isTrailing: false, isDefended: true,

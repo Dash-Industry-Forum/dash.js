@@ -56,6 +56,7 @@ function DodgeScheduleControllerOverride(config) {
 
     const logger = Debug(context).getInstance().getLogger({ __dashjs_factory_name: 'DodgeScheduleControllerOverride' });
     let warnedNegativeScheduleRandom = false;
+    let warnedNegativeScheduleBase = false;
 
     function _getScheduleWait() {
         const dodgeSettings = (settings.get().dodge) || {};
@@ -65,7 +66,13 @@ function DodgeScheduleControllerOverride(config) {
             warnedNegativeScheduleRandom = true;
         }
         const random = Math.max(0, rawRandom);
-        return (dodgeSettings.scheduleWaitBase || 0) + Math.round(Math.random() * random);
+        const rawBase = dodgeSettings.scheduleWaitBase || 0;
+        if (rawBase < 0 && !warnedNegativeScheduleBase) {
+            logger.warn('dodge.scheduleWaitBase is negative (' + rawBase + '), treating as 0');
+            warnedNegativeScheduleBase = true;
+        }
+        const base = Math.max(0, rawBase);
+        return base + Math.round(Math.random() * random);
     }
 
     function _shouldClearScheduleTimer() {

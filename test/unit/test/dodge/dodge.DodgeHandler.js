@@ -840,6 +840,36 @@ describe('DodgeHandler', function () {
             expect(negativeWarnings.length).to.equal(1);
         });
 
+        it('with scheduleWaitBase < 0, delay is clamped to 0 + random and warns exactly once', function () {
+            const loggerSpy = { fatal: sinon.spy(), error: sinon.spy(), warn: sinon.spy(), info: sinon.spy(), debug: sinon.spy() };
+            sinon.stub(Debug(context).getInstance(), 'getLogger').returns(loggerSpy);
+
+            const timerSpy = sinon.spy();
+            makeHandler([{
+                getScheduleController: () => ({ startScheduleTimer: timerSpy, setShouldCheckPlaybackQuality: sinon.spy() }),
+                getType: () => 'video',
+                getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+            }]);
+
+            settings.update({ dodge: { scheduleWaitBase: -100, scheduleWaitRandom: 50 } });
+            for (let i = 0; i < 20; i++) {
+                timerSpy.resetHistory();
+                eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                    { index: i, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                    { streamId: 'stream-1', mediaType: 'video' }
+                );
+                // Clamped base = 0, so delay is exactly the random jitter in [0, 50].
+                const delay = timerSpy.firstCall.args[0];
+                expect(delay).to.be.at.least(0);
+                expect(delay).to.be.at.most(50);
+            }
+
+            const negativeWarnings = loggerSpy.warn.getCalls().filter(
+                c => c.args[0] && c.args[0].indexOf('scheduleWaitBase is negative') !== -1
+            );
+            expect(negativeWarnings.length).to.equal(1);
+        });
+
         it('_schedule only targets the stream processor matching the event mediaType', function () {
             const timerSpy1 = sinon.spy();
             const timerSpy2 = sinon.spy();

@@ -86,6 +86,7 @@ function DodgeHandler(config) {
     let logger,
         defenseRegistry,
         warnedNegativeScheduleRandom,
+        warnedNegativeScheduleBase,
         instance;
 
     // Per-stream state, keeps track of partial segments and pending events.
@@ -96,6 +97,7 @@ function DodgeHandler(config) {
         logger = debug.getLogger(instance);
         defenseRegistry = DefenseRegistry(context).getInstance();
         warnedNegativeScheduleRandom = false;
+        warnedNegativeScheduleBase = false;
         streamState = new Map();
     }
 
@@ -224,7 +226,13 @@ function DodgeHandler(config) {
             warnedNegativeScheduleRandom = true;
         }
         const random = Math.max(0, rawRandom);
-        return (dodgeSettings.scheduleWaitBase || 0) + Math.round(Math.random() * random);
+        const rawBase = dodgeSettings.scheduleWaitBase || 0;
+        if (rawBase < 0 && !warnedNegativeScheduleBase) {
+            logger.warn('dodge.scheduleWaitBase is negative (' + rawBase + '), treating as 0');
+            warnedNegativeScheduleBase = true;
+        }
+        const base = Math.max(0, rawBase);
+        return base + Math.round(Math.random() * random);
     }
 
     function _getStreamProcessor(mediaType) {
