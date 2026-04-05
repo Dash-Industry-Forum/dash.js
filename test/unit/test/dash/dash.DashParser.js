@@ -28,6 +28,22 @@ describe('DashParser', function () {
         expect(dashParser.parse(manifest)).to.be.instanceOf(Object);
     });
 
+    it('should return a parsed Patch object when parse is called with valid patch data', () => {
+        const patchManifest = `<?xml version="1.0" encoding="UTF-8"?>
+<Patch mpdId="foobar"
+       publishTime="2020-01-01T00:00:01Z"
+       originalPublishTime="2020-01-01T00:00:00Z">
+    <replace sel="/MPD/@publishTime">2020-01-01T00:00:01Z</replace>
+</Patch>`;
+        const parsedPatch = dashParser.parse(patchManifest);
+
+        expect(parsedPatch).to.be.instanceOf(Object);
+        expect(parsedPatch.protocol).to.equal('DASH');
+        expect(parsedPatch.mpdId).to.equal('foobar');
+        expect(parsedPatch.replace).to.be.instanceOf(Array);
+        expect(parsedPatch.replace).to.have.lengthOf(1);
+    });
+
     describe('DashParser matchers', function () {
         let manifest;
 
@@ -120,6 +136,5 @@ describe('DashParser', function () {
 
     });
 })
-
 
 
