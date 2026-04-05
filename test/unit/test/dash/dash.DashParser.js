@@ -15,17 +15,17 @@ const dashManifestModel = DashManifestModel(context).getInstance();
 describe('DashParser', function () {
 
     it('should throw an error when parse is called without data and config object has been set properly', () => {
-        expect(dashParser.parse.bind('')).to.be.throw('failed to parse the manifest');
+        expect(() => dashParser.parse('')).to.throw('failed to parse the manifest');
     });
 
     it('should throw an error when parse is called with invalid data', async () => {
         let manifest = await FileLoader.loadTextFile('/data/dash/manifest_error.xml');
-        expect(dashParser.parse.bind(manifest)).to.be.throw('failed to parse the manifest');
+        expect(() => dashParser.parse(manifest)).to.throw('failed to parse the manifest');
     });
 
     it('should return an Object when parse is called with correct data', async () => {
         let manifest = await FileLoader.loadTextFile('/data/dash/manifest.xml');
-        expect(dashParser.parse.bind(manifest)).to.be.instanceOf(Object);
+        expect(dashParser.parse(manifest)).to.be.instanceOf(Object);
     });
 
     describe('DashParser matchers', function () {
@@ -61,14 +61,18 @@ describe('DashParser', function () {
         });
     });
 
-    describe('DashParser - ObjectIron', async () => {
+    describe('DashParser - ObjectIron', () => {
+        let manifest_prop;
+
+        before(async () => {
+            manifest_prop = await FileLoader.loadTextFile('/data/dash/manifest_properties.xml');
+        });
+
         beforeEach(function () {
             dashManifestModel.setConfig({
                 errHandler: errorHandlerMock
             });
         });
-
-        let manifest_prop = await FileLoader.loadTextFile('/data/dash/manifest_properties.xml');
 
         it('should map AudioChannelConfig even if another instance is present on Representation', async () => {
             let parsedMpd = dashParser.parse(manifest_prop);
