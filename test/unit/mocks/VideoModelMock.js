@@ -169,7 +169,6 @@ class VideoModelMock {
     getCurrentCue(textTrack) {
         const textTrackList = this.element.textTracks;
         const track = textTrackList.getTrackById(textTrack.id);
-        console.log('track', track);
         if (!track) {
             return null;
         }
