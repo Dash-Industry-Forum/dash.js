@@ -307,13 +307,13 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | delay passed to startScheduleTimer is within [scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom] |
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom = 0, delay is always exactly scheduleWaitBase |
 
-### R6.2 - All active stream processors receive the scheduling signal
+### R6.2 - Scheduling is scoped to the event's media type
 
-`_scheduleAll()` iterates through every stream processor returned by `streamController.getActiveStreamProcessors()` and calls `startScheduleTimer` and `setShouldCheckPlaybackQuality` on each.
+`_schedule()` finds the stream processor matching the event's `mediaType` and calls `startScheduleTimer` and `setShouldCheckPlaybackQuality` only on that processor. A video event does not affect the audio stream processor's schedule or quality check state.
 
 | File | Description | Test |
 |---|---|---|
-| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | _scheduleAll calls startScheduleTimer on all active stream processors |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | _schedule only targets the stream processor matching the event mediaType |
 
 ### R6.3 - Suppressed events skip scheduling
 
@@ -614,7 +614,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 1 |
 | R6.1 Random walk delay bounded | 2 |
-| R6.2 All stream processors scheduled | 1 |
+| R6.2 Scheduling is scoped to correct stream processor | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
 | R6.4 Padding event routing | 1 |
 | R6.5 Random walk delay on all scheduling paths | 6 |

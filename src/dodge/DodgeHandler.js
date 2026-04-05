@@ -219,38 +219,42 @@ function DodgeHandler(config) {
         return dodgeSettings.scheduleWaitBase + Math.round(Math.random() * dodgeSettings.scheduleWaitRandom);
     }
 
-    function _setQualityCheckAll(checkQuality) {
+    function _getStreamProcessor(mediaType) {
         if (!streamController) {
-            return;
+            return null;
         }
+        if (!mediaType) {
+            return null;
+        }
+        return streamController.getActiveStreamProcessors().find(sp => sp.getType() === mediaType) || null;
+    }
 
-        streamController.getActiveStreamProcessors().forEach(sp => {
+    function _setQualityCheck(checkQuality, mediaType) {
+        const sp = _getStreamProcessor(mediaType);
+        if (sp) {
             const sc = sp.getScheduleController();
             if (sc) {
                 sc.setShouldCheckPlaybackQuality(checkQuality);
             }
-        });
+        }
     }
 
-    function _scheduleAll(checkQuality, delay) {
-        if (!streamController) {
-            return;
-        }
-
-        streamController.getActiveStreamProcessors().forEach(sp => {
+    function _schedule(checkQuality, delay, mediaType) {
+        const sp = _getStreamProcessor(mediaType);
+        if (sp) {
             const sc = sp.getScheduleController();
             if (sc) {
                 sc.setShouldCheckPlaybackQuality(checkQuality);
                 sc.startScheduleTimer(delay);
             }
-        });
+        }
     }
 
     // Partial segment download: start schedule timer
     function _onPartialSegment(e) {
         if (!e.suppress) {
             // No quality switches after partial segment downloads
-            _scheduleAll(false, _getScheduleWait());
+            _schedule(false, _getScheduleWait(), e.mediaType);
         }
     }
 
@@ -258,19 +262,17 @@ function DodgeHandler(config) {
     function _onPaddingLoaded(e) {
         if (!e.suppress) {
             // Only allow quality switches if the buffer flag is set
-            _scheduleAll(e.bufferFlag || false, _getScheduleWait());
+            _schedule(e.bufferFlag || false, _getScheduleWait(), e.mediaType);
         }
 
         // Route to buffer controllers for mock buffer management
-        if (!streamController) { return; }
-        streamController.getActiveStreamProcessors().forEach(sp => {
-            if (!e.mediaType || sp.getType() === e.mediaType) {
-                const bc = sp.getBufferController();
-                if (bc && bc.onPaddingLoaded) {
-                    bc.onPaddingLoaded(e);
-                }
+        const sp = _getStreamProcessor(e.mediaType);
+        if (sp) {
+            const bc = sp.getBufferController();
+            if (bc && bc.onPaddingLoaded) {
+                bc.onPaddingLoaded(e);
             }
-        });
+        }
     }
 
     // ************************************************************************
@@ -453,7 +455,7 @@ function DodgeHandler(config) {
             // Enable quality checks before the event fires. The normal dash.js
             // path (_onBytesAppended) does not call setShouldCheckPlaybackQuality,
             // so we must set it here.
-            _setQualityCheckAll(true);
+            _setQualityCheck(true, request.mediaType);
 
             eventBus.trigger(primaryEvent.event,
                 { chunk: primaryEvent.chunk, request: request, suppress: false },

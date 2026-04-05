@@ -811,7 +811,7 @@ describe('DodgeHandler', function () {
             }
         });
 
-        it('_scheduleAll calls startScheduleTimer on all active stream processors', function () {
+        it('_schedule only targets the stream processor matching the event mediaType', function () {
             const timerSpy1 = sinon.spy();
             const timerSpy2 = sinon.spy();
 
@@ -834,7 +834,7 @@ describe('DodgeHandler', function () {
             );
 
             expect(timerSpy1.calledOnce).to.be.true; // jshint ignore:line
-            expect(timerSpy2.calledOnce).to.be.true; // jshint ignore:line
+            expect(timerSpy2.called).to.be.false; // jshint ignore:line
         });
     });
 });
