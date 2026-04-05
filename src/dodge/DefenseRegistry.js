@@ -224,6 +224,49 @@ function checkDataCycles(stream, logger) {
             }
         }
 
+        // quality is optional. When present, it selects an alternate
+        // representation in the same adaptation set to fetch this cycle from.
+        // Accepted forms: a non-empty string (matched against representation.id
+        // at request time) or a non-negative integer (index into the array
+        // returned by adapter.getVoRepresentations(mediaInfo)). Numeric strings
+        // are kept as strings and treated as representation IDs (with a warning);
+        // use a JSON number if an index is intended. Actual resolution against
+        // the MPD's representations is deferred to DodgeDashHandlerOverride,
+        // since the registry has no access to them.
+        let quality = stream['data'][i].quality;
+        if (quality !== undefined && quality !== null) {
+            if (typeof quality === 'string') {
+                if (quality.length === 0) {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid quality override (empty string)');
+                    }
+                    return false;
+                }
+                // Since other fields can be strings as long as they resolve to
+                // integers, warn here that strings containing numbers will be
+                // interpreted as representation IDs (use a JSON number if an
+                // index is intended).
+                const qint = Number(quality);
+                if (!isNaN(qint) && Number.isInteger(qint)) {
+                    if (logger) {
+                        logger.warn('Extended manifest parsing: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', quality override resolves to an integer ' + qint + ', treating as a representation ID');
+                    }
+                }
+            } else if (typeof quality === 'number') {
+                if (!Number.isInteger(quality) || quality < 0) {
+                    if (logger) {
+                        logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid quality override (must be a non-negative integer)');
+                    }
+                    return false;
+                }
+            } else {
+                if (logger) {
+                    logger.warn('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid quality override');
+                }
+                return false;
+            }
+        }
+
         // Every data cycle MUST have a non-negative integer segment index.
         // Strings are accepted if they parse to a non-negative integer.
         const idx = Number(stream['data'][i].index);

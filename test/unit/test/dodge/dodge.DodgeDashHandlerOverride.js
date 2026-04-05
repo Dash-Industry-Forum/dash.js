@@ -67,7 +67,7 @@ function makeSegment(rep, index) {
 describe('DodgeDashHandlerOverride', function () {
     const objectsHelper = new ObjectsHelper();
 
-    let context, defenseController, override, mockParent, segmentsController, rep;
+    let context, defenseController, override, mockParent, segmentsController, adapter, rep;
 
     beforeEach(function () {
         context = {};
@@ -93,9 +93,14 @@ describe('DodgeDashHandlerOverride', function () {
             getSegmentByTime: sinon.stub().returns(null),
         };
 
+        adapter = {
+            getVoRepresentations: sinon.stub().returns([]),
+        };
+
         override = DodgeDashHandlerOverride.call(
             { context, parent: mockParent, factory: {} },
             {
+                adapter,
                 debug: Debug(context).getInstance(),
                 urlUtils: URLUtils(context).getInstance(),
                 segmentsController,
@@ -309,6 +314,237 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Per-cycle quality override (data cycles)
+
+    describe('Per-cycle quality override', function () {
+
+        // Build siblings list and wire it to the adapter stub so the override's
+        // _resolveCycleRepresentation can find them via adapter.getVoRepresentations().
+        // The list includes currentRep itself at the end, so an integer index of 2
+        // resolves to currentRep.
+        function makeSiblings(currentRep) {
+            const altLow = {
+                id: 'rep_low',
+                index: 0,
+                bandwidth: 250000,
+                initialization: 'https://example.com/init_low.m4s',
+                segmentInfoType: 'SegmentTemplate',
+                segmentDuration: 4,
+                timescale: 1,
+                range: null,
+                path: '',
+                mediaInfo: currentRep.mediaInfo,
+                adaptation: currentRep.adaptation,
+            };
+            const altMid = {
+                id: 'rep_mid',
+                index: 1,
+                bandwidth: 500000,
+                initialization: 'https://example.com/init_mid.m4s',
+                segmentInfoType: 'SegmentTemplate',
+                segmentDuration: 4,
+                timescale: 1,
+                range: null,
+                path: '',
+                mediaInfo: currentRep.mediaInfo,
+                adaptation: currentRep.adaptation,
+            };
+            adapter.getVoRepresentations.withArgs(currentRep.mediaInfo).returns([altLow, altMid, currentRep]);
+            return { altLow, altMid };
+        }
+
+        function makeQualityManifest() {
+            return {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0 }, // cycle 0, no override
+                        { index: 1, quality: 'rep_low' }, // cycle 1, string override
+                        { index: 2, quality: 1 }, // cycle 2, integer override -> rep_mid
+                    ]
+                }]
+            };
+        }
+
+        it('cycle without quality uses the current representation', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest(makeQualityManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep); // cycle 0
+            expect(request.representation.id).to.equal('rep0');
+            expect(request.bandwidth).to.equal(1000000);
+            // segmentsController should have been called with the current rep
+            expect(segmentsController.getSegmentByIndex.lastCall.args[0].id).to.equal('rep0');
+        });
+
+        it('cycle with string quality resolves to the matching sibling representation', function () {
+            const { altLow } = makeSiblings(rep);
+            defenseController.addExtendedManifest(makeQualityManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            const request = override.getNextSegmentRequest({}, rep); // cycle 1, quality: 'rep_low'
+            expect(request.representation.id).to.equal('rep_low');
+            expect(request.bandwidth).to.equal(altLow.bandwidth);
+            expect(segmentsController.getSegmentByIndex.lastCall.args[0].id).to.equal('rep_low');
+        });
+
+        it('cycle with integer quality resolves to the representation at that index', function () {
+            const { altMid } = makeSiblings(rep);
+            defenseController.addExtendedManifest(makeQualityManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.getNextSegmentRequest({}, rep); // cycle 1
+            const request = override.getNextSegmentRequest({}, rep); // cycle 2, quality: 1 -> rep_mid
+            expect(request.representation.id).to.equal('rep_mid');
+            expect(request.bandwidth).to.equal(altMid.bandwidth);
+        });
+
+        it('cycle with out-of-range integer quality stalls (returns null, does not fall back)', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [{ index: 0, quality: 99 }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('cycle with unknown string quality stalls (returns null, does not fall back)', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [{ index: 0, quality: 'rep_nonexistent' }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('cycle with quality override whose alt rep has no segment for the index stalls', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [{ index: 0, quality: 'rep_low' }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            // Force the alt rep lookup to miss.
+            segmentsController.getSegmentByIndex.callsFake((r) => {
+                return r.id === 'rep_low' ? null : makeSegment(r, 0);
+            });
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('failed quality override does not advance lastCycleIndex', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0, quality: 'rep_nonexistent' },
+                        { index: 1 },
+                    ]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            expect(override.getNextSegmentRequest({}, rep)).to.be.null; // jshint ignore:line
+            // Next call re-attempts the same (failing) cycle; lastCycleIndex was not advanced.
+            expect(override.getNextSegmentRequest({}, rep)).to.be.null; // jshint ignore:line
+            // getLastSegment reflects that no segment has been consumed yet.
+            expect(override.getLastSegment()).to.be.null; // jshint ignore:line
+        });
+
+        it('quality override does not poison lastSegment cache for a subsequent same-index cycle', function () {
+            makeSiblings(rep);
+            // Cycle 0: index 0, quality 'rep_low' (overridden).
+            // Cycle 1: index 0, no override. Must not reuse lastSegment from cycle 0
+            // (which carries rep_low); must re-lookup against current rep.
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0, range: '0-999', quality: 'rep_low' },
+                        { index: 0, range: '1000-' },
+                    ]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const r0 = override.getNextSegmentRequest({}, rep); // cycle 0, override
+            expect(r0.representation.id).to.equal('rep_low');
+
+            const r1 = override.getNextSegmentRequest({}, rep); // cycle 1, no override
+            expect(r1.representation.id).to.equal('rep0');
+            expect(r1.bandwidth).to.equal(1000000);
+        });
+
+        it('getSegmentRequestForTime with unresolvable quality override stalls (returns null)', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [{ index: 0, quality: 'rep_nonexistent' }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+
+            const request = override.getSegmentRequestForTime({}, rep, 0);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('getSegmentRequestForTime honors quality override via re-lookup', function () {
+            const { altLow } = makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0 },
+                        { index: 1, quality: 'rep_low' },
+                    ]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+
+            // time = 4, segment index 1, cycle 1 has quality 'rep_low'
+            const request = override.getSegmentRequestForTime({}, rep, 4);
+            expect(request.representation.id).to.equal('rep_low');
+            expect(request.bandwidth).to.equal(altLow.bandwidth);
+        });
+    });
+
     // URL padding
 
     describe('URL padding', function () {
@@ -359,6 +595,7 @@ describe('DodgeDashHandlerOverride', function () {
             paddingOverride = DodgeDashHandlerOverride.call(
                 { context: paddingContext, parent: paddingParent, factory: {} },
                 {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
                     debug: Debug(paddingContext).getInstance(),
                     urlUtils: URLUtils(paddingContext).getInstance(),
                     segmentsController: templateSegmentsController,
@@ -904,6 +1141,7 @@ describe('DodgeDashHandlerOverride', function () {
             trailingOverride = DodgeDashHandlerOverride.call(
                 { context, parent: mockParent, factory: {} },
                 {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
                     debug: Debug(context).getInstance(),
                     urlUtils: URLUtils(context).getInstance(),
                     segmentsController: {

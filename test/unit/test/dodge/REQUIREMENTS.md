@@ -140,6 +140,25 @@ When `buffer` on a data cycle is an array of segment indices, only pending media
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | selective buffer: pending init events are not flushed |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | boolean buffer true still flushes all pending segments |
 
+### R2.10 - Per-cycle quality override on data cycles
+
+When a data cycle carries an optional `quality` field, `DodgeDashHandlerOverride._resolveCycleRepresentation(currentRep, cycle)` resolves an alternate sibling representation via `adapter.getVoRepresentations(currentRep.mediaInfo)` - by ID for strings, or by array index for numbers. Both `getNextSegmentRequest` and `getSegmentRequestForTime` then re-query `segmentsController.getSegmentByIndex(effectiveRep, ...)` so that URL template expansion (`$Bandwidth$`, `$RepresentationID$`) and the request's `representation` / `bandwidth` fields reflect the alternate quality. This lets a defense conceal a large segment's size by fetching it at a lower quality. The `lastSegment` cache reuse guard requires both the absence of `cycle.quality` and `lastSegment.representation === representation`, so a stale segment from a previous override cycle cannot poison a subsequent non-override cycle at the same segment index.
+
+On any resolution failure - no sibling representations available, string id not found, integer index out of range, or the alternate representation has no segment for `cycle.index` - the override logs at error level and **stalls** by returning `null` from `getNextSegmentRequest` / `getSegmentRequestForTime`. `lastCycleIndex` and `lastSegment` are not advanced, mirroring the existing "no segment found" behavior for non-override cycles. The override MUST NOT fall back to the current representation, which would silently corrupt the defense shape (wrong wire size, wrong range semantics, wrong URL template expansion). This stall behavior is independent of `dodge.strictMode` - a failed quality override is always a defense design bug and always fatal.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle without quality uses the current representation |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with string quality resolves to the matching sibling representation |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with integer quality resolves to the representation at that index |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with out-of-range integer quality stalls (returns null, does not fall back) |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with unknown string quality stalls (returns null, does not fall back) |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with quality override whose alt rep has no segment for the index stalls |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | failed quality override does not advance lastCycleIndex |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | quality override does not poison lastSegment cache for a subsequent same-index cycle |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime with unresolvable quality override stalls (returns null) |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime honors quality override via re-lookup |
+
 ---
 
 ## 3. Media Type Coverage
@@ -399,7 +418,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 
 ### R8.1 - Structural validation rejects malformed manifests
 
-`isValidExtendedManifest()` validates the top-level structure of extended manifest files: `start.mpd` and `start.base_uri` must be present and strings, `streams` must be a non-empty array where each entry has a `label` and at least one of `init` or `data`. Dynamic MPDs (containing `type="dynamic"`) are rejected. Data cycle fields are validated: `index` must parse to a non-negative integer, `range` must be a well-formed string, `padding` must be a boolean (or a string parseable to boolean) or absent, and `buffer` must be a boolean (or a string parseable to boolean), an array of non-negative integers (selective buffer), or absent.
+`isValidExtendedManifest()` validates the top-level structure of extended manifest files: `start.mpd` and `start.base_uri` must be present and strings, `streams` must be a non-empty array where each entry has a `label` and at least one of `init` or `data`. Dynamic MPDs (containing `type="dynamic"`) are rejected. Data cycle fields are validated: `index` must parse to a non-negative integer, `range` must be a well-formed string, `padding` must be a boolean (or a string parseable to boolean) or absent, `buffer` must be a boolean (or a string parseable to boolean), an array of non-negative integers (selective buffer), or absent, and `quality` is optional - when present, it must be either a non-empty string (representation ID, resolved lazily in the override against `adapter.getVoRepresentations(mediaInfo)`) or a non-negative JSON number (index into the same array). Numeric strings are kept as strings and treated as representation IDs; a warning is logged to flag the ambiguity. Use a JSON number if an index is intended.
 
 | File | Description | Test |
 |---|---|---|
@@ -437,6 +456,15 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer string "false", true |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with non-parseable string buffer, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with buffer = 1 (number), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = string (representation id), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = 0 (non-negative integer), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = 2 (positive integer), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = "3" (numeric string), true and kept as string (treated as representation ID), warning emitted |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = -1 (negative integer), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = 1.5 (non-integer number), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = "" (empty string), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = true (boolean), false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with quality = [] (array), false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | valid manifest, true |
 
 ### R8.2 - Init cycle validation enforces range and buffer flag rules
@@ -598,6 +626,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R2.7 getLastSegment returns override's segment | 3 |
 | R2.8 Defense state management | 2 |
 | R2.9 Selective buffer | 10 |
+| R2.10 Per-cycle quality override on data cycles | 10 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 6 |
 | R3.3 Fragmented text streams | 6 |
@@ -622,7 +651,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R7.2 Request padding normalizes wire size | 13 |
 | R7.3 FetchLoader applies padding | 2 |
 | R7.4 XHRLoader applies padding | 2 |
-| R8.1 Structural validation rejects malformed manifests | 35 |
+| R8.1 Structural validation rejects malformed manifests | 44 |
 | R8.2 Init cycle validation | 16 |
 | R8.3 Data cycle validation and maxNoPad | 5 |
 | R8.4 Cycle index lookup | 6 |

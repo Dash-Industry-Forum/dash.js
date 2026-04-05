@@ -130,6 +130,7 @@ function StreamProcessor(config) {
         });
 
         dashHandler = DashHandler(context).create({
+            adapter,
             baseURLController: config.baseURLController,
             boxParser,
             constants: Constants,

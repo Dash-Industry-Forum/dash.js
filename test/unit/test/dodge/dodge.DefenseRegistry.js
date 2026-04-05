@@ -433,6 +433,87 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
+        it('data cycle with quality = string (representation id), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: 'video_500k', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with quality = 0 (non-negative integer), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with quality = 2 (positive integer), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: 2, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('data cycle with quality = "3" (numeric string), true and kept as string (treated as representation ID), warning emitted', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: '3', buffer: true }] }]
+            };
+            const warnings = [];
+            const logger = { warn: (msg) => warnings.push(msg), info: () => {}, debug: () => {}, error: () => {} };
+            expect(isValidExtendedManifest(m, logger)).to.be.true; // jshint ignore:line
+            // Numeric strings are NOT normalized to numbers - use a JSON number if an index is intended.
+            expect(m.streams[0].data[0].quality).to.equal('3');
+            // A warning should be emitted to flag the ambiguity.
+            const matched = warnings.filter((w) => w.indexOf('quality override resolves to an integer') !== -1);
+            expect(matched.length).to.equal(1);
+            expect(matched[0]).to.include('3');
+            expect(matched[0]).to.include('treating as a representation ID');
+        });
+
+        it('data cycle with quality = -1 (negative integer), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: -1, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with quality = 1.5 (non-integer number), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: 1.5, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with quality = "" (empty string), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: '', buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with quality = true (boolean), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: true, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with quality = [] (array), false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, quality: [], buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
         it('valid manifest, true', function () {
             expect(isValidExtendedManifest(makeValidManifest())).to.be.true; // jshint ignore:line
         });

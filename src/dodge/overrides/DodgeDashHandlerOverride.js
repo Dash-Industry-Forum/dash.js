@@ -61,6 +61,7 @@ function DodgeDashHandlerOverride(config) {
 
     const defenseRegistry = DefenseRegistry(context).getInstance();
     const settings = Settings(context).getInstance();
+    const adapter = config.adapter;
     const baseURLController = config.baseURLController;
     const urlUtils = config.urlUtils;
     const timelineConverter = config.timelineConverter;
@@ -271,6 +272,51 @@ function DodgeDashHandlerOverride(config) {
     // DATA REQUEST GENERATION
     // ************************************************************************
 
+    /**
+     * Resolve the effective representation for a data cycle. When cycle.quality
+     * is present, it selects an alternate representation in the same adaptation
+     * set to fetch this cycle from. Accepts a string matched against
+     * representation.id, or a non-negative integer index into the array
+     * returned by adapter.getVoRepresentations(mediaInfo).
+     *
+     * Returns the current representation when no override is present, the
+     * resolved alternate representation when the override is valid, or null
+     * when the override cannot be honored. Callers MUST treat null as a stall
+     * condition and return null from their own request generation path; they
+     * MUST NOT fall back to current representation, as that would silently
+     * corrupt the defense shape (wrong wire size, wrong range semantics).
+     */
+    function _resolveCycleRepresentation(currentRep, cycle) {
+        if (!cycle || cycle.quality === undefined || cycle.quality === null) {
+            return currentRep;
+        }
+        const siblings = (adapter && currentRep && currentRep.mediaInfo)
+            ? adapter.getVoRepresentations(currentRep.mediaInfo)
+            : null;
+        if (!siblings || siblings.length === 0) {
+            logger.error('Cycle quality override: "' + cycle.quality + '" cannot be honored, no sibling representations available');
+            return null;
+        }
+        let altRep = null;
+        if (typeof cycle.quality === 'number') {
+            if (cycle.quality >= 0 && cycle.quality < siblings.length) {
+                altRep = siblings[cycle.quality];
+            }
+        } else if (typeof cycle.quality === 'string') {
+            for (let i = 0; i < siblings.length; i++) {
+                if (siblings[i] && siblings[i].id === cycle.quality) {
+                    altRep = siblings[i];
+                    break;
+                }
+            }
+        }
+        if (!altRep) {
+            logger.error('Cycle quality override: "' + cycle.quality + '" did not resolve to a sibling representation');
+            return null;
+        }
+        return altRep;
+    }
+
     function _getRequestForSegment(mediaInfo, segment, range = null, padding = false) {
         if (segment === null || segment === undefined) {
             return null;
@@ -348,8 +394,9 @@ function DodgeDashHandlerOverride(config) {
             return getNextSegmentRequest(mediaInfo, representation);
         }
 
-        // Start with the segment.
-        const segment = segmentsController.getSegmentByTime(representation, time);
+        // Start with the segment. Resolve segment.index from the current
+        // representation's timeline (authoritative for playback).
+        let segment = segmentsController.getSegmentByTime(representation, time);
         if (!segment) {
             logger.debug('No segment found for time ' + time);
             return null;
@@ -364,6 +411,28 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
         logger.debug('cycle ' + cycleIndex + '/' + defendedStreamInfo['data'].length + ', getSegmentRequestForTime');
+
+        // If this cycle carries a quality override, re-lookup the segment
+        // against the alternate representation so the URL template and
+        // bandwidth/id substitutions reflect the alternate quality. On any
+        // failure (bad override, alt rep missing this segment index), stall
+        // by returning null, mirroring the behavior below for a missing
+        // segment in the current representation. We must not fall back to
+        // the current representation, which would silently corrupt the
+        // defense shape (wrong wire size, broken range semantics).
+        if (cycle.quality !== undefined && cycle.quality !== null) {
+            const effectiveRep = _resolveCycleRepresentation(representation, cycle);
+            if (!effectiveRep) {
+                return null;
+            }
+            const altSegment = segmentsController.getSegmentByIndex(effectiveRep, segment.index, -1);
+            if (!altSegment) {
+                logger.error('Cycle quality override: alternate representation "' + effectiveRep.id + '" has no segment for index ' + segment.index);
+                return null;
+            }
+            segment = altSegment;
+            logger.debug('New index for time ' + time + ' in alternate representation is ' + segment.index);
+        }
 
         // Determine if this is a full request by skipping padding cycles.
         let nextIndex = cycleIndex + 1;
@@ -411,12 +480,34 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
+        // Resolve the effective representation for this cycle (may be an
+        // alternate quality override). A failed override returns null and
+        // must stall, as falling back to the current representation would
+        // silently corrupt the defense shape. A missing cycle.quality is not
+        // a failure; _resolveCycleRepresentation just returns currentRep.
+        const effectiveRep = _resolveCycleRepresentation(representation, cycle);
+        if (!effectiveRep) {
+            return null;
+        }
+
+        // Reuse the cached lastSegment only when the current cycle has no
+        // quality override AND the cache was produced under the current
+        // representation, otherwise the cached segment would carry a
+        // stale representation and generate an incorrect URL.
+        const canReuseLast = lastSegment && cycle.index == lastSegment.index &&
+            (cycle.quality === undefined || cycle.quality === null) &&
+            lastSegment.representation === representation;
+
         // Reuse lastSegment or look up segment by index.
-        const segment = (lastSegment && cycle.index == lastSegment.index)
+        const segment = canReuseLast
             ? lastSegment
-            : segmentsController.getSegmentByIndex(representation, cycle.index, -1);
+            : segmentsController.getSegmentByIndex(effectiveRep, cycle.index, -1);
         if (!segment) {
-            logger.debug('No segment found, lastSegment = ' + !!lastSegment);
+            if (cycle.quality !== undefined && cycle.quality !== null) {
+                logger.error('Cycle quality override: alternate representation "' + effectiveRep.id + '" has no segment for index ' + cycle.index);
+            } else {
+                logger.debug('No segment found, lastSegment = ' + !!lastSegment);
+            }
             return null;
         }
         logger.debug('cycle ' + cycleIndex + '/' + defendedStreamInfo['data'].length + ', getNextSegmentRequest');
