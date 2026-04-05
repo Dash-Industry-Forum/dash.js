@@ -128,6 +128,26 @@ describe('applyRequestPadding', function () {
         expect(results.size).to.be.greaterThan(1);
     });
 
+    it('with paddingLengthRandom < 0, clamps to 0 and warns exactly once across calls', function () {
+        const base = 300;
+        const logger = makeLogger();
+        // First call with a negative random value, should warn once and clamp.
+        for (let i = 0; i < 20; i++) {
+            const url = 'https://example.com/seg.m4s?padding=abc';
+            const req = makeRequest(url, {});
+            applyRequestPadding(req, makeSettings(base, undefined, -500), logger);
+            // Clamped: wire size must be exactly base (no downward jitter).
+            expect(wireSize(req)).to.equal(base);
+        }
+        // Warn once flag is module-scoped, so across repeated calls we expect
+        // at most one warning about the negative value. (Prior tests in this
+        // file never pass a negative random, so this is the first trip.)
+        const negativeWarnings = logger.warn.getCalls().filter(
+            c => c.args[0] && c.args[0].indexOf('paddingLengthRandom is negative') !== -1
+        );
+        expect(negativeWarnings.length).to.equal(1);
+    });
+
     it('with paddingLengthRandom = 0, wire size is deterministically paddingLengthBase', function () {
         const url = 'https://example.com/seg.m4s?padding=abc';
         const req = makeRequest(url, { Range: 'bytes=0-999' });

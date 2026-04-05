@@ -29,6 +29,8 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+let warnedNegativeRandom = false;
+
 /**
  * If this is a Dodge request and `dodge.paddingLengthBase` is non-zero, extend
  * the `padding` query parameter that was already merged into the URL so that
@@ -48,7 +50,12 @@
 export function applyRequestPadding(commonMediaRequest, settings, logger) {
     const dodgeSettings = settings.get().dodge || {};
     const paddingLengthBase = dodgeSettings.paddingLengthBase || 0;
-    const paddingLengthRandom = dodgeSettings.paddingLengthRandom || 0;
+    const rawPaddingLengthRandom = dodgeSettings.paddingLengthRandom || 0;
+    if (rawPaddingLengthRandom < 0 && !warnedNegativeRandom) {
+        logger.warn('dodge.paddingLengthRandom is negative (' + rawPaddingLengthRandom + '), treating as 0');
+        warnedNegativeRandom = true;
+    }
+    const paddingLengthRandom = Math.max(0, rawPaddingLengthRandom);
     const queryParam = dodgeSettings.queryParam || 'padding';
 
     if (paddingLengthBase <= 0) {

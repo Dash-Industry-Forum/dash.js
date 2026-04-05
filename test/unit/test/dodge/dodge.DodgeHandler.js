@@ -5,6 +5,7 @@ import EventBus from '../../../../src/core/EventBus.js';
 import Events from '../../../../src/core/events/Events.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import Settings from '../../../../src/core/Settings.js';
+import Debug from '../../../../src/core/Debug.js';
 
 import sinon from 'sinon';
 import { expect } from 'chai';
@@ -809,6 +810,34 @@ describe('DodgeHandler', function () {
                 );
                 expect(timerSpy.firstCall.args[0]).to.equal(200);
             }
+        });
+
+        it('with scheduleWaitRandom < 0, delay is clamped to scheduleWaitBase and warns exactly once', function () {
+            const loggerSpy = { fatal: sinon.spy(), error: sinon.spy(), warn: sinon.spy(), info: sinon.spy(), debug: sinon.spy() };
+            sinon.stub(Debug(context).getInstance(), 'getLogger').returns(loggerSpy);
+
+            const timerSpy = sinon.spy();
+            makeHandler([{
+                getScheduleController: () => ({ startScheduleTimer: timerSpy, setShouldCheckPlaybackQuality: sinon.spy() }),
+                getType: () => 'video',
+                getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+            }]);
+
+            settings.update({ dodge: { scheduleWaitBase: 200, scheduleWaitRandom: -100 } });
+            for (let i = 0; i < 10; i++) {
+                timerSpy.resetHistory();
+                eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                    { index: i, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                    { streamId: 'stream-1', mediaType: 'video' }
+                );
+                // Clamped: delay is exactly the base on every call (no downward jitter).
+                expect(timerSpy.firstCall.args[0]).to.equal(200);
+            }
+
+            const negativeWarnings = loggerSpy.warn.getCalls().filter(
+                c => c.args[0] && c.args[0].indexOf('scheduleWaitRandom is negative') !== -1
+            );
+            expect(negativeWarnings.length).to.equal(1);
         });
 
         it('_schedule only targets the stream processor matching the event mediaType', function () {

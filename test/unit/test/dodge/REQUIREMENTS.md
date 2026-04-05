@@ -319,12 +319,13 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 
 ### R6.1 - Schedule delay is bounded to `[scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom]`
 
-`_getScheduleWait()` returns `scheduleWaitBase + Math.round(Math.random() * scheduleWaitRandom)`. With `scheduleWaitRandom = 0`, the delay is deterministically equal to `scheduleWaitBase`.
+`_getScheduleWait()` returns `scheduleWaitBase + Math.round(Math.random() * scheduleWaitRandom)`. With `scheduleWaitRandom = 0`, the delay is deterministically equal to `scheduleWaitBase`. A negative `scheduleWaitRandom` is clamped to 0 and logged once per DodgeHandler / DodgeScheduleControllerOverride instance.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | delay passed to startScheduleTimer is within [scheduleWaitBase, scheduleWaitBase + scheduleWaitRandom] |
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom = 0, delay is always exactly scheduleWaitBase |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | with scheduleWaitRandom < 0, delay is clamped to scheduleWaitBase and warns exactly once |
 
 ### R6.2 - Scheduling is scoped to the event's media type
 
@@ -361,6 +362,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value = 0: enforces minimum random delay |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value larger than max delay: keeps the larger value |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom < 0: clamps to scheduleWaitBase and warns exactly once |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with undefined value: treats as 0 and enforces minimum delay |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | dashHandler absent: passes value through to parent unchanged |
 
@@ -380,7 +382,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 
 ### R7.2 - Request padding normalizes HTTP wire size to `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`
 
-`applyRequestPadding()` measures the URL + headers wire size and extends a query parameter (configurable via `dodge.queryParam`, default `'padding'`) so that the total equals `paddingLengthBase + Math.round(Math.random() * paddingLengthRandom)`. Disabled when `paddingLengthBase ≤ 0`. When the padding query param doesn't already exist in the URL, it is added and the overhead of `?key=` / `&key=` is accounted for. Invalid URLs are handled gracefully with a warning.
+`applyRequestPadding()` measures the URL + headers wire size and extends a query parameter (configurable via `dodge.queryParam`, default `'padding'`) so that the total equals `paddingLengthBase + Math.round(Math.random() * paddingLengthRandom)`. Disabled when `paddingLengthBase ≤ 0`. When the padding query param doesn't already exist in the URL, it is added and the overhead of `?key=` / `&key=` is accounted for. Invalid URLs are handled gracefully with a warning. A negative `paddingLengthRandom` is clamped to 0 and logged once per module load (misconfiguration is visible but not fatal).
 
 | File | Description | Test |
 |---|---|---|
@@ -391,6 +393,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.RequestPadding.js` | applyRequestPadding | headers contribute to the measured size |
 | `dodge.RequestPadding.js` | applyRequestPadding | existing padding value is preserved as prefix of the extended value |
 | `dodge.RequestPadding.js` | applyRequestPadding | with paddingLengthRandom > 0, wire size is in [paddingLengthBase, paddingLengthBase + paddingLengthRandom] |
+| `dodge.RequestPadding.js` | applyRequestPadding | with paddingLengthRandom < 0, clamps to 0 and warns exactly once across calls |
 | `dodge.RequestPadding.js` | applyRequestPadding | with paddingLengthRandom = 0, wire size is deterministically paddingLengthBase |
 | `dodge.RequestPadding.js` | applyRequestPadding | pad = 0 (already at paddingLengthBase): URL is not modified |
 | `dodge.RequestPadding.js` | applyRequestPadding | request already exceeds padding length: warns and does not modify URL |
@@ -642,13 +645,13 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 1 |
-| R6.1 Random walk delay bounded | 2 |
+| R6.1 Random walk delay bounded | 3 |
 | R6.2 Scheduling is scoped to correct stream processor | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
 | R6.4 Padding event routing | 1 |
-| R6.5 Random walk delay on all scheduling paths | 6 |
+| R6.5 Random walk delay on all scheduling paths | 7 |
 | R7.1 URL padding normalizes template lengths | 3 |
-| R7.2 Request padding normalizes wire size | 13 |
+| R7.2 Request padding normalizes wire size | 14 |
 | R7.3 FetchLoader applies padding | 2 |
 | R7.4 XHRLoader applies padding | 2 |
 | R8.1 Structural validation rejects malformed manifests | 44 |
@@ -662,4 +665,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.4 Partial segment combination event routing | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **229** |
+| **Total** | **251** |

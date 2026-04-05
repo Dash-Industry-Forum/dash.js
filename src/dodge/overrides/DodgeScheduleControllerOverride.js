@@ -41,8 +41,12 @@
  *
  * Registered via mediaPlayer.extend('ScheduleController', DodgeScheduleControllerOverride, true).
  */
+
+import Debug from '../../core/Debug.js';
+
 function DodgeScheduleControllerOverride(config) {
     config = config || {};
+    const context = this.context;
     const parent = this.parent;
     const _parentShouldClearScheduleTimer = parent._shouldClearScheduleTimer;
     const _parentStartScheduleTimer = parent.startScheduleTimer;
@@ -50,9 +54,18 @@ function DodgeScheduleControllerOverride(config) {
     const dashHandler = config.dashHandler;
     const settings = config.settings;
 
+    const logger = Debug(context).getInstance().getLogger({ __dashjs_factory_name: 'DodgeScheduleControllerOverride' });
+    let warnedNegativeScheduleRandom = false;
+
     function _getScheduleWait() {
         const dodgeSettings = (settings.get().dodge) || {};
-        return dodgeSettings.scheduleWaitBase + Math.round(Math.random() * dodgeSettings.scheduleWaitRandom);
+        const rawRandom = dodgeSettings.scheduleWaitRandom || 0;
+        if (rawRandom < 0 && !warnedNegativeScheduleRandom) {
+            logger.warn('dodge.scheduleWaitRandom is negative (' + rawRandom + '), treating as 0');
+            warnedNegativeScheduleRandom = true;
+        }
+        const random = Math.max(0, rawRandom);
+        return (dodgeSettings.scheduleWaitBase || 0) + Math.round(Math.random() * random);
     }
 
     function _shouldClearScheduleTimer() {

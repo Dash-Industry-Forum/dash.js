@@ -1,4 +1,5 @@
 import DodgeScheduleControllerOverride from '../../../../src/dodge/overrides/DodgeScheduleControllerOverride.js';
+import Debug from '../../../../src/core/Debug.js';
 
 import sinon from 'sinon';
 import { expect } from 'chai';
@@ -24,12 +25,19 @@ describe('DodgeScheduleControllerOverride', function () {
             get: () => ({ dodge: { scheduleWaitBase, scheduleWaitRandom } })
         };
 
+        // Fresh context per call so the Debug singleton (and therefore the
+        // logger the factory creates) is isolated. Stub getLogger on that
+        // singleton to return a spy we can assert against.
+        const context = {};
+        const loggerSpy = { fatal: sinon.spy(), error: sinon.spy(), warn: sinon.spy(), info: sinon.spy(), debug: sinon.spy() };
+        sinon.stub(Debug(context).getInstance(), 'getLogger').returns(loggerSpy);
+
         const override = DodgeScheduleControllerOverride.call(
-            { context: {}, parent, factory: {} },
+            { context, parent, factory: {} },
             { dashHandler, settings }
         );
 
-        return { override, parentShouldClearStub, parentStartScheduleTimerStub, getIsTrailingStub, getIsDefendedStub };
+        return { override, parentShouldClearStub, parentStartScheduleTimerStub, getIsTrailingStub, getIsDefendedStub, loggerSpy };
     }
 
     describe('_shouldClearScheduleTimer', function () {
@@ -102,6 +110,26 @@ describe('DodgeScheduleControllerOverride', function () {
             });
             override.startScheduleTimer(0);
             expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(100);
+        });
+
+        it('defended with scheduleWaitRandom < 0: clamps to scheduleWaitBase and warns exactly once', function () {
+            const { override, parentStartScheduleTimerStub, loggerSpy } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: -50
+            });
+            for (let i = 0; i < 20; i++) {
+                override.startScheduleTimer(0);
+            }
+            // Every call must land exactly at the base (no downward jitter).
+            for (const call of parentStartScheduleTimerStub.getCalls()) {
+                expect(call.args[0]).to.equal(100);
+            }
+            // Warn once: flag is scoped to this factory instance, so exactly one
+            // warning regardless of how many times _getScheduleWait is invoked.
+            const negativeWarnings = loggerSpy.warn.getCalls().filter(
+                c => c.args[0] && c.args[0].indexOf('scheduleWaitRandom is negative') !== -1
+            );
+            expect(negativeWarnings.length).to.equal(1);
         });
 
         it('defended with undefined value: treats as 0 and enforces minimum delay', function () {
