@@ -76,7 +76,8 @@ function DodgeDashHandlerOverride(config) {
         lastCycleIndex,
         lastSegment,
         mediaHasFinished,
-        lastRepresentationMediaType;
+        lastRepresentationMediaType,
+        reportedLabels;
 
     function setup() {
         logger = debug.getLogger({ __dashjs_factory_name: 'DodgeDashHandlerOverride' });
@@ -90,6 +91,7 @@ function DodgeDashHandlerOverride(config) {
         lastSegment = null;
         mediaHasFinished = false;
         lastRepresentationMediaType = null;
+        reportedLabels = new Set();
     }
 
     // Return true if strict mode is 'representation' or 'manifest' (both
@@ -410,7 +412,6 @@ function DodgeDashHandlerOverride(config) {
         if (!cycle) {
             return null;
         }
-        logger.debug('cycle ' + cycleIndex + '/' + defendedStreamInfo['data'].length + ', getSegmentRequestForTime');
 
         // If this cycle carries a quality override, re-lookup the segment
         // against the alternate representation so the URL template and
@@ -510,7 +511,6 @@ function DodgeDashHandlerOverride(config) {
             }
             return null;
         }
-        logger.debug('cycle ' + cycleIndex + '/' + defendedStreamInfo['data'].length + ', getNextSegmentRequest');
 
         // Determine if full request by skipping padding cycles.
         let nextIndex = cycleIndex + 1;
@@ -637,10 +637,12 @@ function DodgeDashHandlerOverride(config) {
 
         if (defendedStreamInfo) {
             logger.debug('Defended stream info set for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);
-        } else {
-            logger.debug('Defended stream info not found for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);
+        } else if (!reportedLabels.has(label)) {
+            reportedLabels.add(label);
             if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
                 logger.error('Dodge strict mode is enabled and no defended stream info for label ' + label + ', blocking requests');
+            } else {
+                logger.debug('Defended stream info not found for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);
             }
         }
 
