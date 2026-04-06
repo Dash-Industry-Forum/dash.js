@@ -158,8 +158,6 @@ function checkInitCycles(stream, logger) {
  * @returns {boolean} True if all data cycles are valid.
  */
 function checkDataCycles(stream, logger) {
-    let rangeEnd = -1; // end of current partial segment range
-    let maxIndex = -1; // maximum segment index encountered so far
     let maxNoPad = -1; // maximum non-padding cycle index found
 
     for (let i = 0; i < stream['data'].length; i++) {
@@ -277,26 +275,7 @@ function checkDataCycles(stream, logger) {
             return false;
         }
 
-        // While a partial sequence is in progress for segment maxIndex (rangeEnd >= 0),
-        // the next non-padding cycle MUST have index >= maxIndex.
-        //
-        // Once a segment is complete (rangeEnd == -1), the next non-padding cycle MUST
-        // have index > maxIndex; revisiting a completed segment is not allowed.
-        //
-        // Padding cycles may have any index; they have no requirements.
         if (!padding) {
-            if (maxIndex >= 0 && ((rangeEnd == -1 && idx <= maxIndex) || (rangeEnd >= 0 && idx < maxIndex))) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', non-sequential index');
-                }
-                return false;
-            }
-
-            if (idx > maxIndex) {
-                rangeEnd = -1;
-                maxIndex = idx;
-            }
-
             maxNoPad = i;
         }
 
@@ -337,20 +316,6 @@ function checkDataCycles(stream, logger) {
             }
         }
 
-        if (!padding) {
-            // When continuing a partial sequence (rangeEnd >= 0), the start of the new
-            // range MUST NOT skip bytes. Overlap (rs <= rangeEnd) is permitted.
-            if (rangeEnd >= 0 && rs > rangeEnd + 1) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', partial with non-sequential range ' + rs + '-' + re + ' (segment ' + idx + '), rangeEnd is ' + rangeEnd);
-                }
-                return false;
-            }
-
-            // A cycle without a range is a full download; it completes the segment.
-            // A cycle with a range leaves the segment open for further cycles.
-            rangeEnd = range ? re : -1;
-        }
     }
 
     stream.maxNoPad = maxNoPad;

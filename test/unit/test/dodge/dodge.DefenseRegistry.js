@@ -369,22 +369,6 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
-        it('data cycle with non-sequential index, false', function () {
-            const m = {
-                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
-                streams: [{ label: 'a', init: [{}], data: [{ index: 1, buffer: true }, { index: 0, buffer: true }] }]
-            };
-            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
-        });
-
-        it('data cycle with skipped bytes in a partial range sequence, false', function () {
-            // First cycle covers 0-99; second starts at 200, skipping 100-199.
-            const m = {
-                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
-                streams: [{ label: 'a', init: [{}], data: [{ index: 0, range: '0-99' }, { index: 0, range: '200-299', buffer: true }] }]
-            };
-            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
-        });
 
         it('data cycle with non-integer index, false', function () {
             const m = {
