@@ -1214,6 +1214,35 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Muxed audio/video streams
+
+    describe('Muxed audio/video streams', function () {
+        function makeMuxedRep() {
+            return Object.assign({}, makeRepresentation(), {
+                mediaInfo: { type: 'muxed', streamInfo: { id: 'stream-1' } }
+            });
+        }
+
+        it('defended muxed stream: getNextSegmentRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const muxedRep = makeMuxedRep();
+            override.updateDefendedStreamInfo(muxedRep);
+            const request = override.getNextSegmentRequest({}, muxedRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.index).to.equal(0);
+        });
+
+        it('defended muxed stream: getInitRequest() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const muxedRep = makeMuxedRep();
+            override.updateDefendedStreamInfo(muxedRep);
+            const request = override.getInitRequest({}, muxedRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+    });
+
     // getNextSegmentRequestIdempotent during defended playback
 
     describe('getNextSegmentRequestIdempotent during defended playback', function () {

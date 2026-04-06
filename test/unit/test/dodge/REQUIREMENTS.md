@@ -215,6 +215,15 @@ Covered by R2.4 above.
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end) |
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged) |
 
+### R3.8 - Muxed audio/video streams
+
+Muxed representations (audio and video in the same segments) are defended by their single representation ID, identically to separate audio or video streams. No special handling is needed + the extended manifest references the muxed representation's label.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Muxed audio/video streams | defended muxed stream: getNextSegmentRequest() returns cycle request without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | Muxed audio/video streams | defended muxed stream: getInitRequest() returns cycle request without calling parent |
+
 ### R3.7 - SegmentBase (byte-range) content
 
 SegmentBase representations (used by WebM and single-file MP4 content) store all segments in a single monolithic file, differentiated by byte range. Unlike SegmentTemplate, `segment.media` is `null` and the URL is resolved entirely from BaseURL. The override explicitly handles this: when `segment.media` is null, template expansion is skipped and the URL resolves to the base URL with the padding query parameter. Byte ranges from `cycle.range` override `segment.mediaRange` (partial request) or fall back to the full segment range. Init segments similarly resolve from BaseURL when `representation.initialization` is null, using `representation.range` as the byte range.
@@ -745,6 +754,7 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R3.5 Self-initialized streams | (see R2.4) |
 | R3.6 Undefended text tracks in strict mode | 7 |
 | R3.7 SegmentBase (byte-range) content | 8 |
+| R3.8 Muxed audio/video streams | 2 |
 | R4.1 No spurious seeks during trailing | 4 |
 | R4.2 Segment downloading not complete early | 2 |
 | R4.3 Schedule timer continues (buffering icon) | 5 |
@@ -782,4 +792,4 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R10.2 strictMode = manifest enforcement | 6 |
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
-| **Total** | **296** |
+| **Total** | **298** |
