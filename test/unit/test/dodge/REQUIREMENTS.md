@@ -646,6 +646,17 @@ The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla and erro
 | `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeTrailing returns true when any SP is trailing |
 | `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns false when streamController is null |
 
+### R9.6 - DRM content detection in extended manifests
+
+`tryProcessExtendedManifest` scans the embedded MPD string for DRM indicators (`<ContentProtection`, `cenc:`, `urn:mpeg:dash:mp4protection`, `urn:uuid:` PSSH system ID URNs). DRM license requests may leak content-identifying information through a channel Dodge cannot intercept. In strict mode ('representation' or 'manifest'), manifests containing DRM elements are rejected (returns `false`, fires strict mode error). When strict mode is off, the manifest is accepted with a warning. Manifests without DRM are unaffected. This area needs further consideration as future work.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode representation: rejects manifest containing ContentProtection |
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode manifest: rejects manifest containing ContentProtection |
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing ContentProtection with warning |
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | manifest without DRM: accepted in all modes |
+
 ---
 
 ## 10. Strict Mode Enforcement
@@ -677,6 +688,26 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent |
 | `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null |
 | `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded and known label, defense still works normally |
+
+### R10.3 - DRM key session detection warns during defended playback
+
+DRM license requests may leak content-identifying information through a channel Dodge cannot intercept. When a DRM key session is created during defended playback (`defenseRegistry.hasContent()` is true), DodgeHandler logs a warning. This is a diagnostic signal only - the actual blocking happens at manifest load time (R9.6). Key session error events (failed sessions) and events without an active defense are ignored.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | DRM key session detection | does not fire ERROR when key session created during defended playback (warn only) |
+| `dodge.DodgeHandler.js` | DRM key session detection | no extended manifest loaded: ignores key session event |
+| `dodge.DodgeHandler.js` | DRM key session detection | key session error events are ignored |
+
+### R10.4 - NEED_KEY interception blocks DRM in strict mode
+
+Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high priority (before `ProtectionController._onNeedKey`). When a defense is active in strict mode, it sets `streaming.protection.ignoreEmeEncryptedEvent = true` to prevent ProtectionController from creating key sessions, then fires an error. This blocks the DRM handshake before any license request is sent. When strict mode is off or no defense is active, the event is ignored or a warning is logged. This complements R9.6 (manifest-level rejection) as a runtime fallback.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | strict mode: fires ERROR and sets ignoreEmeEncryptedEvent on NEED_KEY during defended playback |
+| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | strict mode off: does not fire ERROR on NEED_KEY |
+| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | no extended manifest loaded: ignores NEED_KEY |
 
 ---
 
@@ -736,4 +767,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **282** |
+| R9.6 DRM content detection in extended manifests | 4 |
+| R10.3 DRM key session detection (warn only) | 3 |
+| R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
+| **Total** | **292** |

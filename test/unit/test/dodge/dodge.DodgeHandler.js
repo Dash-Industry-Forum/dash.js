@@ -980,4 +980,223 @@ describe('DodgeHandler', function () {
             expect(handler.isDodgeTrailing()).to.be.false; // jshint ignore:line
         });
     });
+
+    // DRM NEED_KEY interception (blocks in strict mode)
+
+    describe('DRM NEED_KEY interception', function () {
+
+        let eventBus, settings;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            if (!Events.NEED_KEY) {
+                Events.NEED_KEY = 'needkey';
+            }
+            if (!Events.KEY_SESSION_CREATED) {
+                Events.KEY_SESSION_CREATED = 'public_keySessionCreated';
+            }
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            const handler = DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+            handler.registerEvents();
+            return handler;
+        }
+
+        it('strict mode: fires ERROR and sets ignoreEmeEncryptedEvent on NEED_KEY during defended playback', function () {
+            const handler = createDodgeHandler('representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function (e) {
+                errorFired = true;
+                expect(e.error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
+            }, this);
+
+            eventBus.trigger(Events.NEED_KEY, { key: {} });
+            expect(errorFired).to.be.true; // jshint ignore:line
+            expect(settings.get().streaming.protection.ignoreEmeEncryptedEvent).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: does not fire ERROR on NEED_KEY', function () {
+            const handler = createDodgeHandler(false);
+            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function () {
+                errorFired = true;
+            }, this);
+
+            eventBus.trigger(Events.NEED_KEY, { key: {} });
+            expect(errorFired).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('no extended manifest loaded: ignores NEED_KEY', function () {
+            const handler = createDodgeHandler('representation');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function () {
+                errorFired = true;
+            }, this);
+
+            eventBus.trigger(Events.NEED_KEY, { key: {} });
+            expect(errorFired).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // DRM key session detection (warn-only diagnostic)
+
+    describe('DRM key session detection', function () {
+
+        let eventBus, settings;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            if (!Events.KEY_SESSION_CREATED) {
+                Events.KEY_SESSION_CREATED = 'public_keySessionCreated';
+            }
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            const handler = DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+            handler.registerEvents();
+            return handler;
+        }
+
+        it('does not fire ERROR when key session created during defended playback (warn only)', function () {
+            const handler = createDodgeHandler('representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function () {
+                errorFired = true;
+            }, this);
+
+            eventBus.trigger(Events.KEY_SESSION_CREATED, { data: {} });
+            expect(errorFired).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('no extended manifest loaded: ignores key session event', function () {
+            const handler = createDodgeHandler('representation');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function () {
+                errorFired = true;
+            }, this);
+
+            eventBus.trigger(Events.KEY_SESSION_CREATED, { data: {} });
+            expect(errorFired).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('key session error events are ignored', function () {
+            const handler = createDodgeHandler('representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+
+            let errorFired = false;
+            eventBus.on(Events.ERROR, function () {
+                errorFired = true;
+            }, this);
+
+            eventBus.trigger(Events.KEY_SESSION_CREATED, { data: null, error: { code: 113 } });
+            expect(errorFired).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // DRM content detection in extended manifest
+
+    describe('DRM content detection in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function makeDrmManifest() {
+            return {
+                start: {
+                    mpd: '<MPD><Period><AdaptationSet><ContentProtection schemeIdUri="urn:uuid:edef8ba9-79d6-4ace-a3c8-27dcd51d21ed"/><Representation id="v" bandwidth="1000000"/></AdaptationSet></Period></MPD>',
+                    base_uri: 'https://example.com/'
+                },
+                streams: [{
+                    label: 'v',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+        }
+
+        it('strict mode representation: rejects manifest containing ContentProtection', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode manifest: rejects manifest containing ContentProtection', function () {
+            const handler = createDodgeHandler('manifest');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: accepts manifest containing ContentProtection with warning', function () {
+            const handler = createDodgeHandler(false);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('ContentProtection');
+            handler.reset();
+        });
+
+        it('manifest without DRM: accepted in all modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.equal('<MPD/>');
+            handler.reset();
+        });
+    });
 });

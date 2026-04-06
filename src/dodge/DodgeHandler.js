@@ -137,6 +137,15 @@ function DodgeHandler(config) {
         eventBus.on(events.INIT_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.on(events.MEDIA_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.on(events.PADDING_LOADED, _onPaddingLoaded, instance);
+        // Protection module events (only present if the module is loaded).
+        // NEED_KEY fires before ProtectionController creates a key session;
+        // intercepting at high priority lets us block DRM in strict mode.
+        if (events.NEED_KEY) {
+            eventBus.on(events.NEED_KEY, _onNeedKey, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+        }
+        if (events.KEY_SESSION_CREATED) {
+            eventBus.on(events.KEY_SESSION_CREATED, _onKeySessionCreated, instance);
+        }
     }
 
     /**
@@ -173,8 +182,24 @@ function DodgeHandler(config) {
             return null;
         }
 
+        // Check whether the embedded MPD contains DRM content protection
+        // elements. DRM license requests may leak identifying information
+        // through a channel Dodge cannot intercept, undermining defenses.
+        // This is a heuristic check on the raw XML string.
+        const mpd = extended['start']['mpd'];
+        if (_mpdContainsDrm(mpd)) {
+            const strictMode = (settings.get().dodge || {}).strictMode;
+            if (strictMode === 'representation' || strictMode === 'manifest') {
+                logger.error('Extended manifest contains DRM-protected content, license requests may leak content-identifying information');
+                _triggerStrictModeError(url);
+                return false;
+            } else {
+                logger.warn('Extended manifest contains DRM-protected content, license requests may leak content-identifying information');
+            }
+        }
+
         return {
-            mpd: extended['start']['mpd'],
+            mpd: mpd,
             baseUri: extended['start']['base_uri'],
         };
     }
@@ -188,6 +213,61 @@ function DodgeHandler(config) {
                 DodgeErrors.DODGE_STRICT_MODE_ERROR_MESSAGE + (url || '')
             )
         });
+    }
+
+    /**
+     * Heuristic check whether an MPD XML string contains DRM content
+     * protection elements.
+     */
+    function _mpdContainsDrm(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('<ContentProtection') ||
+            mpd.includes('cenc:') ||
+            mpd.includes('urn:mpeg:dash:mp4protection') ||
+            mpd.includes('urn:uuid:'); // PSSH system ID URNs
+    }
+
+    /**
+     * Intercept NEED_KEY at high priority, before ProtectionController
+     * creates key sessions and sends license requests. In strict mode
+     * with an active defense, set ignoreEmeEncryptedEvent to prevent
+     * ProtectionController._onNeedKey from running, then fire an
+     * error. When strict mode is off, log a warning (not block).
+     */
+    function _onNeedKey() {
+        if (!defenseRegistry.hasContent()) {
+            return;
+        }
+
+        const strictMode = (settings.get().dodge || {}).strictMode;
+        if (strictMode === 'representation' || strictMode === 'manifest') {
+            // Prevent ProtectionController._onNeedKey (default priority)
+            // from running by enabling the ignoreEmeEncryptedEvent flag.
+            settings.update({ streaming: { protection: { ignoreEmeEncryptedEvent: true } } });
+            logger.error('Dodge strict mode is enabled and DRM key request detected, blocking request');
+            eventBus.trigger(events.ERROR, {
+                error: new DashJSError(
+                    DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE,
+                    'Dodge strict mode is enabled and DRM key request blocked'
+                )
+            });
+        } else {
+            logger.warn('DRM key request detected during defended playback, license requests may leak content-identifying information');
+        }
+    }
+
+    /**
+     * Diagnostic warning when a DRM key session is created despite the
+     * NEED_KEY intercept (e.g., strict mode off, or session created by
+     * manifest-level ContentProtection before Dodge activates).
+     */
+    function _onKeySessionCreated(e) {
+        if (e.error || !defenseRegistry.hasContent()) {
+            return;
+        }
+        logger.warn('DRM key session created during defended playback, license requests may leak content-identifying information');
     }
 
     /**
@@ -233,6 +313,12 @@ function DodgeHandler(config) {
         eventBus.off(events.INIT_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.off(events.MEDIA_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.off(events.PADDING_LOADED, _onPaddingLoaded, instance);
+        if (events.NEED_KEY) {
+            eventBus.off(events.NEED_KEY, _onNeedKey, instance);
+        }
+        if (events.KEY_SESSION_CREATED) {
+            eventBus.off(events.KEY_SESSION_CREATED, _onKeySessionCreated, instance);
+        }
         defenseRegistry.reset();
         streamState.clear();
     }
