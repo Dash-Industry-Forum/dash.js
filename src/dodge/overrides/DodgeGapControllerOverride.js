@@ -42,9 +42,10 @@
  * Registered via mediaPlayer.extend('GapController', DodgeGapControllerOverride, true).
  */
 function DodgeGapControllerOverride() {
-    const dodgeHandler = this.context._dodgeHandler;
+    const context = this.context;
 
     function _shouldJumpGap() {
+        const dodgeHandler = context._dodgeHandler;
         if (dodgeHandler && dodgeHandler.isDodgeTrailing && dodgeHandler.isDodgeTrailing()) {
             return false;
         }

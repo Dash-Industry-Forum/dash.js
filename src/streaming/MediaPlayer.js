@@ -479,6 +479,7 @@ function MediaPlayer() {
         if (dodgeHandler) {
             dodgeHandler.reset();
             dodgeHandler = null;
+            context._dodgeHandler = null;
         }
     }
 
