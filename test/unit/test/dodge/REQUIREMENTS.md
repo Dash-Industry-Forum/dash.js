@@ -215,6 +215,21 @@ Covered by R2.4 above.
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end) |
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged) |
 
+### R3.7 - SegmentBase (byte-range) content
+
+SegmentBase representations (used by WebM and single-file MP4 content) store all segments in a single monolithic file, differentiated by byte range. Unlike SegmentTemplate, `segment.media` is `null` and the URL is resolved entirely from BaseURL. The override explicitly handles this: when `segment.media` is null, template expansion is skipped and the URL resolves to the base URL with the padding query parameter. Byte ranges from `cycle.range` override `segment.mediaRange` (partial request) or fall back to the full segment range. Init segments similarly resolve from BaseURL when `representation.initialization` is null, using `representation.range` as the byte range.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getInitRequest() resolves URL from BaseURL when initialization is null |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getInitRequest() full init cycle uses representation.range when no explicit range |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getNextSegmentRequest() produces correct URL and byte range for SegmentBase |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getNextSegmentRequest() with cycle.range overrides segment.mediaRange |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getNextSegmentRequest() URL has padding query parameter |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getSegmentRequestForTime() works with SegmentBase segments |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | getNextSegmentRequest() sets full/buffer/trail flags correctly for SegmentBase |
+| `dodge.DodgeDashHandlerOverride.js` | SegmentBase (byte-range) content | fallback to parent when no defense is active on SegmentBase representation |
+
 ---
 
 ## 4. Trailing Phase
@@ -655,6 +670,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R3.4 Non-fragmented text streams | (see R2.3) |
 | R3.5 Self-initialized streams | (see R2.4) |
 | R3.6 Undefended text tracks in strict mode | 7 |
+| R3.7 SegmentBase (byte-range) content | 8 |
 | R4.1 No spurious seeks during trailing | 4 |
 | R4.2 Segment downloading not complete early | 2 |
 | R4.3 Schedule timer continues (buffering icon) | 5 |
@@ -685,4 +701,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **263** |
+| **Total** | **271** |

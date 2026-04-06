@@ -239,13 +239,15 @@ function DodgeDashHandlerOverride(config) {
         const presentationStartTime = period.start;
         const isDynamicManifest = parent.getStreamInfo().manifestInfo.isDynamic;
 
-        // Count token occurrences for URL padding.
-        const replacements = {
-            'Bandwidth': 1,
-            'Number': 0,
-            'Time': 0,
-            'ID': 0,
-        };
+        const initUrl = representation.initialization;
+
+        // SegmentBase / byte-range: initialization URL is null (resolved
+        // from BaseURL at load time). No template tokens to normalize.
+        // SegmentTemplate: initialization URL contains $Bandwidth$
+        // (and possibly $RepresentationID$) that must be expanded.
+        const replacements = initUrl
+            ? { 'Bandwidth': 1, 'Number': 0, 'Time': 0, 'ID': 0 }
+            : { 'Bandwidth': 0, 'Number': 0, 'Time': 0, 'ID': 0 };
 
         request.mediaType = mediaType;
         request.type = HTTPRequest.INIT_SEGMENT_TYPE;
@@ -264,10 +266,12 @@ function DodgeDashHandlerOverride(config) {
         request.availabilityEndTime = timelineConverter.calcAvailabilityEndTimeFromPresentationTime(presentationStartTime + period.duration, representation, isDynamicManifest);
         request.representation = representation;
 
-        if (_setRequestUrlWithPadding(request, representation.initialization, representation, replacements)) {
-            request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
-            request.url = replaceIDForTemplate(request.url, representation.id);
-            request.url = unescapeDollarsInTemplate(request.url);
+        if (_setRequestUrlWithPadding(request, initUrl, representation, replacements)) {
+            if (initUrl) {
+                request.url = replaceTokenForTemplate(request.url, 'Bandwidth', representation.bandwidth);
+                request.url = replaceIDForTemplate(request.url, representation.id);
+                request.url = unescapeDollarsInTemplate(request.url);
+            }
             return request;
         }
     }
@@ -357,24 +361,34 @@ function DodgeDashHandlerOverride(config) {
         const representation = segment.representation;
         const bandwidth = representation.bandwidth;
         let url = segment.media;
+        let replacements;
 
-        // Count token occurrences for URL padding.
-        const replacements = {
-            'Number': countUnpaddedTokenOccurrences(url, 'Number'),
-            'Time': countUnpaddedTokenOccurrences(url, 'Time'),
-            'Bandwidth': countUnpaddedTokenOccurrences(url, 'Bandwidth'),
-            'ID': (url.indexOf('$RepresentationID$') === -1) ? 0 : 1,
-        };
-        if (segment.replacements) {
-            replacements['Number'] += segment.replacements['Number'];
-            replacements['Time'] += segment.replacements['Time'];
+        if (url) {
+            // SegmentTemplate / SegmentList: URL contains template tokens
+            // that must be expanded, and whose variable-length substitutions
+            // must be accounted for in the padding calculation.
+            replacements = {
+                'Number': countUnpaddedTokenOccurrences(url, 'Number'),
+                'Time': countUnpaddedTokenOccurrences(url, 'Time'),
+                'Bandwidth': countUnpaddedTokenOccurrences(url, 'Bandwidth'),
+                'ID': (url.indexOf('$RepresentationID$') === -1) ? 0 : 1,
+            };
+            if (segment.replacements) {
+                replacements['Number'] += segment.replacements['Number'];
+                replacements['Time'] += segment.replacements['Time'];
+            }
+
+            url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
+            url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
+            url = replaceTokenForTemplate(url, 'Bandwidth', bandwidth);
+            url = replaceIDForTemplate(url, representation.id);
+            url = unescapeDollarsInTemplate(url);
+        } else {
+            // SegmentBase / byte-range: segment.media is null because all
+            // segments share a single file URL (resolved from BaseURL).
+            // No template tokens to expand or normalize.
+            replacements = { 'Number': 0, 'Time': 0, 'Bandwidth': 0, 'ID': 0 };
         }
-
-        url = replaceTokenForTemplate(url, 'Number', segment.replacementNumber);
-        url = replaceTokenForTemplate(url, 'Time', segment.replacementTime);
-        url = replaceTokenForTemplate(url, 'Bandwidth', bandwidth);
-        url = replaceIDForTemplate(url, representation.id);
-        url = unescapeDollarsInTemplate(url);
 
         request.mediaType = parent.getType();
         request.bandwidth = representation.bandwidth;

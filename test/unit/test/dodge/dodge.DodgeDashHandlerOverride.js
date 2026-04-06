@@ -1313,4 +1313,198 @@ describe('DodgeDashHandlerOverride', function () {
             expect(segment.index).to.equal(1); // padding cycles don't update lastSegment
         });
     });
+
+    // SegmentBase / byte-range content (WebM, single-file MP4)
+
+    describe('SegmentBase (byte-range) content', function () {
+
+        let segBaseRep, segBaseOverride, segBaseSegmentsController;
+
+        function makeSegmentBaseSegment(rep, index) {
+            return {
+                index,
+                media: null, // SegmentBase: no per-segment URL
+                presentationStartTime: index * 4,
+                duration: 4,
+                representation: rep,
+                replacementNumber: index,
+                replacementTime: 0,
+                mediaRange: (index * 100000) + '-' + ((index + 1) * 100000 - 1), // byte range in monolithic file
+                availabilityStartTime: 0,
+                availabilityEndTime: Infinity,
+                wallStartTime: 0,
+                mediaStartTime: 0,
+                replacements: null
+            };
+        }
+
+        function makeSegmentBaseRepresentation() {
+            return {
+                id: 'rep0',
+                index: 0,
+                bandwidth: 1000000,
+                initialization: null, // SegmentBase: init comes from BaseURL + range
+                segmentInfoType: 'SegmentBase',
+                segmentDuration: 4,
+                timescale: 1,
+                range: '0-855', // init segment byte range
+                path: '',
+                mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } },
+                adaptation: {
+                    index: 0,
+                    period: { index: 0, start: 0, duration: 100 }
+                }
+            };
+        }
+
+        function makeSegmentBaseManifest() {
+            return {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-400' }, { range: '401-855' }],
+                    data: [
+                        { index: 0, buffer: false },
+                        { index: 1, buffer: true },
+                        { index: 2, padding: true },
+                    ]
+                }]
+            };
+        }
+
+        beforeEach(function () {
+            segBaseRep = makeSegmentBaseRepresentation();
+
+            segBaseSegmentsController = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => makeSegmentBaseSegment(r, idx)),
+                getSegmentByTime: sinon.stub().callsFake((r, time) => {
+                    const idx = Math.floor(time / 4);
+                    return makeSegmentBaseSegment(r, idx);
+                }),
+            };
+
+            const segBaseURLController = {
+                resolve: () => ({
+                    url: 'https://example.com/video.webm',
+                    serviceLocation: 'example.com',
+                    queryParams: {}
+                })
+            };
+
+            segBaseOverride = DodgeDashHandlerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                {
+                    adapter,
+                    debug: Debug(context).getInstance(),
+                    urlUtils: URLUtils(context).getInstance(),
+                    segmentsController: segBaseSegmentsController,
+                    baseURLController: segBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: sinon.stub().returns(0),
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+        });
+
+        it('getInitRequest() resolves URL from BaseURL when initialization is null', function () {
+            defenseController.addExtendedManifest(makeSegmentBaseManifest());
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            const request = segBaseOverride.getInitRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.url).to.equal('https://example.com/video.webm');
+            expect(request.range).to.equal('0-400');
+            expect(request.partial).to.be.true; // jshint ignore:line
+            expect(request.originalRange).to.equal('0-855');
+        });
+
+        it('getInitRequest() full init cycle uses representation.range when no explicit range', function () {
+            const manifest = makeSegmentBaseManifest();
+            manifest.streams[0].init = [{}]; // single init cycle, no range
+            defenseController.addExtendedManifest(manifest);
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            const request = segBaseOverride.getInitRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.range).to.equal('0-855'); // falls back to representation.range
+            expect(request.partial).to.be.false; // jshint ignore:line
+            expect(request.full).to.be.true; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest() produces correct URL and byte range for SegmentBase', function () {
+            defenseController.addExtendedManifest(makeSegmentBaseManifest());
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            // Consume init cycles first.
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            // First data cycle.
+            const request = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.url).to.equal('https://example.com/video.webm');
+            // No cycle.range override, so uses segment.mediaRange.
+            expect(request.range).to.equal('0-99999');
+            expect(request.originalRange).to.equal('0-99999');
+            expect(request.partial).to.be.false; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest() with cycle.range overrides segment.mediaRange', function () {
+            const manifest = makeSegmentBaseManifest();
+            manifest.streams[0].data[0] = { index: 0, range: '0-50000', buffer: false };
+            defenseController.addExtendedManifest(manifest);
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            const request = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.range).to.equal('0-50000');
+            expect(request.originalRange).to.equal('0-99999');
+            expect(request.partial).to.be.true; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest() URL has padding query parameter', function () {
+            defenseController.addExtendedManifest(makeSegmentBaseManifest());
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            const request = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.queryParams).to.have.property('padding');
+            expect(request.queryParams.padding).to.be.a('string');
+            expect(request.queryParams.padding.length).to.be.greaterThan(0);
+        });
+
+        it('getSegmentRequestForTime() works with SegmentBase segments', function () {
+            defenseController.addExtendedManifest(makeSegmentBaseManifest());
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            const request = segBaseOverride.getSegmentRequestForTime({}, segBaseRep, 0);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.url).to.equal('https://example.com/video.webm');
+            expect(request.range).to.equal('0-99999');
+        });
+
+        it('getNextSegmentRequest() sets full/buffer/trail flags correctly for SegmentBase', function () {
+            defenseController.addExtendedManifest(makeSegmentBaseManifest());
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            segBaseOverride.getInitRequest({}, segBaseRep);
+            const r0 = segBaseOverride.getNextSegmentRequest({}, segBaseRep); // cycle 0
+            expect(r0.full).to.be.true; // jshint ignore:line
+            expect(r0.buffer).to.be.false; // jshint ignore:line
+            expect(r0.trail).to.be.false; // jshint ignore:line
+            const r1 = segBaseOverride.getNextSegmentRequest({}, segBaseRep); // cycle 1
+            expect(r1.full).to.be.true; // jshint ignore:line
+            expect(r1.buffer).to.be.true; // jshint ignore:line
+            expect(r1.trail).to.be.false; // jshint ignore:line
+            const r2 = segBaseOverride.getNextSegmentRequest({}, segBaseRep); // cycle 2, trailing
+            expect(r2.trail).to.be.true; // jshint ignore:line
+            expect(r2.padding).to.be.true; // jshint ignore:line
+        });
+
+        it('fallback to parent when no defense is active on SegmentBase representation', function () {
+            // No extended manifest loaded.
+            const result = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
+            expect(mockParent.getNextSegmentRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentNext: true });
+        });
+    });
 });
