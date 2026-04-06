@@ -657,6 +657,17 @@ The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla and erro
 | `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing ContentProtection with warning |
 | `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | manifest without DRM: accepted in all modes |
 
+### R9.7 - Thumbnail track detection in extended manifests
+
+Thumbnail tracks bypass DashHandler entirely (ThumbnailTracks fetches via its own XHRLoader). They could thus leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD for thumbnail tile scheme IDs (`http://dashif.org/thumbnail_tile`, `http://dashif.org/guidelines/thumbnail_tile`). In strict mode, manifests containing thumbnail tracks are rejected. When strict mode is off, a warning is logged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode representation: rejects manifest containing thumbnail tracks |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode manifest: rejects manifest containing thumbnail tracks |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing thumbnail tracks with warning |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | manifest without thumbnails: accepted in all modes |
+
 ---
 
 ## 10. Strict Mode Enforcement
@@ -765,9 +776,10 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R9.3 Non-strict mode no error | 1 |
 | R9.4 Partial segment combination event routing | 7 |
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
+| R9.6 DRM content detection in extended manifests | 4 |
+| R9.7 Thumbnail track detection | 4 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| R9.6 DRM content detection in extended manifests | 4 |
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
-| **Total** | **292** |
+| **Total** | **296** |

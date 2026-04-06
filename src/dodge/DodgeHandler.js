@@ -198,6 +198,21 @@ function DodgeHandler(config) {
             }
         }
 
+        // Thumbnail tracks bypass DashHandler (ThumbnailTracks fetches
+        // directly via its own XHRLoader). Cycle-based defense does not
+        // apply; thumbnail requests could leak content-identifying
+        // information and are therefore blocked in strict mode.
+        if (_mpdContainsThumbnails(mpd)) {
+            const strictMode = (settings.get().dodge || {}).strictMode;
+            if (strictMode === 'representation' || strictMode === 'manifest') {
+                logger.error('Extended manifest contains thumbnail tracks that bypass Dodge defense');
+                _triggerStrictModeError(url);
+                return false;
+            } else {
+                logger.warn('Extended manifest contains thumbnail tracks that bypass Dodge defense');
+            }
+        }
+
         return {
             mpd: mpd,
             baseUri: extended['start']['base_uri'],
@@ -227,6 +242,19 @@ function DodgeHandler(config) {
             mpd.includes('cenc:') ||
             mpd.includes('urn:mpeg:dash:mp4protection') ||
             mpd.includes('urn:uuid:'); // PSSH system ID URNs
+    }
+
+    /**
+     * Heuristic check whether an MPD XML string contains thumbnail
+     * tracks. Thumbnails bypass DashHandler and are fetched directly
+     * by ThumbnailTracks via its own XHRLoader.
+     */
+    function _mpdContainsThumbnails(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('http://dashif.org/thumbnail_tile') ||
+            mpd.includes('http://dashif.org/guidelines/thumbnail_tile');
     }
 
     /**
