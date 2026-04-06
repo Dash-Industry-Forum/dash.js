@@ -9,33 +9,34 @@ import { expect } from 'chai';
 
 describe('DodgeGapControllerOverride', function () {
 
-    function makeOverride(isTrailing, hasDashHandler = true) {
-        const getIsTrailingStub = sinon.stub().returns(isTrailing);
-        const dashHandler = hasDashHandler ? { getIsTrailing: getIsTrailingStub } : undefined;
+    function makeOverride(isTrailing, hasDodgeHandler = true) {
+        const isDodgeTrailingStub = sinon.stub().returns(isTrailing);
+        const dodgeHandler = hasDodgeHandler ? { isDodgeTrailing: isDodgeTrailingStub } : undefined;
 
         const override = DodgeGapControllerOverride.call(
-            { context: {}, parent: {}, factory: {} },
-            { dashHandler }
+            { context: { _dodgeHandler: dodgeHandler }, parent: {}, factory: {} }
         );
 
         return override;
     }
 
-    describe('shouldJumpGap', function () {
+    describe('_shouldJumpGap', function () {
 
         it('not trailing: returns true (gap jump proceeds normally)', function () {
             const override = makeOverride(false);
-            expect(override.shouldJumpGap()).to.be.true; // jshint ignore:line
+            expect(override._shouldJumpGap()).to.be.true; // jshint ignore:line
         });
 
         it('during trailing: returns false (suppresses gap jump to avoid spurious seek)', function () {
             const override = makeOverride(true);
-            expect(override.shouldJumpGap()).to.be.false; // jshint ignore:line
+            expect(override._shouldJumpGap()).to.be.false; // jshint ignore:line
         });
 
-        it('dashHandler absent: returns true (no crash, gap jumping unaffected)', function () {
-            const override = makeOverride(true, false);
-            expect(override.shouldJumpGap()).to.be.true; // jshint ignore:line
+        it('dodgeHandler absent: returns true (no crash, gap jumping unaffected)', function () {
+            const override = DodgeGapControllerOverride.call(
+                { context: {}, parent: {}, factory: {} }
+            );
+            expect(override._shouldJumpGap()).to.be.true; // jshint ignore:line
         });
     });
 });

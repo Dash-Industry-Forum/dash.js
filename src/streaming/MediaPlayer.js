@@ -332,10 +332,6 @@ function MediaPlayer() {
                 streamController = StreamController(context).getInstance();
             }
 
-            if (!gapController) {
-                gapController = GapController(context).getInstance();
-            }
-
             if (!catchupController) {
                 catchupController = CatchupController(context).getInstance();
             }
@@ -2640,6 +2636,10 @@ function MediaPlayer() {
             segmentBaseController
         });
 
+        if (!gapController) {
+            gapController = GapController(context).getInstance();
+        }
+
         gapController.setConfig({
             settings,
             playbackController,
@@ -2813,6 +2813,7 @@ function MediaPlayer() {
                 streamController: streamController,
                 mediaPlayer: instance
             });
+            context._dodgeHandler = dodgeHandler;
             dodgeHandler.registerExtensions();
             dodgeHandler.registerEvents();
         }

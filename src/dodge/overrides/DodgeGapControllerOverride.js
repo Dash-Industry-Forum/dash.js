@@ -30,9 +30,9 @@
  */
 
 /**
- * Dodge override, suppresses GapController jumps during the trailing
- * phase to prevent spurious seeks to stream end while padding cycles
- * are being downloaded.
+ * Dodge override for GapController. Suppresses gap jumps during the
+ * trailing phase to prevent spurious seeks to stream end while padding
+ * cycles are being downloaded.
  *
  * When playback stalls at the end of real content during trailing,
  * GapController would normally seek to stream end. That seek is handled
@@ -41,19 +41,18 @@
  *
  * Registered via mediaPlayer.extend('GapController', DodgeGapControllerOverride, true).
  */
-function DodgeGapControllerOverride(config) {
-    config = config || {};
-    const dashHandler = config.dashHandler;
+function DodgeGapControllerOverride() {
+    const dodgeHandler = this.context._dodgeHandler;
 
-    function shouldJumpGap() {
-        if (dashHandler && dashHandler.getIsTrailing && dashHandler.getIsTrailing()) {
+    function _shouldJumpGap() {
+        if (dodgeHandler && dodgeHandler.isDodgeTrailing && dodgeHandler.isDodgeTrailing()) {
             return false;
         }
         return true;
     }
 
     return {
-        shouldJumpGap,
+        _shouldJumpGap,
     };
 }
 

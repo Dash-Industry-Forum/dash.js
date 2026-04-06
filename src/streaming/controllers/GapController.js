@@ -304,7 +304,7 @@ function GapController() {
 
     /**
      * Returns whether a jump should proceed. Exposed in the instance object
-     * so it can be overridden.
+     * so it can be overridden by DodgeGapControllerOverride.
      */
     function _shouldJumpGap() {
         return true;

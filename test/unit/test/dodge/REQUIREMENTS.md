@@ -252,9 +252,9 @@ Two complementary mechanisms prevent spurious seeks during the trailing phase:
 
 | File | Description | Test |
 |---|---|---|
-| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | during trailing: returns false (suppresses gap jump to avoid spurious seek) |
-| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | not trailing: returns true (gap jump proceeds normally) |
-| `dodge.DodgeGapControllerOverride.js` | shouldJumpGap | dashHandler absent: returns true (jumping unaffected) |
+| `dodge.DodgeGapControllerOverride.js` | _shouldJumpGap | during trailing: returns false (suppresses gap jump to avoid spurious seek) |
+| `dodge.DodgeGapControllerOverride.js` | _shouldJumpGap | not trailing: returns true (gap jump proceeds normally) |
+| `dodge.DodgeGapControllerOverride.js` | _shouldJumpGap | dodgeHandler absent: returns true (jumping unaffected) |
 | `dodge.DodgeDashHandlerOverride.js` | getSegmentRequestForTime during trailing phase | seek near stream end during trailing returns next padding cycle |
 
 ### R4.2 - Segment downloading is not marked complete during trailing
