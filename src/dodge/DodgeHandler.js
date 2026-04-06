@@ -205,6 +205,29 @@ function DodgeHandler(config) {
         }
     }
 
+    /**
+     * True when at least one active stream processor is running a Dodge
+     * defense. False when the module is loaded but no extended manifest is
+     * active, or when all stream processors fell back to vanilla DASH.
+     * @returns {boolean}
+     */
+    function isDodgeActive() {
+        if (!streamController) { return false; }
+        return streamController.getActiveStreamProcessors()
+            .some(sp => sp.getDashHandler() && sp.getDashHandler().getIsDefended());
+    }
+
+    /**
+     * True when Dodge playback has entered the trailing padding phase
+     * (at least one active stream processor is currently trailing).
+     * @returns {boolean}
+     */
+    function isDodgeTrailing() {
+        if (!streamController) { return false; }
+        return streamController.getActiveStreamProcessors()
+            .some(sp => sp.getDashHandler() && sp.getDashHandler().getIsTrailing());
+    }
+
     function reset() {
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.off(events.INIT_FRAGMENT_PARTIAL, _onPartialSegment, instance);
@@ -594,6 +617,8 @@ function DodgeHandler(config) {
         registerEvents,
         tryProcessExtendedManifest,
         getStreamStats,
+        isDodgeActive,
+        isDodgeTrailing,
         reset,
     };
 

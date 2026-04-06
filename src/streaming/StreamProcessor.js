@@ -1229,6 +1229,10 @@ function StreamProcessor(config) {
         return scheduleController;
     }
 
+    function getDashHandler() {
+        return dashHandler;
+    }
+
     function clearScheduleTimer() {
         if (scheduleController) {
             scheduleController.clearScheduleTimer();
@@ -1626,6 +1630,7 @@ function StreamProcessor(config) {
         getMediaSource,
         getRepresentation,
         getRepresentationController,
+        getDashHandler,
         getScheduleController,
         getStreamId,
         getStreamInfo,

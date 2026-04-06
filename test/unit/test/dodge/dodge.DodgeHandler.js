@@ -896,4 +896,88 @@ describe('DodgeHandler', function () {
             expect(timerSpy2.called).to.be.false; // jshint ignore:line
         });
     });
+
+    // isDodgeActive / isDodgeTrailing
+
+    describe('isDodgeActive and isDodgeTrailing', function () {
+        let handler;
+
+        function makeSP(defended, trailing) {
+            return {
+                getDashHandler: () => ({
+                    getIsDefended: () => defended,
+                    getIsTrailing: () => trailing,
+                }),
+                getType: () => 'video',
+            };
+        }
+
+        function createHandlerWithSPs(streamProcessors) {
+            const eventBus = EventBus(context).getInstance();
+            const settings = Settings(context).getInstance();
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: {
+                    getActiveStreamProcessors: () => streamProcessors,
+                },
+                mediaPlayer: { extend: () => {} }
+            });
+        }
+
+        afterEach(function () {
+            if (handler) { handler.reset(); handler = null; }
+        });
+
+        it('isDodgeActive returns false when no stream processors are active', function () {
+            handler = createHandlerWithSPs([]);
+            expect(handler.isDodgeActive()).to.be.false; // jshint ignore:line
+        });
+
+        it('isDodgeTrailing returns false when no stream processors are active', function () {
+            handler = createHandlerWithSPs([]);
+            expect(handler.isDodgeTrailing()).to.be.false; // jshint ignore:line
+        });
+
+        it('isDodgeActive returns false when no SP is defended', function () {
+            handler = createHandlerWithSPs([makeSP(false, false)]);
+            expect(handler.isDodgeActive()).to.be.false; // jshint ignore:line
+        });
+
+        it('isDodgeActive returns true when any SP is defended', function () {
+            handler = createHandlerWithSPs([
+                makeSP(false, false), // audio, not defended
+                makeSP(true, false), // video, defended
+            ]);
+            expect(handler.isDodgeActive()).to.be.true; // jshint ignore:line
+        });
+
+        it('isDodgeTrailing returns false when no SP is trailing', function () {
+            handler = createHandlerWithSPs([makeSP(true, false)]);
+            expect(handler.isDodgeTrailing()).to.be.false; // jshint ignore:line
+        });
+
+        it('isDodgeTrailing returns true when any SP is trailing', function () {
+            handler = createHandlerWithSPs([
+                makeSP(false, false), // audio, not trailing
+                makeSP(true, true), // video, trailing
+            ]);
+            expect(handler.isDodgeTrailing()).to.be.true; // jshint ignore:line
+        });
+
+        it('isDodgeActive returns false when streamController is null', function () {
+            const eventBus = EventBus(context).getInstance();
+            const settings = Settings(context).getInstance();
+            handler = DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {} }
+            });
+            expect(handler.isDodgeActive()).to.be.false; // jshint ignore:line
+            expect(handler.isDodgeTrailing()).to.be.false; // jshint ignore:line
+        });
+    });
 });

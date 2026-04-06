@@ -993,6 +993,55 @@ function MediaPlayer() {
     }
 
     /**
+     * Time since stream end in seconds. Non-zero only after the video element has
+     * fired `ended`. Primarily useful with Dodge's trailing padding phase; can be
+     * used to update the UI to indicate "finishing up", for example.
+     * @returns {number} Time since stream end in seconds
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function timeSinceEnd() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getTimeSinceStreamEnd();
+    }
+
+    /**
+     * True when a Dodge defense is currently protecting at least one active
+     * stream processor. False when the Dodge module is not loaded, when the
+     * source is a plain MPD, or when all active stream processors fell back
+     * to vanilla DASH.
+     * @returns {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDodgeActive() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.isDodgeActive() : false;
+    }
+
+    /**
+     * True when Dodge playback has entered the trailing padding phase (the
+     * post-`ended` cycles that continue to fetch padding to shape content's
+     * apparent duration on the wire.
+     * @returns {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDodgeTrailing() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.isDodgeTrailing() : false;
+    }
+
+    /**
      * Returns information about the current DVR window including the start time, the end time, the window size.
      * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
      */
@@ -3054,6 +3103,9 @@ function MediaPlayer() {
         setXHRWithCredentialsForType,
         time,
         timeAsUTC,
+        timeSinceEnd,
+        isDodgeActive,
+        isDodgeTrailing,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

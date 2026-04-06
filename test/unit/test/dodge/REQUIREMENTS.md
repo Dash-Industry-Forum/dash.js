@@ -585,6 +585,20 @@ The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla and erro
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | padding cycle: PADDING_LOADED fires |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | buffer with two full segments: flushes pending as secondary, then fires primary |
 
+### R9.5 - `isDodgeActive` and `isDodgeTrailing` report defense status
+
+`isDodgeActive()` returns `true` when at least one active stream processor's DashHandler reports `getIsDefended() === true`. `isDodgeTrailing()` returns `true` when at least one reports `getIsTrailing() === true`. Both return `false` when `streamController` is null or has no active processors, and when no processor is defended/trailing.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns false when no stream processors are active |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeTrailing returns false when no stream processors are active |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns false when no SP is defended |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns true when any SP is defended |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeTrailing returns false when no SP is trailing |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeTrailing returns true when any SP is trailing |
+| `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns false when streamController is null |
+
 ---
 
 ## 10. Strict Mode Enforcement
@@ -668,6 +682,7 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.2 Strict mode manifest error firing | 4 |
 | R9.3 Non-strict mode no error | 1 |
 | R9.4 Partial segment combination event routing | 7 |
+| R9.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **256** |
+| **Total** | **263** |
