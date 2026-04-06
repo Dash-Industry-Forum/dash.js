@@ -64,6 +64,55 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
+        it('stream with valid period (non-negative integer), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: 0, init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('stream with period = null (absent), true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: null, init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('stream with negative period, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: -1, init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('stream with non-integer period, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: 1.5, init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('stream with numeric string period, coerced to integer, true', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: '2', init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+            expect(m.streams[0].period).to.equal(2); // coerced in place
+        });
+
+        it('stream with non-numeric string period, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', period: 'abc', init: [{}], data: [{ index: 0, buffer: true }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
         it('stream missing init (data-only stream), true', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
@@ -628,16 +677,6 @@ describe('DefenseRegistry', function () {
             expect(registry.getDefendedStreamInfo('unknown')).to.be.null; // jshint ignore:line
         });
 
-        it('getDefendedStreamInfo filtered by streamId, returns null when streamId does not match', function () {
-            registry.addExtendedManifest(makeValidManifest(), 'stream-A');
-            expect(registry.getDefendedStreamInfo('video_1000k', 'stream-B')).to.be.null; // jshint ignore:line
-        });
-
-        it('getDefendedStreamInfo filtered by streamId, returns the entry when streamId matches', function () {
-            registry.addExtendedManifest(makeValidManifest(), 'stream-A');
-            expect(registry.getDefendedStreamInfo('video_1000k', 'stream-A')).to.exist; // jshint ignore:line
-        });
-
         it('reset clears all manifests, getDefendedStreamInfo returns null after reset', function () {
             registry.addExtendedManifest(makeValidManifest());
             registry.reset();
@@ -646,6 +685,52 @@ describe('DefenseRegistry', function () {
 
         it('getMaxLabelLength returns 0 when no manifests are loaded', function () {
             expect(registry.getMaxLabelLength()).to.equal(0);
+        });
+
+        it('getDefendedStreamInfo with periodIndex, matches stream with matching period field', function () {
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'video_1000k', period: 0, init: [{}], data: [{ index: 0, buffer: true }] },
+                    { label: 'video_1000k', period: 1, init: [{}], data: [{ index: 5, buffer: true }] },
+                ]
+            });
+            const p0 = registry.getDefendedStreamInfo('video_1000k', 0);
+            expect(p0).to.exist; // jshint ignore:line
+            expect(p0.data[0].index).to.equal(0);
+            const p1 = registry.getDefendedStreamInfo('video_1000k', 1);
+            expect(p1).to.exist; // jshint ignore:line
+            expect(p1.data[0].index).to.equal(5);
+        });
+
+        it('getDefendedStreamInfo with periodIndex, returns null when no period matches', function () {
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'video_1000k', period: 0, init: [{}], data: [{ index: 0, buffer: true }] },
+                ]
+            });
+            expect(registry.getDefendedStreamInfo('video_1000k', 99)).to.be.null; // jshint ignore:line
+        });
+
+        it('getDefendedStreamInfo with periodIndex, stream without period field matches any period', function () {
+            registry.addExtendedManifest(makeValidManifest());
+            // makeValidManifest() has no period field on the stream.
+            const p0 = registry.getDefendedStreamInfo('video_1000k', 0);
+            expect(p0).to.exist; // jshint ignore:line
+            const p5 = registry.getDefendedStreamInfo('video_1000k', 5);
+            expect(p5).to.exist; // jshint ignore:line
+        });
+
+        it('getDefendedStreamInfo without periodIndex, matches stream with period field', function () {
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'video_1000k', period: 0, init: [{}], data: [{ index: 0, buffer: true }] },
+                ]
+            });
+            // No periodIndex passed: matches the first label match regardless of period.
+            expect(registry.getDefendedStreamInfo('video_1000k')).to.exist; // jshint ignore:line
         });
 
         it('getMaxLabelLength returns the longest stream label across multiple streams and manifests', function () {

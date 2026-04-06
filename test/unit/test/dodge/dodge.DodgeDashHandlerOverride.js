@@ -1314,6 +1314,64 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Multi-period support
+
+    describe('Multi-period support', function () {
+
+        it('updateDefendedStreamInfo resolves correct stream for each period', function () {
+            const manifest = {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'rep0', period: 0, init: [{}], data: [{ index: 0, buffer: true }] },
+                    { label: 'rep0', period: 1, init: [{}], data: [{ index: 5, buffer: true }] },
+                ]
+            };
+            defenseController.addExtendedManifest(manifest);
+
+            // Period 0 representation.
+            const repP0 = makeRepresentation();
+            repP0.adaptation.period.index = 0;
+            override.updateDefendedStreamInfo(repP0);
+            const r0 = override.getNextSegmentRequest({}, repP0);
+            expect(r0).to.exist; // jshint ignore:line
+            expect(r0.index).to.equal(0); // from period 0 stream data
+
+            // Period 1 representation (same label, different period).
+            // In dash.js, each period gets its own DashHandler instance;
+            // simulate by resetting cycle state.
+            override.resetInitialSettings();
+            const repP1 = makeRepresentation();
+            repP1.adaptation.period.index = 1;
+            override.updateDefendedStreamInfo(repP1);
+            const r1 = override.getNextSegmentRequest({}, repP1);
+            expect(r1).to.exist; // jshint ignore:line
+            expect(r1.index).to.equal(5); // from period 1 stream data
+        });
+
+        it('updateDefendedStreamInfo returns false for unmatched period', function () {
+            const manifest = {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'rep0', period: 0, init: [{}], data: [{ index: 0, buffer: true }] },
+                ]
+            };
+            defenseController.addExtendedManifest(manifest);
+
+            const repP5 = makeRepresentation();
+            repP5.adaptation.period.index = 5;
+            const result = override.updateDefendedStreamInfo(repP5);
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('stream without period field matches any period', function () {
+            defenseController.addExtendedManifest(makeManifest()); // no period field
+            const repP3 = makeRepresentation();
+            repP3.adaptation.period.index = 3;
+            const result = override.updateDefendedStreamInfo(repP3);
+            expect(result).to.be.true; // jshint ignore:line
+        });
+    });
+
     // SegmentBase / byte-range content (WebM, single-file MP4)
 
     describe('SegmentBase (byte-range) content', function () {

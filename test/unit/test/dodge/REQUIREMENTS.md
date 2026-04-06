@@ -536,9 +536,9 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | getCycleIndexByPlaybackTime | time 0 with segmentDuration 4, segment index 0, first cycle at position 0 |
 | `dodge.DefenseRegistry.js` | getCycleIndexByPlaybackTime | time 5 with segmentDuration 4, segment index 1, first cycle at position 2 |
 
-### R8.5 - Registry stores and retrieves extended manifests by label and stream ID
+### R8.5 - Registry stores and retrieves extended manifests by label
 
-`addExtendedManifest()` validates and stores manifests. `getDefendedStreamInfo()` retrieves a stream entry by label, optionally filtered by stream ID. `hasContent()` reflects whether any manifests are stored. `getMaxLabelLength()` returns the longest stream label across all loaded manifests (0 if none) and is used as a fallback for a misconfigured `dodge.maxIdLength`. `reset()` clears all state.
+`addExtendedManifest()` validates and stores manifests. `getDefendedStreamInfo()` retrieves a stream entry by label. `hasContent()` reflects whether any manifests are stored. `getMaxLabelLength()` returns the longest stream label across all loaded manifests (0 if none) and is used as a fallback for a misconfigured `dodge.maxIdLength`. `reset()` clears all state.
 
 | File | Description | Test |
 |---|---|---|
@@ -546,11 +546,43 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | instance | addExtendedManifest with null, returns false |
 | `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo finds a registered stream by label |
 | `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo returns null for an unknown label |
-| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns null when streamId does not match |
-| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo filtered by streamId, returns the entry when streamId matches |
 | `dodge.DefenseRegistry.js` | instance | reset clears all manifests, getDefendedStreamInfo returns null after reset |
 | `dodge.DefenseRegistry.js` | instance | getMaxLabelLength returns 0 when no manifests are loaded |
 | `dodge.DefenseRegistry.js` | instance | getMaxLabelLength returns the longest stream label across multiple streams and manifests |
+
+### R8.6 - Period field validation
+
+The optional `period` field on stream entries must be a non-negative integer when present. Null or absent values are accepted (backward compatible). Strings that parse to non-negative integers are coerced in place (following the same `Number()` pattern as `data[i].index`). Floats, negative numbers, and non-numeric strings are rejected.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with valid period (non-negative integer), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with period = null (absent), true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with negative period, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with non-integer period, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with numeric string period, coerced to integer, true |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream with non-numeric string period, false |
+
+### R8.7 - Period-scoped stream lookup for multi-period MPDs
+
+`getDefendedStreamInfo(label, periodIndex)` matches streams by label and, when the stream has a `period` field, also by period index. Streams without a `period` field match any period (backward compatible). When no stream matches the given period, returns null. When `periodIndex` is not passed, the first label match is returned regardless of period (backward compatible).
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo with periodIndex, matches stream with matching period field |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo with periodIndex, returns null when no period matches |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo with periodIndex, stream without period field matches any period |
+| `dodge.DefenseRegistry.js` | instance | getDefendedStreamInfo without periodIndex, matches stream with period field |
+
+### R8.8 - Override passes period index to defense registry lookup
+
+`updateDefendedStreamInfo(representation)` passes `representation.adaptation.period.index` to `getDefendedStreamInfo()`, enabling correct per-period defense data resolution in multi-period MPDs. When two periods share the same representation ID, each period's override instance receives its own defense data.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Multi-period support | updateDefendedStreamInfo resolves correct stream for each period |
+| `dodge.DodgeDashHandlerOverride.js` | Multi-period support | updateDefendedStreamInfo returns false for unmatched period |
+| `dodge.DodgeDashHandlerOverride.js` | Multi-period support | stream without period field matches any period |
 
 ---
 
@@ -693,7 +725,10 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R8.2 Init cycle validation | 16 |
 | R8.3 Data cycle validation and maxNoPad | 5 |
 | R8.4 Cycle index lookup | 6 |
-| R8.5 Registry stores and retrieves manifests | 9 |
+| R8.5 Registry stores and retrieves manifests | 7 |
+| R8.6 Period field validation | 6 |
+| R8.7 Period-scoped stream lookup | 4 |
+| R8.8 Override passes period index to registry | 3 |
 | R9.1 Manifest parsing and graceful degradation | 4 |
 | R9.2 Strict mode manifest error firing | 4 |
 | R9.3 Non-strict mode no error | 1 |
@@ -701,4 +736,4 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
-| **Total** | **271** |
+| **Total** | **282** |

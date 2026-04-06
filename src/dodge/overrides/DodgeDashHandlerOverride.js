@@ -676,7 +676,7 @@ function DodgeDashHandlerOverride(config) {
         const label = representation.id;
         lastRepresentationMediaType = representation.mediaInfo.type;
 
-        defendedStreamInfo = defenseRegistry.getDefendedStreamInfo(label);
+        defendedStreamInfo = defenseRegistry.getDefendedStreamInfo(label, period);
 
         if (defendedStreamInfo) {
             logger.debug('Defended stream info set for label ' + label + ', period ' + period + ', adaptation ' + adaptation + ', quality ' + quality);

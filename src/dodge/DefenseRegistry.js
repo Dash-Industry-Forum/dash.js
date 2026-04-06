@@ -432,6 +432,20 @@ function isValidExtendedManifest(manifest, logger) {
             return false;
         }
 
+        // period is optional. When present, scopes this stream entry to a
+        // specific period in multi-period MPDs. Must be a non-negative integer.
+        // Strings are accepted if they parse to a non-negative integer.
+        if (stream['period'] !== undefined && stream['period'] !== null) {
+            const p = Number(stream['period']);
+            if (isNaN(p) || p < 0 || !Number.isInteger(p)) {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', invalid period');
+                }
+                return false;
+            }
+            stream['period'] = p;
+        }
+
         // init is optional for self-initialized streams (no init segment needed)
         // data is optional for init-only streams (e.g. non-fragmented text)
         // At least one of init or data must be non-empty.
@@ -565,13 +579,11 @@ function DefenseRegistry() {
     }
 
     /**
-     * Validate and store an extended manifest. Assigns a unique `manifestId`
-     * and associates the extended manifest with the given `streamId`.
+     * Validate and store an extended manifest. Assigns a unique `manifestId`.
      * @param {Object} content - The parsed extended manifest JSON object.
-     * @param {string|null} [streamId] - The stream ID to associate with this extended manifest.
      * @returns {boolean} True if the extended manifest was accepted.
      */
-    function addExtendedManifest(content, streamId = null) {
+    function addExtendedManifest(content) {
         // Validate the extended manifest.
         if (!isValidExtendedManifest(content, logger)) {
             return false;
@@ -579,10 +591,9 @@ function DefenseRegistry() {
 
         // Each extended manifest receives a unique ID.
         content['manifestId'] = manifestData.length;
-        content['streamId'] = streamId;
 
         // Add the extended manifest to manifestData.
-        logger.info('Extended manifest accepted, stream id ' + streamId);
+        logger.info('Extended manifest accepted');
         manifestData.push(content);
 
         return true;
@@ -590,26 +601,34 @@ function DefenseRegistry() {
 
     /**
      * Find the first stream entry whose `label` matches the given label across
-     * all registered extended manifests. If `streamId` is provided, only
-     * extended manifests associated with that stream ID are searched.
+     * all registered extended manifests. If `periodIndex` is provided, streams
+     * with a `period` field only match when `period === periodIndex`; streams
+     * without a `period` field match any period (backward compatible).
      * @param {string} label - The representation ID to search for.
-     * @param {string|null} [streamId] - Optional stream ID to narrow the search.
+     * @param {number|null} [periodIndex] - Optional period index for multi-period MPDs.
      * @returns {Object|null} The matching stream entry, or null if not found.
      */
-    function getDefendedStreamInfo(label, streamId = null) {
+    function getDefendedStreamInfo(label, periodIndex = null) {
         for (let i = 0; i < manifestData.length; i++) {
             const manifest = manifestData[i];
-
-            if (streamId && streamId != manifest['streamId']) {
-                continue;
-            }
 
             for (let j = 0; j < manifest['streams'].length; j++) {
                 const stream = manifest['streams'][j];
 
-                if (label === stream['label']) {
-                    return stream;
+                if (label !== stream['label']) {
+                    continue;
                 }
+
+                // When the stream has a `period` field and a periodIndex was
+                // supplied, they must match. Streams without a `period` field
+                // match any period (single-period backward compatibility).
+                if (periodIndex !== null && stream['period'] !== undefined && stream['period'] !== null) {
+                    if (stream['period'] !== periodIndex) {
+                        continue;
+                    }
+                }
+
+                return stream;
             }
         }
 
