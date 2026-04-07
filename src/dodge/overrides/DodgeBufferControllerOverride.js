@@ -128,7 +128,7 @@ function DodgeBufferControllerOverride(config) {
      * only changes via onBufferCycleLoaded and onPaddingLoaded.
      */
     function updateBufferLevel() {
-        if (playbackController) {
+        if (playbackController && dashHandler) {
             if (dashHandler.getIsTrailing()) {
                 const timeSinceStreamEnd = playbackController.getTimeSinceStreamEnd();
                 const diffInTime = Math.max(0, timeSinceStreamEnd - lastTimeSinceStreamEnd);
