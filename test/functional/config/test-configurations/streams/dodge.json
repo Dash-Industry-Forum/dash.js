@@ -41,6 +41,54 @@
         "dodge/strict-mode-rejects-mpd",
         "dodge/graceful-degradation"
       ]
+    },
+    {
+      "name": "BBB Trailing (3 playable segments + padding)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_trailing_short.exmfst.json",
+      "includedTestfiles": [
+        "dodge/trailing"
+      ]
+    },
+    {
+      "name": "BBB Video-only defense (no audio stream entry)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_video_only.exmfst.json",
+      "includedTestfiles": [
+        "dodge/representation-strict-mode"
+      ]
+    },
+    {
+      "name": "BBB DRM MPD (ContentProtection in MPD)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_drm.exmfst.json",
+      "includedTestfiles": [
+        "dodge/drm-detection"
+      ]
+    },
+    {
+      "name": "BBB Thumbnails MPD (thumbnail_tile in MPD)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_thumbnails.exmfst.json",
+      "includedTestfiles": [
+        "dodge/thumbnail-detection"
+      ]
+    },
+    {
+      "name": "BBB with text track (undefended subtitle)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_text.exmfst.json",
+      "includedTestfiles": [
+        "dodge/text-track-blocking"
+      ]
+    },
+    {
+      "name": "BBB Multi-period (2 periods)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_multiperiod.exmfst.json",
+      "includedTestfiles": [
+        "dodge/multiperiod"
+      ]
     }
   ]
 }
