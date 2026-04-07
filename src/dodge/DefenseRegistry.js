@@ -320,6 +320,25 @@ function checkDataCycles(stream, logger) {
 
     stream.maxNoPad = maxNoPad;
 
+    // Precompute the `full` flag for each data cycle. A cycle is `full` when
+    // it is the last non-padding cycle that downloads data at a segment index.
+    // When indices are interleaved (e.g. with array buffer directives), only
+    // the final occurrence of each index should trigger segment assembly
+    // in DodgeHandler._concatPartialSegments. We scan right-to-left: the
+    // first unseen non-padding index encountered is the last occurrence.
+    const seen = new Set();
+    for (let i = stream['data'].length - 1; i >= 0; i--) {
+        const cycle = stream['data'][i];
+        if (cycle.padding) {
+            cycle.full = false;
+        } else if (seen.has(cycle.index)) {
+            cycle.full = false;
+        } else {
+            cycle.full = true;
+            seen.add(cycle.index);
+        }
+    }
+
     return true;
 }
 

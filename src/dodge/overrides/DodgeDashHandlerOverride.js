@@ -478,21 +478,13 @@ function DodgeDashHandlerOverride(config) {
             logger.debug('New index for time ' + time + ' in alternate representation is ' + segment.index);
         }
 
-        // Determine if this is a full request by skipping padding cycles.
-        let nextIndex = cycleIndex + 1;
-        let nextCycle = defendedStreamInfo['data'][nextIndex];
-        while (nextCycle && nextCycle.padding) {
-            nextIndex += 1;
-            nextCycle = defendedStreamInfo['data'][nextIndex];
-        }
-
         // Update invariants.
         lastCycleIndex = cycleIndex;
         lastSegment = segment;
 
         const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
         if (request) {
-            request.full = !cycle.padding && (!nextCycle || nextCycle.index != cycle.index);
+            request.full = !!cycle.full;
             request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
             request.padding = !!cycle.padding;
             request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
@@ -555,14 +547,6 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
-        // Determine if full request by skipping padding cycles.
-        let nextIndex = cycleIndex + 1;
-        let nextCycle = defendedStreamInfo['data'][nextIndex];
-        while (nextCycle && nextCycle.padding) {
-            nextIndex += 1;
-            nextCycle = defendedStreamInfo['data'][nextIndex];
-        }
-
         // Update invariants.
         lastCycleIndex = cycleIndex;
         if (!cycle.padding) {
@@ -571,7 +555,7 @@ function DodgeDashHandlerOverride(config) {
 
         const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
         if (request) {
-            request.full = !cycle.padding && (!nextCycle || nextCycle.index != cycle.index);
+            request.full = !!cycle.full;
             request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
             request.padding = !!cycle.padding;
             request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
