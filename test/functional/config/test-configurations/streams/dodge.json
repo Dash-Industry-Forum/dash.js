@@ -12,7 +12,8 @@
       "includedTestfiles": [
         "dodge/play-defended",
         "dodge/defense-verification",
-        "dodge/strict-mode-allows-exmfst"
+        "dodge/strict-mode-allows-exmfst",
+        "dodge/seek"
       ]
     },
     {
@@ -80,6 +81,14 @@
       "url": "/base/test/functional/content/dodge/bbb_30fps_text.exmfst.json",
       "includedTestfiles": [
         "dodge/text-track-blocking"
+      ]
+    },
+    {
+      "name": "BBB Quality override (alternate rep)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_quality_override.exmfst.json",
+      "includedTestfiles": [
+        "dodge/quality-override"
       ]
     },
     {

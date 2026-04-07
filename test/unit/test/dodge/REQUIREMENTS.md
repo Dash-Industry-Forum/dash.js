@@ -520,15 +520,18 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-parseable string padding, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | init cycle with non-boolean padding (number), false |
 
-### R8.3 - Data cycle validation enforces index validity and computes `maxNoPad`
+### R8.3 - Data cycle validation enforces index validity, computes `maxNoPad` and precomputes `cycle.full`
 
-`checkDataCycles()` validates that data cycle indices are non-negative integers and computes `stream.maxNoPad` as the index of the last non-padding cycle.
+`checkDataCycles()` validates that data cycle indices are non-negative integers, computes `stream.maxNoPad` as the index of the last non-padding cycle, and precomputes `cycle.full` for each data cycle via a right-to-left scan (the last non-padding occurrence of each segment index is `full = true`).
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | data cycle with negative index, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | sets stream.maxNoPad to the last non-padding cycle index |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | sets stream.maxNoPad excluding trailing padding cycles |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | precomputes cycle.full: last non-padding occurrence of each index is full |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | precomputes cycle.full correctly with interleaved indices |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | precomputes cycle.full: padding cycles are never full |
 
 ### R8.4 - Cycle index lookup
 
@@ -773,7 +776,7 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R7.4 XHRLoader applies padding | 2 |
 | R8.1 Structural validation rejects malformed manifests | 44 |
 | R8.2 Init cycle validation | 16 |
-| R8.3 Data cycle validation and maxNoPad | 3 |
+| R8.3 Data cycle validation, maxNoPad, and cycle.full precomputation | 6 |
 | R8.4 Cycle index lookup | 6 |
 | R8.5 Registry stores and retrieves manifests | 7 |
 | R8.6 Period field validation | 6 |
@@ -790,4 +793,4 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R10.2 strictMode = manifest enforcement | 6 |
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
-| **Total** | **296** |
+| **Total** | **299** |

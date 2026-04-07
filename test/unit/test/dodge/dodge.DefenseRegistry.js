@@ -574,6 +574,56 @@ describe('DefenseRegistry', function () {
             isValidExtendedManifest(m);
             expect(m.streams[0].maxNoPad).to.equal(1);
         });
+
+        it('precomputes cycle.full: last non-padding occurrence of each index is full', function () {
+            const m = makeValidManifest();
+            // data: [{index:0}, {index:0, buffer:true}, {index:1, buffer:true}]
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false; // index 0, not last occurrence
+            expect(data[1].full).to.be.true; // index 0, last occurrence
+            expect(data[2].full).to.be.true; // index 1, last occurrence
+        });
+
+        it('precomputes cycle.full correctly with interleaved indices', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0, range: '0-100' }, // cycle 0: partial seg 0
+                        { index: 1, range: '0-200' }, // cycle 1: partial seg 1
+                        { index: 0, range: '100-200', buffer: [0, 1] }, // cycle 2: completes seg 0
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false; // index 0, but cycle 2 also has index 0
+            expect(data[1].full).to.be.true; // index 1, last occurrence
+            expect(data[2].full).to.be.true; // index 0, last occurrence
+        });
+
+        it('precomputes cycle.full: padding cycles are never full', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0, buffer: true },
+                        { index: 1, padding: true },
+                        { index: 2, padding: true },
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.true;
+            expect(data[1].full).to.be.false;
+            expect(data[2].full).to.be.false;
+        });
     });
 
     // getCycleIndexBySegmentIndex

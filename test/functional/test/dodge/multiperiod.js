@@ -15,6 +15,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
         let playerAdapter;
         let trafficPromise;
+        let periodTransitionPromise;
 
         before(() => {
             playerAdapter = initializeDashJsAdapter(item, mpd, {
@@ -25,10 +26,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             });
 
-            // Collect traffic long enough to span both periods.
-            // Each period is 12s (3 segments x 4s) but with random walk
-            // delays the requests take longer. Use a generous timeout.
+            // Start both listeners concurrently in before() so neither
+            // misses events that fire during the other's collection window.
             trafficPromise = playerAdapter.collectDodgeTraffic(45000);
+            periodTransitionPromise = playerAdapter.performedPeriodTransitions(45000);
         })
 
         after(() => {
@@ -56,9 +57,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         it(`Period transition occurs`, async () => {
-            // Wait for at least one period switch. Period 0 is 12s of content,
-            // so the transition to period 1 should happen within ~20s.
-            const transitions = await playerAdapter.performedPeriodTransitions(40000);
+            const transitions = await periodTransitionPromise;
             expect(transitions).to.be.at.least(1, 'Expected at least one period transition');
         })
 
@@ -69,15 +68,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 t => t.mediaType === 'video' && t.type === 'MediaSegment'
             );
 
-            // Period 0 has segments at indices 0,1,2 and period 1 also has
-            // indices 0,1,2. After a period transition, segment index resets
-            // to 0. So we should see index 0 appear more than once (once per
-            // period) if both periods were played.
+            // Both periods use segment indices 0, 1, 2. After a period
+            // transition the Dodge override resets and starts from cycle 0
+            // of the period 1 stream. So we should see index 0 appear at
+            // least twice (once per period) and the total count should
+            // exceed a single period's 3 cycles.
             const indexZeroCount = videoRequests.filter(r => r.index === 0).length;
-            expect(indexZeroCount).to.be.at.least(2, 'Expected segment index 0 to appear at least twice (once per period)');
-
-            // Total video requests should cover cycles from both periods
-            // (3 per period = 6 minimum)
+            expect(indexZeroCount).to.be.at.least(2, 'Expected segment index 0 at least twice (once per period)');
             expect(videoRequests.length).to.be.at.least(4, 'Expected video requests from both periods');
         })
     })
