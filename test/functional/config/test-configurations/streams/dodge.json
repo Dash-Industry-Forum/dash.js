@@ -1,0 +1,46 @@
+{
+  "testfiles": {
+    "included": [
+      "dodge/*"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "BBB Undefended",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification",
+        "dodge/strict-mode-allows-exmfst"
+      ]
+    },
+    {
+      "name": "BBB Constant-size defense",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_constant.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification"
+      ]
+    },
+    {
+      "name": "Elephants Dream Mimicry defense",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/elephants_dream_mimicry.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification"
+      ]
+    },
+    {
+      "name": "Regular MPD (no extended manifest)",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "dodge/strict-mode-rejects-mpd",
+        "dodge/graceful-degradation"
+      ]
+    }
+  ]
+}
