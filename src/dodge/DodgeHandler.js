@@ -253,8 +253,7 @@ function DodgeHandler(config) {
         if (!mpd || typeof mpd !== 'string') {
             return false;
         }
-        return mpd.includes('http://dashif.org/thumbnail_tile') ||
-            mpd.includes('http://dashif.org/guidelines/thumbnail_tile');
+        return Constants.THUMBNAILS_SCHEME_ID_URIS.some(uri => mpd.includes(uri));
     }
 
     /**
