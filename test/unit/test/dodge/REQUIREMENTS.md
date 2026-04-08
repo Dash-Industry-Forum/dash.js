@@ -630,12 +630,13 @@ When strict mode is not `'manifest'`, non-JSON input returns `null` without firi
 
 ### R9.4 - `_onFragmentLoadingCompleted` routes events based on cycle type
 
-The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla and errored requests pass through unchanged (sender stays non-null). For Dodge cycles: full segments with `buffer` fire `MEDIA_FRAGMENT_LOADED`; full segments without `buffer` fire `MEDIA_FRAGMENT_PARTIAL` and queue `MEDIA_FRAGMENT_LOADED`; partial segments fire `MEDIA_FRAGMENT_PARTIAL` and queue data; padding cycles fire `PADDING_LOADED`. When a buffer cycle has pending full segments, they are flushed as secondary events before the primary event fires.
+The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla requests (both successful and errored) pass through unchanged (sender stays non-null). Errored Dodge requests are intercepted (sender set to null) to prevent `StreamProcessor._handleFragmentLoadingError` from generating a corrupted retry that would advance or reset `lastCycleIndex`/`lastInitIndex`; playback stalls to preserve the defense pattern. For successful Dodge cycles: full segments with `buffer` fire `MEDIA_FRAGMENT_LOADED`; full segments without `buffer` fire `MEDIA_FRAGMENT_PARTIAL` and queue `MEDIA_FRAGMENT_LOADED`; partial segments fire `MEDIA_FRAGMENT_PARTIAL` and queue data for buffering; padding cycles fire `PADDING_LOADED`. When a buffer cycle has pending full segments, they are flushed as secondary events before the primary event fires.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | vanilla request: sender stays non-null, no Dodge events fired |
-| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | errored request: sender stays non-null, no Dodge events fired |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | errored Dodge request: sender set to null to prevent corrupted retry, no Dodge events fired |
+| `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | errored vanilla request: sender stays non-null |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | full segment with buffer flag: MEDIA_FRAGMENT_LOADED fires |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | full segment without buffer flag: MEDIA_FRAGMENT_PARTIAL fires, MEDIA_FRAGMENT_LOADED queued |
 | `dodge.DodgeHandler.js` | Partial segment combination, _onFragmentLoadingCompleted | partial segment: MEDIA_FRAGMENT_PARTIAL fires, segment data queued |
@@ -785,7 +786,7 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R9.1 Manifest parsing and graceful degradation | 4 |
 | R9.2 Strict mode manifest error firing | 4 |
 | R9.3 Non-strict mode no error | 1 |
-| R9.4 Partial segment combination event routing | 7 |
+| R9.4 Partial segment combination event routing | 8 |
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R9.6 DRM content detection in extended manifests | 4 |
 | R9.7 Thumbnail track detection | 4 |
@@ -793,4 +794,4 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R10.2 strictMode = manifest enforcement | 6 |
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
-| **Total** | **299** |
+| **Total** | **300** |

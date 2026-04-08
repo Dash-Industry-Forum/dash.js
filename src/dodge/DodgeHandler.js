@@ -467,8 +467,15 @@ function DodgeHandler(config) {
         }
 
         if (e.error) {
-            // On error, don't stop propagation - let FragmentController handle
-            // recovery (service location blacklisting, retries, etc.).
+            // Stop propagation to prevent StreamProcessor._handleFragmentLoadingError
+            // from generating a new request via getInitRequest() or
+            // getSegmentRequestForTime(), which would corrupt the cycle
+            // state (lastCycleIndex / lastInitIndex was already advanced).
+            // Stall permanently: HTTPLoader already exhausted its retries, so
+            // the segment is genuinely unavailable and rescheduling would just
+            // fail again. The defense runs correctly or not at all.
+            e.sender = null;
+            logger.error(request.mediaType + ' download failed after all retries; stalling to preserve defense pattern. URL: ' + request.url);
             return;
         }
 

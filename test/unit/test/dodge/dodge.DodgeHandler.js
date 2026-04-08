@@ -266,12 +266,17 @@ describe('DodgeHandler', function () {
             expect(paddingLoadedSpy.called).to.be.false; // jshint ignore:line
         });
 
-        it('errored request: sender stays non-null, no Dodge events fired', function () {
+        it('errored Dodge request: sender set to null to prevent corrupted retry, no Dodge events fired', function () {
             const e = triggerFragmentLoaded(makeRequest({ full: true }), new Error('test error'));
-            expect(e.sender).to.not.be.null; // jshint ignore:line
+            expect(e.sender).to.be.null; // jshint ignore:line
             expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
             expect(partialSegmentSpy.called).to.be.false; // jshint ignore:line
             expect(paddingLoadedSpy.called).to.be.false; // jshint ignore:line
+        });
+
+        it('errored vanilla request: sender stays non-null', function () {
+            const e = triggerFragmentLoaded(makeRequest({ full: undefined, padding: undefined }), new Error('test error'));
+            expect(e.sender).to.not.be.null; // jshint ignore:line
         });
 
         it('full segment with buffer flag: MEDIA_FRAGMENT_LOADED fires', function () {
