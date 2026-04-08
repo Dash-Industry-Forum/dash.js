@@ -1176,6 +1176,10 @@ function StreamController() {
                     logger.info(`Start time from URI parameters: ${startTimeFromUri}`);
                     // Do not move closer to the live edge as defined by live delay
                     startTime = Math.min(startTime, startTimeFromUri);
+                } else {
+                    if (adapter.getDuration() === dvrWindow.end) {
+                        startTime = dvrWindow.start;
+                    }
                 }
             }
             // If calcFromSegmentTimeline is enabled we saw problems caused by the MSE.seekableRange when starting at dvrWindow.start. Apply a small offset to avoid this problem.
