@@ -220,6 +220,37 @@ class CommonEncryption {
 
         return pssh;
     }
+    /**
+     * Extracts key IDs from PSSH boxes with version >= 1
+     *
+     * @param {ArrayBuffer|Uint8Array} data - concatenated PSSH box data
+     * @returns {string[]} array of key IDs as lowercase hex strings
+     */
+    static extractKeyIdsFromPssh(data) {
+        if (!data) {
+            return [];
+        }
+        const dv = new DataView(data.buffer || data);
+        const keyIds = [];
+        let byteCursor = 0;
+        while (byteCursor < dv.byteLength) {
+            const size = dv.getUint32(byteCursor);
+            if (dv.getUint32(byteCursor + 4) !== 0x70737368) { byteCursor += size; continue; }
+            const version = dv.getUint8(byteCursor + 8);
+            if (version >= 1) {
+                const kidCount = dv.getUint32(byteCursor + 28);
+                for (let i = 0; i < kidCount; i++) {
+                    const offset = 32 + (i * 16);
+                    const kidBytes = new Uint8Array(dv.buffer, byteCursor + offset, 16);
+                    const hex = Array.from(kidBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+                    keyIds.push(hex);
+                }
+            }
+            byteCursor += size;
+        }
+        return keyIds;
+    }
+
 
     static getLicenseServerUrlFromMediaInfo(mediaInfoArr, schemeIdUri) {
         try {

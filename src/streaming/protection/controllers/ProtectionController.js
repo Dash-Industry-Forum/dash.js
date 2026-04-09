@@ -673,6 +673,12 @@ function ProtectionController(config) {
             return;
         }
 
+        // Check if the CDM already has a usable key for this KID (e.g. from a multi-key license)
+        if (keySystemMetadata && keySystemMetadata.keyId && _isKeyIdUsableInCdm(keySystemMetadata.keyId)) {
+            logger.debug('DRM: Skipping license request — CDM already has a usable key for KID: ' + keySystemMetadata.keyId);
+            return;
+        }
+
         // Enforce maximum number of open MediaKeySessions, if settings are provided
         _enforceMediaKeySessionLimit();
 
@@ -807,6 +813,23 @@ function ProtectionController(config) {
     }
 
     /**
+     * Checks if the CDM already reports a usable key status for the given key ID,
+     * even if no session was explicitly created for it (e.g. multi-key license).
+     * @param {string} keyId
+     * @return {boolean}
+     * @private
+     */
+    function _isKeyIdUsableInCdm(keyId) {
+        if (!keyId || keyStatusMap.size === 0) {
+            return false;
+        }
+        const normalizedKeyId = keyId.replace(/-/g, '').toLowerCase();
+        const status = keyStatusMap.get(normalizedKeyId);
+        return status === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE;
+    }
+
+
+    /**
      * Checks if the provided init data is equal to one of the existing init data values
      * @param {any} initDataForKS
      * @return {boolean}
@@ -832,6 +855,25 @@ function ProtectionController(config) {
             return false;
         }
     }
+
+    function _areAllKeysUsableForInitData(initData) {
+        if (keyStatusMap.size === 0) {
+            return false;
+        }
+        try {
+            const keyIds = CommonEncryption.extractKeyIdsFromPssh(initData);
+            if (!keyIds || keyIds.length === 0) {
+                return false;
+            }
+            return keyIds.every((kid) => {
+                const status = keyStatusMap.get(kid);
+                return status === ProtectionConstants.MEDIA_KEY_STATUSES.USABLE;
+            });
+        } catch (e) {
+            return false;
+        }
+    }
+
 
     /**
      * Removes the given key session from persistent storage and closes the session
@@ -1432,6 +1474,12 @@ function ProtectionController(config) {
             if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
                 return;
             }
+        }
+
+        // ← NEW CHECK: extract KIDs from PSSH and check if CDM already has usable keys
+        if (selectedKeySystem && !isSinf && _areAllKeysUsableForInitData(abInitData)) {
+            logger.debug('DRM: Skipping license request — CDM already has usable key(s) for KID(s) in initData');
+            return;
         }
 
         logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));

@@ -197,5 +197,45 @@ describe('ProtectionController', function () {
             expect(protectionModelMock.getSessionTokens().map(s => s.keyId)).to.deep.equal(['session-1', 'session-2', 'session-3']);
         });
 
+        it('should skip createKeySession when CDM already has a usable key for the given keyId', function () {
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            // Simulate a usable key status for a KID
+            const keyId = 'abcdef01-2345-6789-abcd-ef0123456789';
+            const normalizedKeyId = keyId.replace(/-/g, '').toLowerCase();
+            protectionController.updateKeyStatusesMap({
+                sessionToken: { hasTriggeredKeyStatusMapUpdate: false },
+                parsedKeyStatuses: [{ keyId: CommonEncryption.hexKidToBufferSource(normalizedKeyId), status: 'usable' }]
+            });
+
+            // Attempt to create a session for the same KID — should be skipped
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: keyId, sessionType: 'temporary' });
+            expect(protectionModelMock.getSessionTokens().length).to.equal(0);
+        });
+
+        it('should create a session when CDM key status is not usable', function () {
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            const keyId = 'abcdef01-2345-6789-abcd-ef0123456789';
+            const normalizedKeyId = keyId.replace(/-/g, '').toLowerCase();
+            protectionController.updateKeyStatusesMap({
+                sessionToken: { hasTriggeredKeyStatusMapUpdate: false },
+                parsedKeyStatuses: [{ keyId: CommonEncryption.hexKidToBufferSource(normalizedKeyId), status: 'expired' }]
+            });
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: keyId, sessionType: 'temporary' });
+            expect(protectionModelMock.getSessionTokens().length).to.equal(1);
+        });
+
+        it('should create a session when keyStatusMap is empty', function () {
+            CommonEncryption.getPSSHForKeySystem = (selectedKeySystem, initData) => initData;
+            protectionController.selectedKeySystem = { systemString: 'mock-system' };
+
+            protectionController.createKeySession({ initData: new ArrayBuffer(8), keyId: 'some-key-id', sessionType: 'temporary' });
+            expect(protectionModelMock.getSessionTokens().length).to.equal(1);
+        });
+
     });
 });
