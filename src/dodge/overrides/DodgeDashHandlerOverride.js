@@ -352,7 +352,7 @@ function DodgeDashHandlerOverride(config) {
         return altRep;
     }
 
-    function _getRequestForSegment(mediaInfo, segment, range = null, padding = false) {
+    function _getRequestForSegment(mediaInfo, segment, range = null, padding = false, homeRepresentation = null) {
         if (segment === null || segment === undefined) {
             return null;
         }
@@ -417,6 +417,9 @@ function DodgeDashHandlerOverride(config) {
         request.representation = representation;
         request.replacementNumber = segment.replacementNumber;
         request.replacementTime = segment.replacementTime;
+        if (homeRepresentation) {
+            request.homeRepresentationId = homeRepresentation.id;
+        }
 
         if (_setRequestUrlWithPadding(request, url, representation, replacements)) {
             return request;
@@ -478,11 +481,14 @@ function DodgeDashHandlerOverride(config) {
             logger.debug('New index for time ' + time + ' in alternate representation is ' + segment.index);
         }
 
+        // Determine whether a quality override changed the representation.
+        const homeRep = (segment.representation !== representation) ? representation : null;
+
         // Update invariants.
         lastCycleIndex = cycleIndex;
         lastSegment = segment;
 
-        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
+        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
         if (request) {
             request.full = !!cycle.full;
             request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
@@ -547,13 +553,16 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
+        // Determine whether a quality override changed the representation.
+        const homeRep = (effectiveRep !== representation) ? representation : null;
+
         // Update invariants.
         lastCycleIndex = cycleIndex;
         if (!cycle.padding) {
             lastSegment = segment;
         }
 
-        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding);
+        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
         if (request) {
             request.full = !!cycle.full;
             request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;

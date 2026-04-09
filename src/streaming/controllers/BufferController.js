@@ -100,7 +100,7 @@ function BufferController(config) {
         setMediaSource(mediaSource);
 
         eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
@@ -330,6 +330,10 @@ function BufferController(config) {
      * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer might be cleared.
      * @param {object} e
      */
+    function _onMediaFragmentLoadedDispatch(e) {
+        instance._onMediaFragmentLoaded(e);
+    }
+
     function _onMediaFragmentLoaded(e) {
         _appendToBuffer(e.chunk, e.request);
     }
@@ -1304,7 +1308,7 @@ function BufferController(config) {
 
     function reset(errored, keepBuffers) {
         eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
 
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
@@ -1326,8 +1330,28 @@ function BufferController(config) {
     function onPaddingLoaded() { }
     function onBufferCycleLoaded() { }
 
+    /**
+     * Public wrapper around _appendToBuffer for use by Dodge overrides.
+     * @param {object} chunk
+     * @param {object} [request]
+     */
+    function appendToBuffer(chunk, request) {
+        _appendToBuffer(chunk, request);
+    }
+
+    /**
+     * Retrieve a cached init segment chunk without appending it.
+     * @param {string} representationId
+     * @return {object|null} The cached DataChunk, or null if not cached.
+     */
+    function getInitChunkFromCache(representationId) {
+        return initCache.extract(streamInfo.id, representationId);
+    }
+
     instance = {
+        _onMediaFragmentLoaded,
         appendInitSegmentFromCache,
+        appendToBuffer,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,
@@ -1335,6 +1359,7 @@ function BufferController(config) {
         getBuffer,
         getBufferControllerType,
         getBufferLevel,
+        getInitChunkFromCache,
         getContinuousBufferTimeForTargetTime,
         getIsBufferingCompleted,
         getIsPruningInProgress,

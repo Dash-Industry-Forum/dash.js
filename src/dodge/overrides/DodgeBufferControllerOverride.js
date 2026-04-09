@@ -56,6 +56,7 @@ function DodgeBufferControllerOverride(config) {
     const _parentResetInitialSettings = parent.resetInitialSettings;
     const _parentSetMockBuffer = parent.setMockBuffer;
     const _parentUpdateBufferLevel = parent.updateBufferLevel;
+    const _parentOnMediaFragmentLoaded = parent._onMediaFragmentLoaded;
 
     const dashHandler = config.dashHandler;
     const playbackController = config.playbackController;
@@ -122,6 +123,38 @@ function DodgeBufferControllerOverride(config) {
     }
 
     /**
+     * Override media fragment loading to handle quality override cycles.
+     * When a chunk carries a homeRepresentationId, the media bytes come from
+     * an alternate representation and require the matching init segment.
+     * Sandwich the media append between init segment switches:
+     *   alternate init -> media data -> restore home init
+     * If either init segment is not cached, stall to preserve the defense.
+     */
+    function _onMediaFragmentLoaded(e) {
+        const chunk = e.chunk;
+
+        if (chunk.homeRepresentationId) {
+            const alternateRepId = chunk.representation.id;
+            const homeRepId = chunk.homeRepresentationId;
+
+            const alternateInit = parent.getInitChunkFromCache(alternateRepId);
+            const homeInit = parent.getInitChunkFromCache(homeRepId);
+
+            if (!alternateInit || !homeInit) {
+                logger.warn('Init segment not cached for quality override (alternate=' + alternateRepId + ', home=' + homeRepId + '), stalling to preserve defense');
+                return;
+            }
+
+            parent.appendToBuffer(alternateInit);
+            parent.appendToBuffer(chunk, e.request);
+            parent.appendToBuffer(homeInit);
+            return;
+        }
+
+        _parentOnMediaFragmentLoaded.call(parent, e);
+    }
+
+    /**
      * Update the buffer level. During the trailing phase, drain mockBuffer by
      * time elapsed since stream end so the reported buffer level falls naturally
      * to zero. Outside the trailing phase, mockBuffer is not drained here; it
@@ -153,6 +186,7 @@ function DodgeBufferControllerOverride(config) {
     setup();
 
     return {
+        _onMediaFragmentLoaded,
         resetInitialSettings,
         onBufferCycleLoaded,
         onPaddingLoaded,

@@ -337,6 +337,29 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 |---|---|---|
 | `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets internal state and delegates to parent.resetInitialSettings() |
 
+### R5.6 - Init segment sandwich for quality override media segments
+
+When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOverride` when a data cycle uses a `quality` override), `DodgeBufferControllerOverride._onMediaFragmentLoaded` sandwiches the media append between init segment switches: it appends the alternate representation's cached init segment, then the media chunk, then restores the home representation's cached init segment. This ensures the MSE SourceBuffer has the correct init segment for decoding the alternate quality bytes. If either init segment is not in the cache, the override stalls (does not append) to preserve the defense. Non-override chunks delegate directly to the parent.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | delegates to parent for non-override chunks |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | sandwiches quality override chunk with init segments when both inits are cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when alternate init is not cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when home init is not cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when both inits are not cached |
+
+### R5.7 - `homeRepresentationId` tagging on quality override requests
+
+`DodgeDashHandlerOverride` sets `request.homeRepresentationId` to the current (home) representation's ID when a data cycle's `quality` field resolves to a different representation. This tag propagates through `DodgeHandler._createDataChunk` to the `DataChunk`, enabling `DodgeBufferControllerOverride` to detect quality override segments. Cycles without a quality override do not set this field.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getNextSegmentRequest sets homeRepresentationId when quality override resolves to a different representation |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getNextSegmentRequest does not set homeRepresentationId when no quality override |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime sets homeRepresentationId when quality override is active |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime does not set homeRepresentationId when no quality override |
+
 ---
 
 ## 6. Random Walk Scheduling
@@ -821,7 +844,7 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R2.7 getLastSegment returns override's segment | 3 |
 | R2.8 Defense state management | 2 |
 | R2.9 Selective buffer | 10 |
-| R2.10 Per-cycle quality override on data cycles | 10 |
+| R2.10 Per-cycle quality override on data cycles | 14 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 6 |
 | R3.3 Fragmented text streams | 6 |
@@ -839,6 +862,8 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 1 |
+| R5.6 Init segment sandwich for quality overrides | 5 |
+| R5.7 homeRepresentationId tagging | 4 |
 | R6.1 Random walk delay bounded | 4 |
 | R6.2 Scheduling is scoped to correct stream processor | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
@@ -874,4 +899,4 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY event handling (warn only) | 2 |
 | R10.5 strictMode = max enforcement | 5 |
-| **Total** | **324** |
+| **Total** | **333** |

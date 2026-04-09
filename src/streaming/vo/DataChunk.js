@@ -44,6 +44,7 @@ class DataChunk {
         this.end = NaN;
         this.duration = NaN;
         this.representation = null;
+        this.homeRepresentationId = null;
         this.endFragment = null;
     }
 }

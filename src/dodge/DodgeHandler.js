@@ -794,6 +794,7 @@ function DodgeHandler(config) {
         chunk.index = request.index;
         chunk.quality = request.quality;
         chunk.representation = request.representation;
+        chunk.homeRepresentationId = request.homeRepresentationId || null;
         chunk.endFragment = endFragment;
         return chunk;
     }

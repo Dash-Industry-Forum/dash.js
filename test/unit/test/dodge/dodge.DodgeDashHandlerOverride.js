@@ -543,6 +543,65 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request.representation.id).to.equal('rep_low');
             expect(request.bandwidth).to.equal(altLow.bandwidth);
         });
+
+        it('getNextSegmentRequest sets homeRepresentationId when quality override resolves to a different representation', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest(makeQualityManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            override.getNextSegmentRequest({}, rep); // cycle 0, no override
+            const request = override.getNextSegmentRequest({}, rep); // cycle 1, quality: 'rep_low'
+            expect(request.homeRepresentationId).to.equal('rep0');
+        });
+
+        it('getNextSegmentRequest does not set homeRepresentationId when no quality override', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest(makeQualityManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep); // cycle 0, no override
+            expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
+        });
+
+        it('getSegmentRequestForTime sets homeRepresentationId when quality override is active', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0 },
+                        { index: 1, quality: 'rep_low' },
+                    ]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+
+            const request = override.getSegmentRequestForTime({}, rep, 4); // segment 1, quality override
+            expect(request.homeRepresentationId).to.equal('rep0');
+        });
+
+        it('getSegmentRequestForTime does not set homeRepresentationId when no quality override', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855' }],
+                    data: [
+                        { index: 0 },
+                        { index: 1, quality: 'rep_low' },
+                    ]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+
+            const request = override.getSegmentRequestForTime({}, rep, 0); // segment 0, no override
+            expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
+        });
     });
 
     // URL padding
