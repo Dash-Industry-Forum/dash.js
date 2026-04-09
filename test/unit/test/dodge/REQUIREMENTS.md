@@ -203,7 +203,7 @@ Covered by R2.4 above.
 
 ### R3.6 - Undefended text tracks in strict mode
 
-`isTextTrackBlockedByDodge()` returns `true` only when strict mode is active, an extended manifest is loaded, and the representation is a text track with no defended stream info. When a text track is blocked, `isLastSegmentRequested()` returns `true` (graceful end) rather than stalling, preventing undefended subtitles from blocking playback.
+`isTextTrackBlockedByDodge()` returns `true` only when strict mode is active, an extended manifest is loaded, and the representation is a text track with no defended stream info. When a text track is blocked, `isLastSegmentRequested()` returns `false` (stall), consistent with the behavior for undefended audio and video tracks.
 
 | File | Description | Test |
 |---|---|---|
@@ -212,7 +212,7 @@ Covered by R2.4 above.
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns true for text rep with no defense in strict mode |
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false for text rep that is defended |
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isTextTrackBlockedByDodge() returns false when strictMode is false |
-| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end) |
+| `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns false for undefended text track in strict mode (stall) |
 | `dodge.DodgeDashHandlerOverride.js` | Text track disabling | isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged) |
 
 ### R3.8 - Muxed audio/video streams
@@ -657,27 +657,89 @@ The handler intercepts all `FRAGMENT_LOADING_COMPLETED` events. Vanilla requests
 | `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeTrailing returns true when any SP is trailing |
 | `dodge.DodgeHandler.js` | isDodgeActive and isDodgeTrailing | isDodgeActive returns false when streamController is null |
 
-### R9.6 - DRM content detection in extended manifests
+### R9.6 - Thumbnail track detection in extended manifests
 
-`tryProcessExtendedManifest` scans the embedded MPD string for DRM indicators (`<ContentProtection`, `cenc:`, `urn:mpeg:dash:mp4protection`, `urn:uuid:` PSSH system ID URNs). DRM license requests may leak content-identifying information through a channel Dodge cannot intercept. In strict mode ('representation' or 'manifest'), manifests containing DRM elements are rejected (returns `false`, fires strict mode error). When strict mode is off, the manifest is accepted with a warning. Manifests without DRM are unaffected. This area needs further consideration as future work.
+Thumbnail tracks bypass DashHandler entirely (ThumbnailTracks fetches via its own XHRLoader). They could thus leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD for thumbnail tile scheme IDs (`http://dashif.org/thumbnail_tile`, `http://dashif.org/guidelines/thumbnail_tile`). Only in `'max'` mode are manifests containing thumbnail tracks rejected. In `'representation'` and `'manifest'` modes, a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
 
 | File | Description | Test |
 |---|---|---|
-| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode representation: rejects manifest containing ContentProtection |
-| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode manifest: rejects manifest containing ContentProtection |
-| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing ContentProtection with warning |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode representation: accepts manifest containing thumbnail tracks with warning |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode manifest: accepts manifest containing thumbnail tracks with warning |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode max: rejects manifest containing thumbnail tracks |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing thumbnail tracks without warning |
+| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | manifest without thumbnails: accepted in all modes |
+
+### R9.7 - Non-fragmented text detection in extended manifests
+
+Non-fragmented text tracks (e.g. `mimeType="application/ttml+xml"` or `mimeType="text/vtt"`) are fetched outside DashHandler and could leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD via `_mpdContainsNonFragmentedText()`. Only in `'max'` mode are manifests containing non-fragmented text rejected. In `'representation'` and `'manifest'` modes, a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode max: rejects manifest containing non-fragmented text |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode representation: accepts manifest containing non-fragmented text with warning |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode manifest: accepts manifest containing non-fragmented text with warning |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing non-fragmented text without warning |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | manifest without non-fragmented text: accepted in all modes |
+
+### R9.8 - XLink detection in extended manifests
+
+XLink expansion fetches external XML from referenced URLs, which could reveal content-identifying information to network observers. `tryProcessExtendedManifest` scans for `xlink:href` in the MPD. Only in `'max'` mode are manifests containing XLink references rejected. In `'representation'` and `'manifest'` modes, a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | XLink detection in tryProcessExtendedManifest | strict mode representation: accepts manifest containing XLink with warning |
+| `dodge.DodgeHandler.js` | XLink detection in tryProcessExtendedManifest | strict mode manifest: accepts manifest containing XLink with warning |
+| `dodge.DodgeHandler.js` | XLink detection in tryProcessExtendedManifest | strict mode max: rejects manifest containing XLink |
+| `dodge.DodgeHandler.js` | XLink detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing XLink without warning |
+| `dodge.DodgeHandler.js` | XLink detection in tryProcessExtendedManifest | manifest without XLink: accepted in all modes |
+
+### R9.9 - DRM content detection in extended manifests
+
+`tryProcessExtendedManifest` scans the embedded MPD string for DRM indicators (`<ContentProtection`, `cenc:`, `urn:mpeg:dash:mp4protection`, `urn:uuid:` PSSH system ID URNs). DRM license requests may leak content-identifying information through a channel Dodge cannot intercept, but this is unlikely to be a useful attack vector and DRM is important in the streaming ecosystem. In all strict modes (including `'max'`), a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged. Manifests without DRM are unaffected.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | accepts manifest containing DRM in all strict modes |
+| `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | strict mode off: no DRM warning |
 | `dodge.DodgeHandler.js` | DRM content detection in tryProcessExtendedManifest | manifest without DRM: accepted in all modes |
 
-### R9.7 - Thumbnail track detection in extended manifests
+### R9.10 - Content Steering detection in extended manifests
 
-Thumbnail tracks bypass DashHandler entirely (ThumbnailTracks fetches via its own XHRLoader). They could thus leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD for thumbnail tile scheme IDs (`http://dashif.org/thumbnail_tile`, `http://dashif.org/guidelines/thumbnail_tile`). In strict mode, manifests containing thumbnail tracks are rejected. When strict mode is off, a warning is logged.
+Content steering sends CDN pathway and throughput data to a steering server - this is unlikely to be an issue for passive traffic analysis protection. `tryProcessExtendedManifest` scans for `<ContentSteering` in the MPD. In all strict modes (including `'max'`), a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
 
 | File | Description | Test |
 |---|---|---|
-| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode representation: rejects manifest containing thumbnail tracks |
-| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode manifest: rejects manifest containing thumbnail tracks |
-| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing thumbnail tracks with warning |
-| `dodge.DodgeHandler.js` | Thumbnail track detection in tryProcessExtendedManifest | manifest without thumbnails: accepted in all modes |
+| `dodge.DodgeHandler.js` | Content Steering detection in tryProcessExtendedManifest | accepts manifest containing ContentSteering in all strict modes |
+| `dodge.DodgeHandler.js` | Content Steering detection in tryProcessExtendedManifest | strict mode off: no ContentSteering warning |
+| `dodge.DodgeHandler.js` | Content Steering detection in tryProcessExtendedManifest | manifest without ContentSteering: accepted in all modes |
+
+### R9.11 - DVB Reporting detection in extended manifests
+
+DVB Reporting sends playback metrics to external servers - this is unlikely to be an issue for passive traffic analysis protection. `tryProcessExtendedManifest` scans for `<Reporting` in the MPD. In all strict modes (including `'max'`), a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | DVB Reporting detection in tryProcessExtendedManifest | accepts manifest containing DVB Reporting in all strict modes |
+| `dodge.DodgeHandler.js` | DVB Reporting detection in tryProcessExtendedManifest | strict mode off: no DVB Reporting warning |
+| `dodge.DodgeHandler.js` | DVB Reporting detection in tryProcessExtendedManifest | manifest without DVB Reporting: accepted in all modes |
+
+### R9.12 - CMCD warning during defended playback
+
+When CMCD is enabled during Dodge playback, a warning is logged because client telemetry may leak content-identifying information. The warning serves as a diagnostic signal for the defense designer.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | CMCD warning in tryProcessExtendedManifest | CMCD enabled with strict mode off: no CMCD warning |
+| `dodge.DodgeHandler.js` | CMCD warning in tryProcessExtendedManifest | CMCD enabled with strict mode representation: warns about CMCD |
+| `dodge.DodgeHandler.js` | CMCD warning in tryProcessExtendedManifest | CMCD disabled: no warning |
+
+### R9.13 - Warning when strictMode is disabled
+
+When `strictMode` is set to `false`, `tryProcessExtendedManifest` logs a warning that undefended representations will fall back to vanilla dash.js without any defense.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest | strictMode false: warns that strict mode is disabled |
 
 ---
 
@@ -711,6 +773,18 @@ When `strictMode` is `'representation'` and `defenseRegistry.hasContent()` is tr
 | `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded but unknown label, getNextSegmentRequestIdempotent returns null |
 | `dodge.DodgeDashHandlerOverride.js` | strictMode = manifest | with extended manifest loaded and known label, defense still works normally |
 
+### R10.5 - `strictMode = max` blocks undefended representations identically
+
+`strictMode = max` behaves the same as `representation` and `manifest` at the per-representation level, and it blocks undefended representations when an extended manifest is active. When no extended manifest is loaded, methods fall back to the parent. The `'max'` level additionally enforces manifest-level policies (see R9.6, R9.7, R9.8) and warns about side-channel settings.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = max | with no extended manifest loaded, falls back to parent (hasContent() = false) |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = max | with extended manifest loaded but unknown label, getInitRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = max | with extended manifest loaded but unknown label, getNextSegmentRequest returns null |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = max | with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent |
+| `dodge.DodgeDashHandlerOverride.js` | strictMode = max | with extended manifest loaded and known label, defense still works normally |
+
 ### R10.3 - DRM key session detection warns during defended playback
 
 DRM license requests may leak content-identifying information through a channel Dodge cannot intercept. When a DRM key session is created during defended playback (`defenseRegistry.hasContent()` is true), DodgeHandler logs a warning. This is a diagnostic signal only - the actual blocking happens at manifest load time (R9.6). Key session error events (failed sessions) and events without an active defense are ignored.
@@ -721,14 +795,13 @@ DRM license requests may leak content-identifying information through a channel 
 | `dodge.DodgeHandler.js` | DRM key session detection | no extended manifest loaded: ignores key session event |
 | `dodge.DodgeHandler.js` | DRM key session detection | key session error events are ignored |
 
-### R10.4 - NEED_KEY interception blocks DRM in strict mode
+### R10.4 - NEED_KEY warns but does not block DRM in any mode
 
-Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high priority (before `ProtectionController._onNeedKey`). When a defense is active in strict mode, it sets `streaming.protection.ignoreEmeEncryptedEvent = true` to prevent ProtectionController from creating key sessions, then fires an error. This blocks the DRM handshake before any license request is sent. When strict mode is off or no defense is active, the event is ignored or a warning is logged. This complements R9.6 (manifest-level rejection) as a runtime fallback.
+DodgeHandler listens for the internal `NEED_KEY` event at high priority (before `ProtectionController._onNeedKey`). In all strict modes (including `'max'`), when a defense is active, a warning is logged but DRM is not blocked. When strict mode is off or no defense is active, the event is ignored. `_onNeedKey` never fires an error or sets `ignoreEmeEncryptedEvent`.
 
 | File | Description | Test |
 |---|---|---|
-| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | strict mode: fires ERROR and sets ignoreEmeEncryptedEvent on NEED_KEY during defended playback |
-| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | strict mode off: does not fire ERROR on NEED_KEY |
+| `dodge.DodgeHandler.js` | DRM NEED_KEY interception | does not fire ERROR on NEED_KEY during defended playback |
 | `dodge.DodgeHandler.js` | DRM NEED_KEY interception | no extended manifest loaded: ignores NEED_KEY |
 
 ---
@@ -788,10 +861,17 @@ Defense-in-depth: DodgeHandler listens for the internal `NEED_KEY` event at high
 | R9.3 Non-strict mode no error | 1 |
 | R9.4 Partial segment combination event routing | 8 |
 | R9.5 isDodgeActive and isDodgeTrailing status | 7 |
-| R9.6 DRM content detection in extended manifests | 4 |
-| R9.7 Thumbnail track detection | 4 |
+| R9.6 Thumbnail track detection | 5 |
+| R9.7 Non-fragmented text detection | 5 |
+| R9.8 XLink detection | 5 |
+| R9.9 DRM content detection | 3 |
+| R9.10 Content Steering detection | 3 |
+| R9.11 DVB Reporting detection | 3 |
+| R9.12 CMCD warning during defended playback | 3 |
+| R9.13 Warning when strictMode is disabled | 1 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
 | R10.3 DRM key session detection (warn only) | 3 |
-| R10.4 NEED_KEY interception blocks DRM in strict mode | 3 |
-| **Total** | **300** |
+| R10.4 NEED_KEY event handling (warn only) | 2 |
+| R10.5 strictMode = max enforcement | 5 |
+| **Total** | **324** |

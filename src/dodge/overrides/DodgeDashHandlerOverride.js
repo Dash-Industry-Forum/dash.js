@@ -96,11 +96,11 @@ function DodgeDashHandlerOverride(config) {
         warnedInvalidMaxIdLength = false;
     }
 
-    // Return true if strict mode is 'representation' or 'manifest' (both
-    // enforce per-representation defense requirements).
+    // Return true if strict mode is 'representation', 'manifest', or 'max'
+    // (all enforce per-representation defense requirements).
     function _isRepresentationStrict() {
         const mode = (settings.get().dodge || {}).strictMode;
-        return mode === 'representation' || mode === 'manifest';
+        return mode === 'representation' || mode === 'manifest' || mode === 'max';
     }
 
     function resetInitialSettings() {
@@ -583,10 +583,7 @@ function DodgeDashHandlerOverride(config) {
     function isLastSegmentRequested(representation, bufferingTime) {
         if (!defendedStreamInfo) {
             if (_isRepresentationStrict() && defenseRegistry.hasContent()) {
-                if (lastRepresentationMediaType === 'text') {
-                    return true; // graceful completion for undefended text track
-                }
-                return false; // stall non-text undefended stream
+                return false; // stall undefended stream
             }
             // Fall back to vanilla DashHandler.
             return _parentIsLastSegmentRequested.call(parent, representation, bufferingTime);

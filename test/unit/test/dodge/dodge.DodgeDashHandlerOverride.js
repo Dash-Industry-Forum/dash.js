@@ -900,6 +900,60 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    describe('strictMode = max', function () {
+        let settings;
+
+        beforeEach(function () {
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'max' } });
+        });
+
+        afterEach(function () {
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('with no extended manifest loaded, falls back to parent (hasContent() = false)', function () {
+            const result = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ parentInit: true });
+        });
+
+        it('with extended manifest loaded but unknown label, getInitRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getInitRequest({}, unknownRep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, getNextSegmentRequest returns null', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label', segmentInfoType: 'SegmentTemplate' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.getNextSegmentRequest({}, unknownRep);
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded but unknown label, isLastSegmentRequested returns false without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const unknownRep = Object.assign({}, rep, { id: 'unknown_label' });
+            override.updateDefendedStreamInfo(unknownRep);
+            const result = override.isLastSegmentRequested(unknownRep, NaN);
+            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
+            expect(result).to.be.false; // jshint ignore:line
+        });
+
+        it('with extended manifest loaded and known label, defense still works normally', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            const request = override.getInitRequest({}, rep);
+            expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+        });
+    });
+
     // Text track disabling
 
     describe('Text track disabling', function () {
@@ -952,12 +1006,12 @@ describe('DodgeDashHandlerOverride', function () {
             expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
         });
 
-        it('isLastSegmentRequested() returns true for undefended text track in strict mode (graceful end)', function () {
+        it('isLastSegmentRequested() returns false for undefended text track in strict mode (stall)', function () {
             defenseController.addExtendedManifest(makeManifest());
             override.updateDefendedStreamInfo(unknownTextRep);
             const result = override.isLastSegmentRequested(unknownTextRep, NaN);
             expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
-            expect(result).to.be.true; // jshint ignore:line
+            expect(result).to.be.false; // jshint ignore:line
         });
 
         it('isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged)', function () {

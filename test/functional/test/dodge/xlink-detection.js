@@ -8,21 +8,20 @@ import {
     playForDuration
 } from '../common/common.js';
 
-const TESTCASE = Constants.TESTCASES.DODGE.DRM_DETECTION;
+const TESTCASE = Constants.TESTCASES.DODGE.XLINK_DETECTION;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
-        describe(`with restrictive strict mode (manifest)`, () => {
+        describe(`with strictMode max (rejects XLink)`, () => {
             let playerAdapter;
 
             before(async () => {
-                // Default strictMode is 'representation', which blocks DRM content
                 playerAdapter = initializeDashJsAdapter(item, mpd, {
                     dodge: {
-                        strictMode: 'manifest'
+                        strictMode: 'max'
                     },
                     streaming: {
                         abr: {
@@ -39,7 +38,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             })
 
-            it(`Dodge defense should not be active (DRM MPD rejected)`, () => {
+            it(`Dodge defense should not be active (XLink MPD rejected)`, () => {
                 const isActive = playerAdapter.isDodgeActive();
                 expect(isActive).to.be.false;
             })
@@ -49,13 +48,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             })
         })
 
-        describe(`with default strict mode (representation)`, () => {
+        describe(`with default strict mode (representation, warns but allows XLink)`, () => {
             let playerAdapter;
 
             before(async () => {
-                // Default strictMode is 'representation', which blocks DRM content
                 playerAdapter = initializeDashJsAdapter(item, mpd);
-                await playForDuration(5000);
+                await playForDuration(8000);
             })
 
             after(() => {
@@ -64,13 +62,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             })
 
-            it(`Dodge defense should not be active (DRM MPD rejected)`, () => {
+            it(`Dodge defense should be active (XLink warning only, not blocked)`, () => {
                 const isActive = playerAdapter.isDodgeActive();
-                expect(isActive).to.be.false;
-            })
-
-            it(`Playback should not progress`, async () => {
-                await checkIsNotProgressing(playerAdapter);
+                expect(isActive).to.be.true;
             })
         })
 
@@ -97,11 +91,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             })
 
-            it(`Dodge defense should be active (DRM warning only, not blocked)`, () => {
-                // With strict mode off, the DRM MPD is accepted with a warning.
-                // isDodgeActive() should be true because the manifest was loaded
-                // and defense info registered. Actual playback may fail (no DRM
-                // keys) but that's expected; we're testing manifest acceptance.
+            it(`Dodge defense should be active (no XLink check when strict mode off)`, () => {
                 const isActive = playerAdapter.isDodgeActive();
                 expect(isActive).to.be.true;
             })

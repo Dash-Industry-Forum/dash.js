@@ -105,6 +105,29 @@ describe('DodgeHandler', function () {
             expect(r2.mpd).to.equal('<MPD2/>');
             expect(r2.baseUri).to.equal('https://server2.example.com/');
         });
+
+        it('strictMode false: warns that strict mode is disabled', function () {
+            const ctx = {};
+            const eventBus = EventBus(ctx).getInstance();
+            const settings = Settings(ctx).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(ctx).getInstance({ settings: settings });
+            settings.update({ dodge: { strictMode: false } });
+            const logMessages = [];
+            const testListener = {};
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+
+            const handler = DodgeHandler(ctx).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('strictMode is disabled'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
     });
 
     // Strict mode
@@ -448,7 +471,7 @@ describe('DodgeHandler', function () {
             paddingLoadedSpy.resetHistory();
             mediaLoadedSpy.resetHistory();
 
-            // Fire padding with selective buffer [0] — flushes pending index 0
+            // Fire padding with selective buffer [0] - flushes pending index 0
             triggerFragmentLoaded(makeRequest({ full: false, padding: true, buffer: [0] }));
             expect(mediaLoadedSpy.calledOnce).to.be.true; // jshint ignore:line (secondary flush)
             expect(paddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
@@ -986,16 +1009,21 @@ describe('DodgeHandler', function () {
         });
     });
 
-    // DRM NEED_KEY interception (blocks in strict mode)
+    // DRM NEED_KEY interception (warn only)
 
     describe('DRM NEED_KEY interception', function () {
 
-        let eventBus, settings;
+        let eventBus, settings, logMessages, testListener;
 
         beforeEach(function () {
             context = {};
             eventBus = EventBus(context).getInstance();
             settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
             if (!Events.NEED_KEY) {
                 Events.NEED_KEY = 'needkey';
             }
@@ -1019,24 +1047,8 @@ describe('DodgeHandler', function () {
             return handler;
         }
 
-        it('strict mode: fires ERROR and sets ignoreEmeEncryptedEvent on NEED_KEY during defended playback', function () {
+        it('does not fire ERROR on NEED_KEY during defended playback', function () {
             const handler = createDodgeHandler('representation');
-            handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
-
-            let errorFired = false;
-            eventBus.on(Events.ERROR, function (e) {
-                errorFired = true;
-                expect(e.error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
-            }, this);
-
-            eventBus.trigger(Events.NEED_KEY, { key: {} });
-            expect(errorFired).to.be.true; // jshint ignore:line
-            expect(settings.get().streaming.protection.ignoreEmeEncryptedEvent).to.be.true; // jshint ignore:line
-            handler.reset();
-        });
-
-        it('strict mode off: does not fire ERROR on NEED_KEY', function () {
-            const handler = createDodgeHandler(false);
             handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
 
             let errorFired = false;
@@ -1046,6 +1058,7 @@ describe('DodgeHandler', function () {
 
             eventBus.trigger(Events.NEED_KEY, { key: {} });
             expect(errorFired).to.be.false; // jshint ignore:line
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('DRM key request'))).to.be.true; // jshint ignore:line
             handler.reset();
         });
 
@@ -1059,6 +1072,7 @@ describe('DodgeHandler', function () {
 
             eventBus.trigger(Events.NEED_KEY, { key: {} });
             expect(errorFired).to.be.false; // jshint ignore:line
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('DRM key request')).length).to.equal(0);
             handler.reset();
         });
     });
@@ -1139,12 +1153,17 @@ describe('DodgeHandler', function () {
 
     describe('DRM content detection in tryProcessExtendedManifest', function () {
 
-        let eventBus, settings;
+        let eventBus, settings, logMessages, testListener;
 
         beforeEach(function () {
             context = {};
             eventBus = EventBus(context).getInstance();
             settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
         });
 
         function createDodgeHandler(strictMode) {
@@ -1174,25 +1193,19 @@ describe('DodgeHandler', function () {
             };
         }
 
-        it('strict mode representation: rejects manifest containing ContentProtection', function () {
+        it('accepts manifest containing DRM in all strict modes', function () {
             const handler = createDodgeHandler('representation');
-            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
-            expect(result).to.be.false; // jshint ignore:line
-            handler.reset();
-        });
-
-        it('strict mode manifest: rejects manifest containing ContentProtection', function () {
-            const handler = createDodgeHandler('manifest');
-            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
-            expect(result).to.be.false; // jshint ignore:line
-            handler.reset();
-        });
-
-        it('strict mode off: accepts manifest containing ContentProtection with warning', function () {
-            const handler = createDodgeHandler(false);
             const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
             expect(result).to.exist; // jshint ignore:line
             expect(result.mpd).to.include('ContentProtection');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('DRM'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: no DRM warning', function () {
+            const handler = createDodgeHandler(false);
+            handler.tryProcessExtendedManifest(JSON.stringify(makeDrmManifest()), 'test.exmfst.json');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('DRM')).length).to.equal(0);
             handler.reset();
         });
 
@@ -1209,12 +1222,17 @@ describe('DodgeHandler', function () {
 
     describe('Thumbnail track detection in tryProcessExtendedManifest', function () {
 
-        let eventBus, settings;
+        let eventBus, settings, logMessages, testListener;
 
         beforeEach(function () {
             context = {};
             eventBus = EventBus(context).getInstance();
             settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
         });
 
         function createDodgeHandler(strictMode) {
@@ -1244,25 +1262,37 @@ describe('DodgeHandler', function () {
             };
         }
 
-        it('strict mode representation: rejects manifest containing thumbnail tracks', function () {
+        it('strict mode representation: accepts manifest containing thumbnail tracks with warning', function () {
             const handler = createDodgeHandler('representation');
             const result = handler.tryProcessExtendedManifest(JSON.stringify(makeThumbnailManifest()), 'test.exmfst.json');
-            expect(result).to.be.false; // jshint ignore:line
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('thumbnail_tile');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('thumbnail'))).to.be.true; // jshint ignore:line
             handler.reset();
         });
 
-        it('strict mode manifest: rejects manifest containing thumbnail tracks', function () {
+        it('strict mode manifest: accepts manifest containing thumbnail tracks with warning', function () {
             const handler = createDodgeHandler('manifest');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeThumbnailManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('thumbnail_tile');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('thumbnail'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode max: rejects manifest containing thumbnail tracks', function () {
+            const handler = createDodgeHandler('max');
             const result = handler.tryProcessExtendedManifest(JSON.stringify(makeThumbnailManifest()), 'test.exmfst.json');
             expect(result).to.be.false; // jshint ignore:line
             handler.reset();
         });
 
-        it('strict mode off: accepts manifest containing thumbnail tracks with warning', function () {
+        it('strict mode off: accepts manifest containing thumbnail tracks without warning', function () {
             const handler = createDodgeHandler(false);
             const result = handler.tryProcessExtendedManifest(JSON.stringify(makeThumbnailManifest()), 'test.exmfst.json');
             expect(result).to.exist; // jshint ignore:line
             expect(result.mpd).to.include('thumbnail_tile');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('thumbnail')).length).to.equal(0);
             handler.reset();
         });
 
@@ -1273,4 +1303,371 @@ describe('DodgeHandler', function () {
             handler.reset();
         });
     });
+
+    // Content Steering detection in extended manifest
+
+    describe('Content Steering detection in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function makeContentSteeringManifest() {
+            return {
+                start: {
+                    mpd: '<MPD><ContentSteering defaultServiceLocation="cdn1" queryBeforeStart="true">https://steering.example.com/dash</ContentSteering><Period><AdaptationSet><Representation id="v" bandwidth="1000000"/></AdaptationSet></Period></MPD>',
+                    base_uri: 'https://example.com/'
+                },
+                streams: [{
+                    label: 'v',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+        }
+
+        it('accepts manifest containing ContentSteering in all strict modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeContentSteeringManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('ContentSteering');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('ContentSteering'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: no ContentSteering warning', function () {
+            const handler = createDodgeHandler(false);
+            handler.tryProcessExtendedManifest(JSON.stringify(makeContentSteeringManifest()), 'test.exmfst.json');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('ContentSteering')).length).to.equal(0);
+            handler.reset();
+        });
+
+        it('manifest without ContentSteering: accepted in all modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // XLink detection in extended manifest
+
+    describe('XLink detection in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function makeXLinkManifest() {
+            return {
+                start: {
+                    mpd: '<MPD><Period xlink:href="https://example.com/period.xml" xlink:actuate="onLoad"><AdaptationSet><Representation id="v" bandwidth="1000000"/></AdaptationSet></Period></MPD>',
+                    base_uri: 'https://example.com/'
+                },
+                streams: [{
+                    label: 'v',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+        }
+
+        it('strict mode representation: accepts manifest containing XLink with warning', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeXLinkManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('xlink:href');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('XLink'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode manifest: accepts manifest containing XLink with warning', function () {
+            const handler = createDodgeHandler('manifest');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeXLinkManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('xlink:href');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('XLink'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode max: rejects manifest containing XLink', function () {
+            const handler = createDodgeHandler('max');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeXLinkManifest()), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: accepts manifest containing XLink without warning', function () {
+            const handler = createDodgeHandler(false);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeXLinkManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('xlink:href');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('XLink')).length).to.equal(0);
+            handler.reset();
+        });
+
+        it('manifest without XLink: accepted in all modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // DVB Reporting detection in extended manifest
+
+    describe('DVB Reporting detection in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function makeDvbReportingManifest() {
+            return {
+                start: {
+                    mpd: '<MPD><Period><AdaptationSet><Representation id="v" bandwidth="1000000"/></AdaptationSet></Period><Metrics metrics="DVBErrors"><Reporting schemeIdUri="urn:dvb:dash:reporting:2014" value="1" dvb:reportingUrl="https://report.example.com/"/></Metrics></MPD>',
+                    base_uri: 'https://example.com/'
+                },
+                streams: [{
+                    label: 'v',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+        }
+
+        it('accepts manifest containing DVB Reporting in all strict modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeDvbReportingManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('<Reporting');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('Reporting'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: no DVB Reporting warning', function () {
+            const handler = createDodgeHandler(false);
+            handler.tryProcessExtendedManifest(JSON.stringify(makeDvbReportingManifest()), 'test.exmfst.json');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('Reporting')).length).to.equal(0);
+            handler.reset();
+        });
+
+        it('manifest without DVB Reporting: accepted in all modes', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // Non-fragmented text detection in extended manifest
+
+    describe('Non-fragmented text detection in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(strictMode) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function makeNonFragmentedTextManifest() {
+            return {
+                start: {
+                    mpd: '<MPD><Period><AdaptationSet mimeType="application/ttml+xml"><Representation id="sub" bandwidth="1000"/></AdaptationSet><AdaptationSet><Representation id="v" bandwidth="1000000"/></AdaptationSet></Period></MPD>',
+                    base_uri: 'https://example.com/'
+                },
+                streams: [{
+                    label: 'v',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+        }
+
+        it('strict mode representation: accepts manifest containing non-fragmented text with warning', function () {
+            const handler = createDodgeHandler('representation');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeNonFragmentedTextManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('application/ttml+xml');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('non-fragmented text'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode manifest: accepts manifest containing non-fragmented text with warning', function () {
+            const handler = createDodgeHandler('manifest');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeNonFragmentedTextManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('application/ttml+xml');
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('non-fragmented text'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode max: rejects manifest containing non-fragmented text', function () {
+            const handler = createDodgeHandler('max');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeNonFragmentedTextManifest()), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode off: accepts manifest containing non-fragmented text without warning', function () {
+            const handler = createDodgeHandler(false);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeNonFragmentedTextManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(result.mpd).to.include('application/ttml+xml');
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('non-fragmented text')).length).to.equal(0);
+            handler.reset();
+        });
+
+        it('manifest without non-fragmented text: accepted in all modes', function () {
+            const handler = createDodgeHandler('max');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
+    // CMCD warning in tryProcessExtendedManifest
+
+    describe('CMCD warning in tryProcessExtendedManifest', function () {
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(strictMode, cmcdEnabled) {
+            if (strictMode !== undefined) {
+                settings.update({ dodge: { strictMode: strictMode } });
+            }
+            if (cmcdEnabled !== undefined) {
+                settings.update({ streaming: { cmcd: { enabled: cmcdEnabled } } });
+            }
+            return DodgeHandler(context).create({
+                eventBus,
+                events: Events,
+                settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        it('CMCD enabled with strict mode off: no CMCD warning', function () {
+            const handler = createDodgeHandler(false, true);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('CMCD')).length).to.equal(0);
+            handler.reset();
+        });
+
+        it('CMCD enabled with strict mode representation: warns about CMCD', function () {
+            const handler = createDodgeHandler('representation', true);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('CMCD'))).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('CMCD disabled: no warning', function () {
+            const handler = createDodgeHandler('representation', false);
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()), 'test.exmfst.json');
+            expect(result).to.exist; // jshint ignore:line
+            expect(logMessages.filter(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('CMCD')).length).to.equal(0);
+            handler.reset();
+        });
+    });
+
 });

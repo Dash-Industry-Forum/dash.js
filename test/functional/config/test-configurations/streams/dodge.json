@@ -60,14 +60,6 @@
       ]
     },
     {
-      "name": "BBB DRM MPD (ContentProtection in MPD)",
-      "type": "vod",
-      "url": "/base/test/functional/content/dodge/bbb_30fps_drm.exmfst.json",
-      "includedTestfiles": [
-        "dodge/drm-detection"
-      ]
-    },
-    {
       "name": "BBB Thumbnails MPD (thumbnail_tile in MPD)",
       "type": "vod",
       "url": "/base/test/functional/content/dodge/bbb_30fps_thumbnails.exmfst.json",
@@ -76,11 +68,43 @@
       ]
     },
     {
-      "name": "BBB with text track (undefended subtitle)",
+      "name": "BBB Text track MPD (undefended subtitle)",
       "type": "vod",
       "url": "/base/test/functional/content/dodge/bbb_30fps_text.exmfst.json",
       "includedTestfiles": [
         "dodge/text-track-blocking"
+      ]
+    },
+    {
+      "name": "BBB XLink MPD (xlink:href in Period)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_xlink.exmfst.json",
+      "includedTestfiles": [
+        "dodge/xlink-detection"
+      ]
+    },
+    {
+      "name": "BBB DRM MPD (side channel policy DRM)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_drm.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
+      ]
+    },
+    {
+      "name": "BBB Undefended (max mode side channel policy)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
+      ]
+    },
+    {
+      "name": "BBB Undefended (non-strict side channel policy)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
       ]
     },
     {

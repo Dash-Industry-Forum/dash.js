@@ -44,6 +44,7 @@ import DodgeXHRLoaderOverride from './overrides/DodgeXHRLoaderOverride.js';
 import Constants from '../streaming/constants/Constants.js';
 import FactoryMaker from '../core/FactoryMaker.js';
 import EventBus from '../core/EventBus.js';
+import { HTTPRequest } from '../streaming/vo/metrics/HTTPRequest.js';
 
 // ABR rules that are compatible with Dodge's cycle-based download model.
 // All built-in rules not in these sets are disabled at module load time.
@@ -153,7 +154,7 @@ function DodgeHandler(config) {
      * manifest JSON, register it with DefenseRegistry and return the embedded
      * MPD string and base URI. If not a valid extended manifest, returns null
      * (graceful degradation). If strict mode 'manifest' is enabled and no
-     * defense can be applied, generates and error and returns false to
+     * defense can be applied, generates an error and returns false to
      * signal an abort to ManifestLoader.
      * @param {string} bytes - Raw response body.
      * @param {string} [url] - Original request URL, included in error messages.
@@ -182,34 +183,79 @@ function DodgeHandler(config) {
             return null;
         }
 
-        // Check whether the embedded MPD contains DRM content protection
-        // elements. DRM license requests may leak identifying information
-        // through a channel Dodge cannot intercept, undermining defenses.
-        // This is a heuristic check on the raw XML string.
+        // The checks below scan the embedded MPD for features that have
+        // not been tested with traffic analysis defenses. In 'max' mode,
+        // the manifest may be rejected; in other strict modes, a warning is
+        // logged so the defense designer can make an informed decision.
         const mpd = extended['start']['mpd'];
-        if (_mpdContainsDrm(mpd)) {
-            const strictMode = (settings.get().dodge || {}).strictMode;
-            if (strictMode === 'representation' || strictMode === 'manifest') {
-                logger.error('Extended manifest contains DRM-protected content, license requests may leak content-identifying information');
+        const strictMode = (settings.get().dodge || {}).strictMode;
+
+        if (strictMode === false) {
+            logger.warn('Dodge strictMode is disabled, undefended representations will fall back to vanilla dash.js without any defense!');
+        }
+
+        // Thumbnail tracks, non-fragmented text, XLink: reject in max mode
+        if (_mpdContainsThumbnails(mpd)) {
+            if (strictMode === 'max') {
+                logger.error('Extended manifest contains thumbnail tracks that bypass Dodge defense, rejected by strict mode max');
                 _triggerStrictModeError(url);
                 return false;
-            } else {
-                logger.warn('Extended manifest contains DRM-protected content, license requests may leak content-identifying information');
+            } else if (strictMode !== false) {
+                logger.warn('Extended manifest contains thumbnail tracks that bypass Dodge defense, verify that thumbnail image sizes do not create a distinguishing traffic pattern!');
             }
         }
 
-        // Thumbnail tracks bypass DashHandler (ThumbnailTracks fetches
-        // directly via its own XHRLoader). Cycle-based defense does not
-        // apply; thumbnail requests could leak content-identifying
-        // information and are therefore blocked in strict mode.
-        if (_mpdContainsThumbnails(mpd)) {
-            const strictMode = (settings.get().dodge || {}).strictMode;
-            if (strictMode === 'representation' || strictMode === 'manifest') {
-                logger.error('Extended manifest contains thumbnail tracks that bypass Dodge defense');
+        if (_mpdContainsNonFragmentedText(mpd)) {
+            if (strictMode === 'max') {
+                logger.error('Extended manifest contains non-fragmented text tracks that bypass Dodge defense, rejected by strict mode max');
                 _triggerStrictModeError(url);
                 return false;
-            } else {
-                logger.warn('Extended manifest contains thumbnail tracks that bypass Dodge defense');
+            } else if (strictMode !== false) {
+                logger.warn('Extended manifest contains non-fragmented text tracks that bypass Dodge defense, verify that text file sizes do not create a distinguishing traffic pattern!');
+            }
+        }
+
+        if (_mpdContainsXLink(mpd)) {
+            if (strictMode === 'max') {
+                logger.error('Extended manifest contains XLink references that bypass Dodge defense, rejected by strict mode max');
+                _triggerStrictModeError(url);
+                return false;
+            } else if (strictMode !== false) {
+                logger.warn('Extended manifest contains XLink references that bypass Dodge defense, verify that external XML sizes do not create a distinguishing traffic pattern!');
+            }
+        }
+
+        // DRM, CMCD, DVB reporting, content steering: likely a non-issue, warn
+        if (strictMode !== false && _mpdContainsDrm(mpd)) {
+            logger.warn('Extended manifest contains DRM-protected content, which has not been tested with defenses, verify that license request patterns do not undermine the defense!');
+        }
+
+        if (strictMode !== false && _mpdContainsContentSteering(mpd)) {
+            logger.warn('Extended manifest contains ContentSteering - steering requests go to a platform-wide endpoint and are unlikely to aid passive fingerprinting, but verify');
+        }
+
+        if (strictMode !== false && _mpdContainsDvbReporting(mpd)) {
+            logger.warn('Extended manifest contains DVB Reporting - reporting requests go to a platform-wide endpoint and are unlikely to aid passive fingerprinting, but verify');
+        }
+
+        if (strictMode !== false && settings.get().streaming.cmcd.enabled) {
+            logger.warn('CMCD is enabled during Dodge playback - CMCD data is encrypted and is unlikely to aid passive fingerprinting; nor/nrr fields are suppressed');
+        }
+
+        // In 'max' mode, warn about settings that the defense designer
+        // may want to change manually for strict threat models. These are
+        // not changed automatically because they are standard dash.js
+        // settings that can be set via updateSettings.
+        if (strictMode === 'max') {
+            if (settings.get().streaming.retryAttempts[HTTPRequest.MEDIA_SEGMENT_TYPE] > 0 ||
+                settings.get().streaming.retryAttempts[HTTPRequest.INIT_SEGMENT_TYPE] > 0) {
+                logger.warn('strictMode max: segment retry attempts > 0, consider setting to 0 for plausible deniability against active attacks');
+            }
+            if (settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError) {
+                logger.warn('strictMode max: background UTC sync on segment download error is enabled, consider disabling for plausible deniability against active attacks');
+            }
+            if (settings.get().streaming.applyContentSteering) {
+                logger.warn('strictMode max: content steering is enabled, consider disabling to reduce extra traffic');
             }
         }
 
@@ -257,11 +303,58 @@ function DodgeHandler(config) {
     }
 
     /**
-     * Intercept NEED_KEY at high priority, before ProtectionController
-     * creates key sessions and sends license requests. In strict mode
-     * with an active defense, set ignoreEmeEncryptedEvent to prevent
-     * ProtectionController._onNeedKey from running, then fire an
-     * error. When strict mode is off, log a warning (not block).
+     * Heuristic check whether an MPD XML string contains non-fragmented
+     * text tracks (e.g., TTML or WebVTT sidecar files). These are
+     * identified by text-related mimeTypes that typically use
+     * BaseURL rather than SegmentTemplate.
+     */
+    function _mpdContainsNonFragmentedText(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('mimeType="application/ttml+xml"') ||
+            mpd.includes('mimeType="text/vtt"');
+    }
+
+    /**
+     * Heuristic check whether an MPD XML string contains XLink references.
+     * XLink expansion fetches external XML from referenced URLs, which could
+     * leak content-identifying information.
+     */
+    function _mpdContainsXLink(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('xlink:href');
+    }
+
+    /**
+     * Heuristic check whether an MPD XML string contains a ContentSteering
+     * element. Steering requests send CDN pathway and throughput data to
+     * a steering server.
+     */
+    function _mpdContainsContentSteering(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('<ContentSteering');
+    }
+
+    /**
+     * Heuristic check whether an MPD XML string contains DVB Reporting
+     * elements. Reporting sends playback metrics to external servers.
+     */
+    function _mpdContainsDvbReporting(mpd) {
+        if (!mpd || typeof mpd !== 'string') {
+            return false;
+        }
+        return mpd.includes('<Reporting');
+    }
+
+    /**
+     * Diagnostic warning when a NEED_KEY event fires during defended
+     * playback. DRM is allowed in all modes but the defense designer
+     * should be aware.
      */
     function _onNeedKey() {
         if (!defenseRegistry.hasContent()) {
@@ -269,32 +362,25 @@ function DodgeHandler(config) {
         }
 
         const strictMode = (settings.get().dodge || {}).strictMode;
-        if (strictMode === 'representation' || strictMode === 'manifest') {
-            // Prevent ProtectionController._onNeedKey (default priority)
-            // from running by enabling the ignoreEmeEncryptedEvent flag.
-            settings.update({ streaming: { protection: { ignoreEmeEncryptedEvent: true } } });
-            logger.error('Dodge strict mode is enabled and DRM key request detected, blocking request');
-            eventBus.trigger(events.ERROR, {
-                error: new DashJSError(
-                    DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE,
-                    'Dodge strict mode is enabled and DRM key request blocked'
-                )
-            });
-        } else {
-            logger.warn('DRM key request detected during defended playback, license requests may leak content-identifying information');
+        if (strictMode !== false) {
+            logger.warn('DRM key request detected during defended playback, DRM has not been tested with defenses');
         }
     }
 
     /**
-     * Diagnostic warning when a DRM key session is created despite the
-     * NEED_KEY intercept (e.g., strict mode off, or session created by
-     * manifest-level ContentProtection before Dodge activates).
+     * Diagnostic warning when a DRM key session is created during
+     * defended playback. DRM is allowed in all modes but the defense
+     * designer should be aware.
      */
     function _onKeySessionCreated(e) {
         if (e.error || !defenseRegistry.hasContent()) {
             return;
         }
-        logger.warn('DRM key session created during defended playback, license requests may leak content-identifying information');
+
+        const strictMode = (settings.get().dodge || {}).strictMode;
+        if (strictMode !== false) {
+            logger.warn('DRM key session created during defended playback, license requests may leak content-identifying information');
+        }
     }
 
     /**

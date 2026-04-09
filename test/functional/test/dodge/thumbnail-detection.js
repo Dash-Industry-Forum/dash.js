@@ -15,13 +15,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
 
-        describe(`with restrictive strict mode (manifest)`, () => {
+        describe(`with strictMode max (rejects thumbnails)`, () => {
             let playerAdapter;
 
             before(async () => {
                 playerAdapter = initializeDashJsAdapter(item, mpd, {
                     dodge: {
-                        strictMode: 'manifest'
+                        strictMode: 'max'
                     },
                     streaming: {
                         abr: {
@@ -48,12 +48,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             })
         })
 
-        describe(`with default strict mode (representation)`, () => {
+        describe(`with default strict mode (representation, warns but allows thumbnails)`, () => {
             let playerAdapter;
 
             before(async () => {
                 playerAdapter = initializeDashJsAdapter(item, mpd);
-                await playForDuration(5000);
+                await playForDuration(8000);
             })
 
             after(() => {
@@ -62,13 +62,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             })
 
-            it(`Dodge defense should not be active (thumbnail MPD rejected)`, () => {
+            it(`Dodge defense should be active (thumbnail warning only, not blocked)`, () => {
                 const isActive = playerAdapter.isDodgeActive();
-                expect(isActive).to.be.false;
-            })
-
-            it(`Playback should not progress`, async () => {
-                await checkIsNotProgressing(playerAdapter);
+                expect(isActive).to.be.true;
             })
         })
 
@@ -95,10 +91,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
             })
 
-            it(`Dodge defense should be active (thumbnail warning only, not blocked)`, () => {
-                // With strict mode off, the thumbnail MPD is accepted with a
-                // warning. Actual thumbnail fetches bypass Dodge but that
-                // doesn't prevent video/audio defense from activating.
+            it(`Dodge defense should be active (no thumbnail check when strict mode off)`, () => {
                 const isActive = playerAdapter.isDodgeActive();
                 expect(isActive).to.be.true;
             })
