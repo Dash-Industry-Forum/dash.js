@@ -13,7 +13,7 @@ function makeManifest() {
         start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
         streams: [{
             label: 'rep0',
-            init: [{ range: '0-855' }, { range: '856-1711' }],
+            init: [{ range: '0-855' }, { range: '856-1711', buffer: true }],
             data: [
                 { index: 0, buffer: false }, // cycle 0, non-padding
                 { index: 1, buffer: true }, // cycle 1, last non-padding, maxNoPad = 1
@@ -285,7 +285,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }, { range: '856-1711' }],
+                    init: [{ range: '0-855' }, { range: '856-1711', buffer: true }],
                     data: [
                         { index: 0 }, // cycle 0
                         { index: 1, buffer: [0] }, // cycle 1, selective buffer
@@ -358,7 +358,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0 }, // cycle 0, no override
                         { index: 1, quality: 'rep_low' }, // cycle 1, string override
@@ -410,7 +410,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [{ index: 0, quality: 99 }]
                 }]
             });
@@ -426,7 +426,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [{ index: 0, quality: 'rep_nonexistent' }]
                 }]
             });
@@ -442,7 +442,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [{ index: 0, quality: 'rep_low' }]
                 }]
             });
@@ -463,7 +463,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0, quality: 'rep_nonexistent' },
                         { index: 1 },
@@ -488,7 +488,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0, range: '0-999', quality: 'rep_low' },
                         { index: 0, range: '1000-' },
@@ -511,7 +511,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [{ index: 0, quality: 'rep_nonexistent' }]
                 }]
             });
@@ -528,7 +528,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0 },
                         { index: 1, quality: 'rep_low' },
@@ -569,7 +569,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0 },
                         { index: 1, quality: 'rep_low' },
@@ -589,7 +589,7 @@ describe('DodgeDashHandlerOverride', function () {
                 start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
                 streams: [{
                     label: 'rep0',
-                    init: [{ range: '0-855' }],
+                    init: [{ range: '0-855', buffer: true }],
                     data: [
                         { index: 0 },
                         { index: 1, quality: 'rep_low' },
@@ -1259,7 +1259,7 @@ describe('DodgeDashHandlerOverride', function () {
             start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
             streams: [{
                 label: 'rep0',
-                init: [{ range: '0-855' }, { range: '856-1711' }],
+                init: [{ range: '0-855' }, { range: '856-1711', buffer: true }],
                 data: [
                     { index: 0, buffer: false },
                     { index: 1, buffer: true },

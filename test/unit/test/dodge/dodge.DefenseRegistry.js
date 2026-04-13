@@ -177,12 +177,12 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
-        it('init cycle buffer flag on non-last cycle, false', function () {
+        it('init cycle buffer flag on non-last cycle is allowed (per-run termination)', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
-                streams: [{ label: 'a', init: [{ range: '0-99', buffer: true }, { range: '100-199' }], data: [{ index: 0, buffer: true }] }]
+                streams: [{ label: 'a', init: [{ range: '0-99', buffer: true }, { range: '100-199', buffer: true }], data: [{ index: 0, buffer: true }] }]
             };
-            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
         });
 
         it('init cycle buffer flag on last cycle only, true', function () {
@@ -623,6 +623,77 @@ describe('DefenseRegistry', function () {
             expect(data[0].full).to.be.true;
             expect(data[1].full).to.be.false;
             expect(data[2].full).to.be.false;
+        });
+    });
+
+    describe('init cycle quality validation and explicit buffer requirement', function () {
+        it('rejects init cycle with empty string quality', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ quality: '' }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false;
+        });
+
+        it('rejects init cycle with negative integer quality', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ quality: -1 }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false;
+        });
+
+        it('rejects init cycle with non-integer number quality', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ quality: 1.5 }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false;
+        });
+
+        it('rejects init cycle with non-string, non-number quality', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ quality: true }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false;
+        });
+
+        it('accepts init cycle with valid string quality (with explicit buffer flags)', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ buffer: true }, { quality: 'alt', buffer: true }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true;
+        });
+
+        it('accepts init cycle with valid numeric quality (with explicit buffer flags)', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ buffer: true }, { quality: 2, buffer: true }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true;
+        });
+
+        it('multi-representation init without buffer flags: no default (designer-owned)', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{}, { quality: 'alt' }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true;
+            expect(m.streams[0].init[0].buffer).to.be.undefined;
+            expect(m.streams[0].init[1].buffer).to.be.undefined;
+        });
+
+        it('single primary init group without buffer: defaults buffer: true on last cycle', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{ range: '0-99' }, { range: '100-199' }], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true;
+            expect(m.streams[0].init[0].buffer).to.be.undefined;
+            expect(m.streams[0].init[1].buffer).to.be.true;
+            expect(m.streams[0].init[0].full).to.be.false;
+            expect(m.streams[0].init[1].full).to.be.true;
+        });
+
+        it('explicit multi-representation init: each buffer-flagged cycle is full', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'x' },
+                streams: [{
+                    label: 'home',
+                    init: [
+                        { range: '0-100' },
+                        { range: '100-200', buffer: true },
+                        { quality: 'alt_a', buffer: true },
+                        { quality: 'alt_b', buffer: true }
+                    ],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.true;
+            const init = m.streams[0].init;
+            expect(init[0].full).to.be.false;
+            expect(init[1].full).to.be.true;
+            expect(init[2].full).to.be.true;
+            expect(init[3].full).to.be.true;
+            expect(init.length).to.equal(4);
         });
     });
 

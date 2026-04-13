@@ -99,7 +99,7 @@ function BufferController(config) {
     function initialize(mediaSource) {
         setMediaSource(mediaSource);
 
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoadedDispatch, instance);
         eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
@@ -289,6 +289,9 @@ function BufferController(config) {
         }
     }
 
+    function _onInitFragmentLoadedDispatch(e) {
+        instance._onInitFragmentLoaded(e);
+    }
 
     /**
      * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache, and appended to the buffer.
@@ -1307,7 +1310,7 @@ function BufferController(config) {
     }
 
     function reset(errored, keepBuffers) {
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoadedDispatch, this);
         eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
 
@@ -1349,6 +1352,7 @@ function BufferController(config) {
     }
 
     instance = {
+        _onInitFragmentLoaded,
         _onMediaFragmentLoaded,
         appendInitSegmentFromCache,
         appendToBuffer,

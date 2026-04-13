@@ -30,6 +30,8 @@
  */
 
 import Debug from '../../core/Debug.js';
+import EventBus from '../../core/EventBus.js';
+import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
 /**
  * Dodge override, adds mock buffer support to BufferController.
@@ -56,28 +58,50 @@ function DodgeBufferControllerOverride(config) {
     const _parentResetInitialSettings = parent.resetInitialSettings;
     const _parentSetMockBuffer = parent.setMockBuffer;
     const _parentUpdateBufferLevel = parent.updateBufferLevel;
+    const _parentOnInitFragmentLoaded = parent._onInitFragmentLoaded;
     const _parentOnMediaFragmentLoaded = parent._onMediaFragmentLoaded;
 
     const dashHandler = config.dashHandler;
     const playbackController = config.playbackController;
 
     const debug = Debug(context).getInstance();
+    const eventBus = EventBus(context).getInstance();
+    const mediaType = parent.getType ? parent.getType() : null;
+
+    const listenerScope = {};
 
     let logger,
         currentMockBuffer,
-        lastTimeSinceStreamEnd;
+        lastTimeSinceStreamEnd,
+        altInitCache;
 
     function setup() {
         logger = debug.getLogger({ __dashjs_factory_name: 'DodgeBufferControllerOverride' });
         currentMockBuffer = 0;
         lastTimeSinceStreamEnd = 0;
+        altInitCache = new Map();
+        eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChangeRequested, listenerScope);
     }
 
     function resetInitialSettings(errored, keepBuffers) {
         currentMockBuffer = 0;
         lastTimeSinceStreamEnd = 0;
+        altInitCache.clear();
         // parent.resetInitialSettings resets mockBuffer
         _parentResetInitialSettings.call(parent, errored, keepBuffers);
+    }
+
+    /**
+     * Clear the Dodge-owned alternate init cache when the home representation
+     * changes. Scoped to this override's mediaType so a quality change on a
+     * different track doesn't wipe our entries. Next media fragment load will
+     * either use freshly cached alternates (from the new home's synthesized
+     * init cycles) or stall to preserve the defense.
+     */
+    function _onQualityChangeRequested(e) {
+        if (!mediaType || !e || e.mediaType === mediaType) {
+            altInitCache.clear();
+        }
     }
 
     /**
@@ -123,6 +147,32 @@ function DodgeBufferControllerOverride(config) {
     }
 
     /**
+     * Override init fragment loading for alternate representation init cycles.
+     * Dodge synthesizes (or the defense provides) init cycles that fetch an
+     * alternate representation's init segment so it can later be used in
+     * quality overrides. Those inits must be cached under the alternate
+     * representation's ID but not appended to the home SourceBuffer.
+     *
+     * We detect the alternate case by chunk.homeRepresentationId: the override
+     * in DodgeDashHandlerOverride sets it when cycle.quality resolves to a
+     * different representation than the home representation. For alternate
+     * inits we save to Dodge's cache; for normal inits we delegate.
+     */
+    function _onInitFragmentLoaded(e) {
+        const chunk = e.chunk;
+        if (chunk && chunk.homeRepresentationId) {
+            // Alternate representation init segment. Store in the Dodge-owned
+            // cache so init loading logic can retrieve it regardless of the
+            // streaming.cacheInitSegments setting, and so its lifetime is
+            // scoped to the current home representation (invalidated on
+            // quality change).
+            altInitCache.set(chunk.representation.id, chunk);
+            return;
+        }
+        _parentOnInitFragmentLoaded.call(parent, e);
+    }
+
+    /**
      * Override media fragment loading to handle quality override cycles.
      * When a chunk carries a homeRepresentationId, the media bytes come from
      * an alternate representation and require the matching init segment.
@@ -137,7 +187,12 @@ function DodgeBufferControllerOverride(config) {
             const alternateRepId = chunk.representation.id;
             const homeRepId = chunk.homeRepresentationId;
 
-            const alternateInit = parent.getInitChunkFromCache(alternateRepId);
+            // Alternate init from the Dodge-owned cache, home init from the
+            // parent's InitCache (normal path). Fall back to the parent cache
+            // for the alternate lookup only if the local cache missed to
+            // cover unusual cases.
+            const alternateInit = altInitCache.get(alternateRepId)
+                || parent.getInitChunkFromCache(alternateRepId);
             const homeInit = parent.getInitChunkFromCache(homeRepId);
 
             if (!alternateInit || !homeInit) {
@@ -186,6 +241,7 @@ function DodgeBufferControllerOverride(config) {
     setup();
 
     return {
+        _onInitFragmentLoaded,
         _onMediaFragmentLoaded,
         resetInitialSettings,
         onBufferCycleLoaded,

@@ -411,7 +411,16 @@ function StreamProcessor(config) {
         }
 
         if (bufferController && e.representationId) {
-            if (!bufferController.appendInitSegmentFromCache(e.representationId)) {
+            if (dashHandler) {
+                const currentRep = representationController.getCurrentRepresentation();
+                dashHandler.updateDefendedStreamInfo(currentRep);
+            }
+            // Dodge: when a defense is active with remaining init cycles
+            // (primary partials or alternate representation inits), skip the init
+            // cache short-circuit - we need to drive every init cycle through
+            // getInitRequest so the wire shape matches the extended manifest.
+            const hasMoreInitCycles = dashHandler && dashHandler.getIsDefended && dashHandler.getIsDefended() && dashHandler.getRemainingInitCycles() > 0;
+            if (hasMoreInitCycles || !bufferController.appendInitSegmentFromCache(e.representationId)) {
                 const rep = representationController.getCurrentRepresentation();
                 // Dummy init segment (fragmented tracks without initialization segment)
                 if (rep.range === 0) {

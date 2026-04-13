@@ -360,6 +360,20 @@ When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOve
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime sets homeRepresentationId when quality override is active |
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime does not set homeRepresentationId when no quality override |
 
+### R5.8 - Dodge-owned alternate init cache, invalidated on quality switch
+
+`DodgeBufferControllerOverride` maintains a local `Map<representationId, chunk>` for alternate-representation init segments (identified by `chunk.homeRepresentationId` being set). These are stored unconditionally - not subject to `streaming.cacheInitSegments` - and are cleared when the override receives `QUALITY_CHANGE_REQUESTED` scoped to its `mediaType`, and on `resetInitialSettings`. The sandwich looks up the alternate init from this local cache (with parent `InitCache` as a fallback) and the home init from the parent `InitCache`.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | delegates to parent for home init (no homeRepresentationId) |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | alternate init is cached locally and does not delegate to parent |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | sandwich retrieves alternate init from the local cache |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | local cache does not depend on streaming.cacheInitSegments |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | QUALITY_CHANGE_REQUESTED for this mediaType clears the local cache |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | QUALITY_CHANGE_REQUESTED for a different mediaType does not clear the local cache |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | resetInitialSettings clears the local cache |
+
 ---
 
 ## 6. Random Walk Scheduling
@@ -617,6 +631,22 @@ The optional `period` field on stream entries must be a non-negative integer whe
 | `dodge.DodgeDashHandlerOverride.js` | Multi-period support | updateDefendedStreamInfo returns false for unmatched period |
 | `dodge.DodgeDashHandlerOverride.js` | Multi-period support | stream without period field matches any period |
 
+### R8.9 - Init cycle quality validation and explicit buffer requirement
+
+Init cycles may carry a `quality` field with the same semantics as on data cycles (non-empty string matched against representation ID, or non-negative integer index into the adaptation set). Numeric strings are accepted as representation IDs with a warning. `full` is derived per quality group via a backward scan (the last cycle per group is `full`). `buffer` is designer-owned; as a backward-compatible default, if no cycle carries a `quality` override and no cycle has `buffer: true`, the last init cycle is auto-buffered.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | rejects init cycle with empty-string quality |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | rejects init cycle with negative integer quality |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | rejects init cycle with non-integer number quality |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | rejects init cycle with non-string, non-number quality |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | accepts init cycle with valid string quality (with explicit buffer flags) |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | accepts init cycle with valid numeric quality (with explicit buffer flags) |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | multi-representation init without buffer flags: no default |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | single primary-init group without buffer: defaults buffer: true on last cycle |
+| `dodge.DefenseRegistry.js` | init-cycle quality validation and explicit buffer requirement | explicit multi-representation init: each buffer-flagged cycle is full |
+
 ---
 
 ## 9. Extended Manifest Processing
@@ -764,6 +794,17 @@ When `strictMode` is set to `false`, `tryProcessExtendedManifest` logs a warning
 |---|---|---|
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest | strictMode false: warns that strict mode is disabled |
 
+### R9.14 - `cacheInitSegments` warning for anonymity set asymmetry
+
+When `streaming.cacheInitSegments` is enabled during defended playback, `tryProcessExtendedManifest` logs a warning. ABR-driven init refetches on quality switches are not controlled by the extended manifest; if two videos in an anonymity set have differing init segment structures, init caching produces different wire patterns across the set. The warning surfaces this concern to the defense designer. With strict mode disabled, the warning is suppressed.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | cacheInitSegments warning in tryProcessExtendedManifest | cacheInitSegments enabled, multiple representations, strict: warns |
+| `dodge.DodgeHandler.js` | cacheInitSegments warning in tryProcessExtendedManifest | cacheInitSegments enabled, single representation, strict: still warns |
+| `dodge.DodgeHandler.js` | cacheInitSegments warning in tryProcessExtendedManifest | cacheInitSegments disabled, multiple representations: no warning |
+| `dodge.DodgeHandler.js` | cacheInitSegments warning in tryProcessExtendedManifest | strictMode off: no warning even with cache enabled and multiple representations |
+
 ---
 
 ## 10. Strict Mode Enforcement
@@ -864,6 +905,7 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R5.5 Buffer controller state reset | 1 |
 | R5.6 Init segment sandwich for quality overrides | 5 |
 | R5.7 homeRepresentationId tagging | 4 |
+| R5.8 Dodge-owned alternate init cache, invalidated on quality switch | 7 |
 | R6.1 Random walk delay bounded | 4 |
 | R6.2 Scheduling is scoped to correct stream processor | 1 |
 | R6.3 Suppressed events skip scheduling | 2 |
@@ -881,6 +923,7 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R8.6 Period field validation | 6 |
 | R8.7 Period-scoped stream lookup | 4 |
 | R8.8 Override passes period index to registry | 3 |
+| R8.9 Init cycle quality validation and explicit buffer requirement | 9 |
 | R9.1 Manifest parsing and graceful degradation | 4 |
 | R9.2 Strict mode manifest error firing | 4 |
 | R9.3 Non-strict mode no error | 1 |
@@ -894,9 +937,10 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R9.11 DVB Reporting detection | 3 |
 | R9.12 CMCD warning during defended playback | 3 |
 | R9.13 Warning when strictMode is disabled | 1 |
+| R9.14 cacheInitSegments warning for anonymity set asymmetry | 4 |
 | R10.1 strictMode = representation enforcement | 8 |
 | R10.2 strictMode = manifest enforcement | 6 |
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY event handling (warn only) | 2 |
 | R10.5 strictMode = max enforcement | 5 |
-| **Total** | **333** |
+| **Total** | **353** |

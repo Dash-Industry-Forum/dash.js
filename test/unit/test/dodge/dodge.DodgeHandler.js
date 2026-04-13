@@ -1670,4 +1670,71 @@ describe('DodgeHandler', function () {
         });
     });
 
+    // cacheInitSegments warning in tryProcessExtendedManifest
+
+    describe('cacheInitSegments warning in tryProcessExtendedManifest', function () {
+
+        const MULTI_REP_MPD = '<MPD xmlns="urn:mpeg:dash:schema:mpd:2011"><Period><AdaptationSet mimeType="video/mp4"><Representation id="video_500k" bandwidth="500000"/><Representation id="video_1000k" bandwidth="1000000"/></AdaptationSet></Period></MPD>';
+        const SINGLE_REP_MPD = '<MPD xmlns="urn:mpeg:dash:schema:mpd:2011"><Period><AdaptationSet mimeType="video/mp4"><Representation id="video_1000k" bandwidth="1000000"/></AdaptationSet></Period></MPD>';
+
+        function makeManifest(mpd) {
+            return { start: { mpd, base_uri: 'https://example.com/' },
+                streams: [{ label: 'video_1000k', init: [{ range: '-855' }], data: [{ index: 0, buffer: true }] }] };
+        }
+
+        let eventBus, settings, logMessages, testListener;
+
+        beforeEach(function () {
+            context = {};
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ debug: { dispatchEvent: true, logLevel: Debug.LOG_LEVEL_WARNING } });
+            Debug(context).getInstance({ settings: settings });
+            testListener = {};
+            logMessages = [];
+            eventBus.on(Events.LOG, (e) => { logMessages.push(e); }, testListener);
+        });
+
+        function createDodgeHandler(cacheInitSegments, strictMode) {
+            settings.update({ streaming: { cacheInitSegments }, dodge: { strictMode } });
+            return DodgeHandler(context).create({
+                eventBus, events: Events, settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {}, updateSettings: () => {} }
+            });
+        }
+
+        function hasCacheWarn() {
+            return logMessages.some(m => m.level === Debug.LOG_LEVEL_WARNING && m.message.includes('cacheInitSegments'));
+        }
+
+        it('cacheInitSegments enabled, multiple representations, strict: warns', function () {
+            const handler = createDodgeHandler(true, 'representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeManifest(MULTI_REP_MPD)), 'test.exmfst.json');
+            expect(hasCacheWarn()).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('cacheInitSegments enabled, single representation, strict: still warns', function () {
+            const handler = createDodgeHandler(true, 'representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeManifest(SINGLE_REP_MPD)), 'test.exmfst.json');
+            expect(hasCacheWarn()).to.be.true; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('cacheInitSegments disabled, multiple representations: no warning', function () {
+            const handler = createDodgeHandler(false, 'representation');
+            handler.tryProcessExtendedManifest(JSON.stringify(makeManifest(MULTI_REP_MPD)), 'test.exmfst.json');
+            expect(hasCacheWarn()).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strictMode off: no warning even with cache enabled', function () {
+            const handler = createDodgeHandler(true, false);
+            handler.tryProcessExtendedManifest(JSON.stringify(makeManifest(MULTI_REP_MPD)), 'test.exmfst.json');
+            expect(hasCacheWarn()).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+    });
+
 });

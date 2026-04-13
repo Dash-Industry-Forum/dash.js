@@ -223,12 +223,26 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
+        // Resolve the effective representation for this init cycle. When
+        // cycle.quality is present, fetch the alternate representation's init
+        // segment so it is cached in the Dodge-owned cache under that rep's ID
+        // (required by the handling in DodgeBufferControllerOverride). On any
+        // resolution failure, stall + never silently fall back to the home
+        // representation, which would corrupt the defense.
+        const effectiveRep = _resolveCycleRepresentation(representation, cycle);
+        if (!effectiveRep) {
+            return null;
+        }
+
         lastInitIndex = initIndex;
 
-        const request = _generateInitRequest(mediaInfo, representation, representation.mediaInfo.type, cycle.range, cycle.padding);
+        const request = _generateInitRequest(mediaInfo, effectiveRep, representation.mediaInfo.type, cycle.range, cycle.padding);
         if (request) {
-            request.full = getRemainingInitCycles() == 0;
-            request.buffer = request.full;
+            request.full = !!cycle.full;
+            request.buffer = !!cycle.buffer;
+            if (effectiveRep !== representation) {
+                request.homeRepresentationId = representation.id;
+            }
         }
         return request;
     }

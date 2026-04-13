@@ -102,6 +102,42 @@ function checkInitCycles(stream, logger) {
             }
         }
 
+        // quality is optional on init cycles, with the same semantics as on data
+        // cycles: a non-empty string (matched against representation.id) or a
+        // non-negative integer (index into adapter.getVoRepresentations). On init
+        // cycles, quality selects the representation whose init segment is fetched
+        // and cached in the Dodge-owned cache or InitCache, if enabled. Resolution
+        // against the MPD is deferred to DodgeDashHandlerOverride.
+        let quality = stream['init'][i].quality;
+        if (quality !== undefined && quality !== null) {
+            if (typeof quality === 'string') {
+                if (quality.length === 0) {
+                    if (logger) {
+                        logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid quality override (empty string)');
+                    }
+                    return false;
+                }
+                const qint = Number(quality);
+                if (!isNaN(qint) && Number.isInteger(qint)) {
+                    if (logger) {
+                        logger.warn('Extended manifest parsing: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', quality override resolves to an integer ' + qint + ', treating as a representation ID');
+                    }
+                }
+            } else if (typeof quality === 'number') {
+                if (!Number.isInteger(quality) || quality < 0) {
+                    if (logger) {
+                        logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid quality override (must be a non-negative integer)');
+                    }
+                    return false;
+                }
+            } else {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid quality override');
+                }
+                return false;
+            }
+        }
+
         // buffer MUST be a boolean (or a string parseable to boolean), or absent.
         // Array buffer is NOT valid on init cycles.
         let buffer = stream['init'][i].buffer;
@@ -132,15 +168,33 @@ function checkInitCycles(stream, logger) {
         }
     }
 
-    // Buffer flags on init cycles are ignored by getInitRequest() (it always
-    // sets buffer = full on the last init cycle). But for correctness, either
-    // no init cycle should carry a buffer flag, or only the last one.
-    for (let i = 0; i < stream['init'].length - 1; i++) {
-        if (stream['init'][i].buffer) {
-            if (logger) {
-                logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', unexpected buffer flag');
-            }
-            return false;
+    // Precompute the `full` flag for each init cycle. A cycle is `full` when
+    // it is the last cycle of a contiguous run for the same representation
+    // (identified by its `quality` value - undefined/null is the home rep).
+    // Mirrors the data cycle backward scan for segment indices. Defense
+    // designers are responsible for setting `buffer: true` on cycles that
+    // should fire INIT_FRAGMENT_LOADED (a subset of the `full` cycles).
+    //
+    // Simple default for the single representation case: if no cycle
+    // carries a `quality` override and no cycle has `buffer: true`, set
+    // `buffer: true` on the last init cycle. With multi-representation
+    // defenses, the designer must set buffer explicitly.
+    const hasQuality = stream['init'].some(c => c.quality !== undefined && c.quality !== null);
+    const hasBuffer = stream['init'].some(c => c.buffer === true);
+    if (!hasQuality && !hasBuffer && stream['init'].length > 0) {
+        stream['init'][stream['init'].length - 1].buffer = true;
+    }
+
+    const seen = new Set();
+    for (let i = stream['init'].length - 1; i >= 0; i--) {
+        const cycle = stream['init'][i];
+        const key = (cycle.quality === undefined || cycle.quality === null) ? 'home'
+            : (typeof cycle.quality === 'number' ? 'n:' + cycle.quality : 's:' + cycle.quality);
+        if (seen.has(key)) {
+            cycle.full = false;
+        } else {
+            cycle.full = true;
+            seen.add(key);
         }
     }
 
@@ -522,7 +576,7 @@ function DefenseRegistry() {
     let instance,
         logger,
         manifestData;
-    
+
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
         manifestData = [];

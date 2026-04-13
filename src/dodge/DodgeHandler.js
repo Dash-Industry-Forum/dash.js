@@ -242,6 +242,18 @@ function DodgeHandler(config) {
             logger.warn('CMCD is enabled during Dodge playback - CMCD data is encrypted and is unlikely to aid passive fingerprinting; nor/nrr fields are suppressed');
         }
 
+        // Init segment caching is outside Dodge's cycle control: an ABR-driven
+        // home representation switch triggers an init fetch only when the new
+        // rep's init is not already cached. Two videos in an anonymity set
+        // with differing init segment structures can therefore produce
+        // different wire patterns on switch. Defense designers should
+        // either ensure identical init segment structures across their
+        // anonymity set, or disable streaming.cacheInitSegments for
+        // symmetric (always-refetch) behavior.
+        if (strictMode !== false && settings.get().streaming.cacheInitSegments) {
+            logger.warn('streaming.cacheInitSegments is enabled - ABR-driven init refetches on quality switches are not controlled by the extended manifest');
+        }
+
         // In 'max' mode, warn about settings that the defense designer
         // may want to change manually for strict threat models. These are
         // not changed automatically because they are standard dash.js

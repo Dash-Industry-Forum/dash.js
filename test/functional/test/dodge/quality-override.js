@@ -4,6 +4,8 @@ import Utils from '../../src/Utils.js';
 
 import {
     checkIsPlaying,
+    checkIsProgressing,
+    checkNoCriticalErrors,
     initializeDashJsAdapter
 } from '../common/common.js';
 
@@ -23,9 +25,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
             playerAdapter = initializeDashJsAdapter(item, mpd, {
                 streaming: {
-                    abr: {
-                        autoSwitchBitrate: { video: false, audio: false }
-                    }
+                    cacheInitSegments: true
+                },
+                dodge: {
+                    strictMode: false
                 }
             });
 
@@ -107,12 +110,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             expect(overridesSeen).to.be.at.least(1, 'Expected at least one quality override cycle to be verified');
         })
 
-        // Note: playback progression is not checked here because quality
-        // override cycles fetch segments from a different representation
-        // (bbb_30fps_1024x576_2500k, avc1.64001f/level 31) than the init
-        // segment (bbb_30fps_640x360_1000k, avc1.64001e/level 30). The
-        // browser may not decode these mixed-level segments. The security-
-        // relevant assertion - that the correct alternate rep's URL and
-        // byte range are fetched - is verified above.
+        it(`Playback progresses through quality override cycles`, async () => {
+            await checkIsProgressing(playerAdapter);
+        })
+
+        it(`Expect no critical errors to be thrown`, () => {
+            checkNoCriticalErrors(playerAdapter);
+        })
     })
 })
