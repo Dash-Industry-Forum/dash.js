@@ -104,11 +104,12 @@ export class DrmController {
             hasData = true;
         }
 
-        // DRM prioritization
-        if (this._isChecked('drm-prioritize')) {
-            const prPriority = parseInt($('#drm-pr-priority')?.value);
-            const wvPriority = parseInt($('#drm-wv-priority')?.value);
-            const fpPriority = parseInt($('#drm-fp-priority')?.value);
+        // DRM prioritization — apply automatically if any priority has been adjusted
+        const prPriority = parseInt($('#drm-pr-priority')?.value);
+        const wvPriority = parseInt($('#drm-wv-priority')?.value);
+        const fpPriority = parseInt($('#drm-fp-priority')?.value);
+        const hasPriority = [prPriority, wvPriority, fpPriority].some(p => !isNaN(p) && p > 0);
+        if (hasPriority) {
             if (protData['com.microsoft.playready'] && !isNaN(prPriority)) {
                 protData['com.microsoft.playready'].priority = prPriority;
             }
@@ -142,6 +143,8 @@ export class DrmController {
             this._setVal('drm-pr-timeout', pr.httpTimeout);
             this._setVal('drm-pr-video-robustness', pr.videoRobustness);
             this._setVal('drm-pr-audio-robustness', pr.audioRobustness);
+            this._setVal('drm-pr-persistent-state', pr.persistentState);
+            this._setVal('drm-pr-distinctive-identifier', pr.distinctiveIdentifier);
             this._extractHeaders(pr.httpRequestHeaders, this._prHeaders, 'drm-pr-headers');
             this._applyPriority('drm-pr-priority', pr.priority);
         }
@@ -154,6 +157,8 @@ export class DrmController {
             this._setVal('drm-wv-timeout', wv.httpTimeout);
             this._setVal('drm-wv-video-robustness', wv.videoRobustness);
             this._setVal('drm-wv-audio-robustness', wv.audioRobustness);
+            this._setVal('drm-wv-persistent-state', wv.persistentState);
+            this._setVal('drm-wv-distinctive-identifier', wv.distinctiveIdentifier);
             this._extractHeaders(wv.httpRequestHeaders, this._wvHeaders, 'drm-wv-headers');
             this._applyPriority('drm-wv-priority', wv.priority);
         }
@@ -166,6 +171,8 @@ export class DrmController {
             this._setVal('drm-fp-timeout', fp.httpTimeout);
             this._setVal('drm-fp-video-robustness', fp.videoRobustness);
             this._setVal('drm-fp-audio-robustness', fp.audioRobustness);
+            this._setVal('drm-fp-persistent-state', fp.persistentState);
+            this._setVal('drm-fp-distinctive-identifier', fp.distinctiveIdentifier);
             this._extractHeaders(fp.httpRequestHeaders, this._fpHeaders, 'drm-fp-headers');
             this._applyPriority('drm-fp-priority', fp.priority);
         }
@@ -188,14 +195,7 @@ export class DrmController {
             this._extractHeaders(ck.httpRequestHeaders, this._ckHeaders, 'drm-ck-headers');
         }
 
-        // Enable DRM prioritization checkbox if any system has a priority set
-        const hasPriority = [pr, wv, fp].some(d => d && d.priority !== undefined && d.priority !== null);
-        if (hasPriority) {
-            const prioritize = $('#drm-prioritize');
-            if (prioritize) {
-                prioritize.checked = true;
-            }
-        }
+
     }
 
     /**
@@ -215,7 +215,10 @@ export class DrmController {
             }
         }
 
-        const selects = ['drm-wv-video-robustness', 'drm-wv-audio-robustness'];
+        const selects = ['drm-wv-video-robustness', 'drm-wv-audio-robustness',
+            'drm-pr-persistent-state', 'drm-pr-distinctive-identifier',
+            'drm-wv-persistent-state', 'drm-wv-distinctive-identifier',
+            'drm-fp-persistent-state', 'drm-fp-distinctive-identifier'];
         for (const id of selects) {
             const el = $(`#${id}`);
             if (el) {
@@ -234,21 +237,12 @@ export class DrmController {
         this._renderHeaders('drm-ck-headers', this._ckHeaders);
         this._renderKeyPairs();
 
-        const prioritize = $('#drm-prioritize');
-        if (prioritize) {
-            prioritize.checked = false;
-        }
         $('#drm-pr-priority').value = '0';
         $('#drm-wv-priority').value = '0';
         $('#drm-fp-priority').value = '0';
     }
 
     // ---- Private ----
-
-    _isChecked(id) {
-        const el = $(`#${id}`);
-        return el ? el.checked : false;
-    }
 
     _setVal(id, value) {
         const el = $(`#${id}`);
@@ -306,6 +300,16 @@ export class DrmController {
         const audioRobustness = $(`#drm-${prefix}-audio-robustness`)?.value.trim();
         if (audioRobustness) {
             target.audioRobustness = audioRobustness;
+        }
+
+        const persistentState = $(`#drm-${prefix}-persistent-state`)?.value;
+        if (persistentState) {
+            target.persistentState = persistentState;
+        }
+
+        const distinctiveIdentifier = $(`#drm-${prefix}-distinctive-identifier`)?.value;
+        if (distinctiveIdentifier) {
+            target.distinctiveIdentifier = distinctiveIdentifier;
         }
 
         // Headers

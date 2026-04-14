@@ -5,6 +5,7 @@ import {expect} from 'chai';
 const context = {};
 const ttmlParser = TTMLParser(context).getInstance();
 let ttml_file;
+let ttml_last_cue_file;
 
 describe('TTMLParser', function () {
 
@@ -12,6 +13,7 @@ describe('TTMLParser', function () {
 
         before(async function () {
             ttml_file = await FileLoader.loadTextFile('/data/subtitles/ttmlSample.ttml');
+            ttml_last_cue_file = await FileLoader.loadTextFile('/data/subtitles/ttmlLastCue.ttml');
         });
 
         it('should return an empty array when parse is called and parameters are undefined', () => {
@@ -24,6 +26,14 @@ describe('TTMLParser', function () {
             expect(captionsArray).to.have.lengthOf(2);
             expect(captionsArray[0].start).to.equal(0);
             expect(captionsArray[0].end).to.equal(5);
+        });
+
+        it('should use endTimeSegment as fallback for the last cue end time', () => {
+            const endTimeSegment = 10;
+            const captionsArray = ttmlParser.parse(ttml_last_cue_file, 0, 0, endTimeSegment, []);
+            expect(captionsArray).to.have.lengthOf(1);
+            expect(captionsArray[0].start).to.equal(0);
+            expect(captionsArray[0].end).to.equal(endTimeSegment);
         });
     });
 });

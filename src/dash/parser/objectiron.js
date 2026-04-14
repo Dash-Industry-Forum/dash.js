@@ -32,37 +32,66 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 
 function ObjectIron(mappers) {
 
-    function mergeValues(parentItem, childItem) {
-        for (let name in parentItem) {
-            if (!childItem.hasOwnProperty(name)) {
-                childItem[name] = parentItem[name];
+    function _mergeValues(parentItem, childItem) {
+        if (typeof parentItem === 'object') {
+            for (let name in parentItem) {
+                if (!childItem.hasOwnProperty(name)) {
+                    childItem[name] = parentItem[name];
+                }
+            }
+        }
+    }
+    
+    function _mappingAllowed (element, exception) {
+        let allowMapping = true;
+        if (exception) {
+            for (const [key, values] of Object.entries(exception)) {
+                let attr = element[key];
+                if (values.some(v => attr.match(v))) {
+                    allowMapping = false;
+                }
+            }
+        }
+
+        return allowMapping;
+    }
+    
+    function _conditionallyMapProperty(exception, propertyName, propertyIsArray, propertyElementFromParent, childNode) {
+        if (_mappingAllowed(propertyElementFromParent, exception)) {
+            if (childNode[propertyName]) {
+                // property already exists
+                if (propertyIsArray) {
+                    childNode[propertyName].push(propertyElementFromParent);
+                } else {
+                    // non-Array Properties can be:
+                    // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or 
+                    // - attributes (e.g. codecs)
+                    _mergeValues(propertyElementFromParent, childNode[propertyName]);
+                }
+            } else {
+                // just add the property
+                if (propertyIsArray) {
+                    childNode[propertyName] = [propertyElementFromParent];
+                } else {
+                    childNode[propertyName] = propertyElementFromParent;
+                }
             }
         }
     }
 
-    function mapProperties(properties, parent, child) {
+    function mapProperties(properties, exceptions, parentNode, childNode) {
         for (let i = 0, len = properties.length; i < len; ++i) {
-            const property = properties[i];
+            const propertyName = properties[i];
 
-            if (parent[property.name]) {
-                if (child[property.name]) {
-                    // check to see if we should merge
-                    if (property.merge) {
-                        const parentValue = parent[property.name];
-                        const childValue = child[property.name];
+            if (parentNode[propertyName]) {
+                const propertyFromParentElement = parentNode[propertyName];
 
-                        // complex objects; merge properties
-                        if (typeof parentValue === 'object' && typeof childValue === 'object') {
-                            mergeValues(parentValue, childValue);
-                        }
-                        // simple objects; merge them together
-                        else {
-                            child[property.name] = parentValue + childValue;
-                        }
-                    }
+                if (Array.isArray(propertyFromParentElement)) {
+                    propertyFromParentElement.forEach(propParentEl => {
+                        _conditionallyMapProperty(exceptions[propertyName], propertyName, true, propParentEl, childNode);
+                    });
                 } else {
-                    // just add the property
-                    child[property.name] = parent[property.name];
+                    _conditionallyMapProperty(exceptions[propertyName], propertyName, false, propertyFromParentElement, childNode);
                 }
             }
         }
@@ -76,7 +105,7 @@ function ObjectIron(mappers) {
             if (array) {
                 for (let v = 0, len2 = array.length; v < len2; ++v) {
                     const childNode = array[v];
-                    mapProperties(item.properties, node, childNode);
+                    mapProperties(item.properties, item.exceptions, node, childNode);
                     mapItem(childItem, childNode);
                 }
             }

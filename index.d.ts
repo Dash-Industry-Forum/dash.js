@@ -4760,6 +4760,9 @@ export interface ProtectionData {
     /** Distinctive identifier (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-distinctiveidentifier) */
     distinctiveIdentifier?: string;
 
+    /** Persistent state requirement (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysystemconfiguration-persistentstate) */
+    persistentState?: string;
+
     /** The session type (see https://www.w3.org/TR/encrypted-media/#dom-mediakeysessiontype) */
     sessionType?: string;
 
@@ -4783,6 +4786,21 @@ export interface ProtectionData {
         certType?: string;
         url?: string
     }>;
+
+    /** CDM-specific data passed during key system access request */
+    cdmData?: string;
+
+    /** Legacy/alternative license acquisition URL */
+    laURL?: string;
+
+    /** Flag indicating DRMToday vendor-specific handling */
+    drmtoday?: boolean;
+
+    /** Preferred key system string ordering */
+    systemStringPriority?: string[];
+
+    /** Initialization data types (e.g. "cenc", "sinf") */
+    initDataTypes?: string[];
 }
 
 export interface SessionToken {
