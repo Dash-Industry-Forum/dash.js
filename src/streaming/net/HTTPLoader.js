@@ -421,7 +421,7 @@ function HTTPLoader(cfg) {
             headers: requestObject.headers,
             credentials: withCredentials ? 'include' : 'omit',
             timeout: _getRequestTimeout(requestObject),
-            cmcd: cmcdModel.getCmcdData(requestObject),
+            body: requestObject.body,
             customData: { request: requestObject }
         });
 
