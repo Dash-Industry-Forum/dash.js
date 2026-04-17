@@ -164,13 +164,11 @@ function DodgeBufferControllerOverride(config) {
     function _onInitFragmentLoaded(e) {
         const chunk = e.chunk;
         if (chunk && chunk.homeRepresentationId) {
-            // Alternate representation init segment. Store in the Dodge-owned
-            // cache so init loading logic can retrieve it regardless of the
-            // streaming.cacheInitSegments setting, and so its lifetime is
-            // scoped to the current home representation (invalidated on
-            // quality change).
             altInitCache.set(chunk.representation.id, chunk);
             return;
+        }
+        if (chunk && chunk.representation) {
+            altInitCache.set(chunk.representation.id, chunk);
         }
         _parentOnInitFragmentLoaded.call(parent, e);
     }
@@ -198,7 +196,8 @@ function DodgeBufferControllerOverride(config) {
 
             const alternateInit = altInitCache.get(alternateRepId)
                 || parent.getInitChunkFromCache(alternateRepId);
-            const homeInit = parent.getInitChunkFromCache(homeRepId);
+            const homeInit = altInitCache.get(homeRepId)
+                || parent.getInitChunkFromCache(homeRepId);
 
             if (!alternateInit || !homeInit) {
                 logger.warn('Init segment not cached for quality override (alternate=' + alternateRepId + ', home=' + homeRepId + '), stalling to preserve defense');
