@@ -339,12 +339,14 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 
 ### R5.6 - Init segment sandwich for quality override media segments
 
-When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOverride` when a data cycle uses a `quality` override), `DodgeBufferControllerOverride._onMediaFragmentLoaded` sandwiches the media append between init segment switches: it appends the alternate representation's cached init segment, then the media chunk, then restores the home representation's cached init segment. This ensures the MSE SourceBuffer has the correct init segment for decoding the alternate quality bytes. If either init segment is not in the cache, the override stalls (does not append) to preserve the defense. Non-override chunks delegate directly to the parent.
+When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOverride` when a data cycle uses a `quality` override), `DodgeBufferControllerOverride._onMediaFragmentLoaded` sandwiches the media append between init segment switches: it appends the alternate representation's cached init segment, appends the media chunk, then appends the home representation's cached init segment. When `changeType()` is available (both `capabilities.supportsChangeType()` and `streaming.buffer.useChangeType` are true), each init append is preceded by a `changeType()` call to reset the MSE parser state. When `changeType()` is not available, the init-media-init sequence is still appended but without `changeType()` calls. If either init segment is missing from the cache, the override stalls (does not append) to preserve the defense. Non-override chunks delegate directly to the parent.
 
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | delegates to parent for non-override chunks |
-| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | sandwiches quality override chunk with init segments when both inits are cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | sandwiches quality override chunk with changeType() + init segments when both inits are cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | skips changeType calls when useChangeType is disabled in settings |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | skips changeType calls when capability is not supported |
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when alternate init is not cached |
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when home init is not cached |
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when both inits are not cached |
@@ -903,7 +905,7 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 1 |
-| R5.6 Init segment sandwich for quality overrides | 5 |
+| R5.6 Init segment sandwich for quality overrides | 7 |
 | R5.7 homeRepresentationId tagging | 4 |
 | R5.8 Dodge-owned alternate init cache, invalidated on quality switch | 7 |
 | R6.1 Random walk delay bounded | 4 |
@@ -943,4 +945,4 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY event handling (warn only) | 2 |
 | R10.5 strictMode = max enforcement | 5 |
-| **Total** | **353** |
+| **Total** | **355** |

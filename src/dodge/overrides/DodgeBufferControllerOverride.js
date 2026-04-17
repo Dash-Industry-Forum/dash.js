@@ -31,6 +31,7 @@
 
 import Debug from '../../core/Debug.js';
 import EventBus from '../../core/EventBus.js';
+import Settings from '../../core/Settings.js';
 import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
 
 /**
@@ -62,10 +63,12 @@ function DodgeBufferControllerOverride(config) {
     const _parentOnMediaFragmentLoaded = parent._onMediaFragmentLoaded;
 
     const dashHandler = config.dashHandler;
+    const capabilities = config.capabilities;
     const playbackController = config.playbackController;
 
     const debug = Debug(context).getInstance();
     const eventBus = EventBus(context).getInstance();
+    const settings = Settings(context).getInstance();
     const mediaType = parent.getType ? parent.getType() : null;
 
     const listenerScope = {};
@@ -176,21 +179,23 @@ function DodgeBufferControllerOverride(config) {
      * Override media fragment loading to handle quality override cycles.
      * When a chunk carries a homeRepresentationId, the media bytes come from
      * an alternate representation and require the matching init segment.
-     * Sandwich the media append between init segment switches:
-     *   alternate init -> media data -> restore home init
-     * If either init segment is not cached, stall to preserve the defense.
+     * Sandwich the media append between changeType() + init segment switches:
+     *   changeType(alt) -> append(altInit) -> append(media)
+     *   -> changeType(home) -> append(homeInit)
+     * The changeType() calls reset the SourceBuffer's parser state to
+     * WAITING_FOR_SEGMENT so each init is parsed as an initialization segment
+     * rather than as a (malformed) media segment.
+     * Stalls if either init is missing. When changeType is available
+     * (capability supported AND setting enabled), wraps the sandwich with
+     * changeType calls; otherwise appends init/media/init without them.
      */
-    function _onMediaFragmentLoaded(e) {
+    async function _onMediaFragmentLoaded(e) {
         const chunk = e.chunk;
 
         if (chunk.homeRepresentationId) {
             const alternateRepId = chunk.representation.id;
             const homeRepId = chunk.homeRepresentationId;
 
-            // Alternate init from the Dodge-owned cache, home init from the
-            // parent's InitCache (normal path). Fall back to the parent cache
-            // for the alternate lookup only if the local cache missed to
-            // cover unusual cases.
             const alternateInit = altInitCache.get(alternateRepId)
                 || parent.getInitChunkFromCache(alternateRepId);
             const homeInit = parent.getInitChunkFromCache(homeRepId);
@@ -200,9 +205,29 @@ function DodgeBufferControllerOverride(config) {
                 return;
             }
 
-            parent.appendToBuffer(alternateInit);
-            parent.appendToBuffer(chunk, e.request);
-            parent.appendToBuffer(homeInit);
+            const useChangeType = capabilities && capabilities.supportsChangeType()
+                && settings.get().streaming.buffer.useChangeType;
+
+            const alternateRep = alternateInit.representation;
+            const homeRep = homeInit.representation;
+            if (useChangeType && (!alternateRep || !homeRep)) {
+                logger.warn('Init segment missing representation reference for quality override, stalling to preserve defense');
+                return;
+            }
+
+            try {
+                if (useChangeType) {
+                    await parent.changeType(alternateRep);
+                }
+                await parent.appendToBuffer(alternateInit);
+                await parent.appendToBuffer(chunk, e.request);
+                if (useChangeType) {
+                    await parent.changeType(homeRep);
+                }
+                await parent.appendToBuffer(homeInit);
+            } catch (err) {
+                logger.warn('Quality override failed; defense may not progress: ' + (err && err.message ? err.message : err));
+            }
             return;
         }
 

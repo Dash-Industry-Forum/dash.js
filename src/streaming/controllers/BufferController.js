@@ -349,9 +349,10 @@ function BufferController(config) {
      */
     function _appendToBuffer(chunk, request = null) {
         if (!sourceBufferSink) {
-            return;
+            return Promise.resolve();
         }
-        sourceBufferSink.append(chunk, request)
+        const appendPromise = sourceBufferSink.append(chunk, request);
+        const settled = appendPromise
             .then((e) => {
                 _onAppended(e);
             })
@@ -362,6 +363,8 @@ function BufferController(config) {
         if (chunk.representation.mediaInfo.type === Constants.VIDEO) {
             _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
+
+        return settled;
     }
 
     function _showBufferRanges(ranges) {
@@ -608,6 +611,13 @@ function BufferController(config) {
                     resolve();
                 })
         });
+    }
+
+    function changeType(representation) {
+        if (!sourceBufferSink) {
+            return Promise.resolve();
+        }
+        return sourceBufferSink.changeType(representation);
     }
 
     function _changeCodec(newRepresentation, oldRepresentation) {
@@ -1339,7 +1349,7 @@ function BufferController(config) {
      * @param {object} [request]
      */
     function appendToBuffer(chunk, request) {
-        _appendToBuffer(chunk, request);
+        return _appendToBuffer(chunk, request);
     }
 
     /**
@@ -1356,6 +1366,7 @@ function BufferController(config) {
         _onMediaFragmentLoaded,
         appendInitSegmentFromCache,
         appendToBuffer,
+        changeType,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,

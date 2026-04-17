@@ -165,8 +165,15 @@ function ScheduleController(config) {
         const currentRepresentation = representationController.getCurrentRepresentation();
         const remainingInitCycles = dashHandler ? dashHandler.getRemainingInitCycles() : -1;
 
-        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (remainingInitCycles && (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack)) {
+        // Dodge defended streams can queue multiple init cycles for a single
+        // home representation (e.g. an alt-rep init staged for a later quality
+        // override). The vanilla DashHandler stub returns -1, so this guard is
+        // a no-op for non-Dodge playback. A quality change or AdaptationSet
+        // switch still takes the init path via the original condition.
+        const dodgeNeedsMoreInits = remainingInitCycles > 0;
+        const qualitySwitchNeedsInit = remainingInitCycles &&
+            (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack);
+        if (dodgeNeedsMoreInits || qualitySwitchNeedsInit) {
             _initFragmentNeeded(currentRepresentation, remainingInitCycles)
         } else {
             _mediaFragmentNeeded()

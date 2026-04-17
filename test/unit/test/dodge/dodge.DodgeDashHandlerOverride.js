@@ -1514,6 +1514,45 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // ABR home representation switch resets cycle counters
+
+    describe('ABR home representation switch', function () {
+
+        it('preserves cycle counters across same-label re-queries', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{ label: 'rep0', init: [{ buffer: true }], data: [{ index: 0, buffer: true }, { index: 1, buffer: true }] }]
+            });
+            const rep = makeRepresentation();
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep); // lastCycleIndex -> 0
+
+            override.updateDefendedStreamInfo(rep); // same label, no reset
+            const next = override.getNextSegmentRequest({}, rep);
+            expect(next.index).to.equal(1); // advances, does not restart
+        });
+
+        it('resets cycle counters when the representation label changes', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [
+                    { label: 'rep_low', init: [{ buffer: true }], data: [{ index: 0, buffer: true }, { index: 1, buffer: true }] },
+                    { label: 'rep_high', init: [{ buffer: true }], data: [{ index: 0, buffer: true }, { index: 1, buffer: true }] }
+                ]
+            });
+            const repLow = makeRepresentation();
+            repLow.id = 'rep_low';
+            override.updateDefendedStreamInfo(repLow);
+            override.getNextSegmentRequest({}, repLow); // lastCycleIndex -> 0
+
+            const repHigh = makeRepresentation();
+            repHigh.id = 'rep_high';
+            override.updateDefendedStreamInfo(repHigh); // label changed, reset
+            const next = override.getNextSegmentRequest({}, repHigh);
+            expect(next.index).to.equal(0); // restarted from cycle 0
+        });
+    });
+
     // SegmentBase / byte-range content (WebM, single-file MP4)
 
     describe('SegmentBase (byte-range) content', function () {

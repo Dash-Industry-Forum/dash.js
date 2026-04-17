@@ -719,6 +719,16 @@ function DodgeHandler(config) {
                 { streamId: strInfo.id, mediaType: request.mediaType }
             );
 
+            // Alternate-representation init segments are cached by the
+            // DodgeBufferControllerOverride and never reach the SourceBuffer,
+            // so BufferController's normal _onAppended path never fires
+            // BYTES_APPENDED_END_FRAGMENT and the ScheduleController never
+            // re-arms its timer. Kick the schedule explicitly here so the
+            // next init/media cycle is requested.
+            if (primaryEvent.event === events.INIT_FRAGMENT_LOADED && request.homeRepresentationId) {
+                _schedule(false, _getScheduleWait(), request.mediaType);
+            }
+
         } else {
             eventBus.trigger(primaryEvent.event,
                 {

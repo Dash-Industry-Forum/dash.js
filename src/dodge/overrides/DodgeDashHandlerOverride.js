@@ -77,6 +77,7 @@ function DodgeDashHandlerOverride(config) {
         lastSegment,
         mediaHasFinished,
         lastRepresentationMediaType,
+        lastResolvedLabel,
         reportedLabels,
         warnedInvalidMaxIdLength;
 
@@ -92,6 +93,7 @@ function DodgeDashHandlerOverride(config) {
         lastSegment = null;
         mediaHasFinished = false;
         lastRepresentationMediaType = null;
+        lastResolvedLabel = null;
         reportedLabels = new Set();
         warnedInvalidMaxIdLength = false;
     }
@@ -679,6 +681,22 @@ function DodgeDashHandlerOverride(config) {
         const quality = representation.index;
         const label = representation.id;
         lastRepresentationMediaType = representation.mediaInfo.type;
+
+        // On a home representation switch (e.g. ABR picked a different
+        // quality), reset per-stream cycle counters. StreamProcessor calls
+        // this method before every init/segment request, so same-label
+        // re-queries preserve state; only a genuine label change triggers
+        // the reset. Without this, lastInitIndex / lastCycleIndex would be
+        // carried into the new stream entry's cycle arrays, potentially
+        // reading past the end or skipping cycles.
+        if (lastResolvedLabel !== null && lastResolvedLabel !== label) {
+            logger.debug('Home representation switched from ' + lastResolvedLabel + ' to ' + label + ', resetting cycle counters');
+            lastInitIndex = -1;
+            lastCycleIndex = -1;
+            lastSegment = null;
+            mediaHasFinished = false;
+        }
+        lastResolvedLabel = label;
 
         defendedStreamInfo = defenseRegistry.getDefendedStreamInfo(label, period);
 
