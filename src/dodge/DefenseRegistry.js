@@ -407,9 +407,13 @@ function checkDataCycles(stream, logger) {
             } else {
                 target = new Set();
                 for (let k = 0; k < cycle.buffer.length; k++) {
-                    if (pendingIndices.has(cycle.buffer[k])) {
-                        target.add(cycle.buffer[k]);
+                    if (!pendingIndices.has(cycle.buffer[k])) {
+                        if (logger) {
+                            logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', buffer array references segment index ' + cycle.buffer[k] + ' which has not appeared in the stream');
+                        }
+                        return false;
                     }
+                    target.add(cycle.buffer[k]);
                 }
             }
 
