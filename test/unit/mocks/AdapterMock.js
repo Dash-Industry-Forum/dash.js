@@ -249,7 +249,11 @@ function AdapterMock() {
         const id = preselection.preselectionComponents.split(' ')[0];
         const as = adaptations.find((as) => as.id == id);
         return (as ? as.Representation[0] : undefined);
-    }
+    };
+
+    this.getDuration = function () {
+        return 1000;
+    };
 
 }
 
