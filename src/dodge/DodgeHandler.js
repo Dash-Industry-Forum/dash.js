@@ -56,16 +56,14 @@ const SUPPORTED_ABANDON_FRAGMENT_RULES = new Set();
  * provides the building blocks for client-side, application-layer video
  * fingerprinting defenses. It does not require any changes to servers or
  * network infrastructures, nor does it need to coordinate with servers.
- * All defense logic is handled within dash.js
+ * All defense logic is handled within dash.js.
  * 
  * Dodge was first described in the PoPETS 2026 paper "Dodge: A Client-Side
  * Framework for Application-Layer Video Fingerprinting Defenses". See the
- * paper and the arXiv technical report "Opt-In Video Fingerprinting
- * Protection in dash.js" for more details.
+ * paper for more details about the original design.
  *
  * DodgeHandler has the following responsibilities:
- *  1. Register controller overrides (DashHandler, BufferController, and
- *     ScheduleController) and loader overrides.
+ *  1. Register controller and loader overrides.
  *  2. Intercept manifest loading to detect extended manifests (JSON), add them
  *     to the registry, and extract the embedded MPD + base URI.
  *  3. Intercept FRAGMENT_LOADING_COMPLETED and handle Dodge-specific events
@@ -454,18 +452,21 @@ function DodgeHandler(config) {
 
     function _getScheduleWait() {
         const dodgeSettings = (settings.get().dodge) || {};
-        const rawRandom = dodgeSettings.scheduleWaitRandom || 0;
-        if (rawRandom < 0 && !warnedNegativeScheduleRandom) {
-            logger.warn('dodge.scheduleWaitRandom is negative (' + rawRandom + '), treating as 0');
-            warnedNegativeScheduleRandom = true;
-        }
-        const random = Math.max(0, rawRandom);
+
         const rawBase = dodgeSettings.scheduleWaitBase || 0;
         if (rawBase < 0 && !warnedNegativeScheduleBase) {
             logger.warn('dodge.scheduleWaitBase is negative (' + rawBase + '), treating as 0');
             warnedNegativeScheduleBase = true;
         }
+        const rawRandom = dodgeSettings.scheduleWaitRandom || 0;
+        if (rawRandom < 0 && !warnedNegativeScheduleRandom) {
+            logger.warn('dodge.scheduleWaitRandom is negative (' + rawRandom + '), treating as 0');
+            warnedNegativeScheduleRandom = true;
+        }
+
         const base = Math.max(0, rawBase);
+        const random = Math.max(0, rawRandom);
+        
         return base + Math.round(Math.random() * random);
     }
 
@@ -511,7 +512,6 @@ function DodgeHandler(config) {
     // Padding loaded: schedule and update mock buffers
     function _onPaddingLoaded(e) {
         if (!e.suppress) {
-            // Only allow quality switches if the buffer flag is set
             _schedule(e.bufferFlag || false, _getScheduleWait(), e.mediaType);
         }
 
@@ -602,11 +602,16 @@ function DodgeHandler(config) {
             const selectiveIndices = Array.isArray(request.buffer) ? new Set(request.buffer) : null;
 
             // [data segments] Flush pending media events for same
-            // stream, mediaType, and representation
+            // stream and mediaType. Use the home representation ID for
+            // matching: with quality overrides, consecutive cycles may
+            // carry different representation IDs, but all belong to the
+            // same defended stream and should be flushed together.
+            const homeRepId = request.homeRepresentationId || request.representation.id;
             for (let i = pendingMedia.length - 1; i >= 0; i--) {
                 const event = pendingMedia[i];
                 if (event.streamId == strInfo.id && event.mediaType == request.mediaType) {
-                    if (event.representationId == request.representation.id) {
+                    const eventHomeRepId = event.homeRepresentationId || event.representationId;
+                    if (eventHomeRepId == homeRepId) {
                         if (!selectiveIndices || selectiveIndices.has(event.index)) {
                             secondaryEvents.push(event);
                             pendingMedia.splice(i, 1);
@@ -676,6 +681,7 @@ function DodgeHandler(config) {
                         streamId: strInfo.id,
                         mediaType: request.mediaType,
                         representationId: request.representation.id,
+                        homeRepresentationId: request.homeRepresentationId || null,
                         event: events.MEDIA_FRAGMENT_LOADED,
                         index: request.index
                     });
@@ -697,6 +703,21 @@ function DodgeHandler(config) {
             };
         }
 
+        // Determine whether quality checks should be enabled. Rules:
+        //  - data fragment loaded with buffer = true or selective array: yes
+        //  - padding with active buffer and at least one data secondary: yes
+        //  - init fragment loaded: no
+        //  - partial (init or data): no
+        const hasDataSecondary = secondaryEvents.some(
+            ev => ev.event === events.MEDIA_FRAGMENT_LOADED
+        );
+        let enableQualityCheck = false;
+        if (primaryEvent.event === events.MEDIA_FRAGMENT_LOADED) {
+            enableQualityCheck = _isBufferActive(request.buffer);
+        } else if (primaryEvent.event === events.PADDING_LOADED) {
+            enableQualityCheck = _isBufferActive(request.buffer) && hasDataSecondary;
+        }
+
         // Fire secondary events in chronological order. Suppress them; we
         // want to schedule only once the primary event has been fired.
         for (let i = secondaryEvents.length - 1; i >= 0; i--) {
@@ -709,10 +730,7 @@ function DodgeHandler(config) {
 
         // Fire the primary event. Do not suppress it; it causes scheduling.
         if (primaryEvent.event === events.INIT_FRAGMENT_LOADED || primaryEvent.event === events.MEDIA_FRAGMENT_LOADED) {
-            // Enable quality checks before the event fires. The normal dash.js
-            // path (_onBytesAppended) does not call setShouldCheckPlaybackQuality,
-            // so we must set it here.
-            _setQualityCheck(true, request.mediaType);
+            _setQualityCheck(enableQualityCheck, request.mediaType);
 
             eventBus.trigger(primaryEvent.event,
                 { chunk: primaryEvent.chunk, request: request, suppress: false },
@@ -737,8 +755,8 @@ function DodgeHandler(config) {
                     quality: request.quality,
                     byteLength: bytes.byteLength,
                     trail: request.trail,
-                    buffer: request.buffer === true && secondaryEvents.length == 0,
-                    bufferFlag: _isBufferActive(request.buffer),
+                    buffer: request.buffer === true && !hasDataSecondary,
+                    bufferFlag: enableQualityCheck,
                     suppress: false
                 },
                 { streamId: strInfo.id, mediaType: request.mediaType }

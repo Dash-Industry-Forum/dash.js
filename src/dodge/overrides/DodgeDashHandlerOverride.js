@@ -151,7 +151,7 @@ function DodgeDashHandlerOverride(config) {
                     if (pad > 0) {
                         random += '0'.repeat(count * pad);
                     } else if (pad < 0) {
-                        logger.warn('set request URL: replacement number ' + request.replacementNumber + ' exceeds max length ' + max);
+                        logger.warn('Set request URL: replacement number ' + request.replacementNumber + ' exceeds max length ' + max);
                     }
                 }
                 if (replacements['Time'] > 0) {
@@ -161,7 +161,7 @@ function DodgeDashHandlerOverride(config) {
                     if (pad > 0) {
                         random += '0'.repeat(count * pad);
                     } else if (pad < 0) {
-                        logger.warn('set request URL: replacement time ' + request.replacementTime + ' exceeds max length ' + max);
+                        logger.warn('Set request URL: replacement time ' + request.replacementTime + ' exceeds max length ' + max);
                     }
                 }
                 if (replacements['Bandwidth'] > 0) {
@@ -171,7 +171,7 @@ function DodgeDashHandlerOverride(config) {
                     if (pad > 0) {
                         random += '0'.repeat(count * pad);
                     } else if (pad < 0) {
-                        logger.warn('set request URL: bandwidth ' + request.representation.bandwidth + ' exceeds max length ' + max);
+                        logger.warn('Set request URL: bandwidth ' + request.representation.bandwidth + ' exceeds max length ' + max);
                     }
                 }
                 if (replacements['ID'] > 0) {
@@ -182,7 +182,7 @@ function DodgeDashHandlerOverride(config) {
                     if (pad > 0) {
                         random += '0'.repeat(count * pad);
                     } else if (pad < 0) {
-                        logger.warn('set request URL: representation ID "' + request.representation.id + '" exceeds maxIdLength ' + maxId);
+                        logger.warn('Set request URL: representation ID "' + request.representation.id + '" exceeds maxIdLength ' + maxId);
                     }
                 }
             }
@@ -242,7 +242,7 @@ function DodgeDashHandlerOverride(config) {
         if (request) {
             request.full = !!cycle.full;
             request.buffer = !!cycle.buffer;
-            if (effectiveRep !== representation) {
+            if (effectiveRep.id !== representation.id) {
                 request.homeRepresentationId = representation.id;
             }
         }
@@ -498,7 +498,7 @@ function DodgeDashHandlerOverride(config) {
         }
 
         // Determine whether a quality override changed the representation.
-        const homeRep = (segment.representation !== representation) ? representation : null;
+        const homeRep = (segment.representation.id !== representation.id) ? representation : null;
 
         // Update invariants.
         lastCycleIndex = cycleIndex;
@@ -548,13 +548,13 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
-        // Reuse the cached lastSegment only when the current cycle has no
-        // quality override AND the cache was produced under the current
-        // representation, otherwise the cached segment would carry a
-        // stale representation and generate an incorrect URL.
+        // Reuse the cached lastSegment only when the effective representation
+        // matches the current one AND the cache was produced under that same
+        // representation, otherwise the cached segment would carry a stale
+        // representation and generate an incorrect URL.
         const canReuseLast = lastSegment && cycle.index == lastSegment.index &&
-            (cycle.quality === undefined || cycle.quality === null) &&
-            lastSegment.representation === representation;
+            effectiveRep.id === representation.id &&
+            lastSegment.representation.id === representation.id;
 
         // Reuse lastSegment or look up segment by index.
         const segment = canReuseLast
@@ -570,7 +570,7 @@ function DodgeDashHandlerOverride(config) {
         }
 
         // Determine whether a quality override changed the representation.
-        const homeRep = (effectiveRep !== representation) ? representation : null;
+        const homeRep = (effectiveRep.id !== representation.id) ? representation : null;
 
         // Update invariants.
         lastCycleIndex = cycleIndex;
@@ -657,13 +657,6 @@ function DodgeDashHandlerOverride(config) {
         return lastSegment;
     }
 
-    function getNextExpectedIndex() {
-        if (!defendedStreamInfo) { return -1; }
-        const cycleIndex = lastCycleIndex + 1;
-        const cycle = defendedStreamInfo['data'][cycleIndex];
-        return cycle ? cycle.index : -1;
-    }
-
     function getRemainingInitCycles() {
         if (!defendedStreamInfo) { return -1; }
         return defendedStreamInfo['init'].length - lastInitIndex - 1;
@@ -740,7 +733,6 @@ function DodgeDashHandlerOverride(config) {
         repeatSegmentRequest,
         getCurrentIndex,
         getLastSegment,
-        getNextExpectedIndex,
         getRemainingInitCycles,
         updateDefendedStreamInfo,
         getIsDefended,

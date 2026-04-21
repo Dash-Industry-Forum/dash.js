@@ -35,6 +35,10 @@ import FactoryMaker from '../core/FactoryMaker.js';
 /**
  * Validate init cycles in a stream entry. Check that each range, if
  * present, is a string of the form "<start>-<end>" with start <= end.
+ * Check that padding and buffer are booleans, strings true/false, or
+ * absent (selective buffering is not allowed for init cycles).
+ * Check that quality is a string representation ID, numerical
+ * representation index, or absent. Precompute `full` flags.
  * @param {Object} stream - The stream entry from an extended manifest.
  * @param {Object} [logger] - Optional logger for rejection messages.
  * @returns {boolean} True if all init cycles are valid.
@@ -102,6 +106,35 @@ function checkInitCycles(stream, logger) {
             }
         }
 
+        // buffer MUST be a boolean (or a string parseable to boolean), or absent.
+        // Array buffer is NOT valid on init cycles.
+        let buffer = stream['init'][i].buffer;
+        if (buffer !== undefined && buffer !== null) {
+            if (Array.isArray(buffer)) {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', buffer must not be an array');
+                }
+                return false;
+            } else if (typeof buffer === 'string') {
+                if (buffer === 'true') {
+                    buffer = true;
+                } else if (buffer === 'false') {
+                    buffer = false;
+                } else {
+                    if (logger) {
+                        logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
+                    }
+                    return false;
+                }
+                stream['init'][i].buffer = buffer;
+            } else if (typeof buffer !== 'boolean') {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
+                }
+                return false;
+            }
+        }
+
         // quality is optional on init cycles, with the same semantics as on data
         // cycles: a non-empty string (matched against representation.id) or a
         // non-negative integer (index into adapter.getVoRepresentations). On init
@@ -137,35 +170,6 @@ function checkInitCycles(stream, logger) {
                 return false;
             }
         }
-
-        // buffer MUST be a boolean (or a string parseable to boolean), or absent.
-        // Array buffer is NOT valid on init cycles.
-        let buffer = stream['init'][i].buffer;
-        if (buffer !== undefined && buffer !== null) {
-            if (Array.isArray(buffer)) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', buffer must not be an array');
-                }
-                return false;
-            } else if (typeof buffer === 'string') {
-                if (buffer === 'true') {
-                    buffer = true;
-                } else if (buffer === 'false') {
-                    buffer = false;
-                } else {
-                    if (logger) {
-                        logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
-                    }
-                    return false;
-                }
-                stream['init'][i].buffer = buffer;
-            } else if (typeof buffer !== 'boolean') {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', init cycle at index ' + i + ', invalid buffer value');
-                }
-                return false;
-            }
-        }
     }
 
     // Precompute the `full` flag for each init cycle. A cycle is `full` when
@@ -176,9 +180,9 @@ function checkInitCycles(stream, logger) {
     // should fire INIT_FRAGMENT_LOADED (a subset of the `full` cycles).
     //
     // Simple default for the single representation case: if no cycle
-    // carries a `quality` override and no cycle has `buffer: true`, set
+    // carries a quality override and no cycle has `buffer: true`, set
     // `buffer: true` on the last init cycle. With multi-representation
-    // defenses, the designer must set buffer explicitly.
+    // defenses, the designer must set the buffer flag explicitly.
     const hasQuality = stream['init'].some(c => c.quality !== undefined && c.quality !== null);
     const hasBuffer = stream['init'].some(c => c.buffer === true);
     if (!hasQuality && !hasBuffer && stream['init'].length > 0) {
@@ -203,10 +207,9 @@ function checkInitCycles(stream, logger) {
 
 /**
  * Validate data cycles in a stream entry. Check that segment indices are
- * non-negative, non-padding cycles are monotonically non-decreasing and do not
- * contain duplicate segment downloads, ranges are well-formed, and consecutive
- * partial ranges do not skip bytes. Set `stream.maxNoPad` to the index of the
- * last non-padding cycle.
+ * non-negative; ranges are well-formed; and the padding, buffer, and quality
+ * fields have correct values. Set `stream.maxNoPad` to the index of the last
+ * non-padding cycle and precompute `full` flags.
  * @param {Object} stream - The stream entry from an extended manifest.
  * @param {Object} [logger] - Optional logger for rejection messages.
  * @returns {boolean} True if all data cycles are valid.
@@ -215,8 +218,55 @@ function checkDataCycles(stream, logger) {
     let maxNoPad = -1; // maximum non-padding cycle index found
 
     for (let i = 0; i < stream['data'].length; i++) {
+        const idx = Number(stream['data'][i].index);
         const range = stream['data'][i].range;
         let padding = stream['data'][i].padding;
+
+        // Every data cycle MUST have a non-negative integer segment index.
+        // Strings are accepted if they parse to a non-negative integer.
+        if (isNaN(idx) || idx < 0 || !Number.isInteger(idx)) {
+            if (logger) {
+                logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid index');
+            }
+            return false;
+        }
+
+        // range is optional
+        let rs;
+        let re;
+
+        if (range) {
+            if (typeof range !== 'string' && !(range instanceof String)) {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+
+            const rangeTokens = range.split('-');
+            if (rangeTokens.length != 2 || isNaN(rangeTokens[0]) || isNaN(rangeTokens[1])) {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+            rs = parseInt(rangeTokens[0], 10);
+            re = parseInt(rangeTokens[1], 10);
+            if (isNaN(rs)) {
+                rs = 0;
+            }
+            if (isNaN(re)) {
+                re = Number.MAX_SAFE_INTEGER;
+            }
+
+            // Range start MUST NOT exceed range end.
+            if (rs > re) {
+                if (logger) {
+                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
+                }
+                return false;
+            }
+        }
 
         // padding MUST be a boolean (or a string parseable to boolean), or absent.
         if (padding !== undefined && padding !== null) {
@@ -319,77 +369,74 @@ function checkDataCycles(stream, logger) {
             }
         }
 
-        // Every data cycle MUST have a non-negative integer segment index.
-        // Strings are accepted if they parse to a non-negative integer.
-        const idx = Number(stream['data'][i].index);
-        if (isNaN(idx) || idx < 0 || !Number.isInteger(idx)) {
-            if (logger) {
-                logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid index');
-            }
-            return false;
-        }
-
         if (!padding) {
             maxNoPad = i;
         }
-
-        // range is optional
-        let rs;
-        let re;
-
-        if (range) {
-            if (typeof range !== 'string' && !(range instanceof String)) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
-                }
-                return false;
-            }
-
-            const rangeTokens = range.split('-');
-            if (rangeTokens.length != 2 || isNaN(rangeTokens[0]) || isNaN(rangeTokens[1])) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
-                }
-                return false;
-            }
-            rs = parseInt(rangeTokens[0], 10);
-            re = parseInt(rangeTokens[1], 10);
-            if (isNaN(rs)) {
-                rs = 0;
-            }
-            if (isNaN(re)) {
-                re = Number.MAX_SAFE_INTEGER;
-            }
-
-            // Range start MUST NOT exceed range end.
-            if (rs > re) {
-                if (logger) {
-                    logger.error('Extended manifest rejected: defended stream info with label ' + stream['label'] + ', data cycle at index ' + i + ', invalid range');
-                }
-                return false;
-            }
-        }
-
     }
 
     stream.maxNoPad = maxNoPad;
 
-    // Precompute the `full` flag for each data cycle. A cycle is `full` when
-    // it is the last non-padding cycle that downloads data at a segment index.
-    // When indices are interleaved (e.g. with array buffer directives), only
-    // the final occurrence of each index should trigger segment assembly
-    // in DodgeHandler._concatPartialSegments. We scan right-to-left: the
-    // first unseen non-padding index encountered is the last occurrence.
-    const seen = new Set();
-    for (let i = stream['data'].length - 1; i >= 0; i--) {
-        const cycle = stream['data'][i];
-        if (cycle.padding) {
-            cycle.full = false;
-        } else if (seen.has(cycle.index)) {
-            cycle.full = false;
-        } else {
-            cycle.full = true;
-            seen.add(cycle.index);
+    // Precompute the `full` flag for each data cycle via a forward pass.
+    // `full` triggers segment assembly in DodgeHandler._concatPartialSegments.
+    // At each buffer directive, every segment index that will be flushed must
+    // have exactly one cycle marked full (the last download of that index
+    // before the flush point). We scan forward; when we hit a buffer directive,
+    // we scan backwards to mark the last occurrence of each target index.
+    const data = stream['data'];
+    for (let i = 0; i < data.length; i++) {
+        data[i].full = false;
+    }
+
+    const pendingIndices = new Set();
+
+    for (let i = 0; i < data.length; i++) {
+        const cycle = data[i];
+        cycle.full = false;
+        
+        if (!cycle.padding) {
+            pendingIndices.add(cycle.index);
+        }
+
+        const bufferActive = cycle.buffer === true
+            || (Array.isArray(cycle.buffer) && cycle.buffer.length > 0);
+
+        if (bufferActive) {
+            let target;
+            if (cycle.buffer === true) {
+                target = new Set(pendingIndices);
+            } else {
+                target = new Set();
+                for (let k = 0; k < cycle.buffer.length; k++) {
+                    if (pendingIndices.has(cycle.buffer[k])) {
+                        target.add(cycle.buffer[k]);
+                    }
+                }
+            }
+
+            const needed = new Set(target);
+            for (let j = i; j >= 0 && needed.size > 0; j--) {
+                if (!data[j].padding && !data[j].full && needed.has(data[j].index)) {
+                    data[j].full = true;
+                    needed.delete(data[j].index);
+                }
+            }
+
+            if (cycle.buffer === true) {
+                pendingIndices.clear();
+            } else {
+                for (let k = 0; k < cycle.buffer.length; k++) {
+                    pendingIndices.delete(cycle.buffer[k]);
+                }
+            }
+        }
+    }
+
+    // Mark remaining unflushed indices.
+    const remaining = new Set(pendingIndices);
+    for (let i = data.length - 1; i >= 0 && remaining.size > 0; i--) {
+        if (!data[i].padding && !data[i].full && remaining.has(data[i].index)) {
+            data[i].full = true;
+            remaining.delete(data[i].index);
         }
     }
 
@@ -399,9 +446,11 @@ function checkDataCycles(stream, logger) {
 /**
  * Validate the structure of an extended manifest object. Check for `start.mpd`
  * and `start.base_uri` which should be strings, that `streams` is a non-empty
- * array of well-formed entries, and validate cycles with `checkInitCycles`
- * and `checkDataCycles`. The manifest is not allowed to be dynamic. Also set
- * `stream.maxNoPad` on each stream entry, a side effect of `checkDataCycles`.
+ * array of well-formed entries (with proper `label`, `period`, and init and/or
+ * data cycles), and validate cycles with `checkInitCycles` and `checkDataCycles`.
+ * The manifest is not allowed to be dynamic. Also set `stream.maxNoPad` on each
+ * stream entry, a side effect of `checkDataCycles`, and precompute `full` flags
+ * for both init and data cycles.
  * @param {Object} manifest - The parsed extended manifest JSON object.
  * @param {Object} [logger] - Optional logger for rejection messages.
  * @returns {boolean} True if the extended manifest is valid.
@@ -641,7 +690,7 @@ function DefenseRegistry() {
      * Find the first stream entry whose `label` matches the given label across
      * all registered extended manifests. If `periodIndex` is provided, streams
      * with a `period` field only match when `period === periodIndex`; streams
-     * without a `period` field match any period (backward compatible).
+     * without a `period` field match any period.
      * @param {string} label - The representation ID to search for.
      * @param {number|null} [periodIndex] - Optional period index for multi-period MPDs.
      * @returns {Object|null} The matching stream entry, or null if not found.

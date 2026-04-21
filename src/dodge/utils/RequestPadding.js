@@ -29,6 +29,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+let warnedNegativeBase = false;
 let warnedNegativeRandom = false;
 
 /**
@@ -49,19 +50,27 @@ let warnedNegativeRandom = false;
  */
 export function applyRequestPadding(commonMediaRequest, settings, logger) {
     const dodgeSettings = settings.get().dodge || {};
-    const paddingLengthBase = dodgeSettings.paddingLengthBase || 0;
+
+    const rawPaddingLengthBase = dodgeSettings.paddingLengthBase || 0;
+    if (rawPaddingLengthBase < 0 && !warnedNegativeBase) {
+        logger.warn('dodge.paddingLengthBase is negative (' + rawPaddingLengthBase + '), treating as 0 - requests will not be padded!');
+        warnedNegativeBase = true;
+    }
+
     const rawPaddingLengthRandom = dodgeSettings.paddingLengthRandom || 0;
     if (rawPaddingLengthRandom < 0 && !warnedNegativeRandom) {
-        logger.warn('dodge.paddingLengthRandom is negative (' + rawPaddingLengthRandom + '), treating as 0');
+        logger.warn('dodge.paddingLengthRandom is negative (' + rawPaddingLengthRandom + '), treating as 0 - requests will be padded to a fixed size');
         warnedNegativeRandom = true;
     }
+
+    const paddingLengthBase = Math.max(0, rawPaddingLengthBase);
     const paddingLengthRandom = Math.max(0, rawPaddingLengthRandom);
+
     const queryParam = dodgeSettings.queryParam || 'padding';
 
     if (paddingLengthBase <= 0) {
         return;
     }
-
 
     // Approximate the HTTP/1.1 wire size: URL length (request line) plus all
     // headers. Each header contributes key.length + ': '.length + value.length
@@ -80,7 +89,7 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
     const paddingLength = paddingLengthBase + Math.round(Math.random() * paddingLengthRandom);
     const pad = paddingLength - size;
     if (pad < 0) {
-        logger.warn('add request padding: original request size ' + size + ' exceeds paddingLength ' + paddingLength);
+        logger.warn('Add request padding: original request size ' + size + ' exceeds paddingLength ' + paddingLength);
         return;
     }
     if (pad == 0) {
@@ -99,12 +108,12 @@ export function applyRequestPadding(commonMediaRequest, settings, logger) {
         const overhead = url.toString().length - commonMediaRequest.url.length;
         const zeros = pad - overhead;
         if (zeros <= 0) {
-            logger.warn('add request padding: updated request size ' + size + ' exceeds paddingLength ' + paddingLength);
+            logger.warn('Add request padding: updated request size ' + size + ' with padding header exceeds paddingLength ' + paddingLength);
             return;
         }
         url.searchParams.set(queryParam, current + '0'.repeat(zeros));
         commonMediaRequest.url = url.toString();
-    } catch (e) {
-        logger.warn('add request padding: failed to extend URL, ' + e.message);
+    } catch (err) {
+        logger.warn('Add request padding: failed to extend URL, ' + (err && err.message ? err.message : err));
     }
 }

@@ -35,7 +35,7 @@
  * 1. Keeps the schedule timer running during the trailing phase (padding
  *    cycles after all playable content).
  * 2. Enforces a random-walk delay on every schedule timer start when a
- *    Dodge defense is active, so that buffered-segment loads (which go
+ *    Dodge defense is active, so that buffered segment loads (which go
  *    through the normal dash.js _onBytesAppended → startScheduleTimer(0)
  *    path) still get the same random delay as partial and padding events.
  *
@@ -60,18 +60,21 @@ function DodgeScheduleControllerOverride(config) {
 
     function _getScheduleWait() {
         const dodgeSettings = (settings.get().dodge) || {};
-        const rawRandom = dodgeSettings.scheduleWaitRandom || 0;
-        if (rawRandom < 0 && !warnedNegativeScheduleRandom) {
-            logger.warn('dodge.scheduleWaitRandom is negative (' + rawRandom + '), treating as 0');
-            warnedNegativeScheduleRandom = true;
-        }
-        const random = Math.max(0, rawRandom);
+        
         const rawBase = dodgeSettings.scheduleWaitBase || 0;
         if (rawBase < 0 && !warnedNegativeScheduleBase) {
             logger.warn('dodge.scheduleWaitBase is negative (' + rawBase + '), treating as 0');
             warnedNegativeScheduleBase = true;
         }
+        const rawRandom = dodgeSettings.scheduleWaitRandom || 0;
+        if (rawRandom < 0 && !warnedNegativeScheduleRandom) {
+            logger.warn('dodge.scheduleWaitRandom is negative (' + rawRandom + '), treating as 0');
+            warnedNegativeScheduleRandom = true;
+        }
+
         const base = Math.max(0, rawBase);
+        const random = Math.max(0, rawRandom);
+        
         return base + Math.round(Math.random() * random);
     }
 

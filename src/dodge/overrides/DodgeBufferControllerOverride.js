@@ -44,12 +44,18 @@ import MediaPlayerEvents from '../../streaming/MediaPlayerEvents.js';
  * Two separate mechanisms update it:
  *  - onBufferCycleLoaded: increments by (segmentDuration - actualDuration) after
  *    each non-trailing buffer cycle, absorbing variance in segment durations.
- *    This value can be negative if a segment is longer than expected.
+ *    This value can be negative if a segment is longer than the MPD duration.
  *  - onPaddingLoaded: increments by segmentDuration for each trailing buffer
  *    cycle, covering the virtual buffer time after all playable content.
  *
  * During the trailing phase, updateBufferLevel drains mockBuffer over time so
  * the reported buffer level falls naturally to zero as playback finishes.
+ * 
+ * Alternate-representation init segments are also cached locally here (not the
+ * same as dash.js's native caching), which allows for quality overrides in the
+ * extended manifest - intentionally downloading segments from a sibling
+ * representation (in the same adaptation set). This can, for example,
+ * be used to conceal large segments by fetching a smaller version.
  */
 function DodgeBufferControllerOverride(config) {
 
@@ -118,10 +124,10 @@ function DodgeBufferControllerOverride(config) {
      */
     function onBufferCycleLoaded(e) {
         if (lastTimeSinceStreamEnd != 0) {
-            logger.debug('trailing reset');
+            logger.debug('Trailing reset on buffer cycle loaded, last time since stream end = ' + lastTimeSinceStreamEnd);
             currentMockBuffer = 0;
             lastTimeSinceStreamEnd = 0;
-            _parentSetMockBuffer.call(parent,0);
+            _parentSetMockBuffer.call(parent, 0);
         }
         
         currentMockBuffer += e.representation.segmentDuration - e.actualDuration;
@@ -130,36 +136,36 @@ function DodgeBufferControllerOverride(config) {
 
     /**
      * Called when a padding cycle is finished. Increment the mock buffer for
-     * trailing cycles; reset it if trailing ended unexpectedly.
+     * trailing cycles; reset it if trailing ended due to a seek.
      */
     function onPaddingLoaded(e) {
         if (!e.trail) {
             if (lastTimeSinceStreamEnd != 0) {
-                logger.debug('trailing reset');
+                logger.debug('Trailing reset on padding loaded, last time since stream end = ' + lastTimeSinceStreamEnd);
                 currentMockBuffer = 0;
                 lastTimeSinceStreamEnd = 0;
-                _parentSetMockBuffer.call(parent,0);
+                _parentSetMockBuffer.call(parent, 0);
             }
             return;
         }
 
         if (e.buffer) {
             currentMockBuffer += e.representation.segmentDuration;
-            _parentSetMockBuffer.call(parent,currentMockBuffer);
+            _parentSetMockBuffer.call(parent, currentMockBuffer);
         }
     }
 
     /**
      * Override init fragment loading for alternate representation init cycles.
-     * Dodge synthesizes (or the defense provides) init cycles that fetch an
-     * alternate representation's init segment so it can later be used in
-     * quality overrides. Those inits must be cached under the alternate
-     * representation's ID but not appended to the home SourceBuffer.
+     * The defense can provide init cycles that fetch another representation's
+     * init segment so it can later be used in quality overrides. Those inits
+     * must be cached under the alternate representation's ID but not
+     * appended to the home SourceBuffer.
      *
      * We detect the alternate case by chunk.homeRepresentationId: the override
      * in DodgeDashHandlerOverride sets it when cycle.quality resolves to a
      * different representation than the home representation. For alternate
-     * inits we save to Dodge's cache; for normal inits we delegate.
+     * inits we save to Dodge's cache; for normal inits we save + delegate.
      */
     function _onInitFragmentLoaded(e) {
         const chunk = e.chunk;
@@ -177,12 +183,15 @@ function DodgeBufferControllerOverride(config) {
      * Override media fragment loading to handle quality override cycles.
      * When a chunk carries a homeRepresentationId, the media bytes come from
      * an alternate representation and require the matching init segment.
+     * 
      * Sandwich the media append between changeType() + init segment switches:
      *   changeType(alt) -> append(altInit) -> append(media)
      *   -> changeType(home) -> append(homeInit)
+     * 
      * The changeType() calls reset the SourceBuffer's parser state to
      * WAITING_FOR_SEGMENT so each init is parsed as an initialization segment
      * rather than as a (malformed) media segment.
+     * 
      * Stalls if either init is missing. When changeType is available
      * (capability supported AND setting enabled), wraps the sandwich with
      * changeType calls; otherwise appends init/media/init without them.
@@ -210,7 +219,7 @@ function DodgeBufferControllerOverride(config) {
             const alternateRep = alternateInit.representation;
             const homeRep = homeInit.representation;
             if (useChangeType && (!alternateRep || !homeRep)) {
-                logger.warn('Init segment missing representation reference for quality override, stalling to preserve defense');
+                logger.warn('Init segment missing representation reference for quality override and useChangeType is enabled, stalling to preserve defense');
                 return;
             }
 
@@ -249,9 +258,9 @@ function DodgeBufferControllerOverride(config) {
                 lastTimeSinceStreamEnd += diffInTime;
 
                 // Sync the decremented mockBuffer to parent before it computes buffer level.
-                _parentSetMockBuffer.call(parent,Math.max(currentMockBuffer, 0));
+                _parentSetMockBuffer.call(parent, Math.max(currentMockBuffer, 0));
             } else if (lastTimeSinceStreamEnd != 0) {
-                logger.debug('trailing reset');
+                logger.debug('Trailing reset on buffer level update, last time since stream end = ' + lastTimeSinceStreamEnd);
                 currentMockBuffer = 0;
                 lastTimeSinceStreamEnd = 0;
                 _parentSetMockBuffer.call(parent,0);

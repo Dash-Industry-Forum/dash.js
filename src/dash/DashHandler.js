@@ -461,7 +461,6 @@ function DashHandler(config) {
     function updateDefendedStreamInfo() { return false; }
     function getIsDefended() { return false; }
     function getIsTrailing() { return false; }
-    function getNextExpectedIndex() { return -1; }
     function getRemainingInitCycles() { return -1; }
     function isTextTrackBlockedByDodge() { return false; }
 
@@ -471,7 +470,6 @@ function DashHandler(config) {
         getIsDefended,
         getIsTrailing,
         getLastSegment,
-        getNextExpectedIndex,
         getNextSegmentRequest,
         getNextSegmentRequestIdempotent,
         getRemainingInitCycles,
