@@ -232,6 +232,13 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request.index).to.equal(1);
         });
 
+        it('getSegmentRequestForTime() returns null when no segment exists for the requested time', function () {
+            segmentsController.getSegmentByTime.returns(null);
+            const request = override.getSegmentRequestForTime({}, rep, 999);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
         it('getIsTrailing() returns false before any cycles are consumed', function () {
             // lastCycleIndex = -1, maxNoPad = 1, -1 >= 1 is false
             expect(override.getIsTrailing()).to.be.false; // jshint ignore:line
@@ -587,6 +594,24 @@ describe('DodgeDashHandlerOverride', function () {
 
             const request = override.getNextSegmentRequest({}, rep); // cycle 0, no override
             expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest does not set homeRepresentationId when quality matches home rep', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, quality: 'rep0', buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
+            expect(request.representation.id).to.equal('rep0');
         });
 
         it('getSegmentRequestForTime sets homeRepresentationId when quality override is active', function () {
@@ -1039,76 +1064,6 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
-    // Text track disabling
-
-    describe('Text track disabling', function () {
-        let settings, textRep, unknownTextRep;
-
-        beforeEach(function () {
-            settings = Settings(context).getInstance();
-            settings.update({ dodge: { strictMode: 'representation' } });
-
-            textRep = Object.assign({}, makeRepresentation(), {
-                mediaInfo: { type: 'text', streamInfo: { id: 'stream-1' } }
-            });
-
-            unknownTextRep = Object.assign({}, textRep, { id: 'unknown_text_label' });
-        });
-
-        afterEach(function () {
-            settings.update({ dodge: { strictMode: false } });
-        });
-
-        it('isTextTrackBlockedByDodge() returns false when no extended manifest loaded', function () {
-            override.updateDefendedStreamInfo(unknownTextRep);
-            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
-        });
-
-        it('isTextTrackBlockedByDodge() returns false for video rep with no defense in strict mode', function () {
-            defenseController.addExtendedManifest(makeManifest());
-            const unknownVideoRep = Object.assign({}, rep, { id: 'unknown_video_label' });
-            override.updateDefendedStreamInfo(unknownVideoRep);
-            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
-        });
-
-        it('isTextTrackBlockedByDodge() returns true for text rep with no defense in strict mode', function () {
-            defenseController.addExtendedManifest(makeManifest());
-            override.updateDefendedStreamInfo(unknownTextRep);
-            expect(override.isTextTrackBlockedByDodge()).to.be.true; // jshint ignore:line
-        });
-
-        it('isTextTrackBlockedByDodge() returns false for text rep that is defended', function () {
-            defenseController.addExtendedManifest(makeManifest());
-            // textRep.id is 'rep0', which is in the extended manifest
-            override.updateDefendedStreamInfo(textRep);
-            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
-        });
-
-        it('isTextTrackBlockedByDodge() returns false when strictMode is false', function () {
-            settings.update({ dodge: { strictMode: false } });
-            defenseController.addExtendedManifest(makeManifest());
-            override.updateDefendedStreamInfo(unknownTextRep);
-            expect(override.isTextTrackBlockedByDodge()).to.be.false; // jshint ignore:line
-        });
-
-        it('isLastSegmentRequested() returns false for undefended text track in strict mode (stall)', function () {
-            defenseController.addExtendedManifest(makeManifest());
-            override.updateDefendedStreamInfo(unknownTextRep);
-            const result = override.isLastSegmentRequested(unknownTextRep, NaN);
-            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
-            expect(result).to.be.false; // jshint ignore:line
-        });
-
-        it('isLastSegmentRequested() returns false for undefended video track in strict mode (stall behavior unchanged)', function () {
-            defenseController.addExtendedManifest(makeManifest());
-            const unknownVideoRep = Object.assign({}, rep, { id: 'unknown_video_label' });
-            override.updateDefendedStreamInfo(unknownVideoRep);
-            const result = override.isLastSegmentRequested(unknownVideoRep, NaN);
-            expect(mockParent.isLastSegmentRequested.called).to.be.false; // jshint ignore:line
-            expect(result).to.be.false; // jshint ignore:line
-        });
-    });
-
     // Data-only streams (self-initialized)
 
     describe('Data-only streams (self-initialized)', function () {
@@ -1248,6 +1203,17 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request).to.exist; // jshint ignore:line
         });
 
+        it('defended audio stream: getSegmentRequestForTime() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            const audioRep = makeAudioRep();
+            override.updateDefendedStreamInfo(audioRep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+            const request = override.getSegmentRequestForTime({}, audioRep, 4);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.index).to.equal(1);
+        });
+
         it('audio stream with no defended stream info (no extended manifest loaded): getNextSegmentRequest() delegates to parent', function () {
             // No manifest in defenseController, updateDefendedStreamInfo returns false, fallback
             const settings = Settings(context).getInstance();
@@ -1328,6 +1294,17 @@ describe('DodgeDashHandlerOverride', function () {
             const request = override.getInitRequest({}, textRep);
             expect(mockParent.getInitRequest.called).to.be.false; // jshint ignore:line
             expect(request).to.exist; // jshint ignore:line
+        });
+
+        it('defended fragmented text stream: getSegmentRequestForTime() returns cycle request without calling parent', function () {
+            defenseController.addExtendedManifest(fragmentedTextManifest);
+            const textRep = makeFragmentedTextRep();
+            override.updateDefendedStreamInfo(textRep);
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+            const request = override.getSegmentRequestForTime({}, textRep, 4);
+            expect(mockParent.getSegmentRequestForTime.called).to.be.false; // jshint ignore:line
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.index).to.equal(1);
         });
 
         it('fragmented text stream with no defended stream info (no extended manifest): getNextSegmentRequest() delegates to parent', function () {

@@ -329,6 +329,25 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
         });
 
+        it('data cycle with buffer = [5] referencing unseen index, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [{ index: 0, buffer: [5] }] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('data cycle with buffer = [0, 3] where index 3 has not appeared, false', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', init: [{}], data: [
+                    { index: 0 },
+                    { index: 1, buffer: [0, 3] }
+                ] }]
+            };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
         it('data cycle with buffer string "true", true', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
@@ -603,6 +622,116 @@ describe('DefenseRegistry', function () {
             expect(data[0].full).to.be.false; // index 0, but cycle 2 also has index 0
             expect(data[1].full).to.be.true; // index 1, last occurrence
             expect(data[2].full).to.be.true; // index 0, last occurrence
+        });
+
+        it('precomputes cycle.full: buffer = true forces full even when same index appears later', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0 }, // cycle 0: partial
+                        { index: 0, buffer: true }, // cycle 1: buffer forces full
+                        { index: 0 }, // cycle 2: partial (repeat)
+                        { index: 0, buffer: true }, // cycle 3: buffer forces full
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false;
+            expect(data[1].full).to.be.true;
+            expect(data[2].full).to.be.false;
+            expect(data[3].full).to.be.true;
+        });
+
+        it('precomputes cycle.full: selective buffer array forces full even when same index appears later', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0 }, // cycle 0: partial
+                        { index: 0, buffer: [0] }, // cycle 1: selective buffer forces full
+                        { index: 0 }, // cycle 2: partial
+                        { index: 0, buffer: true }, // cycle 3: buffer forces full
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false;
+            expect(data[1].full).to.be.true;
+            expect(data[2].full).to.be.false;
+            expect(data[3].full).to.be.true;
+        });
+
+        it('precomputes cycle.full: multiple buffer windows each get independent full marks', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0 }, // cycle 0: partial
+                        { index: 1 }, // cycle 1: partial
+                        { index: 0, buffer: true }, // cycle 2: flush all (window 1)
+                        { index: 0 }, // cycle 3: partial (window 2)
+                        { index: 1 }, // cycle 4: partial
+                        { index: 1, buffer: true }, // cycle 5: flush all (window 2)
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false; // partial in window 1
+            expect(data[1].full).to.be.true; // last index 1 before buffer at cycle 2
+            expect(data[2].full).to.be.true; // buffer point, last index 0 in window 1
+            expect(data[3].full).to.be.true; // last index 0 before buffer at cycle 5
+            expect(data[4].full).to.be.false; // partial in window 2
+            expect(data[5].full).to.be.true; // buffer point, last index 1 in window 2
+        });
+
+        it('precomputes cycle.full: selective buffer only marks target indices, remainder marked at next flush', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0 }, // cycle 0
+                        { index: 1 }, // cycle 1
+                        { index: 2, buffer: [0] }, // cycle 2: flush only index 0
+                        { index: 1, buffer: true }, // cycle 3: flush remaining (1, 2)
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.true; // last index 0 before selective flush at cycle 2
+            expect(data[1].full).to.be.false; // index 1 not in [0], stays partial
+            expect(data[2].full).to.be.true; // last index 2 before flush at cycle 3
+            expect(data[3].full).to.be.true; // last index 1 before flush at cycle 3
+        });
+
+        it('precomputes cycle.full: empty buffer array does not force full', function () {
+            const m = {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{
+                    label: 'a',
+                    init: [{}],
+                    data: [
+                        { index: 0, buffer: [] }, // cycle 0: empty array = not active
+                        { index: 0, buffer: true }, // cycle 1: last occurrence, full
+                    ]
+                }]
+            };
+            isValidExtendedManifest(m);
+            const data = m.streams[0].data;
+            expect(data[0].full).to.be.false;
+            expect(data[1].full).to.be.true;
         });
 
         it('precomputes cycle.full: padding cycles are never full', function () {

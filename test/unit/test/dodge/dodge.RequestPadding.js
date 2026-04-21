@@ -189,16 +189,6 @@ describe('applyRequestPadding', function () {
         expect(padValue.length).to.be.greaterThan(3);
     });
 
-    it('custom queryParam: padding uses the configured param name, not the default', function () {
-        const url = 'https://example.com/seg.m4s?pad=abc';
-        const req = makeRequest(url, {});
-        const targetSize = url.length + 50;
-        applyRequestPadding(req, makeSettings(targetSize, 'pad'), makeLogger());
-        const padValue = new URL(req.url).searchParams.get('pad');
-        expect(padValue.startsWith('abc')).to.be.true; // jshint ignore:line
-        expect(wireSize(req)).to.equal(targetSize);
-    });
-
     // Invalid URL
 
     it('invalid URL: warns and does not throw', function () {

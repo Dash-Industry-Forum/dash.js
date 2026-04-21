@@ -455,15 +455,16 @@ describe('DodgeHandler', function () {
             expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
         });
 
-        it('selective buffer: padding event has bufferFlag true but buffer false (array buffer is not boolean true)', function () {
-            // Fire a padding request with array buffer and no pending segments
+        it('selective buffer: padding event has bufferFlag false and buffer false (array buffer is not boolean true)', function () {
+            // Fire a padding request with array buffer and no pending segments.
+            // bufferFlag is only true for boolean buffer = true, not arrays.
             triggerFragmentLoaded(makeRequest({ full: false, padding: true, buffer: [0] }));
             expect(paddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
-            expect(paddingLoadedSpy.firstCall.args[0].bufferFlag).to.be.true; // jshint ignore:line
+            expect(paddingLoadedSpy.firstCall.args[0].bufferFlag).to.be.false; // jshint ignore:line
             expect(paddingLoadedSpy.firstCall.args[0].buffer).to.be.false; // jshint ignore:line
         });
 
-        it('selective buffer: padding event has bufferFlag true but buffer false when secondary events flushed', function () {
+        it('selective buffer: padding event has bufferFlag true when data secondary flushed, buffer false', function () {
             // Queue a pending segment
             triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
             expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
@@ -494,7 +495,7 @@ describe('DodgeHandler', function () {
             expect(handler.getStreamStats('stream-1').pendingInit).to.equal(1);
         });
 
-        it('boolean buffer true still flushes all pending segments', function () {
+        it('boolean buffer true flushes all pending segments', function () {
             triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
             triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 1 }));
             expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(2);
@@ -609,7 +610,7 @@ describe('DodgeHandler', function () {
             expect(startTimerSpy.called).to.be.false; // jshint ignore:line
         });
 
-        it('PADDING_LOADED with buffer flag: startScheduleTimer called, quality check enabled', function () {
+        it('PADDING_LOADED with bufferFlag = true (data secondary flushed): quality check enabled', function () {
             eventBus.trigger(Events.PADDING_LOADED,
                 { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: true, bufferFlag: true },
                 { streamId: 'stream-1', mediaType: 'video' }
@@ -618,7 +619,7 @@ describe('DodgeHandler', function () {
             expect(setQualitySpy.calledOnceWith(true)).to.be.true; // jshint ignore:line
         });
 
-        it('PADDING_LOADED without buffer flag: startScheduleTimer called, quality check disabled', function () {
+        it('PADDING_LOADED with bufferFlag = false: startScheduleTimer called, quality check disabled', function () {
             eventBus.trigger(Events.PADDING_LOADED,
                 { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: false, bufferFlag: false },
                 { streamId: 'stream-1', mediaType: 'video' }
@@ -707,11 +708,11 @@ describe('DodgeHandler', function () {
             expect(setQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
         });
 
-        it('INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled', function () {
+        it('INIT_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, quality check disabled', function () {
             // When the last init cycle fires (full = true, buffer = true),
             // DodgeHandler emits INIT_FRAGMENT_LOADED, not INIT_FRAGMENT_PARTIAL.
-            // _scheduleAll is not called (scheduling is left to the vanilla path),
-            // but quality checks are enabled via _setQualityCheckAll(true).
+            // _scheduleAll is not called. Quality checks are only enabled for
+            // MEDIA_FRAGMENT_LOADED with buffer=true, not for init fragments.
             eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
                 sender: { context: 'test' },
                 request: {
@@ -749,10 +750,10 @@ describe('DodgeHandler', function () {
             }, { streamId: 'stream-1' });
 
             expect(startTimerSpy.called).to.be.false; // jshint ignore:line
-            expect(setQualitySpy.calledOnceWith(true)).to.be.true; // jshint ignore:line
+            expect(setQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
         });
 
-        it('MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, but quality check enabled', function () {
+        it('MEDIA_FRAGMENT_LOADED: startScheduleTimer not called by Dodge, quality check enabled', function () {
             // When a full cycle with buffer completes (full = true, buffer = true),
             // DodgeHandler emits MEDIA_FRAGMENT_LOADED, not MEDIA_FRAGMENT_PARTIAL.
             // _scheduleAll is not called (scheduling is left to the vanilla path),
@@ -796,6 +797,60 @@ describe('DodgeHandler', function () {
 
             expect(startTimerSpy.called).to.be.false; // jshint ignore:line
             expect(setQualitySpy.calledOnceWith(true)).to.be.true; // jshint ignore:line
+        });
+
+        it('full = true, buffer = false: fires MEDIA_FRAGMENT_PARTIAL', function () {
+            // A full cycle without buffer queues the assembled segment and fires
+            // a PARTIAL event. Quality checks are disabled by _onPartialSegment.
+            // Verify the LOADED path (which enables quality checks) isn't taken.
+            const mediaLoadedSpy = sinon.spy();
+            const mediaPartialSpy = sinon.spy();
+            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, mediaLoadedSpy, {});
+            eventBus.on(Events.MEDIA_FRAGMENT_PARTIAL, mediaPartialSpy, {});
+
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+                sender: { context: 'test' },
+                request: {
+                    full: true,
+                    buffer: false,
+                    padding: false,
+                    trail: false,
+                    index: 0,
+                    mediaType: 'video',
+                    type: 'MediaSegment',
+                    quality: 0,
+                    duration: 4,
+                    startTime: 0,
+                    mediaStartTime: 0,
+                    originalRange: null,
+                    range: null,
+                    bandwidth: 1000,
+                    adaptationIndex: 0,
+                    timescale: 1,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    availabilityTimeComplete: true,
+                    wallStartTime: 0,
+                    replacementNumber: 0,
+                    replacementTime: 0,
+                    representation: {
+                        id: 'rep0',
+                        bandwidth: 1000,
+                        adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                        mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                    },
+                    isInitializationRequest: () => false,
+                },
+                response: new ArrayBuffer(8),
+                error: null,
+            }, { streamId: 'stream-1' });
+
+            expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
+            expect(mediaPartialSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(setQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
+
+            eventBus.off(Events.MEDIA_FRAGMENT_LOADED, mediaLoadedSpy, {});
+            eventBus.off(Events.MEDIA_FRAGMENT_PARTIAL, mediaPartialSpy, {});
         });
     });
 
