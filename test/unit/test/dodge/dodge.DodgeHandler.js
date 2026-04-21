@@ -1868,4 +1868,448 @@ describe('DodgeHandler', function () {
         });
     });
 
+    describe('_concatPartialSegments via _onFragmentLoadingCompleted', function () {
+        let handler, eventBus, settings;
+        let loadedSpy, testListener;
+
+        function makeRequest(overrides) {
+            return Object.assign({
+                full: false, padding: false, buffer: false, trail: false,
+                index: 0, mediaType: 'video', type: 'MediaSegment', quality: 0,
+                duration: 4, startTime: 0, mediaStartTime: 0,
+                originalRange: null, range: null, bandwidth: 1000,
+                adaptationIndex: 0, timescale: 1,
+                availabilityStartTime: 0, availabilityEndTime: Infinity,
+                availabilityTimeComplete: true, wallStartTime: 0,
+                replacementNumber: 0, replacementTime: 0,
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                },
+                isInitializationRequest: () => false,
+            }, overrides || {});
+        }
+
+        function triggerFragmentLoaded(request, responseBytes) {
+            const e = {
+                sender: { context: 'test' },
+                request,
+                response: responseBytes || new ArrayBuffer(8),
+                error: null,
+            };
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, e, { streamId: 'stream-1' });
+            return e;
+        }
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+
+            handler = DodgeHandler(context).create({
+                eventBus, events: Events, settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {} }
+            });
+            handler.registerEvents();
+
+            testListener = {};
+            loadedSpy = sinon.spy();
+            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, loadedSpy, testListener);
+        });
+
+        afterEach(function () {
+            eventBus.off(Events.MEDIA_FRAGMENT_LOADED, loadedSpy, testListener);
+            handler.reset();
+        });
+
+        it('single piece without range info: assembles using 0 to byteLength - 1', function () {
+            // A single full+buffer request with no range info: rangeEnd = 0 + byteLength - 1
+            const bytes = new Uint8Array([10, 20, 30]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, range: null, originalRange: null }), bytes);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(3);
+            expect(Array.from(chunk.bytes)).to.deep.equal([10, 20, 30]);
+        });
+
+        it('multiple pieces with contiguous ranges: merged correctly', function () {
+            // Piece 1: range 0-3 (4 bytes)
+            const bytes1 = new Uint8Array([1, 2, 3, 4]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false, range: '0-3' }), bytes1);
+
+            // Piece 2: range 4-7 (4 bytes), full + buffer to trigger assembly
+            const bytes2 = new Uint8Array([5, 6, 7, 8]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, range: '4-7' }), bytes2);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(8);
+            expect(Array.from(chunk.bytes)).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
+        });
+
+        it('multiple pieces with non-contiguous ranges: gap filled with zeros', function () {
+            // Piece 1: range 0-1
+            const bytes1 = new Uint8Array([10, 20]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false, range: '0-1' }), bytes1);
+
+            // Piece 2: range 4-5 (gap at 2-3)
+            const bytes2 = new Uint8Array([50, 60]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, range: '4-5' }), bytes2);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(6);
+            expect(Array.from(chunk.bytes)).to.deep.equal([10, 20, 0, 0, 50, 60]);
+        });
+
+        it('pieces placed by range offset regardless of insertion order', function () {
+            // Insert range 4-7 first, then 0-3
+            const bytes1 = new Uint8Array([5, 6, 7, 8]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false, range: '4-7' }), bytes1);
+
+            const bytes2 = new Uint8Array([1, 2, 3, 4]).buffer;
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, range: '0-3' }), bytes2);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(Array.from(chunk.bytes)).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
+        });
+
+        it('NaN index matching for init segments', function () {
+            const initLoadedSpy = sinon.spy();
+            eventBus.on(Events.INIT_FRAGMENT_LOADED, initLoadedSpy, testListener);
+
+            const bytes1 = new Uint8Array([0xAA, 0xBB]).buffer;
+            triggerFragmentLoaded(makeRequest({
+                full: false, buffer: false, range: '0-1',
+                index: NaN, isInitializationRequest: () => true,
+            }), bytes1);
+
+            const bytes2 = new Uint8Array([0xCC, 0xDD]).buffer;
+            triggerFragmentLoaded(makeRequest({
+                full: true, buffer: true, range: '2-3',
+                index: NaN, isInitializationRequest: () => true,
+            }), bytes2);
+
+            expect(initLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = initLoadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(4);
+            expect(Array.from(chunk.bytes)).to.deep.equal([0xAA, 0xBB, 0xCC, 0xDD]);
+
+            eventBus.off(Events.INIT_FRAGMENT_LOADED, initLoadedSpy, testListener);
+        });
+
+        it('unmatched pieces are not consumed: different mediaType is not assembled', function () {
+            // Partial for audio
+            triggerFragmentLoaded(makeRequest({
+                full: false, buffer: false, range: '0-3', mediaType: 'audio',
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'audio', streamInfo: { id: 'stream-1' } }
+                },
+            }), new Uint8Array([1, 2, 3, 4]).buffer);
+
+            // Full+buffer for video should not pick up the audio partial
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, range: '0-1' }), new Uint8Array([9, 10]).buffer);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(2);
+            expect(Array.from(chunk.bytes)).to.deep.equal([9, 10]);
+
+            // The audio partial should still be in the queue
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(1);
+        });
+
+        it('originalRange is used when available, range overrides it', function () {
+            // The code first parses originalRange, then range. The range values override.
+            // originalRange: '100-199', range: '0-3' -> rangeStart = 0, rangeEnd = 3
+            const bytes1 = new Uint8Array([1, 2, 3, 4]).buffer;
+            triggerFragmentLoaded(makeRequest({
+                full: false, buffer: false, originalRange: '100-199', range: '0-3',
+            }), bytes1);
+
+            const bytes2 = new Uint8Array([5, 6, 7, 8]).buffer;
+            triggerFragmentLoaded(makeRequest({
+                full: true, buffer: true, originalRange: '200-299', range: '4-7',
+            }), bytes2);
+
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.bytes.length).to.equal(8);
+            expect(Array.from(chunk.bytes)).to.deep.equal([1, 2, 3, 4, 5, 6, 7, 8]);
+        });
+
+        it('matched pieces are removed from partialSegments array', function () {
+            // Add two partials for index 0
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false, index: 0, range: '0-3' }), new Uint8Array(4).buffer);
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false, index: 0, range: '4-7' }), new Uint8Array(4).buffer);
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(2);
+
+            // Assemble with full+buffer
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true, index: 0, range: '8-11' }), new Uint8Array(4).buffer);
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(0);
+        });
+    });
+
+    describe('_createDataChunk via _onFragmentLoadingCompleted', function () {
+        let handler, eventBus, settings;
+        let loadedSpy, testListener;
+
+        function makeRequest(overrides) {
+            return Object.assign({
+                full: true, padding: false, buffer: true, trail: false,
+                index: 5, mediaType: 'video', type: 'MediaSegment', quality: 3,
+                duration: 4, startTime: 20, mediaStartTime: 20,
+                originalRange: null, range: null, bandwidth: 1000,
+                adaptationIndex: 0, timescale: 1,
+                availabilityStartTime: 0, availabilityEndTime: Infinity,
+                availabilityTimeComplete: true, wallStartTime: 0,
+                replacementNumber: 5, replacementTime: 0,
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                },
+                isInitializationRequest: () => false,
+            }, overrides || {});
+        }
+
+        function triggerFragmentLoaded(request, responseBytes) {
+            const e = {
+                sender: { context: 'test' },
+                request,
+                response: responseBytes || new ArrayBuffer(8),
+                error: null,
+            };
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, e, { streamId: 'stream-1' });
+            return e;
+        }
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+
+            handler = DodgeHandler(context).create({
+                eventBus, events: Events, settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {} }
+            });
+            handler.registerEvents();
+
+            testListener = {};
+            loadedSpy = sinon.spy();
+            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, loadedSpy, testListener);
+        });
+
+        afterEach(function () {
+            eventBus.off(Events.MEDIA_FRAGMENT_LOADED, loadedSpy, testListener);
+            handler.reset();
+        });
+
+        it('populates chunk fields from request properties', function () {
+            triggerFragmentLoaded(makeRequest());
+            expect(loadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.streamId).to.equal('stream-1');
+            expect(chunk.segmentType).to.equal('MediaSegment');
+            expect(chunk.start).to.equal(20);
+            expect(chunk.duration).to.equal(4);
+            expect(chunk.end).to.equal(24);
+            expect(chunk.index).to.equal(5);
+            expect(chunk.quality).to.equal(3);
+            expect(chunk.representation.id).to.equal('rep0');
+        });
+
+        it('homeRepresentationId defaults to null when not set on request', function () {
+            triggerFragmentLoaded(makeRequest());
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.homeRepresentationId).to.be.null; // jshint ignore:line
+        });
+
+        it('homeRepresentationId is set when present on request', function () {
+            triggerFragmentLoaded(makeRequest({ homeRepresentationId: 'video_500k' }));
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.homeRepresentationId).to.equal('video_500k');
+        });
+
+        it('endFragment is true for full buffered segments', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true }));
+            const chunk = loadedSpy.firstCall.args[0].chunk;
+            expect(chunk.endFragment).to.be.true; // jshint ignore:line
+        });
+    });
+
+    describe('getStreamStats', function () {
+        let handler, eventBus, settings;
+
+        function makeRequest(overrides) {
+            return Object.assign({
+                full: false, padding: false, buffer: false, trail: false,
+                index: 0, mediaType: 'video', type: 'MediaSegment', quality: 0,
+                duration: 4, startTime: 0, mediaStartTime: 0,
+                originalRange: null, range: null, bandwidth: 1000,
+                adaptationIndex: 0, timescale: 1,
+                availabilityStartTime: 0, availabilityEndTime: Infinity,
+                availabilityTimeComplete: true, wallStartTime: 0,
+                replacementNumber: 0, replacementTime: 0,
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                },
+                isInitializationRequest: () => false,
+            }, overrides || {});
+        }
+
+        function triggerFragmentLoaded(request, streamId) {
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, {
+                sender: { context: 'test' },
+                request,
+                response: new ArrayBuffer(8),
+                error: null,
+            }, { streamId: streamId || 'stream-1' });
+        }
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+
+            handler = DodgeHandler(context).create({
+                eventBus, events: Events, settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {} }
+            });
+            handler.registerEvents();
+        });
+
+        afterEach(function () {
+            handler.reset();
+        });
+
+        it('returns zeros for unknown streamId', function () {
+            const stats = handler.getStreamStats('nonexistent-stream');
+            expect(stats.partialSegments).to.equal(0);
+            expect(stats.pendingInit).to.equal(0);
+            expect(stats.pendingMedia).to.equal(0);
+        });
+
+        it('returns correct counts after partials and pending segments accumulate', function () {
+            // Add a partial (non-full, non-padding)
+            triggerFragmentLoaded(makeRequest({ full: false, padding: false }));
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(1);
+
+            // Add a pending media (full without buffer) - this also consumes the partial
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: false, index: 0 }));
+            expect(handler.getStreamStats('stream-1').pendingMedia).to.equal(1);
+            // The partial was consumed during assembly, so partialSegments should be 0
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(0);
+        });
+
+        it('tracks streams independently by streamId', function () {
+            triggerFragmentLoaded(makeRequest({ full: false, padding: false }), 'stream-1');
+
+            // stream-2 needs its own representation with matching streamInfo
+            triggerFragmentLoaded(makeRequest({
+                full: false, padding: false,
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'video', streamInfo: { id: 'stream-2' } }
+                },
+            }), 'stream-2');
+
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(1);
+            expect(handler.getStreamStats('stream-2').partialSegments).to.equal(1);
+        });
+    });
+    
+    describe('Error fragment stalling, _onFragmentLoadingCompleted', function () {
+        let handler, eventBus, settings;
+        let mediaLoadedSpy, partialSpy, paddingSpy, initLoadedSpy, testListener;
+
+        function makeRequest(overrides) {
+            return Object.assign({
+                full: true, padding: false, buffer: true, trail: false,
+                index: 0, mediaType: 'video', type: 'MediaSegment', quality: 0,
+                duration: 4, startTime: 0, mediaStartTime: 0,
+                originalRange: null, range: null, bandwidth: 1000,
+                adaptationIndex: 0, timescale: 1,
+                availabilityStartTime: 0, availabilityEndTime: Infinity,
+                availabilityTimeComplete: true, wallStartTime: 0,
+                replacementNumber: 0, replacementTime: 0,
+                url: 'https://example.com/seg.m4s',
+                representation: {
+                    id: 'rep0', bandwidth: 1000,
+                    adaptation: { index: 0, period: { index: 0, start: 0, duration: 100 } },
+                    mediaInfo: { type: 'video', streamInfo: { id: 'stream-1' } }
+                },
+                isInitializationRequest: () => false,
+            }, overrides || {});
+        }
+
+        function triggerFragmentLoaded(request, error) {
+            const e = {
+                sender: { context: 'test' },
+                request,
+                response: new ArrayBuffer(8),
+                error: error || null,
+            };
+            eventBus.trigger(Events.FRAGMENT_LOADING_COMPLETED, e, { streamId: 'stream-1' });
+            return e;
+        }
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+
+            handler = DodgeHandler(context).create({
+                eventBus, events: Events, settings,
+                streamController: null,
+                mediaPlayer: { extend: () => {} }
+            });
+            handler.registerEvents();
+
+            testListener = {};
+            mediaLoadedSpy = sinon.spy();
+            partialSpy = sinon.spy();
+            paddingSpy = sinon.spy();
+            initLoadedSpy = sinon.spy();
+            eventBus.on(Events.MEDIA_FRAGMENT_LOADED, mediaLoadedSpy, testListener);
+            eventBus.on(Events.MEDIA_FRAGMENT_PARTIAL, partialSpy, testListener);
+            eventBus.on(Events.PADDING_LOADED, paddingSpy, testListener);
+            eventBus.on(Events.INIT_FRAGMENT_LOADED, initLoadedSpy, testListener);
+        });
+
+        afterEach(function () {
+            eventBus.off(Events.MEDIA_FRAGMENT_LOADED, mediaLoadedSpy, testListener);
+            eventBus.off(Events.MEDIA_FRAGMENT_PARTIAL, partialSpy, testListener);
+            eventBus.off(Events.PADDING_LOADED, paddingSpy, testListener);
+            eventBus.off(Events.INIT_FRAGMENT_LOADED, initLoadedSpy, testListener);
+            handler.reset();
+        });
+
+        it('errored Dodge request does not fire any Dodge events', function () {
+            triggerFragmentLoaded(makeRequest({ full: true, buffer: true }), new Error('network'));
+            expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
+            expect(partialSpy.called).to.be.false; // jshint ignore:line
+            expect(paddingSpy.called).to.be.false; // jshint ignore:line
+            expect(initLoadedSpy.called).to.be.false; // jshint ignore:line
+        });
+
+        it('errored Dodge request does not accumulate partial segments', function () {
+            triggerFragmentLoaded(makeRequest({ full: false, buffer: false }), new Error('network'));
+            expect(handler.getStreamStats('stream-1').partialSegments).to.equal(0);
+        });
+
+        it('errored vanilla request passes through without sender nulling', function () {
+            const e = triggerFragmentLoaded(makeRequest({ full: undefined, padding: undefined }), new Error('network'));
+            expect(e.sender).to.not.be.null; // jshint ignore:line
+            expect(mediaLoadedSpy.called).to.be.false; // jshint ignore:line
+        });
+    });
+
 });

@@ -653,6 +653,39 @@ describe('DodgeDashHandlerOverride', function () {
             const request = override.getSegmentRequestForTime({}, rep, 0); // segment 0, no override
             expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
         });
+
+        it('cycle quality override with no siblings available stalls (returns null)', function () {
+            adapter.getVoRepresentations.returns(null);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, quality: 'rep_low' }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('cycle with quality: null uses the current representation (no override)', function () {
+            makeSiblings(rep);
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, quality: null, buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.representation.id).to.equal('rep0');
+        });
     });
 
     // URL padding
@@ -1775,6 +1808,240 @@ describe('DodgeDashHandlerOverride', function () {
             const result = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
             expect(mockParent.getNextSegmentRequest.calledOnce).to.be.true; // jshint ignore:line
             expect(result).to.deep.equal({ parentNext: true });
+        });
+    });
+
+    describe('_generateInitRequest construction', function () {
+
+        it('SegmentTemplate init: request has correct type, mediaType, and representation', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getInitRequest({}, rep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.type).to.equal('InitializationSegment');
+            expect(request.mediaType).to.equal('video');
+            expect(request.representation.id).to.equal('rep0');
+        });
+
+        it('init cycle with range override: sets request.range and partial = true', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '100-200', buffer: true }],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getInitRequest({}, rep);
+            expect(request.range).to.equal('100-200');
+            expect(request.partial).to.be.true; // jshint ignore:line
+        });
+
+        it('init cycle without range: uses representation.range and partial = false', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ buffer: true }],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getInitRequest({}, rep);
+            expect(request.range).to.equal(rep.range); // null for SegmentTemplate
+            expect(request.partial).to.be.false; // jshint ignore:line
+        });
+
+        it('SegmentBase init (initialization = null): still returns a valid request', function () {
+            const segBaseRep = Object.assign({}, rep, {
+                initialization: null,
+                segmentInfoType: 'SegmentBase',
+                range: '0-855',
+            });
+
+            const segBaseURLController = {
+                resolve: () => ({ url: 'https://example.com/video.webm', serviceLocation: 'example.com', queryParams: {} })
+            };
+            const segBaseOverride = DodgeDashHandlerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                {
+                    adapter,
+                    debug: Debug(context).getInstance(),
+                    urlUtils: URLUtils(context).getInstance(),
+                    segmentsController,
+                    baseURLController: segBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: { getTimeSinceStreamEnd: sinon.stub().returns(0), getStreamEndTime: sinon.stub().returns(100) },
+                }
+            );
+
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+
+            const request = segBaseOverride.getInitRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.type).to.equal('InitializationSegment');
+        });
+
+        it('init cycle with padding flag: sets request.padding = true', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [
+                        { range: '0-855', padding: true },
+                        { buffer: true }
+                    ],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getInitRequest({}, rep);
+            expect(request.padding).to.be.true; // jshint ignore:line
+        });
+    });
+
+    describe('_getRequestForSegment construction', function () {
+
+        it('data request has correct type and mediaType', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep); // cycle 0
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.type).to.equal('MediaSegment');
+            expect(request.mediaType).to.equal('video');
+        });
+
+        it('null segment returns null', function () {
+            segmentsController.getSegmentByIndex.returns(null);
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.be.null; // jshint ignore:line
+        });
+
+        it('SegmentBase data request (segment.media = null): still returns valid request', function () {
+            const segBaseRep = Object.assign({}, rep, {
+                initialization: null,
+                segmentInfoType: 'SegmentBase',
+                range: '0-855',
+            });
+
+            const segBaseURLController = {
+                resolve: () => ({ url: 'https://example.com/video.webm', serviceLocation: 'example.com', queryParams: {} })
+            };
+            const segBaseSegCtrl = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => ({
+                    index: idx,
+                    media: null,
+                    presentationStartTime: idx * 4,
+                    duration: 4,
+                    representation: r,
+                    replacementNumber: idx,
+                    replacementTime: 0,
+                    mediaRange: '856-999',
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    wallStartTime: 0,
+                    mediaStartTime: 0,
+                    replacements: null,
+                })),
+                getSegmentByTime: sinon.stub().returns(null),
+            };
+            const segBaseOverride = DodgeDashHandlerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                {
+                    adapter,
+                    debug: Debug(context).getInstance(),
+                    urlUtils: URLUtils(context).getInstance(),
+                    segmentsController: segBaseSegCtrl,
+                    baseURLController: segBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: { getTimeSinceStreamEnd: sinon.stub().returns(0), getStreamEndTime: sinon.stub().returns(100) },
+                }
+            );
+
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, buffer: true }]
+                }]
+            });
+            segBaseOverride.updateDefendedStreamInfo(segBaseRep);
+
+            const request = segBaseOverride.getNextSegmentRequest({}, segBaseRep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.type).to.equal('MediaSegment');
+        });
+
+        it('homeRepresentation provided: sets homeRepresentationId on request', function () {
+            const siblings = [
+                Object.assign({}, rep, { id: 'rep_low', bandwidth: 250000, initialization: 'https://example.com/init_low.m4s', mediaInfo: rep.mediaInfo, adaptation: rep.adaptation }),
+                rep
+            ];
+            adapter.getVoRepresentations.withArgs(rep.mediaInfo).returns(siblings);
+
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, quality: 'rep_low', buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.homeRepresentationId).to.equal('rep0');
+        });
+
+        it('no homeRepresentation: homeRepresentationId not set', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request).to.exist; // jshint ignore:line
+            expect(request.homeRepresentationId).to.be.undefined; // jshint ignore:line
+        });
+
+        it('data request with range override: sets range and partial = true', function () {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{ range: '0-855', buffer: true }],
+                    data: [{ index: 0, range: '100-200', buffer: true }]
+                }]
+            });
+            override.updateDefendedStreamInfo(rep);
+
+            const request = override.getNextSegmentRequest({}, rep);
+            expect(request.range).to.equal('100-200');
+            expect(request.partial).to.be.true; // jshint ignore:line
         });
     });
 });

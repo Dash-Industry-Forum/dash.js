@@ -73,6 +73,36 @@ describe('DodgeBufferControllerOverride', function () {
             expect(mockParent.setMockBuffer.lastCall.args[0]).to.be.closeTo(0.06, 1e-9);
         });
 
+        it('zero variance when actualDuration equals segmentDuration', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 4 });
+            expect(mockParent.setMockBuffer.calledOnceWith(0)).to.be.true; // jshint ignore:line
+        });
+
+        it('resets mockBuffer before accumulating when trailing was active', function () {
+            // Enter trailing state
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(5);
+            override.updateBufferLevel();
+            mockParent.setMockBuffer.reset();
+
+            // onBufferCycleLoaded should reset trailing state then accumulate
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.9 });
+
+            // First call resets to 0, second call sets accumulated value
+            // After reset, mockBuffer = 0 + (4 - 3.9) = 0.1
+            expect(mockParent.setMockBuffer.lastCall.args[0]).to.be.closeTo(0.1, 1e-9);
+        });
+
+        it('large negative variance is accepted', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 2 }, actualDuration: 5 });
+            expect(mockParent.setMockBuffer.firstCall.args[0]).to.be.closeTo(-3, 1e-9);
+        });
+
+        it('large positive variance accumulates correctly', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 10 }, actualDuration: 3 });
+            expect(mockParent.setMockBuffer.firstCall.args[0]).to.be.closeTo(7, 1e-9);
+        });
+
     });
 
     // onPaddingLoaded
@@ -147,6 +177,67 @@ describe('DodgeBufferControllerOverride', function () {
             override.updateBufferLevel();
 
             expect(mockParent.setMockBuffer.calledOnceWith(0)).to.be.true; // jshint ignore:line
+        });
+
+        it('skips mock buffer logic when dashHandler is undefined, still calls parent', function () {
+            // Create override without dashHandler
+            const noDashOverride = DodgeBufferControllerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                { dashHandler: undefined, playbackController, capabilities }
+            );
+            mockParent.setMockBuffer.reset();
+            mockParent.updateBufferLevel.reset();
+
+            noDashOverride.updateBufferLevel();
+
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+            expect(mockParent.updateBufferLevel.calledOnce).to.be.true; // jshint ignore:line
+        });
+
+        it('skips mock buffer logic when playbackController is undefined, still calls parent', function () {
+            const noPbOverride = DodgeBufferControllerOverride.call(
+                { context, parent: mockParent, factory: {} },
+                { dashHandler, playbackController: undefined, capabilities }
+            );
+            mockParent.setMockBuffer.reset();
+            mockParent.updateBufferLevel.reset();
+
+            noPbOverride.updateBufferLevel();
+
+            expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
+            expect(mockParent.updateBufferLevel.calledOnce).to.be.true; // jshint ignore:line
+        });
+
+        it('resets mockBuffer when exiting trailing phase', function () {
+            // Enter trailing
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(2);
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            override.updateBufferLevel();
+            mockParent.setMockBuffer.reset();
+
+            // Exit trailing
+            dashHandler.getIsTrailing.returns(false);
+            override.updateBufferLevel();
+
+            expect(mockParent.setMockBuffer.calledOnceWith(0)).to.be.true; // jshint ignore:line
+        });
+
+        it('clamps delta to zero when timeSinceStreamEnd decreases', function () {
+            // Enter trailing with time = 5
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 8 } });
+            dashHandler.getIsTrailing.returns(true);
+            playbackController.getTimeSinceStreamEnd.returns(5);
+            override.updateBufferLevel();
+            mockParent.setMockBuffer.reset();
+
+            // Time goes backwards to 3 (Math.max(0, 3-5) = 0)
+            playbackController.getTimeSinceStreamEnd.returns(3);
+            override.updateBufferLevel();
+
+            // mockBuffer should not increase; delta clamped to 0
+            // currentMockBuffer was 8 - 5 = 3 from first call
+            expect(mockParent.setMockBuffer.lastCall.args[0]).to.be.closeTo(3, 1e-9);
         });
     });
 

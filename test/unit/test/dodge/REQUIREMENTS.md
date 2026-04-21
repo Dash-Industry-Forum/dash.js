@@ -168,6 +168,8 @@ On any resolution failure - no sibling representations available, string ID not 
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | quality override does not poison lastSegment cache for a subsequent same-index cycle |
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime with unresolvable quality override stalls (returns null) |
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | getSegmentRequestForTime honors quality override via re-lookup |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle quality override with no siblings available stalls (returns null) |
+| `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with quality: null uses the current representation (no override) |
 
 ---
 
@@ -236,6 +238,31 @@ Muxed representations (audio and video in the same segments) are defended by the
 |---|---|---|
 | `dodge.DodgeDashHandlerOverride.js` | Muxed audio/video streams | defended muxed stream: getNextSegmentRequest() returns cycle request without calling parent |
 | `dodge.DodgeDashHandlerOverride.js` | Muxed audio/video streams | defended muxed stream: getInitRequest() returns cycle request without calling parent |
+
+### R3.8 - `_generateInitRequest` constructs init requests correctly
+
+The internal `_generateInitRequest` function builds a `FragmentRequest` for init segments. For SegmentTemplate representations, it sets `Bandwidth` replacement count to 1 and applies template token substitution. For SegmentBase representations (`representation.initialization = null`), all replacement counts are 0 and no template expansion occurs. Range overrides set `request.range` and `request.partial = true`; without a range override, `representation.range` is used with `partial = false`.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | _generateInitRequest construction | SegmentTemplate init: request has correct type, mediaType, and representation |
+| `dodge.DodgeDashHandlerOverride.js` | _generateInitRequest construction | init cycle with range override: sets request.range and partial = true |
+| `dodge.DodgeDashHandlerOverride.js` | _generateInitRequest construction | init cycle without range: uses representation.range and partial = false |
+| `dodge.DodgeDashHandlerOverride.js` | _generateInitRequest construction | SegmentBase init (initialization = null): still returns a valid request |
+| `dodge.DodgeDashHandlerOverride.js` | _generateInitRequest construction | init cycle with padding flag: sets request.padding = true |
+
+### R3.9 - `_getRequestForSegment` constructs data requests correctly
+
+The internal `_getRequestForSegment` function builds a `FragmentRequest` for media segments. Returns `null` for null segments. For SegmentTemplate, applies token replacement and counts replacements. For SegmentBase (`segment.media = null`), skips template expansion with all replacement counts at 0. When `homeRepresentation` is provided, sets `homeRepresentationId` on the request.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | data request has correct type and mediaType |
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | null segment returns null |
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | SegmentBase data request (segment.media = null): still returns valid request |
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | homeRepresentation provided: sets homeRepresentationId on request |
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | no homeRepresentation: homeRepresentationId not set |
+| `dodge.DodgeDashHandlerOverride.js` | _getRequestForSegment construction | data request with range override: sets range and partial = true |
 
 ---
 
@@ -334,6 +361,28 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 |---|---|---|
 | `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets internal state and delegates to parent.resetInitialSettings() |
 | `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets mockBuffer to zero after accumulation |
+
+### R5.6 - `onBufferCycleLoaded` handles negative variance and trailing reset
+
+`onBufferCycleLoaded` increments `currentMockBuffer` by `segmentDuration - actualDuration`. When `actualDuration > segmentDuration`, the variance is negative (accepted). When trailing was previously active (`lastTimeSinceStreamEnd != 0`), the mock buffer is reset to 0 before the new variance is accumulated.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | zero variance when actualDuration equals segmentDuration |
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | resets mockBuffer before accumulating when trailing was active |
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | large negative variance is accepted |
+| `dodge.DodgeBufferControllerOverride.js` | onBufferCycleLoaded | large positive variance accumulates correctly |
+
+### R5.7 - `updateBufferLevel` guards against missing dashHandler
+
+`updateBufferLevel` guards on `playbackController && dashHandler` before managing mock buffer state. When either is undefined, mock buffer logic is skipped but the parent's `updateBufferLevel` is still called. When exiting the trailing phase (`getIsTrailing()` returns false with `lastTimeSinceStreamEnd != 0`), mock buffer is reset to 0. Time decreases (`timeSinceStreamEnd < lastTimeSinceStreamEnd`) are clamped to a zero delta.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | skips mock buffer logic when dashHandler is undefined, still calls parent |
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | skips mock buffer logic when playbackController is undefined, still calls parent |
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | resets mockBuffer when exiting trailing phase |
+| `dodge.DodgeBufferControllerOverride.js` | updateBufferLevel | clamps delta to zero when timeSinceStreamEnd decreases |
 
 ---
 
@@ -891,6 +940,56 @@ DodgeHandler listens for the internal `NEED_KEY` event. In all strict modes (inc
 
 ---
 
+## 12. Internal Helpers
+
+### R12.1 - `_concatPartialSegments` assembles byte ranges correctly
+
+The internal `_concatPartialSegments` function combines accumulated partial responses into a single `Uint8Array`. It matches pieces by `index` (with `NaN` for init segments), `mediaType`, and `representation.id`. Range parsing uses `originalRange` first, then `range` (which overrides). When no valid range end is found, it computes `rangeStart + byteLength - 1`. Pieces are placed at their range offset in the result buffer; gaps are filled with zeros - but there should never be any gaps. Matched pieces are removed from the `partialSegments` array.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | single piece without range info: assembles using 0 to byteLength - 1 |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | multiple pieces with contiguous ranges: merged correctly |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | multiple pieces with non-contiguous ranges: gap filled with zeros |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | pieces placed by range offset regardless of insertion order |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | NaN index matching for init segments |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | unmatched pieces are not consumed: different mediaType is not assembled |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | originalRange is used when available, range overrides it |
+| `dodge.DodgeHandler.js` | _concatPartialSegments via _onFragmentLoadingCompleted | matched pieces are removed from partialSegments array |
+
+### R12.2 - `_createDataChunk` populates DataChunk correctly
+
+The internal `_createDataChunk` function constructs a `DataChunk` from the assembled bytes and request metadata. All fields are copied directly from the request; `end` is computed as `start + duration`. `homeRepresentationId` defaults to `null` when undefined on the request.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | _createDataChunk via _onFragmentLoadingCompleted | populates chunk fields from request properties |
+| `dodge.DodgeHandler.js` | _createDataChunk via _onFragmentLoadingCompleted | homeRepresentationId defaults to null when not set on request |
+| `dodge.DodgeHandler.js` | _createDataChunk via _onFragmentLoadingCompleted | homeRepresentationId is set when present on request |
+| `dodge.DodgeHandler.js` | _createDataChunk via _onFragmentLoadingCompleted | endFragment is true for full buffered segments |
+
+### R12.3 - `getStreamStats` returns correct counts
+
+The public `getStreamStats(streamId)` method returns `{ partialSegments, pendingInit, pendingMedia }` counts for a given stream. For unknown stream IDs, a new empty state is created and zeros are returned. Each stream ID is tracked independently.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | getStreamStats | returns zeros for unknown streamId |
+| `dodge.DodgeHandler.js` | getStreamStats | returns correct counts after partials and pending segments accumulate |
+| `dodge.DodgeHandler.js` | getStreamStats | tracks streams independently by streamId |
+
+### R12.4 - Error fragments stall without corrupting state
+
+When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` truthy with `full` or `padding` defined), it sets `e.sender = null` to prevent `StreamProcessor._handleFragmentLoadingError` from generating a corrupted retry. No Dodge events are fired and no partial segments are accumulated. Vanilla errored requests (no Dodge-specific fields) pass through unchanged.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | Error fragment stalling, _onFragmentLoadingCompleted | errored Dodge request does not fire any Dodge events |
+| `dodge.DodgeHandler.js` | Error fragment stalling, _onFragmentLoadingCompleted | errored Dodge request does not accumulate partial segments |
+| `dodge.DodgeHandler.js` | Error fragment stalling, _onFragmentLoadingCompleted | errored vanilla request passes through without sender nulling |
+
+---
+
 ## Summary
 
 | Requirement | Tests |
@@ -906,7 +1005,7 @@ DodgeHandler listens for the internal `NEED_KEY` event. In all strict modes (inc
 | R2.7 getLastSegment returns override's segment | 3 |
 | R2.8 Defense state management | 8 |
 | R2.9 Selective buffer | 10 |
-| R2.10 Per-cycle quality override on data cycles | 10 |
+| R2.10 Per-cycle quality override on data cycles | 12 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 7 |
 | R3.3 Fragmented text streams | 7 |
@@ -914,6 +1013,8 @@ DodgeHandler listens for the internal `NEED_KEY` event. In all strict modes (inc
 | R3.5 Self-initialized streams | (see R2.4) |
 | R3.6 SegmentBase (byte-range) content | 8 |
 | R3.7 Muxed audio/video streams | 2 |
+| R3.8 _generateInitRequest construction | 5 |
+| R3.9 _getRequestForSegment construction | 6 |
 | R4.1 No spurious seeks during trailing | 4 |
 | R4.2 Segment downloading not complete early | 2 |
 | R4.3 Schedule timer continues (buffering icon) | 5 |
@@ -923,6 +1024,8 @@ DodgeHandler listens for the internal `NEED_KEY` event. In all strict modes (inc
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
 | R5.5 Buffer controller state reset | 2 |
+| R5.6 onBufferCycleLoaded boundary conditions | 4 |
+| R5.7 updateBufferLevel guards against missing dashHandler | 4 |
 | R6.1 Init segment sandwich for quality overrides | 8 |
 | R6.2 homeRepresentationId tagging | 5 |
 | R6.3 Dodge-owned alternate init cache, invalidated on quality switch | 8 |
@@ -963,4 +1066,8 @@ DodgeHandler listens for the internal `NEED_KEY` event. In all strict modes (inc
 | R11.3 strictMode = max enforcement | 5 |
 | R11.4 DRM key session detection (warn only) | 3 |
 | R11.5 NEED_KEY event handling (warn only) | 2 |
-| **Total** | **377** |
+| R12.1 _concatPartialSegments assembly | 8 |
+| R12.2 _createDataChunk population | 4 |
+| R12.3 getStreamStats counts | 3 |
+| R12.4 Error fragment stalling | 3 |
+| **Total** | **416** |
