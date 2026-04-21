@@ -103,6 +103,8 @@ When no extended manifest is loaded and strict mode does not apply, every reques
 |---|---|---|
 | `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | with no defended stream info, delegates to parent |
 | `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | with defended stream info, returns null to suppress CMCD nor/nrr leak |
+| `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | with defended stream info, returns null consistently across multiple calls |
+| `dodge.DodgeDashHandlerOverride.js` | getNextSegmentRequestIdempotent during defended playback | transitions from defended to undefended after reset restores parent delegation |
 
 ### R2.7 - `getLastSegment()` returns the override's segment during defended playback
 
@@ -122,6 +124,10 @@ The parent DashHandler's `lastSegment` is never updated during defended playback
 |---|---|---|
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | updateDefendedStreamInfo() returns true when stream is found |
 | `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | resetInitialSettings() clears state; with strictMode = false, subsequent getInitRequest() falls back to parent |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | updateDefendedStreamInfo() returns false for unknown label |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | updateDefendedStreamInfo() with same label across multiple calls preserves defense |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getIsDefended() returns true when defended stream info is set |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getIsDefended() returns false after reset with strictMode false |
 
 ### R2.9 - Selective buffer: array buffer on data cycles flushes only matching pending segments
 
@@ -336,6 +342,7 @@ Resets `currentMockBuffer` and `lastTimeSinceStreamEnd` to zero and delegates to
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets internal state and delegates to parent.resetInitialSettings() |
+| `dodge.DodgeBufferControllerOverride.js` | resetInitialSettings | resets mockBuffer to zero after accumulation |
 
 ### R5.6 - Init segment sandwich for quality override media segments
 
@@ -350,6 +357,7 @@ When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOve
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when alternate init is not cached |
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when home init is not cached |
 | `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | stalls when both inits are not cached |
+| `dodge.DodgeBufferControllerOverride.js` | _onMediaFragmentLoaded | handles consecutive quality overrides correctly |
 
 ### R5.7 - `homeRepresentationId` tagging on quality override requests
 
@@ -370,6 +378,7 @@ When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOve
 |---|---|---|
 | `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | delegates to parent for home init (no homeRepresentationId) |
 | `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | alternate init is cached locally and does not delegate to parent |
+| `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | home init is both cached locally and delegated to parent |
 | `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | sandwich retrieves alternate init from the local cache |
 | `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | local cache does not depend on streaming.cacheInitSegments |
 | `dodge.DodgeBufferControllerOverride.js` | _onInitFragmentLoaded | QUALITY_CHANGE_REQUESTED for this mediaType clears the local cache |
@@ -398,6 +407,8 @@ When a media chunk carries a `homeRepresentationId` (set by `DodgeDashHandlerOve
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | _schedule only targets the stream processor matching the event mediaType |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | audio event targets audio SP, does not affect video SP |
+| `dodge.DodgeHandler.js` | Random walk scheduling, _getScheduleWait and _scheduleAll | padding event for video does not route to audio buffer controller |
 
 ### R6.3 - Suppressed events skip scheduling
 
@@ -415,6 +426,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | File | Description | Test |
 |---|---|---|
 | `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED: routes event to buffer controller onPaddingLoaded |
+| `dodge.DodgeHandler.js` | Scheduling logic, _onPartialSegment and _onPaddingLoaded | PADDING_LOADED: routes event with all expected fields to buffer controller |
 
 ### R6.5 - Random walk delay is enforced on all scheduling paths during defended playback
 
@@ -425,6 +437,7 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | not defended: passes value through to parent unchanged |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value = 0: enforces minimum random delay |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value larger than max delay: keeps the larger value |
+| `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with value between base and max: keeps the original value |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitRandom < 0: clamps to scheduleWaitBase and warns exactly once |
 | `dodge.DodgeScheduleControllerOverride.js` | startScheduleTimer | defended with scheduleWaitBase < 0: clamps to 0 and warns exactly once |
@@ -473,6 +486,8 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 |---|---|---|
 | `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | delegates to parent.load() |
 | `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | extends URL before calling parent.load() when paddingLengthBase is set |
+| `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | preserves original request headers after padding |
+| `dodge.RequestPadding.js` | DodgeFetchLoaderOverride | passes through config argument to parent.load() |
 
 ### R7.4 - XHRLoader applies request padding before dispatching the request
 
@@ -480,6 +495,8 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 |---|---|---|
 | `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | delegates to parent.load() |
 | `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | extends URL before calling parent.load() when paddingLengthBase is set |
+| `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | preserves original request headers after padding |
+| `dodge.RequestPadding.js` | DodgeXHRLoaderOverride | passes through config argument to parent.load() |
 
 ---
 
@@ -883,9 +900,9 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R2.3 Init-only (non-fragmented text) streams | 3 |
 | R2.4 Data-only (self-initialized) streams | 4 |
 | R2.5 Fallback to parent | 6 |
-| R2.6 CMCD nor/nrr suppressed during defense | 2 |
+| R2.6 CMCD nor/nrr suppressed during defense | 4 |
 | R2.7 getLastSegment returns override's segment | 3 |
-| R2.8 Defense state management | 2 |
+| R2.8 Defense state management | 6 |
 | R2.9 Selective buffer | 10 |
 | R2.10 Per-cycle quality override on data cycles | 14 |
 | R3.1 Video streams | (implicit) |
@@ -904,19 +921,19 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R5.2 Mock buffer incremented only for trailing padding | 5 |
 | R5.3 Mock buffer drains during trailing | 3 |
 | R5.4 Mock buffer resets on trailing exit | 1 |
-| R5.5 Buffer controller state reset | 1 |
-| R5.6 Init segment sandwich for quality overrides | 7 |
+| R5.5 Buffer controller state reset | 2 |
+| R5.6 Init segment sandwich for quality overrides | 8 |
 | R5.7 homeRepresentationId tagging | 4 |
-| R5.8 Dodge-owned alternate init cache, invalidated on quality switch | 7 |
+| R5.8 Dodge-owned alternate init cache, invalidated on quality switch | 8 |
 | R6.1 Random walk delay bounded | 4 |
-| R6.2 Scheduling is scoped to correct stream processor | 1 |
+| R6.2 Scheduling is scoped to correct stream processor | 3 |
 | R6.3 Suppressed events skip scheduling | 2 |
-| R6.4 Padding event routing | 1 |
-| R6.5 Random walk delay on all scheduling paths | 8 |
+| R6.4 Padding event routing | 2 |
+| R6.5 Random walk delay on all scheduling paths | 9 |
 | R7.1 URL padding normalizes template lengths | 4 |
 | R7.2 Request padding normalizes wire size | 14 |
-| R7.3 FetchLoader applies padding | 2 |
-| R7.4 XHRLoader applies padding | 2 |
+| R7.3 FetchLoader applies padding | 4 |
+| R7.4 XHRLoader applies padding | 4 |
 | R8.1 Structural validation rejects malformed manifests | 44 |
 | R8.2 Init cycle validation | 16 |
 | R8.3 Data cycle validation, maxNoPad, and cycle.full precomputation | 6 |
@@ -945,4 +962,4 @@ DodgeHandler listens for the internal `NEED_KEY` event at high priority (before 
 | R10.3 DRM key session detection (warn only) | 3 |
 | R10.4 NEED_KEY event handling (warn only) | 2 |
 | R10.5 strictMode = max enforcement | 5 |
-| **Total** | **355** |
+| **Total** | **374** |

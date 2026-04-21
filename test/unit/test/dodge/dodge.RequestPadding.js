@@ -236,6 +236,24 @@ describe('DodgeFetchLoaderOverride', function () {
         expect(parentLoad.calledOnce).to.be.true; // jshint ignore:line
         expect(req.url.length).to.be.greaterThan(url.length);
     });
+
+    it('preserves original request headers after padding', function () {
+        settings.update({ dodge: { paddingLengthBase: 1000, paddingLengthRandom: 0, queryParam: 'padding' } });
+        const parentLoad = sinon.stub();
+        const override = DodgeFetchLoaderOverride.call({ context, parent: { load: parentLoad }, factory: {} });
+        const req = { url: 'https://example.com/seg.m4s?padding=abc', headers: { 'Range': 'bytes=0-1000', 'X-Custom': 'value' } };
+        override.load(req, {});
+        expect(req.headers['Range']).to.equal('bytes=0-1000');
+        expect(req.headers['X-Custom']).to.equal('value');
+    });
+
+    it('passes through config argument to parent.load()', function () {
+        const parentLoad = sinon.stub();
+        const override = DodgeFetchLoaderOverride.call({ context, parent: { load: parentLoad }, factory: {} });
+        const config = { timeout: 5000 };
+        override.load({ url: 'https://example.com/seg.m4s', headers: {} }, config);
+        expect(parentLoad.firstCall.args[1]).to.equal(config);
+    });
 });
 
 describe('DodgeXHRLoaderOverride', function () {
@@ -264,5 +282,23 @@ describe('DodgeXHRLoaderOverride', function () {
         override.load(req, {});
         expect(parentLoad.calledOnce).to.be.true; // jshint ignore:line
         expect(req.url.length).to.be.greaterThan(url.length);
+    });
+
+    it('preserves original request headers after padding', function () {
+        settings.update({ dodge: { paddingLengthBase: 1000, paddingLengthRandom: 0, queryParam: 'padding' } });
+        const parentLoad = sinon.stub();
+        const override = DodgeXHRLoaderOverride.call({ context, parent: { load: parentLoad }, factory: {} });
+        const req = { url: 'https://example.com/seg.m4s?padding=abc', headers: { 'Range': 'bytes=0-1000', 'X-Custom': 'value' } };
+        override.load(req, {});
+        expect(req.headers['Range']).to.equal('bytes=0-1000');
+        expect(req.headers['X-Custom']).to.equal('value');
+    });
+
+    it('passes through config argument to parent.load()', function () {
+        const parentLoad = sinon.stub();
+        const override = DodgeXHRLoaderOverride.call({ context, parent: { load: parentLoad }, factory: {} });
+        const config = { timeout: 5000 };
+        override.load({ url: 'https://example.com/seg.m4s', headers: {} }, config);
+        expect(parentLoad.firstCall.args[1]).to.equal(config);
     });
 });

@@ -172,6 +172,18 @@ describe('DodgeBufferControllerOverride', function () {
             override.updateBufferLevel();
             expect(mockParent.setMockBuffer.called).to.be.false; // jshint ignore:line
         });
+
+        it('resets mockBuffer to zero after accumulation', function () {
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.5 });
+            override.onPaddingLoaded({ trail: true, buffer: true, representation: { segmentDuration: 4 } });
+            mockParent.setMockBuffer.reset();
+
+            override.resetInitialSettings(false, false);
+
+            // Verify by accumulating again - value should start from zero, not from prior state
+            override.onBufferCycleLoaded({ representation: { segmentDuration: 4 }, actualDuration: 3.9 });
+            expect(mockParent.setMockBuffer.lastCall.args[0]).to.be.closeTo(0.1, 1e-9);
+        });
     });
 
     // _onMediaFragmentLoaded (init sandwich for quality overrides)
@@ -303,6 +315,27 @@ describe('DodgeBufferControllerOverride', function () {
             expect(mockParent.appendToBuffer.called).to.be.false; // jshint ignore:line
             expect(mockParent._onMediaFragmentLoaded.called).to.be.false; // jshint ignore:line
         });
+
+        it('handles consecutive quality overrides correctly', async function () {
+            const altRep = { id: 'video_500k' };
+            const homeRep = { id: 'video_1000k' };
+            const altInit = { representation: altRep, bytes: new Uint8Array(10) };
+            const homeInit = { representation: homeRep, bytes: new Uint8Array(20) };
+            mockParent.getInitChunkFromCache.withArgs('video_500k').returns(altInit);
+            mockParent.getInitChunkFromCache.withArgs('video_1000k').returns(homeInit);
+
+            await override._onMediaFragmentLoaded({
+                chunk: { representation: altRep, homeRepresentationId: 'video_1000k' },
+                request: {}
+            });
+            await override._onMediaFragmentLoaded({
+                chunk: { representation: altRep, homeRepresentationId: 'video_1000k' },
+                request: {}
+            });
+
+            expect(mockParent.changeType.callCount).to.equal(4);
+            expect(mockParent.appendToBuffer.callCount).to.equal(6);
+        });
     });
 
     // _onInitFragmentLoaded + Dodge-owned alternate init cache
@@ -320,6 +353,12 @@ describe('DodgeBufferControllerOverride', function () {
             const chunk = { representation: { id: 'video_500k' }, homeRepresentationId: 'video_1000k' };
             override._onInitFragmentLoaded({ chunk });
             expect(mockParent._onInitFragmentLoaded.called).to.be.false; // jshint ignore:line
+        });
+
+        it('home init is both cached locally and delegated to parent', function () {
+            const homeChunk = { representation: { id: 'video_1000k' }, homeRepresentationId: null };
+            override._onInitFragmentLoaded({ chunk: homeChunk });
+            expect(mockParent._onInitFragmentLoaded.calledOnce).to.be.true; // jshint ignore:line
         });
 
         it('sandwich retrieves alternate init from the local cache (parent cache never consulted for alt)', async function () {

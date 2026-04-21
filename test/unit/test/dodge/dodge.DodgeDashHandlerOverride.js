@@ -274,6 +274,32 @@ describe('DodgeDashHandlerOverride', function () {
 
             settings.update({ dodge: { strictMode: 'representation' } });
         });
+
+        it('updateDefendedStreamInfo() returns false for unknown label', function () {
+            const unknownRep = makeRepresentation();
+            unknownRep.id = 'nonexistent_label';
+            expect(override.updateDefendedStreamInfo(unknownRep)).to.be.false; // jshint ignore:line
+        });
+
+        it('updateDefendedStreamInfo() with same label across multiple calls preserves defense', function () {
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.updateDefendedStreamInfo(rep); // re-query same label
+            const r = override.getNextSegmentRequest({}, rep); // should be cycle 1, not cycle 0
+            expect(r).to.exist; // jshint ignore:line
+            expect(r.index).to.equal(1);
+        });
+
+        it('getIsDefended() returns true when defended stream info is set', function () {
+            expect(override.getIsDefended()).to.be.true; // jshint ignore:line
+        });
+
+        it('getIsDefended() returns false after reset with strictMode false', function () {
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+            override.resetInitialSettings();
+            expect(override.getIsDefended()).to.be.false; // jshint ignore:line
+            settings.update({ dodge: { strictMode: 'representation' } });
+        });
     });
 
     // Selective buffer (array buffer on data cycles)
@@ -1377,6 +1403,34 @@ describe('DodgeDashHandlerOverride', function () {
             const result = override.getNextSegmentRequestIdempotent({}, rep);
             expect(mockParent.getNextSegmentRequestIdempotent.called).to.be.false; // jshint ignore:line
             expect(result).to.be.null; // jshint ignore:line
+        });
+
+        it('with defended stream, returns null consistently across multiple calls', function () {
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep); // cycle 0
+
+            for (let i = 0; i < 5; i++) {
+                expect(override.getNextSegmentRequestIdempotent({}, rep)).to.be.null; // jshint ignore:line
+            }
+            expect(mockParent.getNextSegmentRequestIdempotent.called).to.be.false; // jshint ignore:line
+        });
+
+        it('transitions from defended to undefended after reset restore parent delegation', function () {
+            const settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: false } });
+
+            defenseController.addExtendedManifest(makeManifest());
+            override.updateDefendedStreamInfo(rep);
+            override.getNextSegmentRequest({}, rep);
+            expect(override.getNextSegmentRequestIdempotent({}, rep)).to.be.null; // jshint ignore:line
+
+            override.resetInitialSettings();
+            const result = override.getNextSegmentRequestIdempotent({}, rep);
+            expect(mockParent.getNextSegmentRequestIdempotent.calledOnce).to.be.true; // jshint ignore:line
+            expect(result).to.deep.equal({ idempotent: true });
+
+            settings.update({ dodge: { strictMode: 'representation' } });
         });
     });
 

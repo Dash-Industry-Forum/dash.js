@@ -650,6 +650,26 @@ describe('DodgeHandler', function () {
             expect(onPaddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
         });
 
+        it('PADDING_LOADED: routes event with all expected fields to buffer controller', function () {
+            const e = {
+                index: 3,
+                suppress: false,
+                representation: { segmentDuration: 4 },
+                quality: 0,
+                byteLength: 200,
+                trail: true,
+                buffer: false,
+                bufferFlag: true,
+                mediaType: 'video',
+            };
+            eventBus.trigger(Events.PADDING_LOADED, e, { streamId: 'stream-1', mediaType: 'video' });
+            expect(onPaddingLoadedSpy.calledOnce).to.be.true; // jshint ignore:line
+            const passedEvent = onPaddingLoadedSpy.firstCall.args[0];
+            expect(passedEvent.trail).to.be.true; // jshint ignore:line
+            expect(passedEvent.buffer).to.be.false; // jshint ignore:line
+            expect(passedEvent.representation).to.deep.equal({ segmentDuration: 4 });
+        });
+
         it('vanilla request: startScheduleTimer is never called', function () {
             // A vanilla FRAGMENT_LOADING_COMPLETED request has full = undefined and
             // padding = undefined. DodgeHandler must pass it through without triggering
@@ -922,6 +942,62 @@ describe('DodgeHandler', function () {
 
             expect(timerSpy1.calledOnce).to.be.true; // jshint ignore:line
             expect(timerSpy2.called).to.be.false; // jshint ignore:line
+        });
+
+        it('audio event targets audio SP, does not affect video SP', function () {
+            const videoTimerSpy = sinon.spy();
+            const audioTimerSpy = sinon.spy();
+            const videoQualitySpy = sinon.spy();
+            const audioQualitySpy = sinon.spy();
+
+            makeHandler([
+                {
+                    getScheduleController: () => ({ startScheduleTimer: videoTimerSpy, setShouldCheckPlaybackQuality: videoQualitySpy }),
+                    getType: () => 'video',
+                    getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+                },
+                {
+                    getScheduleController: () => ({ startScheduleTimer: audioTimerSpy, setShouldCheckPlaybackQuality: audioQualitySpy }),
+                    getType: () => 'audio',
+                    getBufferController: () => ({ onPaddingLoaded: sinon.spy() }),
+                },
+            ]);
+
+            eventBus.trigger(Events.MEDIA_FRAGMENT_PARTIAL,
+                { index: 0, suppress: false, representation: {}, quality: 0, byteLength: 100, trail: false, buffer: false },
+                { streamId: 'stream-1', mediaType: 'audio' }
+            );
+
+            expect(audioTimerSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(audioQualitySpy.calledOnceWith(false)).to.be.true; // jshint ignore:line
+            expect(videoTimerSpy.called).to.be.false; // jshint ignore:line
+            expect(videoQualitySpy.called).to.be.false; // jshint ignore:line
+        });
+
+        it('padding event for video does not route to audio buffer controller', function () {
+            const videoPaddingSpy = sinon.spy();
+            const audioPaddingSpy = sinon.spy();
+
+            makeHandler([
+                {
+                    getScheduleController: () => ({ startScheduleTimer: sinon.spy(), setShouldCheckPlaybackQuality: sinon.spy() }),
+                    getType: () => 'video',
+                    getBufferController: () => ({ onPaddingLoaded: videoPaddingSpy }),
+                },
+                {
+                    getScheduleController: () => ({ startScheduleTimer: sinon.spy(), setShouldCheckPlaybackQuality: sinon.spy() }),
+                    getType: () => 'audio',
+                    getBufferController: () => ({ onPaddingLoaded: audioPaddingSpy }),
+                },
+            ]);
+
+            eventBus.trigger(Events.PADDING_LOADED,
+                { index: 0, suppress: false, representation: { segmentDuration: 4 }, quality: 0, byteLength: 100, trail: true, buffer: true, bufferFlag: true },
+                { streamId: 'stream-1', mediaType: 'video' }
+            );
+
+            expect(videoPaddingSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(audioPaddingSpy.called).to.be.false; // jshint ignore:line
         });
     });
 

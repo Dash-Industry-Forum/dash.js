@@ -103,6 +103,17 @@ describe('DodgeScheduleControllerOverride', function () {
             expect(parentStartScheduleTimerStub.firstCall.args[0]).to.equal(500);
         });
 
+        it('defended with value between base and max: keeps the original value', function () {
+            const { override, parentStartScheduleTimerStub } = makeOverride({
+                parentResult: false, isTrailing: false, isDefended: true,
+                scheduleWaitBase: 100, scheduleWaitRandom: 50
+            });
+            override.startScheduleTimer(120);
+            expect(parentStartScheduleTimerStub.calledOnce).to.be.true; // jshint ignore:line
+            const delay = parentStartScheduleTimerStub.firstCall.args[0];
+            expect(delay).to.be.at.least(120);
+        });
+
         it('defended with scheduleWaitRandom = 0: delay is exactly scheduleWaitBase', function () {
             const { override, parentStartScheduleTimerStub } = makeOverride({
                 parentResult: false, isTrailing: false, isDefended: true,
