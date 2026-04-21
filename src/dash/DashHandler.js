@@ -462,8 +462,6 @@ function DashHandler(config) {
     function getIsDefended() { return false; }
     function getIsTrailing() { return false; }
     function getRemainingInitCycles() { return -1; }
-    function isTextTrackBlockedByDodge() { return false; }
-
     instance = {
         getCurrentIndex,
         getInitRequest,
@@ -483,7 +481,6 @@ function DashHandler(config) {
         repeatSegmentRequest,
         reset,
         updateDefendedStreamInfo,
-        isTextTrackBlockedByDodge,
     };
 
     setup();

@@ -431,11 +431,6 @@ function StreamProcessor(config) {
                 if (dashHandler) {
                     dashHandler.updateDefendedStreamInfo(rep);
                 }
-                // Dodge: text track has no defense in strict mode, disable instead of retrying
-                if (currentMediaInfo.isText && dashHandler && dashHandler.isTextTrackBlockedByDodge()) {
-                    scheduleController.setInitSegmentRequired(false);
-                    return;
-                }
                 const request = dashHandler ? dashHandler.getInitRequest(currentMediaInfo, rep) : null;
                 if (request) {
                     fragmentModel.executeRequest(request);

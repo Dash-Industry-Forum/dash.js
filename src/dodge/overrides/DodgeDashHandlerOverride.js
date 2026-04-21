@@ -29,7 +29,6 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-import Constants from '../../streaming/constants/Constants.js';
 import DefenseRegistry, { getCycleIndexBySegmentIndex } from '../DefenseRegistry.js';
 import Settings from '../../core/Settings.js';
 import {
@@ -76,7 +75,6 @@ function DodgeDashHandlerOverride(config) {
         lastCycleIndex,
         lastSegment,
         mediaHasFinished,
-        lastRepresentationMediaType,
         lastResolvedLabel,
         reportedLabels,
         warnedInvalidMaxIdLength;
@@ -92,7 +90,6 @@ function DodgeDashHandlerOverride(config) {
         lastCycleIndex = -1;
         lastSegment = null;
         mediaHasFinished = false;
-        lastRepresentationMediaType = null;
         lastResolvedLabel = null;
         reportedLabels = new Set();
         warnedInvalidMaxIdLength = false;
@@ -665,7 +662,6 @@ function DodgeDashHandlerOverride(config) {
     function updateDefendedStreamInfo(representation) {
         if (!representation) {
             defendedStreamInfo = null;
-            lastRepresentationMediaType = null;
             return false;
         }
 
@@ -673,7 +669,6 @@ function DodgeDashHandlerOverride(config) {
         const adaptation = representation.adaptation.index;
         const quality = representation.index;
         const label = representation.id;
-        lastRepresentationMediaType = representation.mediaInfo.type;
 
         // On a home representation switch (e.g. ABR picked a different
         // quality), reset per-stream cycle counters. StreamProcessor calls
@@ -715,11 +710,6 @@ function DodgeDashHandlerOverride(config) {
         return !!(defendedStreamInfo && lastCycleIndex >= defendedStreamInfo['maxNoPad'] && lastCycleIndex < defendedStreamInfo['data'].length - 1);
     }
 
-    function isTextTrackBlockedByDodge() {
-        return _isRepresentationStrict() && defenseRegistry.hasContent() &&
-            !defendedStreamInfo && lastRepresentationMediaType === Constants.TEXT;
-    }
-
     setup();
 
     return {
@@ -737,7 +727,6 @@ function DodgeDashHandlerOverride(config) {
         updateDefendedStreamInfo,
         getIsDefended,
         getIsTrailing,
-        isTextTrackBlockedByDodge,
     };
 }
 
