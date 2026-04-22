@@ -1,0 +1,22 @@
+{
+  "browsers": [
+    "firefox_custom"
+  ],
+  "hostname": "localhost",
+  "port": 4200,
+  "protocol": "http",
+  "concurrency": 1,
+  "customLaunchers": {
+    "firefox_custom": {
+      "base": "Firefox",
+      "prefs": {
+        "media.autoplay.default": 0,
+        "media.autoplay.blocking_policy": 0,
+        "media.autoplay.enabled.user-gestures-needed": false
+      }
+    }
+  },
+  "reporters": [
+    "mocha"
+  ]
+}

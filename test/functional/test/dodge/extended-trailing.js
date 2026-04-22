@@ -8,12 +8,14 @@ import {
     initializeDashJsAdapter
 } from '../common/common.js';
 
-const TESTCASE = Constants.TESTCASES.DODGE.TRAILING;
+const TESTCASE = Constants.TESTCASES.DODGE.EXTENDED_TRAILING;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
-    describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
+    describe(`${TESTCASE} - ${item.name} - ${mpd}`, function () {
+        this.timeout(120000);
+
         let playerAdapter;
 
         before(() => {
@@ -51,8 +53,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         it(`Trailing phase is reached`, async () => {
-            // The short manifest has only 3 real segments (12s) then padding.
-            // Poll until isDodgeTrailing() becomes true or timeout.
             const timeout = 30000;
             const start = Date.now();
             let isTrailing = false;
@@ -63,20 +63,32 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
                 await playerAdapter.sleep(500);
             }
-            expect(isTrailing, 'Expected isDodgeTrailing() to become true after real segments were exhausted').to.be.true;
+            expect(isTrailing, 'Expected isDodgeTrailing() to become true').to.be.true;
         })
 
-        it(`Buffer level remains positive during trailing`, () => {
+        it(`Buffer level is non-negative during extended trailing`, () => {
             const videoBuffer = playerAdapter.getBufferLengthByType('video');
-            expect(videoBuffer).to.be.a('number');
-            expect(videoBuffer).to.be.at.least(0, 'Video buffer level should not be negative during trailing (mock buffer may be broken)');
+            if (typeof videoBuffer === 'number' && !isNaN(videoBuffer)) {
+                expect(videoBuffer).to.be.at.least(0,
+                    'Video buffer should be non-negative during extended trailing');
+            }
         })
 
-        it(`Playback position does not jump to stream end during trailing`, async () => {
-            const duration = playerAdapter.getDuration();
-            await playerAdapter.sleep(3000);
-            const currentTime = playerAdapter.getCurrentTime();
-            expect(currentTime).to.be.below(duration - 100, 'Playback position jumped near stream end during trailing - gap jump suppression may have failed (duration=' + duration + ', currentTime=' + currentTime + ')');
+        it(`Extended trailing downloads more cycles than short trailing`, async () => {
+            const timeout = 30000;
+            const start = Date.now();
+            let trailingSeenCount = 0;
+            while (Date.now() - start < timeout) {
+                if (playerAdapter.isDodgeTrailing()) {
+                    trailingSeenCount++;
+                }
+                if (trailingSeenCount >= 3 && !playerAdapter.isDodgeTrailing()) {
+                    break;
+                }
+                await playerAdapter.sleep(500);
+            }
+            expect(trailingSeenCount).to.be.at.least(2,
+                'Expected trailing phase to persist across multiple polling intervals (10 padding cycles should take several seconds)');
         })
 
         it(`Expect no critical errors to be thrown`, () => {

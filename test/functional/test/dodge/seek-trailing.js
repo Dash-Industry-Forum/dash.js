@@ -4,11 +4,12 @@ import Utils from '../../src/Utils.js';
 
 import {
     checkIsPlaying,
+    checkIsProgressing,
     checkNoCriticalErrors,
     initializeDashJsAdapter
 } from '../common/common.js';
 
-const TESTCASE = Constants.TESTCASES.DODGE.TRAILING;
+const TESTCASE = Constants.TESTCASES.DODGE.SEEK_TRAILING;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
@@ -51,8 +52,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         it(`Trailing phase is reached`, async () => {
-            // The short manifest has only 3 real segments (12s) then padding.
-            // Poll until isDodgeTrailing() becomes true or timeout.
             const timeout = 30000;
             const start = Date.now();
             let isTrailing = false;
@@ -63,20 +62,29 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 }
                 await playerAdapter.sleep(500);
             }
-            expect(isTrailing, 'Expected isDodgeTrailing() to become true after real segments were exhausted').to.be.true;
+            expect(isTrailing, 'Expected isDodgeTrailing() to become true').to.be.true;
         })
 
-        it(`Buffer level remains positive during trailing`, () => {
+        it(`Seek backward during trailing does not crash`, async () => {
+            playerAdapter.seek(0);
+            await playerAdapter.sleep(2000);
+            expect(playerAdapter.isDodgeActive()).to.be.true;
+        })
+
+        it(`Buffer level is non-negative after seek during trailing`, () => {
             const videoBuffer = playerAdapter.getBufferLengthByType('video');
             expect(videoBuffer).to.be.a('number');
-            expect(videoBuffer).to.be.at.least(0, 'Video buffer level should not be negative during trailing (mock buffer may be broken)');
+            expect(videoBuffer).to.be.at.least(0);
         })
 
-        it(`Playback position does not jump to stream end during trailing`, async () => {
-            const duration = playerAdapter.getDuration();
-            await playerAdapter.sleep(3000);
-            const currentTime = playerAdapter.getCurrentTime();
-            expect(currentTime).to.be.below(duration - 100, 'Playback position jumped near stream end during trailing - gap jump suppression may have failed (duration=' + duration + ', currentTime=' + currentTime + ')');
+        it(`Playback progresses after seek`, async () => {
+            // PLAYBACK_ENDED fires during trailing once isLastSegmentRequested
+            // returns true and the playable buffer drains; PlaybackController
+            // then pauses the video element. Seeking backward moves currentTime
+            // but leaves the element paused, so timeupdate never fires and the
+            // progression check would time out. Explicitly resume playback.
+            playerAdapter.play();
+            await checkIsProgressing(playerAdapter);
         })
 
         it(`Expect no critical errors to be thrown`, () => {

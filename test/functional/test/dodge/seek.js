@@ -52,7 +52,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         it(`Seek forward resumes defended playback`, async () => {
-            // Seek to ~60s (well past the initial buffer). This exercises
+            // Seek to 60s (well past the initial buffer). This exercises
             // getSegmentRequestForTime which uses a different code path than
             // getNextSegmentRequest (it locates the cycle by time rather than
             // advancing sequentially).

@@ -753,6 +753,7 @@ class DashJsAdapter {
                         padding: e.request.padding,
                         trail: e.request.trail,
                         representationId: e.request.representation ? e.request.representation.id : null,
+                        homeRepresentationId: e.request.homeRepresentationId || null,
                         requestRef: e.request,
                         timestamp: Date.now()
                     });

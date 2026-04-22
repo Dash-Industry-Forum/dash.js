@@ -69,6 +69,31 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             expect(isActive).to.be.true;
         })
 
+        it(`Init cycles include alternate representation pre-fetch`, async () => {
+            const traffic = await trafficPromise;
+
+            const initRequests = traffic.filter(
+                t => t.mediaType === 'video' && t.type === 'InitializationSegment'
+            );
+
+            expect(initRequests.length).to.be.at.least(2, 'Expected at least 2 video init requests (home + alternate)');
+
+            const altInits = initRequests.filter(r => r.homeRepresentationId !== null);
+            expect(altInits.length).to.be.at.least(1, 'Expected at least one init request with homeRepresentationId (alternate representation pre-fetch)');
+
+            const altInit = altInits[0];
+            expect(altInit.representationId).to.not.equal(altInit.homeRepresentationId, 'Alternate init representationId should differ from homeRepresentationId');
+
+            const primaryStream = extendedManifest.streams.find(s =>
+                s.label === altInit.homeRepresentationId
+            );
+            expect(primaryStream, 'homeRepresentationId should match a stream label in the extended manifest').to.not.be.undefined;
+
+            const qualityInitCycle = primaryStream.init.find(c => c.quality);
+            expect(qualityInitCycle, 'Primary stream should have an init cycle with quality override').to.not.be.undefined;
+            expect(altInit.representationId).to.equal(qualityInitCycle.quality, 'Alternate init representationId should match the quality field in the manifest');
+        })
+
         it(`Quality override cycles fetch from alternate representation`, async () => {
             const traffic = await trafficPromise;
 
@@ -78,18 +103,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
             expect(videoRequests.length).to.be.at.least(3, 'Expected at least 3 video data cycle requests');
 
-            // Identify the home stream from the first home representation
-            // request. A home request is one whose representationId matches a
-            // stream entry AND whose range matches that stream's data[0].range.
-            // This is robust to the player picking either of the defended
-            // video representations at startup.
             const primaryStream = extendedManifest.streams.find(s =>
                 s.label === videoRequests[0].representationId &&
                 s.data[0] && s.data[0].range === videoRequests[0].range
             );
             expect(
-                primaryStream,
-                `videoRequests[0] (repId=${videoRequests[0].representationId}, range=${videoRequests[0].range}) does not match any stream's home cycle 0`
+                primaryStream, `videoRequests[0] (repId=${videoRequests[0].representationId}, range=${videoRequests[0].range}) does not match any stream's cycle 0`
             ).to.not.be.undefined;
 
             // Walk the primary stream's data[] cycle-by-cycle and match each
@@ -136,10 +155,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         })
 
         it(`Playback completes past quality override segments`, () => {
-            // The defense is only ~16s long (4 cycles x 4s) and PLAYBACK_ENDED
-            // typically fires while the prior "Quality override ..." block is
-            // still awaiting trafficPromise. Check the recorded event log
-            // instead of attaching a fresh listener.
             checkEventHasBeenTriggered(playerAdapter, MediaPlayerEvents.PLAYBACK_ENDED);
         })
 

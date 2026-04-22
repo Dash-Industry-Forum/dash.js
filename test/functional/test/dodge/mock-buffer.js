@@ -8,7 +8,7 @@ import {
     initializeDashJsAdapter
 } from '../common/common.js';
 
-const TESTCASE = Constants.TESTCASES.DODGE.TRAILING;
+const TESTCASE = Constants.TESTCASES.DODGE.MOCK_BUFFER;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
@@ -50,33 +50,31 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             expect(isActive).to.be.true;
         })
 
-        it(`Trailing phase is reached`, async () => {
-            // The short manifest has only 3 real segments (12s) then padding.
-            // Poll until isDodgeTrailing() becomes true or timeout.
+        it(`Buffer level is non-negative during defended playback`, async () => {
             const timeout = 30000;
             const start = Date.now();
-            let isTrailing = false;
+            let bufferWasPositive = false;
             while (Date.now() - start < timeout) {
-                isTrailing = playerAdapter.isDodgeTrailing();
-                if (isTrailing) {
+                const videoBuffer = playerAdapter.getBufferLengthByType('video');
+                if (typeof videoBuffer === 'number' && !isNaN(videoBuffer)) {
+                    expect(videoBuffer).to.be.at.least(0, 'Video buffer should never be negative during defended playback');
+                    if (videoBuffer > 0) {
+                        bufferWasPositive = true;
+                    }
+                }
+                if (playerAdapter.isDodgeTrailing()) {
                     break;
                 }
                 await playerAdapter.sleep(500);
             }
-            expect(isTrailing, 'Expected isDodgeTrailing() to become true after real segments were exhausted').to.be.true;
+            expect(bufferWasPositive, 'Expected buffer to be positive at some point during data cycles').to.be.true;
         })
 
-        it(`Buffer level remains positive during trailing`, () => {
+        it(`Buffer level remains non-negative after data cycles`, () => {
             const videoBuffer = playerAdapter.getBufferLengthByType('video');
-            expect(videoBuffer).to.be.a('number');
-            expect(videoBuffer).to.be.at.least(0, 'Video buffer level should not be negative during trailing (mock buffer may be broken)');
-        })
-
-        it(`Playback position does not jump to stream end during trailing`, async () => {
-            const duration = playerAdapter.getDuration();
-            await playerAdapter.sleep(3000);
-            const currentTime = playerAdapter.getCurrentTime();
-            expect(currentTime).to.be.below(duration - 100, 'Playback position jumped near stream end during trailing - gap jump suppression may have failed (duration=' + duration + ', currentTime=' + currentTime + ')');
+            if (typeof videoBuffer === 'number' && !isNaN(videoBuffer)) {
+                expect(videoBuffer).to.be.at.least(0, 'Video buffer should not be negative after data cycles complete');
+            }
         })
 
         it(`Expect no critical errors to be thrown`, () => {

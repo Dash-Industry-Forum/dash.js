@@ -13,7 +13,8 @@
         "dodge/play-defended",
         "dodge/defense-verification",
         "dodge/strict-mode-allows-exmfst",
-        "dodge/seek"
+        "dodge/seek",
+        "dodge/seek-backward"
       ]
     },
     {
@@ -48,7 +49,17 @@
       "type": "vod",
       "url": "/base/test/functional/content/dodge/bbb_30fps_trailing_short.exmfst.json",
       "includedTestfiles": [
-        "dodge/trailing"
+        "dodge/trailing",
+        "dodge/seek-trailing",
+        "dodge/mock-buffer"
+      ]
+    },
+    {
+      "name": "BBB Extended Trailing (3 playable segments + 10 padding)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_trailing_extended.exmfst.json",
+      "includedTestfiles": [
+        "dodge/extended-trailing"
       ]
     },
     {
@@ -60,19 +71,19 @@
       ]
     },
     {
-      "name": "BBB Thumbnails MPD (thumbnail_tile in MPD)",
-      "type": "vod",
-      "url": "/base/test/functional/content/dodge/bbb_30fps_thumbnails.exmfst.json",
-      "includedTestfiles": [
-        "dodge/thumbnail-detection"
-      ]
-    },
-    {
       "name": "BBB Text track MPD (undefended subtitle)",
       "type": "vod",
       "url": "/base/test/functional/content/dodge/bbb_30fps_text.exmfst.json",
       "includedTestfiles": [
         "dodge/text-track-blocking"
+      ]
+    },
+    {
+      "name": "BBB Thumbnails MPD (thumbnail_tile in MPD)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_thumbnails.exmfst.json",
+      "includedTestfiles": [
+        "dodge/thumbnail-detection"
       ]
     },
     {

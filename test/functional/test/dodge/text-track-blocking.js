@@ -17,7 +17,6 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
         let trafficPromise;
 
         before(() => {
-            // Default strictMode 'representation' blocks undefended text tracks
             playerAdapter = initializeDashJsAdapter(item, mpd, {
                 streaming: {
                     abr: {
