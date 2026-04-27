@@ -117,8 +117,7 @@ function CmcdController() {
 
         if (autoPlay) {
             eventBus.on(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
-        }
-        else {
+        } else {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
 
@@ -335,7 +334,7 @@ function CmcdController() {
         }
     }
 
-    function _triggerCMCDDataGeneratedEvent(request){
+    function _triggerCMCDDataGeneratedEvent(request) {
         const effectiveMode = cmcdConfig.get('mode');
         const eventData = {
             url: request.url,
@@ -362,8 +361,7 @@ function CmcdController() {
     function isCmcdEnabled(targetIndex = null) {
         if (targetIndex !== null) {
             return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
-        }
-        else {
+        } else {
             return _canBeEnabled() && _checkIncludeInRequests();
         }
     }
@@ -482,7 +480,7 @@ function CmcdController() {
     }
 
     function _onPlaybackWaiting() {
-        if (cmcdModel.wasPlaying()){
+        if (cmcdModel.wasPlaying()) {
             const mediaType = cmcdModel.getLastMediaTypeRequest();
             cmcdModel.onRebufferingStarted(mediaType);
             _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
@@ -518,11 +516,11 @@ function CmcdController() {
         return commonMediaRequest;
     }
 
-    function getCmcdResponseInterceptors(){
+    function getCmcdResponseInterceptors() {
         return [_cmcdResponseReceivedInterceptor];
     }
 
-    function _cmcdResponseReceivedInterceptor(response){
+    function _cmcdResponseReceivedInterceptor(response) {
         const requestType = response.request?.customData?.request?.type;
         if (requestType === HTTPRequest.CMCD_EVENT) {
             return response;
@@ -566,7 +564,11 @@ function CmcdController() {
             }
         }
 
-        cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
+        try {
+            cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
+        } catch (e) {
+            logger.error(e);
+        }
     }
 
     function getCmcdParametersFromManifest() {
