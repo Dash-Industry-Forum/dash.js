@@ -97,9 +97,9 @@
                 const elem = domElements[key];
 
                 if (activeServiceLocations[key]) {
-                    elem.setAttribute('src', 'img/server-active.svg')
+                    elem.setAttribute('src', '../common/img/server-active.svg')
                 } else {
-                    elem.setAttribute('src', 'img/server.svg');
+                    elem.setAttribute('src', '../common/img/server.svg');
                 }
 
             })
@@ -120,7 +120,7 @@
                         const figure = document.createElement('figure');
                         figure.setAttribute('class', 'cdn-selection');
                         const img = document.createElement('img');
-                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('src', '../common/img/server.svg');
                         img.setAttribute('class', 'figure-img img-fluid cdn-selection');
                         const figCaption = document.createElement('figcaption');
                         figCaption.setAttribute('class', 'figure-caption');
@@ -152,7 +152,7 @@
                         const figure = document.createElement('figure');
                         figure.setAttribute('class', 'cdn-selection');
                         const img = document.createElement('img');
-                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('src', '../common/img/server.svg');
                         img.setAttribute('class', 'figure-img img-fluid cdn-selection');
                         const figCaption = document.createElement('figcaption');
                         figCaption.setAttribute('class', 'figure-caption');
@@ -241,7 +241,7 @@
             <div class="col-md-7">
                 <div class="h-100 p-5 border rounded-3">
                     <h4>Architecture</h4>
-                    <img src="img/steering.png" class="img-fluid" alt="Steering architecture illustration">
+                    <img src="../common/img/steering.png" class="img-fluid" alt="Steering architecture illustration">
                 </div>
             </div>
         </div>
