@@ -177,7 +177,7 @@ function CmcdController() {
     function _createCmcdReporter() {
         const config = {
             version: cmcdConfig.getVersion(),
-            transmissionMode: cmcdConfig.get('mode') === Constants.CMCD_MODE_HEADER
+            transmissionMode: cmcdConfig.get('mode') === Constants.CMCD_MODE_HEADERS
                 ? CMCD_HEADERS
                 : CMCD_QUERY,
             enabledKeys: cmcdConfig.get('keys'),
@@ -345,7 +345,7 @@ function CmcdController() {
             mode: effectiveMode,
         };
 
-        if (effectiveMode === Constants.CMCD_MODE_HEADER) {
+        if (effectiveMode === Constants.CMCD_MODE_HEADERS) {
             eventData.headers = request.headers;
         } else {
             try {

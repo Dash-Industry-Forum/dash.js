@@ -60,7 +60,7 @@
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
         /* possible modes of attach cmcd data */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters */
-        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var CMCD_MODE_HEADERS = 'headers'; /* as HTTP headers */
         let player;
         let mpd = "";
         let currentSelectedServiceLocation = {}
@@ -86,8 +86,8 @@
         function handleCmcdDataGeneratedEvent(event) {
             log('type: ' + event.mediaType);
             log('file: ' + event.url.split('/').pop())
-            let mode = !!event.headers ? CMCD_MODE_HEADER : CMCD_MODE_QUERY;
-            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            let mode = !!event.headers ? CMCD_MODE_HEADERS : CMCD_MODE_QUERY;
+            var data = mode === CMCD_MODE_HEADERS ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
             var keys = Object.keys(data);
             keys = keys.sort();
             for (var key of keys) {

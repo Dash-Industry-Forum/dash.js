@@ -997,8 +997,8 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('v', 2);
         });
 
-        it('should decorate a v1 request with CMCD headers when mode is header', function () {
-            settings.update({ streaming: { cmcd: { enabled: true, version: 1, mode: 'header' } } });
+        it('should decorate a v1 request with CMCD headers when mode is headers', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 1, mode: 'headers' } } });
             cmcdController.reset();
             cmcdController.initialize();
             cmcdController.setConfig({
@@ -1023,8 +1023,8 @@ describe('CmcdController', function () {
             expect(result.headers).to.have.property('CMCD-Object');
         });
 
-        it('should decorate a v2 request with CMCD headers when mode is header', function () {
-            settings.update({ streaming: { cmcd: { enabled: true, version: 2, mode: 'header' } } });
+        it('should decorate a v2 request with CMCD headers when mode is headers', function () {
+            settings.update({ streaming: { cmcd: { enabled: true, version: 2, mode: 'headers' } } });
             cmcdController.reset();
             cmcdController.initialize();
             cmcdController.setConfig({

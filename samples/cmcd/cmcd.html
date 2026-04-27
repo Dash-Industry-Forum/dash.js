@@ -28,7 +28,7 @@
 
         /* possible modes of attach cmcd data */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters */
-        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var CMCD_MODE_HEADERS = 'headers'; /* as HTTP headers */
         var player;
 
         function init() {
@@ -63,7 +63,7 @@
             log('type: ' + event.mediaType);
             log('file: ' + event.url.split('/').pop())
             var mode = player.getSettings().streaming.cmcd.mode;
-            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            var data = mode === CMCD_MODE_HEADERS ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
             var keys = Object.keys(data);
             keys = keys.sort();
             for (var key of keys) {

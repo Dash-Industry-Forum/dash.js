@@ -2941,7 +2941,7 @@ export interface Constants {
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
     TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
     CMCD_MODE_QUERY: 'query',
-    CMCD_MODE_HEADER: 'header',
+    CMCD_MODE_HEADERS: 'headers',
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],

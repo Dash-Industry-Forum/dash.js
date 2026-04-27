@@ -34,7 +34,7 @@ import {
     CmcdEventType,
     CMCD_DEFAULT_TIME_INTERVAL,
     CMCD_PARAM,
-    CMCD_QUERY,
+    CmcdTransmissionMode,
     CMCD_KEYS
 } from '@svta/cml-cmcd';
 
@@ -236,14 +236,14 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_QUERY: CMCD_QUERY,
+    CMCD_MODE_QUERY: CmcdTransmissionMode.QUERY,
 
     /**
-     *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+     *  @constant {string} CMCD_MODE_HEADERS specifies to attach CMCD metrics as HTTP headers.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_HEADER: 'header',
+    CMCD_MODE_HEADERS: CmcdTransmissionMode.HEADERS,
 
     /**
      *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
