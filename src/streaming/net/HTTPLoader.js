@@ -556,7 +556,7 @@ function HTTPLoader(cfg) {
         // Update CommonMediaResponse Resource Timing info
         httpResponse.resourceTiming.startTime = resource.startTime;
         httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
-        httpResponse.resourceTiming.responseStart = resource.startTime;
+        httpResponse.resourceTiming.responseStart = resource.responseStart;
         httpResponse.resourceTiming.responseEnd = resource.responseEnd;
         httpResponse.resourceTiming.duration = resource.duration;
     }
