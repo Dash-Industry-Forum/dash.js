@@ -695,8 +695,8 @@ function DashManifestModel() {
 
         // now, only take those Properties from AdaptationSet which we didn't already get from Representations
         if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
-            adaptation[propertyType].forEach( adaptationProp => {
-                const alreadyPresent = allProperties.some(d => { 
+            adaptation[propertyType].forEach(adaptationProp => {
+                const alreadyPresent = allProperties.some(d => {
                     return d.schemeIdUri === adaptationProp.schemeIdUri && d.value === adaptationProp.value
                 });
                 if (!alreadyPresent) {
@@ -760,7 +760,7 @@ function DashManifestModel() {
 
     function getRepresentationFor(index, adaptation) {
         return adaptation && adaptation.Representation && adaptation.Representation.length > 0 &&
-            isInteger(index) ? adaptation.Representation[index] : null;
+        isInteger(index) ? adaptation.Representation[index] : null;
     }
 
     function getRealAdaptationFor(voAdaptation) {
@@ -1580,8 +1580,11 @@ function DashManifestModel() {
         const entry = new ClientDataReporting();
 
         // Check if schemeIdUri is either in ClientDataReporting (v2) or CMCDParameters (v1)
-        const schemeIdUri = element.schemeIdUri || (element[DashConstants.CMCD_PARAMETERS] && element[DashConstants.CMCD_PARAMETERS].schemeIdUri);
-        const isCmcdSupported = schemeIdUri === Constants.CTA_5004_2023_SCHEME || schemeIdUri === Constants.CTA_5004_2025_SCHEME;
+        const schemeIdUri = element.schemeIdUri || element[DashConstants.CMCD_PARAMETERS]?.schemeIdUri;
+        const isCmcdSupported = [
+            Constants.CTA_5004_2023_SCHEME,
+            Constants.CTA_5004_2025_SCHEME
+        ].includes(schemeIdUri);
 
         if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && isCmcdSupported) {
             entry.cmcdParameters = new CMCDParameters();
