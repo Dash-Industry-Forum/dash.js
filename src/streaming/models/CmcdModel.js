@@ -45,6 +45,15 @@ import CmcdConfigAccessor from '../cmcd/config/CmcdConfigAccessor.js';
 
 const RTP_SAFETY_FACTOR = 5;
 
+const REQUEST_TYPE_TO_CMCD_FILTER = {
+    [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
+    [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
+    [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
+    [HTTPRequest.MPD_TYPE]: 'mpd',
+    [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+    [HTTPRequest.OTHER_TYPE]: 'other',
+};
+
 function CmcdModel() {
     let instance,
         dashMetrics,
@@ -52,7 +61,7 @@ function CmcdModel() {
         playbackController,
         abrController,
         throughputController,
-        cmcdConfig,
+        cmcdConfigAccessor,
         _lastMediaTypeRequest,
         _isStartup,
         _bufferLevelStarved,
@@ -68,7 +77,7 @@ function CmcdModel() {
     let context = this.context;
 
     function setup() {
-        cmcdConfig = CmcdConfigAccessor(context).getInstance();
+        cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
         resetInitialSettings();
     }
 
@@ -144,8 +153,8 @@ function CmcdModel() {
             }
         }
 
-        const rtp = cmcdConfig.has('rtp')
-            ? cmcdConfig.get('rtp')
+        const rtp = cmcdConfigAccessor.has('rtp')
+            ? cmcdConfigAccessor.get('rtp')
             : _calculateRtp(request);
         if (!isNaN(rtp)) {
             data.rtp = rtp;
@@ -646,7 +655,7 @@ function CmcdModel() {
             let segmentSize = (bandwidth * duration) / 1000; // Calculate file size in kilobits
             let timeToLoad = (currentBufferLevel / playbackRate) / 1000; // Calculate time available to load file in seconds
             let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-            const rtpSafetyFactor = cmcdConfig.get('rtpSafetyFactor', { defaultValue: RTP_SAFETY_FACTOR });
+            const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', { defaultValue: RTP_SAFETY_FACTOR });
             let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
 
@@ -703,11 +712,11 @@ function CmcdModel() {
         // Note: Always update accessor when params exist, regardless of applyParametersFromMpd
         // The accessor uses priority-based resolution, so manifest params will only be used
         // when they have higher priority in the PropertyMap configuration
-        if (cmcdConfig && Object.keys(cmcdParametersFromManifest).length > 0) {
-            cmcdConfig.setManifestParams(cmcdParametersFromManifest);
-        } else if (cmcdConfig) {
+        if (cmcdConfigAccessor && Object.keys(cmcdParametersFromManifest).length > 0) {
+            cmcdConfigAccessor.setManifestParams(cmcdParametersFromManifest);
+        } else if (cmcdConfigAccessor) {
             // Clear manifest params if none are available
-            cmcdConfig.setManifestParams(null);
+            cmcdConfigAccessor.setManifestParams(null);
         }
 
         return cmcdParametersFromManifest;
@@ -741,18 +750,10 @@ function CmcdModel() {
     }
 
     function isIncludedInRequestFilter(type, includeInRequests) {
-        const includeInRequestsArray = includeInRequests || cmcdConfig.get('includeInRequests');
+        const includeInRequestsArray = includeInRequests ?? cmcdConfigAccessor.get('includeInRequests');
+        const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
 
-        const filtersTypes = {
-            [HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
-            [HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
-            [HTTPRequest.MPD_TYPE]: 'mpd',
-            [HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-            [HTTPRequest.OTHER_TYPE]: 'other',
-        };
-
-        return includeInRequestsArray.some(t => filtersTypes[type] === t);
+        return filterType !== undefined && includeInRequestsArray.includes(filterType);
     }
 
     function reset() {
@@ -762,7 +763,7 @@ function CmcdModel() {
     function _updateLastMediaTypeRequest(type, mediatype) {
         // Video > Audio > None
         if (mediatype === Constants.VIDEO || mediatype === Constants.AUDIO) {
-            if (!_lastMediaTypeRequest || _lastMediaTypeRequest == Constants.AUDIO) {
+            if (!_lastMediaTypeRequest || _lastMediaTypeRequest === Constants.AUDIO) {
                 _lastMediaTypeRequest = mediatype;
             }
         }
@@ -849,27 +850,27 @@ function CmcdModel() {
     }
 
     instance = {
-        setup,
-        reset,
-        setConfig,
         calculateCmcdDataForRequest,
-        onPeriodSwitchComplete,
-        onPlaybackStarted,
-        onPlaybackPlaying,
-        onRebufferingStarted,
-        onRebufferingCompleted,
-        onPlaybackSeeking,
-        onPlaybackSeeked,
-        wasPlaying,
-        onBufferLevelStateChanged,
         calculateMsd,
-        resetInitialSettings,
         getCmcdParametersFromManifest,
-        onPlaybackRateChanged,
-        onManifestLoaded,
         getEventModeData,
+        getLastMediaTypeRequest,
         isIncludedInRequestFilter,
-        getLastMediaTypeRequest
+        onBufferLevelStateChanged,
+        onManifestLoaded,
+        onPeriodSwitchComplete,
+        onPlaybackPlaying,
+        onPlaybackRateChanged,
+        onPlaybackSeeked,
+        onPlaybackSeeking,
+        onPlaybackStarted,
+        onRebufferingCompleted,
+        onRebufferingStarted,
+        reset,
+        resetInitialSettings,
+        setConfig,
+        setup,
+        wasPlaying,
     };
 
     setup();
