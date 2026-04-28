@@ -52,7 +52,7 @@ function CmcdController() {
     let instance,
         logger,
         cmcdModel,
-        cmcdConfig,
+        cmcdConfigAccessor,
         cmcdReporter,
         reporterNeedsRebuild,
         urlLoader,
@@ -65,9 +65,9 @@ function CmcdController() {
     let debug = Debug(context).getInstance();
 
     cmcdModel = CmcdModel(context).getInstance();
-    cmcdConfig = CmcdConfigAccessor(context).getInstance();
+    cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
 
-    function setup() {
+    function _setup() {
         logger = debug.getLogger(instance);
         reset();
     }
@@ -96,9 +96,9 @@ function CmcdController() {
         // This resolves timing issues where CMCDParameters are needed before they're available
         // Using a provider pattern keeps CmcdConfigAccessor decoupled from ServiceDescriptionController
         if (config.serviceDescriptionController) {
-            const sdc = config.serviceDescriptionController;
-            cmcdConfig.setManifestParamsProvider(() => {
-                const serviceDescription = sdc.getServiceDescriptionSettings();
+            const serviceDescriptionController = config.serviceDescriptionController;
+            cmcdConfigAccessor.setManifestParamsProvider(() => {
+                const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
                 return serviceDescription?.clientDataReporting?.cmcdParameters || null;
             });
         }
@@ -109,6 +109,15 @@ function CmcdController() {
     function initialize(autoPlay) {
         reporterNeedsRebuild = false;
 
+        _initializeEventBus(autoPlay);
+
+        cmcdReporter = _createCmcdReporter();
+        cmcdReporter.start();
+
+        _initializePlaybackStateListeners();
+    }
+
+    function _initializeEventBus(autoPlay) {
         eventBus.on(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
         eventBus.on(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
@@ -120,12 +129,7 @@ function CmcdController() {
         } else {
             eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
         }
-
-        cmcdReporter = _createCmcdReporter();
-        cmcdReporter.start();
-
-        _initializeEvenModeListeners();
-        _initializePlaybackStateListeners();
+        eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
     }
 
     function _initializePlaybackStateListeners() {
@@ -145,10 +149,6 @@ function CmcdController() {
         });
     }
 
-    function _initializeEvenModeListeners() {
-        eventBus.on(MediaPlayerEvents.ERROR, _onPlayerError, instance);
-    }
-
     function _rebuildReporterIfNeeded() {
         if (!reporterNeedsRebuild || !cmcdReporter) {
             return;
@@ -160,8 +160,8 @@ function CmcdController() {
         // IMPORTANT: Don't reset reporterNeedsRebuild until we actually rebuild,
         // otherwise a race condition can occur where params aren't available yet
         // and we never get another chance to rebuild.
-        const applyFromMpd = cmcdConfig.get('applyParametersFromMpd') ?? true;
-        if (!applyFromMpd || !cmcdConfig.hasManifestParams()) {
+        const applyFromMpd = cmcdConfigAccessor.get('applyParametersFromMpd') ?? true;
+        if (!applyFromMpd || !cmcdConfigAccessor.hasManifestParams()) {
             return;
         }
 
@@ -175,21 +175,21 @@ function CmcdController() {
 
     function _createCmcdReporter() {
         const config = {
-            version: cmcdConfig.getVersion(),
-            transmissionMode: cmcdConfig.get('mode') === Constants.CMCD_MODE_HEADERS
+            version: cmcdConfigAccessor.getVersion(),
+            transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS
                 ? CMCD_HEADERS
                 : CMCD_QUERY,
-            enabledKeys: cmcdConfig.get('keys'),
+            enabledKeys: cmcdConfigAccessor.get('keys'),
             eventTargets: _buildReporterTargets(),
         };
 
         // Only pass sid/cid if they have actual values, so CmcdReporter
         // uses its own defaults (e.g., auto-generated uuid for sid)
-        const sid = cmcdConfig.get('sessionID');
+        const sid = cmcdConfigAccessor.get('sessionID');
         if (sid) {
             config.sid = sid;
         }
-        const cid = cmcdConfig.get('contentID');
+        const cid = cmcdConfigAccessor.get('contentID');
         if (cid) {
             config.cid = cid;
         }
@@ -198,10 +198,10 @@ function CmcdController() {
     }
 
     function _buildReporterTargets() {
-        const targets = cmcdConfig.getEventTargets();
+        const targets = cmcdConfigAccessor.getEventTargets();
         return targets
             .map((_target, index) => {
-                const accessor = cmcdConfig.getEventTarget(index);
+                const accessor = cmcdConfigAccessor.getEventTarget(index);
                 if (!isCmcdEnabled(index)) {
                     return null;
                 }
@@ -335,7 +335,7 @@ function CmcdController() {
     }
 
     function _triggerCMCDDataGeneratedEvent(request) {
-        const effectiveMode = cmcdConfig.get('mode');
+        const effectiveMode = cmcdConfigAccessor.get('mode');
         const eventData = {
             url: request.url,
             mediaType: request.mediaType,
@@ -367,24 +367,24 @@ function CmcdController() {
     }
 
     function _canBeEnabled() {
-        const version = cmcdConfig.getVersion();
+        const version = cmcdConfigAccessor.getVersion();
 
         if (version !== 1 && version !== 2) {
             logger.error(`version parameter must be 1 or 2, got ${version}.`);
             return false;
         }
 
-        return cmcdConfig.isEnabled();
+        return cmcdConfigAccessor.isEnabled();
     }
 
     function _checkIncludeInRequests() {
-        const version = cmcdConfig.getVersion();
+        const version = cmcdConfigAccessor.getVersion();
         if (version === 2) {
             return true; // Skip this validation for version 2
         }
 
         // Version 1 validation
-        const enabledRequests = cmcdConfig.get('includeInRequests');
+        const enabledRequests = cmcdConfigAccessor.get('includeInRequests');
 
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
@@ -402,14 +402,14 @@ function CmcdController() {
     }
 
     function _targetCanBeEnabled(targetIndex) {
-        const cmcdVersion = cmcdConfig.getVersion();
+        const cmcdVersion = cmcdConfigAccessor.getVersion();
 
         if (cmcdVersion !== 2) {
             logger.warn('CMCD version 2 is required for target configuration');
             return false;
         }
 
-        const targetAccessor = cmcdConfig.getEventTarget(targetIndex);
+        const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
         const enabled = targetAccessor.get('targetEnabled');
         const url = targetAccessor.get('targetUrl');
 
@@ -422,7 +422,7 @@ function CmcdController() {
     }
 
     function _checkTargetIncludeInRequests(targetIndex) {
-        const targetAccessor = cmcdConfig.getEventTarget(targetIndex);
+        const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
         let enabledRequests = targetAccessor.get('targetIncludeInRequests');
 
         if (!enabledRequests) {
@@ -605,7 +605,7 @@ function CmcdController() {
         setConfig
     };
 
-    setup();
+    _setup();
 
     return instance;
 }
