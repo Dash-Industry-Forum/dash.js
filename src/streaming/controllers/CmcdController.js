@@ -63,6 +63,13 @@ function CmcdController() {
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     let debug = Debug(context).getInstance();
+    const stateMap = {
+        [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_PLAYER_STATES.STARTING,
+        [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_PLAYER_STATES.PAUSED,
+        [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_PLAYER_STATES.FATAL_ERROR,
+        [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_PLAYER_STATES.ENDED,
+    };
+    const playbackStateHandlers = {};
 
     cmcdModel = CmcdModel(context).getInstance();
     cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
@@ -133,19 +140,16 @@ function CmcdController() {
     }
 
     function _initializePlaybackStateListeners() {
-        const stateMap = {
-            [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_PLAYER_STATES.STARTING,
-            [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_PLAYER_STATES.PAUSED,
-            [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_PLAYER_STATES.FATAL_ERROR,
-            [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_PLAYER_STATES.ENDED,
-        };
-
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
         Object.entries(stateMap).forEach(([event, state]) => {
-            eventBus.on(event, () => _onStateChange(state), instance);
+            if (!playbackStateHandlers[event]) {
+                playbackStateHandlers[event] = () => _onStateChange(state);
+            }
+
+            eventBus.on(event, playbackStateHandlers[event], instance);
         });
     }
 
@@ -580,11 +584,17 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+        eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, instance);
-        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
-
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+        eventBus.off(MediaPlayerEvents.ERROR, _onPlayerError, instance);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance)
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+
+        Object.keys(stateMap).forEach((event) => {
+            eventBus.off(event, playbackStateHandlers[event], instance);
+        });
 
         if (cmcdReporter) {
             cmcdReporter.stop(true);
