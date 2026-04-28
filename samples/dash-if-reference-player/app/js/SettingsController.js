@@ -189,6 +189,7 @@ export class SettingsController {
         if (this._isChecked('opt-cmcd-enabled')) {
             config.streaming.cmcd = {
                 enabled: true,
+                version: parseInt($('#opt-cmcd-version').value) || 1,
                 mode: $('#opt-cmcd-mode').value,
                 rtpSafetyFactor: parseFloat($('#opt-cmcd-rtp-safety').value) || 5
             };
@@ -459,7 +460,7 @@ export class SettingsController {
             'opt-live-delay', 'opt-live-delay-frag-count', 'opt-utc-offset',
             'opt-init-bitrate-video', 'opt-min-bitrate-video', 'opt-max-bitrate-video',
             'opt-cmcd-session-id', 'opt-cmcd-content-id', 'opt-cmcd-rtp',
-            'opt-cmcd-rtp-safety', 'opt-cmcd-mode', 'opt-cmcd-enabled-keys',
+            'opt-cmcd-rtp-safety', 'opt-cmcd-mode', 'opt-cmcd-version', 'opt-cmcd-enabled-keys',
             'opt-cmsd-etp-weight'
         ];
 
@@ -711,6 +712,10 @@ export class SettingsController {
         }
 
         // ---- CMCD inputs ----
+        const cmcdVersion = $('#opt-cmcd-version');
+        if (cmcdVersion && s?.streaming?.cmcd?.version !== undefined) {
+            cmcdVersion.value = s.streaming.cmcd.version;
+        }
         const cmcdMode = $('#opt-cmcd-mode');
         if (cmcdMode && s?.streaming?.cmcd?.mode) {
             cmcdMode.value = s.streaming.cmcd.mode;
