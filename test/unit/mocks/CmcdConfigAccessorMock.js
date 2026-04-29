@@ -28,17 +28,17 @@ function CmcdConfigAccessorMock() {
         return this.get('enabled', { defaultValue: false });
     };
 
-    this.getTargets = function () {
+    this.getEventTargets = function () {
         const version = this.getVersion();
         if (version !== 2) {
             return [];
         }
-        const targets = this.get('targets');
+        const targets = this.get('eventTargets');
         return Array.isArray(targets) ? targets : [];
     };
 
-    this.getTarget = function (index) {
-        const targets = this.getTargets();
+    this.getEventTarget = function (index) {
+        const targets = this.getEventTargets();
         if (index < 0 || index >= targets.length) {
             return null;
         }

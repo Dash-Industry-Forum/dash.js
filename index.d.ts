@@ -1959,7 +1959,16 @@ export class MediaPlayerSettingClass {
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
             includeInRequests?: Array<string>,
-            version?: number
+            version?: number,
+            eventTargets?: Array<{
+                enabled?: boolean,
+                url?: string,
+                events?: Array<string>,
+                interval?: number,
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>,
+                batchSize?: number
+            }>
         },
         cmsd?: {
             enabled?: boolean,

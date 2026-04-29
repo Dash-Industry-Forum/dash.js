@@ -8,7 +8,7 @@ import {
 } from '../common/common.js';
 import { expect } from 'chai';
 import CmcdRequestCollector from '../../helpers/CmcdRequestCollector.js';
-import { validateCmcdRequest, validateCmcdEvent } from '@svta/cml-cmcd';
+import { validateCmcdRequest, validateCmcdEvents } from '@svta/cml-cmcd';
 
 const TESTCASE = Constants.TESTCASES.FEATURE_SUPPORT.CMCD_V2;
 
@@ -164,7 +164,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             collector.attach();
             const settings = {
                 streaming: {
-                    cmcd: { ...DEFAULT_CMCD_V2_CONFIG, mode: 'header' },
+                    cmcd: { ...DEFAULT_CMCD_V2_CONFIG, mode: 'headers' },
                 },
             };
             playerAdapter = initializeDashJsAdapter(item, mpd, settings);
@@ -248,12 +248,12 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         cmcd: {
                             ...DEFAULT_CMCD_V2_CONFIG,
                             mode: 'query',
-                            targets: [
+                            eventTargets: [
                                 {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['url', 'rc', 'msd', 'e', 'ts', 'sn'],
-                                    includeOnRequests: ['mpd', 'segment'],
+                                    includeInRequests: ['mpd', 'segment'],
                                     events: ['rr'],
                                 },
                             ],
@@ -281,9 +281,9 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const events = collector.getRequests('event');
                 expect(events.length).to.be.at.least(1);
 
-                const parsed = events.map((r) => validateCmcdEvent(r.httpRequest.body, { version: 2 }));
-                const rrResults = parsed.filter((r) => r.data && r.data.e === 'rr');
-                expect(rrResults.length).to.be.at.least(1);
+                const allEvents = events.flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
+                const rrEvents = allEvents.filter((d) => d.e === 'rr');
+                expect(rrEvents.length).to.be.at.least(1);
             });
         });
 
@@ -301,7 +301,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         cmcd: {
                             ...DEFAULT_CMCD_V2_CONFIG,
                             mode: 'query',
-                            targets: [
+                            eventTargets: [
                                 {
                                     enabled: true,
                                     url: targetUrl,
@@ -333,13 +333,17 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const events = collector.getRequests('event');
                 expect(events.length).to.be.at.least(1);
 
-                const results = events.map((r) => validateCmcdEvent(r.httpRequest.body, { version: 2 }));
-                const psResults = results.filter((r) => r.data && r.data.e === 'ps');
-                expect(psResults.length).to.be.at.least(1);
+                const results = events.map((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }));
 
-                for (const result of psResults) {
-                    expect(result.data.sta).to.not.be.undefined;
+                for (const result of results) {
                     expect(result.valid, `Play-state event validation failed:\n${formatIssues(result)}`).to.be.true;
+                }
+
+                const psEvents = results.flatMap((r) => r.data || []).filter((d) => d.e === 'ps');
+                expect(psEvents.length).to.be.at.least(1);
+
+                for (const d of psEvents) {
+                    expect(d.sta).to.not.be.undefined;
                 }
             });
         });
@@ -358,13 +362,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         cmcd: {
                             ...DEFAULT_CMCD_V2_CONFIG,
                             mode: 'query',
-                            targets: [
+                            eventTargets: [
                                 {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ts', 'sn'],
                                     events: ['t'],
-                                    timeInterval: 3,
+                                    interval: 3,
                                 },
                             ],
                         },
@@ -390,9 +394,10 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 await playerAdapter.sleep(8000);
                 await collector.waitForRequests('event', 2, 20000);
 
-                const results = collector.getRequests('event').map((r) => validateCmcdEvent(r.httpRequest.body, { version: 2 }));
-                const tiResults = results.filter((r) => r.data && r.data.e === 't');
-                expect(tiResults.length).to.be.at.least(2);
+                const allEvents = collector.getRequests('event')
+                    .flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
+                const tiEvents = allEvents.filter((d) => d.e === 't');
+                expect(tiEvents.length).to.be.at.least(2);
             });
         });
 
@@ -410,13 +415,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                         cmcd: {
                             ...DEFAULT_CMCD_V2_CONFIG,
                             mode: 'query',
-                            targets: [
+                            eventTargets: [
                                 {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ts', 'sn', 'sta', 'url', 'rc'],
                                     events: ['ps', 'rr'],
-                                    includeOnRequests: ['mpd', 'segment'],
+                                    includeInRequests: ['mpd', 'segment'],
                                 },
                             ],
                         },
@@ -436,7 +441,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 await checkIsPlaying(playerAdapter, true);
             });
 
-            it('POST content type is text/cmcd', async function () {
+            it('POST content type is application/cmcd', async function () {
                 this.timeout(30000);
                 await collector.waitForRequests('event', 1, TIMEOUTS.REQUEST_COLLECTION);
 
@@ -445,7 +450,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
                 for (const evt of events) {
                     const contentType = evt.httpRequest.headers['content-type'] || '';
-                    expect(contentType).to.include('text/cmcd');
+                    expect(contentType).to.include('application/cmcd');
                 }
             });
 
@@ -457,7 +462,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 expect(events.length).to.be.at.least(1);
 
                 for (const evt of events) {
-                    const result = validateCmcdEvent(evt.httpRequest.body, { version: 2 });
+                    const result = validateCmcdEvents(evt.httpRequest.body, { version: 2 });
                     expect(result.valid, `CMCD event validation failed for POST to ${evt.httpRequest.url}:\n${formatIssues(result)}`).to.be.true;
                 }
             });
@@ -466,13 +471,13 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 this.timeout(30000);
                 await collector.waitForRequests('event', 3, TIMEOUTS.REQUEST_COLLECTION);
 
-                const parsed = collector.getRequests('event')
-                    .map((r) => validateCmcdEvent(r.httpRequest.body, { version: 2 }).data)
-                    .filter((d) => d && d.sn !== undefined);
-                expect(parsed.length).to.be.at.least(2);
+                const withSn = collector.getRequests('event')
+                    .flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || [])
+                    .filter((d) => d.sn !== undefined);
+                expect(withSn.length).to.be.at.least(2);
 
-                for (let i = 1; i < parsed.length; i++) {
-                    expect(parsed[i].sn).to.be.greaterThan(parsed[i - 1].sn);
+                for (let i = 1; i < withSn.length; i++) {
+                    expect(withSn[i].sn).to.be.greaterThan(withSn[i - 1].sn);
                 }
             });
         });
@@ -676,7 +681,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 collector.attach();
                 const settings = {
                     streaming: {
-                        cmcd: { ...DEFAULT_CMCD_V2_CONFIG, mode: 'header' },
+                        cmcd: { ...DEFAULT_CMCD_V2_CONFIG, mode: 'headers' },
                     },
                 };
                 playerAdapter = initializeDashJsAdapter(item, mpd, settings);

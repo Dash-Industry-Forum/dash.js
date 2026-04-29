@@ -80,12 +80,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e', 'sta'],
                             events: ['ps'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -109,10 +109,10 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -129,12 +129,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e', 'sta', 'ttfb'],
                             events: ['ps'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -160,12 +160,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e'],
                             events: ['e'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -200,12 +200,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e'],
                             events: ['e'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -233,10 +233,10 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 1,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -252,7 +252,7 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['sn'],
@@ -284,12 +284,12 @@ describe('CmcdController', function () {
                     cmcd: {
                         version: 2,
                         sid: 'session-id',
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: [],
                             events: ['rr'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -328,12 +328,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e', 'sta'],
                             events: ['ps'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -369,7 +369,7 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e', 'sta'],
@@ -492,12 +492,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['e'],
                             events: ['ps', 't'],
-                            timeInterval: 1
+                            interval: 1
                         }]
                     }
                 }
@@ -517,7 +517,7 @@ describe('CmcdController', function () {
             clock.restore();
         });
 
-        it('should send reports periodically according to the timeInterval', () => {
+        it('should send reports periodically according to the interval', () => {
             // CmcdReporter fires the first TIME_INTERVAL event immediately on start()
             expect(urlLoaderMock.load.calledOnce).to.be.true;
             let requestSent = urlLoaderMock.load.firstCall.args[0].request;
@@ -546,12 +546,12 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.event.collector/api',
                             enabled: true,
                             enabledKeys: ['ab', 'tab', 'lab'],
                             events: ['ps'],
-                            timeInterval: 0
+                            interval: 0
                         }]
                     }
                 }
@@ -639,10 +639,10 @@ describe('CmcdController', function () {
                     cmcd: {
                         version: 2,
                         sid: 'session-id',
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
@@ -696,10 +696,10 @@ describe('CmcdController', function () {
                     cmcd: {
                         version: 2,
                         sid: 'session-id',
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
@@ -747,10 +747,10 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -782,10 +782,10 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 1,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -817,10 +817,10 @@ describe('CmcdController', function () {
                     cmcd: {
                         version: 2,
                         sid: 'session-id',
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
                         }]
@@ -871,10 +871,10 @@ describe('CmcdController', function () {
                 streaming: {
                     cmcd: {
                         version: 2,
-                        targets: [{
+                        eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeOnRequests: ['segment'],
+                            includeInRequests: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['rr']
                         }]

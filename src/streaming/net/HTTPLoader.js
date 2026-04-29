@@ -263,7 +263,10 @@ function HTTPLoader(cfg) {
                     eventBus.trigger(Events.MANIFEST_LOADING_FINISHED, { requestObject });
                 }
 
-                if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && commonMediaResponse.data) {
+                // POST requests are allowed to have empty response bodies (e.g. CMCD event reporting endpoints).
+                // GET requests still need a body since dash.js consumes it (manifests, segments).
+                const hasUsableBody = !!commonMediaResponse.data || requestObject.method === HTTPRequest.POST;
+                if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && hasUsableBody) {
                     if (config.success) {
                         config.success(commonMediaResponse.data, commonMediaResponse.statusText, commonMediaResponse.url);
                     }

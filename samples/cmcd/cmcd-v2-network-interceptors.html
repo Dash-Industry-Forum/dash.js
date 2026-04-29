@@ -57,7 +57,7 @@
     <script class="code">
         /* CMCD v2 transmission modes:
          * - Request Mode: uses 'query' or 'header' (configurable via settings.streaming.cmcd.mode)
-         * - Event Mode (targets): always uses 'body' (POST request) - mode is not configurable per target
+         * - Event Mode (eventTargets): always uses 'body' (POST request) - mode is not configurable per target
          */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters (Request Mode only) */
         var player;
@@ -82,7 +82,7 @@
                         mode: CMCD_MODE_QUERY,
                         enabledKeys: ['cid', 'sid'],
                         includeInRequests: ['segment', 'mpd'],
-                        targets: [
+                        eventTargets: [
                             {
                                 enabled: true,
                                 url: 'http://localhost:3003/report',

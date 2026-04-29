@@ -161,7 +161,7 @@ function CmcdConfigAccessor() {
     /**
      * Resolve a dot-notation path in an object with support for array notation and context variables
      * @param {Object} obj - Object to traverse
-     * @param {string} path - Dot-notation path (e.g., 'streaming.cmcd.version' or 'targets[0].mode')
+     * @param {string} path - Dot-notation path (e.g., 'streaming.cmcd.version')
      * @param {Object} pathContext - Context variables for path interpolation (e.g., {targetIndex: 0})
      * @returns {*} Resolved value or undefined
      * @private
@@ -171,10 +171,10 @@ function CmcdConfigAccessor() {
      * _resolvePath(obj, 'settings.streaming.cmcd.version')
      *
      * // Array notation
-     * _resolvePath(obj, 'settings.streaming.cmcd.targets[0].url')
+     * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[0].url')
      *
      * // Context variables
-     * _resolvePath(obj, 'settings.streaming.cmcd.targets[{targetIndex}].url', {targetIndex: 0})
+     * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[{targetIndex}].url', {targetIndex: 0})
      */
     function _resolvePath(obj, path, pathContext = {}) {
         if (!obj || !path) {
@@ -182,7 +182,7 @@ function CmcdConfigAccessor() {
         }
 
         // Replace contextual variables in the path
-        // Example: 'targets[{targetIndex}].mode' with {targetIndex: 0} -> 'targets[0].mode'
+        // Example: 'eventTargets[{targetIndex}].batchSize' with {targetIndex: 0} -> 'eventTargets[0].batchSize'
         let resolvedPath = path;
         for (const [key, value] of Object.entries(pathContext)) {
             resolvedPath = resolvedPath.replace(`{${key}}`, value);
@@ -199,7 +199,7 @@ function CmcdConfigAccessor() {
                 return undefined;
             }
 
-            // Handle array notation: targets[0]
+            // Handle array notation: eventTargets[0]
             const arrayMatch = part.match(/^([^\[]+)\[(\d+)\]$/);
 
             if (arrayMatch) {
@@ -390,13 +390,13 @@ function CmcdConfigAccessor() {
      * @public
      *
      * @example
-     * const targets = cmcdConfig.getTargets();
+     * const targets = cmcdConfig.getEventTargets();
      * targets.forEach((target, index) => {
-     *   const targetAccessor = cmcdConfig.getTarget(index);
+     *   const targetAccessor = cmcdConfig.getEventTarget(index);
      *   const keys = targetAccessor.get('targetKeys');
      * });
      */
-    function getTargets() {
+    function getEventTargets() {
         const version = _detectVersion();
 
         // Only V2 supports targets
@@ -404,7 +404,7 @@ function CmcdConfigAccessor() {
             return [];
         }
 
-        const targets = get('targets');
+        const targets = get('eventTargets');
         return Array.isArray(targets) ? targets : [];
     }
 
@@ -415,15 +415,15 @@ function CmcdConfigAccessor() {
      * @public
      *
      * @example
-     * const target = cmcdConfig.getTarget(0);
+     * const target = cmcdConfig.getEventTarget(0);
      * if (target) {
      *   const url = target.get('targetUrl');
      *   const keys = target.get('targetKeys');
      *   const events = target.get('targetEvents');
      * }
      */
-    function getTarget(index) {
-        const targets = getTargets();
+    function getEventTarget(index) {
+        const targets = getEventTargets();
 
         // Validate index
         if (index < 0 || index >= targets.length) {
@@ -473,8 +473,8 @@ function CmcdConfigAccessor() {
         getVersion,
         hasManifestParams,
         isEnabled,
-        getTargets,
-        getTarget,
+        getEventTargets,
+        getEventTarget,
         reset
     };
 

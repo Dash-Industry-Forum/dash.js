@@ -199,17 +199,17 @@ function CmcdController() {
     }
 
     function _buildReporterTargets() {
-        const targets = cmcdConfig.getTargets();
+        const targets = cmcdConfig.getEventTargets();
         return targets
             .map((_target, index) => {
-                const accessor = cmcdConfig.getTarget(index);
+                const accessor = cmcdConfig.getEventTarget(index);
                 if (!isCmcdEnabled(index)) {
                     return null;
                 }
                 return {
                     url: accessor.get('targetUrl'),
                     events: accessor.get('targetEvents'),
-                    interval: accessor.get('targetTimeInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
+                    interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                     batchSize: accessor.get('targetBatchSize') || 1,
                     enabledKeys: accessor.get('targetKeys'),
                 };
@@ -411,7 +411,7 @@ function CmcdController() {
             return false;
         }
 
-        const targetAccessor = cmcdConfig.getTarget(targetIndex);
+        const targetAccessor = cmcdConfig.getEventTarget(targetIndex);
         const enabled = targetAccessor.get('targetEnabled');
         const url = targetAccessor.get('targetUrl');
 
@@ -424,8 +424,8 @@ function CmcdController() {
     }
 
     function _checkTargetIncludeInRequests(targetIndex) {
-        const targetAccessor = cmcdConfig.getTarget(targetIndex);
-        let enabledRequests = targetAccessor.get('targetIncludeOnRequests');
+        const targetAccessor = cmcdConfig.getEventTarget(targetIndex);
+        let enabledRequests = targetAccessor.get('targetIncludeInRequests');
 
         if (!enabledRequests) {
             return true;

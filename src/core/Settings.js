@@ -661,15 +661,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
  * This object is used for setting the window parameters for "step" mode.
- * 
+ *
  * It is only applicable if the Catchup mechanism used is of mode "step".
- * 
+ *
  * The parameters are all percentages of the target latency. Where 1 is on target.
- * 
+ *
  * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
- * 
+ *
  * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
- * 
+ *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
@@ -969,31 +969,27 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
- * @property {Array.<CmcdTarget>} [targets]
+ * @property {Array.<CmcdEventTarget>} [eventTargets]
  * List of CMCD reporting targets.
  */
 
 /**
- * @typedef {Object} CmcdTarget
- * @property {string} [mode]
- * Mode of the CMCD reporting.
+ * @typedef {Object} CmcdEventTarget
  * @property {boolean} [enabled]
  * Whether the CMCD reporting is enabled for this target.
  * @property {string} [url]
  * The reporting endpoint URL.
  * @property {string} [events]
  * The events that should trigger the CMCD reporting.
- * @property {string} [timeInterval]
+ * @property {number} [interval]
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeOnRequests]
+ * @property {Array.<string>} [includeInRequests]
  * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
- * @property {Array.<number>} [batchRetryDelays]
- * Array of retry delay values in milliseconds for batched CMCD reporting failures.
- * Each value represents the delay before the next retry attempt.
- * If not specified, defaults to Constants.CMCD_DEFAULT_BATCH_RETRY_DELAYS.
-*/
+ * @property {number} [batchSize]
+ * The batch size for the CMCD reporting.
+ */
 
 /**
  * @typedef {Object} module:Settings~CmsdSettings
@@ -1504,7 +1500,7 @@ function Settings() {
                 enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
                 version: 1,
-                targets: []
+                eventTargets: []
             },
             cmsd: {
                 enabled: false,

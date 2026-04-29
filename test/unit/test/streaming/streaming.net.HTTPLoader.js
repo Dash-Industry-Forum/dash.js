@@ -127,6 +127,34 @@ describe('HTTPLoader', function () {
         expect(callbacks.success.calledBefore(callbacks.complete)).to.be.true; // jshint ignore:line
     });
 
+    it('should call success and not retry when a POST returns 200 with an empty body', async () => {
+        let resolveOnComplete;
+        const completePromise = new Promise((resolve) => {
+            resolveOnComplete = resolve;
+        });
+        const callbacks = _createCallbacks();
+        callbacks.complete = sinon.spy(() => resolveOnComplete());
+
+        httpLoader = _createHttpLoader();
+
+        await httpLoader.load({
+            request: { method: HTTPRequest.POST },
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
+        });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(200, {}, '');
+        await completePromise;
+
+        // Only one request fired (no retry), success was called.
+        expect(requests.length).to.equal(1);
+        sinon.assert.calledOnce(callbacks.success);
+        sinon.assert.calledOnce(callbacks.complete);
+        sinon.assert.notCalled(callbacks.error);
+    });
+
     it('should use XHRLoader and call error and complete callback when load is called with error', async () => {
         let resolveOnError;
         const errorPromise = new Promise((resolve) => {

@@ -272,14 +272,14 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Reporting targets array
+     * V2: Reporting eventTargets array
      * Priority: settings > default ([])
      */
-    targets: {
+    eventTargets: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets',
+                path: 'settings.streaming.cmcd.eventTargets',
                 priority: 1,
                 type: 'array',
                 default: []
@@ -295,7 +295,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].enabled',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabled',
                 priority: 1,
                 type: 'boolean',
                 default: true
@@ -311,7 +311,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].url',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].url',
                 priority: 1,
                 type: 'string',
                 default: null
@@ -327,7 +327,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].enabledKeys',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabledKeys',
                 priority: 1,
                 type: 'array',
                 default: []
@@ -343,7 +343,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].events',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].events',
                 priority: 1,
                 type: 'array',
                 default: []
@@ -355,11 +355,11 @@ const CmcdPropertyMap = {
      * V2: Target time interval for periodic reporting
      * Note: This is target-specific, requires context
      */
-    targetTimeInterval: {
+    targetInterval: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].timeInterval',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].interval',
                 priority: 1,
                 type: 'number',
                 default: Constants.CMCD_DEFAULT_TIME_INTERVAL
@@ -375,7 +375,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].batchSize',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].batchSize',
                 priority: 1,
                 type: 'number',
                 default: 0
@@ -391,7 +391,7 @@ const CmcdPropertyMap = {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.targets[{targetIndex}].includeInRequests',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
                 priority: 1,
                 type: 'array'
             },
