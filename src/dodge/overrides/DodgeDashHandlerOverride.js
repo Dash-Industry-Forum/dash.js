@@ -128,11 +128,10 @@ function DodgeDashHandlerOverride(config) {
         } else {
             url = baseURL.url;
             serviceLocation = baseURL.serviceLocation;
-            queryParams = baseURL.queryParams;
-
-            if (queryParams == null || queryParams == undefined) {
-                queryParams = {};
-            }
+            // Clone: every request resolved against the same BaseURL would
+            // otherwise share one queryParams object, leaving in-flight
+            // requests pointing at the newest random padding value.
+            queryParams = baseURL.queryParams ? Object.assign({}, baseURL.queryParams) : {};
 
             // Start with a short random string for cache busting.
             let random = Math.random().toString(36).substring(2, 10);

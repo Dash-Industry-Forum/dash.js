@@ -502,6 +502,9 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | relative template URL, queryParams.padding is set on the request |
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | $Number$ padding is longer for a 1-digit index than for a 2-digit index |
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | absolute URL (no template expansion), queryParams has no padding key |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | request.queryParams is not the BaseURL.queryParams object (cloned, not aliased) |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | baseURL.queryParams is not mutated by request generation |
+| `dodge.DodgeDashHandlerOverride.js` | URL padding | request.queryParams.padding is stable across subsequent request generations against the same BaseURL |
 | `dodge.DodgeDashHandlerOverride.js` | URL padding | maxIdLength invalid (negative): falls back to max loaded label length and warns exactly once across requests |
 
 ### R8.2 - Request padding normalizes HTTP wire size to `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`
@@ -1034,7 +1037,7 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R7.3 Suppressed events skip scheduling | 2 |
 | R7.4 Padding event routing | 2 |
 | R7.5 Random walk delay on all scheduling paths | 9 |
-| R8.1 URL padding normalizes template lengths | 4 |
+| R8.1 URL padding normalizes template lengths | 7 |
 | R8.2 Request padding normalizes wire size | 13 |
 | R8.3 FetchLoader applies padding | 4 |
 | R8.4 XHRLoader applies padding | 4 |
@@ -1070,4 +1073,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **416** |
+| **Total** | **419** |

@@ -787,6 +787,224 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request.queryParams.padding).to.be.undefined; // jshint ignore:line
         });
 
+        // BaseURL.queryParams isolation: each generated request must own its
+        // queryParams object. Aliasing the BaseURL's object causes padding values
+        // to be silently overwritten when another request is generated against the
+        // same BaseURL, which (combined with HTTPLoader's retry path appending
+        // request.queryParams to request.url) produces duplicate
+        // `?padding=X&padding=Y` query parameters on the wire.
+
+        it('request.queryParams is not the BaseURL.queryParams object (cloned, not aliased)', function () {
+            // Use a baseURLController whose resolve() returns the same baseURL
+            // object on every call so we can detect aliasing.
+            const sharedBaseURL = { url: 'https://example.com/', serviceLocation: 'example.com', queryParams: {} };
+            const stableBaseURLController = { resolve: () => sharedBaseURL };
+
+            const ctx = {};
+            Debug(ctx).getInstance();
+            const registry = DefenseRegistry(ctx).getInstance();
+            registry.reset();
+
+            const localRep = makeRepresentation();
+            const localParent = {
+                getInitRequest: sinon.stub().returns(null),
+                getNextSegmentRequest: sinon.stub().returns(null),
+                resetInitialSettings: sinon.stub(),
+                initialize: sinon.stub(),
+                getStreamInfo: sinon.stub().returns({ manifestInfo: { isDynamic: false } }),
+                getType: sinon.stub().returns('video'),
+            };
+            const localSegmentsController = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => ({
+                    index: idx,
+                    media: 'seg_$Number$.m4s',
+                    presentationStartTime: idx * 4,
+                    duration: 4,
+                    representation: r,
+                    replacementNumber: idx,
+                    replacementTime: 0,
+                    mediaRange: null,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    wallStartTime: 0,
+                    mediaStartTime: 0,
+                    replacements: null,
+                })),
+                getSegmentByTime: sinon.stub().returns(null),
+            };
+            const localOverride = DodgeDashHandlerOverride.call(
+                { context: ctx, parent: localParent, factory: {} },
+                {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
+                    debug: Debug(ctx).getInstance(),
+                    urlUtils: URLUtils(ctx).getInstance(),
+                    segmentsController: localSegmentsController,
+                    baseURLController: stableBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: sinon.stub().returns(0),
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }, { index: 1, buffer: true }]
+                }]
+            });
+            localOverride.updateDefendedStreamInfo(localRep);
+
+            const request = localOverride.getNextSegmentRequest({}, localRep);
+
+            expect(request.queryParams).to.exist; // jshint ignore:line
+            expect(request.queryParams).to.not.equal(sharedBaseURL.queryParams);
+        });
+
+        it('baseURL.queryParams is not mutated by request generation', function () {
+            const sharedBaseURL = { url: 'https://example.com/', serviceLocation: 'example.com', queryParams: {} };
+            const stableBaseURLController = { resolve: () => sharedBaseURL };
+
+            const ctx = {};
+            Debug(ctx).getInstance();
+            const registry = DefenseRegistry(ctx).getInstance();
+            registry.reset();
+
+            const localRep = makeRepresentation();
+            const localParent = {
+                getInitRequest: sinon.stub().returns(null),
+                getNextSegmentRequest: sinon.stub().returns(null),
+                resetInitialSettings: sinon.stub(),
+                initialize: sinon.stub(),
+                getStreamInfo: sinon.stub().returns({ manifestInfo: { isDynamic: false } }),
+                getType: sinon.stub().returns('video'),
+            };
+            const localSegmentsController = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => ({
+                    index: idx,
+                    media: 'seg_$Number$.m4s',
+                    presentationStartTime: idx * 4,
+                    duration: 4,
+                    representation: r,
+                    replacementNumber: idx,
+                    replacementTime: 0,
+                    mediaRange: null,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    wallStartTime: 0,
+                    mediaStartTime: 0,
+                    replacements: null,
+                })),
+                getSegmentByTime: sinon.stub().returns(null),
+            };
+            const localOverride = DodgeDashHandlerOverride.call(
+                { context: ctx, parent: localParent, factory: {} },
+                {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
+                    debug: Debug(ctx).getInstance(),
+                    urlUtils: URLUtils(ctx).getInstance(),
+                    segmentsController: localSegmentsController,
+                    baseURLController: stableBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: sinon.stub().returns(0),
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }, { index: 1, buffer: true }]
+                }]
+            });
+            localOverride.updateDefendedStreamInfo(localRep);
+
+            localOverride.getNextSegmentRequest({}, localRep);
+            localOverride.getNextSegmentRequest({}, localRep);
+
+            // The BaseURL's queryParams object must not have been written to.
+            expect(sharedBaseURL.queryParams).to.deep.equal({});
+        });
+
+        it('request.queryParams.padding is stable across subsequent generated requests against the same BaseURL', function () {
+            const sharedBaseURL = { url: 'https://example.com/', serviceLocation: 'example.com', queryParams: {} };
+            const stableBaseURLController = { resolve: () => sharedBaseURL };
+
+            const ctx = {};
+            Debug(ctx).getInstance();
+            const registry = DefenseRegistry(ctx).getInstance();
+            registry.reset();
+
+            const localRep = makeRepresentation();
+            const localParent = {
+                getInitRequest: sinon.stub().returns(null),
+                getNextSegmentRequest: sinon.stub().returns(null),
+                resetInitialSettings: sinon.stub(),
+                initialize: sinon.stub(),
+                getStreamInfo: sinon.stub().returns({ manifestInfo: { isDynamic: false } }),
+                getType: sinon.stub().returns('video'),
+            };
+            const localSegmentsController = {
+                getSegmentByIndex: sinon.stub().callsFake((r, idx) => ({
+                    index: idx,
+                    media: 'seg_$Number$.m4s',
+                    presentationStartTime: idx * 4,
+                    duration: 4,
+                    representation: r,
+                    replacementNumber: idx,
+                    replacementTime: 0,
+                    mediaRange: null,
+                    availabilityStartTime: 0,
+                    availabilityEndTime: Infinity,
+                    wallStartTime: 0,
+                    mediaStartTime: 0,
+                    replacements: null,
+                })),
+                getSegmentByTime: sinon.stub().returns(null),
+            };
+            const localOverride = DodgeDashHandlerOverride.call(
+                { context: ctx, parent: localParent, factory: {} },
+                {
+                    adapter: { getVoRepresentations: sinon.stub().returns([]) },
+                    debug: Debug(ctx).getInstance(),
+                    urlUtils: URLUtils(ctx).getInstance(),
+                    segmentsController: localSegmentsController,
+                    baseURLController: stableBaseURLController,
+                    timelineConverter: objectsHelper.getDummyTimelineConverter(),
+                    playbackController: {
+                        getTimeSinceStreamEnd: sinon.stub().returns(0),
+                        getStreamEndTime: sinon.stub().returns(100),
+                    },
+                }
+            );
+            registry.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'rep0',
+                    init: [{}],
+                    data: [{ index: 0, buffer: true }, { index: 1, buffer: true }]
+                }]
+            });
+            localOverride.updateDefendedStreamInfo(localRep);
+
+            const requestA = localOverride.getNextSegmentRequest({}, localRep);
+            const paddingA = requestA.queryParams.padding;
+
+            const requestB = localOverride.getNextSegmentRequest({}, localRep);
+
+            // Two distinct queryParams objects (no aliasing).
+            expect(requestA.queryParams).to.not.equal(requestB.queryParams);
+            // requestA's padding value must not have been overwritten by
+            // requestB's generation.
+            expect(requestA.queryParams.padding).to.equal(paddingA);
+            expect(requestA.queryParams.padding).to.not.equal(requestB.queryParams.padding);
+        });
+
         it('maxIdLength invalid (negative): falls back to max loaded label length and warns exactly once across requests', function () {
             const ctx = {};
             const loggerSpy = { fatal: sinon.spy(), error: sinon.spy(), warn: sinon.spy(), info: sinon.spy(), debug: sinon.spy() };
