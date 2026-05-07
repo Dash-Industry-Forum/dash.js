@@ -1,4 +1,5 @@
 import BlacklistController from '../../../../src/streaming/controllers/BlacklistController.js';
+import ContentSteeringController from '../../../../src/dash/controllers/ContentSteeringController.js';
 import EventBus from '../../../../src/core/EventBus.js';
 import Settings from '../../../../src/core/Settings.js';
 import chai from 'chai';
@@ -20,12 +21,17 @@ describe('BlacklistController', function () {
     const defaultConfig = { updateEventName: '' };
 
     let clock;
+    let contentSteeringResponseStub;
 
     this.beforeEach(() => {
         clock = sinon.useFakeTimers();
     });
 
     this.afterEach(() => {
+        if (contentSteeringResponseStub) {
+            contentSteeringResponseStub.restore();
+            contentSteeringResponseStub = null;
+        }
         if (clock) {
             clock.restore();
             clock = null;
@@ -127,8 +133,10 @@ describe('BlacklistController', function () {
 
     it('should remove an entry after a content steering TTL blacklist expiry time has passed', () => {
         const config = { updateEventName: '', enableExpiry: true };
+        const contentSteeringController = ContentSteeringController(context).getInstance();
+        contentSteeringResponseStub = sinon.stub(contentSteeringController, 'getCurrentSteeringResponseData').returns({ ttl: 60 });
+
         const blacklistController = BlacklistController(context).create(config);
-        blacklistController.setContentSteeringBlacklistExpiry(60);
 
         blacklistController.add(SERVICE_LOCATION);
         clock.tick(30 * 1000);

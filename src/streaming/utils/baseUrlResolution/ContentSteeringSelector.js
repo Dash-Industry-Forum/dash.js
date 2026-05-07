@@ -31,16 +31,13 @@
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ContentSteeringController from '../../../dash/controllers/ContentSteeringController.js';
-import EventBus from '../../../core/EventBus.js';
-import MediaPlayerEvents from '../../MediaPlayerEvents.js';
 
 function ContentSteeringSelector() {
 
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
     let instance,
         contentSteeringController,
-        blacklistController
+        blacklistController;
 
     function setup() {
         contentSteeringController = ContentSteeringController(context).getInstance();
@@ -53,7 +50,6 @@ function ContentSteeringSelector() {
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
         }
-        eventBus.on(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onContentSteeringRequestCompleted, instance);
     }
 
     function selectBaseUrlIndex(data) {
@@ -93,20 +89,6 @@ function ContentSteeringSelector() {
         }
         return steeringIndex;
     }
-
-    
-    function _onContentSteeringRequestCompleted() {
-        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-        if (!currentSteeringResponseData) {
-            return
-        }
-        if (currentSteeringResponseData.ttl) {
-            blacklistController.setContentSteeringBlacklistExpiry(currentSteeringResponseData.ttl);
-        } else {
-            blacklistController.setContentSteeringBlacklistExpiry(-1);
-        }
-    }
-
 
     instance = {
         selectBaseUrlIndex,

@@ -32,16 +32,17 @@
 import FactoryMaker from '../../core/FactoryMaker.js';
 import EventBus from '../../core/EventBus.js';
 import Settings from '../../core/Settings.js';
+import ContentSteeringController from '../../dash/controllers/ContentSteeringController.js';
 
 function BlackListController(config) {
 
     config = config || {};
     let instance;
     let blacklist = [];
-    let blacklistExpiry = null;
 
     const eventBus = EventBus(this.context).getInstance();
     const settings = Settings(this.context).getInstance();
+    const contentSteeringController = ContentSteeringController(this.context).getInstance();
     const updateEventName = config.updateEventName;
     const addBlacklistEventName = config.addBlacklistEventName;
 
@@ -58,7 +59,7 @@ function BlackListController(config) {
             return;
         }
 
-        const expiry = blacklistExpiry || settings.get().streaming.blacklistExpiryTime;
+        const expiry = config.enableExpiry ? getBlacklistExpiry() : NaN;
         if (config.enableExpiry && expiry && expiry > 0) {
             const timeoutId = setTimeout(() => {
                 remove(entry);
@@ -82,8 +83,14 @@ function BlackListController(config) {
         add(e.entry);
     }
 
-    function setContentSteeringBlacklistExpiry(seconds) {
-        blacklistExpiry = seconds;
+    function getBlacklistExpiry() {
+        const currentSteeringResponseData = contentSteeringController ? contentSteeringController.getCurrentSteeringResponseData() : null;
+
+        if (currentSteeringResponseData && Number.isFinite(currentSteeringResponseData.ttl)) {
+            return currentSteeringResponseData.ttl;
+        }
+
+        return settings.get().streaming.blacklistExpiryTime;
     }
 
     function setup() {
@@ -102,15 +109,13 @@ function BlackListController(config) {
             }
         }
         blacklist = [];
-        blacklistExpiry = null;
     }
 
     instance = {
         add: add,
         remove: remove,
         contains: contains,
-        reset: reset,
-        setContentSteeringBlacklistExpiry: setContentSteeringBlacklistExpiry
+        reset: reset
     };
 
     setup();
