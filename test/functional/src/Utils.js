@@ -1,4 +1,4 @@
-import {UAParser} from 'ua-parser-js'
+import CoreUtils from '../../../src/core/Utils.js'
 
 class Utils {
 
@@ -58,7 +58,7 @@ class Utils {
             return false
         }
 
-        const userAgent = UAParser(navigator.userAgent.toLowerCase())
+        const userAgent = CoreUtils.parseUserAgent(navigator.userAgent)
         return excludedPlatforms.some((platform) => {
             return platform && platform.browser && platform.browser.toLowerCase() === userAgent.browser.name.toLowerCase()
         })
