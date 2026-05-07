@@ -1,0 +1,143 @@
+{
+  "start": {
+    "mpd": "<MPD mediaPresentationDuration=\"PT634.566S\" minBufferTime=\"PT2.00S\" profiles=\"urn:hbbtv:dash:profile:isoff-live:2012,urn:mpeg:dash:profile:isoff-live:2011\" type=\"static\" xmlns=\"urn:mpeg:dash:schema:mpd:2011\" xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" xsi:schemaLocation=\"urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd\">\n <BaseURL>https://dash.akamaized.net/akamai/bbb_30fps/</BaseURL>\n <Period>\n  <AdaptationSet mimeType=\"video/mp4\" contentType=\"video\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\" par=\"16:9\">\n   <SegmentTemplate duration=\"120\" timescale=\"30\" media=\"$RepresentationID$/$RepresentationID$_$Number$.m4v\" startNumber=\"1\" initialization=\"$RepresentationID$/$RepresentationID$_0.m4v\"/>\n   <Representation id=\"bbb_30fps_1024x576_2500k\" codecs=\"avc1.64001f\" bandwidth=\"3134488\" width=\"1024\" height=\"576\" frameRate=\"30\" sar=\"1:1\" scanType=\"progressive\"/>\n   <Representation id=\"bbb_30fps_1280x720_4000k\" codecs=\"avc1.64001f\" bandwidth=\"4952892\" width=\"1280\" height=\"720\" frameRate=\"30\" sar=\"1:1\" scanType=\"progressive\"/>\n   <Representation id=\"bbb_30fps_640x360_1000k\" codecs=\"avc1.64001e\" bandwidth=\"1254758\" width=\"640\" height=\"360\" frameRate=\"30\" sar=\"1:1\" scanType=\"progressive\"/>\n  </AdaptationSet>\n  <AdaptationSet mimeType=\"audio/mp4\" contentType=\"audio\" subsegmentAlignment=\"true\" subsegmentStartsWithSAP=\"1\">\n   <Accessibility schemeIdUri=\"urn:tva:metadata:cs:AudioPurposeCS:2007\" value=\"6\"/>\n   <Role schemeIdUri=\"urn:mpeg:dash:role:2011\" value=\"main\"/>\n   <SegmentTemplate duration=\"192512\" timescale=\"48000\" media=\"$RepresentationID$/$RepresentationID$_$Number$.m4a\" startNumber=\"1\" initialization=\"$RepresentationID$/$RepresentationID$_0.m4a\"/>\n   <Representation id=\"bbb_a64k\" codecs=\"mp4a.40.5\" bandwidth=\"67071\" audioSamplingRate=\"48000\">\n    <AudioChannelConfiguration schemeIdUri=\"urn:mpeg:dash:23003:3:audio_channel_configuration:2011\" value=\"2\"/>\n   </Representation>\n  </AdaptationSet>\n </Period>\n</MPD>\n",
+    "base_uri": "https://dash.akamaized.net/akamai/bbb_30fps/"
+  },
+  "streams": [
+    {
+      "label": "bbb_30fps_640x360_1000k",
+      "init": [
+        {
+          "range": "0-705"
+        }
+      ],
+      "data": [
+        {
+          "index": 0,
+          "range": "0-371769",
+          "buffer": true
+        },
+        {
+          "index": 1,
+          "range": "0-578174",
+          "buffer": true
+        },
+        {
+          "index": 2,
+          "range": "0-489174",
+          "buffer": true
+        },
+        {
+          "index": 3,
+          "range": "0-481846",
+          "buffer": true
+        },
+        {
+          "index": 4,
+          "range": "0-509578",
+          "buffer": true
+        },
+        {
+          "index": 5,
+          "range": "0-397415",
+          "buffer": true
+        },
+        {
+          "index": 6,
+          "range": "0-553035",
+          "buffer": true
+        }
+      ]
+    },
+    {
+      "label": "bbb_30fps_1024x576_2500k",
+      "init": [
+        {
+          "range": "0-704"
+        }
+      ],
+      "data": [
+        {
+          "index": 0,
+          "range": "0-758240",
+          "buffer": true
+        },
+        {
+          "index": 1,
+          "range": "0-1468267",
+          "buffer": true
+        },
+        {
+          "index": 2,
+          "range": "0-1203119",
+          "buffer": true
+        },
+        {
+          "index": 3,
+          "range": "0-1226399",
+          "buffer": true
+        },
+        {
+          "index": 4,
+          "range": "0-1286480",
+          "buffer": true
+        },
+        {
+          "index": 5,
+          "range": "0-973751",
+          "buffer": true
+        },
+        {
+          "index": 6,
+          "range": "0-1386323",
+          "buffer": true
+        }
+      ]
+    },
+    {
+      "label": "bbb_30fps_1280x720_4000k",
+      "init": [
+        {
+          "range": "0-704"
+        }
+      ],
+      "data": [
+        {
+          "index": 0,
+          "range": "0-1019519",
+          "buffer": true
+        },
+        {
+          "index": 1,
+          "range": "0-2426612",
+          "buffer": true
+        },
+        {
+          "index": 2,
+          "range": "0-1919212",
+          "buffer": true
+        },
+        {
+          "index": 3,
+          "range": "0-1958124",
+          "buffer": true
+        },
+        {
+          "index": 4,
+          "range": "0-2042804",
+          "buffer": true
+        },
+        {
+          "index": 5,
+          "range": "0-1572124",
+          "buffer": true
+        },
+        {
+          "index": 6,
+          "range": "0-2231829",
+          "buffer": true
+        }
+      ]
+    }
+  ]
+}

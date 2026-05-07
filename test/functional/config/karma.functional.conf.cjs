@@ -49,7 +49,8 @@ module.exports = async function (config) {
         // https://github.com/webpack-contrib/karma-webpack#alternative-usage
         files: [
             { pattern: 'test/functional/lib/ima3_dai.js', watched: false, nocache: true },
-            { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true }
+            { pattern: 'test/functional/content/**/*.mpd', watched: false, included: false, served: true },
+            { pattern: 'test/functional/content/**/*.exmfst.json', watched: false, included: false, served: true }
         ].concat(includedTestfiles),
 
 

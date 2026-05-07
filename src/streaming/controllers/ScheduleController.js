@@ -43,6 +43,7 @@ function ScheduleController(config) {
     const abrController = config.abrController;
     const bufferController = config.bufferController;
     const context = this.context;
+    const dashHandler = config.dashHandler;
     const dashMetrics = config.dashMetrics;
     const eventBus = EventBus(context).getInstance();
     const fragmentModel = config.fragmentModel;
@@ -123,7 +124,7 @@ function ScheduleController(config) {
     function _schedule() {
         const scheduleTimeout = mediaPlayerModel.getScheduleTimeout();
         try {
-            if (_shouldClearScheduleTimer()) {
+            if (instance._shouldClearScheduleTimer()) {
                 clearScheduleTimer();
                 return;
             }
@@ -162,16 +163,24 @@ function ScheduleController(config) {
      */
     function _getNextFragment() {
         const currentRepresentation = representationController.getCurrentRepresentation();
+        const remainingInitCycles = dashHandler ? dashHandler.getRemainingInitCycles() : -1;
 
-        // A quality changed occured or we are switching the AdaptationSet. In that case we need to load a new init segment
-        if (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack) {
-            _initFragmentNeeded(currentRepresentation)
+        // Dodge defended streams can queue multiple init cycles for a single
+        // home representation (e.g. an alt-rep init staged for a later quality
+        // override). The vanilla DashHandler stub returns -1, so this guard is
+        // a no-op for non-Dodge playback. A quality change or AdaptationSet
+        // switch still takes the init path via the original condition.
+        const dodgeNeedsMoreInits = remainingInitCycles > 0;
+        const qualitySwitchNeedsInit = remainingInitCycles &&
+            (initSegmentRequired || currentRepresentation.id !== lastInitializedRepresentationId || switchTrack);
+        if (dodgeNeedsMoreInits || qualitySwitchNeedsInit) {
+            _initFragmentNeeded(currentRepresentation, remainingInitCycles)
         } else {
             _mediaFragmentNeeded()
         }
     }
 
-    function _initFragmentNeeded(currentRepresentation) {
+    function _initFragmentNeeded(currentRepresentation, remainingInitCycles) {
         if (switchTrack) {
             logger.debug('Switch track for ' + type + ', representation id = ' + currentRepresentation.id);
             switchTrack = false;
@@ -184,6 +193,9 @@ function ScheduleController(config) {
         );
         shouldCheckPlaybackQuality = false;
         initSegmentRequired = false;
+        if (remainingInitCycles == 1) {
+            setLastInitializedRepresentationId(currentRepresentation.id);
+        }
     }
 
     function _mediaFragmentNeeded() {
@@ -468,6 +480,7 @@ function ScheduleController(config) {
         getType,
         initialize,
         reset,
+        _shouldClearScheduleTimer,
         setShouldCheckPlaybackQuality,
         setInitSegmentRequired,
         setLastInitializedRepresentationId,

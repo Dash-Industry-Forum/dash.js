@@ -303,12 +303,24 @@ function GapController() {
     }
 
     /**
+     * Returns whether a jump should proceed. Exposed in the instance object
+     * so it can be overridden by DodgeGapControllerOverride.
+     */
+    function _shouldJumpGap() {
+        return true;
+    }
+
+    /**
      * Jump a gap
      * @param {number} currentTime
      * @param {boolean} playbackStalled
      * @private
      */
     function _jumpGap(currentTime, playbackStalled = false) {
+        if (!instance._shouldJumpGap()) {
+            return;
+        }
+
         const gapSettings = settings.get().streaming.gaps;
         const enableStallFix = gapSettings.enableStallFix;
         const stallSeek = gapSettings.stallSeek;
@@ -380,7 +392,8 @@ function GapController() {
     instance = {
         reset,
         setConfig,
-        initialize
+        initialize,
+        _shouldJumpGap,
     };
 
     setup();

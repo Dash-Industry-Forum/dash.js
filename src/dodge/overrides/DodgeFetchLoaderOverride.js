@@ -29,24 +29,38 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import Debug from '../../core/Debug.js';
+import Settings from '../../core/Settings.js';
+import { applyRequestPadding } from '../utils/RequestPadding.js';
+
 /**
- * @class
- * @ignore
+ * Overrides FetchLoader.load() to apply request-level padding for Dodge
+ * requests before delegating to the parent implementation.
+ *
+ * When `dodge.paddingLengthBase` is set, all Dodge requests are padded so
+ * the approximate HTTP/1.1 wire size (URL + all request headers) falls in
+ * `[paddingLengthBase, paddingLengthBase + paddingLengthRandom]`.
  */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
-    constructor() {
-        this.streamId = null;
-        this.segmentType = null;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representation = null;
-        this.homeRepresentationId = null;
-        this.endFragment = null;
+function DodgeFetchLoaderOverride() {
+
+    const context = this.context;
+    const parent = this.parent;
+    const _parentLoad = parent.load;
+
+    const settings = Settings(context).getInstance();
+    const logger = Debug(context).getInstance().getLogger(this);
+
+    /**
+     * Apply request padding and delegate to the parent FetchLoader.
+     * @param {CommonMediaRequest} commonMediaRequest
+     * @param {CommonMediaResponse} commonMediaResponse
+     */
+    function load(commonMediaRequest, commonMediaResponse) {
+        applyRequestPadding(commonMediaRequest, settings, logger);
+        return _parentLoad.call(parent, commonMediaRequest, commonMediaResponse);
     }
+
+    return { load };
 }
 
-export default DataChunk;
+export default DodgeFetchLoaderOverride;

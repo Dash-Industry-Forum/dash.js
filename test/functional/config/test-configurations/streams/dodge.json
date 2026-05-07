@@ -1,0 +1,138 @@
+{
+  "testfiles": {
+    "included": [
+      "dodge/*"
+    ]
+  },
+  "testvectors": [
+    {
+      "name": "BBB Undefended",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification",
+        "dodge/strict-mode-allows-exmfst",
+        "dodge/seek",
+        "dodge/seek-backward"
+      ]
+    },
+    {
+      "name": "BBB Constant-size defense",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_constant.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification"
+      ]
+    },
+    {
+      "name": "Elephants Dream Mimicry defense",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/elephants_dream_mimicry.exmfst.json",
+      "includedTestfiles": [
+        "dodge/play-defended",
+        "dodge/defense-verification"
+      ]
+    },
+    {
+      "name": "Regular MPD (no extended manifest)",
+      "type": "vod",
+      "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
+      "includedTestfiles": [
+        "dodge/strict-mode-rejects-mpd",
+        "dodge/graceful-degradation"
+      ]
+    },
+    {
+      "name": "BBB Trailing (3 playable segments + padding)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_trailing_short.exmfst.json",
+      "includedTestfiles": [
+        "dodge/trailing",
+        "dodge/seek-trailing",
+        "dodge/mock-buffer"
+      ]
+    },
+    {
+      "name": "BBB Extended Trailing (3 playable segments + 10 padding)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_trailing_extended.exmfst.json",
+      "includedTestfiles": [
+        "dodge/extended-trailing"
+      ]
+    },
+    {
+      "name": "BBB Video-only defense (no audio stream entry)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_video_only.exmfst.json",
+      "includedTestfiles": [
+        "dodge/representation-strict-mode"
+      ]
+    },
+    {
+      "name": "BBB Text track MPD (undefended subtitle)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_text.exmfst.json",
+      "includedTestfiles": [
+        "dodge/text-track-blocking"
+      ]
+    },
+    {
+      "name": "BBB Thumbnails MPD (thumbnail_tile in MPD)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_thumbnails.exmfst.json",
+      "includedTestfiles": [
+        "dodge/thumbnail-detection"
+      ]
+    },
+    {
+      "name": "BBB XLink MPD (xlink:href in Period)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_xlink.exmfst.json",
+      "includedTestfiles": [
+        "dodge/xlink-detection"
+      ]
+    },
+    {
+      "name": "BBB DRM MPD (side channel policy DRM)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_drm.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
+      ]
+    },
+    {
+      "name": "BBB Undefended (max mode side channel policy)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
+      ]
+    },
+    {
+      "name": "BBB Undefended (non-strict side channel policy)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_undef.exmfst.json",
+      "includedTestfiles": [
+        "dodge/side-channel-policy"
+      ]
+    },
+    {
+      "name": "BBB Quality override (alternate rep)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_quality_override.exmfst.json",
+      "includedTestfiles": [
+        "dodge/quality-override"
+      ]
+    },
+    {
+      "name": "BBB Multi-period (2 periods)",
+      "type": "vod",
+      "url": "/base/test/functional/content/dodge/bbb_30fps_multiperiod.exmfst.json",
+      "includedTestfiles": [
+        "dodge/multiperiod"
+      ]
+    }
+  ]
+}

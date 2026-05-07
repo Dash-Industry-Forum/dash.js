@@ -29,24 +29,17 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @class
- * @ignore
- */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
-    constructor() {
-        this.streamId = null;
-        this.segmentType = null;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representation = null;
-        this.homeRepresentationId = null;
-        this.endFragment = null;
-    }
+import DodgeHandler from './DodgeHandler.js';
+
+// Register DodgeHandler on the global dashjs object.
+var context = (typeof window !== 'undefined' && window) || global;
+
+var dashjs = context.dashjs;
+if (!dashjs) {
+    dashjs = context.dashjs = {};
 }
 
-export default DataChunk;
+dashjs.DodgeHandler = DodgeHandler;
+
+export default dashjs;
+export { DodgeHandler };

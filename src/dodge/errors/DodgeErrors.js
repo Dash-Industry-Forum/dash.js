@@ -29,24 +29,22 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+import ErrorsBase from '../../core/errors/ErrorsBase.js';
+
 /**
  * @class
- * @ignore
  */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
+class DodgeErrors extends ErrorsBase {
     constructor() {
-        this.streamId = null;
-        this.segmentType = null;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representation = null;
-        this.homeRepresentationId = null;
-        this.endFragment = null;
+        super();
+        /**
+         * Error code returned when Dodge strict mode is enabled but no
+         * extended manifest or defended stream info is available
+         */
+        this.DODGE_STRICT_MODE_ERROR_CODE = 300;
+        this.DODGE_STRICT_MODE_ERROR_MESSAGE = 'DODGE_STRICT_MODE_ERROR: Strict mode is enabled but defense info is unavailable.';
     }
 }
 
-export default DataChunk;
+let dodgeErrors = new DodgeErrors();
+export default dodgeErrors;

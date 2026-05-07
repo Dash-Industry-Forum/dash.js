@@ -51,6 +51,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Error related settings
  * @property {module:Settings~StreamingSettings} [streaming]
  * Streaming related settings.
+ * @property {module:Settings~DodgeSettings} [dodge]
+ * Dodge extension settings.
  * @example
  *
  * // Full settings object
@@ -360,6 +362,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            recoverAttempts: {
  *                mediaErrorDecode: 5
  *             }
+ *          },
+ *          dodge: {
+ *            scheduleWaitBase: 100,
+ *            scheduleWaitRandom: 50,
+ *            maxIdLength: 32,
+ *            queryParam: 'padding',
+ *            paddingLengthBase: 0,
+ *            paddingLengthRandom: 0,
+ *            strictMode: 'representation'
  *          }
  * }
  */
@@ -540,6 +551,31 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Defines the maximum number of recover attempts for specific media errors.
  *
  * For mediaErrorDecode the player will reset the MSE and skip the blacklisted segment that caused the decode error. The resulting gap will be handled by the GapController.
+ */
+
+/**
+ * @typedef {Object} module:Settings~DodgeSettings
+ * @property {number} [scheduleWaitBase=100]
+ * Base interval in milliseconds between segment requests for random-walk scheduling.
+ * @property {number} [scheduleWaitRandom=50]
+ * Maximum additional random delay in milliseconds added to scheduleWaitBase per request.
+ * @property {number} [maxIdLength=32]
+ * Maximum expected length of a representation ID string, required for proper URL padding.
+ * @property {string} [queryParam='padding']
+ * Name of the query parameter appended to segment URLs to normalize their lengths.
+ * @property {number} [paddingLengthBase=0]
+ * Base target HTTP/1.1 wire size in bytes (URL + request headers) for Dodge requests.
+ * @property {number} [paddingLengthRandom=0]
+ * Maximum additional random bytes added to paddingLengthBase per request.
+ * @property {false|'representation'|'manifest'} [strictMode='representation']
+ * Controls fallback behavior when defense info is not available. Note that it is risky to
+ * set strictMode to false; this allows representations that don't appear in the extended
+ * manifest to play undefended. For almost all use cases, a properly constructed extended
+ * manifest should not exclude any representations from the original MPD. Use with care.
+ * 
+ * 'representation': block undefended representations when an extended manifest is active
+ * 'manifest': block undefended representations and refuse to play vanilla MPDs (default)
+ * false: fall back to normal dash.js behavior on a per-representation basis
  */
 
 /**
@@ -1506,6 +1542,15 @@ function Settings() {
             recoverAttempts: {
                 mediaErrorDecode: 5
             }
+        },
+        dodge: {
+            scheduleWaitBase: 100,
+            scheduleWaitRandom: 50,
+            maxIdLength: 32,
+            queryParam: 'padding',
+            paddingLengthBase: 0,
+            paddingLengthRandom: 0,
+            strictMode: 'representation'
         }
     };
 

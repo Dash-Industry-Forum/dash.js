@@ -2,6 +2,7 @@ import Constants from '../src/Constants.js';
 import {getRandomNumber} from '../test/common/common.js';
 import {MediaPlayer, Debug} from '../../../dist/modern/esm/dash.all.min.js';
 import '../../../dist/modern/esm/dash.mss.min.js';
+import '../../../dist/modern/esm/dash.dodge.min.js';
 
 class DashJsAdapter {
 
@@ -709,6 +710,61 @@ class DashJsAdapter {
     async sleep(timeoutValue) {
         return new Promise((resolve) => {
             setTimeout(resolve, timeoutValue)
+        });
+    }
+
+    isDodgeActive() {
+        try {
+            return this.player.isDodgeActive();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    isDodgeTrailing() {
+        try {
+            return this.player.isDodgeTrailing();
+        } catch (e) {
+            return false;
+        }
+    }
+
+    collectDodgeTraffic(timeoutValue, minRequests = Infinity) {
+        return new Promise((resolve) => {
+            const traffic = [];
+            let timer = null;
+
+            const _done = () => {
+                clearTimeout(timer);
+                this.player.off(MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onStarted);
+                resolve(traffic);
+            };
+
+            const _onStarted = (e) => {
+                if (e && e.request) {
+                    traffic.push({
+                        type: e.request.type,
+                        mediaType: e.request.mediaType,
+                        url: e.request.url,
+                        index: e.request.index,
+                        range: e.request.range || null,
+                        full: e.request.full,
+                        buffer: e.request.buffer,
+                        padding: e.request.padding,
+                        trail: e.request.trail,
+                        representationId: e.request.representation ? e.request.representation.id : null,
+                        homeRepresentationId: e.request.homeRepresentationId || null,
+                        requestRef: e.request,
+                        timestamp: Date.now()
+                    });
+                    if (traffic.length >= minRequests) {
+                        _done();
+                    }
+                }
+            };
+
+            timer = setTimeout(_done, timeoutValue);
+            this.player.on(MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onStarted);
         });
     }
 }

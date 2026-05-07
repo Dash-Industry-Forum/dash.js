@@ -30,23 +30,31 @@
  */
 
 /**
- * @class
- * @ignore
+ * Dodge override for GapController. Suppresses gap jumps during the
+ * trailing phase to prevent spurious seeks to stream end while padding
+ * cycles are being downloaded.
+ *
+ * When playback stalls at the end of real content during trailing,
+ * GapController would normally seek to stream end. That seek is handled
+ * gracefully by DodgeDashHandlerOverride.getSegmentRequestForTime(), but the
+ * visual seek and metric increment are unnecessary.
+ *
+ * Registered via mediaPlayer.extend('GapController', DodgeGapControllerOverride, true).
  */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
-    constructor() {
-        this.streamId = null;
-        this.segmentType = null;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representation = null;
-        this.homeRepresentationId = null;
-        this.endFragment = null;
+function DodgeGapControllerOverride() {
+    const context = this.context;
+
+    function _shouldJumpGap() {
+        const dodgeHandler = context._dodgeHandler;
+        if (dodgeHandler && dodgeHandler.isDodgeTrailing && dodgeHandler.isDodgeTrailing()) {
+            return false;
+        }
+        return true;
     }
+
+    return {
+        _shouldJumpGap,
+    };
 }
 
-export default DataChunk;
+export default DodgeGapControllerOverride;

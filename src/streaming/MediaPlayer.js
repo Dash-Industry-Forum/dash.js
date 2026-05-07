@@ -146,6 +146,7 @@ function MediaPlayer() {
         protectionController,
         metricsReportingController,
         mssHandler,
+        dodgeHandler,
         offlineController,
         adapter,
         mediaPlayerModel,
@@ -331,10 +332,6 @@ function MediaPlayer() {
                 streamController = StreamController(context).getInstance();
             }
 
-            if (!gapController) {
-                gapController = GapController(context).getInstance();
-            }
-
             if (!catchupController) {
                 catchupController = CatchupController(context).getInstance();
             }
@@ -477,6 +474,12 @@ function MediaPlayer() {
         if (offlineController) {
             offlineController.reset();
             offlineController = null;
+        }
+
+        if (dodgeHandler) {
+            dodgeHandler.reset();
+            dodgeHandler = null;
+            context._dodgeHandler = null;
         }
     }
 
@@ -984,6 +987,55 @@ function MediaPlayer() {
         t = (metric === null || t === 0) ? 0 : Math.max(0, (t - metric.range.start));
 
         return t
+    }
+
+    /**
+     * Time since stream end in seconds. Non-zero only after the video element has
+     * fired `ended`. Primarily useful with Dodge's trailing padding phase; can be
+     * used to update the UI to indicate "finishing up", for example.
+     * @returns {number} Time since stream end in seconds
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function timeSinceEnd() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return playbackController.getTimeSinceStreamEnd();
+    }
+
+    /**
+     * True when a Dodge defense is currently protecting at least one active
+     * stream processor. False when the Dodge module is not loaded, when the
+     * source is a plain MPD, or when all active stream processors fell back
+     * to vanilla DASH.
+     * @returns {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDodgeActive() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.isDodgeActive() : false;
+    }
+
+    /**
+     * True when Dodge playback has entered the trailing padding phase (the
+     * post-`ended` cycles that continue to fetch padding to shape content's
+     * apparent duration on the wire.
+     * @returns {boolean}
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function isDodgeTrailing() {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.isDodgeTrailing() : false;
     }
 
     /**
@@ -1498,6 +1550,7 @@ function MediaPlayer() {
             _detectProtection();
             _detectMetricsReporting();
             _detectMss();
+            _detectDodge();
 
             if (streamController) {
                 streamController.switchToVideoElement(providedStartTime);
@@ -2584,6 +2637,10 @@ function MediaPlayer() {
             segmentBaseController
         });
 
+        if (!gapController) {
+            gapController = GapController(context).getInstance();
+        }
+
         gapController.setConfig({
             settings,
             playbackController,
@@ -2665,6 +2722,7 @@ function MediaPlayer() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             mssHandler: mssHandler,
+            dodgeHandler: dodgeHandler,
             settings: settings
         });
     }
@@ -2733,6 +2791,32 @@ function MediaPlayer() {
                 constants: Constants,
                 metricsConstants: MetricsConstants
             });
+        }
+    }
+
+    function _detectDodge() {
+        if (dodgeHandler || typeof dashjs === 'undefined') {
+            return;
+        }
+
+        let detectedDodgeHandler = dashjs.DodgeHandler;
+        if (typeof detectedDodgeHandler === 'function') {
+            if (detectedDodgeHandler.events) {
+                Events.extend(detectedDodgeHandler.events);
+            }
+            if (detectedDodgeHandler.errors) {
+                Errors.extend(detectedDodgeHandler.errors);
+            }
+            dodgeHandler = detectedDodgeHandler(context).create({
+                eventBus: eventBus,
+                events: Events,
+                settings: settings,
+                streamController: streamController,
+                mediaPlayer: instance
+            });
+            context._dodgeHandler = dodgeHandler;
+            dodgeHandler.registerExtensions();
+            dodgeHandler.registerEvents();
         }
     }
 
@@ -3021,6 +3105,9 @@ function MediaPlayer() {
         setXHRWithCredentialsForType,
         time,
         timeAsUTC,
+        timeSinceEnd,
+        isDodgeActive,
+        isDodgeTrailing,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

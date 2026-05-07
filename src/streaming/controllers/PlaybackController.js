@@ -59,6 +59,8 @@ function PlaybackController() {
         originalLiveDelay,
         playOnceInitialized,
         playbackStalled,
+        playbackEnded,
+        playbackStalledTime,
         seekTarget,
         serviceDescriptionController,
         settings,
@@ -130,6 +132,8 @@ function PlaybackController() {
         isDynamic = streamInfo.manifestInfo.isDynamic;
 
         playbackStalled = false;
+        playbackEnded = 0;
+        playbackStalledTime = 0;
         internalSeek = false;
 
         eventBus.on(Events.DATA_UPDATE_COMPLETED, _onDataUpdateCompleted, instance);
@@ -633,7 +637,13 @@ function PlaybackController() {
             return;
         }
 
+        const wasStall = playbackStalled;
         playbackStalled = e.state === MetricsConstants.BUFFER_EMPTY;
+
+        if (wasStall && !playbackStalled && playbackEnded > 0) {
+            playbackEnded += (Date.now() / 1000) - playbackStalledTime;
+        }
+        playbackStalledTime = playbackStalled ? Date.now() / 1000 : 0;
 
         if (settings.get().streaming.buffer.setStallState) {
             videoModel.setStallState(e.mediaType, e.state === MetricsConstants.BUFFER_EMPTY);
@@ -649,17 +659,24 @@ function PlaybackController() {
 
     function _onPlaybackWaiting() {
         logger.info('Native video element event: waiting');
+        if (!playbackEnded && getTimeToStreamEnd() < settings.get().streaming.gaps.smallGapLimit) {
+            playbackEnded = Date.now() / 1000;
+        }
         eventBus.trigger(Events.PLAYBACK_WAITING, { playingTime: getTime() });
     }
 
     function _onPlaybackPlaying() {
         logger.info('Native video element event: playing');
         internalSeek = false;
+        playbackEnded = 0;
         eventBus.trigger(Events.PLAYBACK_PLAYING, { playingTime: getTime() });
     }
 
     function _onPlaybackPaused() {
         logger.info('Native video element event: pause');
+        if (!playbackEnded && getTimeToStreamEnd() < settings.get().streaming.gaps.smallGapLimit) {
+            playbackEnded = Date.now() / 1000;
+        }
         eventBus.trigger(Events.PLAYBACK_PAUSED, { ended: getEnded() });
     }
 
@@ -727,6 +744,9 @@ function PlaybackController() {
     // Event to handle the native video element ended event
     function _onNativePlaybackEnded() {
         logger.info('Native video element event: ended');
+        if (!playbackEnded) {
+            playbackEnded = Date.now() / 1000;
+        }
         pause();
         stopUpdatingWallclockTime();
         const streamInfo = streamController ? streamController.getActiveStreamInfo() : null;
@@ -745,6 +765,9 @@ function PlaybackController() {
         if (wallclockTimeIntervalId && e.isLast) {
             // PLAYBACK_ENDED was triggered elsewhere, react.
             logger.info('onPlaybackEnded -- PLAYBACK_ENDED but native video element didn\'t fire ended');
+            if (!playbackEnded) {
+                playbackEnded = Date.now() / 1000;
+            }
             const seekTime = e.seekTime ? e.seekTime : getStreamEndTime();
             videoModel.setCurrentTime(seekTime);
             pause();
@@ -915,6 +938,15 @@ function PlaybackController() {
         videoModel.removeEventListener('waiting', _onPlaybackWaiting);
     }
 
+    function getTimeSinceStreamEnd() {
+        if (!playbackEnded || isNaN(playbackEnded)) {
+            return 0;
+        }
+        const currentTime = Date.now() / 1000;
+        const stallFactor = playbackStalled ? currentTime - playbackStalledTime : 0;
+        return parseFloat((currentTime - stallFactor - playbackEnded).toFixed(5));
+    }
+
     instance = {
         computeAndSetLiveDelay,
         getAvailabilityStartTime,
@@ -934,6 +966,7 @@ function PlaybackController() {
         getStreamEndTime,
         getTime,
         getTimeToStreamEnd,
+        getTimeSinceStreamEnd,
         initialize,
         isPaused,
         isProgressing,

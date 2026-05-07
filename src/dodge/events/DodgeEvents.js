@@ -30,23 +30,14 @@
  */
 
 /**
- * @class
- * @ignore
+ * Dodge-specific internal events. These are registered via Events.extend()
+ * when the Dodge module is loaded and are only meaningful when extended
+ * manifests are used.
  */
-class DataChunk {
-    //Represents a data structure that keep all the necessary info about a single init/media segment
-    constructor() {
-        this.streamId = null;
-        this.segmentType = null;
-        this.index = NaN;
-        this.bytes = null;
-        this.start = NaN;
-        this.end = NaN;
-        this.duration = NaN;
-        this.representation = null;
-        this.homeRepresentationId = null;
-        this.endFragment = null;
-    }
-}
+const DodgeEvents = {
+    PADDING_LOADED: 'paddingLoaded',
+    INIT_FRAGMENT_PARTIAL: 'initFragmentPartial',
+    MEDIA_FRAGMENT_PARTIAL: 'mediaFragmentPartial',
+};
 
-export default DataChunk;
+export default DodgeEvents;

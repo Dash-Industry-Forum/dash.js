@@ -58,6 +58,7 @@ function ManifestLoader(config) {
         parser;
 
     let mssHandler = config.mssHandler;
+    let dodgeHandler = config.dodgeHandler;
     let errHandler = config.errHandler;
 
     function setup() {
@@ -167,6 +168,19 @@ function ManifestLoader(config) {
                     return;
                 }
 
+                // Dodge: intercept extended manifest before parser selection
+                let dodgeResult = null;
+                if (dodgeHandler) {
+                    dodgeResult = dodgeHandler.tryProcessExtendedManifest(data, url);
+                    if (dodgeResult === false) {
+                        return; // strict mode abort, error event already fired by DodgeHandler
+                    }
+                    if (dodgeResult) {
+                        data = dodgeResult.mpd;
+                        baseUri = urlUtils.parseBaseUrl(dodgeResult.baseUri);
+                    }
+                }
+
                 // Create parser according to manifest type
                 if (parser === null) {
                     parser = createParser(data);
@@ -200,7 +214,7 @@ function ManifestLoader(config) {
                 }
 
                 if (manifest) {
-                    manifest.url = actualUrl || url;
+                    manifest.url = dodgeResult ? `${dodgeResult.baseUri}static.mpd` : (actualUrl || url);
 
                     // URL from which the MPD was originally retrieved (MPD updates will not change this value)
                     if (!manifest.originalUrl) {

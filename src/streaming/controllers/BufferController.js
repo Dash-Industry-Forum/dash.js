@@ -65,6 +65,7 @@ function BufferController(config) {
         logger,
         isBufferingCompleted,
         bufferLevel,
+        mockBuffer,
         criticalBufferLevel,
         mediaSource,
         maxAppendedIndex,
@@ -98,8 +99,8 @@ function BufferController(config) {
     function initialize(mediaSource) {
         setMediaSource(mediaSource);
 
-        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, instance);
-        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, instance);
+        eventBus.on(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoadedDispatch, instance);
+        eventBus.on(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, instance);
         eventBus.on(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, instance);
 
         eventBus.on(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
@@ -288,6 +289,9 @@ function BufferController(config) {
         }
     }
 
+    function _onInitFragmentLoadedDispatch(e) {
+        instance._onInitFragmentLoaded(e);
+    }
 
     /**
      * Callback handler when init segment has been loaded. Based on settings, the init segment is saved to the cache, and appended to the buffer.
@@ -329,6 +333,10 @@ function BufferController(config) {
      * Calls the _appendToBuffer function to append the segment to the buffer. In case of a track switch the buffer might be cleared.
      * @param {object} e
      */
+    function _onMediaFragmentLoadedDispatch(e) {
+        instance._onMediaFragmentLoaded(e);
+    }
+
     function _onMediaFragmentLoaded(e) {
         _appendToBuffer(e.chunk, e.request);
     }
@@ -341,9 +349,10 @@ function BufferController(config) {
      */
     function _appendToBuffer(chunk, request = null) {
         if (!sourceBufferSink) {
-            return;
+            return Promise.resolve();
         }
-        sourceBufferSink.append(chunk, request)
+        const appendPromise = sourceBufferSink.append(chunk, request);
+        const settled = appendPromise
             .then((e) => {
                 _onAppended(e);
             })
@@ -354,6 +363,8 @@ function BufferController(config) {
         if (chunk.representation.mediaInfo.type === Constants.VIDEO) {
             _triggerEvent(Events.VIDEO_CHUNK_RECEIVED, { chunk: chunk });
         }
+
+        return settled;
     }
 
     function _showBufferRanges(ranges) {
@@ -375,7 +386,7 @@ function BufferController(config) {
             return;
         }
 
-        _updateBufferLevel();
+        instance.updateBufferLevel();
 
         isQuotaExceeded = false;
         appendedBytesInfo = e.chunk;
@@ -394,6 +405,27 @@ function BufferController(config) {
             _showBufferRanges(ranges);
             _onPlaybackProgression();
             _adjustSeekTarget();
+        }
+
+        // Compute actual buffer increment from trace and notify Dodge mock buffer.
+        if (e.trace && e.request && e.request.buffer && !e.request.trail &&
+                appendedBytesInfo.segmentType === HTTPRequest.MEDIA_SEGMENT_TYPE) {
+            const desiredDuration = appendedBytesInfo.representation.segmentDuration;
+            let actualDuration = 0;
+            if (e.trace.length >= 2) {
+                let idx = 1;
+                while (idx < e.trace.length) {
+                    const d = e.trace[idx] - e.trace[idx - 1];
+                    if (d > 0.0 && (isNaN(desiredDuration) || d < 2.0 * desiredDuration)) {
+                        actualDuration = d;
+                        break;
+                    }
+                    idx++;
+                }
+            }
+            if (actualDuration > 0) {
+                instance.onBufferCycleLoaded({ representation: appendedBytesInfo.representation, actualDuration });
+            }
         }
 
         let suppressAppendedEvent = false;
@@ -581,6 +613,13 @@ function BufferController(config) {
         });
     }
 
+    function changeType(representation) {
+        if (!sourceBufferSink) {
+            return Promise.resolve();
+        }
+        return sourceBufferSink.changeType(representation);
+    }
+
     function _changeCodec(newRepresentation, oldRepresentation) {
 
         if (!newRepresentation || !oldRepresentation) {
@@ -755,7 +794,7 @@ function BufferController(config) {
 
     function _onPlaybackProgression() {
         if (!replacingBuffer && (type !== Constants.TEXT || textController.isTextEnabled())) {
-            _updateBufferLevel();
+            instance.updateBufferLevel();
         }
     }
 
@@ -869,6 +908,10 @@ function BufferController(config) {
         return length;
     }
 
+    function updateBufferLevel() {
+        _updateBufferLevel();
+    }
+
     function _updateBufferLevel() {
         if (playbackController) {
             let referenceTime = playbackController.getTime() || 0;
@@ -877,7 +920,7 @@ function BufferController(config) {
                 referenceTime = !isNaN(seekTarget) ? seekTarget : 0;
             }
             const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
-            bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0);
+            bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0) + (mockBuffer || 0);
             _triggerEvent(Events.BUFFER_LEVEL_UPDATED, { mediaType: type, bufferLevel: bufferLevel });
             checkIfSufficientBuffer();
         }
@@ -977,7 +1020,7 @@ function BufferController(config) {
     function clearBuffers(ranges) {
         return new Promise((resolve, reject) => {
             if (!ranges || !sourceBufferSink || ranges.length === 0) {
-                _updateBufferLevel();
+                instance.updateBufferLevel();
                 resolve();
                 return;
             }
@@ -1063,7 +1106,7 @@ function BufferController(config) {
 
         if (pendingPruningRanges.length === 0) {
             isPruningInProgress = false;
-            _updateBufferLevel();
+            instance.updateBufferLevel();
         }
 
         if (e.unintended) {
@@ -1075,7 +1118,7 @@ function BufferController(config) {
             clearNextRange();
         } else {
             if (!replacingBuffer) {
-                _updateBufferLevel();
+                instance.updateBufferLevel();
             } else {
                 replacingBuffer = false;
             }
@@ -1251,6 +1294,7 @@ function BufferController(config) {
         isPruningInProgress = false;
         isQuotaExceeded = false;
         bufferLevel = 0;
+        mockBuffer = 0;
         wallclockTicked = 0;
         pendingPruningRanges = [];
         seekTarget = NaN;
@@ -1276,8 +1320,8 @@ function BufferController(config) {
     }
 
     function reset(errored, keepBuffers) {
-        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoaded, this);
-        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoaded, this);
+        eventBus.off(Events.INIT_FRAGMENT_LOADED, _onInitFragmentLoadedDispatch, this);
+        eventBus.off(Events.MEDIA_FRAGMENT_LOADED, _onMediaFragmentLoadedDispatch, this);
         eventBus.off(Events.WALLCLOCK_TIME_UPDATED, _onWallclockTimeUpdated, this);
 
         eventBus.off(MediaPlayerEvents.PLAYBACK_PLAYING, _onPlaybackPlaying, this);
@@ -1290,8 +1334,39 @@ function BufferController(config) {
         resetInitialSettings(errored, keepBuffers);
     }
 
+    function setMockBuffer(value) {
+        mockBuffer = value;
+    }
+
+    // Stubs for DodgeBufferControllerOverride. FactoryMaker.merge() only replaces
+    // functions that hasOwnProperty on parent, so these must be present here.
+    function onPaddingLoaded() { }
+    function onBufferCycleLoaded() { }
+
+    /**
+     * Public wrapper around _appendToBuffer for use by Dodge overrides.
+     * @param {object} chunk
+     * @param {object} [request]
+     */
+    function appendToBuffer(chunk, request) {
+        return _appendToBuffer(chunk, request);
+    }
+
+    /**
+     * Retrieve a cached init segment chunk without appending it.
+     * @param {string} representationId
+     * @return {object|null} The cached DataChunk, or null if not cached.
+     */
+    function getInitChunkFromCache(representationId) {
+        return initCache.extract(streamInfo.id, representationId);
+    }
+
     instance = {
+        _onInitFragmentLoaded,
+        _onMediaFragmentLoaded,
         appendInitSegmentFromCache,
+        appendToBuffer,
+        changeType,
         clearBuffers,
         createBufferSink,
         dischargePreBuffer,
@@ -1299,6 +1374,7 @@ function BufferController(config) {
         getBuffer,
         getBufferControllerType,
         getBufferLevel,
+        getInitChunkFromCache,
         getContinuousBufferTimeForTargetTime,
         getIsBufferingCompleted,
         getIsPruningInProgress,
@@ -1317,9 +1393,13 @@ function BufferController(config) {
         prepareForReplacementTrackSwitch,
         pruneAllSafely,
         pruneBuffer,
+        onBufferCycleLoaded,
+        onPaddingLoaded,
         reset,
+        updateBufferLevel,
         segmentRequestingCompleted,
         setIsBufferingCompleted,
+        setMockBuffer,
         setMediaSource,
         setSeekTarget,
         updateAppendWindow,
