@@ -67,6 +67,11 @@ function MediaController() {
 
         if (!settings) {
             settings = domStorage.getSavedMediaSettings(type);
+            if (settings) {
+                // If the settings are defined locally, do not take codec into account or it'll be too strict.
+                // eg: An audio track should not be selected by codec but merely by lang.
+                delete settings.codec;
+            }
             setInitialSettings(type, settings);
         }
 
@@ -83,6 +88,7 @@ function MediaController() {
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsCodec, settings);
         }
 
         if (tracks.length === 0) {
@@ -307,10 +313,11 @@ function MediaController() {
             viewpoint: mediaInfo.viewpoint,
             roles: mediaInfo.roles,
             accessibility: mediaInfo.accessibility,
-            audioChannelConfiguration: mediaInfo.audioChannelConfiguration
+            audioChannelConfiguration: mediaInfo.audioChannelConfiguration,
+            codec: mediaInfo.codec
         };
         let notEmpty = settings.lang || settings.viewpoint || (settings.role && settings.role.length > 0) ||
-            (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0);
+            (settings.accessibility && settings.accessibility.length > 0) || (settings.audioChannelConfiguration && settings.audioChannelConfiguration.length > 0) || settings.codec;
 
         return notEmpty ? settings : null;
     }
@@ -374,6 +381,10 @@ function MediaController() {
         return matchAudioChannelConfiguration;
     }
 
+    function matchSettingsCodec(settings, track) {
+        return !settings.codec || (settings.codec === track.codec);
+    }
+
     function matchSettings(settings, track, isTrackActive = false) {
         try {
             let matchLang = false;
@@ -407,9 +418,10 @@ function MediaController() {
             let matchAudioChannelConfiguration = !settings.audioChannelConfiguration || !!track.audioChannelConfiguration.filter(function (item) {
                 return item === settings.audioChannelConfiguration;
             })[0];
+            let matchCodec = !settings.codec || (settings.codec === track.codec);
 
 
-            return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
+            return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration && matchCodec);
         } catch (e) {
             return false;
             logger.error(e);
@@ -642,6 +654,7 @@ function MediaController() {
         matchSettingsRole,
         matchSettingsAccessibility,
         matchSettingsAudioChannelConfig,
+        matchSettingsCodec,
         saveTextSettingsDisabled,
         setConfig,
         reset

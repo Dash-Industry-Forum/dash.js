@@ -1605,6 +1605,7 @@ function MediaPlayer() {
      *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
+    *  codec: codecValue,
      *  accessibility: accessibilityValue,
      *  role: roleValue}
      *
@@ -1628,6 +1629,7 @@ function MediaPlayer() {
      *  index: indexValue,
      *  viewpoint: viewpointValue,
      *  audioChannelConfiguration: audioChannelConfigurationValue,
+    *  codec: codecValue,
      *  accessibility: accessibilityValue,
      *  role: roleValue}
      * @param {MediaType} type

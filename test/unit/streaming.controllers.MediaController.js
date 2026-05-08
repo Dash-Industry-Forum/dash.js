@@ -587,6 +587,50 @@ describe('MediaController', function () {
             expect(objectUtils.areEqual(currentTrack, esTrack)).to.be.true; // jshint ignore:line
         });
 
+        it('should use codec filtering to reduce otherwise identical audio tracks to one match', function () {
+            settings.update({
+                streaming: {
+                    selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_FIRST_TRACK
+                }
+            });
+
+            const aacStereoTrack = {
+                type: trackType,
+                id: '23defb99-8486-40dc-8bb5-1c87711e1a2d',
+                lang: 'de',
+                viewpoint: null,
+                roles: [],
+                accessibility: [],
+                audioChannelConfiguration: ['2'],
+                codec: 'audio/mp4;codecs="mp4a.40.2"',
+                streamInfo: streamInfo
+            };
+            const ec3StereoTrack = {
+                type: trackType,
+                id: 'bf8b5f64-2cba-4687-9ead-a1f5fcf58d24',
+                lang: 'de',
+                viewpoint: null,
+                roles: [],
+                accessibility: [],
+                audioChannelConfiguration: ['2'],
+                codec: 'audio/mp4;codecs="ec-3"',
+                streamInfo: streamInfo
+            };
+
+            mediaController.addTrack(aacStereoTrack);
+            mediaController.addTrack(ec3StereoTrack);
+
+            mediaController.setInitialSettings(trackType, {
+                lang: 'de',
+                audioChannelConfiguration: '2',
+                codec: 'audio/mp4;codecs="ec-3"'
+            });
+            mediaController.setInitialMediaSettingsForType(trackType, streamInfo);
+
+            const currentTrack = mediaController.getCurrentTrackFor(trackType, streamInfo.id);
+            expect(objectUtils.areEqual(currentTrack, ec3StereoTrack)).to.be.true; // jshint ignore:line
+        });
+
     });
 
     describe('Initial Track Selection', function () {

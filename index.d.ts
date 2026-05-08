@@ -1872,6 +1872,7 @@ declare namespace dashjs {
         lang?: string;
         viewpoint?: any;
         audioChannelConfiguration?: any[];
+        codec?: string;
         accessibility?: any;
         role?: string;
     }
