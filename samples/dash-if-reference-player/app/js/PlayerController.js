@@ -224,8 +224,8 @@ export class PlayerController extends EventEmitter {
         this.emit('streamInitialized');
     }
 
-    _onPlaybackEnded() {
-        this.emit('playbackEnded');
+    _onPlaybackEnded(e) {
+        this.emit('playbackEnded', e);
     }
 
     _onKeySystemSelected(e) {
