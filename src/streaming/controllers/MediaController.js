@@ -87,8 +87,8 @@ function MediaController() {
                 tracks = filterTracksBySettings(tracks, matchSettingsRole, settings);
             }
             tracks = filterTracksBySettings(tracks, matchSettingsAccessibility, settings);
-            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
             tracks = filterTracksBySettings(tracks, matchSettingsCodec, settings);
+            tracks = filterTracksBySettings(tracks, matchSettingsAudioChannelConfig, settings);
         }
 
         if (tracks.length === 0) {
