@@ -333,7 +333,7 @@ function CmcdController() {
             _triggerCMCDDataGeneratedEvent(request)
 
         } catch (e) {
-            //TODO: add warning
+            logger.warn(e);
             return null;
         }
     }
