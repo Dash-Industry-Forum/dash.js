@@ -70,7 +70,7 @@
             player = dashjs.MediaPlayer().create();
             video = document.querySelector('video');
             player.initialize();
-            version = player.getVersion();
+            const reportingUrl = 'http://localhost:3333/cmcd/response-received'
 
             player.updateSettings({
                 streaming: {
@@ -85,7 +85,7 @@
                         eventTargets: [
                             {
                                 enabled: true,
-                                url: 'http://localhost:3003/report',
+                                url: reportingUrl,
                                 enabledKeys: ['e', 'rc', 'url'],
                                 events: ['rr']
                             },
@@ -100,7 +100,7 @@
             /* Callback before report - Event Mode uses POST body */
             player.addRequestInterceptor((request) => {
                 /* Only modify requests to our report endpoint that contain 'rr' (response received) event */
-                const isReportEndpoint = request.customData.request.type == 'CmcdEvent' && request.url.includes('http://localhost:3003/report');
+                const isReportEndpoint = request.customData.request.type == 'CmcdEvent' && request.url.includes(reportingUrl);
                 const hasRrEvent = request.body && decodeURIComponent(request.body).includes('e=rr');
 
                 if (isReportEndpoint && hasRrEvent) {

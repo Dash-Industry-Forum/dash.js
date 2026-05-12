@@ -56,26 +56,26 @@
             eventTargets: [
                 {
                     enabled: true,
-                    url: 'http://localhost:3001/cmcd/response-received',
+                    url: 'http://localhost:3333/cmcd/response-received',
                     enabledKeys: ['url', 'rc', 'msd'],
                     includeInRequests: ['mpd', 'segment'],
                     events: ['rr']
                 },
                 {
                     enabled: true,
-                    url: 'http://localhost:3002/cmcd/event-mode',
+                    url: 'http://localhost:3333/cmcd/event-mode',
                     interval: 10,
                     enabledKeys: ['e', 'msd', 'sta'],
                     events: ['ps', 'e', 't']
                 },
                 {
                     enabled: true,
-                    url: 'http://localhost:3003/cmcd/event-mode',
+                    url: 'http://localhost:3333/cmcd/event-mode',
                     interval: 6
                 },
                 {
                     enabled: true,
-                    url: 'http://localhost:3004/cmcd/event-body-mode',
+                    url: 'http://localhost:3333/cmcd/event-body-mode',
                     batchSize: 3
                 }
             ]
@@ -90,10 +90,10 @@
 
             player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
 
-            // Initialize source input with default URL
+            /* Initialize source input with default URL */
             document.getElementById('source-url').value = defaultSourceUrl;
 
-            // Initialize config textarea with default config
+            /* Initialize config textarea with default config */
             document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
 
             player.updateSettings({
@@ -182,7 +182,7 @@
             return cmcdData
         }
 
-        function getKeysForJsonMode(event){
+        function getKeysForJsonMode(event) {
             const decoded = decodeURIComponent(event.cmcdString);
             const entries = decoded.split(',');
 
@@ -192,11 +192,11 @@
                 let [key, value] = entry.split('=');
 
                 if (value?.startsWith('"') && value.endsWith('"')) {
-                value = value.slice(1, -1);
+                    value = value.slice(1, -1);
                 }
 
                 if (!isNaN(value) && value.trim() !== '') {
-                value = Number(value);
+                    value = Number(value);
                 }
 
                 cmcdData[key] = value;
@@ -228,16 +228,6 @@
             console.log(msg);
         }
 
-        // Simulate a PLAYBACK_ERROR after 5 seconds
-        // setTimeout(() => {
-        //     console.warn("⏱️ Simulating PLAYBACK_ERROR after timeout...");
-        //     player.trigger('playbackError', {
-        //         error: "custom",
-        //         event: "timeoutError",
-        //         message: "Simulated timeout-based playback failure"
-        //     });
-        // }, 15000);
-
     </script>
 </head>
 <body>
@@ -254,7 +244,11 @@
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>CMCD v2 Reporting</h3>
                     <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
-                        Client Data (CMCD - CTA 5004).</p>
+                        Client Data (CMCD - CTA 5004). Please note that in this sample we are also enabling the CMCD v2
+                        event mode next to the common request mode. To fully demonstrate the event mode, there needs to
+                        be a server that collects the metrics that are sent
+                        out when an event is triggered. We provide a local dummy server for this purpose which can be
+                        found in `samples/simple-express-server`. </p>
                 </div>
             </div>
         </div>
@@ -282,7 +276,8 @@
             </div>
             <div class="col-md-6">
                 <label for="trace" class="form-label"><strong>CMCD Data</strong></label>
-                <textarea class="form-control" placeholder="Sent CMCD data will be displayed here" id="trace"></textarea>
+                <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+                          id="trace"></textarea>
             </div>
         </div>
         <div class="row">
