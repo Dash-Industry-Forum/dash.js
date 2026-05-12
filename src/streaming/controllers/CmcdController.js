@@ -49,27 +49,28 @@ import Errors from '../../core/errors/Errors.js';
 import CmcdConfigAccessor from '../cmcd/config/CmcdConfigAccessor.js';
 
 function CmcdController() {
-    let instance,
-        logger,
+    let cmcdConfigAccessor,
         cmcdModel,
-        cmcdConfigAccessor,
         cmcdReporter,
-        reporterNeedsRebuild,
-        urlLoader,
-        mediaPlayerModel,
         dashMetrics,
-        errHandler;
+        errHandler,
+        instance,
+        logger,
+        mediaPlayerModel,
+        reporterNeedsRebuild,
+        urlLoader;
+
 
     let context = this.context;
     let eventBus = EventBus(context).getInstance();
     let debug = Debug(context).getInstance();
-    const stateMap = {
+    const playbackStateMap = {
         [MediaPlayerEvents.PLAYBACK_INITIALIZED]: Constants.CMCD_PLAYER_STATES.STARTING,
         [MediaPlayerEvents.PLAYBACK_PAUSED]: Constants.CMCD_PLAYER_STATES.PAUSED,
         [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_PLAYER_STATES.FATAL_ERROR,
         [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_PLAYER_STATES.ENDED,
     };
-    let playbackStateHandlers;
+    let playbackStateHandlers = {};
 
     cmcdModel = CmcdModel(context).getInstance();
     cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
@@ -103,9 +104,8 @@ function CmcdController() {
         // This resolves timing issues where CMCDParameters are needed before they're available
         // Using a provider pattern keeps CmcdConfigAccessor decoupled from ServiceDescriptionController
         if (config.serviceDescriptionController) {
-            const serviceDescriptionController = config.serviceDescriptionController;
-            cmcdConfigAccessor.setManifestParamsProvider(() => {
-                const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+            cmcdConfigAccessor.setManifestParamsProviderFunction(() => {
+                const serviceDescription = config.serviceDescriptionController.getServiceDescriptionSettings();
                 return serviceDescription?.clientDataReporting?.cmcdParameters || null;
             });
         }
@@ -117,6 +117,15 @@ function CmcdController() {
         _resetInitialSettings();
         _initializeEventBus(autoPlay);
 
+        if (!urlLoader) {
+            urlLoader = URLLoader(context).create({
+                errHandler,
+                mediaPlayerModel,
+                errors: Errors,
+                dashMetrics,
+            });
+        }
+
         cmcdReporter = _createCmcdReporter();
         cmcdReporter.start();
 
@@ -125,7 +134,6 @@ function CmcdController() {
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
-        playbackStateHandlers = {};
     }
 
     function _initializeEventBus(autoPlay) {
@@ -148,13 +156,109 @@ function CmcdController() {
         eventBus.on(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.on(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
-        Object.entries(stateMap).forEach(([event, state]) => {
+        Object.entries(playbackStateMap).forEach(([event, state]) => {
             if (!playbackStateHandlers[event]) {
-                playbackStateHandlers[event] = () => _onStateChange(state);
+                playbackStateHandlers[event] = () => _onPlaybackStateChange(state);
             }
 
             eventBus.on(event, playbackStateHandlers[event], instance);
         });
+    }
+
+    function _onPlaybackStateChange(state) {
+        // Update CmcdReporter with the new player state
+        if (cmcdReporter) {
+            cmcdReporter.update({ sta: state });
+        }
+        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
+    }
+
+    function _createCmcdReporter() {
+        const cmcdConfig = {
+            version: cmcdConfigAccessor.getVersion(),
+            transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
+            enabledKeys: cmcdConfigAccessor.get('keys'),
+            eventTargets: _buildReporterTargets(),
+        };
+
+        // Only pass sid/cid if they have actual values, so CmcdReporter
+        // uses its own defaults (e.g., auto-generated uuid for sid)
+        const sid = cmcdConfigAccessor.get('sessionID');
+        if (sid) {
+            cmcdConfig.sid = sid;
+        }
+        const cid = cmcdConfigAccessor.get('contentID');
+        if (cid) {
+            cmcdConfig.cid = cid;
+        }
+
+        return new CmcdReporter(cmcdConfig, _customRequester);
+    }
+
+    function _buildReporterTargets() {
+        const targets = cmcdConfigAccessor.getEventTargets();
+
+        return targets.reduce((result, _target, index) => {
+            if (!isCmcdEnabled(index)) {
+                return result;
+            }
+
+            const accessor = cmcdConfigAccessor.getEventTarget(index);
+            result.push({
+                url: accessor.get('targetUrl'),
+                events: accessor.get('targetEvents'),
+                interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
+                batchSize: accessor.get('targetBatchSize') || 1,
+                enabledKeys: accessor.get('targetKeys'),
+            });
+
+            return result;
+        }, []);
+    }
+
+    function _customRequester(request) {
+        return new Promise((resolve) => {
+            const httpRequest = new CmcdReportRequest();
+            httpRequest.url = request.url;
+            httpRequest.method = request.method;
+            httpRequest.headers = request.headers;
+            httpRequest.body = request.body;
+            httpRequest.type = HTTPRequest.CMCD_EVENT;
+
+            urlLoader.load({
+                request: httpRequest,
+                success: () => resolve({ status: 200 }),
+                error: (e) => resolve({ status: e?.status || 500 }),
+            });
+        });
+    }
+
+    function _onPeriodSwitchComplete() {
+        cmcdModel.onPeriodSwitchComplete();
+    }
+
+    function _onPlaybackStarted() {
+        cmcdModel.onPlaybackStarted();
+    }
+
+    function _onPlaybackPlaying() {
+        cmcdModel.onPlaybackPlaying();
+        _onPlaybackStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
+    }
+
+    function _onPlayerError(errorData) {
+        if (errorData.error && errorData.error.data.request && errorData.error.data.request.type === HTTPRequest.CMCD_EVENT) {
+            return;
+        }
+        // Update CmcdReporter with the error code
+        if (cmcdReporter) {
+            const errorCode = errorData.error?.code || errorData.error?.data?.code;
+            if (errorCode) {
+                cmcdReporter.update({ ec: errorCode });
+            }
+        }
+
+        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
     }
 
     function _rebuildReporterIfNeeded() {
@@ -181,111 +285,10 @@ function CmcdController() {
         cmcdReporter.start();
     }
 
-    function _createCmcdReporter() {
-        const config = {
-            version: cmcdConfigAccessor.getVersion(),
-            transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS
-                ? CMCD_HEADERS
-                : CMCD_QUERY,
-            enabledKeys: cmcdConfigAccessor.get('keys'),
-            eventTargets: _buildReporterTargets(),
-        };
-
-        // Only pass sid/cid if they have actual values, so CmcdReporter
-        // uses its own defaults (e.g., auto-generated uuid for sid)
-        const sid = cmcdConfigAccessor.get('sessionID');
-        if (sid) {
-            config.sid = sid;
-        }
-        const cid = cmcdConfigAccessor.get('contentID');
-        if (cid) {
-            config.cid = cid;
-        }
-
-        return new CmcdReporter(config, _customRequester);
-    }
-
-    function _buildReporterTargets() {
-        const targets = cmcdConfigAccessor.getEventTargets();
-        return targets
-            .map((_target, index) => {
-                const accessor = cmcdConfigAccessor.getEventTarget(index);
-                if (!isCmcdEnabled(index)) {
-                    return null;
-                }
-                return {
-                    url: accessor.get('targetUrl'),
-                    events: accessor.get('targetEvents'),
-                    interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
-                    batchSize: accessor.get('targetBatchSize') || 1,
-                    enabledKeys: accessor.get('targetKeys'),
-                };
-            })
-            .filter(Boolean);
-    }
-
-    function _customRequester(request) {
-        return new Promise((resolve) => {
-            if (!urlLoader) {
-                urlLoader = URLLoader(context).create({
-                    errHandler: errHandler,
-                    mediaPlayerModel: mediaPlayerModel,
-                    errors: Errors,
-                    dashMetrics: dashMetrics,
-                });
-            }
-
-            const httpRequest = new CmcdReportRequest();
-            httpRequest.url = request.url;
-            httpRequest.method = request.method;
-            httpRequest.headers = request.headers;
-            httpRequest.body = request.body;
-            httpRequest.type = HTTPRequest.CMCD_EVENT;
-
-            urlLoader.load({
-                request: httpRequest,
-                success: () => resolve({ status: 200 }),
-                error: (e) => resolve({ status: e?.status || 500 }),
-            });
-        });
-    }
-
-    function _onStateChange(state) {
-        // Update CmcdReporter with the new player state
-        if (cmcdReporter) {
-            cmcdReporter.update({ sta: state });
-        }
-        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
-    }
-
-    function _onPeriodSwitchComplete() {
-        cmcdModel.onPeriodSwitchComplete();
-    }
-
-    function _onPlaybackStarted() {
-        cmcdModel.onPlaybackStarted();
-    }
-
-    function _onPlaybackPlaying() {
-        cmcdModel.onPlaybackPlaying();
-        _onStateChange(Constants.CMCD_PLAYER_STATES.PLAYING);
-    }
-
-    function _onPlayerError(errorData) {
-        if (errorData.error && errorData.error.data.request && errorData.error.data.request.type === HTTPRequest.CMCD_EVENT) {
-            return;
-        }
-        // Update CmcdReporter with the error code
-        if (cmcdReporter) {
-            const errorCode = errorData.error?.code || errorData.error?.data?.code;
-            if (errorCode) {
-                cmcdReporter.update({ ec: errorCode });
-            }
-        }
-
-        triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.ERROR);
-    }
-
+    /**
+     * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
+     * @param event
+     */
     function triggerCmcdEventMode(event) {
         if (!cmcdReporter) {
             return;
@@ -295,7 +298,7 @@ function CmcdController() {
 
         const cmcdData = cmcdModel.getEventModeData();
 
-        // Route MSD through update() for the reporter's internal send-once tracking
+        // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
         const msdData = cmcdModel.calculateMsd();
         if (msdData.msd !== undefined) {
             cmcdReporter.update(msdData);
@@ -334,7 +337,7 @@ function CmcdController() {
             request.headers = decorated.headers;
             request.cmcd = decorated.customData?.cmcd || {};
 
-            _triggerCMCDDataGeneratedEvent(request)
+            _triggerCmcdDataGeneratedEvent(request)
 
         } catch (e) {
             logger.warn(e);
@@ -342,7 +345,7 @@ function CmcdController() {
         }
     }
 
-    function _triggerCMCDDataGeneratedEvent(request) {
+    function _triggerCmcdDataGeneratedEvent(request) {
         const effectiveMode = cmcdConfigAccessor.get('mode');
         const eventData = {
             url: request.url,
@@ -480,7 +483,7 @@ function CmcdController() {
 
     function _onPlaybackSeeking() {
         cmcdModel.onPlaybackSeeking();
-        _onStateChange(Constants.CMCD_PLAYER_STATES.SEEKING);
+        _onPlaybackStateChange(Constants.CMCD_PLAYER_STATES.SEEKING);
     }
 
     function _onPlaybackSeeked() {
@@ -491,9 +494,9 @@ function CmcdController() {
         if (cmcdModel.wasPlaying()) {
             const mediaType = cmcdModel.getLastMediaTypeRequest();
             cmcdModel.onRebufferingStarted(mediaType);
-            _onStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
+            _onPlaybackStateChange(Constants.CMCD_PLAYER_STATES.REBUFFERING);
         } else {
-            _onStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
+            _onPlaybackStateChange(Constants.CMCD_PLAYER_STATES.WAITING);
         }
     }
 
@@ -524,7 +527,7 @@ function CmcdController() {
         return commonMediaRequest;
     }
 
-    function getCmcdResponseInterceptors() {
+    function getCmcdResponseReceivedInterceptors() {
         return [_cmcdResponseReceivedInterceptor];
     }
 
@@ -600,7 +603,7 @@ function CmcdController() {
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_WAITING, _onPlaybackWaiting, instance);
 
-        Object.keys(stateMap).forEach((event) => {
+        Object.keys(playbackStateMap).forEach((event) => {
             eventBus.off(event, playbackStateHandlers[event], instance);
         });
 
@@ -615,7 +618,7 @@ function CmcdController() {
     instance = {
         applyCmcdToRequest,
         getCmcdRequestInterceptors,
-        getCmcdResponseInterceptors,
+        getCmcdResponseReceivedInterceptors,
         getCmcdParametersFromManifest,
         initialize,
         isCmcdEnabled,

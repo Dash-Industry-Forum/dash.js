@@ -61,7 +61,7 @@ function CmcdConfigAccessor() {
     let instance;
     let settings;
     let manifestParams;
-    let manifestParamsProvider;
+    let manifestParamsProviderFunction;
 
     const context = this.context;
 
@@ -72,7 +72,7 @@ function CmcdConfigAccessor() {
     function setup() {
         settings = Settings(context).getInstance();
         manifestParams = null;
-        manifestParamsProvider = null;
+        manifestParamsProviderFunction = null;
     }
 
     /**
@@ -89,8 +89,8 @@ function CmcdConfigAccessor() {
      *     ?.clientDataReporting?.cmcdParameters || null;
      * });
      */
-    function setManifestParamsProvider(providerFn) {
-        manifestParamsProvider = providerFn;
+    function setManifestParamsProviderFunction(providerFn) {
+        manifestParamsProviderFunction = providerFn;
     }
 
     /**
@@ -99,11 +99,11 @@ function CmcdConfigAccessor() {
      * @private
      */
     function _getManifestParamsFromProvider() {
-        if (typeof manifestParamsProvider !== 'function') {
+        if (typeof manifestParamsProviderFunction !== 'function') {
             return null;
         }
         try {
-            return manifestParamsProvider();
+            return manifestParamsProviderFunction();
         } catch (e) {
             // Provider not ready yet or threw an error
             return null;
@@ -381,7 +381,7 @@ function CmcdConfigAccessor() {
      */
     function reset() {
         manifestParams = null;
-        manifestParamsProvider = null;
+        manifestParamsProviderFunction = null;
     }
 
     /**
@@ -475,7 +475,7 @@ function CmcdConfigAccessor() {
         isEnabled,
         reset,
         setManifestParams,
-        setManifestParamsProvider,
+        setManifestParamsProviderFunction,
     };
 
     setup();

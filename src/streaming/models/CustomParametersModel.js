@@ -78,7 +78,7 @@ function CustomParametersModel() {
 
         // Initialize request interceptors with default CMCD interceptors
         requestInterceptors = cmcdController.getCmcdRequestInterceptors();
-        responseInterceptors = cmcdController.getCmcdResponseInterceptors();
+        responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
 
         externalSubtitles = new Set();
     }
