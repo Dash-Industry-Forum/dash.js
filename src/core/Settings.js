@@ -325,6 +325,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                 }
  *             },
  *            cmcd: {
+ *                applyParametersFromMpd: true,
  *                enabled: false,
  *                sid: null,
  *                cid: null,
@@ -333,7 +334,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
- *                version: 1
+ *                version: 1,
+ *                eventTargets: []
  *            },
  *            cmsd: {
  *                enabled: false,
