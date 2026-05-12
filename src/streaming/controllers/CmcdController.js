@@ -507,7 +507,7 @@ function CmcdController() {
     function _cmcdRequestModeInterceptor(commonMediaRequest) {
         const requestType = commonMediaRequest.customData.request.type;
 
-        if (!cmcdModel.isIncludedInRequestFilter(requestType)) {
+        if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
             commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
             return commonMediaRequest;
         }
