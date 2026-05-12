@@ -708,6 +708,13 @@ function CmcdModel() {
             }
         }
 
+
+        return cmcdParametersFromManifest;
+    }
+
+    function updateCmcdManifestParamsInCmcdConfigAccessor() {
+        const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+
         // Update CmcdConfigAccessor with manifest parameters if available
         // Note: Always update accessor when params exist, regardless of applyParametersFromMpd
         // The accessor uses priority-based resolution, so manifest params will only be used
@@ -719,7 +726,6 @@ function CmcdModel() {
             cmcdConfigAccessor.setManifestParams(null);
         }
 
-        return cmcdParametersFromManifest;
     }
 
     function calculateCmcdDataForRequest(request) {
@@ -870,6 +876,7 @@ function CmcdModel() {
         resetInitialSettings,
         setConfig,
         setup,
+        updateCmcdManifestParamsInCmcdConfigAccessor,
         wasPlaying,
     };
 

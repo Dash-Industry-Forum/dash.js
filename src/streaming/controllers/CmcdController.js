@@ -69,7 +69,7 @@ function CmcdController() {
         [MediaPlayerEvents.PLAYBACK_ERROR]: Constants.CMCD_PLAYER_STATES.FATAL_ERROR,
         [MediaPlayerEvents.PLAYBACK_ENDED]: Constants.CMCD_PLAYER_STATES.ENDED,
     };
-    const playbackStateHandlers = {};
+    let playbackStateHandlers;
 
     cmcdModel = CmcdModel(context).getInstance();
     cmcdConfigAccessor = CmcdConfigAccessor(context).getInstance();
@@ -114,14 +114,18 @@ function CmcdController() {
     }
 
     function initialize(autoPlay) {
-        reporterNeedsRebuild = false;
-
+        _resetInitialSettings();
         _initializeEventBus(autoPlay);
 
         cmcdReporter = _createCmcdReporter();
         cmcdReporter.start();
 
         _initializePlaybackStateListeners();
+    }
+
+    function _resetInitialSettings() {
+        reporterNeedsRebuild = false;
+        playbackStateHandlers = {};
     }
 
     function _initializeEventBus(autoPlay) {
@@ -456,7 +460,7 @@ function CmcdController() {
     }
 
     function _onManifestLoaded(data) {
-        getCmcdParametersFromManifest();
+        _updateCmcdManifestParamsInCmcdConfigAccessor();
 
         // Mark reporter for rebuild so it picks up sid, cid, and keys from manifest params.
         // We can't rebuild here because ServiceDescriptionController may not have processed
@@ -465,8 +469,8 @@ function CmcdController() {
         reporterNeedsRebuild = true;
 
         if (cmcdReporter) {
-            const streamInfo = cmcdModel.onManifestLoaded(data);
-            cmcdReporter.update(streamInfo);
+            const streamFormatInfo = cmcdModel.onManifestLoaded(data);
+            cmcdReporter.update(streamFormatInfo);
         }
     }
 
@@ -577,6 +581,10 @@ function CmcdController() {
 
     function getCmcdParametersFromManifest() {
         return cmcdModel.getCmcdParametersFromManifest();
+    }
+
+    function _updateCmcdManifestParamsInCmcdConfigAccessor() {
+        cmcdModel.updateCmcdManifestParamsInCmcdConfigAccessor()
     }
 
     function reset() {

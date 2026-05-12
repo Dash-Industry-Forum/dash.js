@@ -466,16 +466,16 @@ function CmcdConfigAccessor() {
     }
 
     instance = {
-        setManifestParamsProvider,
-        setManifestParams,
         get,
-        has,
+        getEventTarget,
+        getEventTargets,
         getVersion,
+        has,
         hasManifestParams,
         isEnabled,
-        getEventTargets,
-        getEventTarget,
-        reset
+        reset,
+        setManifestParams,
+        setManifestParamsProvider,
     };
 
     setup();

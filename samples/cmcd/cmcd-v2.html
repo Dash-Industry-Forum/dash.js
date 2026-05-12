@@ -35,57 +35,47 @@
 
     <script class="code">
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
-
-        /* CMCD v2 transmission modes:
-         * - Request Mode: uses 'query' or 'header' (configurable via settings.streaming.cmcd.mode)
-         * - Event Mode (eventTargets): always uses 'body' (POST request) - mode is not configurable per target
-         */
-        var CMCD_MODE_QUERY = 'query'; /* as query parameters (Request Mode only) */
-        var CMCD_MODE_HEADERS = 'headers'; /* as HTTP headers (Request Mode only) */
-        var CMCD_MODE_BODY = 'body'; /* as body of request (Event Mode only) */
         var player;
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
 
         var defaultCmcdConfig = {
             version: 2,
             enabled: true,
-            sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5',
-            cid: '21cf726cfe3d937b5f974f72bb5bd06a',
-            mode: CMCD_MODE_QUERY,
+            sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* sample-only placeholder */
+            cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* sample-only placeholder */
+            mode: 'query',
             enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
+            includeInRequests: ['segment', 'mpd'],
             eventTargets: [
                 {
                     enabled: true,
                     url: 'http://localhost:3333/cmcd/response-received',
-                    enabledKeys: ['url', 'rc', 'msd'],
-                    includeInRequests: ['mpd', 'segment'],
+                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
+                    includeInRequests: ['segment'],
                     events: ['rr']
                 },
-                {
-                    enabled: true,
-                    url: 'http://localhost:3333/cmcd/event-mode',
-                    interval: 10,
-                    enabledKeys: ['e', 'msd', 'sta'],
-                    events: ['ps', 'e', 't']
-                },
-                {
-                    enabled: true,
-                    url: 'http://localhost:3333/cmcd/event-mode',
-                    interval: 6
-                },
-                {
-                    enabled: true,
-                    url: 'http://localhost:3333/cmcd/event-body-mode',
-                    batchSize: 3
-                }
+                // {
+                //     enabled: true,
+                //     url: 'http://localhost:3333/cmcd/event-mode',
+                //     interval: 10,
+                //     enabledKeys: ['e', 'msd', 'sta'],
+                //     events: ['ps', 'e', 't']
+                // },
+                // {
+                //     enabled: true,
+                //     url: 'http://localhost:3333/cmcd/event-mode',
+                //     interval: 6
+                // },
+                // {
+                //     enabled: true,
+                //     url: 'http://localhost:3333/cmcd/event-body-mode',
+                //     batchSize: 3
+                // }
             ]
         };
 
         function init() {
-            var video;
-
             player = dashjs.MediaPlayer().create();
-            video = document.querySelector('video');
             player.initialize();
 
             player.on(CMCD_DATA_GENERATED, handleCmcdDataGeneratedEvent);
@@ -102,7 +92,7 @@
                 }
             });
             player.setAutoPlay(false);
-            player.attachView(video);
+            player.attachView(document.querySelector('video'));
             player.attachSource(defaultSourceUrl);
         }
 
@@ -138,8 +128,12 @@
         }
 
         function handleCmcdDataGeneratedEvent(event) {
+            /* Mode values match event.mode as set by the player */
+            var CMCD_MODE_HEADERS = 'headers'; /* HTTP headers (Request Mode) */
+            var CMCD_MODE_BODY = 'body'; /* POST body (Event Mode) */
+
             log('type: ' + event.mediaType);
-            log('file: ' + event.url.split('/').pop())
+            log('file: ' + event.url.split('/').pop());
             var mode = event.mode;
             var data;
 
@@ -148,7 +142,7 @@
                     data = getKeysForHeaderMode(event);
                     break;
                 case CMCD_MODE_BODY:
-                    data = getKeysForJsonMode(event);
+                    data = getKeysForBodyMode(event);
                     break;
                 default:
                     data = getKeysForQueryMode(event);
@@ -176,48 +170,85 @@
             var keys = Object.keys(event.headers);
 
             for (var key of keys) {
-                extractKeyValuePairs(event.headers[key], cmcdData)
+                extractKeyValuePairs(event.headers[key], cmcdData);
             }
 
-            return cmcdData
-        }
-
-        function getKeysForJsonMode(event) {
-            const decoded = decodeURIComponent(event.cmcdString);
-            const entries = decoded.split(',');
-
-            const cmcdData = {};
-
-            for (let entry of entries) {
-                let [key, value] = entry.split('=');
-
-                if (value?.startsWith('"') && value.endsWith('"')) {
-                    value = value.slice(1, -1);
-                }
-
-                if (!isNaN(value) && value.trim() !== '') {
-                    value = Number(value);
-                }
-
-                cmcdData[key] = value;
-            }
             return cmcdData;
         }
 
+        function getKeysForBodyMode(event) {
+            var decoded = decodeURIComponent(event.cmcdString);
+            var cmcdData = {};
+
+            extractKeyValuePairs(decoded, cmcdData);
+
+            return cmcdData;
+        }
+
+        /**
+         * Parse a CMCD key=value string into an object.
+         * Handles quoted string values that may contain commas
+         * (e.g. nor="seg1.mp4,seg2.mp4") by splitting only on
+         * commas that are outside double quotes.
+         */
         function extractKeyValuePairs(cmcdString, cmcdData) {
-            if (cmcdString === '') {
+            if (!cmcdString) {
                 return;
             }
-            var keyValuePairs = cmcdString.split(',');
 
-            keyValuePairs.forEach(function (keyValuePair) {
-                var data = keyValuePair.split('=');
-                var key = data[0];
-                var value = data[1];
+            var pairs = splitOutsideQuotes(cmcdString);
 
-                cmcdData[key] = value;
-            })
+            for (var i = 0; i < pairs.length; i++) {
+                var eqIndex = pairs[i].indexOf('=');
+                var key, value;
 
+                if (eqIndex === -1) {
+                    /* Boolean key with no value (e.g. "bs") */
+                    key = pairs[i].trim();
+                    value = true;
+                } else {
+                    key = pairs[i].substring(0, eqIndex).trim();
+                    value = pairs[i].substring(eqIndex + 1);
+
+                    /* Strip surrounding quotes */
+                    if (value.length >= 2 && value.charAt(0) === '"' && value.charAt(value.length - 1) === '"') {
+                        value = value.substring(1, value.length - 1);
+                    }
+                }
+
+                if (key) {
+                    cmcdData[key] = value;
+                }
+            }
+        }
+
+        /**
+         * Split a string on commas, but only those outside double quotes.
+         */
+        function splitOutsideQuotes(str) {
+            var parts = [];
+            var current = '';
+            var inQuotes = false;
+
+            for (var i = 0; i < str.length; i++) {
+                var ch = str.charAt(i);
+
+                if (ch === '"') {
+                    inQuotes = !inQuotes;
+                    current += ch;
+                } else if (ch === ',' && !inQuotes) {
+                    parts.push(current);
+                    current = '';
+                } else {
+                    current += ch;
+                }
+            }
+
+            if (current) {
+                parts.push(current);
+            }
+
+            return parts;
         }
 
         function log(msg) {

@@ -2115,9 +2115,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         THUMBNAILS MANAGEMENT
- 
+
     ---------------------------------------------------------------------------
     */
 
@@ -2155,9 +2155,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         TOOLS AND OTHERS FUNCTIONS
- 
+
     ---------------------------------------------------------------------------
     */
     /**
@@ -2538,77 +2538,77 @@ function MediaPlayer() {
 
         if (!textController) {
             textController = TextController(context).create({
+                adapter,
+                baseURLController,
                 errHandler,
                 manifestModel,
-                adapter,
                 mediaController,
-                baseURLController,
+                settings,
                 videoModel,
-                settings
             });
         }
 
         capabilitiesFilter.setConfig({
+            adapter,
             capabilities,
             customParametersModel,
-            adapter,
-            settings,
-            protectionController,
+            errHandler,
             manifestModel,
-            errHandler
+            protectionController,
+            settings,
         });
 
         streamController.setConfig({
+            abrController,
+            adapter,
+            baseURLController,
             capabilities,
             capabilitiesFilter,
-            manifestLoader,
-            manifestModel,
-            mediaPlayerModel,
+            contentSteeringController,
             customParametersModel,
-            protectionController,
-            textController,
-            adapter,
             dashMetrics,
             errHandler,
-            timelineConverter,
-            videoModel,
-            playbackController,
-            serviceDescriptionController,
-            contentSteeringController,
-            abrController,
-            throughputController,
+            manifestLoader,
+            manifestModel,
             mediaController,
+            mediaPlayerModel,
+            playbackController,
+            protectionController,
+            segmentBaseController,
+            serviceDescriptionController,
             settings,
-            baseURLController,
+            textController,
+            throughputController,
+            timelineConverter,
             uriFragmentModel,
-            segmentBaseController
+            videoModel,
         });
 
         gapController.setConfig({
-            settings,
+            adapter,
             playbackController,
+            settings,
             streamController,
-            videoModel,
             timelineConverter,
-            adapter
+            videoModel,
         });
 
         playbackController.setConfig({
-            streamController,
-            serviceDescriptionController,
-            dashMetrics,
             adapter,
-            videoModel,
+            dashMetrics,
+            serviceDescriptionController,
+            settings,
+            streamController,
             timelineConverter,
-            settings
+            videoModel,
         });
 
         catchupController.setConfig({
-            streamController,
-            playbackController,
             mediaPlayerModel,
+            playbackController,
+            settings,
+            streamController,
             videoModel,
-            settings
         })
 
         throughputController.setConfig({
@@ -2617,27 +2617,27 @@ function MediaPlayer() {
         })
 
         abrController.setConfig({
-            streamController,
+            adapter,
             capabilities,
+            cmsdModel,
+            customParametersModel,
+            dashMetrics,
             domStorage,
             mediaPlayerModel,
-            customParametersModel,
+            settings,
+            streamController,
             throughputController,
-            cmsdModel,
-            dashMetrics,
-            adapter,
             videoModel,
-            settings
         });
 
         cmcdController.setConfig({
             abrController,
             dashMetrics,
+            errHandler,
+            mediaPlayerModel,
             playbackController,
             serviceDescriptionController,
             throughputController,
-            mediaPlayerModel,
-            errHandler
         });
 
         clientDataReportingController.setConfig({
