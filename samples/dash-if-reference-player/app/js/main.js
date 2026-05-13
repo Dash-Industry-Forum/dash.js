@@ -230,8 +230,8 @@ function doStop() {
 }
 
 // ---- Playback ended (loop) ----
-function onPlaybackEnded() {
-    if (settingsController.loop && !playerController.isDynamic) {
+function onPlaybackEnded(e) {
+    if (settingsController.loop && !playerController.isDynamic && e.isLast) {
         playerController.player.seek(0);
         playerController.player.play();
     }
