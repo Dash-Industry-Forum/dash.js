@@ -2189,10 +2189,12 @@ function MediaPlayer() {
         retrieveManifestRequest = { manifestLoader, resetLoader };
 
         const handler = (e) => {
-            if (!e.error) {
-                callback(e.manifest);
-            } else {
-                callback(null, e.error);
+            if (typeof callback == 'function') {
+                if (!e.error) {
+                    callback(e.manifest);
+                } else {
+                    callback(null, e.error);
+                }
             }
 
             resetLoader();
