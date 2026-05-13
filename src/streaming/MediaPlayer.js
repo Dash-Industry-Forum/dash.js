@@ -170,7 +170,7 @@ function MediaPlayer() {
         domStorage,
         segmentBaseController,
         clientDataReportingController,
-        retrieveManifestLoader;
+        retrieveManifestRequest;
 
     /*
     ---------------------------------------------------------------------------
@@ -480,8 +480,9 @@ function MediaPlayer() {
             offlineController = null;
         }
 
-        if (retrieveManifestLoader) {
-            retrieveManifestLoader.reset();
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+            retrieveManifestRequest = null;
         }
     }
 
@@ -2174,23 +2175,33 @@ function MediaPlayer() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        retrieveManifestLoader = _createManifestLoader();
-        let self = this;
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+        }
 
-        const handler = function (e) {
+        const manifestLoader = _createManifestLoader();
+        const resetLoader = () => {
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, this);
+            manifestLoader.reset();
+            retrieveManifestRequest = null;
+        };
+
+        retrieveManifestRequest = { manifestLoader, resetLoader };
+
+        const handler = (e) => {
             if (!e.error) {
                 callback(e.manifest);
             } else {
                 callback(null, e.error);
             }
-            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
-            retrieveManifestLoader.reset();
+
+            resetLoader();
         };
 
-        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, this);
 
         uriFragmentModel.initialize(url);
-        retrieveManifestLoader.load(url);
+        manifestLoader.load(url);
     }
 
     /**
