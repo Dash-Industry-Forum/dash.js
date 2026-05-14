@@ -169,7 +169,8 @@ function MediaPlayer() {
         uriFragmentModel,
         domStorage,
         segmentBaseController,
-        clientDataReportingController;
+        clientDataReportingController,
+        retrieveManifestRequest;
 
     /*
     ---------------------------------------------------------------------------
@@ -477,6 +478,11 @@ function MediaPlayer() {
         if (offlineController) {
             offlineController.reset();
             offlineController = null;
+        }
+
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+            retrieveManifestRequest = null;
         }
     }
 
@@ -2169,20 +2175,32 @@ function MediaPlayer() {
      * @instance
      */
     function retrieveManifest(url, callback) {
-        let manifestLoader = _createManifestLoader();
-        let self = this;
+        if (retrieveManifestRequest) {
+            retrieveManifestRequest.resetLoader();
+        }
 
-        const handler = function (e) {
-            if (!e.error) {
-                callback(e.manifest);
-            } else {
-                callback(null, e.error);
-            }
-            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        const manifestLoader = _createManifestLoader();
+        const resetLoader = () => {
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, handler, this);
             manifestLoader.reset();
+            retrieveManifestRequest = null;
         };
 
-        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, self);
+        retrieveManifestRequest = { manifestLoader, resetLoader };
+
+        const handler = (e) => {
+            if (typeof callback == 'function') {
+                if (!e.error) {
+                    callback(e.manifest);
+                } else {
+                    callback(null, e.error);
+                }
+            }
+
+            resetLoader();
+        };
+
+        eventBus.on(Events.INTERNAL_MANIFEST_LOADED, handler, this);
 
         uriFragmentModel.initialize(url);
         manifestLoader.load(url);
