@@ -324,7 +324,7 @@ function CmcdController() {
         _rebuildReporterIfNeeded();
 
         try {
-            const cmcdData = cmcdModel.calculateCmcdDataForRequest(request);
+            const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
 
             // Route MSD through update() for the reporter's internal send-once tracking
             const msdData = cmcdModel.calculateMsd();

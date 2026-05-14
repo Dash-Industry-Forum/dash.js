@@ -728,7 +728,7 @@ function CmcdModel() {
 
     }
 
-    function calculateCmcdDataForRequest(request) {
+    function deriveCmcdDataForRequest(request) {
         try {
             _updateLastMediaTypeRequest(request.type, request.mediaType);
             let cmcdData = {};
@@ -856,8 +856,8 @@ function CmcdModel() {
     }
 
     instance = {
-        calculateCmcdDataForRequest,
         calculateMsd,
+        deriveCmcdDataForRequest,
         getCmcdParametersFromManifest,
         getEventModeData,
         getLastMediaTypeRequest,
