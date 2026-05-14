@@ -21,6 +21,37 @@
             margin-top: 20px;
             font-size: 10px;
         }
+
+        .event-target-config {
+            background-color: #f8f9fa;
+        }
+
+        .source-input-group {
+            width: 100%;
+            max-width: 640px;
+            margin: 0 auto 1rem auto;
+        }
+
+        .sample-box {
+            height: 100%;
+        }
+
+        .video-panel {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .video-panel video {
+            width: 100%;
+            height: auto;
+            max-width: 640px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .trace-box {
+            min-height: 320px;
+        }
     </style>
     <script>
         function getKeysForQueryMode(cmcdString) {
@@ -61,46 +92,110 @@
          */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters (Request Mode only) */
         var player;
+        var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
+        var defaultReportingUrl = 'http://localhost:3333/cmcd/response-received';
+        var activeReportingUrl = '';
+
+        function getDefaultEventTargetConfig() {
+            return {
+                enabled: false,
+                url: defaultReportingUrl,
+                enabledKeys: ['e', 'rc', 'url'],
+                events: ['rr']
+            };
+        }
+
+        function getDefaultCmcdConfig() {
+            return {
+                version: 2,
+                enabled: true, /* enable reporting of cmcd parameters */
+                sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
+                cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
+                mode: CMCD_MODE_QUERY,
+                enabledKeys: ['cid', 'sid'],
+                includeInRequests: ['segment', 'mpd'],
+                eventTargets: [getDefaultEventTargetConfig()]
+            };
+        }
+
+        function updateEventTargetControlState() {
+            var enabled = document.getElementById('rr-event-target-enabled').checked;
+            document.getElementById('rr-event-target-url').disabled = !enabled;
+        }
+
+        function handleEventTargetControlChange() {
+            updateEventTargetControlState();
+            applyCmcdSettings();
+        }
+
+        function syncEventTargetControls(cmcdConfig) {
+            var eventTarget = cmcdConfig.eventTargets[0] || getDefaultEventTargetConfig();
+
+            document.getElementById('rr-event-target-enabled').checked = !!eventTarget.enabled;
+            document.getElementById('rr-event-target-url').value = eventTarget.url || defaultReportingUrl;
+            updateEventTargetControlState();
+        }
+
+        function getCmcdConfigFromControls() {
+            var cmcdConfig = getDefaultCmcdConfig();
+            var endpoint = document.getElementById('rr-event-target-url').value.trim();
+
+            cmcdConfig.eventTargets[0].enabled = document.getElementById('rr-event-target-enabled').checked;
+            cmcdConfig.eventTargets[0].url = endpoint || defaultReportingUrl;
+
+            return cmcdConfig;
+        }
+
+        function applyCmcdSettings() {
+            var cmcdConfig = getCmcdConfigFromControls();
+
+            activeReportingUrl = cmcdConfig.eventTargets[0].enabled ? cmcdConfig.eventTargets[0].url : '';
+
+            player.updateSettings({
+                streaming: {
+                    cmcd: cmcdConfig
+                }
+            });
+
+            if (activeReportingUrl) {
+                log('CMCD event target enabled: ' + activeReportingUrl);
+            } else {
+                log('CMCD event target disabled');
+            }
+        }
+
+        function loadSource() {
+            var url = document.getElementById('source-url').value.trim();
+
+            if (url) {
+                player.attachSource(url);
+                log('Source loaded: ' + url);
+            }
+        }
+
+        function resetCmcdSettings() {
+            syncEventTargetControls(getDefaultCmcdConfig());
+            applyCmcdSettings();
+        }
 
         function init() {
-            var video,
-                url = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd',
-                version;
+            var video;
 
             player = dashjs.MediaPlayer().create();
             video = document.querySelector('video');
             player.initialize();
-            const reportingUrl = 'http://localhost:3333/cmcd/response-received'
 
-            player.updateSettings({
-                streaming: {
-                    cmcd: {
-                        version: 2,
-                        enabled: true, /* enable reporting of cmcd parameters */
-                        sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* session id send with each request */
-                        cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* content id send with each request */
-                        mode: CMCD_MODE_QUERY,
-                        enabledKeys: ['cid', 'sid'],
-                        includeInRequests: ['segment', 'mpd'],
-                        eventTargets: [
-                            {
-                                enabled: true,
-                                url: reportingUrl,
-                                enabledKeys: ['e', 'rc', 'url'],
-                                events: ['rr']
-                            },
-                        ]
-                    }
-                }
-            });
+            document.getElementById('source-url').value = defaultSourceUrl;
+
+            syncEventTargetControls(getDefaultCmcdConfig());
+            applyCmcdSettings();
             player.setAutoPlay(false);
             player.attachView(video);
-            player.attachSource(url);
 
             /* Callback before report - Event Mode uses POST body */
             player.addRequestInterceptor((request) => {
                 /* Only modify requests to our report endpoint that contain 'rr' (response received) event */
-                const isReportEndpoint = request.customData.request.type == 'CmcdEvent' && request.url.includes(reportingUrl);
+                const isReportEndpoint = request.customData.request.type === 'CmcdEvent' && activeReportingUrl && request.url.includes(activeReportingUrl);
                 const hasRrEvent = request.body && decodeURIComponent(request.body).includes('e=rr');
 
                 if (isReportEndpoint && hasRrEvent) {
@@ -124,7 +219,7 @@
             player.addResponseInterceptor((response) => {
                 const request = response.request.customData.request;
                 /* Only log requests to our report endpoint that contain 'rr' (response received) event */
-                const isReportEndpoint = request.type == 'CmcdEvent' && request.url.includes('http://localhost:3003/report');
+                const isReportEndpoint = request.type === 'CmcdEvent' && activeReportingUrl && request.url.includes(activeReportingUrl);
                 const hasRrEvent = request.body && decodeURIComponent(request.body).includes('e=rr');
 
                 if (isReportEndpoint && hasRrEvent) {
@@ -152,9 +247,7 @@
             const originalOpen = XMLHttpRequest.prototype.open;
             XMLHttpRequest.prototype.open = function(method, url, ...rest) {
                 /* Mark requests to report endpoint for body logging */
-                if (url.includes('report')) {
-                    this._cmcdReportUrl = true;
-                }
+                this._cmcdReportUrl = !!(activeReportingUrl && url.includes(activeReportingUrl));
                 return originalOpen.call(this, method, url, ...rest);
             };
         }
@@ -173,19 +266,41 @@
             <div class="col-md-12">
                 <div class="h-100 p-5 bg-light border rounded-3">
                     <h3>CMCD v2 Callbacks with Network Interceptors</h3>
-                    <p>This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode</p>
+                    <p>This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode. The predefined CMCD event target is disabled by default so the sample can be used without a local collector. Enable it only when you want to test against a running endpoint.</p>
                 </div>
             </div>
         </div>
-        <div class="row mt-2">
-            <div class="col-md-6">
-                <video controls="true"></video>
+        <div class="row mt-3">
+            <div class="col-md-12">
+                <div class="video-panel p-4 border rounded-3 bg-white shadow-sm">
+                    <div class="input-group source-input-group">
+                        <input type="text" class="form-control" id="source-url" placeholder="Enter MPD URL">
+                        <button class="btn btn-primary" onclick="loadSource()">Load</button>
+                    </div>
+                    <video controls></video>
+                </div>
             </div>
-            <div class="col-md-6">
-                <div class="form-floating">
-                    <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6 mb-3">
+                <div class="sample-box event-target-config p-3 border rounded-3 shadow-sm">
+                    <h5>Predefined CMCD v2 Event Target</h5>
+                    <div class="form-check form-switch mb-3">
+                        <input class="form-check-input" type="checkbox" id="rr-event-target-enabled" onchange="handleEventTargetControlChange()">
+                        <label class="form-check-label" for="rr-event-target-enabled"><strong>Response received reporting</strong></label>
+                    </div>
+                    <label class="form-label" for="rr-event-target-url">Endpoint</label>
+                    <input class="form-control" type="text" id="rr-event-target-url" value="http://localhost:3333/cmcd/response-received" onchange="handleEventTargetControlChange()">
+                    <div class="form-text mb-3">Default endpoint: http://localhost:3333/cmcd/response-received</div>
+                    <div class="form-text">Changes here are applied automatically.</div>
+                    <button class="btn btn-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
+                    <label for="trace" class="form-label"><strong>CMCD Report Data</strong></label>
+                    <textarea class="form-control trace-box" placeholder="Sent CMCD data will be displayed here"
                               id="trace"></textarea>
-                    <label for="trace">CMCD Report Data</label>
                 </div>
             </div>
         </div>

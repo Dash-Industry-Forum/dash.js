@@ -31,50 +31,288 @@
             width: 640px;
             margin: 0 auto;
         }
+
+        .event-target-item {
+            background-color: #f8f9fa;
+        }
+
+        .event-target-item .form-text {
+            font-size: 12px;
+        }
+
+        .sample-box {
+            height: 100%;
+        }
+
+        .video-panel {
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .video-panel video {
+            width: 100%;
+            height: auto;
+            max-width: 640px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .box-textarea {
+            min-height: 300px;
+        }
     </style>
 
-    <script class="code">
+    <script>
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
         var player;
+        var currentCmcdConfig;
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
-
-        var defaultCmcdConfig = {
-            version: 2,
-            enabled: true,
-            sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* sample-only placeholder */
-            cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* sample-only placeholder */
-            mode: 'query',
-            enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-            includeInRequests: ['segment', 'mpd'],
-            eventTargets: [
-                {
-                    enabled: true,
+        var defaultEventTargetDefinitions = [
+            {
+                title: 'Response received reporting',
+                description: 'Sends response-received (rr) events for segment requests.',
+                config: {
+                    enabled: false,
                     url: 'http://localhost:3333/cmcd/response-received',
                     enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
                     includeInRequests: ['segment'],
                     events: ['rr']
-                },
-                // {
-                //     enabled: true,
-                //     url: 'http://localhost:3333/cmcd/event-mode',
-                //     interval: 10,
-                //     enabledKeys: ['e', 'msd', 'sta'],
-                //     events: ['ps', 'e', 't']
-                // },
-                // {
-                //     enabled: true,
-                //     url: 'http://localhost:3333/cmcd/event-mode',
-                //     interval: 6
-                // },
-                // {
-                //     enabled: true,
-                //     url: 'http://localhost:3333/cmcd/event-body-mode',
-                //     batchSize: 3
-                // }
-            ]
-        };
+                }
+            },
+            {
+                title: 'Playback state events',
+                description: 'Sends playback state (ps) events every 10 seconds.',
+                config: {
+                    enabled: false,
+                    url: 'http://localhost:3333/cmcd/event-mode',
+                    interval: 10,
+                    enabledKeys: ['e', 'msd', 'sta'],
+                    events: ['ps']
+                }
+            },
+            {
+                title: 'Periodic event mode reporting',
+                description: 'Sends periodic CMCD event mode reports every 6 seconds.',
+                config: {
+                    enabled: false,
+                    url: 'http://localhost:3333/cmcd/event-mode',
+                    interval: 6
+                }
+            },
+            {
+                title: 'Batched event body reporting',
+                description: 'Sends batched CMCD body mode reports with a batch size of 3.',
+                config: {
+                    enabled: false,
+                    url: 'http://localhost:3333/cmcd/event-body-mode',
+                    batchSize: 3
+                }
+            }
+        ];
+
+        function cloneJson(value) {
+            return JSON.parse(JSON.stringify(value));
+        }
+
+        function getDefaultEventTargets() {
+            return defaultEventTargetDefinitions.map(function (definition) {
+                return cloneJson(definition.config);
+            });
+        }
+
+        function getDefaultCmcdConfig() {
+            return {
+                version: 2,
+                enabled: true,
+                sid: 'b248658d-1d1a-4039-91d0-8c08ba597da5', /* sample-only placeholder */
+                cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* sample-only placeholder */
+                mode: 'query',
+                enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
+                includeInRequests: ['segment', 'mpd'],
+                eventTargets: getDefaultEventTargets()
+            };
+        }
+
+        function mergeCmcdConfigWithDefaults(cmcdConfig) {
+            var normalizedConfig = getDefaultCmcdConfig();
+            var eventTargets = [];
+            var keys;
+            var i;
+
+            if (!cmcdConfig) {
+                return normalizedConfig;
+            }
+
+            keys = Object.keys(cmcdConfig);
+
+            for (i = 0; i < keys.length; i++) {
+                if (keys[i] !== 'eventTargets') {
+                    normalizedConfig[keys[i]] = cmcdConfig[keys[i]];
+                }
+            }
+
+            eventTargets = Array.isArray(cmcdConfig.eventTargets) ? cmcdConfig.eventTargets : [];
+
+            for (i = 0; i < defaultEventTargetDefinitions.length; i++) {
+                if (eventTargets[i]) {
+                    normalizedConfig.eventTargets[i] = Object.assign({}, normalizedConfig.eventTargets[i], eventTargets[i]);
+
+                    if (!normalizedConfig.eventTargets[i].url) {
+                        normalizedConfig.eventTargets[i].url = defaultEventTargetDefinitions[i].config.url;
+                    }
+                }
+            }
+
+            if (eventTargets.length > defaultEventTargetDefinitions.length) {
+                normalizedConfig.eventTargets = normalizedConfig.eventTargets.concat(
+                    cloneJson(eventTargets.slice(defaultEventTargetDefinitions.length))
+                );
+            }
+
+            return normalizedConfig;
+        }
+
+        function updateCmcdConfigTextarea(cmcdConfig) {
+            document.getElementById('cmcd-config').value = JSON.stringify(cmcdConfig, null, 2);
+        }
+
+        function getEventTargetFormInput(index, field) {
+            return document.querySelector('[data-event-target-index="' + index + '"][data-event-target-field="' + field + '"]');
+        }
+
+        function applyEventTargetControlsToConfig(cmcdConfig) {
+            var normalizedConfig = mergeCmcdConfigWithDefaults(cmcdConfig);
+            var i;
+
+            for (i = 0; i < defaultEventTargetDefinitions.length; i++) {
+                var enabledInput = getEventTargetFormInput(i, 'enabled');
+                var urlInput = getEventTargetFormInput(i, 'url');
+
+                if (enabledInput) {
+                    normalizedConfig.eventTargets[i].enabled = enabledInput.checked;
+                }
+
+                if (urlInput) {
+                    normalizedConfig.eventTargets[i].url = urlInput.value.trim() || defaultEventTargetDefinitions[i].config.url;
+                }
+            }
+
+            return normalizedConfig;
+        }
+
+        function applyCmcdConfig(cmcdConfig, options) {
+            var shouldLog = !options || options.log !== false;
+
+            currentCmcdConfig = mergeCmcdConfigWithDefaults(cmcdConfig);
+            renderEventTargetControls(currentCmcdConfig);
+            updateCmcdConfigTextarea(currentCmcdConfig);
+
+            player.updateSettings({
+                streaming: {
+                    cmcd: currentCmcdConfig
+                }
+            });
+
+            if (shouldLog) {
+                log('CMCD settings applied successfully');
+            }
+
+            document.getElementById('cmcd-config').style.borderColor = '';
+        }
+
+        function syncEventTargetControlsToTextarea() {
+            var cmcdConfig = applyEventTargetControlsToConfig(currentCmcdConfig || getDefaultCmcdConfig());
+
+            updateCmcdConfigTextarea(cmcdConfig);
+            document.getElementById('cmcd-config').style.borderColor = '';
+
+            return cmcdConfig;
+        }
+
+        function handleEventTargetControlChange(event) {
+            var targetIndex = event.target.getAttribute('data-event-target-index');
+            var field = event.target.getAttribute('data-event-target-field');
+            var endpointInput;
+
+            if (field === 'enabled') {
+                endpointInput = getEventTargetFormInput(targetIndex, 'url');
+
+                if (endpointInput) {
+                    endpointInput.disabled = !event.target.checked;
+                }
+            }
+
+            applyCmcdConfig(syncEventTargetControlsToTextarea());
+        }
+
+        function renderEventTargetControls(cmcdConfig) {
+            var container = document.getElementById('event-targets-container');
+            var normalizedConfig = mergeCmcdConfigWithDefaults(cmcdConfig);
+            var i;
+
+            container.innerHTML = '';
+
+            for (i = 0; i < defaultEventTargetDefinitions.length; i++) {
+                var definition = defaultEventTargetDefinitions[i];
+                var eventTargetConfig = normalizedConfig.eventTargets[i];
+                var wrapper = document.createElement('div');
+                var toggleRow = document.createElement('div');
+                var toggleInput = document.createElement('input');
+                var toggleLabel = document.createElement('label');
+                var endpointWrapper = document.createElement('div');
+                var endpointLabel = document.createElement('label');
+                var endpointInput = document.createElement('input');
+                var helperText = document.createElement('div');
+
+                wrapper.className = 'event-target-item border rounded-3 p-3 mb-2';
+
+                toggleRow.className = 'form-check form-switch';
+                toggleInput.className = 'form-check-input';
+                toggleInput.type = 'checkbox';
+                toggleInput.id = 'event-target-enabled-' + i;
+                toggleInput.checked = !!eventTargetConfig.enabled;
+                toggleInput.setAttribute('data-event-target-index', i);
+                toggleInput.setAttribute('data-event-target-field', 'enabled');
+                toggleInput.addEventListener('change', handleEventTargetControlChange);
+
+                toggleLabel.className = 'form-check-label';
+                toggleLabel.setAttribute('for', toggleInput.id);
+                toggleLabel.innerHTML = '<strong>' + definition.title + '</strong>';
+
+                toggleRow.appendChild(toggleInput);
+                toggleRow.appendChild(toggleLabel);
+
+                endpointWrapper.className = 'mt-3';
+                endpointLabel.className = 'form-label';
+                endpointLabel.setAttribute('for', 'event-target-url-' + i);
+                endpointLabel.textContent = 'Endpoint';
+
+                endpointInput.className = 'form-control';
+                endpointInput.type = 'text';
+                endpointInput.id = 'event-target-url-' + i;
+                endpointInput.value = eventTargetConfig.url || definition.config.url;
+                endpointInput.disabled = !eventTargetConfig.enabled;
+                endpointInput.setAttribute('data-event-target-index', i);
+                endpointInput.setAttribute('data-event-target-field', 'url');
+                endpointInput.addEventListener('change', handleEventTargetControlChange);
+
+                helperText.className = 'form-text';
+                helperText.textContent = definition.description + ' Default endpoint: ' + definition.config.url;
+
+                endpointWrapper.appendChild(endpointLabel);
+                endpointWrapper.appendChild(endpointInput);
+
+                wrapper.appendChild(toggleRow);
+                wrapper.appendChild(endpointWrapper);
+                wrapper.appendChild(helperText);
+
+                container.appendChild(wrapper);
+            }
+        }
 
         function init() {
+            var defaultCmcdConfig = getDefaultCmcdConfig();
+
             player = dashjs.MediaPlayer().create();
             player.initialize();
 
@@ -83,17 +321,9 @@
             /* Initialize source input with default URL */
             document.getElementById('source-url').value = defaultSourceUrl;
 
-            /* Initialize config textarea with default config */
-            document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
-
-            player.updateSettings({
-                streaming: {
-                    cmcd: defaultCmcdConfig
-                }
-            });
+            applyCmcdConfig(defaultCmcdConfig, { log: false });
             player.setAutoPlay(false);
             player.attachView(document.querySelector('video'));
-            player.attachSource(defaultSourceUrl);
         }
 
         function loadSource() {
@@ -107,14 +337,9 @@
         function applyCmcdSettings() {
             var configTextarea = document.getElementById('cmcd-config');
             try {
-                var cmcdConfig = JSON.parse(configTextarea.value);
-                player.updateSettings({
-                    streaming: {
-                        cmcd: cmcdConfig
-                    }
-                });
-                log('CMCD settings applied successfully');
-                configTextarea.style.borderColor = '';
+                var cmcdConfig = mergeCmcdConfigWithDefaults(JSON.parse(configTextarea.value));
+
+                applyCmcdConfig(cmcdConfig);
             } catch (e) {
                 log('Error parsing JSON: ' + e.message);
                 configTextarea.style.borderColor = 'red';
@@ -122,7 +347,10 @@
         }
 
         function resetCmcdSettings() {
-            document.getElementById('cmcd-config').value = JSON.stringify(defaultCmcdConfig, null, 2);
+            var defaultCmcdConfig = getDefaultCmcdConfig();
+
+            renderEventTargetControls(defaultCmcdConfig);
+            updateCmcdConfigTextarea(defaultCmcdConfig);
             document.getElementById('cmcd-config').style.borderColor = '';
             applyCmcdSettings();
         }
@@ -276,39 +504,49 @@
                     <h3>CMCD v2 Reporting</h3>
                     <p>This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media
                         Client Data (CMCD - CTA 5004). Please note that in this sample we are also enabling the CMCD v2
-                        event mode next to the common request mode. To fully demonstrate the event mode, there needs to
-                        be a server that collects the metrics that are sent
-                        out when an event is triggered. We provide a local dummy server for this purpose which can be
-                        found in `samples/simple-express-server`. </p>
+                        event mode next to the common request mode. The predefined event targets are disabled by default
+                        so the sample can be used without a local collector. To demonstrate the event mode, enable the
+                        targets you want to test and point them to a running collector such as the local dummy server in
+                        "samples/simple-express-server". </p>
                 </div>
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-12">
-                <div class="input-group source-input-group">
-                    <input type="text" class="form-control" id="source-url" placeholder="Enter MPD URL">
-                    <button class="btn btn-primary" onclick="loadSource()">Load</button>
-                </div>
-            </div>
-        </div>
-        <div class="row mt-2">
-            <div class="col-md-12 text-center">
-                <video controls="true"></video>
             </div>
         </div>
         <div class="row mt-3">
-            <div class="col-md-6">
-                <label for="cmcd-config" class="form-label"><strong>CMCD Configuration (streaming.cmcd)</strong></label>
-                <textarea class="form-control" id="cmcd-config" placeholder="Enter CMCD JSON configuration"></textarea>
-                <div class="mt-2">
-                    <button class="btn btn-primary" onclick="applyCmcdSettings()">Apply Settings</button>
-                    <button class="btn btn-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
+            <div class="col-md-12">
+                <div class="video-panel p-4 border rounded-3 bg-white shadow-sm">
+                    <div class="input-group source-input-group mb-3">
+                        <input type="text" class="form-control" id="source-url" placeholder="Enter MPD URL">
+                        <button class="btn btn-primary" onclick="loadSource()">Load</button>
+                    </div>
+                    <video controls></video>
                 </div>
             </div>
-            <div class="col-md-6">
-                <label for="trace" class="form-label"><strong>CMCD Data</strong></label>
-                <textarea class="form-control" placeholder="Sent CMCD data will be displayed here"
-                          id="trace"></textarea>
+        </div>
+        <div class="row mt-3">
+            <div class="col-lg-6 mb-3">
+                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
+                    <h5>Predefined CMCD v2 Event Targets</h5>
+                    <p class="text-muted mb-3">Enable only the targets you want to use. Each target keeps the current sample endpoint as its default, but starts disabled to avoid failed localhost requests.</p>
+                    <div id="event-targets-container"></div>
+                    <div class="form-text">Changes here are applied automatically and mirrored into the JSON configuration below. Use <strong>Apply Settings</strong> only after editing the JSON manually.</div>
+                </div>
+            </div>
+            <div class="col-lg-6 mb-3">
+                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
+                    <label for="cmcd-config" class="form-label"><strong>CMCD Configuration (streaming.cmcd)</strong></label>
+                    <textarea class="form-control box-textarea" id="cmcd-config" placeholder="Enter CMCD JSON configuration"></textarea>
+                    <div class="mt-2">
+                        <button class="btn btn-primary" onclick="applyCmcdSettings()">Apply Settings</button>
+                        <button class="btn btn-secondary" onclick="resetCmcdSettings()">Reset to Default</button>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="sample-box p-3 border rounded-3 bg-white shadow-sm">
+                    <label for="trace" class="form-label"><strong>CMCD Data</strong></label>
+                    <textarea class="form-control box-textarea" placeholder="Sent CMCD data will be displayed here"
+                              id="trace"></textarea>
+                </div>
             </div>
         </div>
         <div class="row">
@@ -328,6 +566,5 @@
         init();
     });
 </script>
-<script src="../highlighter.js"></script>
 </body>
 </html>
