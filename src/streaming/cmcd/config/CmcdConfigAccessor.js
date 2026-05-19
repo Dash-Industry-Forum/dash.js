@@ -254,7 +254,7 @@ function CmcdConfigAccessor() {
         }
 
         const version = _detectVersion();
-        const context = _getContext();
+        const dataContext = _getContext();
 
         // Check if this mapping applies to the current version
         if (propertyMapping.version && !propertyMapping.version.includes(version)) {
@@ -269,7 +269,7 @@ function CmcdConfigAccessor() {
 
         // Check if we should skip manifest params (avoid circular dependency by checking settings directly)
         const applyParametersFromMpd = property === 'applyParametersFromMpd' ? true :
-            (context.settings?.streaming?.cmcd?.applyParametersFromMpd ?? true);
+            (dataContext.settings?.streaming?.cmcd?.applyParametersFromMpd ?? true);
 
         // Sort sources by priority (lower number = higher priority)
         const sortedSources = [...propertyMapping.sources].sort((a, b) => a.priority - b.priority);
@@ -281,7 +281,7 @@ function CmcdConfigAccessor() {
                 continue;
             }
 
-            const value = _resolvePath(context, source.path, pathContext);
+            const value = _resolvePath(dataContext, source.path, pathContext);
 
             // Check if value exists and is not null/undefined
             if (value !== null && value !== undefined) {
