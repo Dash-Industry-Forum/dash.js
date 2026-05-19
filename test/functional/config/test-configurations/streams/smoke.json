@@ -379,7 +379,7 @@
       }
     },
     {
-      "name": "BBB 30fps VOD",
+      "name": "BBB 30fps VoD CMCD v2",
       "type": "vod",
       "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",
       "includedTestfiles": [

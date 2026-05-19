@@ -69,6 +69,17 @@
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
         var defaultEventTargetDefinitions = [
             {
+                title: 'Response received remote reporting',
+                description: 'Sends response-received (rr) events for segment requests.',
+                config: {
+                    enabled: false,
+                    url: 'https://ea7e0b56-3623-420b-9d0b-2b39a4d3d4bb.fwf.app/',
+                    enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
+                    includeInRequests: ['segment'],
+                    events: ['rr']
+                }
+            },
+            {
                 title: 'Response received reporting',
                 description: 'Sends response-received (rr) events for segment requests.',
                 config: {
@@ -81,7 +92,7 @@
             },
             {
                 title: 'Playback state events',
-                description: 'Sends playback state (ps) events every 10 seconds.',
+                description: 'Sends reports after playback state (ps) events every 10 seconds.',
                 config: {
                     enabled: false,
                     url: 'http://localhost:3333/cmcd/event-mode',

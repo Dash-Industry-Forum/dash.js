@@ -864,17 +864,6 @@
                     "Video",
                     "Audio"
                 ]
-            },
-            {
-                "title": "CMCD v2 Callbacks with Network Interceptors",
-                "description": "This sample shows how to use Network Interceptors to execute callbacks after server response or pre-request callbacks for Response and Event Mode",
-                "href": "cmcd/cmcd-v2-network-interceptors.html",
-                "image": "lib/img/bbb-1.jpg",
-                "labels": [
-                    "VoD",
-                    "Video",
-                    "Audio"
-                ]
             }
         ]
     },
