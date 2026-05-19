@@ -247,7 +247,7 @@ function CmcdController() {
     }
 
     function _onPlayerError(errorData) {
-        if (errorData.error && errorData.error.data.request && errorData.error.data.request.type === HTTPRequest.CMCD_EVENT) {
+        if (errorData.error?.data?.request?.type === HTTPRequest.CMCD_EVENT) {
             return;
         }
         // Update CmcdReporter with the error code
@@ -405,7 +405,7 @@ function CmcdController() {
             return false;
         }
 
-        invalidRequests.map((k) => {
+        invalidRequests.forEach((k) => {
             logger.warn(`request type ${k} is not supported.`);
         });
 
@@ -448,7 +448,7 @@ function CmcdController() {
             return false;
         }
 
-        invalidRequests.map((k) => {
+        invalidRequests.forEach((k) => {
             logger.warn(`request type ${k} is not supported.`);
         });
 
@@ -591,8 +591,8 @@ function CmcdController() {
     }
 
     function reset() {
-        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, this);
+        eventBus.off(MediaPlayerEvents.PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+        eventBus.off(MediaPlayerEvents.MANIFEST_LOADED, _onManifestLoaded, instance);
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
         eventBus.off(MediaPlayerEvents.PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
         eventBus.off(MediaPlayerEvents.PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
