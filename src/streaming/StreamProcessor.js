@@ -611,7 +611,12 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
+        if (!bufferController || !representationController) {
+            return;
+        }
+
         const currentRepresentation = representationController.getCurrentCompositeRepresentation();
+
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -950,7 +955,7 @@ function StreamProcessor(config) {
             // base layer stream processor (type VIDEO), `request.bandwidth` refers only
             // to the base layer. Therefore, the comparison should use the base layer
             // bandwidth (`dependentRepresentation`) only.
-            const newBandwidth = (type === Constants.VIDEO) && newRepresentation.dependentRepresentation ? 
+            const newBandwidth = (type === Constants.VIDEO) && newRepresentation.dependentRepresentation ?
                 newRepresentation.dependentRepresentation.bandwidth : newRepresentation.bandwidth;
 
             // The new quality is higher than the one we originally requested
