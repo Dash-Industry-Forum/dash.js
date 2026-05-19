@@ -606,6 +606,7 @@ function CmcdModel() {
         _bufferLevelStarved = {};
         _isStartup = {};
         _initialMediaRequestsDone = {};
+        _isSeeking = false;
         _lastMediaTypeRequest = undefined;
         _playbackStartedTime = undefined;
         _rebufferingStartTime = {};
@@ -776,15 +777,15 @@ function CmcdModel() {
     }
 
     function _calculateCmcdDataForRequestForSteering(request) {
-        const data = !_lastMediaTypeRequest ? getGenericCmcdData(request) : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+        const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
 
         data.ot = CmcdObjectType.OTHER;
 
         return data;
     }
 
-    function _calculateCmcdDataForRequestForLicense(request) {
-        const data = getGenericCmcdData(request);
+    function _calculateCmcdDataForRequestForLicense() {
+        const data = getGenericCmcdData();
 
         data.ot = CmcdObjectType.KEY;
 
