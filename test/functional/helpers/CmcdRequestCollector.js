@@ -6,16 +6,26 @@ const CMCD_HEADER_NAMES = [
 ];
 
 function classifyUrl(url, method) {
-    if (method === 'POST') return 'event';
-    if (/\.mpd/i.test(url)) return 'manifest';
-    if (/\.(m4s|m4v|m4a|mp4)/i.test(url)) return 'segment';
+    if (method === 'POST') {
+        return 'event';
+    }
+    if (/\.mpd/i.test(url)) {
+        return 'manifest';
+    }
+    if (/\.(m4s|m4v|m4a|mp4)/i.test(url)) {
+        return 'segment';
+    }
     return 'unknown';
 }
 
 function detectReportingMode(url, headers) {
     const hasCmcdHeaders = CMCD_HEADER_NAMES.some((name) => headers[name]);
-    if (hasCmcdHeaders) return 'header';
-    if (url.includes('CMCD=')) return 'query';
+    if (hasCmcdHeaders) {
+        return 'header';
+    }
+    if (url.includes('CMCD=')) {
+        return 'query';
+    }
     return null;
 }
 
@@ -153,7 +163,9 @@ class CmcdRequestCollector {
      * @returns {Array}
      */
     getRequests(type) {
-        if (!type) return this.requests;
+        if (!type) {
+            return this.requests;
+        }
         return this.requests.filter((r) => r.type === type);
     }
 
@@ -194,7 +206,9 @@ class CmcdRequestCollector {
 
     _notifyResolvers(type) {
         this._resolvers = this._resolvers.filter((r) => {
-            if (r.type !== type) return true;
+            if (r.type !== type) {
+                return true;
+            }
             const requests = this.getRequests(r.type);
             if (requests.length >= r.count) {
                 r.resolve(requests);
