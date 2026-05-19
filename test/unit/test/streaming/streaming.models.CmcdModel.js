@@ -63,7 +63,7 @@ describe('CmcdModel', function () {
             expect(cmcdModel).to.exist;
             expect(typeof cmcdModel.setup).to.equal('function');
             expect(typeof cmcdModel.reset).to.equal('function');
-            expect(typeof cmcdModel.calculateCmcdDataForRequest).to.equal('function');
+            expect(typeof cmcdModel.deriveCmcdDataForRequest).to.equal('function');
         });
 
         it('should reset to initial settings', function () {
@@ -80,7 +80,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/manifest.mpd'
             };
 
-            const data = cmcdModel.calculateCmcdDataForRequest(request);
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('m'); // manifest object type
         });
@@ -98,7 +98,7 @@ describe('CmcdModel', function () {
                 }
             };
 
-            const data = cmcdModel.calculateCmcdDataForRequest(request);
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('v'); // video object type
             expect(data.br).to.deep.equal([new SfItem(1000, { v: true })]); // bitrate in kbps
@@ -111,7 +111,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/init.mp4'
             };
 
-            const data = cmcdModel.calculateCmcdDataForRequest(request);
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data).to.exist;
             expect(data.ot).to.equal('i'); // init object type
             expect(data.su).to.equal(true); // startup
@@ -123,7 +123,7 @@ describe('CmcdModel', function () {
                 url: 'http://example.com/file'
             };
 
-            const data = cmcdModel.calculateCmcdDataForRequest(request);
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data).to.deep.equal({});
         });
     });
@@ -219,10 +219,10 @@ describe('CmcdModel', function () {
             clock.tick(500);
             cmcdModel.onPlaybackPlaying();
 
-            const data = cmcdModel.calculateCmcdDataForRequest(request);
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data.bsd).to.deep.equal([new SfItem(500, { v: true })]);
 
-            const data2 = cmcdModel.calculateCmcdDataForRequest(request);
+            const data2 = cmcdModel.deriveCmcdDataForRequest(request);
             expect(data2.bsd).to.not.exist;
             clock.restore();
         });

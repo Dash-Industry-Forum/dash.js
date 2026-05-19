@@ -310,7 +310,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.called).to.be.true;
@@ -674,7 +674,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
@@ -729,7 +729,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
@@ -771,7 +771,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.called).to.be.false;
@@ -805,7 +805,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.called).to.be.false;
@@ -852,7 +852,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
 
             expect(urlLoaderMock.load.calledOnce).to.be.true;
@@ -897,7 +897,7 @@ describe('CmcdController', function () {
                 }
             };
 
-            const interceptor = cmcdController.getCmcdResponseInterceptors()[0];
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
             interceptor(mockResponse);
             interceptor(mockResponse);
 
