@@ -34,9 +34,9 @@ import BaseURLController from './controllers/BaseURLController.js';
 import BoxParser from './utils/BoxParser.js';
 import Capabilities from './utils/Capabilities.js';
 import CapabilitiesFilter from './utils/CapabilitiesFilter.js';
+import CmcdController from './controllers/CmcdController.js';
 import CatchupController from './controllers/CatchupController.js';
 import ClientDataReportingController from './controllers/ClientDataReportingController.js';
-import CmcdModel from './models/CmcdModel.js';
 import CmsdModel from './models/CmsdModel.js';
 import Constants from './constants/Constants.js';
 import ContentSteeringController from '../dash/controllers/ContentSteeringController.js';
@@ -163,7 +163,7 @@ function MediaPlayer() {
         catchupController,
         dashMetrics,
         manifestModel,
-        cmcdModel,
+        cmcdController,
         cmsdModel,
         videoModel,
         uriFragmentModel,
@@ -356,7 +356,7 @@ function MediaPlayer() {
 
             manifestModel = ManifestModel(context).getInstance();
 
-            cmcdModel = CmcdModel(context).getInstance();
+            cmcdController = CmcdController(context).getInstance();
 
             cmsdModel = CmsdModel(context).getInstance();
 
@@ -2121,9 +2121,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         THUMBNAILS MANAGEMENT
- 
+
     ---------------------------------------------------------------------------
     */
 
@@ -2161,9 +2161,9 @@ function MediaPlayer() {
 
     /*
     ---------------------------------------------------------------------------
- 
+
         TOOLS AND OTHERS FUNCTIONS
- 
+
     ---------------------------------------------------------------------------
     */
     /**
@@ -2538,7 +2538,7 @@ function MediaPlayer() {
             }
         }
         textController.reset();
-        cmcdModel.reset();
+        cmcdController.reset();
         cmsdModel.reset();
     }
 
@@ -2556,77 +2556,77 @@ function MediaPlayer() {
 
         if (!textController) {
             textController = TextController(context).create({
+                adapter,
+                baseURLController,
                 errHandler,
                 manifestModel,
-                adapter,
                 mediaController,
-                baseURLController,
+                settings,
                 videoModel,
-                settings
             });
         }
 
         capabilitiesFilter.setConfig({
+            adapter,
             capabilities,
             customParametersModel,
-            adapter,
-            settings,
-            protectionController,
+            errHandler,
             manifestModel,
-            errHandler
+            protectionController,
+            settings,
         });
 
         streamController.setConfig({
+            abrController,
+            adapter,
+            baseURLController,
             capabilities,
             capabilitiesFilter,
-            manifestLoader,
-            manifestModel,
-            mediaPlayerModel,
+            contentSteeringController,
             customParametersModel,
-            protectionController,
-            textController,
-            adapter,
             dashMetrics,
             errHandler,
-            timelineConverter,
-            videoModel,
-            playbackController,
-            serviceDescriptionController,
-            contentSteeringController,
-            abrController,
-            throughputController,
+            manifestLoader,
+            manifestModel,
             mediaController,
+            mediaPlayerModel,
+            playbackController,
+            protectionController,
+            segmentBaseController,
+            serviceDescriptionController,
             settings,
-            baseURLController,
+            textController,
+            throughputController,
+            timelineConverter,
             uriFragmentModel,
-            segmentBaseController
+            videoModel,
         });
 
         gapController.setConfig({
-            settings,
+            adapter,
             playbackController,
+            settings,
             streamController,
-            videoModel,
             timelineConverter,
-            adapter
+            videoModel,
         });
 
         playbackController.setConfig({
-            streamController,
-            serviceDescriptionController,
-            dashMetrics,
             adapter,
-            videoModel,
+            dashMetrics,
+            serviceDescriptionController,
+            settings,
+            streamController,
             timelineConverter,
-            settings
+            videoModel,
         });
 
         catchupController.setConfig({
-            streamController,
-            playbackController,
             mediaPlayerModel,
+            playbackController,
+            settings,
+            streamController,
             videoModel,
-            settings
         })
 
         throughputController.setConfig({
@@ -2635,22 +2635,24 @@ function MediaPlayer() {
         })
 
         abrController.setConfig({
-            streamController,
+            adapter,
             capabilities,
+            cmsdModel,
+            customParametersModel,
+            dashMetrics,
             domStorage,
             mediaPlayerModel,
-            customParametersModel,
+            settings,
+            streamController,
             throughputController,
-            cmsdModel,
-            dashMetrics,
-            adapter,
             videoModel,
-            settings
         });
 
-        cmcdModel.setConfig({
+        cmcdController.setConfig({
             abrController,
             dashMetrics,
+            errHandler,
+            mediaPlayerModel,
             playbackController,
             serviceDescriptionController,
             throughputController,
@@ -2670,7 +2672,7 @@ function MediaPlayer() {
         textController.initialize();
         gapController.initialize();
         catchupController.initialize();
-        cmcdModel.initialize(autoPlay);
+        cmcdController.initialize(autoPlay);
         cmsdModel.initialize();
         contentSteeringController.initialize();
         segmentBaseController.initialize();
@@ -2715,7 +2717,7 @@ function MediaPlayer() {
                 events: Events,
                 BASE64,
                 constants: Constants,
-                cmcdModel,
+                cmcdController,
                 settings
             });
 

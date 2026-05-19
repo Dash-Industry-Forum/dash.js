@@ -58,6 +58,9 @@ StreamMock.prototype.getCurrentRepresentationForType = function () {
     return null;
 }
 
+StreamMock.prototype.getRepresentationsByType = function () {
+    return null;
+}
 StreamMock.prototype.setRepresentationsByType = function (type, filtered, unfiltered) {
     this._representations[type] = filtered;
     this._unfilteredRepresentations[type] = unfiltered;

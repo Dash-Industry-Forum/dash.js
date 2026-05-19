@@ -60,7 +60,7 @@
         var CMCD_DATA_GENERATED = dashjs.MetricsReporting.events.CMCD_DATA_GENERATED;
         /* possible modes of attach cmcd data */
         var CMCD_MODE_QUERY = 'query'; /* as query parameters */
-        var CMCD_MODE_HEADER = 'header'; /* as HTTP headers */
+        var CMCD_MODE_HEADERS = 'headers'; /* as HTTP headers */
         let player;
         let mpd = "";
         let currentSelectedServiceLocation = {}
@@ -86,8 +86,8 @@
         function handleCmcdDataGeneratedEvent(event) {
             log('type: ' + event.mediaType);
             log('file: ' + event.url.split('/').pop())
-            let mode = !!event.headers ? CMCD_MODE_HEADER : CMCD_MODE_QUERY;
-            var data = mode === CMCD_MODE_HEADER ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
+            let mode = !!event.headers ? CMCD_MODE_HEADERS : CMCD_MODE_QUERY;
+            var data = mode === CMCD_MODE_HEADERS ? getKeysForHeaderMode(event) : getKeysForQueryMode(event);
             var keys = Object.keys(data);
             keys = keys.sort();
             for (var key of keys) {
@@ -191,9 +191,9 @@
                 const elem = domElements[key];
 
                 if (activeServiceLocations[key]) {
-                    elem.setAttribute('src', 'img/server-active.svg')
+                    elem.setAttribute('src', '../common/img/server-active.svg')
                 } else {
-                    elem.setAttribute('src', 'img/server.svg');
+                    elem.setAttribute('src', '../common/img/server.svg');
                 }
 
             })
@@ -214,7 +214,7 @@
                         const figure = document.createElement('figure');
                         figure.setAttribute('class', 'cdn-selection');
                         const img = document.createElement('img');
-                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('src', '../common/img/server.svg');
                         img.setAttribute('class', 'figure-img img-fluid cdn-selection');
                         const figCaption = document.createElement('figcaption');
                         figCaption.setAttribute('class', 'figure-caption');
@@ -246,7 +246,7 @@
                         const figure = document.createElement('figure');
                         figure.setAttribute('class', 'cdn-selection');
                         const img = document.createElement('img');
-                        img.setAttribute('src', 'img/server.svg');
+                        img.setAttribute('src', '../common/img/server.svg');
                         img.setAttribute('class', 'figure-img img-fluid cdn-selection');
                         const figCaption = document.createElement('figcaption');
                         figCaption.setAttribute('class', 'figure-caption');

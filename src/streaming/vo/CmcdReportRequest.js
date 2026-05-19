@@ -3,7 +3,7 @@
  * included below. This software may be subject to other third party and contributor
  * rights, including patent rights, and no such rights are granted under this license.
  *
- * Copyright (c) 2024, Dash Industry Forum.
+ * Copyright (c) 2013, Dash Industry Forum.
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
@@ -28,40 +28,17 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-import DescriptorType from './DescriptorType.js';
-import Constants from '../../streaming/constants/Constants.js';
-
 /**
  * @class
  * @ignore
  */
-class CMCDParameters extends DescriptorType {
-    constructor() {
+import FragmentRequest from './FragmentRequest.js';
+
+class CmcdReportRequest extends FragmentRequest {
+    constructor(method) {
         super();
-        this.version = null;
-        this.sessionID = null;
-        this.contentID = null;
-        this.mode = null;
-        this.keys = null;
-        this.includeInRequests = null;
-    }
-
-    init(data) {
-        super.init(data);
-
-        if (data) {
-            this.version = data.version ? parseInt(data.version) : null;
-            this.sessionID = data.sessionID;
-            this.contentID = data.contentID;
-            this.mode = data.mode ?? 'query';
-            this.keys = data.keys ? data.keys.split(' ') : null;
-            this.includeInRequests = data.includeInRequests
-                ? data.includeInRequests.split(' ')
-                : [Constants.CMCD_DEFAULT_INCLUDE_IN_REQUESTS];
-            this.schemeIdUri = data.schemeIdUri;
-        }
+        this.method = method || null;
     }
 }
 
-export default CMCDParameters;
+export default CmcdReportRequest;
