@@ -6,7 +6,7 @@ import MediaPlayerModelMock from '../../mocks/MediaPlayerModelMock.js';
 import ServiceDescriptionControllerMock from '../../mocks/ServiceDescriptionControllerMock.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import Settings from '../../../../src/core/Settings.js';
-import CmcdModel from '../../../../src/streaming/models/CmcdModel.js';
+import CmcdController from '../../../../src/streaming/controllers/CmcdController.js';
 import ClientDataReportingController from '../../../../src/streaming/controllers/ClientDataReportingController.js';
 
 import {expect} from 'chai';
@@ -24,7 +24,7 @@ let settings = Settings(context).getInstance();
 describe('HTTPLoader', function () {
     let serviceDescriptionControllerMock = new ServiceDescriptionControllerMock();
     let clientDataReportingController,
-        cmcdModel,
+        cmcdController,
         requests;
 
     function _createHttpLoader() {
@@ -50,13 +50,13 @@ describe('HTTPLoader', function () {
         errHandler = ErrorHandler(context).getInstance();
         dashMetrics = DashMetrics(context).getInstance();
         clientDataReportingController = ClientDataReportingController(context).getInstance();
-        cmcdModel = CmcdModel(context).getInstance();
+        cmcdController = CmcdController(context).getInstance();
 
         clientDataReportingController.setConfig({
             serviceDescriptionController: serviceDescriptionControllerMock,
         });
 
-        cmcdModel.setConfig({
+        cmcdController.setConfig({
             serviceDescriptionController: serviceDescriptionControllerMock,
         });
 
@@ -125,6 +125,34 @@ describe('HTTPLoader', function () {
         sinon.assert.calledOnce(callbacks.success);
         sinon.assert.calledOnce(callbacks.complete);
         expect(callbacks.success.calledBefore(callbacks.complete)).to.be.true; // jshint ignore:line
+    });
+
+    it('should call success and not retry when a POST returns 200 with an empty body', async () => {
+        let resolveOnComplete;
+        const completePromise = new Promise((resolve) => {
+            resolveOnComplete = resolve;
+        });
+        const callbacks = _createCallbacks();
+        callbacks.complete = sinon.spy(() => resolveOnComplete());
+
+        httpLoader = _createHttpLoader();
+
+        await httpLoader.load({
+            request: { method: HTTPRequest.POST },
+            success: callbacks.success,
+            complete: callbacks.complete,
+            error: callbacks.error
+        });
+
+        expect(requests.length).to.equal(1);
+        requests[0].respond(200, {}, '');
+        await completePromise;
+
+        // Only one request fired (no retry), success was called.
+        expect(requests.length).to.equal(1);
+        sinon.assert.calledOnce(callbacks.success);
+        sinon.assert.calledOnce(callbacks.complete);
+        sinon.assert.notCalled(callbacks.error);
     });
 
     it('should use XHRLoader and call error and complete callback when load is called with error', async () => {

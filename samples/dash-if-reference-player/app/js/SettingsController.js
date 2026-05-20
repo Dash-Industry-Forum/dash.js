@@ -15,6 +15,13 @@ export class SettingsController {
         this._restoredProtData = null;
     }
 
+    static get _ARRAY_SETTING_PATHS() {
+        return new Set([
+            'streaming.cmcd.enabledKeys',
+            'streaming.cmcd.includeInRequests'
+        ]);
+    }
+
     /**
      * Initialize all settings bindings and save defaults
      */
@@ -189,6 +196,7 @@ export class SettingsController {
         if (this._isChecked('opt-cmcd-enabled')) {
             config.streaming.cmcd = {
                 enabled: true,
+                version: parseInt($('#opt-cmcd-version').value) || 1,
                 mode: $('#opt-cmcd-mode').value,
                 rtpSafetyFactor: parseFloat($('#opt-cmcd-rtp-safety').value) || 5
             };
@@ -206,7 +214,11 @@ export class SettingsController {
             }
             const keys = $('#opt-cmcd-enabled-keys').value.trim();
             if (keys) {
-                config.streaming.cmcd.enabledKeys = keys.split(',').map(k => k.trim());
+                config.streaming.cmcd.enabledKeys = this._parseCommaSeparatedInput(keys);
+            }
+            const includeInRequests = $('#opt-cmcd-include-in-requests').value.trim();
+            if (includeInRequests) {
+                config.streaming.cmcd.includeInRequests = this._parseCommaSeparatedInput(includeInRequests);
             }
         }
 
@@ -459,7 +471,8 @@ export class SettingsController {
             'opt-live-delay', 'opt-live-delay-frag-count', 'opt-utc-offset',
             'opt-init-bitrate-video', 'opt-min-bitrate-video', 'opt-max-bitrate-video',
             'opt-cmcd-session-id', 'opt-cmcd-content-id', 'opt-cmcd-rtp',
-            'opt-cmcd-rtp-safety', 'opt-cmcd-mode', 'opt-cmcd-enabled-keys',
+            'opt-cmcd-rtp-safety', 'opt-cmcd-mode', 'opt-cmcd-version', 'opt-cmcd-enabled-keys',
+            'opt-cmcd-include-in-requests',
             'opt-cmsd-etp-weight'
         ];
 
@@ -711,6 +724,10 @@ export class SettingsController {
         }
 
         // ---- CMCD inputs ----
+        const cmcdVersion = $('#opt-cmcd-version');
+        if (cmcdVersion && s?.streaming?.cmcd?.version !== undefined) {
+            cmcdVersion.value = s.streaming.cmcd.version;
+        }
         const cmcdMode = $('#opt-cmcd-mode');
         if (cmcdMode && s?.streaming?.cmcd?.mode) {
             cmcdMode.value = s.streaming.cmcd.mode;
@@ -732,6 +749,11 @@ export class SettingsController {
         if (cmcdEnabledKeys) {
             const v = s?.streaming?.cmcd?.enabledKeys;
             cmcdEnabledKeys.value = Array.isArray(v) ? v.join(', ') : '';
+        }
+        const cmcdIncludeInRequests = $('#opt-cmcd-include-in-requests');
+        if (cmcdIncludeInRequests) {
+            const v = s?.streaming?.cmcd?.includeInRequests;
+            cmcdIncludeInRequests.value = Array.isArray(v) ? v.join(', ') : '';
         }
     }
 
@@ -766,7 +788,7 @@ export class SettingsController {
             if (value && typeof value === 'object' && !Array.isArray(value)) {
                 this._flattenObject(value, fullKey, params);
             } else {
-                params.set(fullKey, String(value));
+                params.set(fullKey, Array.isArray(value) ? value.join(',') : String(value));
             }
         }
     }
@@ -780,7 +802,9 @@ export class SettingsController {
             }
             current = current[keys[i]];
         }
-        current[keys[keys.length - 1]] = value;
+        current[keys[keys.length - 1]] = SettingsController._ARRAY_SETTING_PATHS.has(path)
+            ? this._parseCommaSeparatedInput(value)
+            : value;
     }
 
     _coerceType(value) {
@@ -798,6 +822,10 @@ export class SettingsController {
             return num;
         }
         return value;
+    }
+
+    _parseCommaSeparatedInput(value) {
+        return String(value).split(',').map((item) => item.trim()).filter(Boolean);
     }
 
     _showCopyNotification() {

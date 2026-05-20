@@ -423,6 +423,11 @@
                             <input class="form-check-input" type="checkbox" id="opt-cmcd-enabled">
                             <label class="form-check-label" for="opt-cmcd-enabled">Enable CMCD</label>
                         </div>
+                        <span class="option-label">Version</span>
+                        <select id="opt-cmcd-version">
+                            <option value="1">1</option>
+                            <option value="2">2</option>
+                        </select>
                         <span class="option-label">Session ID</span>
                         <input type="text" id="opt-cmcd-session-id" placeholder="Auto-generated">
                         <span class="option-label">Content ID</span>
@@ -438,6 +443,8 @@
                         </select>
                         <span class="option-label">Enabled Keys</span>
                         <input type="text" id="opt-cmcd-enabled-keys" placeholder="e.g. br,d,ot,tb">
+                        <span class="option-label">Include In Requests</span>
+                        <input type="text" id="opt-cmcd-include-in-requests" placeholder="e.g. segment,mpd">
                     </div>
                 </div>
 
@@ -525,7 +532,8 @@
 
             <div class="info-callout">
                 <i class="bi bi-info-circle"></i>
-                Use the <i class="bi bi-link-45deg"></i> button to export player settings as a shareable URL.
+                Use the <i class="bi bi-link-45deg"></i> button to export player settings as a shareable URL. Various
+                samples showcasing the dash.js features can be found in our <a href="../index.html">sample section</a>.
             </div>
 
             <!-- Stats Panel -->

@@ -205,6 +205,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+ *            blacklistExpiryTime: -1,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -325,6 +326,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                 }
  *             },
  *            cmcd: {
+ *                applyParametersFromMpd: true,
  *                enabled: false,
  *                sid: null,
  *                cid: null,
@@ -333,7 +335,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
- *                version: 1
+ *                version: 1,
+ *                eventTargets: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -661,15 +664,15 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
  * This object is used for setting the window parameters for "step" mode.
- * 
+ *
  * It is only applicable if the Catchup mechanism used is of mode "step".
- * 
+ *
  * The parameters are all percentages of the target latency. Where 1 is on target.
- * 
+ *
  * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
- * 
+ *
  * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
- * 
+ *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
  * Use this parameter to set the minimum and maximum catch up rates, as percentages, for low latency live streams.
@@ -969,6 +972,26 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdEventTarget>} [eventTargets]
+ * List of CMCD reporting targets.
+ */
+
+/**
+ * @typedef {Object} CmcdEventTarget
+ * @property {boolean} [enabled]
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} [url]
+ * The reporting endpoint URL.
+ * @property {string} [events]
+ * The events that should trigger the CMCD reporting.
+ * @property {number} [interval]
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * @property {Array.<string>} [enabledKeys]
+ * CMCD keys to include in the report.
+ * @property {Array.<string>} [includeInRequests]
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {number} [batchSize]
+ * The batch size for the CMCD reporting.
  */
 
 /**
@@ -1106,6 +1129,10 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
  * This mode makes the player select the track with a widest range of bitrates.
  *
+ * @property {number} [blacklistExpiryTime=-1]
+ * The time in seconds that a Service Location remains on the blacklist.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -1340,6 +1367,7 @@ function Settings() {
             prioritizeRoleMain: true,
             assumeDefaultRoleAsMain: true,
             selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+            blacklistExpiryTime: -1,
             fragmentRequestTimeout: 20000,
             fragmentRequestProgressTimeout: -1,
             manifestRequestTimeout: 10000,
@@ -1477,9 +1505,10 @@ function Settings() {
                 rtp: null,
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
-                enabledKeys: Constants.CMCD_AVAILABLE_KEYS,
+                enabledKeys: Constants.CMCD_KEYS,
                 includeInRequests: ['segment', 'mpd'],
-                version: 1
+                version: 1,
+                eventTargets: []
             },
             cmsd: {
                 enabled: false,

@@ -1828,6 +1828,7 @@ export class MediaPlayerSettingClass {
         prioritizeRoleMain?: boolean;
         assumeDefaultRoleAsMain?: boolean;
         selectionModeForInitialTrack?: TrackSelectionMode;
+        blacklistExpiryTime?: number;
         fragmentRequestTimeout?: number;
         fragmentRequestProgressTimeout?: number;
         manifestRequestTimeout?: number;
@@ -1959,7 +1960,16 @@ export class MediaPlayerSettingClass {
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
             includeInRequests?: Array<string>,
-            version?: number
+            version?: number,
+            eventTargets?: Array<{
+                enabled?: boolean,
+                url?: string,
+                events?: Array<string>,
+                interval?: number,
+                enabledKeys?: Array<string>,
+                includeInRequests?: Array<string>,
+                batchSize?: number
+            }>
         },
         cmsd?: {
             enabled?: boolean,
@@ -2941,7 +2951,7 @@ export interface Constants {
     TRACK_SELECTION_MODE_HIGHEST_EFFICIENCY: 'highestEfficiency',
     TRACK_SELECTION_MODE_WIDEST_RANGE: 'widestRange',
     CMCD_MODE_QUERY: 'query',
-    CMCD_MODE_HEADER: 'header',
+    CMCD_MODE_HEADERS: 'headers',
     CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
     CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
@@ -3803,21 +3813,55 @@ export interface BaseURLTreeModel {
 }
 
 export interface CmcdModel {
-    getCmcdData(request: HTTPRequest): object;
-
-    getCmcdParametersFromManifest(): CMCDParameters;
-
-    getHeaderParameters(request: HTTPRequest): object | null;
-
-    getQueryParameter(request: HTTPRequest): { key: string, finalPayloadString: string } | null;
-
-    initialize(): void;
-
-    isCmcdEnabled(): boolean;
+    setup(): void;
 
     reset(): void;
 
     setConfig(config: object): void;
+
+    getCmcdData(request: HTTPRequest): object;
+
+    onStateChange(state: any): void;
+
+    onPeriodSwitchComplete(): void;
+
+    onPlaybackStarted(): void;
+
+    onPlaybackPlaying(): void;
+
+    onRebufferingStarted(mediaType: string): void;
+
+    onRebufferingCompleted(mediaType: string): void;
+
+    onPlayerError(errorData: any): void;
+
+    onPlaybackSeeking(): void;
+
+    onPlaybackSeeked(): void;
+
+    onPlaybackRateChanged(data: any): void;
+
+    wasPlaying(): boolean;
+
+    onManifestLoaded(data: any): void;
+
+    onBufferLevelStateChanged(data: any): void;
+
+    updateMsdData(mode: string): object;
+
+    resetInitialSettings(): void;
+
+    getCmcdParametersFromManifest(): CMCDParameters;
+
+    triggerCmcdEventMode(event: string): object;
+
+    getGenericCmcdData(mediaType?: string): object;
+
+    isIncludedInRequestFilter(type: string, includeInRequests?: any): boolean;
+
+    getLastMediaTypeRequest(): string;
+
+    onEventChange(state: any): void;
 }
 
 export interface CmsdModel {
@@ -6126,4 +6170,3 @@ export type RequestFilter = (request: LicenseRequest) => Promise<any>;
 export type ResponseFilter = (response: LicenseResponse) => Promise<any>;
 export type CertificateRequestFilter = (request: CertificateRequest) => Promise<any>;
 export type CertificateResponseFilter = (response: CertificateResponse) => Promise<any>;
-
