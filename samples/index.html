@@ -122,6 +122,33 @@
             color: var(--rp-text-muted);
             font-size: 0.9rem;
         }
+
+        /* Search-active mode: show all tab panes at once */
+        .search-active .samples-tabs {
+            display: none;
+        }
+        .search-active .tab-pane {
+            display: block;
+            opacity: 1;
+        }
+        .search-section-heading {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--rp-accent);
+            padding: 0.5rem 0 0.35rem;
+            margin-bottom: 0.5rem;
+            border-bottom: 1px solid var(--rp-border);
+        }
+        .search-no-results {
+            text-align: center;
+            padding: 2rem;
+            color: var(--rp-text-muted);
+            font-size: 0.9rem;
+            display: none;
+        }
+        .search-active .search-no-results.visible {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -162,6 +189,7 @@
 
     <!-- Tab content -->
     <div class="tab-content" id="tab-content"></div>
+    <div class="search-no-results" id="search-no-results">No samples found.</div>
 
     <!-- Footer -->
     <div class="sample-footer">
@@ -267,6 +295,11 @@
                     row.appendChild(col);
                 });
 
+                var heading = document.createElement('div');
+                heading.className = 'search-section-heading';
+                heading.style.display = 'none';
+                heading.textContent = section.section;
+                pane.appendChild(heading);
                 pane.appendChild(row);
                 tabContent.appendChild(pane);
             });
@@ -295,15 +328,76 @@
             });
         }
 
+        var activeTabBeforeSearch = null;
+
         function filterSamples() {
             var query = searchInput.value.toLowerCase().trim();
-            var cards = document.querySelectorAll('.sample-card-col');
-            cards.forEach(function (card) {
-                var title = card.getAttribute('data-title') || '';
-                var desc = card.getAttribute('data-desc') || '';
-                var match = !query || title.indexOf(query) !== -1 || desc.indexOf(query) !== -1;
-                card.style.display = match ? '' : 'none';
-            });
+            var container = document.querySelector('.sample-container');
+            var panes = document.querySelectorAll('.tab-pane');
+            var noResults = document.getElementById('search-no-results');
+            var totalVisible = 0;
+
+            if (query) {
+                /* Enter search mode */
+                if (!container.classList.contains('search-active')) {
+                    /* Remember which tab was active before searching */
+                    var activeBtn = document.querySelector('.samples-tabs .nav-link.active');
+                    activeTabBeforeSearch = activeBtn ? activeBtn.id : null;
+                }
+                container.classList.add('search-active');
+
+                panes.forEach(function (pane) {
+                    var cards = pane.querySelectorAll('.sample-card-col');
+                    var heading = pane.querySelector('.search-section-heading');
+                    var visibleInSection = 0;
+
+                    cards.forEach(function (card) {
+                        var title = card.getAttribute('data-title') || '';
+                        var desc = card.getAttribute('data-desc') || '';
+                        var match = title.indexOf(query) !== -1 || desc.indexOf(query) !== -1;
+                        card.style.display = match ? '' : 'none';
+                        if (match) visibleInSection++;
+                    });
+
+                    /* Show section heading + pane only if it has matches */
+                    if (heading) {
+                        heading.style.display = visibleInSection > 0 ? '' : 'none';
+                    }
+                    pane.style.display = visibleInSection > 0 ? 'block' : 'none';
+                    totalVisible += visibleInSection;
+                });
+
+                /* Show/hide no-results message */
+                noResults.classList.toggle('visible', totalVisible === 0);
+
+            } else {
+                /* Exit search mode: restore tabbed view */
+                container.classList.remove('search-active');
+                noResults.classList.remove('visible');
+
+                /* Show all cards again */
+                var allCards = document.querySelectorAll('.sample-card-col');
+                allCards.forEach(function (card) {
+                    card.style.display = '';
+                });
+
+                /* Reset pane inline display styles */
+                panes.forEach(function (pane) {
+                    pane.style.display = '';
+                    var heading = pane.querySelector('.search-section-heading');
+                    if (heading) heading.style.display = 'none';
+                });
+
+                /* Re-activate the tab that was active before search */
+                if (activeTabBeforeSearch) {
+                    var tabEl = document.getElementById(activeTabBeforeSearch);
+                    if (tabEl) {
+                        var tab = new bootstrap.Tab(tabEl);
+                        tab.show();
+                    }
+                    activeTabBeforeSearch = null;
+                }
+            }
         }
     })();
 </script>
