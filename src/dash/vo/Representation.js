@@ -58,6 +58,7 @@ class Representation {
         this.id = null;
         this.indexRange = null;
         this.initialization = null;
+        this.k = 1;
         this.maxPlayoutRate = NaN;
         this.mediaFinishedInformation = { numberOfSegments: 0, mediaTimeOfLastSignaledSegment: NaN };
         this.mediaInfo = null;
@@ -86,6 +87,15 @@ class Representation {
         return this.segmentInfoType !== DashConstants.BASE_URL &&
             this.segmentInfoType !== DashConstants.SEGMENT_BASE &&
             !this.indexRange;
+    }
+
+    isBootstrapRepresentation() {
+        if (!this.segmentSequenceProperties || this.segmentSequenceProperties.length === 0) {
+            return false;
+        }
+        return this.segmentSequenceProperties.some((ssp) => {
+            return ssp.isBootstrapConfiguration();
+        })
     }
 }
 

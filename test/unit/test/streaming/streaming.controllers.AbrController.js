@@ -936,5 +936,61 @@ describe('AbrController', function () {
             let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
             expect(possibleVoRepresentations.length).to.be.equal(2);
         });
-    })
+
+        it('should allow representations with a bandwidth below limitBitrateByPortalMinimum', function () {
+            videoModelMock.getVideoElementSize = () => {
+                return { elementWidth: 200 }
+            };
+            const s = {
+                streaming: {
+                    abr: {
+                        limitBitrateByPortal: true,
+                        limitBitrateByPortalMinimum: 2100
+                    }
+                }
+            };
+            settings.update(s);
+
+            const mediaInfo = streamProcessor.getMediaInfo();
+            const bitrateList = mediaInfo.bitrateList;
+
+            adapterMock.getVoRepresentations = () => {
+                return [
+                    {
+                        bitrateInKbit: bitrateList[0].bandwidth / 1000,
+                        bandwidth: 1000000,
+                        mediaInfo,
+                        id: 1,
+                        width: 640
+                    },
+                    {
+                        bitrateInKbit: bitrateList[1].bandwidth / 1000,
+                        bandwidth: 2000000,
+                        mediaInfo,
+                        id: 2,
+                        width: 720
+                    },
+                    {
+                        bitrateInKbit: bitrateList[2].bandwidth / 1000,
+                        bandwidth: 3000000,
+                        mediaInfo,
+                        id: 3,
+                        width: 1920
+                    }
+                ]
+            }
+
+            adapterMock.areMediaInfosEqual = () => {
+                return true
+            }
+
+            mediaInfo.streamInfo = streamProcessor.getStreamInfo();
+            mediaInfo.type = Constants.VIDEO;
+
+            let possibleVoRepresentations = abrCtrl.getPossibleVoRepresentationsFilteredBySettings(mediaInfo);
+            expect(possibleVoRepresentations.length).to.be.equal(2);
+            expect(possibleVoRepresentations[0].id).to.be.equal(1);
+            expect(possibleVoRepresentations[1].id).to.be.equal(2);
+        });
+    });
 });

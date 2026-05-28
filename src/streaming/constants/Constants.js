@@ -28,6 +28,15 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+import {
+    CmcdPlayerState,
+    CmcdReportingMode,
+    CmcdEventType,
+    CMCD_DEFAULT_TIME_INTERVAL,
+    CMCD_PARAM,
+    CmcdTransmissionMode,
+    CMCD_KEYS
+} from '@svta/cml-cmcd';
 
 /**
  * Constants declaration
@@ -132,6 +141,13 @@ export default {
     LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP',
 
     /**
+     *  @constant {string} LIVE_CATCHUP_MODE_STEP Throughput calculation based on moof parsing
+     *  @memberof Constants#
+     *  @static
+     */
+    LIVE_CATCHUP_MODE_STEP: 'liveCatchupModeStep',
+
+    /**
      *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
      *  @memberof Constants#
      *  @static
@@ -213,34 +229,28 @@ export default {
      *  @memberof Constants#
      *  @static
      */
-    CMCD_QUERY_KEY: 'CMCD',
+    CMCD_QUERY_KEY: CMCD_PARAM,
 
     /**
      *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_QUERY: 'query',
+    CMCD_MODE_QUERY: CmcdTransmissionMode.QUERY,
 
     /**
-     *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+     *  @constant {string} CMCD_MODE_HEADERS specifies to attach CMCD metrics as HTTP headers.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_MODE_HEADER: 'header',
+    CMCD_MODE_HEADERS: CmcdTransmissionMode.HEADERS,
 
     /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
+     *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
      *  @memberof Constants#
      *  @static
      */
-    CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
-    /**
-     *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
-     *  @memberof Constants#
-     *  @static
-     */
-    CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
+    CMCD_MODE_BODY: 'body',
 
     /**
      *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
@@ -248,7 +258,60 @@ export default {
      *  @static
      */
     CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+    /**
+     *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_TIME_INTERVAL: CMCD_DEFAULT_TIME_INTERVAL,
+    /**
+     *  @constant {string} CMCD_REPORTING_MODE specifies all the available modes for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_REPORTING_MODE: CmcdReportingMode,
 
+    /**
+     *  @constant {string} CMCD_KEYS specifies all the available keys for CMCD.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_KEYS: CMCD_KEYS,
+
+    /**
+     *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_REPORTING_EVENTS: CmcdEventType,
+
+    /**
+     *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_PLAYER_STATES: CmcdPlayerState,
+    /**
+     *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
+     *  @memberof Constants#
+     *  @static
+     */
+    CMCD_DEFAULT_VERSION: 1,
+    /**
+     *  @constant {string} CMCD_DEFAULT_INCLUDE_IN_REQUESTS specifies default requests type to include CMCD data.
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
+
+    /**
+     *  @constant {string} CMCD_CONTENT_TYPE_HEADER specifies content type for cmcd batching
+     *  @memberof Constants#
+     *  @static
+    */
+    CMCD_CONTENT_TYPE_HEADER: {
+        'Content-Type': 'text/cmcd'
+    },
 
     INITIALIZE: 'initialize',
     TEXT_SHOWING: 'showing',
@@ -263,11 +326,14 @@ export default {
     SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
     SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
     CTA_5004_2023_SCHEME: 'urn:mpeg:dash:cta-5004:2023',
+    CTA_5004_2025_SCHEME: 'urn:dashif:cta-5004:2025',
     THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
     FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
     COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
     URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
     EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
+    ADV_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2025',
+    URL_QUERY_STATE_PREFIX: /urn:mpeg:dash:state:/,
     MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
     TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
     SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',

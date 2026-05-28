@@ -1,0 +1,79 @@
+{
+    "items": [
+        {
+            "name": "Digital Primates",
+            "logo": "img/dp.png",
+            "link": "http://www.digitalprimates.net"
+        },
+        {
+            "name": "Akamai",
+            "logo": "img/akamai.png",
+            "link": "http://www.akamai.com"
+        },
+        {
+            "name": "Microsoft Open Technologies",
+            "logo": "img/MSOpenTech.jpg",
+            "link": "http://msopentech.com"
+        },
+        {
+            "name": "Fraunhofer Fokus",
+            "logo": "img/fh_fokus.png",
+            "link": "https://www.fokus.fraunhofer.de/go/fame"
+        },
+        {
+            "name": "CableLabs",
+            "logo": "img/cablelabs.png",
+            "link": "http://www.cablelabs.com"
+        },
+        {
+            "name": "YouTube",
+            "logo": "img/youtube.png",
+            "link": "http://www.youtube.com"
+        },
+        {
+            "name": "Brightcove",
+            "logo": "img/brightcove.png",
+            "link": "https://www.brightcove.com"
+        },
+        {
+            "name": "Eyevinn",
+            "logo": "img/eyevinn.png",
+            "link": "https://www.eyevinn.se/"
+        },
+        {
+            "name": "Epic Labs",
+            "logo": "img/epiclabs.png",
+            "link": "https://www.epiclabs.io/"
+        },
+        {
+            "name": "National University of Singapore",
+            "logo": "img/National_University_of_Singapore_logo_NUS.png",
+            "link": "https://nus.edu.sg/"
+        },
+        {
+            "name": "Özyeğin University",
+            "logo": "img/OzU_logo_eng.png",
+            "link": "https://www.ozyegin.edu.tr/"
+        },
+        {
+            "name": "Unified Streaming",
+            "logo": "img/US-logo-petrol-rgb.jpg",
+            "link": "https://www.unified-streaming.com/"
+        },
+        {
+            "name": "Broadpeak",
+            "logo": "img/broadpeak.png",
+            "link": "https://broadpeak.tv/"
+        },
+        {
+            "name": "V-Nova",
+            "logo": "img/v-nova.png",
+            "link": "https://v-nova.com/"
+        },
+        {
+            "name": "Qualabs",
+            "logo": "img/qualabs.png",
+            "link": "https://www.qualabs.com/"
+        }
+    ]
+}

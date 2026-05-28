@@ -33,11 +33,12 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
-import {bcp47Normalize} from 'bcp-47-normalize';
+import {normalizeBcp47} from '../utils/BCP47Utils.js';
 import {extendedFilter} from 'bcp-47-match';
 import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import DashConstants from '../../dash/constants/DashConstants.js';
 import getNChanFromAudioChannelConfig from '../utils/AudioChannelConfiguration.js';
+import ObjectUtils from '../utils/ObjectUtils.js';
 
 function MediaController() {
 
@@ -180,10 +181,10 @@ function MediaController() {
         if (!track) {
             return;
         }
-        logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\'');
 
         const mediaType = track.type;
         if (!_isMultiTrackSupportedByType(mediaType)) {
+            logger.info('track not added (_isMultiTrackSupportedByType), track.index=' + track.index);
             return;
         }
 
@@ -196,10 +197,12 @@ function MediaController() {
         for (let i = 0, len = mediaTracks.length; i < len; ++i) {
             //track is already set.
             if (areTracksEqual(mediaTracks[i], track)) {
+                logger.info('track not added as it is already set (this track-index=' + track.index + ' - existing track.index=' + mediaTracks[i].index + ')');
                 return;
             }
         }
-
+        
+        logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\', track.id=\'' + track.id + '\', track.index=' + track.index);
         mediaTracks.push(track);
     }
 
@@ -366,15 +369,19 @@ function MediaController() {
             return false;
         }
 
+        let objectUtils = ObjectUtils(context).getInstance();
+
         const sameId = t1.id === t2.id;
-        const sameViewpoint = JSON.stringify(t1.viewpoint) === JSON.stringify(t2.viewpoint);
+        const sameViewpoint = objectUtils.areEqual(t1.viewpoint, t2.viewpoint);
         const sameLang = t1.lang === t2.lang;
         const sameCodec = t1.codec === t2.codec;
-        const sameRoles = JSON.stringify(t1.roles) === JSON.stringify(t2.roles);
-        const sameAccessibility = JSON.stringify(t1.accessibility) === JSON.stringify(t2.accessibility);
-        const sameAudioChannelConfiguration = JSON.stringify(t1.audioChannelConfiguration) === JSON.stringify(t2.audioChannelConfiguration);
+        const sameRoles = objectUtils.areEqual(t1.roles, t2.roles);
+        const sameAccessibility = objectUtils.areEqual(t1.accessibility, t2.accessibility);
+        const sameAudioChannelConfiguration = objectUtils.areEqual(t1.audioChannelConfiguration, t2.audioChannelConfiguration);
+        const sameSupplementalProps = objectUtils.areEqual(t1.supplementalProperties, t2.supplementalProperties);
+        const sameEssentialProps = objectUtils.areEqual(t1.essentialProperties, t2.essentialProperties);
 
-        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration);
+        return (sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps);
     }
 
 
@@ -412,6 +419,7 @@ function MediaController() {
             }
         });
         if (tracksAfterMatcher.length !== 0) {
+            logger.info('Filter-Function (' + filterFn.name + ') resulted in ' + tracksAfterMatcher.length + ' tracks');
             return tracksAfterMatcher;
         }
 
@@ -435,7 +443,7 @@ function MediaController() {
             return !settings.lang ||
             (settings.lang instanceof RegExp) ?
                 (track.lang.match(settings.lang)) : track.lang !== '' ?
-                    (extendedFilter(track.lang, bcp47Normalize(settings.lang)).length > 0) : false;
+                    (extendedFilter(track.lang, normalizeBcp47(settings.lang)).length > 0) : false;
         } catch (e) {
             return false
         }
@@ -511,7 +519,7 @@ function MediaController() {
 
             // If the track has a language and we can normalize the target language check if we got a match
             else if (track.lang !== '') {
-                const normalizedSettingsLang = bcp47Normalize(settings.lang);
+                const normalizedSettingsLang = normalizeBcp47(settings.lang);
                 if (normalizedSettingsLang) {
                     matchLang = extendedFilter(track.lang, normalizedSettingsLang).length > 0
                 }
@@ -533,8 +541,8 @@ function MediaController() {
 
             return (matchLang && matchIndex && matchViewPoint && (matchRole || (track.type === Constants.AUDIO && isTrackActive)) && matchAccessibility && matchAudioChannelConfiguration);
         } catch (e) {
-            return false;
             logger.error(e);
+            return false;
         }
     }
 
@@ -666,13 +674,13 @@ function MediaController() {
         return trackArr;
     }
 
-    function _getTracksWithPartialIdrSegments(trackArr) {
+    function _getL3DBootstrapTracks(trackArr) {
         return trackArr.filter((track) => {
             if (!track.segmentSequenceProperties || track.segmentSequenceProperties.length === 0) {
                 return false;
             }
             return track.segmentSequenceProperties.some((ssp) => {
-                return ssp.cadence === 1 && (ssp.sapType === 0 || ssp.sapType === 1);
+                return ssp.isBootstrapConfiguration();
             })
         });
     }
@@ -926,7 +934,7 @@ function MediaController() {
     }
 
     function _trackSelectionModeLowestStartupDelay(tracks) {
-        let tmpArr = _getTracksWithPartialIdrSegments(tracks);
+        let tmpArr = _getL3DBootstrapTracks(tracks);
         const targetTracks = tmpArr.length > 0 ? tmpArr : tracks;
 
         return _trackSelectionModeHighestEfficiency(targetTracks);

@@ -33,7 +33,7 @@
  */
 import BaseMatcher from './BaseMatcher.js';
 import DashConstants from '../../constants/DashConstants.js';
-import {bcp47Normalize} from 'bcp-47-normalize';
+import {normalizeBcp47} from '../../../streaming/utils/BCP47Utils.js';
 
 class LangMatcher extends BaseMatcher {
     constructor() {
@@ -58,7 +58,7 @@ class LangMatcher extends BaseMatcher {
                 return false;
             },
             str => {
-                let lang = bcp47Normalize(str);
+                let lang = normalizeBcp47(str);
                 if (lang) {
                     return lang;
                 }

@@ -528,7 +528,7 @@ function ContentSteeringController() {
                     break;
                 // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
                 case 429:
-                    const retryAfter = response && response.getResponseHeader ? response.getResponseHeader('retry-after') : null;
+                    const retryAfter = response && response.headers && response.headers['retry-after'];
                     if (retryAfter !== null) {
                         if (!currentSteeringResponseData) {
                             currentSteeringResponseData = {};

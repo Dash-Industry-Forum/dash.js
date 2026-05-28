@@ -676,7 +676,7 @@ function DashManifestModel() {
         }
 
         // now, only return properties present on all Representations
-        // repr.legth is always >= 2
+        // repr.length is always >= 2
         return propertiesOfFirstRepresentation.filter(prop => {
             return repr.slice(1).every(currRep => {
                 return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some(e => {
@@ -692,10 +692,18 @@ function DashManifestModel() {
         }
 
         let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[DashConstants.REPRESENTATION]);
+
+        // now, only take those Properties from AdaptationSet which we didn't already get from Representations
         if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
-            allProperties.push(...adaptation[propertyType])
+            adaptation[propertyType].forEach(adaptationProp => {
+                const alreadyPresent = allProperties.some(d => {
+                    return d.schemeIdUri === adaptationProp.schemeIdUri && d.value === adaptationProp.value
+                });
+                if (!alreadyPresent) {
+                    allProperties.push(adaptationProp);
+                }
+            })
         }
-        // we don't check whether there are duplicates on AdaptationSets and Representations
 
         return allProperties.map(essentialProperty => {
             const s = new DescriptorType();
@@ -930,9 +938,13 @@ function DashManifestModel() {
             voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
         } else if (segmentInfoType === DashConstants.SEGMENT_TIMELINE) {
             voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+            voRepresentation.k = _getKValue(segmentInfo.SegmentTimeline)
         }
         if (segmentInfo.hasOwnProperty(DashConstants.MEDIA)) {
             voRepresentation.media = segmentInfo.media;
+        }
+        if (segmentInfo.hasOwnProperty(DashConstants.K)) {
+            voRepresentation.k = segmentInfo.k || 1;
         }
         if (segmentInfo.hasOwnProperty(DashConstants.START_NUMBER)) {
             voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
@@ -976,6 +988,14 @@ function DashManifestModel() {
         let s0 = segmentTimeline.S[0];
         let s1 = segmentTimeline.S[1];
         return s0.hasOwnProperty('d') ? s0.d : (s1.t - s0.t);
+    }
+
+    function _getKValue(segmentTimeline) {
+        if (!segmentTimeline || !segmentTimeline.S) {
+            return 1;
+        }
+        const s0 = segmentTimeline.S[0];
+        return s0.hasOwnProperty(DashConstants.K) ? s0.k : 1;
     }
 
     function _calcMseTimeOffset(representation) {
@@ -1559,7 +1579,14 @@ function DashManifestModel() {
     function _createClientDataReportingInstance(element) {
         const entry = new ClientDataReporting();
 
-        if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && element[DashConstants.CMCD_PARAMETERS].schemeIdUri === Constants.CTA_5004_2023_SCHEME) {
+        // Check if schemeIdUri is either in ClientDataReporting (v2) or CMCDParameters (v1)
+        const schemeIdUri = element.schemeIdUri || element[DashConstants.CMCD_PARAMETERS]?.schemeIdUri;
+        const isCmcdSupported = [
+            Constants.CTA_5004_2023_SCHEME,
+            Constants.CTA_5004_2025_SCHEME
+        ].includes(schemeIdUri);
+
+        if (element.hasOwnProperty(DashConstants.CMCD_PARAMETERS) && isCmcdSupported) {
             entry.cmcdParameters = new CMCDParameters();
             entry.cmcdParameters.init(element[DashConstants.CMCD_PARAMETERS]);
         }

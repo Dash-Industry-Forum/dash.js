@@ -31,16 +31,13 @@
 
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ContentSteeringController from '../../../dash/controllers/ContentSteeringController.js';
-import EventBus from '../../../core/EventBus.js';
 
 function ContentSteeringSelector() {
 
     const context = this.context;
-    const eventBus = EventBus(context).getInstance();
     let instance,
         contentSteeringController,
-        blacklistController,
-        blacklistResetTimeout = [];
+        blacklistController;
 
     function setup() {
         contentSteeringController = ContentSteeringController(context).getInstance();
@@ -53,7 +50,6 @@ function ContentSteeringSelector() {
         if (config.contentSteeringController) {
             contentSteeringController = config.contentSteeringController;
         }
-        eventBus.on(config.addBlacklistEventName, _onAddBlackList, instance);
     }
 
     function selectBaseUrlIndex(data) {
@@ -77,11 +73,6 @@ function ContentSteeringSelector() {
         return steeringIndex;
     }
 
-    function reset() {
-        blacklistResetTimeout.forEach(timer => clearTimeout(timer))
-        blacklistResetTimeout = []
-    }
-
     function _findexIndexOfServiceLocation(pathwayPriority = [], baseUrls = []) {
         let i = 0;
         let steeringIndex = NaN;
@@ -99,25 +90,9 @@ function ContentSteeringSelector() {
         return steeringIndex;
     }
 
-    
-    function _onAddBlackList(e) {
-        const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-        if (!currentSteeringResponseData) {
-            return
-        }
-        const entry = e.entry
-        const timer = setTimeout(() => {
-            blacklistController.remove(entry);
-            blacklistResetTimeout.splice(blacklistResetTimeout.indexOf(timer, 1))
-        }, currentSteeringResponseData.ttl * 1000);
-        blacklistResetTimeout.push(timer)
-    }
-
-
     instance = {
         selectBaseUrlIndex,
-        setConfig,
-        reset
+        setConfig
     };
 
     setup();

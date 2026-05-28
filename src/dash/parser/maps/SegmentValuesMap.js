@@ -40,9 +40,11 @@ class SegmentValuesMap extends MapNode {
             DashConstants.SEGMENT_BASE, DashConstants.SEGMENT_TEMPLATE, DashConstants.SEGMENT_LIST
         ];
 
-        super(DashConstants.PERIOD, commonProperties, [
-            new MapNode(DashConstants.ADAPTATION_SET, commonProperties, [
-                new MapNode(DashConstants.REPRESENTATION, commonProperties)
+        const exceptions = {};
+
+        super(DashConstants.PERIOD, commonProperties, exceptions, [
+            new MapNode(DashConstants.ADAPTATION_SET, commonProperties, exceptions, [
+                new MapNode(DashConstants.REPRESENTATION, commonProperties, exceptions)
             ])
         ]);
     }

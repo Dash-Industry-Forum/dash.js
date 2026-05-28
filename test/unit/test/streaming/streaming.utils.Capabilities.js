@@ -4,16 +4,9 @@ import DescriptorType from '../../../../src/dash/vo/DescriptorType.js';
 
 import {expect} from 'chai';
 import Constants from '../../../../src/streaming/constants/Constants.js';
-//import {UAParser} from 'ua-parser-js';
 
 let settings;
 let capabilities;
-
-//const uaString = typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '';
-//const ua = UAParser(uaString);
-
-// The Media Capabilities API seems to return wrong values on Linux with Firefox. Deactivate some tests for now
-//const isLinuxFirefox = ua.browser.name.toLowerCase() === 'firefox' && ua.os.name.toLowerCase().includes('linux');
 
 const enhancementCodecs = ['lvc1'];
 
@@ -83,15 +76,25 @@ EssentialPropertyPrivateTransferFunction.init({
 describe('Capabilities', function () {
     beforeEach(function () {
         settings = Settings({}).getInstance();
+        settings.reset();
         capabilities = Capabilities({}).getInstance();
 
         capabilities.setConfig({
             settings: settings
         });
-        settings.reset();
     });
 
     describe('supports EssentialProperty', function () {
+        beforeEach(function () {
+            settings.update({
+                streaming: {
+                    capabilities: {
+                        filterVideoColorimetryEssentialProperties: false,
+                        filterHDRMetadataFormatEssentialProperties: false,
+                    }
+                }
+            })
+        });
         it('should return true if EssentialProperty value is known', function () {
             let res = capabilities.supportsEssentialProperty(EssentialPropertyThumbNail);
             expect(res).to.be.true;

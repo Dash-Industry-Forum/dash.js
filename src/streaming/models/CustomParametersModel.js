@@ -33,6 +33,7 @@ import FactoryMaker from '../../core/FactoryMaker.js';
 import Settings from '../../core/Settings.js';
 import {checkParameterType} from '../utils/SupervisorTools.js';
 import Constants from '../constants/Constants.js';
+import CmcdController from '../controllers/CmcdController.js';
 import ExternalSubtitle from '../vo/ExternalSubtitle.js';
 
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
@@ -45,11 +46,14 @@ function CustomParametersModel() {
         requestInterceptors,
         responseInterceptors,
         licenseRequestFilters,
+        certificateRequestFilters,
+        certificateResponseFilters,
         licenseResponseFilters,
         customCapabilitiesFilters,
         customInitialTrackSelectionFunction,
         externalSubtitles,
-        customAbrRules;
+        customAbrRules,
+        cmcdController;
 
     const context = this.context;
     const settings = Settings(context).getInstance();
@@ -58,18 +62,24 @@ function CustomParametersModel() {
         xhrWithCredentials = {
             default: DEFAULT_XHR_WITH_CREDENTIALS
         };
+        cmcdController = CmcdController(context).getInstance();
         _resetInitialSettings();
     }
 
     function _resetInitialSettings() {
-        requestInterceptors = [];
-        responseInterceptors = [];
         licenseRequestFilters = [];
         licenseResponseFilters = [];
+        certificateRequestFilters = [];
+        certificateResponseFilters = [];
         customCapabilitiesFilters = [];
         customAbrRules = [];
         customInitialTrackSelectionFunction = null;
         utcTimingSources = [];
+
+        // Initialize request interceptors with default CMCD interceptors
+        requestInterceptors = cmcdController.getCmcdRequestInterceptors();
+        responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
+
         externalSubtitles = new Set();
     }
 
@@ -107,6 +117,58 @@ function CustomParametersModel() {
      */
     function getCustomInitialTrackSelectionFunction() {
         return customInitialTrackSelectionFunction;
+    }
+
+    /**
+     * Returns all certificate request filters
+     * @return {array}
+     */
+    function getCertificateRequestFilters() {
+        return certificateRequestFilters;
+    }
+
+    /**
+     * Returns all certificate response filters
+     * @return {array}
+     */
+    function getCertificateResponseFilters() {
+        return certificateResponseFilters;
+    }
+
+    /**
+     * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license request filter callback
+     */
+    function registerCertificateRequestFilter(filter) {
+        certificateRequestFilters.push(filter);
+    }
+
+    /**
+     * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+     * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+     * The filters are applied in the order they are registered.
+     * @param {function} filter - the license response filter callback
+     */
+    function registerCertificateResponseFilter(filter) {
+        certificateResponseFilters.push(filter);
+    }
+
+    /**
+     * Unregisters a certificate request filter.
+     * @param {function} filter - the license request filter callback
+     */
+    function unregisterCertificateRequestFilter(filter) {
+        _unregisterFilter(certificateRequestFilters, filter);
+    }
+
+    /**
+     * Unregisters a certificate response filter.
+     * @param {function} filter - the license response filter callback
+     */
+    function unregisterCertificateResponseFilter(filter) {
+        _unregisterFilter(certificateResponseFilters, filter);
     }
 
     /**
@@ -452,6 +514,8 @@ function CustomParametersModel() {
         addUTCTimingSource,
         clearDefaultUTCTimingSources,
         getAbrCustomRules,
+        getCertificateRequestFilters,
+        getCertificateResponseFilters,
         getCustomCapabilitiesFilters,
         getCustomInitialTrackSelectionFunction,
         getExternalSubtitles,
@@ -461,6 +525,8 @@ function CustomParametersModel() {
         getResponseInterceptors,
         getUTCTimingSources,
         getXHRWithCredentialsForType,
+        registerCertificateRequestFilter,
+        registerCertificateResponseFilter,
         registerCustomCapabilitiesFilter,
         registerLicenseRequestFilter,
         registerLicenseResponseFilter,
@@ -478,6 +544,8 @@ function CustomParametersModel() {
         setConfig,
         setCustomInitialTrackSelectionFunction,
         setXHRWithCredentialsForType,
+        unregisterCertificateRequestFilter,
+        unregisterCertificateResponseFilter,
         unregisterCustomCapabilitiesFilter,
         unregisterLicenseRequestFilter,
         unregisterLicenseResponseFilter,

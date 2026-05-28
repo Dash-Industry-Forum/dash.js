@@ -30,6 +30,7 @@
  */
 
 import DescriptorType from './DescriptorType.js';
+import Constants from '../../streaming/constants/Constants.js';
 
 /**
  * @class
@@ -50,12 +51,14 @@ class CMCDParameters extends DescriptorType {
         super.init(data);
 
         if (data) {
-            this.version = data.version;
+            this.version = data.version ? parseInt(data.version) : null;
             this.sessionID = data.sessionID;
             this.contentID = data.contentID;
             this.mode = data.mode ?? 'query';
             this.keys = data.keys ? data.keys.split(' ') : null;
-            this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : ['segment'];
+            this.includeInRequests = data.includeInRequests
+                ? data.includeInRequests.split(' ')
+                : [Constants.CMCD_DEFAULT_INCLUDE_IN_REQUESTS];
             this.schemeIdUri = data.schemeIdUri;
         }
     }

@@ -34,7 +34,6 @@ import Events from '../../core/events/Events.js';
 import EventBus from '../../core/EventBus.js';
 import Constants from '../constants/Constants.js';
 
-const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 10;
 const GAP_JUMP_WAITING_TIME_OFFSET = 0.1;
 
@@ -199,9 +198,13 @@ function GapController() {
         if (!streamController.getActiveStream()) {
             return false;
         }
-        const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some((key) => {
-            return trackSwitchByMediaType[key];
-        });
+        let trackSwitchInProgress = false;
+        for (const key in trackSwitchByMediaType) {
+            if (trackSwitchByMediaType[key]) {
+                trackSwitchInProgress = true;
+                break;
+            }
+        }
         const shouldIgnoreSeekingState = checkSeekingState ? _shouldIgnoreSeekingState() : false;
 
         return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && (!playbackController.isSeeking() || shouldIgnoreSeekingState) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() &&
@@ -281,7 +284,7 @@ function GapController() {
                     const currentTime = playbackController.getTime();
                     _jumpGap(currentTime);
 
-                }, GAP_HANDLER_INTERVAL);
+                }, settings.get().streaming.gaps.checkInterval);
             }
         } catch (e) {
         }
@@ -306,11 +309,12 @@ function GapController() {
      * @private
      */
     function _jumpGap(currentTime, playbackStalled = false) {
-        const enableStallFix = settings.get().streaming.gaps.enableStallFix;
-        const stallSeek = settings.get().streaming.gaps.stallSeek;
-        const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
-        const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
-        const seekOffset = settings.get().streaming.gaps.seekOffset;
+        const gapSettings = settings.get().streaming.gaps;
+        const enableStallFix = gapSettings.enableStallFix;
+        const stallSeek = gapSettings.stallSeek;
+        const smallGapLimit = gapSettings.smallGapLimit;
+        const jumpLargeGaps = gapSettings.jumpLargeGaps;
+        const seekOffset = gapSettings.seekOffset;
         const ranges = videoModel.getBufferRange();
         let nextRangeIndex;
         let seekToPosition = NaN;

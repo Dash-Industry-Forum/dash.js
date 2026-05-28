@@ -611,7 +611,12 @@ function StreamProcessor(config) {
     }
 
     function _onDataUpdateCompleted() {
+        if (!bufferController || !representationController) {
+            return;
+        }
+
         const currentRepresentation = representationController.getCurrentCompositeRepresentation();
+
         if (!bufferController.getIsBufferingCompleted()) {
             bufferController.updateBufferTimestampOffset(currentRepresentation);
         }
@@ -945,8 +950,16 @@ function StreamProcessor(config) {
             const bufferLevel = bufferController.getBufferLevel();
             const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
+            // In scalable dual-track mode, `newRepresentation.bandwidth` reflects the
+            // combined bandwidth of the base and enhancement layers. However, in the
+            // base layer stream processor (type VIDEO), `request.bandwidth` refers only
+            // to the base layer. Therefore, the comparison should use the base layer
+            // bandwidth (`dependentRepresentation`) only.
+            const newBandwidth = (type === Constants.VIDEO) && newRepresentation.dependentRepresentation ?
+                newRepresentation.dependentRepresentation.bandwidth : newRepresentation.bandwidth;
+
             // The new quality is higher than the one we originally requested
-            if (request.bandwidth < newRepresentation.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
+            if (request.bandwidth < newBandwidth && bufferLevel >= safeBufferLevel && abandonmentState === MetricsConstants.ALLOW_LOAD) {
                 bufferController.prepareForFastQualitySwitch(newRepresentation, oldRepresentation)
                     .then(() => {
                         _fastQualitySwitchPreparationDone(time, safeBufferLevel);

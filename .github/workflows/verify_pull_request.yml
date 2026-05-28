@@ -7,75 +7,33 @@ on:
 
 jobs:
     merge_build_and_unit_test:
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         steps:
-            -   name: Checkout development branch of origin
+            # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
+            # which is the PR branch merged into the target branch (development). This ensures the build
+            # and tests verify the code as it would look after merging.
+            -   name: Checkout repository
                 uses: actions/checkout@v4
-                with:
-                    repository: Dash-Industry-Forum/dash.js
-                    ref: development
-            -   name: Merge to development
-                run: |
-                    git config --global user.name "GitHub Action"
-                    git config --global user.email "action@github.com"
-                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
-                    git merge pr-branch --no-ff
-            -   name: Setup node
-                uses: actions/setup-node@v4
-                with:
-                    node-version: '20'
-                    cache: 'npm'
-            -   name: Cache node modules
-                id: cache-npm
-                uses: actions/cache@v3
-                with:
-                    path: node_modules
-                    key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
-                    restore-keys: |
-                        ${{ runner.os }}-build-
-                        ${{ runner.os }}-
-            -   if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-                name: List the state of node modules
-                continue-on-error: true
-                run: npm list
-            -   run: npm install
-            -   run: npm run build
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Build and run unit tests
+                run: npm run build
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
         steps:
-            -   name: Checkout development branch of origin
+            # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
+            # which is the PR branch merged into the target branch (development). This ensures the
+            # functional tests verify the code as it would look after merging.
+            -   name: Checkout repository
                 uses: actions/checkout@v4
-                with:
-                    repository: Dash-Industry-Forum/dash.js
-                    ref: development
-            -   name: Merge to development
-                run: |
-                    git config --global user.name "GitHub Action"
-                    git config --global user.email "action@github.com"
-                    git fetch origin pull/${{ github.event.pull_request.number }}/head:pr-branch
-                    git merge pr-branch --no-ff
-            -   name: Setup node
-                uses: actions/setup-node@v4
-                with:
-                    node-version: '18'
-                    cache: 'npm'
-            -   name: Cache node modules
-                id: cache-npm
-                uses: actions/cache@v3
-                with:
-                    path: node_modules
-                    key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
-                    restore-keys: |
-                        ${{ runner.os }}-build-
-                        ${{ runner.os }}-
-            -   if: ${{ steps.cache-npm.outputs.cache-hit != 'true' }}
-                name: List the state of node modules
-                continue-on-error: true
-                run: npm list
-            -   run: npm install
-            -   run: npm run webpack-build-modern
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Install karma-webdriver-launcher
+                run: npm install karma-webdriver-launcher
+            -   name: Build modern bundle
+                run: npm run webpack-build-modern
             -   name: Start Tunnel
                 uses: LambdaTest/LambdaTest-tunnel-action@v2
                 id: tunnel
@@ -83,10 +41,8 @@ jobs:
                     user: ${{ secrets.LT_USERNAME }}
                     accessKey: ${{ secrets.LT_ACCESS_KEY }}
                     tunnelName: "dashjs-tunnel-${{github.run_number}}"
-            -   name: Run functional tests for a single vector on Lambdatest
+            -   name: Run functional tests on LambdaTest
                 env:
                     LT_USERNAME: ${{ secrets.LT_USERNAME }}
                     LT_ACCESS_KEY: ${{ secrets.LT_ACCESS_KEY }}
                 run: node_modules/karma/bin/karma start test/functional/config/karma.functional.conf.cjs --configfile=lambdatest --streamsfile=single
-
-

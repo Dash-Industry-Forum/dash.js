@@ -38,8 +38,8 @@ import FactoryMaker from '../core/FactoryMaker.js';
 import DashManifestModel from './models/DashManifestModel.js';
 import PatchManifestModel from './models/PatchManifestModel.js';
 import Representation from './vo/Representation.js';
-import {bcp47Normalize} from 'bcp-47-normalize';
-import { getId3Frames } from '@svta/cml-id3';
+import {normalizeBcp47} from '../streaming/utils/BCP47Utils.js';
+import {getId3Frames} from '@svta/cml-id3';
 import Constants from '../streaming/constants/Constants.js';
 import Settings from '../core/Settings.js';
 
@@ -202,6 +202,10 @@ function DashAdapter() {
             data = adaptations[i];
             idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
             media = convertAdaptationToMediaInfo(voAdaptations[idx]);
+
+            if (!media) {
+                continue;
+            }
 
             if (embeddedText) {
                 let accessibilityLength = media.accessibility.length;
@@ -1206,8 +1210,8 @@ function DashAdapter() {
         });
         if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
             const ids = adaptationSetSwitching[0].value.toString().split(',')
-            adaptationSetSwitchingCompatibleIds = ids.map((id) => {
-                return id
+            adaptationSetSwitchingCompatibleIds = ids.filter((id) => {
+                return id !== mediaInfo.id
             })
         }
 
@@ -1221,7 +1225,7 @@ function DashAdapter() {
         mediaInfo.codec = 'cea-608-in-SEI';
         mediaInfo.isEmbedded = true;
         mediaInfo.isFragmented = false;
-        mediaInfo.lang = bcp47Normalize(lang);
+        mediaInfo.lang = normalizeBcp47(lang);
         mediaInfo.roles = [{ schemeIdUri: 'urn:mpeg:dash:role:2011', value: 'caption' }];
     }
 
@@ -1310,6 +1314,7 @@ function DashAdapter() {
     instance = {
         applyPatchToManifest,
         areMediaInfosEqual,
+        convertAdaptationToMediaInfo,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,

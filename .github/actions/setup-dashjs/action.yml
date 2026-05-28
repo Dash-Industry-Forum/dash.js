@@ -1,0 +1,24 @@
+name: 'Setup dash.js'
+description: 'Setup Node.js, cache and install dependencies'
+
+runs:
+    using: 'composite'
+    steps:
+        -   name: Setup Node.js
+            uses: actions/setup-node@v4
+            with:
+                node-version: '20'
+                cache: 'npm'
+        -   name: Cache node modules
+            id: cache-npm
+            uses: actions/cache@v4
+            with:
+                path: node_modules
+                key: ${{ runner.os }}-build-${{ hashFiles('**/package-lock.json') }}
+                restore-keys: |
+                    ${{ runner.os }}-build-
+                    ${{ runner.os }}-
+        -   name: Install dependencies
+            if: steps.cache-npm.outputs.cache-hit != 'true'
+            shell: bash
+            run: npm install

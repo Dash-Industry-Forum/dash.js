@@ -400,12 +400,13 @@ function AbrController() {
             if (!settings.get().streaming.abr.limitBitrateByPortal) {
                 return voRepresentations;
             }
+            const minimum = (settings.get().streaming.abr.limitBitrateByPortalMinimum * 1000) || 0;
 
             const { elementWidth } = videoModel.getVideoElementSize();
 
             const filteredArray = voRepresentations.filter((voRepresentation) => {
-                return voRepresentation.mediaInfo.type !== Constants.VIDEO || voRepresentation.width <= elementWidth;
-            })
+                return voRepresentation.mediaInfo.type !== Constants.VIDEO || voRepresentation.width <= elementWidth || voRepresentation.bandwidth <= minimum;
+            });
 
             if (filteredArray.length > 0) {
                 return filteredArray
@@ -489,31 +490,55 @@ function AbrController() {
 
     function _sortByDefaultParameters(voRepresentations) {
         voRepresentations.sort((a, b) => {
-
-            // In case both Representations are coming from the same MediaInfo then choose the one with the highest resolution and highest bitrate
             if (adapter.areMediaInfosEqual(a.mediaInfo, b.mediaInfo)) {
-                if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
-                    return a.pixelsPerSecond - b.pixelsPerSecond
-                } else {
-                    return a.bandwidth - b.bandwidth
-                }
+                return _sortForSameMediaInfos(a, b);
             }
-
-            // In case the Representations are coming from different MediaInfos they might have different codecs. The bandwidth is not a good indicator, use bits per pixel instead
-            else {
-                if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
-                    return a.pixelsPerSecond - b.pixelsPerSecond
-                } else if (!isNaN(a.bitsPerPixel) && !isNaN(b.bitsPerPixel)) {
-                    return b.bitsPerPixel - a.bitsPerPixel
-                } else {
-                    return a.bandwidth - b.bandwidth
-                }
-            }
-        })
+            return _sortForDifferentMediaInfos(a, b);
+        });
 
         return voRepresentations
     }
 
+    function _sortForSameMediaInfos(a, b) {
+        if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+            return a.pixelsPerSecond - b.pixelsPerSecond;
+        }
+
+        const bwDiff = a.bandwidth - b.bandwidth;
+        if (bwDiff !== 0) {
+            return bwDiff;
+        }
+
+        return _sortBySegmentSequenceProperties(a, b);
+    }
+
+    function _sortForDifferentMediaInfos(a, b) {
+        if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+            return a.pixelsPerSecond - b.pixelsPerSecond;
+        }
+
+        if (!isNaN(a.bitsPerPixel) && !isNaN(b.bitsPerPixel) && a.bitsPerPixel !== b.bitsPerPixel) {
+            return b.bitsPerPixel - a.bitsPerPixel;
+        }
+
+        const bwDiff = a.bandwidth - b.bandwidth;
+        if (bwDiff !== 0) {
+            return bwDiff;
+        }
+
+        return _sortBySegmentSequenceProperties(a, b);
+    }
+
+    function _sortBySegmentSequenceProperties(a, b) {
+        const isABootstrapRepresentation = a.isBootstrapRepresentation();
+        const isBBootstrapRepresentation = b.isBootstrapRepresentation();
+
+        if (isABootstrapRepresentation !== isBBootstrapRepresentation) {
+            return isABootstrapRepresentation ? -1 : 1;
+        }
+
+        return b.k - a.k;
+    }
 
     function _resolveDependencies(voRepresentations) {
         voRepresentations.forEach(rep => {
@@ -563,11 +588,11 @@ function AbrController() {
 
     function _onVideoElementResized() {
         if (settings.get().streaming.abr.limitBitrateByPortal) {
-            Object.keys(streamProcessorDict).forEach(streamId => {
-                Object.keys(streamProcessorDict[streamId]).forEach(mediaType => {
+            for (const streamId in streamProcessorDict) {
+                for (const mediaType in streamProcessorDict[streamId]) {
                     checkPlaybackQuality(mediaType, streamId);
-                });
-            });
+                }
+            }
         }
     }
 
@@ -695,6 +720,7 @@ function AbrController() {
             const streamProcessor = streamProcessorDict[streamId][type];
             const lastSegment = streamProcessor.getLastSegment();
             const currentRepresentation = streamProcessor.getRepresentationController()?.getCurrentCompositeRepresentation();
+
             const canSwitchQuality = canPerformQualitySwitch(lastSegment, currentRepresentation);
 
             if (!settings.get().streaming.abr.autoSwitchBitrate[type] || !canSwitchQuality) {

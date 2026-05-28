@@ -108,7 +108,8 @@ function Stream(config) {
 
             segmentBlacklistController = BlacklistController(context).create({
                 updateEventName: Events.SEGMENT_LOCATION_BLACKLIST_CHANGED,
-                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD
+                addBlacklistEventName: Events.SEGMENT_LOCATION_BLACKLIST_ADD,
+                enableExpiry: false
             });
 
             fragmentController = FragmentController(context).create({
@@ -298,7 +299,7 @@ function Stream(config) {
 
             Promise.all(promises)
                 .then(() => {
-                    return _createBufferSinks(previousSourceBufferSinks)
+                    return _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod)
                 })
                 .then((bufferSinks) => {
                     if (streamProcessors.length === 0) {
@@ -527,14 +528,16 @@ function Stream(config) {
     /**
      * Creates the SourceBufferSink objects for all StreamProcessors
      * @param {array} previousSourceBufferSinks
+     * @param {array} representationsFromPreviousPeriod
      * @return {Promise<object>}
      * @private
      */
-    function _createBufferSinks(previousSourceBufferSinks) {
+    function _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod) {
         return new Promise((resolve) => {
             const buffers = {};
             const promises = streamProcessors.map((sp) => {
-                const oldRepresentation = sp.getRepresentation();
+                const spRepresentation = sp.getRepresentation();
+                const oldRepresentation = representationsFromPreviousPeriod.find((r) => r.mediaInfo.type === spRepresentation.mediaInfo.type);
                 return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
             });
 
@@ -717,10 +720,11 @@ function Stream(config) {
 
     /**
      * @param {string} type
+     * @param filterBySettings
      * @returns {Array}
      * @memberof Stream#
      */
-    function getRepresentationsByType(type) {
+    function getRepresentationsByType(type, filterBySettings = true) {
         checkConfig();
         if (type === Constants.IMAGE) {
             if (!thumbnailController) {
@@ -729,7 +733,7 @@ function Stream(config) {
             return thumbnailController.getPossibleVoRepresentations();
         }
         const mediaInfo = _getMediaInfo(type);
-        return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+        return filterBySettings ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true) : abrController.getPossibleVoRepresentations(mediaInfo, true);
     }
 
     /**

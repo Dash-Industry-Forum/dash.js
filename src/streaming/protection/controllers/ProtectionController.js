@@ -37,10 +37,12 @@ import DashJSError from '../../vo/DashJSError.js';
 import LicenseRequest from '../vo/LicenseRequest.js';
 import LicenseResponse from '../vo/LicenseResponse.js';
 import {HTTPRequest} from '../../vo/metrics/HTTPRequest.js';
+import CertUrlUtils from '../../utils/CertUrlUtils.js';
 import Utils from '../../../core/Utils.js';
-import Constants from '../../constants/Constants.js';
 import FactoryMaker from '../../../core/FactoryMaker.js';
 import ProtectionConstants from '../../constants/ProtectionConstants.js';
+import CertificateRequest from '../vo/CertificateRequest.js';
+import CertificateResponse from '../vo/CertificateResponse.js';
 
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
@@ -48,6 +50,9 @@ const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 const LICENSE_SERVER_REQUEST_RETRIES = 3;
 const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
 const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+const CERTIFICATE_REQUEST_RETRIES = 3;
+const CERTIFICATE_REQUEST_RETRY_INTERVAL = 500;
+const CERTIFICATE_REQUEST_DEFAULT_TIMEOUT = 8000;
 
 /**
  * @module ProtectionController
@@ -68,7 +73,7 @@ function ProtectionController(config) {
 
     config = config || {};
     const BASE64 = config.BASE64;
-    const cmcdModel = config.cmcdModel;
+    const cmcdController = config.cmcdController;
     const constants = config.constants;
     const customParametersModel = config.customParametersModel;
     const debug = config.debug;
@@ -80,6 +85,7 @@ function ProtectionController(config) {
     let needkeyRetries = [];
 
     let applicationProvidedProtectionData,
+        certificateCache,
         instance,
         keyStatusMap,
         keySystemSelectionInProgress,
@@ -87,6 +93,7 @@ function ProtectionController(config) {
         licenseXhrRequest,
         logger,
         mediaInfoArr,
+        pendingCertificatePromise,
         pendingMediaTypesToHandle,
         robustnessLevel,
         selectedKeySystem,
@@ -101,6 +108,8 @@ function ProtectionController(config) {
         licenseXhrRequest = null;
         licenseRequestRetryTimeout = null;
         keyStatusMap = new Map();
+        certificateCache = new Map();
+        pendingCertificatePromise = null;
         eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
     }
 
@@ -182,7 +191,15 @@ function ProtectionController(config) {
 
         // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
         else if (selectedKeySystem) {
-            _handlePendingMediaTypes();
+            // FairPlay: wait for the certificate to be applied before creating sessions
+            if (pendingCertificatePromise) {
+                pendingCertificatePromise
+                    .then(() => {
+                        _handlePendingMediaTypes();
+                    });
+            } else {
+                _handlePendingMediaTypes();
+            }
         }
     }
 
@@ -239,10 +256,270 @@ function ProtectionController(config) {
                 protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
             }
 
-            _handlePendingMediaTypes();
+            // FairPlay requires the server certificate before generateRequest() can succeed.
+            // Wait for certificate acquisition to complete before creating key sessions.
+            if (selectedKeySystem.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
+                _handleFairplayCertificateRequired();
+            } else {
+                // For other key systems cert is optional; fire-and-forget
+                _handleCertificateRequired();
+            }
         } catch (e) {
             logger.error(e);
         }
+    }
+
+    function _handleFairplayCertificateRequired() {
+        // Store the promise so _onNeedKey can also wait for it
+        pendingCertificatePromise = _acquireCertificateFromManifest()
+            .then(() => {
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            })
+            .catch((e) => {
+                // Even if cert acquisition fails, proceed — the app may have set it via protData
+                logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
+                pendingCertificatePromise = null;
+                _handlePendingMediaTypes();
+            });
+    }
+
+    function _handleCertificateRequired() {
+        _acquireCertificateFromManifest()
+            .catch((e) => {
+                logger.error(e);
+            })
+        _handlePendingMediaTypes();
+    }
+
+    /**
+     * Attempt to acquire and set a server certificate using Certurl entries from the manifest
+     * Only runs if no certificate already applied via protData
+     * @private
+     */
+    function _acquireCertificateFromManifest() {
+        if (!selectedKeySystem) {
+            return Promise.resolve();
+        }
+        const ksString = selectedKeySystem.systemString;
+        const cacheEntry = certificateCache.get(ksString);
+        if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) {
+            return Promise.resolve();
+        }
+        // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
+        const certCandidates = _getCertificateUrlsForSelectedKeySystem();
+        if (!certCandidates.length) {
+            logger.debug('DRM: No Certificate Server URLs found for ' + ksString + '. Skipping certificate acquisition.');
+            return Promise.resolve();
+        }
+        logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
+        const protData = _getProtDataForKeySystem(selectedKeySystem) || {};
+        const entry = cacheEntry || { applied: false, inProgress: true, attempts: 0 };
+        entry.inProgress = true;
+        certificateCache.set(ksString, entry);
+        return _fetchAndApplyCertificateSequentially(certCandidates, 0, protData, ksString, entry);
+    }
+
+    /**
+     * Collect certificate URL objects for the selected key system from mediaInfo content protection data
+     * @param {string|null} preferredType
+     * @return {Array<{url:string, certType:string|null}>}
+     * @private
+     */
+    function _getCertificateUrlsForSelectedKeySystem() {
+        const urls = [];
+        // 1. API-provided certUrls (protData) take priority
+        const protData = _getProtDataForKeySystem(selectedKeySystem);
+        if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
+            protData.certUrls.forEach(c => {
+                urls.push(c);
+            });
+        }
+        // 2. Manifest-provided certUrls
+        mediaInfoArr.forEach(mediaInfo => {
+            if (!mediaInfo || !mediaInfo.contentProtection) {
+                return;
+            }
+            mediaInfo.contentProtection.forEach(contentProtection => {
+                if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri.toLowerCase() === selectedKeySystem.schemeIdURI) {
+                    contentProtection.certUrls.forEach(c => {
+                        urls.push(c);
+                    });
+                }
+            });
+        });
+        return CertUrlUtils.dedupeCertUrls(urls);
+    }
+
+    function _fetchAndApplyCertificateSequentially(candidates, index, protData, ksString, cacheEntry) {
+        if (index >= candidates.length) {
+            return _handleAllCertificateRequestsFailed(cacheEntry, ksString);
+        }
+        const candidate = candidates[index];
+        const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[HTTPRequest.LICENSE_CERTIFICATE])
+            ? settings.get().streaming.retryAttempts[HTTPRequest.LICENSE_CERTIFICATE]
+            : CERTIFICATE_REQUEST_RETRIES;
+        logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
+        return _buildCertificateRequest(candidate, protData)
+            .then((certificateRequest) => {
+                return _sendCertificateRequest(certificateRequest, protData, retryAttempts);
+            })
+            .then((arrayBuffer) => {
+                return _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry);
+            })
+            .then(() => {
+                _logCertificateSuccess(candidate, ksString, cacheEntry);
+            })
+            .catch((err) => {
+                cacheEntry.attempts++;
+                cacheEntry.lastError = err && err.message ? err.message : err;
+                logger.warn('DRM: Certificate attempt failed (' + candidate.url + '): ' + cacheEntry.lastError);
+                return _fetchAndApplyCertificateSequentially(candidates, index + 1, protData, ksString, cacheEntry);
+            });
+    }
+
+    function _buildCertificateRequest(candidate, protData) {
+        const certificateRequestFilters = customParametersModel.getCertificateRequestFilters();
+        let withCredentials = false;
+        if (protData && typeof protData.withCredentials === 'boolean') {
+            withCredentials = protData.withCredentials;
+        }
+        const reqHeaders = {};
+        if (protData) {
+            _updateHeaders(reqHeaders, protData.httpRequestHeaders);
+        }
+        const certificateRequest = new CertificateRequest(candidate.url, reqHeaders, withCredentials);
+        return _applyFilters(certificateRequestFilters, certificateRequest)
+            .then(() => certificateRequest);
+    }
+
+    function _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry) {
+        if (!arrayBuffer || !arrayBuffer.byteLength) {
+            throw new Error('Empty certificate response');
+        }
+        cacheEntry.urlUsed = candidate.url;
+        cacheEntry.buffer = arrayBuffer;
+        return _applyServerCertificate(arrayBuffer, ksString, cacheEntry)
+            .then((applied) => {
+                if (!applied) {
+                    throw new Error('CDM rejected certificate');
+                }
+                cacheEntry.applied = true;
+                cacheEntry.inProgress = false;
+            });
+    }
+
+    function _logCertificateSuccess(candidate, ksString, cacheEntry) {
+        const typeSuffix = candidate.certType ? (' certType=' + candidate.certType) : '';
+        logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + typeSuffix + ' for ' + ksString + '.');
+    }
+
+    function _handleAllCertificateRequestsFailed(cacheEntry, ksString) {
+        cacheEntry.inProgress = false;
+        cacheEntry.error = cacheEntry.error || 'All certificate candidates failed';
+        logger.warn('DRM: All certificate candidates failed for ' + ksString + '.');
+        return Promise.reject(new Error(cacheEntry.error));
+    }
+
+    /**
+     * Download a certificate binary with retries.
+     * @param {CertificateRequest} certificateRequest
+     * @param {object} protData
+     * @param {number} retries
+     * @return {Promise<ArrayBuffer>}
+     * @private
+     */
+    function _sendCertificateRequest(certificateRequest, protData, retries) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(certificateRequest.method, certificateRequest.url, true);
+            xhr.responseType = certificateRequest.responseType;
+            const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
+            if (timeout > 0) {
+                xhr.timeout = timeout;
+            }
+
+            xhr.withCredentials = certificateRequest.withCredentials;
+            for (const key of Object.keys(certificateRequest.headers)) {
+                xhr.setRequestHeader(key, certificateRequest.headers[key]);
+            }
+
+            const _attemptFail = (reason) => {
+                if (retries > 0) {
+                    const remaining = retries - 1;
+                    const retryInterval = !isNaN(settings.get().streaming.retryIntervals[HTTPRequest.LICENSE_CERTIFICATE]) ? settings.get().streaming.retryIntervals[HTTPRequest.LICENSE_CERTIFICATE] : CERTIFICATE_REQUEST_RETRY_INTERVAL;
+                    logger.debug('DRM: Certificate request failed (' + reason + '). Retrying... remaining=' + remaining);
+                    setTimeout(() => {
+                        _sendCertificateRequest(certificateRequest, protData, remaining)
+                            .then(resolve)
+                            .catch(reject);
+                    }, retryInterval);
+                } else {
+                    reject(new Error(reason));
+                }
+            };
+            xhr.onload = function () {
+                if (this.status >= 200 && this.status <= 299) {
+                    const responseHeaders = Utils.parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+                    const certificateResponseFilters = customParametersModel.getCertificateResponseFilters();
+                    const certificateResponse = new CertificateResponse(xhr.responseURL, responseHeaders, this.response)
+                    _applyFilters(certificateResponseFilters, certificateResponse)
+                        .then(() => {
+                            resolve(this.response);
+                        })
+                        .catch(() => {
+                            resolve(this.response);
+                        })
+
+                } else {
+                    _attemptFail('HTTP ' + this.status);
+                }
+            };
+            xhr.onerror = function () {
+                _attemptFail('network error');
+            };
+            xhr.ontimeout = function () {
+                _attemptFail('timeout');
+            };
+            xhr.onabort = function () {
+                _attemptFail('aborted');
+            };
+            try {
+                xhr.send(certificateRequest.body);
+            } catch (e) {
+                reject(e);
+            }
+        });
+    }
+
+    /**
+     * Apply the certificate to the CDM; supports both sync and promise-returning implementations.
+     * @param {ArrayBuffer} buffer
+     * @param {string} ksString
+     * @param {object} cacheEntry
+     * @return {Promise<boolean>}
+     * @private
+     */
+    function _applyServerCertificate(buffer, ksString, cacheEntry) {
+        return new Promise((resolve, reject) => {
+            try {
+                const result = protectionModel.setServerCertificate(buffer);
+                if (result && typeof result.then === 'function') {
+                    result.then((val) => {
+                        resolve(typeof val === 'boolean' ? val : true);
+                    }).catch((e) => {
+                        cacheEntry.error = e && e.message ? e.message : e;
+                        reject(e);
+                    });
+                } else {
+                    resolve(true);
+                }
+            } catch (e) {
+                cacheEntry.error = e && e.message ? e.message : e;
+                logger.warn('DRM: setServerCertificate threw for ' + ksString + ': ' + cacheEntry.error);
+                reject(e);
+            }
+        });
     }
 
     /**
@@ -307,18 +584,25 @@ function ProtectionController(config) {
         const protData = keySystemData.protData;
         const audioCapabilities = [];
         const videoCapabilities = [];
-        const initDataTypes = (protData && protData.initDataTypes && protData.initDataTypes.length > 0) ? protData.initDataTypes : [ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC];
+        let defaultInitDataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC;
+        if (keySystemData.ks && keySystemData.ks.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) {
+            defaultInitDataType = ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
+        }
+        const initDataTypes = (protData && protData.initDataTypes && protData.initDataTypes.length > 0) ? protData.initDataTypes : [defaultInitDataType];
         const audioRobustness = (protData && protData.audioRobustness && protData.audioRobustness.length > 0) ? protData.audioRobustness : robustnessLevel;
         const videoRobustness = (protData && protData.videoRobustness && protData.videoRobustness.length > 0) ? protData.videoRobustness : robustnessLevel;
         const ksSessionType = keySystemData.sessionType;
         const distinctiveIdentifier = (protData && protData.distinctiveIdentifier) ? protData.distinctiveIdentifier : 'optional';
         const persistentState = (protData && protData.persistentState) ? protData.persistentState : (ksSessionType === 'temporary') ? 'optional' : 'required';
 
+        // FairPlay uses CBCS encryption exclusively
+        const encryptionScheme = (keySystemData.ks && keySystemData.ks.systemString === ProtectionConstants.FAIRPLAY_KEYSTEM_STRING) ? ProtectionConstants.ENCRYPTION_SCHEME_CBCS : undefined;
+
         mediaInfoArr.forEach((media) => {
             if (media.type === constants.AUDIO) {
-                audioCapabilities.push(new MediaCapability(media.codec, audioRobustness));
+                audioCapabilities.push(new MediaCapability(media.codec, audioRobustness, encryptionScheme));
             } else if (media.type === constants.VIDEO) {
-                videoCapabilities.push(new MediaCapability(media.codec, videoRobustness));
+                videoCapabilities.push(new MediaCapability(media.codec, videoRobustness, encryptionScheme));
             }
         });
 
@@ -660,6 +944,17 @@ function ProtectionController(config) {
     }
 
     /**
+     * Returns the protection data set by the application for use in license acquisition with EME
+     *
+     * @memberof module:ProtectionController
+     * @instance
+     * @ignore
+     */
+    function getProtectionData() {
+        return applicationProvidedProtectionData
+    }
+
+    /**
      * Stop method is called when current playback is stopped/resetted.
      *
      * @memberof module:ProtectionController
@@ -695,6 +990,7 @@ function ProtectionController(config) {
         keySystemSelectionInProgress = false;
 
         keyStatusMap = new Map();
+        certificateCache = new Map();
 
         if (protectionModel) {
             protectionModel.reset();
@@ -870,21 +1166,17 @@ function ProtectionController(config) {
      */
     function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
         const xhr = new XMLHttpRequest();
-        const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
 
-        if (cmcdModel.isCmcdEnabled()) {
-            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_QUERY) {
-                const cmcdParams = cmcdModel.getQueryParameter({
-                    url: request.url,
-                    type: HTTPRequest.LICENSE
-                });
-
-                if (cmcdParams) {
-                    request.url = Utils.addAdditionalQueryParameterToUrl(request.url, [cmcdParams]);
-                }
-            }
-        }
+        // Apply CMCD data to the license request (handles both query and header modes)
+        const cmcdRequest = {
+            url: request.url,
+            type: HTTPRequest.LICENSE,
+            method: request.method,
+            headers: request.headers || {},
+        };
+        cmcdController.applyCmcdToRequest(cmcdRequest)
+        request.url = cmcdRequest.url;
+        request.headers = cmcdRequest.headers;
 
         xhr.open(request.method, request.url, true);
         xhr.responseType = request.responseType;
@@ -894,25 +1186,6 @@ function ProtectionController(config) {
         }
         for (const key in request.headers) {
             xhr.setRequestHeader(key, request.headers[key]);
-        }
-
-        if (cmcdModel.isCmcdEnabled()) {
-            const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
-            if (cmcdMode === Constants.CMCD_MODE_HEADER) {
-                const cmcdHeaders = cmcdModel.getHeaderParameters({
-                    url: request.url,
-                    type: HTTPRequest.LICENSE
-                });
-
-                if (cmcdHeaders) {
-                    for (const header in cmcdHeaders) {
-                        let value = cmcdHeaders[header];
-                        if (value) {
-                            xhr.setRequestHeader(header, value);
-                        }
-                    }
-                }
-            }
         }
 
         const _retryRequest = function () {
@@ -1102,9 +1375,10 @@ function ProtectionController(config) {
 
         logger.debug('DRM: onNeedKey');
 
-        // Ignore non-cenc initData
-        if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC) {
-            logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+        // Ignore unsupported initData types (only cenc and sinf are supported)
+        if (event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_CENC &&
+            event.key.initDataType !== ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF) {
+            logger.warn('DRM:  Only \'cenc\' and \'sinf\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
             return;
         }
 
@@ -1126,20 +1400,25 @@ function ProtectionController(config) {
             abInitData = abInitData.buffer;
         }
 
-        // If key system has already been selected and initData already seen, then do nothing
+        const isSinf = event.key.initDataType === ProtectionConstants.INITIALIZATION_DATA_TYPE_SINF;
+
         if (selectedKeySystem) {
-            const initDataForKS = CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
-            if (initDataForKS) {
-                // Check for duplicate initData
-                if (_isInitDataDuplicate(initDataForKS)) {
-                    return;
-                }
+            const initDataForCheck = isSinf ? abInitData : CommonEncryption.getPSSHForKeySystem(selectedKeySystem, abInitData);
+
+            if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
+                return;
             }
         }
 
         logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
 
-        const supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+        let supportedKeySystemsMetadata;
+        if (isSinf) {
+            // sinf data is FairPlay-specific; match against the FairPlay key system directly
+            supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForSinf(abInitData, applicationProvidedProtectionData, sessionType);
+        } else {
+            supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+        }
         if (supportedKeySystemsMetadata.length === 0) {
             logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
             return;
@@ -1147,6 +1426,7 @@ function ProtectionController(config) {
 
         _handleKeySystemFromPssh(supportedKeySystemsMetadata);
     }
+
 
     /**
      * Returns all available key systems
@@ -1274,6 +1554,7 @@ function ProtectionController(config) {
         closeKeySession,
         createKeySession,
         getKeySystems,
+        getProtectionData,
         getSupportedKeySystemMetadataFromContentProtection,
         handleKeySystemFromManifest,
         initializeForMedia,

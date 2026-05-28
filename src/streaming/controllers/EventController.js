@@ -54,6 +54,21 @@ function EventController() {
         ADDED: 'added'
     };
 
+    /**
+     * Check if an object has no own properties (faster than Object.keys().length === 0)
+     * @param {object} obj
+     * @returns {boolean}
+     * @private
+     */
+    function _isEmptyObject(obj) {
+        for (const key in obj) {
+            if (Object.prototype.hasOwnProperty.call(obj, key)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
 
@@ -194,8 +209,8 @@ function EventController() {
     function _removeOutdatedEventObjects(events) {
         try {
             for (const key in events) {
-                if (events.hasOwnProperty(key)) {
-                    if (Object.keys(events[key]).length === 0) {
+                if (Object.prototype.hasOwnProperty.call(events, key)) {
+                    if (_isEmptyObject(events[key])) {
                         delete events[key];
                     }
                 }
@@ -407,17 +422,16 @@ function EventController() {
     function _iterateAndTriggerCallback(events, callback) {
         try {
             if (events) {
-                const periodIds = Object.keys(events);
-                for (let i = 0; i < periodIds.length; i++) {
-                    const currentPeriod = events[periodIds[i]];
-                    const schemeIdUris = Object.keys(currentPeriod);
-                    for (let j = 0; j < schemeIdUris.length; j++) {
-                        const schemeIdEvents = currentPeriod[schemeIdUris[j]];
-                        schemeIdEvents.forEach((event) => {
+                for (const periodId in events) {
+                    const currentPeriod = events[periodId];
+                    for (const schemeIdUri in currentPeriod) {
+                        const schemeIdEvents = currentPeriod[schemeIdUri];
+                        for (let i = 0; i < schemeIdEvents.length; i++) {
+                            const event = schemeIdEvents[i];
                             if (event !== undefined) {
                                 callback(event);
                             }
-                        });
+                        }
                     }
                 }
             }
