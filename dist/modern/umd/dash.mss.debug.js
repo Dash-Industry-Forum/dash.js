@@ -1508,7 +1508,7 @@ function EventBus() {
     if (idx < 0) {
       return;
     }
-    handlers[type][idx] = null;
+    handlers[type].splice(idx, 1);
   }
   function trigger(type, payload = {}, filters = {}) {
     if (!type || !handlers[type]) {
@@ -2330,24 +2330,29 @@ function MssFragmentMoofProcessor(config) {
         // Remove segments prior to availability start time
         segment = segments[0];
         endTime = (segment.t + segment.d) / timescale;
-        while (endTime < availabilityStartTime) {
+        while (segments.length > 0 && endTime < availabilityStartTime) {
           // Check if not currently playing the segment to be removed
           if (!playbackController.isPaused() && playbackController.getTime() < endTime) {
             break;
           }
           // logger.debug('Remove segment  - t = ' + (segment.t / timescale));
           segments.splice(0, 1);
+          if (segments.length === 0) {
+            break;
+          }
           segment = segments[0];
           endTime = (segment.t + segment.d) / timescale;
         }
       }
 
       // Update DVR window range => set range end to end time of current segment
-      range = {
-        start: segments[0].t / timescale,
-        end: tfdt.baseMediaDecodeTime / timescale + request.duration
-      };
-      updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
+      if (segments.length > 0) {
+        range = {
+          start: segments[0].t / timescale,
+          end: tfdt.baseMediaDecodeTime / timescale + request.duration
+        };
+        updateDVR(type, range, streamProcessor.getStreamInfo().manifestInfo);
+      }
     }
   }
   function updateDVR(type, range, manifestInfo) {
@@ -4906,32 +4911,20 @@ __webpack_require__.r(__webpack_exports__);
  */
 /* harmony default export */ __webpack_exports__["default"] = ({
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
-  WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
-  PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
-  PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
-  WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
-  PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
-  W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
+  ENCRYPTION_SCHEME_CBCS: 'cbcs',
+  ENCRYPTION_SCHEME_CENC: 'cenc',
+  FAIRPLAY_KEYSTEM_STRING: 'com.apple.fps',
+  FAIRPLAY_UUID: '94ce86fb-07ff-4f43-adb8-93d2fa968ca2',
   INITIALIZATION_DATA_TYPE_CENC: 'cenc',
   INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
+  INITIALIZATION_DATA_TYPE_SINF: 'sinf',
   INITIALIZATION_DATA_TYPE_WEBM: 'webm',
-  ENCRYPTION_SCHEME_CENC: 'cenc',
-  ENCRYPTION_SCHEME_CBCS: 'cbcs',
   MEDIA_KEY_MESSAGE_TYPES: {
     LICENSE_REQUEST: 'license-request',
     LICENSE_RENEWAL: 'license-renewal',
     LICENSE_RELEASE: 'license-release',
     INDIVIDUALIZATION_REQUEST: 'individualization-request'
-  },
-  ROBUSTNESS_STRINGS: {
-    WIDEVINE: {
-      SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
-      SW_SECURE_DECODE: 'SW_SECURE_DECODE',
-      HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
-      HW_SECURE_DECODE: 'HW_SECURE_DECODE',
-      HW_SECURE_ALL: 'HW_SECURE_ALL'
-    }
   },
   MEDIA_KEY_STATUSES: {
     USABLE: 'usable',
@@ -4941,7 +4934,22 @@ __webpack_require__.r(__webpack_exports__);
     OUTPUT_DOWNSCALED: 'output-downscaled',
     STATUS_PENDING: 'status-pending',
     INTERNAL_ERROR: 'internal-error'
-  }
+  },
+  PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
+  PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
+  ROBUSTNESS_STRINGS: {
+    WIDEVINE: {
+      SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
+      SW_SECURE_DECODE: 'SW_SECURE_DECODE',
+      HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
+      HW_SECURE_DECODE: 'HW_SECURE_DECODE',
+      HW_SECURE_ALL: 'HW_SECURE_ALL'
+    }
+  },
+  W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
+  WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
+  WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
 });
 
 /***/ }),
@@ -5215,6 +5223,7 @@ class HTTPRequest {
      * - Index Fragment
      * - Media Fragment
      * - Bitstream Switching Fragment
+     * - CMCD Response
      * - other
      * @public
      */
@@ -5327,19 +5336,22 @@ class HTTPRequestTrace {
     this.b = [];
   }
 }
-HTTPRequest.GET = 'GET';
-HTTPRequest.HEAD = 'HEAD';
-HTTPRequest.MPD_TYPE = 'MPD';
-HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
-HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
-HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
-HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
-HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
-HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
-HTTPRequest.LICENSE = 'license';
 HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
+HTTPRequest.GET = 'GET';
+HTTPRequest.POST = 'POST';
+HTTPRequest.HEAD = 'HEAD';
+HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
+HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
+HTTPRequest.LICENSE = 'license';
+HTTPRequest.LICENSE_CERTIFICATE = 'licenseCertificate';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.CMCD_EVENT = 'CmcdEvent';
 HTTPRequest.OTHER_TYPE = 'other';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 
 
 /***/ })

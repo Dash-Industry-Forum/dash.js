@@ -129,15 +129,15 @@ function fromByteArray(uint8) {
 
 
 
-var base64 = __webpack_require__(/*! base64-js */ "./node_modules/base64-js/index.js");
-var ieee754 = __webpack_require__(/*! ieee754 */ "./node_modules/ieee754/index.js");
-var customInspectSymbol = typeof Symbol === 'function' && typeof Symbol['for'] === 'function' // eslint-disable-line dot-notation
+const base64 = __webpack_require__(/*! base64-js */ "./node_modules/base64-js/index.js");
+const ieee754 = __webpack_require__(/*! ieee754 */ "./node_modules/ieee754/index.js");
+const customInspectSymbol = typeof Symbol === 'function' && typeof Symbol['for'] === 'function' // eslint-disable-line dot-notation
 ? Symbol['for']('nodejs.util.inspect.custom') // eslint-disable-line dot-notation
 : null;
 exports.Buffer = Buffer;
 exports.SlowBuffer = SlowBuffer;
 exports.INSPECT_MAX_BYTES = 50;
-var K_MAX_LENGTH = 0x7fffffff;
+const K_MAX_LENGTH = 0x7fffffff;
 exports.kMaxLength = K_MAX_LENGTH;
 
 /**
@@ -161,8 +161,8 @@ if (!Buffer.TYPED_ARRAY_SUPPORT && typeof console !== 'undefined' && typeof cons
 function typedArraySupport() {
   // Can typed array instances can be augmented?
   try {
-    var arr = new Uint8Array(1);
-    var proto = {
+    const arr = new Uint8Array(1);
+    const proto = {
       foo: function () {
         return 42;
       }
@@ -193,7 +193,7 @@ function createBuffer(length) {
     throw new RangeError('The value "' + length + '" is invalid for option "size"');
   }
   // Return an augmented `Uint8Array` instance
-  var buf = new Uint8Array(length);
+  const buf = new Uint8Array(length);
   Object.setPrototypeOf(buf, Buffer.prototype);
   return buf;
 }
@@ -239,11 +239,11 @@ function from(value, encodingOrOffset, length) {
   if (typeof value === 'number') {
     throw new TypeError('The "value" argument must not be of type number. Received type number');
   }
-  var valueOf = value.valueOf && value.valueOf();
+  const valueOf = value.valueOf && value.valueOf();
   if (valueOf != null && valueOf !== value) {
     return Buffer.from(valueOf, encodingOrOffset, length);
   }
-  var b = fromObject(value);
+  const b = fromObject(value);
   if (b) return b;
   if (typeof Symbol !== 'undefined' && Symbol.toPrimitive != null && typeof value[Symbol.toPrimitive] === 'function') {
     return Buffer.from(value[Symbol.toPrimitive]('string'), encodingOrOffset, length);
@@ -319,9 +319,9 @@ function fromString(string, encoding) {
   if (!Buffer.isEncoding(encoding)) {
     throw new TypeError('Unknown encoding: ' + encoding);
   }
-  var length = byteLength(string, encoding) | 0;
-  var buf = createBuffer(length);
-  var actual = buf.write(string, encoding);
+  const length = byteLength(string, encoding) | 0;
+  let buf = createBuffer(length);
+  const actual = buf.write(string, encoding);
   if (actual !== length) {
     // Writing a hex string, for example, that contains invalid characters will
     // cause everything after the first invalid character to be ignored. (e.g.
@@ -331,16 +331,16 @@ function fromString(string, encoding) {
   return buf;
 }
 function fromArrayLike(array) {
-  var length = array.length < 0 ? 0 : checked(array.length) | 0;
-  var buf = createBuffer(length);
-  for (var i = 0; i < length; i += 1) {
+  const length = array.length < 0 ? 0 : checked(array.length) | 0;
+  const buf = createBuffer(length);
+  for (let i = 0; i < length; i += 1) {
     buf[i] = array[i] & 255;
   }
   return buf;
 }
 function fromArrayView(arrayView) {
   if (isInstance(arrayView, Uint8Array)) {
-    var copy = new Uint8Array(arrayView);
+    const copy = new Uint8Array(arrayView);
     return fromArrayBuffer(copy.buffer, copy.byteOffset, copy.byteLength);
   }
   return fromArrayLike(arrayView);
@@ -352,7 +352,7 @@ function fromArrayBuffer(array, byteOffset, length) {
   if (array.byteLength < byteOffset + (length || 0)) {
     throw new RangeError('"length" is outside of buffer bounds');
   }
-  var buf;
+  let buf;
   if (byteOffset === undefined && length === undefined) {
     buf = new Uint8Array(array);
   } else if (length === undefined) {
@@ -367,8 +367,8 @@ function fromArrayBuffer(array, byteOffset, length) {
 }
 function fromObject(obj) {
   if (Buffer.isBuffer(obj)) {
-    var len = checked(obj.length) | 0;
-    var buf = createBuffer(len);
+    const len = checked(obj.length) | 0;
+    const buf = createBuffer(len);
     if (buf.length === 0) {
       return buf;
     }
@@ -410,9 +410,9 @@ Buffer.compare = function compare(a, b) {
     throw new TypeError('The "buf1", "buf2" arguments must be one of type Buffer or Uint8Array');
   }
   if (a === b) return 0;
-  var x = a.length;
-  var y = b.length;
-  for (var i = 0, len = Math.min(x, y); i < len; ++i) {
+  let x = a.length;
+  let y = b.length;
+  for (let i = 0, len = Math.min(x, y); i < len; ++i) {
     if (a[i] !== b[i]) {
       x = a[i];
       y = b[i];
@@ -448,20 +448,21 @@ Buffer.concat = function concat(list, length) {
   if (list.length === 0) {
     return Buffer.alloc(0);
   }
-  var i;
+  let i;
   if (length === undefined) {
     length = 0;
     for (i = 0; i < list.length; ++i) {
       length += list[i].length;
     }
   }
-  var buffer = Buffer.allocUnsafe(length);
-  var pos = 0;
+  const buffer = Buffer.allocUnsafe(length);
+  let pos = 0;
   for (i = 0; i < list.length; ++i) {
-    var buf = list[i];
+    let buf = list[i];
     if (isInstance(buf, Uint8Array)) {
       if (pos + buf.length > buffer.length) {
-        Buffer.from(buf).copy(buffer, pos);
+        if (!Buffer.isBuffer(buf)) buf = Buffer.from(buf);
+        buf.copy(buffer, pos);
       } else {
         Uint8Array.prototype.set.call(buffer, buf, pos);
       }
@@ -484,12 +485,12 @@ function byteLength(string, encoding) {
   if (typeof string !== 'string') {
     throw new TypeError('The "string" argument must be one of type string, Buffer, or ArrayBuffer. ' + 'Received type ' + typeof string);
   }
-  var len = string.length;
-  var mustMatch = arguments.length > 2 && arguments[2] === true;
+  const len = string.length;
+  const mustMatch = arguments.length > 2 && arguments[2] === true;
   if (!mustMatch && len === 0) return 0;
 
   // Use a for loop to avoid recursion
-  var loweredCase = false;
+  let loweredCase = false;
   for (;;) {
     switch (encoding) {
       case 'ascii':
@@ -519,7 +520,7 @@ function byteLength(string, encoding) {
 }
 Buffer.byteLength = byteLength;
 function slowToString(encoding, start, end) {
-  var loweredCase = false;
+  let loweredCase = false;
 
   // No need to verify that "this.length <= MAX_UINT32" since it's a read-only
   // property of a typed array.
@@ -585,37 +586,37 @@ function slowToString(encoding, start, end) {
 // See: https://github.com/feross/buffer/issues/154
 Buffer.prototype._isBuffer = true;
 function swap(b, n, m) {
-  var i = b[n];
+  const i = b[n];
   b[n] = b[m];
   b[m] = i;
 }
 Buffer.prototype.swap16 = function swap16() {
-  var len = this.length;
+  const len = this.length;
   if (len % 2 !== 0) {
     throw new RangeError('Buffer size must be a multiple of 16-bits');
   }
-  for (var i = 0; i < len; i += 2) {
+  for (let i = 0; i < len; i += 2) {
     swap(this, i, i + 1);
   }
   return this;
 };
 Buffer.prototype.swap32 = function swap32() {
-  var len = this.length;
+  const len = this.length;
   if (len % 4 !== 0) {
     throw new RangeError('Buffer size must be a multiple of 32-bits');
   }
-  for (var i = 0; i < len; i += 4) {
+  for (let i = 0; i < len; i += 4) {
     swap(this, i, i + 3);
     swap(this, i + 1, i + 2);
   }
   return this;
 };
 Buffer.prototype.swap64 = function swap64() {
-  var len = this.length;
+  const len = this.length;
   if (len % 8 !== 0) {
     throw new RangeError('Buffer size must be a multiple of 64-bits');
   }
-  for (var i = 0; i < len; i += 8) {
+  for (let i = 0; i < len; i += 8) {
     swap(this, i, i + 7);
     swap(this, i + 1, i + 6);
     swap(this, i + 2, i + 5);
@@ -624,7 +625,7 @@ Buffer.prototype.swap64 = function swap64() {
   return this;
 };
 Buffer.prototype.toString = function toString() {
-  var length = this.length;
+  const length = this.length;
   if (length === 0) return '';
   if (arguments.length === 0) return utf8Slice(this, 0, length);
   return slowToString.apply(this, arguments);
@@ -636,8 +637,8 @@ Buffer.prototype.equals = function equals(b) {
   return Buffer.compare(this, b) === 0;
 };
 Buffer.prototype.inspect = function inspect() {
-  var str = '';
-  var max = exports.INSPECT_MAX_BYTES;
+  let str = '';
+  const max = exports.INSPECT_MAX_BYTES;
   str = this.toString('hex', 0, max).replace(/(.{2})/g, '$1 ').trim();
   if (this.length > max) str += ' ... ';
   return '<Buffer ' + str + '>';
@@ -681,12 +682,12 @@ Buffer.prototype.compare = function compare(target, start, end, thisStart, thisE
   thisStart >>>= 0;
   thisEnd >>>= 0;
   if (this === target) return 0;
-  var x = thisEnd - thisStart;
-  var y = end - start;
-  var len = Math.min(x, y);
-  var thisCopy = this.slice(thisStart, thisEnd);
-  var targetCopy = target.slice(start, end);
-  for (var i = 0; i < len; ++i) {
+  let x = thisEnd - thisStart;
+  let y = end - start;
+  const len = Math.min(x, y);
+  const thisCopy = this.slice(thisStart, thisEnd);
+  const targetCopy = target.slice(start, end);
+  for (let i = 0; i < len; ++i) {
     if (thisCopy[i] !== targetCopy[i]) {
       x = thisCopy[i];
       y = targetCopy[i];
@@ -760,9 +761,9 @@ function bidirectionalIndexOf(buffer, val, byteOffset, encoding, dir) {
   throw new TypeError('val must be string, number or Buffer');
 }
 function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
-  var indexSize = 1;
-  var arrLength = arr.length;
-  var valLength = val.length;
+  let indexSize = 1;
+  let arrLength = arr.length;
+  let valLength = val.length;
   if (encoding !== undefined) {
     encoding = String(encoding).toLowerCase();
     if (encoding === 'ucs2' || encoding === 'ucs-2' || encoding === 'utf16le' || encoding === 'utf-16le') {
@@ -782,9 +783,9 @@ function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
       return buf.readUInt16BE(i * indexSize);
     }
   }
-  var i;
+  let i;
   if (dir) {
-    var foundIndex = -1;
+    let foundIndex = -1;
     for (i = byteOffset; i < arrLength; i++) {
       if (read(arr, i) === read(val, foundIndex === -1 ? 0 : i - foundIndex)) {
         if (foundIndex === -1) foundIndex = i;
@@ -797,8 +798,8 @@ function arrayIndexOf(arr, val, byteOffset, encoding, dir) {
   } else {
     if (byteOffset + valLength > arrLength) byteOffset = arrLength - valLength;
     for (i = byteOffset; i >= 0; i--) {
-      var found = true;
-      for (var j = 0; j < valLength; j++) {
+      let found = true;
+      for (let j = 0; j < valLength; j++) {
         if (read(arr, i + j) !== read(val, j)) {
           found = false;
           break;
@@ -820,7 +821,7 @@ Buffer.prototype.lastIndexOf = function lastIndexOf(val, byteOffset, encoding) {
 };
 function hexWrite(buf, string, offset, length) {
   offset = Number(offset) || 0;
-  var remaining = buf.length - offset;
+  const remaining = buf.length - offset;
   if (!length) {
     length = remaining;
   } else {
@@ -829,12 +830,13 @@ function hexWrite(buf, string, offset, length) {
       length = remaining;
     }
   }
-  var strLen = string.length;
+  const strLen = string.length;
   if (length > strLen / 2) {
     length = strLen / 2;
   }
-  for (var i = 0; i < length; ++i) {
-    var parsed = parseInt(string.substr(i * 2, 2), 16);
+  let i;
+  for (i = 0; i < length; ++i) {
+    const parsed = parseInt(string.substr(i * 2, 2), 16);
     if (numberIsNaN(parsed)) return i;
     buf[offset + i] = parsed;
   }
@@ -876,13 +878,13 @@ Buffer.prototype.write = function write(string, offset, length, encoding) {
   } else {
     throw new Error('Buffer.write(string, encoding, offset[, length]) is no longer supported');
   }
-  var remaining = this.length - offset;
+  const remaining = this.length - offset;
   if (length === undefined || length > remaining) length = remaining;
   if (string.length > 0 && (length < 0 || offset < 0) || offset > this.length) {
     throw new RangeError('Attempt to write outside buffer bounds');
   }
   if (!encoding) encoding = 'utf8';
-  var loweredCase = false;
+  let loweredCase = false;
   for (;;) {
     switch (encoding) {
       case 'hex':
@@ -924,14 +926,14 @@ function base64Slice(buf, start, end) {
 }
 function utf8Slice(buf, start, end) {
   end = Math.min(buf.length, end);
-  var res = [];
-  var i = start;
+  const res = [];
+  let i = start;
   while (i < end) {
-    var firstByte = buf[i];
-    var codePoint = null;
-    var bytesPerSequence = firstByte > 0xEF ? 4 : firstByte > 0xDF ? 3 : firstByte > 0xBF ? 2 : 1;
+    const firstByte = buf[i];
+    let codePoint = null;
+    let bytesPerSequence = firstByte > 0xEF ? 4 : firstByte > 0xDF ? 3 : firstByte > 0xBF ? 2 : 1;
     if (i + bytesPerSequence <= end) {
-      var secondByte, thirdByte, fourthByte, tempCodePoint;
+      let secondByte, thirdByte, fourthByte, tempCodePoint;
       switch (bytesPerSequence) {
         case 1:
           if (firstByte < 0x80) {
@@ -989,58 +991,58 @@ function utf8Slice(buf, start, end) {
 // Based on http://stackoverflow.com/a/22747272/680742, the browser with
 // the lowest limit is Chrome, with 0x10000 args.
 // We go 1 magnitude less, for safety
-var MAX_ARGUMENTS_LENGTH = 0x1000;
+const MAX_ARGUMENTS_LENGTH = 0x1000;
 function decodeCodePointsArray(codePoints) {
-  var len = codePoints.length;
+  const len = codePoints.length;
   if (len <= MAX_ARGUMENTS_LENGTH) {
     return String.fromCharCode.apply(String, codePoints); // avoid extra slice()
   }
 
   // Decode in chunks to avoid "call stack size exceeded".
-  var res = '';
-  var i = 0;
+  let res = '';
+  let i = 0;
   while (i < len) {
     res += String.fromCharCode.apply(String, codePoints.slice(i, i += MAX_ARGUMENTS_LENGTH));
   }
   return res;
 }
 function asciiSlice(buf, start, end) {
-  var ret = '';
+  let ret = '';
   end = Math.min(buf.length, end);
-  for (var i = start; i < end; ++i) {
+  for (let i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i] & 0x7F);
   }
   return ret;
 }
 function latin1Slice(buf, start, end) {
-  var ret = '';
+  let ret = '';
   end = Math.min(buf.length, end);
-  for (var i = start; i < end; ++i) {
+  for (let i = start; i < end; ++i) {
     ret += String.fromCharCode(buf[i]);
   }
   return ret;
 }
 function hexSlice(buf, start, end) {
-  var len = buf.length;
+  const len = buf.length;
   if (!start || start < 0) start = 0;
   if (!end || end < 0 || end > len) end = len;
-  var out = '';
-  for (var i = start; i < end; ++i) {
+  let out = '';
+  for (let i = start; i < end; ++i) {
     out += hexSliceLookupTable[buf[i]];
   }
   return out;
 }
 function utf16leSlice(buf, start, end) {
-  var bytes = buf.slice(start, end);
-  var res = '';
+  const bytes = buf.slice(start, end);
+  let res = '';
   // If bytes.length is odd, the last 8 bits must be ignored (same as node.js)
-  for (var i = 0; i < bytes.length - 1; i += 2) {
+  for (let i = 0; i < bytes.length - 1; i += 2) {
     res += String.fromCharCode(bytes[i] + bytes[i + 1] * 256);
   }
   return res;
 }
 Buffer.prototype.slice = function slice(start, end) {
-  var len = this.length;
+  const len = this.length;
   start = ~~start;
   end = end === undefined ? len : ~~end;
   if (start < 0) {
@@ -1056,7 +1058,7 @@ Buffer.prototype.slice = function slice(start, end) {
     end = len;
   }
   if (end < start) end = start;
-  var newBuf = this.subarray(start, end);
+  const newBuf = this.subarray(start, end);
   // Return an augmented `Uint8Array` instance
   Object.setPrototypeOf(newBuf, Buffer.prototype);
   return newBuf;
@@ -1073,9 +1075,9 @@ Buffer.prototype.readUintLE = Buffer.prototype.readUIntLE = function readUIntLE(
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
   if (!noAssert) checkOffset(offset, byteLength, this.length);
-  var val = this[offset];
-  var mul = 1;
-  var i = 0;
+  let val = this[offset];
+  let mul = 1;
+  let i = 0;
   while (++i < byteLength && (mul *= 0x100)) {
     val += this[offset + i] * mul;
   }
@@ -1087,8 +1089,8 @@ Buffer.prototype.readUintBE = Buffer.prototype.readUIntBE = function readUIntBE(
   if (!noAssert) {
     checkOffset(offset, byteLength, this.length);
   }
-  var val = this[offset + --byteLength];
-  var mul = 1;
+  let val = this[offset + --byteLength];
+  let mul = 1;
   while (byteLength > 0 && (mul *= 0x100)) {
     val += this[offset + --byteLength] * mul;
   }
@@ -1119,13 +1121,37 @@ Buffer.prototype.readUint32BE = Buffer.prototype.readUInt32BE = function readUIn
   if (!noAssert) checkOffset(offset, 4, this.length);
   return this[offset] * 0x1000000 + (this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3]);
 };
+Buffer.prototype.readBigUInt64LE = defineBigIntMethod(function readBigUInt64LE(offset) {
+  offset = offset >>> 0;
+  validateNumber(offset, 'offset');
+  const first = this[offset];
+  const last = this[offset + 7];
+  if (first === undefined || last === undefined) {
+    boundsError(offset, this.length - 8);
+  }
+  const lo = first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24;
+  const hi = this[++offset] + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + last * 2 ** 24;
+  return BigInt(lo) + (BigInt(hi) << BigInt(32));
+});
+Buffer.prototype.readBigUInt64BE = defineBigIntMethod(function readBigUInt64BE(offset) {
+  offset = offset >>> 0;
+  validateNumber(offset, 'offset');
+  const first = this[offset];
+  const last = this[offset + 7];
+  if (first === undefined || last === undefined) {
+    boundsError(offset, this.length - 8);
+  }
+  const hi = first * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
+  const lo = this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last;
+  return (BigInt(hi) << BigInt(32)) + BigInt(lo);
+});
 Buffer.prototype.readIntLE = function readIntLE(offset, byteLength, noAssert) {
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
   if (!noAssert) checkOffset(offset, byteLength, this.length);
-  var val = this[offset];
-  var mul = 1;
-  var i = 0;
+  let val = this[offset];
+  let mul = 1;
+  let i = 0;
   while (++i < byteLength && (mul *= 0x100)) {
     val += this[offset + i] * mul;
   }
@@ -1137,9 +1163,9 @@ Buffer.prototype.readIntBE = function readIntBE(offset, byteLength, noAssert) {
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
   if (!noAssert) checkOffset(offset, byteLength, this.length);
-  var i = byteLength;
-  var mul = 1;
-  var val = this[offset + --i];
+  let i = byteLength;
+  let mul = 1;
+  let val = this[offset + --i];
   while (i > 0 && (mul *= 0x100)) {
     val += this[offset + --i] * mul;
   }
@@ -1156,13 +1182,13 @@ Buffer.prototype.readInt8 = function readInt8(offset, noAssert) {
 Buffer.prototype.readInt16LE = function readInt16LE(offset, noAssert) {
   offset = offset >>> 0;
   if (!noAssert) checkOffset(offset, 2, this.length);
-  var val = this[offset] | this[offset + 1] << 8;
+  const val = this[offset] | this[offset + 1] << 8;
   return val & 0x8000 ? val | 0xFFFF0000 : val;
 };
 Buffer.prototype.readInt16BE = function readInt16BE(offset, noAssert) {
   offset = offset >>> 0;
   if (!noAssert) checkOffset(offset, 2, this.length);
-  var val = this[offset + 1] | this[offset] << 8;
+  const val = this[offset + 1] | this[offset] << 8;
   return val & 0x8000 ? val | 0xFFFF0000 : val;
 };
 Buffer.prototype.readInt32LE = function readInt32LE(offset, noAssert) {
@@ -1175,6 +1201,31 @@ Buffer.prototype.readInt32BE = function readInt32BE(offset, noAssert) {
   if (!noAssert) checkOffset(offset, 4, this.length);
   return this[offset] << 24 | this[offset + 1] << 16 | this[offset + 2] << 8 | this[offset + 3];
 };
+Buffer.prototype.readBigInt64LE = defineBigIntMethod(function readBigInt64LE(offset) {
+  offset = offset >>> 0;
+  validateNumber(offset, 'offset');
+  const first = this[offset];
+  const last = this[offset + 7];
+  if (first === undefined || last === undefined) {
+    boundsError(offset, this.length - 8);
+  }
+  const val = this[offset + 4] + this[offset + 5] * 2 ** 8 + this[offset + 6] * 2 ** 16 + (last << 24); // Overflow
+
+  return (BigInt(val) << BigInt(32)) + BigInt(first + this[++offset] * 2 ** 8 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 24);
+});
+Buffer.prototype.readBigInt64BE = defineBigIntMethod(function readBigInt64BE(offset) {
+  offset = offset >>> 0;
+  validateNumber(offset, 'offset');
+  const first = this[offset];
+  const last = this[offset + 7];
+  if (first === undefined || last === undefined) {
+    boundsError(offset, this.length - 8);
+  }
+  const val = (first << 24) +
+  // Overflow
+  this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + this[++offset];
+  return (BigInt(val) << BigInt(32)) + BigInt(this[++offset] * 2 ** 24 + this[++offset] * 2 ** 16 + this[++offset] * 2 ** 8 + last);
+});
 Buffer.prototype.readFloatLE = function readFloatLE(offset, noAssert) {
   offset = offset >>> 0;
   if (!noAssert) checkOffset(offset, 4, this.length);
@@ -1205,11 +1256,11 @@ Buffer.prototype.writeUintLE = Buffer.prototype.writeUIntLE = function writeUInt
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
   if (!noAssert) {
-    var maxBytes = Math.pow(2, 8 * byteLength) - 1;
+    const maxBytes = Math.pow(2, 8 * byteLength) - 1;
     checkInt(this, value, offset, byteLength, maxBytes, 0);
   }
-  var mul = 1;
-  var i = 0;
+  let mul = 1;
+  let i = 0;
   this[offset] = value & 0xFF;
   while (++i < byteLength && (mul *= 0x100)) {
     this[offset + i] = value / mul & 0xFF;
@@ -1221,11 +1272,11 @@ Buffer.prototype.writeUintBE = Buffer.prototype.writeUIntBE = function writeUInt
   offset = offset >>> 0;
   byteLength = byteLength >>> 0;
   if (!noAssert) {
-    var maxBytes = Math.pow(2, 8 * byteLength) - 1;
+    const maxBytes = Math.pow(2, 8 * byteLength) - 1;
     checkInt(this, value, offset, byteLength, maxBytes, 0);
   }
-  var i = byteLength - 1;
-  var mul = 1;
+  let i = byteLength - 1;
+  let mul = 1;
   this[offset + i] = value & 0xFF;
   while (--i >= 0 && (mul *= 0x100)) {
     this[offset + i] = value / mul & 0xFF;
@@ -1275,16 +1326,62 @@ Buffer.prototype.writeUint32BE = Buffer.prototype.writeUInt32BE = function write
   this[offset + 3] = value & 0xff;
   return offset + 4;
 };
+function wrtBigUInt64LE(buf, value, offset, min, max) {
+  checkIntBI(value, min, max, buf, offset, 7);
+  let lo = Number(value & BigInt(0xffffffff));
+  buf[offset++] = lo;
+  lo = lo >> 8;
+  buf[offset++] = lo;
+  lo = lo >> 8;
+  buf[offset++] = lo;
+  lo = lo >> 8;
+  buf[offset++] = lo;
+  let hi = Number(value >> BigInt(32) & BigInt(0xffffffff));
+  buf[offset++] = hi;
+  hi = hi >> 8;
+  buf[offset++] = hi;
+  hi = hi >> 8;
+  buf[offset++] = hi;
+  hi = hi >> 8;
+  buf[offset++] = hi;
+  return offset;
+}
+function wrtBigUInt64BE(buf, value, offset, min, max) {
+  checkIntBI(value, min, max, buf, offset, 7);
+  let lo = Number(value & BigInt(0xffffffff));
+  buf[offset + 7] = lo;
+  lo = lo >> 8;
+  buf[offset + 6] = lo;
+  lo = lo >> 8;
+  buf[offset + 5] = lo;
+  lo = lo >> 8;
+  buf[offset + 4] = lo;
+  let hi = Number(value >> BigInt(32) & BigInt(0xffffffff));
+  buf[offset + 3] = hi;
+  hi = hi >> 8;
+  buf[offset + 2] = hi;
+  hi = hi >> 8;
+  buf[offset + 1] = hi;
+  hi = hi >> 8;
+  buf[offset] = hi;
+  return offset + 8;
+}
+Buffer.prototype.writeBigUInt64LE = defineBigIntMethod(function writeBigUInt64LE(value, offset = 0) {
+  return wrtBigUInt64LE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'));
+});
+Buffer.prototype.writeBigUInt64BE = defineBigIntMethod(function writeBigUInt64BE(value, offset = 0) {
+  return wrtBigUInt64BE(this, value, offset, BigInt(0), BigInt('0xffffffffffffffff'));
+});
 Buffer.prototype.writeIntLE = function writeIntLE(value, offset, byteLength, noAssert) {
   value = +value;
   offset = offset >>> 0;
   if (!noAssert) {
-    var limit = Math.pow(2, 8 * byteLength - 1);
+    const limit = Math.pow(2, 8 * byteLength - 1);
     checkInt(this, value, offset, byteLength, limit - 1, -limit);
   }
-  var i = 0;
-  var mul = 1;
-  var sub = 0;
+  let i = 0;
+  let mul = 1;
+  let sub = 0;
   this[offset] = value & 0xFF;
   while (++i < byteLength && (mul *= 0x100)) {
     if (value < 0 && sub === 0 && this[offset + i - 1] !== 0) {
@@ -1298,12 +1395,12 @@ Buffer.prototype.writeIntBE = function writeIntBE(value, offset, byteLength, noA
   value = +value;
   offset = offset >>> 0;
   if (!noAssert) {
-    var limit = Math.pow(2, 8 * byteLength - 1);
+    const limit = Math.pow(2, 8 * byteLength - 1);
     checkInt(this, value, offset, byteLength, limit - 1, -limit);
   }
-  var i = byteLength - 1;
-  var mul = 1;
-  var sub = 0;
+  let i = byteLength - 1;
+  let mul = 1;
+  let sub = 0;
   this[offset + i] = value & 0xFF;
   while (--i >= 0 && (mul *= 0x100)) {
     if (value < 0 && sub === 0 && this[offset + i + 1] !== 0) {
@@ -1358,6 +1455,12 @@ Buffer.prototype.writeInt32BE = function writeInt32BE(value, offset, noAssert) {
   this[offset + 3] = value & 0xff;
   return offset + 4;
 };
+Buffer.prototype.writeBigInt64LE = defineBigIntMethod(function writeBigInt64LE(value, offset = 0) {
+  return wrtBigUInt64LE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'));
+});
+Buffer.prototype.writeBigInt64BE = defineBigIntMethod(function writeBigInt64BE(value, offset = 0) {
+  return wrtBigUInt64BE(this, value, offset, -BigInt('0x8000000000000000'), BigInt('0x7fffffffffffffff'));
+});
 function checkIEEE754(buf, value, offset, ext, max, min) {
   if (offset + ext > buf.length) throw new RangeError('Index out of range');
   if (offset < 0) throw new RangeError('Index out of range');
@@ -1418,7 +1521,7 @@ Buffer.prototype.copy = function copy(target, targetStart, start, end) {
   if (target.length - targetStart < end - start) {
     end = target.length - targetStart + start;
   }
-  var len = end - start;
+  const len = end - start;
   if (this === target && typeof Uint8Array.prototype.copyWithin === 'function') {
     // Use built-in when available, missing from IE11
     this.copyWithin(targetStart, start, end);
@@ -1450,7 +1553,7 @@ Buffer.prototype.fill = function fill(val, start, end, encoding) {
       throw new TypeError('Unknown encoding: ' + encoding);
     }
     if (val.length === 1) {
-      var code = val.charCodeAt(0);
+      const code = val.charCodeAt(0);
       if (encoding === 'utf8' && code < 128 || encoding === 'latin1') {
         // Fast path: If `val` fits into a single byte, use that numeric value.
         val = code;
@@ -1472,14 +1575,14 @@ Buffer.prototype.fill = function fill(val, start, end, encoding) {
   start = start >>> 0;
   end = end === undefined ? this.length : end >>> 0;
   if (!val) val = 0;
-  var i;
+  let i;
   if (typeof val === 'number') {
     for (i = start; i < end; ++i) {
       this[i] = val;
     }
   } else {
-    var bytes = Buffer.isBuffer(val) ? val : Buffer.from(val, encoding);
-    var len = bytes.length;
+    const bytes = Buffer.isBuffer(val) ? val : Buffer.from(val, encoding);
+    const len = bytes.length;
     if (len === 0) {
       throw new TypeError('The value "' + val + '" is invalid for argument "value"');
     }
@@ -1490,10 +1593,125 @@ Buffer.prototype.fill = function fill(val, start, end, encoding) {
   return this;
 };
 
+// CUSTOM ERRORS
+// =============
+
+// Simplified versions from Node, changed for Buffer-only usage
+const errors = {};
+function E(sym, getMessage, Base) {
+  errors[sym] = class NodeError extends Base {
+    constructor() {
+      super();
+      Object.defineProperty(this, 'message', {
+        value: getMessage.apply(this, arguments),
+        writable: true,
+        configurable: true
+      });
+
+      // Add the error code to the name to include it in the stack trace.
+      this.name = `${this.name} [${sym}]`;
+      // Access the stack to generate the error message including the error code
+      // from the name.
+      this.stack; // eslint-disable-line no-unused-expressions
+      // Reset the name to the actual name.
+      delete this.name;
+    }
+    get code() {
+      return sym;
+    }
+    set code(value) {
+      Object.defineProperty(this, 'code', {
+        configurable: true,
+        enumerable: true,
+        value,
+        writable: true
+      });
+    }
+    toString() {
+      return `${this.name} [${sym}]: ${this.message}`;
+    }
+  };
+}
+E('ERR_BUFFER_OUT_OF_BOUNDS', function (name) {
+  if (name) {
+    return `${name} is outside of buffer bounds`;
+  }
+  return 'Attempt to access memory outside buffer bounds';
+}, RangeError);
+E('ERR_INVALID_ARG_TYPE', function (name, actual) {
+  return `The "${name}" argument must be of type number. Received type ${typeof actual}`;
+}, TypeError);
+E('ERR_OUT_OF_RANGE', function (str, range, input) {
+  let msg = `The value of "${str}" is out of range.`;
+  let received = input;
+  if (Number.isInteger(input) && Math.abs(input) > 2 ** 32) {
+    received = addNumericalSeparator(String(input));
+  } else if (typeof input === 'bigint') {
+    received = String(input);
+    if (input > BigInt(2) ** BigInt(32) || input < -(BigInt(2) ** BigInt(32))) {
+      received = addNumericalSeparator(received);
+    }
+    received += 'n';
+  }
+  msg += ` It must be ${range}. Received ${received}`;
+  return msg;
+}, RangeError);
+function addNumericalSeparator(val) {
+  let res = '';
+  let i = val.length;
+  const start = val[0] === '-' ? 1 : 0;
+  for (; i >= start + 4; i -= 3) {
+    res = `_${val.slice(i - 3, i)}${res}`;
+  }
+  return `${val.slice(0, i)}${res}`;
+}
+
+// CHECK FUNCTIONS
+// ===============
+
+function checkBounds(buf, offset, byteLength) {
+  validateNumber(offset, 'offset');
+  if (buf[offset] === undefined || buf[offset + byteLength] === undefined) {
+    boundsError(offset, buf.length - (byteLength + 1));
+  }
+}
+function checkIntBI(value, min, max, buf, offset, byteLength) {
+  if (value > max || value < min) {
+    const n = typeof min === 'bigint' ? 'n' : '';
+    let range;
+    if (byteLength > 3) {
+      if (min === 0 || min === BigInt(0)) {
+        range = `>= 0${n} and < 2${n} ** ${(byteLength + 1) * 8}${n}`;
+      } else {
+        range = `>= -(2${n} ** ${(byteLength + 1) * 8 - 1}${n}) and < 2 ** ` + `${(byteLength + 1) * 8 - 1}${n}`;
+      }
+    } else {
+      range = `>= ${min}${n} and <= ${max}${n}`;
+    }
+    throw new errors.ERR_OUT_OF_RANGE('value', range, value);
+  }
+  checkBounds(buf, offset, byteLength);
+}
+function validateNumber(value, name) {
+  if (typeof value !== 'number') {
+    throw new errors.ERR_INVALID_ARG_TYPE(name, 'number', value);
+  }
+}
+function boundsError(value, length, type) {
+  if (Math.floor(value) !== value) {
+    validateNumber(value, type);
+    throw new errors.ERR_OUT_OF_RANGE(type || 'offset', 'an integer', value);
+  }
+  if (length < 0) {
+    throw new errors.ERR_BUFFER_OUT_OF_BOUNDS();
+  }
+  throw new errors.ERR_OUT_OF_RANGE(type || 'offset', `>= ${type ? 1 : 0} and <= ${length}`, value);
+}
+
 // HELPER FUNCTIONS
 // ================
 
-var INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
+const INVALID_BASE64_RE = /[^+/0-9A-Za-z-_]/g;
 function base64clean(str) {
   // Node takes equal signs as end of the Base64 encoding
   str = str.split('=')[0];
@@ -1509,11 +1727,11 @@ function base64clean(str) {
 }
 function utf8ToBytes(string, units) {
   units = units || Infinity;
-  var codePoint;
-  var length = string.length;
-  var leadSurrogate = null;
-  var bytes = [];
-  for (var i = 0; i < length; ++i) {
+  let codePoint;
+  const length = string.length;
+  let leadSurrogate = null;
+  const bytes = [];
+  for (let i = 0; i < length; ++i) {
     codePoint = string.charCodeAt(i);
 
     // is surrogate component
@@ -1571,17 +1789,17 @@ function utf8ToBytes(string, units) {
   return bytes;
 }
 function asciiToBytes(str) {
-  var byteArray = [];
-  for (var i = 0; i < str.length; ++i) {
+  const byteArray = [];
+  for (let i = 0; i < str.length; ++i) {
     // Node's code seems to be doing this and not & 0x7F..
     byteArray.push(str.charCodeAt(i) & 0xFF);
   }
   return byteArray;
 }
 function utf16leToBytes(str, units) {
-  var c, hi, lo;
-  var byteArray = [];
-  for (var i = 0; i < str.length; ++i) {
+  let c, hi, lo;
+  const byteArray = [];
+  for (let i = 0; i < str.length; ++i) {
     if ((units -= 2) < 0) break;
     c = str.charCodeAt(i);
     hi = c >> 8;
@@ -1595,7 +1813,8 @@ function base64ToBytes(str) {
   return base64.toByteArray(base64clean(str));
 }
 function blitBuffer(src, dst, offset, length) {
-  for (var i = 0; i < length; ++i) {
+  let i;
+  for (i = 0; i < length; ++i) {
     if (i + offset >= dst.length || i >= src.length) break;
     dst[i + offset] = src[i];
   }
@@ -1615,17 +1834,25 @@ function numberIsNaN(obj) {
 
 // Create lookup table for `toString('hex')`
 // See: https://github.com/feross/buffer/issues/219
-var hexSliceLookupTable = function () {
-  var alphabet = '0123456789abcdef';
-  var table = new Array(256);
-  for (var i = 0; i < 16; ++i) {
-    var i16 = i * 16;
-    for (var j = 0; j < 16; ++j) {
+const hexSliceLookupTable = function () {
+  const alphabet = '0123456789abcdef';
+  const table = new Array(256);
+  for (let i = 0; i < 16; ++i) {
+    const i16 = i * 16;
+    for (let j = 0; j < 16; ++j) {
       table[i16 + j] = alphabet[i] + alphabet[j];
     }
   }
   return table;
 }();
+
+// Return not function with Error if BigInt not supported
+function defineBigIntMethod(fn) {
+  return typeof BigInt === 'undefined' ? BufferBigIntNotDefined : fn;
+}
+function BufferBigIntNotDefined() {
+  throw new Error('BigInt not supported');
+}
 
 /***/ }),
 
@@ -12683,771 +12910,6 @@ SafeBuffer.allocUnsafeSlow = function (size) {
 
 /***/ }),
 
-/***/ "./node_modules/ua-parser-js/src/ua-parser.js":
-/*!****************************************************!*\
-  !*** ./node_modules/ua-parser-js/src/ua-parser.js ***!
-  \****************************************************/
-/***/ (function(module, exports, __webpack_require__) {
-
-var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
-/* UAParser.js v1.0.38
-   Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
-   MIT License */ /*
-                  Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
-                  Supports browser & node.js environment. 
-                  Demo   : https://faisalman.github.io/ua-parser-js
-                  Source : https://github.com/faisalman/ua-parser-js */
-/////////////////////////////////////////////////////////////////////////////////
-
-(function (window, undefined) {
-  'use strict';
-
-  //////////////
-  // Constants
-  /////////////
-  var LIBVERSION = '1.0.38',
-    EMPTY = '',
-    UNKNOWN = '?',
-    FUNC_TYPE = 'function',
-    UNDEF_TYPE = 'undefined',
-    OBJ_TYPE = 'object',
-    STR_TYPE = 'string',
-    MAJOR = 'major',
-    MODEL = 'model',
-    NAME = 'name',
-    TYPE = 'type',
-    VENDOR = 'vendor',
-    VERSION = 'version',
-    ARCHITECTURE = 'architecture',
-    CONSOLE = 'console',
-    MOBILE = 'mobile',
-    TABLET = 'tablet',
-    SMARTTV = 'smarttv',
-    WEARABLE = 'wearable',
-    EMBEDDED = 'embedded',
-    UA_MAX_LENGTH = 500;
-  var AMAZON = 'Amazon',
-    APPLE = 'Apple',
-    ASUS = 'ASUS',
-    BLACKBERRY = 'BlackBerry',
-    BROWSER = 'Browser',
-    CHROME = 'Chrome',
-    EDGE = 'Edge',
-    FIREFOX = 'Firefox',
-    GOOGLE = 'Google',
-    HUAWEI = 'Huawei',
-    LG = 'LG',
-    MICROSOFT = 'Microsoft',
-    MOTOROLA = 'Motorola',
-    OPERA = 'Opera',
-    SAMSUNG = 'Samsung',
-    SHARP = 'Sharp',
-    SONY = 'Sony',
-    XIAOMI = 'Xiaomi',
-    ZEBRA = 'Zebra',
-    FACEBOOK = 'Facebook',
-    CHROMIUM_OS = 'Chromium OS',
-    MAC_OS = 'Mac OS';
-
-  ///////////
-  // Helper
-  //////////
-
-  var extend = function (regexes, extensions) {
-      var mergedRegexes = {};
-      for (var i in regexes) {
-        if (extensions[i] && extensions[i].length % 2 === 0) {
-          mergedRegexes[i] = extensions[i].concat(regexes[i]);
-        } else {
-          mergedRegexes[i] = regexes[i];
-        }
-      }
-      return mergedRegexes;
-    },
-    enumerize = function (arr) {
-      var enums = {};
-      for (var i = 0; i < arr.length; i++) {
-        enums[arr[i].toUpperCase()] = arr[i];
-      }
-      return enums;
-    },
-    has = function (str1, str2) {
-      return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
-    },
-    lowerize = function (str) {
-      return str.toLowerCase();
-    },
-    majorize = function (version) {
-      return typeof version === STR_TYPE ? version.replace(/[^\d\.]/g, EMPTY).split('.')[0] : undefined;
-    },
-    trim = function (str, len) {
-      if (typeof str === STR_TYPE) {
-        str = str.replace(/^\s\s*/, EMPTY);
-        return typeof len === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
-      }
-    };
-
-  ///////////////
-  // Map helper
-  //////////////
-
-  var rgxMapper = function (ua, arrays) {
-      var i = 0,
-        j,
-        k,
-        p,
-        q,
-        matches,
-        match;
-
-      // loop through all regexes maps
-      while (i < arrays.length && !matches) {
-        var regex = arrays[i],
-          // even sequence (0,2,4,..)
-          props = arrays[i + 1]; // odd sequence (1,3,5,..)
-        j = k = 0;
-
-        // try matching uastring with regexes
-        while (j < regex.length && !matches) {
-          if (!regex[j]) {
-            break;
-          }
-          matches = regex[j++].exec(ua);
-          if (!!matches) {
-            for (p = 0; p < props.length; p++) {
-              match = matches[++k];
-              q = props[p];
-              // check if given property is actually array
-              if (typeof q === OBJ_TYPE && q.length > 0) {
-                if (q.length === 2) {
-                  if (typeof q[1] == FUNC_TYPE) {
-                    // assign modified match
-                    this[q[0]] = q[1].call(this, match);
-                  } else {
-                    // assign given value, ignore regex match
-                    this[q[0]] = q[1];
-                  }
-                } else if (q.length === 3) {
-                  // check whether function or regex
-                  if (typeof q[1] === FUNC_TYPE && !(q[1].exec && q[1].test)) {
-                    // call function (usually string mapper)
-                    this[q[0]] = match ? q[1].call(this, match, q[2]) : undefined;
-                  } else {
-                    // sanitize match using given regex
-                    this[q[0]] = match ? match.replace(q[1], q[2]) : undefined;
-                  }
-                } else if (q.length === 4) {
-                  this[q[0]] = match ? q[3].call(this, match.replace(q[1], q[2])) : undefined;
-                }
-              } else {
-                this[q] = match ? match : undefined;
-              }
-            }
-          }
-        }
-        i += 2;
-      }
-    },
-    strMapper = function (str, map) {
-      for (var i in map) {
-        // check if current value is array
-        if (typeof map[i] === OBJ_TYPE && map[i].length > 0) {
-          for (var j = 0; j < map[i].length; j++) {
-            if (has(map[i][j], str)) {
-              return i === UNKNOWN ? undefined : i;
-            }
-          }
-        } else if (has(map[i], str)) {
-          return i === UNKNOWN ? undefined : i;
-        }
-      }
-      return str;
-    };
-
-  ///////////////
-  // String map
-  //////////////
-
-  // Safari < 3.0
-  var oldSafariMap = {
-      '1.0': '/8',
-      '1.2': '/1',
-      '1.3': '/3',
-      '2.0': '/412',
-      '2.0.2': '/416',
-      '2.0.3': '/417',
-      '2.0.4': '/419',
-      '?': '/'
-    },
-    windowsVersionMap = {
-      'ME': '4.90',
-      'NT 3.11': 'NT3.51',
-      'NT 4.0': 'NT4.0',
-      '2000': 'NT 5.0',
-      'XP': ['NT 5.1', 'NT 5.2'],
-      'Vista': 'NT 6.0',
-      '7': 'NT 6.1',
-      '8': 'NT 6.2',
-      '8.1': 'NT 6.3',
-      '10': ['NT 6.4', 'NT 10.0'],
-      'RT': 'ARM'
-    };
-
-  //////////////
-  // Regex map
-  /////////////
-
-  var regexes = {
-    browser: [[/\b(?:crmo|crios)\/([\w\.]+)/i // Chrome for Android/iOS
-    ], [VERSION, [NAME, 'Chrome']], [/edg(?:e|ios|a)?\/([\w\.]+)/i // Microsoft Edge
-    ], [VERSION, [NAME, 'Edge']], [
-    // Presto based
-    /(opera mini)\/([-\w\.]+)/i,
-    // Opera Mini
-    /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,
-    // Opera Mobi/Tablet
-    /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i // Opera
-    ], [NAME, VERSION], [/opios[\/ ]+([\w\.]+)/i // Opera mini on iphone >= 8.0
-    ], [VERSION, [NAME, OPERA + ' Mini']], [/\bop(?:rg)?x\/([\w\.]+)/i // Opera GX
-    ], [VERSION, [NAME, OPERA + ' GX']], [/\bopr\/([\w\.]+)/i // Opera Webkit
-    ], [VERSION, [NAME, OPERA]], [
-    // Mixed
-    /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i // Baidu
-    ], [VERSION, [NAME, 'Baidu']], [/(kindle)\/([\w\.]+)/i,
-    // Kindle
-    /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,
-    // Lunascape/Maxthon/Netfront/Jasmine/Blazer
-    // Trident based
-    /(avant|iemobile|slim)\s?(?:browser)?[\/ ]?([\w\.]*)/i,
-    // Avant/IEMobile/SlimBrowser
-    /(?:ms|\()(ie) ([\w\.]+)/i,
-    // Internet Explorer
-
-    // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
-    /(flock|rockmelt|midori|epiphany|silk|skyfire|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|qq|duckduckgo)\/([-\w\.]+)/i,
-    // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
-    /(heytap|ovi)browser\/([\d\.]+)/i,
-    // Heytap/Ovi
-    /(weibo)__([\d\.]+)/i // Weibo
-    ], [NAME, VERSION], [/\bddg\/([\w\.]+)/i // DuckDuckGo
-    ], [VERSION, [NAME, 'DuckDuckGo']], [/(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i // UCBrowser
-    ], [VERSION, [NAME, 'UC' + BROWSER]], [/microm.+\bqbcore\/([\w\.]+)/i,
-    // WeChat Desktop for Windows Built-in Browser
-    /\bqbcore\/([\w\.]+).+microm/i, /micromessenger\/([\w\.]+)/i // WeChat
-    ], [VERSION, [NAME, 'WeChat']], [/konqueror\/([\w\.]+)/i // Konqueror
-    ], [VERSION, [NAME, 'Konqueror']], [/trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i // IE11
-    ], [VERSION, [NAME, 'IE']], [/ya(?:search)?browser\/([\w\.]+)/i // Yandex
-    ], [VERSION, [NAME, 'Yandex']], [/slbrowser\/([\w\.]+)/i // Smart Lenovo Browser
-    ], [VERSION, [NAME, 'Smart Lenovo ' + BROWSER]], [/(avast|avg)\/([\w\.]+)/i // Avast/AVG Secure Browser
-    ], [[NAME, /(.+)/, '$1 Secure ' + BROWSER], VERSION], [/\bfocus\/([\w\.]+)/i // Firefox Focus
-    ], [VERSION, [NAME, FIREFOX + ' Focus']], [/\bopt\/([\w\.]+)/i // Opera Touch
-    ], [VERSION, [NAME, OPERA + ' Touch']], [/coc_coc\w+\/([\w\.]+)/i // Coc Coc Browser
-    ], [VERSION, [NAME, 'Coc Coc']], [/dolfin\/([\w\.]+)/i // Dolphin
-    ], [VERSION, [NAME, 'Dolphin']], [/coast\/([\w\.]+)/i // Opera Coast
-    ], [VERSION, [NAME, OPERA + ' Coast']], [/miuibrowser\/([\w\.]+)/i // MIUI Browser
-    ], [VERSION, [NAME, 'MIUI ' + BROWSER]], [/fxios\/([-\w\.]+)/i // Firefox for iOS
-    ], [VERSION, [NAME, FIREFOX]], [/\bqihu|(qi?ho?o?|360)browser/i // 360
-    ], [[NAME, '360 ' + BROWSER]], [/(oculus|sailfish|huawei|vivo)browser\/([\w\.]+)/i], [[NAME, /(.+)/, '$1 ' + BROWSER], VERSION], [
-    // Oculus/Sailfish/HuaweiBrowser/VivoBrowser
-    /samsungbrowser\/([\w\.]+)/i // Samsung Internet
-    ], [VERSION, [NAME, SAMSUNG + ' Internet']], [/(comodo_dragon)\/([\w\.]+)/i // Comodo Dragon
-    ], [[NAME, /_/g, ' '], VERSION], [/metasr[\/ ]?([\d\.]+)/i // Sogou Explorer
-    ], [VERSION, [NAME, 'Sogou Explorer']], [/(sogou)mo\w+\/([\d\.]+)/i // Sogou Mobile
-    ], [[NAME, 'Sogou Mobile'], VERSION], [/(electron)\/([\w\.]+) safari/i,
-    // Electron-based App
-    /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,
-    // Tesla
-    /m?(qqbrowser|2345Explorer)[\/ ]?([\w\.]+)/i // QQBrowser/2345 Browser
-    ], [NAME, VERSION], [/(lbbrowser)/i,
-    // LieBao Browser
-    /\[(linkedin)app\]/i // LinkedIn App for iOS & Android
-    ], [NAME], [
-    // WebView
-    /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i // Facebook App for iOS & Android
-    ], [[NAME, FACEBOOK], VERSION], [/(Klarna)\/([\w\.]+)/i,
-    // Klarna Shopping Browser for iOS & Android
-    /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,
-    // Kakao App
-    /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,
-    // Naver InApp
-    /safari (line)\/([\w\.]+)/i,
-    // Line App for iOS
-    /\b(line)\/([\w\.]+)\/iab/i,
-    // Line App for Android
-    /(alipay)client\/([\w\.]+)/i,
-    // Alipay
-    /(twitter)(?:and| f.+e\/([\w\.]+))/i,
-    // Twitter
-    /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i // Chromium/Instagram/Snapchat
-    ], [NAME, VERSION], [/\bgsa\/([\w\.]+) .*safari\//i // Google Search Appliance on iOS
-    ], [VERSION, [NAME, 'GSA']], [/musical_ly(?:.+app_?version\/|_)([\w\.]+)/i // TikTok
-    ], [VERSION, [NAME, 'TikTok']], [/headlesschrome(?:\/([\w\.]+)| )/i // Chrome Headless
-    ], [VERSION, [NAME, CHROME + ' Headless']], [/ wv\).+(chrome)\/([\w\.]+)/i // Chrome WebView
-    ], [[NAME, CHROME + ' WebView'], VERSION], [/droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i // Android Browser
-    ], [VERSION, [NAME, 'Android ' + BROWSER]], [/(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i // Chrome/OmniWeb/Arora/Tizen/Nokia
-    ], [NAME, VERSION], [/version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i // Mobile Safari
-    ], [VERSION, [NAME, 'Mobile Safari']], [/version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i // Safari & Safari Mobile
-    ], [VERSION, NAME], [/webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i // Safari < 3.0
-    ], [NAME, [VERSION, strMapper, oldSafariMap]], [/(webkit|khtml)\/([\w\.]+)/i], [NAME, VERSION], [
-    // Gecko based
-    /(navigator|netscape\d?)\/([-\w\.]+)/i // Netscape
-    ], [[NAME, 'Netscape'], VERSION], [/mobile vr; rv:([\w\.]+)\).+firefox/i // Firefox Reality
-    ], [VERSION, [NAME, FIREFOX + ' Reality']], [/ekiohf.+(flow)\/([\w\.]+)/i,
-    // Flow
-    /(swiftfox)/i,
-    // Swiftfox
-    /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror|klar)[\/ ]?([\w\.\+]+)/i,
-    // IceDragon/Iceweasel/Camino/Chimera/Fennec/Maemo/Minimo/Conkeror/Klar
-    /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
-    // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
-    /(firefox)\/([\w\.]+)/i,
-    // Other Firefox-based
-    /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,
-    // Mozilla
-
-    // Other
-    /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir|obigo|mosaic|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
-    // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir/Obigo/Mosaic/Go/ICE/UP.Browser
-    /(links) \(([\w\.]+)/i,
-    // Links
-    /panasonic;(viera)/i // Panasonic Viera
-    ], [NAME, VERSION], [/(cobalt)\/([\w\.]+)/i // Cobalt
-    ], [NAME, [VERSION, /master.|lts./, ""]]],
-    cpu: [[/(?:(amd|x(?:(?:86|64)[-_])?|wow|win)64)[;\)]/i // AMD64 (x64)
-    ], [[ARCHITECTURE, 'amd64']], [/(ia32(?=;))/i // IA32 (quicktime)
-    ], [[ARCHITECTURE, lowerize]], [/((?:i[346]|x)86)[;\)]/i // IA32 (x86)
-    ], [[ARCHITECTURE, 'ia32']], [/\b(aarch64|arm(v?8e?l?|_?64))\b/i // ARM64
-    ], [[ARCHITECTURE, 'arm64']], [/\b(arm(?:v[67])?ht?n?[fl]p?)\b/i // ARMHF
-    ], [[ARCHITECTURE, 'armhf']], [
-    // PocketPC mistakenly identified as PowerPC
-    /windows (ce|mobile); ppc;/i], [[ARCHITECTURE, 'arm']], [/((?:ppc|powerpc)(?:64)?)(?: mac|;|\))/i // PowerPC
-    ], [[ARCHITECTURE, /ower/, EMPTY, lowerize]], [/(sun4\w)[;\)]/i // SPARC
-    ], [[ARCHITECTURE, 'sparc']], [/((?:avr32|ia64(?=;))|68k(?=\))|\barm(?=v(?:[1-7]|[5-7]1)l?|;|eabi)|(?=atmel )avr|(?:irix|mips|sparc)(?:64)?\b|pa-risc)/i
-    // IA64, 68K, ARM/64, AVR/32, IRIX/64, MIPS/64, SPARC/64, PA-RISC
-    ], [[ARCHITECTURE, lowerize]]],
-    device: [[
-    //////////////////////////
-    // MOBILES & TABLETS
-    /////////////////////////
-
-    // Samsung
-    /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [/\b((?:s[cgp]h|gt|sm)-\w+|sc[g-]?[\d]+a?|galaxy nexus)/i, /samsung[- ]([-\w]+)/i, /sec-(sgh\w+)/i], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
-    // Apple
-    /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i // iPod/iPhone
-    ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [/\((ipad);[-\w\),; ]+apple/i,
-    // iPad
-    /applecoremedia\/[\w\.]+ \((ipad)/i, /\b(ipad)\d\d?,\d\d?[;\]].+ios/i], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [/(macintosh);/i], [MODEL, [VENDOR, APPLE]], [
-    // Sharp
-    /\b(sh-?[altvz]?\d\d[a-ekm]?)/i], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
-    // Huawei
-    /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [/(?:huawei|honor)([-\w ]+)[;\)]/i, /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
-    // Xiaomi
-    /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,
-    // Xiaomi POCO
-    /\b; (\w+) build\/hm\1/i,
-    // Xiaomi Hongmi 'numeric' models
-    /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,
-    // Xiaomi Hongmi
-    /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,
-    // Xiaomi Redmi
-    /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,
-    // Xiaomi Redmi 'numeric' models
-    /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
-    ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [/oid[^\)]+; (2\d{4}(283|rpbf)[cgl])( bui|\))/i,
-    // Redmi Pad
-    /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i // Mi Pad tablets
-    ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
-    // OPPO
-    /; (\w+) bui.+ oppo/i, /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i], [MODEL, [VENDOR, 'OPPO'], [TYPE, MOBILE]], [/\b(opd2\d{3}a?) bui/i], [MODEL, [VENDOR, 'OPPO'], [TYPE, TABLET]], [
-    // Vivo
-    /vivo (\w+)(?: bui|\))/i, /\b(v[12]\d{3}\w?[at])(?: bui|;)/i], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
-    // Realme
-    /\b(rmx[1-3]\d{3})(?: bui|;|\))/i], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
-    // Motorola
-    /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i, /\bmot(?:orola)?[- ](\w*)/i, /((?:moto[\w\(\) ]+|xt\d{3,4}|nexus 6)(?= bui|\)))/i], [MODEL, [VENDOR, MOTOROLA], [TYPE, MOBILE]], [/\b(mz60\d|xoom[2 ]{0,2}) build\//i], [MODEL, [VENDOR, MOTOROLA], [TYPE, TABLET]], [
-    // LG
-    /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i], [MODEL, [VENDOR, LG], [TYPE, TABLET]], [/(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i, /\blg[-e;\/ ]+((?!browser|netcast|android tv)\w+)/i, /\blg-?([\d\w]+) bui/i], [MODEL, [VENDOR, LG], [TYPE, MOBILE]], [
-    // Lenovo
-    /(ideatab[-\w ]+)/i, /lenovo ?(s[56]000[-\w]+|tab(?:[\w ]+)|yt[-\d\w]{6}|tb[-\d\w]{6})/i], [MODEL, [VENDOR, 'Lenovo'], [TYPE, TABLET]], [
-    // Nokia
-    /(?:maemo|nokia).*(n900|lumia \d+)/i, /nokia[-_ ]?([-\w\.]*)/i], [[MODEL, /_/g, ' '], [VENDOR, 'Nokia'], [TYPE, MOBILE]], [
-    // Google
-    /(pixel c)\b/i // Google Pixel C
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, TABLET]], [/droid.+; (pixel[\daxl ]{0,6})(?: bui|\))/i // Google Pixel
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
-    // Sony
-    /droid.+ (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [/sony tablet [ps]/i, /\b(?:sony)?sgp\w+(?: bui|\))/i], [[MODEL, 'Xperia Tablet'], [VENDOR, SONY], [TYPE, TABLET]], [
-    // OnePlus
-    / (kb2005|in20[12]5|be20[12][59])\b/i, /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i], [MODEL, [VENDOR, 'OnePlus'], [TYPE, MOBILE]], [
-    // Amazon
-    /(alexa)webm/i, /(kf[a-z]{2}wi|aeo[c-r]{2})( bui|\))/i,
-    // Kindle Fire without Silk / Echo Show
-    /(kf[a-z]+)( bui|\)).+silk\//i // Kindle Fire HD
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [/((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i // Fire Phone
-    ], [[MODEL, /(.+)/g, 'Fire Phone $1'], [VENDOR, AMAZON], [TYPE, MOBILE]], [
-    // BlackBerry
-    /(playbook);[-\w\),; ]+(rim)/i // BlackBerry PlayBook
-    ], [MODEL, VENDOR, [TYPE, TABLET]], [/\b((?:bb[a-f]|st[hv])100-\d)/i, /\(bb10; (\w+)/i // BlackBerry 10
-    ], [MODEL, [VENDOR, BLACKBERRY], [TYPE, MOBILE]], [
-    // Asus
-    /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i], [MODEL, [VENDOR, ASUS], [TYPE, TABLET]], [/ (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i], [MODEL, [VENDOR, ASUS], [TYPE, MOBILE]], [
-    // HTC
-    /(nexus 9)/i // HTC Nexus 9
-    ], [MODEL, [VENDOR, 'HTC'], [TYPE, TABLET]], [/(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,
-    // HTC
-
-    // ZTE
-    /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i, /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
-    ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
-    // Acer
-    /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i], [MODEL, [VENDOR, 'Acer'], [TYPE, TABLET]], [
-    // Meizu
-    /droid.+; (m[1-5] note) bui/i, /\bmz-([-\w]{2,})/i], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
-    // Ulefone
-    /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i], [MODEL, [VENDOR, 'Ulefone'], [TYPE, MOBILE]], [
-    // MIXED
-    /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron|infinix|tecno)[-_ ]?([-\w]*)/i,
-    // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
-    /(hp) ([\w ]+\w)/i,
-    // HP iPAQ
-    /(asus)-?(\w+)/i,
-    // Asus
-    /(microsoft); (lumia[\w ]+)/i,
-    // Microsoft Lumia
-    /(lenovo)[-_ ]?([-\w]+)/i,
-    // Lenovo
-    /(jolla)/i,
-    // Jolla
-    /(oppo) ?([\w ]+) bui/i // OPPO
-    ], [VENDOR, MODEL, [TYPE, MOBILE]], [/(kobo)\s(ereader|touch)/i,
-    // Kobo
-    /(archos) (gamepad2?)/i,
-    // Archos
-    /(hp).+(touchpad(?!.+tablet)|tablet)/i,
-    // HP TouchPad
-    /(kindle)\/([\w\.]+)/i,
-    // Kindle
-    /(nook)[\w ]+build\/(\w+)/i,
-    // Nook
-    /(dell) (strea[kpr\d ]*[\dko])/i,
-    // Dell Streak
-    /(le[- ]+pan)[- ]+(\w{1,9}) bui/i,
-    // Le Pan Tablets
-    /(trinity)[- ]*(t\d{3}) bui/i,
-    // Trinity Tablets
-    /(gigaset)[- ]+(q\w{1,9}) bui/i,
-    // Gigaset Tablets
-    /(vodafone) ([\w ]+)(?:\)| bui)/i // Vodafone
-    ], [VENDOR, MODEL, [TYPE, TABLET]], [/(surface duo)/i // Surface Duo
-    ], [MODEL, [VENDOR, MICROSOFT], [TYPE, TABLET]], [/droid [\d\.]+; (fp\du?)(?: b|\))/i // Fairphone
-    ], [MODEL, [VENDOR, 'Fairphone'], [TYPE, MOBILE]], [/(u304aa)/i // AT&T
-    ], [MODEL, [VENDOR, 'AT&T'], [TYPE, MOBILE]], [/\bsie-(\w*)/i // Siemens
-    ], [MODEL, [VENDOR, 'Siemens'], [TYPE, MOBILE]], [/\b(rct\w+) b/i // RCA Tablets
-    ], [MODEL, [VENDOR, 'RCA'], [TYPE, TABLET]], [/\b(venue[\d ]{2,7}) b/i // Dell Venue Tablets
-    ], [MODEL, [VENDOR, 'Dell'], [TYPE, TABLET]], [/\b(q(?:mv|ta)\w+) b/i // Verizon Tablet
-    ], [MODEL, [VENDOR, 'Verizon'], [TYPE, TABLET]], [/\b(?:barnes[& ]+noble |bn[rt])([\w\+ ]*) b/i // Barnes & Noble Tablet
-    ], [MODEL, [VENDOR, 'Barnes & Noble'], [TYPE, TABLET]], [/\b(tm\d{3}\w+) b/i], [MODEL, [VENDOR, 'NuVision'], [TYPE, TABLET]], [/\b(k88) b/i // ZTE K Series Tablet
-    ], [MODEL, [VENDOR, 'ZTE'], [TYPE, TABLET]], [/\b(nx\d{3}j) b/i // ZTE Nubia
-    ], [MODEL, [VENDOR, 'ZTE'], [TYPE, MOBILE]], [/\b(gen\d{3}) b.+49h/i // Swiss GEN Mobile
-    ], [MODEL, [VENDOR, 'Swiss'], [TYPE, MOBILE]], [/\b(zur\d{3}) b/i // Swiss ZUR Tablet
-    ], [MODEL, [VENDOR, 'Swiss'], [TYPE, TABLET]], [/\b((zeki)?tb.*\b) b/i // Zeki Tablets
-    ], [MODEL, [VENDOR, 'Zeki'], [TYPE, TABLET]], [/\b([yr]\d{2}) b/i, /\b(dragon[- ]+touch |dt)(\w{5}) b/i // Dragon Touch Tablet
-    ], [[VENDOR, 'Dragon Touch'], MODEL, [TYPE, TABLET]], [/\b(ns-?\w{0,9}) b/i // Insignia Tablets
-    ], [MODEL, [VENDOR, 'Insignia'], [TYPE, TABLET]], [/\b((nxa|next)-?\w{0,9}) b/i // NextBook Tablets
-    ], [MODEL, [VENDOR, 'NextBook'], [TYPE, TABLET]], [/\b(xtreme\_)?(v(1[045]|2[015]|[3469]0|7[05])) b/i // Voice Xtreme Phones
-    ], [[VENDOR, 'Voice'], MODEL, [TYPE, MOBILE]], [/\b(lvtel\-)?(v1[12]) b/i // LvTel Phones
-    ], [[VENDOR, 'LvTel'], MODEL, [TYPE, MOBILE]], [/\b(ph-1) /i // Essential PH-1
-    ], [MODEL, [VENDOR, 'Essential'], [TYPE, MOBILE]], [/\b(v(100md|700na|7011|917g).*\b) b/i // Envizen Tablets
-    ], [MODEL, [VENDOR, 'Envizen'], [TYPE, TABLET]], [/\b(trio[-\w\. ]+) b/i // MachSpeed Tablets
-    ], [MODEL, [VENDOR, 'MachSpeed'], [TYPE, TABLET]], [/\btu_(1491) b/i // Rotor Tablets
-    ], [MODEL, [VENDOR, 'Rotor'], [TYPE, TABLET]], [/(shield[\w ]+) b/i // Nvidia Shield Tablets
-    ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, TABLET]], [/(sprint) (\w+)/i // Sprint Phones
-    ], [VENDOR, MODEL, [TYPE, MOBILE]], [/(kin\.[onetw]{3})/i // Microsoft Kin
-    ], [[MODEL, /\./g, ' '], [VENDOR, MICROSOFT], [TYPE, MOBILE]], [/droid.+; (cc6666?|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i // Zebra
-    ], [MODEL, [VENDOR, ZEBRA], [TYPE, TABLET]], [/droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
-    ///////////////////
-    // SMARTTVS
-    ///////////////////
-
-    /smart-tv.+(samsung)/i // Samsung
-    ], [VENDOR, [TYPE, SMARTTV]], [/hbbtv.+maple;(\d+)/i], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [/(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i // LG SmartTV
-    ], [[VENDOR, LG], [TYPE, SMARTTV]], [/(apple) ?tv/i // Apple TV
-    ], [VENDOR, [MODEL, APPLE + ' TV'], [TYPE, SMARTTV]], [/crkey/i // Google Chromecast
-    ], [[MODEL, CHROME + 'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [/droid.+aft(\w+)( bui|\))/i // Fire TV
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [/\(dtv[\);].+(aquos)/i, /(aquos-tv[\w ]+)\)/i // Sharp
-    ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]], [/(bravia[\w ]+)( bui|\))/i // Sony
-    ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [/(mitv-\w{5}) bui/i // Xiaomi
-    ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [/Hbbtv.*(technisat) (.*);/i // TechniSAT
-    ], [VENDOR, MODEL, [TYPE, SMARTTV]], [/\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,
-    // Roku
-    /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i // HbbTV devices
-    ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [/\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i // SmartTV from Unidentified Vendors
-    ], [[TYPE, SMARTTV]], [
-    ///////////////////
-    // CONSOLES
-    ///////////////////
-
-    /(ouya)/i,
-    // Ouya
-    /(nintendo) ([wids3utch]+)/i // Nintendo
-    ], [VENDOR, MODEL, [TYPE, CONSOLE]], [/droid.+; (shield) bui/i // Nvidia
-    ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, CONSOLE]], [/(playstation [345portablevi]+)/i // Playstation
-    ], [MODEL, [VENDOR, SONY], [TYPE, CONSOLE]], [/\b(xbox(?: one)?(?!; xbox))[\); ]/i // Microsoft Xbox
-    ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
-    ///////////////////
-    // WEARABLES
-    ///////////////////
-
-    /((pebble))app/i // Pebble
-    ], [VENDOR, MODEL, [TYPE, WEARABLE]], [/(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i // Apple Watch
-    ], [MODEL, [VENDOR, APPLE], [TYPE, WEARABLE]], [/droid.+; (glass) \d/i // Google Glass
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, WEARABLE]], [/droid.+; (wt63?0{2,3})\)/i], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [/(quest( \d| pro)?)/i // Oculus Quest
-    ], [MODEL, [VENDOR, FACEBOOK], [TYPE, WEARABLE]], [
-    ///////////////////
-    // EMBEDDED
-    ///////////////////
-
-    /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i // Tesla
-    ], [VENDOR, [TYPE, EMBEDDED]], [/(aeobc)\b/i // Echo Dot
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, EMBEDDED]], [
-    ////////////////////
-    // MIXED (GENERIC)
-    ///////////////////
-
-    /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i // Android Phones from Unidentified Vendors
-    ], [MODEL, [TYPE, MOBILE]], [/droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i // Android Tablets from Unidentified Vendors
-    ], [MODEL, [TYPE, TABLET]], [/\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i // Unidentifiable Tablet
-    ], [[TYPE, TABLET]], [/(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i // Unidentifiable Mobile
-    ], [[TYPE, MOBILE]], [/(android[-\w\. ]{0,9});.+buil/i // Generic Android Device
-    ], [MODEL, [VENDOR, 'Generic']]],
-    engine: [[/windows.+ edge\/([\w\.]+)/i // EdgeHTML
-    ], [VERSION, [NAME, EDGE + 'HTML']], [/webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i // Blink
-    ], [VERSION, [NAME, 'Blink']], [/(presto)\/([\w\.]+)/i,
-    // Presto
-    /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i,
-    // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna
-    /ekioh(flow)\/([\w\.]+)/i,
-    // Flow
-    /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,
-    // KHTML/Tasman/Links
-    /(icab)[\/ ]([23]\.[\d\.]+)/i,
-    // iCab
-    /\b(libweb)/i], [NAME, VERSION], [/rv\:([\w\.]{1,9})\b.+(gecko)/i // Gecko
-    ], [VERSION, NAME]],
-    os: [[
-    // Windows
-    /microsoft (windows) (vista|xp)/i // Windows (iTunes)
-    ], [NAME, VERSION], [/(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i // Windows Phone
-    ], [NAME, [VERSION, strMapper, windowsVersionMap]], [/windows nt 6\.2; (arm)/i,
-    // Windows RT
-    /windows[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i, /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i], [[VERSION, strMapper, windowsVersionMap], [NAME, 'Windows']], [
-    // iOS/macOS
-    /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,
-    // iOS
-    /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i, /cfnetwork\/.+darwin/i], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [/(mac os x) ?([\w\. ]*)/i, /(macintosh|mac_powerpc\b)(?!.+haiku)/i // Mac OS
-    ], [[NAME, MAC_OS], [VERSION, /_/g, '.']], [
-    // Mobile OSes
-    /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i // Android-x86/HarmonyOS
-    ], [VERSION, NAME], [
-    // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
-    /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i, /(blackberry)\w*\/([\w\.]*)/i,
-    // Blackberry
-    /(tizen|kaios)[\/ ]([\w\.]+)/i,
-    // Tizen/KaiOS
-    /\((series40);/i // Series 40
-    ], [NAME, VERSION], [/\(bb(10);/i // BlackBerry 10
-    ], [VERSION, [NAME, BLACKBERRY]], [/(?:symbian ?os|symbos|s60(?=;)|series60)[-\/ ]?([\w\.]*)/i // Symbian
-    ], [VERSION, [NAME, 'Symbian']], [/mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i // Firefox OS
-    ], [VERSION, [NAME, FIREFOX + ' OS']], [/web0s;.+rt(tv)/i, /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i // WebOS
-    ], [VERSION, [NAME, 'webOS']], [/watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i // watchOS
-    ], [VERSION, [NAME, 'watchOS']], [
-    // Google Chromecast
-    /crkey\/([\d\.]+)/i // Google Chromecast
-    ], [VERSION, [NAME, CHROME + 'cast']], [/(cros) [\w]+(?:\)| ([\w\.]+)\b)/i // Chromium OS
-    ], [[NAME, CHROMIUM_OS], VERSION], [
-    // Smart TVs
-    /panasonic;(viera)/i,
-    // Panasonic Viera
-    /(netrange)mmh/i,
-    // Netrange
-    /(nettv)\/(\d+\.[\w\.]+)/i,
-    // NetTV
-
-    // Console
-    /(nintendo|playstation) ([wids345portablevuch]+)/i,
-    // Nintendo/Playstation
-    /(xbox); +xbox ([^\);]+)/i,
-    // Microsoft Xbox (360, One, X, S, Series X, Series S)
-
-    // Other
-    /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,
-    // Joli/Palm
-    /(mint)[\/\(\) ]?(\w*)/i,
-    // Mint
-    /(mageia|vectorlinux)[; ]/i,
-    // Mageia/VectorLinux
-    /([kxln]?ubuntu|debian|suse|opensuse|gentoo|arch(?= linux)|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire)(?: gnu\/linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
-    // Ubuntu/Debian/SUSE/Gentoo/Arch/Slackware/Fedora/Mandriva/CentOS/PCLinuxOS/RedHat/Zenwalk/Linpus/Raspbian/Plan9/Minix/RISCOS/Contiki/Deepin/Manjaro/elementary/Sabayon/Linspire
-    /(hurd|linux) ?([\w\.]*)/i,
-    // Hurd/Linux
-    /(gnu) ?([\w\.]*)/i,
-    // GNU
-    /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i,
-    // FreeBSD/NetBSD/OpenBSD/PC-BSD/GhostBSD/DragonFly
-    /(haiku) (\w+)/i // Haiku
-    ], [NAME, VERSION], [/(sunos) ?([\w\.\d]*)/i // Solaris
-    ], [[NAME, 'Solaris'], VERSION], [/((?:open)?solaris)[-\/ ]?([\w\.]*)/i,
-    // Solaris
-    /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,
-    // AIX
-    /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i,
-    // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX/SerenityOS
-    /(unix) ?([\w\.]*)/i // UNIX
-    ], [NAME, VERSION]]
-  };
-
-  /////////////////
-  // Constructor
-  ////////////////
-
-  var UAParser = function (ua, extensions) {
-    if (typeof ua === OBJ_TYPE) {
-      extensions = ua;
-      ua = undefined;
-    }
-    if (!(this instanceof UAParser)) {
-      return new UAParser(ua, extensions).getResult();
-    }
-    var _navigator = typeof window !== UNDEF_TYPE && window.navigator ? window.navigator : undefined;
-    var _ua = ua || (_navigator && _navigator.userAgent ? _navigator.userAgent : EMPTY);
-    var _uach = _navigator && _navigator.userAgentData ? _navigator.userAgentData : undefined;
-    var _rgxmap = extensions ? extend(regexes, extensions) : regexes;
-    var _isSelfNav = _navigator && _navigator.userAgent == _ua;
-    this.getBrowser = function () {
-      var _browser = {};
-      _browser[NAME] = undefined;
-      _browser[VERSION] = undefined;
-      rgxMapper.call(_browser, _ua, _rgxmap.browser);
-      _browser[MAJOR] = majorize(_browser[VERSION]);
-      // Brave-specific detection
-      if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
-        _browser[NAME] = 'Brave';
-      }
-      return _browser;
-    };
-    this.getCPU = function () {
-      var _cpu = {};
-      _cpu[ARCHITECTURE] = undefined;
-      rgxMapper.call(_cpu, _ua, _rgxmap.cpu);
-      return _cpu;
-    };
-    this.getDevice = function () {
-      var _device = {};
-      _device[VENDOR] = undefined;
-      _device[MODEL] = undefined;
-      _device[TYPE] = undefined;
-      rgxMapper.call(_device, _ua, _rgxmap.device);
-      if (_isSelfNav && !_device[TYPE] && _uach && _uach.mobile) {
-        _device[TYPE] = MOBILE;
-      }
-      // iPadOS-specific detection: identified as Mac, but has some iOS-only properties
-      if (_isSelfNav && _device[MODEL] == 'Macintosh' && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
-        _device[MODEL] = 'iPad';
-        _device[TYPE] = TABLET;
-      }
-      return _device;
-    };
-    this.getEngine = function () {
-      var _engine = {};
-      _engine[NAME] = undefined;
-      _engine[VERSION] = undefined;
-      rgxMapper.call(_engine, _ua, _rgxmap.engine);
-      return _engine;
-    };
-    this.getOS = function () {
-      var _os = {};
-      _os[NAME] = undefined;
-      _os[VERSION] = undefined;
-      rgxMapper.call(_os, _ua, _rgxmap.os);
-      if (_isSelfNav && !_os[NAME] && _uach && _uach.platform && _uach.platform != 'Unknown') {
-        _os[NAME] = _uach.platform.replace(/chrome os/i, CHROMIUM_OS).replace(/macos/i, MAC_OS); // backward compatibility
-      }
-      return _os;
-    };
-    this.getResult = function () {
-      return {
-        ua: this.getUA(),
-        browser: this.getBrowser(),
-        engine: this.getEngine(),
-        os: this.getOS(),
-        device: this.getDevice(),
-        cpu: this.getCPU()
-      };
-    };
-    this.getUA = function () {
-      return _ua;
-    };
-    this.setUA = function (ua) {
-      _ua = typeof ua === STR_TYPE && ua.length > UA_MAX_LENGTH ? trim(ua, UA_MAX_LENGTH) : ua;
-      return this;
-    };
-    this.setUA(_ua);
-    return this;
-  };
-  UAParser.VERSION = LIBVERSION;
-  UAParser.BROWSER = enumerize([NAME, VERSION, MAJOR]);
-  UAParser.CPU = enumerize([ARCHITECTURE]);
-  UAParser.DEVICE = enumerize([MODEL, VENDOR, TYPE, CONSOLE, MOBILE, SMARTTV, TABLET, WEARABLE, EMBEDDED]);
-  UAParser.ENGINE = UAParser.OS = enumerize([NAME, VERSION]);
-
-  ///////////
-  // Export
-  //////////
-
-  // check js environment
-  if (typeof exports !== UNDEF_TYPE) {
-    // nodejs env
-    if ("object" !== UNDEF_TYPE && module.exports) {
-      exports = module.exports = UAParser;
-    }
-    exports.UAParser = UAParser;
-  } else {
-    // requirejs env (optional)
-    if ("function" === FUNC_TYPE && __webpack_require__.amdO) {
-      !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
-        return UAParser;
-      }).call(exports, __webpack_require__, exports, module),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    } else if (typeof window !== UNDEF_TYPE) {
-      // browser env
-      window.UAParser = UAParser;
-    }
-  }
-
-  // jQuery/Zepto specific (optional)
-  // Note:
-  //   In AMD env the global scope should be kept clean, but jQuery is an exception.
-  //   jQuery always exports to global scope, unless jQuery.noConflict(true) is used,
-  //   and we should catch that.
-  var $ = typeof window !== UNDEF_TYPE && (window.jQuery || window.Zepto);
-  if ($ && !$.ua) {
-    var parser = new UAParser();
-    $.ua = parser.getResult();
-    $.ua.get = function () {
-      return parser.getUA();
-    };
-    $.ua.set = function (ua) {
-      parser.setUA(ua);
-      var result = parser.getResult();
-      for (var prop in result) {
-        $.ua[prop] = result[prop];
-      }
-    };
-  }
-})(typeof window === 'object' ? window : this);
-
-/***/ }),
-
 /***/ "./node_modules/util-deprecate/browser.js":
 /*!************************************************!*\
   !*** ./node_modules/util-deprecate/browser.js ***!
@@ -13808,7 +13270,7 @@ __webpack_require__.r(__webpack_exports__);
 *
 * @enum
 *
-* @beta
+* @public
 */
 const VerboseLevel = {
   ERROR: 0,
@@ -13824,7 +13286,7 @@ const VerboseLevel = {
 /**
 * CaptionsLogger. To be removed in the future.
 *
-* @beta
+* @public
 */
 var CaptionsLogger = class {
   constructor() {
@@ -13844,7 +13306,7 @@ var CaptionsLogger = class {
 /**
 * Pen state.
 *
-* @beta
+* @public
 */
 var PenState = class {
   constructor() {
@@ -13884,7 +13346,7 @@ var PenState = class {
 /**
 * Unicode character with styling and background.
 *
-* @beta
+* @public
 */
 var StyledUnicodeChar = class {
   constructor() {
@@ -14027,7 +13489,7 @@ function getCharForByte(byte) {
 /**
 * CTA-608 row consisting of NR_COLS instances of StyledUnicodeChar.
 *
-* @beta
+* @public
 */
 var Row = class {
   constructor(logger = new CaptionsLogger()) {
@@ -14128,7 +13590,7 @@ const NR_ROWS = 15;
 /**
 * Keep a CTA-608 screen of 32x15 styled characters
 *
-* @beta
+* @public
 */
 var CaptionScreen = class {
   constructor(logger = new CaptionsLogger()) {
@@ -14267,7 +13729,7 @@ var CaptionScreen = class {
 /**
 * CTA-608 Channel
 *
-* @beta
+* @public
 */
 var Cta608Channel = class {
   constructor(channelNumber, outputFilter, logger = new CaptionsLogger()) {
@@ -14521,7 +13983,7 @@ function setLastCmd(a, b, cmdHistory) {
 /**
 * CEA-608 caption parser.
 *
-* @beta
+* @public
 */
 var Cta608Parser = class {
   constructor(field, out1, out2) {
@@ -14732,7 +14194,7 @@ var Cta608Parser = class {
 * @param cta608Range - The range of the CTA-608 data
 * @returns The extracted CTA-608 data
 *
-* @beta
+* @public
 */
 function extractCta608Data(raw, cta608Range) {
   let pos = cta608Range[0];
@@ -14787,12 +14249,62 @@ function isCCType(type) {
 function isNonEmptyCCData(ccData1, ccData2) {
   return (ccData1 & 127) > 0 || (ccData2 & 127) > 0;
 }
-function isSeiNalUnitType(unitType) {
-  return unitType === 6;
+/**
+* H.264 SEI NAL unit type
+*/
+const H264_SEI_TYPE = 6;
+/**
+* H.265 prefix SEI NAL unit type
+*/
+const H265_PREFIX_SEI_TYPE = 39;
+/**
+* H.265 suffix SEI NAL unit type
+*/
+const H265_SUFFIX_SEI_TYPE = 40;
+/**
+* H.266 prefix SEI NAL unit type
+*/
+const H266_PREFIX_SEI_TYPE = 23;
+/**
+* H.266 suffix SEI NAL unit type
+*/
+const H266_SUFFIX_SEI_TYPE = 24;
+/**
+* Detects whether a NAL unit is an SEI (Supplemental Enhancement Information) unit
+* and returns its type and header size.
+*
+* This function supports auto-detection across H.264, H.265, and H.266 codecs:
+* - H.264: 1-byte NAL header, type in bits 0-4
+* - H.265: 2-byte NAL header, type in bits 1-6 of byte 0
+* - H.266: 2-byte NAL header, type in bits 3-7 of byte 1
+*
+* @param raw - The DataView containing the NAL unit data
+* @param pos - The position of the first NAL header byte
+* @returns An object containing the NAL unit type and header size, or null if not an SEI NAL unit
+*/
+function extractNalUnitType(raw, pos) {
+  const byte0 = raw.getUint8(pos);
+  const h264Type = byte0 & 31;
+  if (h264Type === H264_SEI_TYPE) return {
+    nalType: h264Type,
+    headerSize: 1
+  };
+  const h265Type = byte0 >> 1 & 63;
+  if (h265Type === H265_PREFIX_SEI_TYPE || h265Type === H265_SUFFIX_SEI_TYPE) return {
+    nalType: h265Type,
+    headerSize: 2
+  };
+  if (pos + 1 >= raw.byteLength) return null;
+  const h266Type = raw.getUint8(pos + 1) >> 3 & 31;
+  if (h266Type === H266_PREFIX_SEI_TYPE || h266Type === H266_SUFFIX_SEI_TYPE) return {
+    nalType: h266Type,
+    headerSize: 2
+  };
+  return null;
 }
 function parseCta608DataFromSei(sei, fieldData) {
   let cursor = 0;
-  while (cursor < sei.byteLength) {
+  while (cursor < sei.byteLength - 1) {
     let payloadType = 0;
     let payloadSize = 0;
     let now;
@@ -14827,18 +14339,19 @@ function parseCta608DataFromSei(sei, fieldData) {
 * @param sampleSize - The size of the sample in bytes
 * @returns fieldData array containing field 1 and field 2 data arrays
 *
-* @beta
+* @public
 */
 function extractCta608DataFromSample(raw, startPos, sampleSize) {
   let nalSize = 0;
-  let nalType = 0;
   const fieldData = [[], []];
-  for (let cursor = startPos; cursor < startPos + sampleSize - 5; cursor++) {
+  for (let cursor = startPos; cursor < startPos + sampleSize - 6; cursor++) {
     nalSize = raw.getUint32(cursor);
-    nalType = raw.getUint8(cursor + 4) & 31;
-    if (cursor + 5 + nalSize > startPos + sampleSize) break;
-    if (isSeiNalUnitType(nalType)) {
-      if (cursor + 5 + nalSize <= raw.byteLength) parseCta608DataFromSei(getSeiData(raw, cursor + 5, cursor + 5 + nalSize), fieldData);
+    const nalEnd = cursor + 4 + nalSize;
+    if (nalEnd > startPos + sampleSize) break;
+    const seiInfo = extractNalUnitType(raw, cursor + 4);
+    if (seiInfo) {
+      const seiStart = cursor + 4 + seiInfo.headerSize;
+      if (nalEnd <= raw.byteLength) parseCta608DataFromSei(getSeiData(raw, seiStart, nalEnd), fieldData);
     }
     cursor += nalSize + 3;
   }
@@ -14855,12 +14368,11 @@ function extractCta608DataFromSample(raw, startPos, sampleSize) {
 * @param size - The size of the data
 * @returns The extracted CTA-608 NAL units
 *
-* @beta
+* @public
 */
 function findCta608Nalus(raw, startPos, size) {
   let nalSize = 0,
-    cursor = startPos,
-    nalType = 0;
+    cursor = startPos;
   const cta608NaluRanges = [];
   const isCTA608SEI = (payloadType, payloadSize, raw$1, pos) => {
     if (payloadType !== 4 || payloadSize < 8) return null;
@@ -14872,9 +14384,9 @@ function findCta608Nalus(raw, startPos, size) {
   };
   while (cursor < startPos + size) {
     nalSize = raw.getUint32(cursor);
-    nalType = raw.getUint8(cursor + 4) & 31;
-    if (nalType === 6) {
-      let pos = cursor + 5;
+    const seiInfo = extractNalUnitType(raw, cursor + 4);
+    if (seiInfo) {
+      let pos = cursor + 4 + seiInfo.headerSize;
       let payloadType = -1;
       while (pos < cursor + 4 + nalSize - 1) {
         payloadType = 0;
@@ -14935,7 +14447,7 @@ function findCta608Nalus(raw, startPos, size) {
 /**
 * SCC Parser
 *
-* @beta
+* @public
 */
 var SccParser = class {
   constructor(processor, field = 1) {
@@ -15007,14 +14519,33 @@ var SccParser = class {
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   CMCD_COMMON_KEYS: function() { return /* binding */ CMCD_COMMON_KEYS; },
 /* harmony export */   CMCD_DEFAULT_TIME_INTERVAL: function() { return /* binding */ CMCD_DEFAULT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_AD_BREAK_END: function() { return /* binding */ CMCD_EVENT_AD_BREAK_END; },
+/* harmony export */   CMCD_EVENT_AD_BREAK_START: function() { return /* binding */ CMCD_EVENT_AD_BREAK_START; },
+/* harmony export */   CMCD_EVENT_AD_END: function() { return /* binding */ CMCD_EVENT_AD_END; },
+/* harmony export */   CMCD_EVENT_AD_START: function() { return /* binding */ CMCD_EVENT_AD_START; },
+/* harmony export */   CMCD_EVENT_BACKGROUNDED_MODE: function() { return /* binding */ CMCD_EVENT_BACKGROUNDED_MODE; },
+/* harmony export */   CMCD_EVENT_BITRATE_CHANGE: function() { return /* binding */ CMCD_EVENT_BITRATE_CHANGE; },
+/* harmony export */   CMCD_EVENT_CONTENT_ID: function() { return /* binding */ CMCD_EVENT_CONTENT_ID; },
+/* harmony export */   CMCD_EVENT_CUSTOM_EVENT: function() { return /* binding */ CMCD_EVENT_CUSTOM_EVENT; },
+/* harmony export */   CMCD_EVENT_ERROR: function() { return /* binding */ CMCD_EVENT_ERROR; },
 /* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
 /* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
+/* harmony export */   CMCD_EVENT_MUTE: function() { return /* binding */ CMCD_EVENT_MUTE; },
+/* harmony export */   CMCD_EVENT_PLAYER_COLLAPSE: function() { return /* binding */ CMCD_EVENT_PLAYER_COLLAPSE; },
+/* harmony export */   CMCD_EVENT_PLAYER_EXPAND: function() { return /* binding */ CMCD_EVENT_PLAYER_EXPAND; },
+/* harmony export */   CMCD_EVENT_PLAY_STATE: function() { return /* binding */ CMCD_EVENT_PLAY_STATE; },
+/* harmony export */   CMCD_EVENT_RESPONSE_RECEIVED: function() { return /* binding */ CMCD_EVENT_RESPONSE_RECEIVED; },
+/* harmony export */   CMCD_EVENT_SKIP: function() { return /* binding */ CMCD_EVENT_SKIP; },
+/* harmony export */   CMCD_EVENT_TIME_INTERVAL: function() { return /* binding */ CMCD_EVENT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_UNMUTE: function() { return /* binding */ CMCD_EVENT_UNMUTE; },
 /* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; },
 /* harmony export */   CMCD_HEADERS: function() { return /* binding */ CMCD_HEADERS; },
+/* harmony export */   CMCD_HEADER_FIELDS: function() { return /* binding */ CMCD_HEADER_FIELDS; },
+/* harmony export */   CMCD_HEADER_MAP: function() { return /* binding */ CMCD_HEADER_MAP; },
 /* harmony export */   CMCD_JSON: function() { return /* binding */ CMCD_JSON; },
 /* harmony export */   CMCD_KEYS: function() { return /* binding */ CMCD_KEYS; },
+/* harmony export */   CMCD_MIME_TYPE: function() { return /* binding */ CMCD_MIME_TYPE; },
 /* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
 /* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
 /* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
@@ -15022,22 +14553,23 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
 /* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
 /* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
-/* harmony export */   CMCD_RESPONSE_MODE: function() { return /* binding */ CMCD_RESPONSE_MODE; },
 /* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
 /* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
 /* harmony export */   CMCD_V1: function() { return /* binding */ CMCD_V1; },
 /* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; },
 /* harmony export */   CMCD_V2: function() { return /* binding */ CMCD_V2; },
-/* harmony export */   CmcdEncoding: function() { return /* binding */ CmcdEncoding; },
+/* harmony export */   CMCD_VALIDATION_SEVERITY_ERROR: function() { return /* binding */ CMCD_VALIDATION_SEVERITY_ERROR; },
+/* harmony export */   CMCD_VALIDATION_SEVERITY_WARNING: function() { return /* binding */ CMCD_VALIDATION_SEVERITY_WARNING; },
 /* harmony export */   CmcdEventType: function() { return /* binding */ CmcdEventType; },
-/* harmony export */   CmcdFormatters: function() { return /* binding */ CmcdFormatters; },
 /* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
 /* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
 /* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdReporter: function() { return /* binding */ CmcdReporter; },
 /* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
 /* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
 /* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; },
 /* harmony export */   CmcdTransmissionMode: function() { return /* binding */ CmcdTransmissionMode; },
+/* harmony export */   CmcdValidationSeverity: function() { return /* binding */ CmcdValidationSeverity; },
 /* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
 /* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
 /* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
@@ -15050,132 +14582,602 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; },
 /* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; },
 /* harmony export */   isCmcdResponseReceivedKey: function() { return /* binding */ isCmcdResponseReceivedKey; },
+/* harmony export */   isCmcdV1Data: function() { return /* binding */ isCmcdV1Data; },
 /* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; },
+/* harmony export */   isCmcdV2Data: function() { return /* binding */ isCmcdV2Data; },
 /* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; },
 /* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; },
-/* harmony export */   toCmcdJson: function() { return /* binding */ toCmcdJson; },
 /* harmony export */   toCmcdQuery: function() { return /* binding */ toCmcdQuery; },
-/* harmony export */   toCmcdReport: function() { return /* binding */ toCmcdReport; },
-/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; }
+/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; },
+/* harmony export */   toCmcdValue: function() { return /* binding */ toCmcdValue; },
+/* harmony export */   validateCmcd: function() { return /* binding */ validateCmcd; },
+/* harmony export */   validateCmcdEventReport: function() { return /* binding */ validateCmcdEventReport; },
+/* harmony export */   validateCmcdEvents: function() { return /* binding */ validateCmcdEvents; },
+/* harmony export */   validateCmcdHeaders: function() { return /* binding */ validateCmcdHeaders; },
+/* harmony export */   validateCmcdKeys: function() { return /* binding */ validateCmcdKeys; },
+/* harmony export */   validateCmcdRequest: function() { return /* binding */ validateCmcdRequest; },
+/* harmony export */   validateCmcdStructure: function() { return /* binding */ validateCmcdStructure; },
+/* harmony export */   validateCmcdValues: function() { return /* binding */ validateCmcdValues; }
 /* harmony export */ });
 /* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
-/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
-/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
 
 
 
-
-//#region src/CMCD_OBJECT.ts
+//#region src/CMCD_FORMATTER_MAP.ts
+const roundValue = value => {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value), value.params);
+  return Math.round(value);
+};
+const toRounded = value => {
+  if (Array.isArray(value)) return value.map(roundValue);
+  return roundValue(value);
+};
+const toUrlSafe = (value, options) => {
+  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
+    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(options.baseUrl));
+    return options.version === 1 ? encodeURIComponent(value) : value;
+  }
+};
+const hundredValue = value => {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value / 100) * 100, value.params);
+  return Math.round(value / 100) * 100;
+};
+const toHundred = value => {
+  if (Array.isArray(value)) return value.map(hundredValue);
+  return hundredValue(value);
+};
+const nor = (value, options) => {
+  let norValue = value;
+  if (options.version >= 2) {
+    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  }
+  return toUrlSafe(norValue, options);
+};
 /**
-* CMCD object header name.
+* The default formatters for CMCD values.
 *
-*
-* @beta
+* @public
 */
-const CMCD_OBJECT = "CMCD-Object";
-
-//#endregion
-//#region src/CMCD_REQUEST.ts
-/**
-* CMCD request header name.
-*
-*
-* @beta
-*/
-const CMCD_REQUEST = "CMCD-Request";
-
-//#endregion
-//#region src/CMCD_SESSION.ts
-/**
-* CMCD session header name.
-*
-*
-* @beta
-*/
-const CMCD_SESSION = "CMCD-Session";
-
-//#endregion
-//#region src/CMCD_STATUS.ts
-/**
-* CMCD status header name.
-*
-*
-* @beta
-*/
-const CMCD_STATUS = "CMCD-Status";
-
-//#endregion
-//#region src/CMCD_HEADER_MAP.ts
-/**
-* The map of CMCD keys to their appropriate header shard.
-*
-*
-* @internal
-*/
-const CMCD_HEADER_MAP = {
-  br: CMCD_OBJECT,
-  ab: CMCD_OBJECT,
-  d: CMCD_OBJECT,
-  ot: CMCD_OBJECT,
-  tb: CMCD_OBJECT,
-  tpb: CMCD_OBJECT,
-  lb: CMCD_OBJECT,
-  tab: CMCD_OBJECT,
-  lab: CMCD_OBJECT,
-  url: CMCD_OBJECT,
-  pb: CMCD_REQUEST,
-  bl: CMCD_REQUEST,
-  tbl: CMCD_REQUEST,
-  dl: CMCD_REQUEST,
-  ltc: CMCD_REQUEST,
-  mtp: CMCD_REQUEST,
-  nor: CMCD_REQUEST,
-  nrr: CMCD_REQUEST,
-  rc: CMCD_REQUEST,
-  sn: CMCD_REQUEST,
-  sta: CMCD_REQUEST,
-  su: CMCD_REQUEST,
-  ttfb: CMCD_REQUEST,
-  ttfbb: CMCD_REQUEST,
-  ttlb: CMCD_REQUEST,
-  cmsdd: CMCD_REQUEST,
-  cmsds: CMCD_REQUEST,
-  smrt: CMCD_REQUEST,
-  df: CMCD_REQUEST,
-  cs: CMCD_REQUEST,
-  ts: CMCD_REQUEST,
-  cid: CMCD_SESSION,
-  pr: CMCD_SESSION,
-  sf: CMCD_SESSION,
-  sid: CMCD_SESSION,
-  st: CMCD_SESSION,
-  v: CMCD_SESSION,
-  msd: CMCD_SESSION,
-  bs: CMCD_STATUS,
-  bsd: CMCD_STATUS,
-  cdn: CMCD_STATUS,
-  rtp: CMCD_STATUS,
-  bg: CMCD_STATUS,
-  pt: CMCD_STATUS,
-  ec: CMCD_STATUS,
-  e: CMCD_STATUS
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor,
+  rtp: toHundred,
+  tb: toRounded
 };
 
 //#endregion
+//#region src/CMCD_V2.ts
+/**
+* CMCD Version 2
+*
+* @public
+*/
+const CMCD_V2 = 2;
+
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event type for the 'bc' key (bitrate change).
+*
+* @public
+*/
+const CMCD_EVENT_BITRATE_CHANGE = "bc";
+/**
+* CMCD event type for the 'ps' key (play state change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAY_STATE = "ps";
+/**
+* CMCD event type for the 'e' key (error).
+*
+* @public
+*/
+const CMCD_EVENT_ERROR = "e";
+/**
+* CMCD event type for the 't' key (time interval).
+*
+* @public
+*/
+const CMCD_EVENT_TIME_INTERVAL = "t";
+/**
+* CMCD event type for the 'c' key (content ID).
+*
+* @public
+*/
+const CMCD_EVENT_CONTENT_ID = "c";
+/**
+* CMCD event type for the 'b' key (backgrounded mode).
+*
+* @public
+*/
+const CMCD_EVENT_BACKGROUNDED_MODE = "b";
+/**
+* CMCD event type for the 'm' key (mute).
+*
+* @public
+*/
+const CMCD_EVENT_MUTE = "m";
+/**
+* CMCD event type for the 'um' key (unmute).
+*
+* @public
+*/
+const CMCD_EVENT_UNMUTE = "um";
+/**
+* CMCD event type for the 'pe' key (player expand).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_EXPAND = "pe";
+/**
+* CMCD event type for the 'pc' key (player collapse).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
+/**
+* CMCD event type for the 'rr' key (response received).
+*
+* @public
+*/
+const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
+/**
+* CMCD event type for the 'as' key (ad start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_START = "as";
+/**
+* CMCD event type for the 'ae' key (ad end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_END = "ae";
+/**
+* CMCD event type for the 'abs' key (ad break start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_START = "abs";
+/**
+* CMCD event type for the 'abe' key (ad break end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_END = "abe";
+/**
+* CMCD event type for the 'sk' key (skip).
+*
+* @public
+*/
+const CMCD_EVENT_SKIP = "sk";
+/**
+* CMCD event type for the 'ce' key (custom event).
+*
+* @public
+*/
+const CMCD_EVENT_CUSTOM_EVENT = "ce";
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
+*
+* @public
+*/
+const CmcdEventType = {
+  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
+  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
+  ERROR: CMCD_EVENT_ERROR,
+  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
+  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
+  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
+  MUTE: CMCD_EVENT_MUTE,
+  UNMUTE: CMCD_EVENT_UNMUTE,
+  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
+  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
+  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
+  AD_START: CMCD_EVENT_AD_START,
+  AD_END: CMCD_EVENT_AD_END,
+  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
+  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
+  SKIP: CMCD_EVENT_SKIP,
+  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
+};
+
+//#endregion
+//#region src/CmcdReportingMode.ts
+/**
+* CMCD event mode variable name.
+*
+* @public
+*/
+const CMCD_EVENT_MODE = "event";
+/**
+* CMCD request mode variable name.
+*
+* @public
+*/
+const CMCD_REQUEST_MODE = "request";
+/**
+* CMCD reporting mode types.
+*
+* @enum
+*
+* @public
+*/
+const CmcdReportingMode = {
+  REQUEST: CMCD_REQUEST_MODE,
+  EVENT: CMCD_EVENT_MODE
+};
+
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
+
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
+
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
+/**
+* Check if a key is a custom key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*/
+function isCmcdCustomKey(key) {
+  return CUSTOM_KEY_REGEX.test(key);
+}
+
+//#endregion
+//#region src/isCmcdRequestKey.ts
+const CMCD_REQUEST_KEY_SET = new Set(CMCD_REQUEST_KEYS);
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* CMCD v2 - Response-only and timing keys.
+*
+* @public
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
+
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+const CMCD_RESPONSE_KEY_SET = new Set(CMCD_RESPONSE_KEYS);
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEY_SET.has(key);
+}
+
+//#endregion
+//#region src/isCmcdEventKey.ts
+const CMCD_EVENT_KEY_SET = new Set(CMCD_EVENT_KEYS);
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
+}
+
+//#endregion
+//#region src/CMCD_INNER_LIST_KEYS.ts
+/**
+* Keys that are inner lists in V2 but plain scalars in V1.
+*
+* Used by both encoding (down-conversion) and decoding (up-conversion).
+*
+* @internal
+*/
+const CMCD_INNER_LIST_KEYS = new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
+
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+* @public
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
+
+//#endregion
+//#region src/isCmcdV1Key.ts
+const CMCD_V1_KEY_SET$1 = new Set(CMCD_V1_KEYS);
+/**
+* Filter function for CMCD v1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
+}
+
+//#endregion
+//#region src/isTokenField.ts
+const TOKEN_FIELDS = new Set(["ot", "sf", "st", "e", "sta"]);
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return TOKEN_FIELDS.has(key);
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+//#region src/prepareCmcdData.ts
+const filterMap = {
+  [CMCD_EVENT_MODE]: isCmcdEventKey,
+  [CMCD_REQUEST_MODE]: isCmcdRequestKey
+};
+/**
+* Unwrap an inner list or SfItem value to a plain scalar.
+*/
+function unwrapValue(value, ot) {
+  if (Array.isArray(value)) {
+    let item;
+    if (ot) item = value.find(item$1 => item$1.params?.ot === ot);
+    if (!item) item = value[0];
+    return unwrapValue(item);
+  }
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.value;
+  return value;
+}
+/**
+* Down-convert V2 CMCD data to V1 format.
+*
+* - Extracts `nrr` from `nor` SfItem `r` parameter.
+* - Unwraps inner-list values to plain scalars.
+*/
+function downConvertToV1(obj) {
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (key === "nor") {
+      const first = (Array.isArray(value) ? value : [value])[0];
+      if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+        result["nor"] = first.value;
+        if (first.params?.r) result["nrr"] = first.params.r;
+      } else result["nor"] = first;
+    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, obj["ot"]);else result[key] = value;
+  }
+  return result;
+}
+/**
+* Convert a generic object to CMCD data.
+*
+* @param obj - The CMCD object to process.
+* @param options - Options for encoding.
+*
+* @public
+*/
+function prepareCmcdData(obj, options = {}) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const version = options.version || obj["v"] || CMCD_V2;
+  const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
+  const data = version === 1 ? downConvertToV1(obj) : obj;
+  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
+  let keys = Object.keys(data).filter(keyFilter);
+  if (data["e"] && data["e"] !== CMCD_EVENT_RESPONSE_RECEIVED) keys = keys.filter(key => !isCmcdResponseReceivedKey(key));
+  const filter = options.filter;
+  if (typeof filter === "function") keys = keys.filter(filter);
+  const isEventMode = reportingMode === CMCD_EVENT_MODE;
+  if (isEventMode) {
+    const eventType = data["e"];
+    if (!keys.includes("e") && eventType != null) keys.push("e");
+    if (!keys.includes("ts")) keys.push("ts");
+    if (!keys.includes("cen") && data["cen"] != null && eventType === CMCD_EVENT_CUSTOM_EVENT) keys.push("cen");
+  }
+  if (keys.length === 0) return results;
+  if (version > 1 && !keys.includes("v")) keys.push("v");
+  const formatterOptions = {
+    version,
+    reportingMode,
+    baseUrl: options.baseUrl
+  };
+  keys.sort();
+  for (const key of keys) {
+    let value = data[key];
+    const formatter = options.formatters?.[key] ?? CMCD_FORMATTER_MAP[key];
+    if (typeof formatter === "function") value = formatter(value, formatterOptions);
+    if (key === "v") if (version === 1) continue;else value = version;
+    if (key === "pr" && value === 1) continue;
+    if (isEventMode && key === "ts" && !Number.isFinite(value)) value = Date.now();
+    if (!isValid(value)) continue;
+    if (isTokenField(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
+    results[key] = value;
+  }
+  return results;
+}
+
+//#endregion
 //#region src/CmcdHeaderField.ts
+/**
+* CMCD object header name.
+*
+* @public
+*/
+const CMCD_OBJECT = "CMCD-Object";
+/**
+* CMCD request header name.
+*
+* @public
+*/
+const CMCD_REQUEST = "CMCD-Request";
+/**
+* CMCD session header name.
+*
+* @public
+*/
+const CMCD_SESSION = "CMCD-Session";
+/**
+* CMCD status header name.
+*
+* @public
+*/
+const CMCD_STATUS = "CMCD-Status";
 /**
 * CMCD header fields.
 *
 *
 * @enum
 *
-* @beta
+* @public
 */
 const CmcdHeaderField = {
   OBJECT: CMCD_OBJECT,
   REQUEST: CMCD_REQUEST,
   SESSION: CMCD_SESSION,
   STATUS: CMCD_STATUS
+};
+/**
+* All CMCD header fields as an array.
+*
+* @public
+*/
+const CMCD_HEADER_FIELDS = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
+
+//#endregion
+//#region src/CMCD_HEADER_MAP.ts
+/**
+* The map of CMCD keys to their appropriate header shard.
+*
+* Note: Event-only keys (e, ts, cen, h) and response-received keys
+* (rc, ttfb, ttlb, url, etc.) are intentionally absent. They are
+* transmitted via the event-mode POST body, not HTTP headers.
+*
+* @public
+*/
+const CMCD_HEADER_MAP = {
+  ab: CMCD_OBJECT,
+  br: CMCD_OBJECT,
+  d: CMCD_OBJECT,
+  lab: CMCD_OBJECT,
+  lb: CMCD_OBJECT,
+  ot: CMCD_OBJECT,
+  tab: CMCD_OBJECT,
+  tb: CMCD_OBJECT,
+  tpb: CMCD_OBJECT,
+  bl: CMCD_REQUEST,
+  cs: CMCD_REQUEST,
+  dfa: CMCD_REQUEST,
+  dl: CMCD_REQUEST,
+  ltc: CMCD_REQUEST,
+  mtp: CMCD_REQUEST,
+  nor: CMCD_REQUEST,
+  nrr: CMCD_REQUEST,
+  pb: CMCD_REQUEST,
+  sn: CMCD_REQUEST,
+  sta: CMCD_REQUEST,
+  su: CMCD_REQUEST,
+  tbl: CMCD_REQUEST,
+  cid: CMCD_SESSION,
+  msd: CMCD_SESSION,
+  sf: CMCD_SESSION,
+  sid: CMCD_SESSION,
+  st: CMCD_SESSION,
+  v: CMCD_SESSION,
+  bg: CMCD_STATUS,
+  bs: CMCD_STATUS,
+  bsa: CMCD_STATUS,
+  bsd: CMCD_STATUS,
+  bsda: CMCD_STATUS,
+  cdn: CMCD_STATUS,
+  ec: CMCD_STATUS,
+  nr: CMCD_STATUS,
+  pr: CMCD_STATUS,
+  pt: CMCD_STATUS,
+  rtp: CMCD_STATUS
 };
 
 //#endregion
@@ -15194,267 +15196,44 @@ function createHeaderMap(headerMap) {
 *
 * @returns The CMCD header shards.
 *
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
 *
-* @beta
+* @public
 */
 function groupCmcdHeaders(cmcd, customHeaderMap) {
   const result = {};
   if (!cmcd) return result;
-  const keys$1 = Object.keys(cmcd);
+  const keys = Object.keys(cmcd);
   const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
-  return keys$1.reduce((acc, key) => {
+  for (const key of keys) {
     const field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
-    const data = acc[field] ??= {};
+    const data = result[field] ??= {};
     data[key] = cmcd[key];
-    return acc;
-  }, result);
-}
-
-//#endregion
-//#region src/CMCD_EVENT_MODE.ts
-/**
-* CMCD event mode variable name.
-*
-*
-* @beta
-*/
-const CMCD_EVENT_MODE = "event";
-
-//#endregion
-//#region src/CMCD_FORMATTER_MAP.ts
-const toRounded = value => Math.round(value);
-const toUrlSafe = (value, options) => {
-  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
-  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
-    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_2__.urlToRelativePath)(value, options.baseUrl);
-    return options.version === 1 ? encodeURIComponent(value) : value;
   }
-};
-const toHundred = value => toRounded(value / 100) * 100;
-const nor = (value, options) => {
-  let norValue = value;
-  if (options.version >= 2) {
-    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  return result;
+}
+
+//#endregion
+//#region src/toPreparedCmcdHeaders.ts
+/**
+* Encode already-prepared CMCD data to CMCD header shards.
+*
+* @param data - The prepared CMCD data to encode.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+* @returns The CMCD header shards.
+*
+* @internal
+*/
+function toPreparedCmcdHeaders(data, customHeaderMap) {
+  const result = {};
+  const shards = groupCmcdHeaders(data, customHeaderMap);
+  for (const [field, value] of Object.entries(shards)) {
+    const shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
+      whitespace: false
+    });
+    if (shard) result[field] = shard;
   }
-  return toUrlSafe(norValue, options);
-};
-/**
-* The default formatters for CMCD values.
-*
-*
-* @beta
-*/
-const CMCD_FORMATTER_MAP = {
-  br: toRounded,
-  d: toRounded,
-  bl: toHundred,
-  dl: toHundred,
-  mtp: toHundred,
-  nor,
-  rtp: toHundred,
-  tb: toRounded
-};
-
-//#endregion
-//#region src/CMCD_REQUEST_MODE.ts
-/**
-* CMCD request mode variable name.
-*
-*
-* @beta
-*/
-const CMCD_REQUEST_MODE = "request";
-
-//#endregion
-//#region src/CMCD_COMMON_KEYS.ts
-/**
-* Defines the common keys for CMCD (Common Media Client Data) version 2.
-*
-*
-* @beta
-*/
-const CMCD_COMMON_KEYS = ["ab", "bg", "bl", "br", "bs", "bsd", "cdn", "cid", "cs", "df", "ec", "lab", "lb", "ltc", "msd", "mtp", "pb", "pr", "pt", "sf", "sid", "sn", "st", "sta", "tab", "tb", "tbl", "tpb", "ts", "v"];
-
-//#endregion
-//#region src/CMCD_EVENT_KEYS.ts
-/**
-* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
-*
-*
-* @beta
-*/
-const CMCD_EVENT_KEYS = ["e"];
-
-//#endregion
-//#region src/CMCD_RESPONSE_KEYS.ts
-/**
-* CMCD v2 - Response-only and timing keys.
-*
-*
-* @beta
-*/
-const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
-
-//#endregion
-//#region src/isCmcdCustomKey.ts
-const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
-/**
-* Check if a key is a custom key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a custom key, `false` otherwise.
-*
-*
-* @beta
-*/
-function isCmcdCustomKey(key) {
-  return CUSTOM_KEY_REGEX.test(key);
-}
-
-//#endregion
-//#region src/isCmcdEventKey.ts
-/**
-* Check if a key is a valid CMCD event key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/isCmcdEventKey.test.ts#example}
-*/
-function isCmcdEventKey(key) {
-  return CMCD_COMMON_KEYS.includes(key) || CMCD_EVENT_KEYS.includes(key) || CMCD_RESPONSE_KEYS.includes(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/CMCD_REQUEST_KEYS.ts
-/**
-* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
-*
-*
-* @beta
-*/
-const CMCD_REQUEST_KEYS = ["d", "dl", "nor", "ot", "rtp", "su"];
-
-//#endregion
-//#region src/isCmcdRequestKey.ts
-/**
-* Check if a key is a valid CMCD request key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
-*/
-function isCmcdRequestKey(key) {
-  return CMCD_COMMON_KEYS.includes(key) || CMCD_REQUEST_KEYS.includes(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/isCmcdResponseReceivedKey.ts
-/**
-* Check if a key is a valid CMCD response key.
-*
-* @param key - The key to check.
-*
-* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
-*
-* @group CMCD
-*
-* @beta
-*
-* @example
-* {@includeCode ../../test/cmcd/isCmcdResponseReceivedKey.test.ts#example}
-*/
-function isCmcdResponseReceivedKey(key) {
-  return CMCD_RESPONSE_KEYS.includes(key);
-}
-
-//#endregion
-//#region src/CMCD_V1_KEYS.ts
-/**
-* Defines the keys for CMCD (Common Media Client Data) version 1.
-*
-*
-* @beta
-*/
-const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
-
-//#endregion
-//#region src/isCmcdV1Key.ts
-/**
-* Filter function for CMCD v1 keys.
-*
-* @param key - The CMCD key to filter.
-*
-* @returns `true` if the key should be included, `false` otherwise.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/isCmcdV1Key.test.ts#example}
-*/
-function isCmcdV1Key(key) {
-  return CMCD_V1_KEYS.includes(key) || isCmcdCustomKey(key);
-}
-
-//#endregion
-//#region src/prepareCmcdData.ts
-const filterMap = {
-  [CMCD_EVENT_MODE]: isCmcdEventKey,
-  [CMCD_REQUEST_MODE]: isCmcdRequestKey
-};
-/**
-* Convert a generic object to CMCD data.
-*
-* @param obj - The CMCD object to process.
-* @param options - Options for encoding.
-*
-*
-* @beta
-*/
-function prepareCmcdData(obj, options = {}) {
-  const results = {};
-  if (obj == null || typeof obj !== "object") return results;
-  const version = options.version || obj["v"] || 1;
-  const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
-  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
-  let keys$1 = Object.keys(obj).filter(keyFilter);
-  if (obj["e"] && obj["e"] !== "rr") keys$1 = keys$1.filter(key => !isCmcdResponseReceivedKey(key));
-  const filter = options.filter;
-  if (typeof filter === "function") keys$1 = keys$1.filter(filter);
-  const needsTimestamp = reportingMode === CMCD_EVENT_MODE;
-  if (needsTimestamp && !keys$1.includes("ts")) keys$1.push("ts");
-  if (version > 1 && !keys$1.includes("v")) keys$1.push("v");
-  const formatters = Object.assign({}, CMCD_FORMATTER_MAP, options.formatters);
-  const formatterOptions = {
-    version,
-    reportingMode,
-    baseUrl: options.baseUrl
-  };
-  keys$1.sort().forEach(key => {
-    let value = obj[key];
-    const formatter = formatters[key];
-    if (typeof formatter === "function") value = formatter(value, formatterOptions);
-    if (key === "v") if (version === 1) return;else value = version;
-    if (key == "pr" && value === 1) return;
-    if (needsTimestamp && key === "ts" && !Number.isFinite(value)) value = Date.now();
-    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isValid)(value)) return;
-    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.isTokenField)(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
-    results[key] = value;
-  });
-  return results;
+  return result;
 }
 
 //#endregion
@@ -15467,23 +15246,16 @@ function prepareCmcdData(obj, options = {}) {
 *
 * @returns The CMCD header shards.
 *
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/toCmcdHeaders.test.ts#example}
 */
 function toCmcdHeaders(cmcd, options = {}) {
-  const result = {};
-  if (!cmcd) return result;
-  const shards = groupCmcdHeaders(prepareCmcdData(cmcd, options), options?.customHeaderMap);
-  return Object.entries(shards).reduce((acc, [field, value]) => {
-    const shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
-      whitespace: false
-    });
-    if (shard) acc[field] = shard;
-    return acc;
-  }, result);
+  if (!cmcd) return {};
+  return toPreparedCmcdHeaders(prepareCmcdData(cmcd, options), options?.customHeaderMap);
 }
 
 //#endregion
@@ -15497,11 +15269,12 @@ function toCmcdHeaders(cmcd, options = {}) {
 *
 * @returns The headers with the CMCD header shards appended.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/appendCmcdHeaders.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
 */
 function appendCmcdHeaders(headers, cmcd, options) {
   return Object.assign(headers, toCmcdHeaders(cmcd, options));
@@ -15512,10 +15285,25 @@ function appendCmcdHeaders(headers, cmcd, options) {
 /**
 * CMCD parameter name.
 *
-*
-* @beta
+* @public
 */
 const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/encodePreparedCmcd.ts
+/**
+* Encode already-prepared CMCD data to a structured field dictionary string.
+*
+* @param data - The prepared CMCD data to encode.
+* @returns The encoded CMCD string.
+*
+* @internal
+*/
+function encodePreparedCmcd(data) {
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(data, {
+    whitespace: false
+  });
+}
 
 //#endregion
 //#region src/encodeCmcd.ts
@@ -15527,17 +15315,16 @@ const CMCD_PARAM = "CMCD";
 *
 * @returns The encoded CMCD string.
 *
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#payload-definition-for-headers-and-query-argument-transmission | CTA-5004-B Payload Definition}
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/encodeCmcd.test.ts#example}
 */
 function encodeCmcd(cmcd, options = {}) {
   if (!cmcd) return "";
-  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(prepareCmcdData(cmcd, options), {
-    whitespace: false
-  });
+  return encodePreparedCmcd(prepareCmcdData(cmcd, options));
 }
 
 //#endregion
@@ -15550,8 +15337,9 @@ function encodeCmcd(cmcd, options = {}) {
 *
 * @returns The URL encoded CMCD data.
 *
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 *
-* @beta
+* @public
 */
 function toCmcdUrl(cmcd, options = {}) {
   if (!cmcd) return "";
@@ -15569,8 +15357,9 @@ function toCmcdUrl(cmcd, options = {}) {
 *
 * @returns The CMCD query arg.
 *
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/toCmcdQuery.test.ts#example}
@@ -15592,11 +15381,12 @@ const REGEX = /CMCD=[^&#]+/;
 *
 * @returns The URL with the CMCD query args appended.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/appendCmcdQuery.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
 */
 function appendCmcdQuery(url, cmcd, options) {
   const query = toCmcdQuery(cmcd, options);
@@ -15608,164 +15398,61 @@ function appendCmcdQuery(url, cmcd, options) {
 //#endregion
 //#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
 /**
-* The default time interval in secondswhen using using event mode
+* The default time interval in seconds when using using event mode
 *
-*
-* @beta
+* @public
 */
 const CMCD_DEFAULT_TIME_INTERVAL = 30;
 
 //#endregion
-//#region src/CMCD_HEADERS.ts
-/**
-* CMCD `headers` transmission mode.
-*
-*
-* @beta
-*/
-const CMCD_HEADERS = "headers";
-
-//#endregion
-//#region src/CMCD_JSON.ts
-/**
-* CMCD `json` transmission mode.
-*
-*
-* @beta
-*
-* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
-*/
-const CMCD_JSON = "json";
-
-//#endregion
 //#region src/CMCD_KEYS.ts
-const keySet = new Set([...CMCD_V1_KEYS, ...CMCD_COMMON_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS]);
 /**
 * A list of all CMCD keys.
 *
-*
-* @beta
+* @public
 */
-const CMCD_KEYS = Array.from(keySet);
+const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
 
 //#endregion
-//#region src/CMCD_QUERY.ts
+//#region src/CMCD_MIME_TYPE.ts
 /**
-* CMCD `query` transmission mode.
+* CMCD MIME type for event report payloads.
 *
-*
-* @beta
+* @public
 */
-const CMCD_QUERY = "query";
-
-//#endregion
-//#region src/CMCD_RESPONSE_MODE.ts
-/**
-* CMCD response mode variable name.
-*
-*
-* @beta
-*/
-const CMCD_RESPONSE_MODE = "response";
+const CMCD_MIME_TYPE = "application/cmcd";
 
 //#endregion
 //#region src/CMCD_V1.ts
 /**
 * CMCD Version 1
 *
-*
-* @beta
+* @public
 */
 const CMCD_V1 = 1;
-
-//#endregion
-//#region src/CMCD_V2.ts
-/**
-* CMCD Version 2
-*
-*
-* @beta
-*/
-const CMCD_V2 = 2;
-
-//#endregion
-//#region src/CmcdTransmissionMode.ts
-/**
-* CMCD transmission modes.
-*
-*
-* @enum
-*
-* @beta
-*/
-const CmcdTransmissionMode = {
-  JSON: CMCD_JSON,
-  QUERY: CMCD_QUERY,
-  HEADERS: CMCD_HEADERS
-};
-
-//#endregion
-//#region src/CmcdEncoding.ts
-/**
-* CMCD encoding types.
-*
-*
-* @enum
-*
-* @beta
-*
-* @deprecated Use {@link CmcdTransmissionMode} instead.
-*
-* @see {@link CmcdTransmissionMode}
-*/
-const CmcdEncoding = CmcdTransmissionMode;
-
-//#endregion
-//#region src/CmcdEventType.ts
-/**
-* CMCD event types for the 'e' key (event mode).
-*
-*
-* @enum
-*
-* @beta
-*/
-const CmcdEventType = {
-  PLAY_STATE: "ps",
-  ERROR: "e",
-  TIME_INTERVAL: "t",
-  CONTENT_ID: "c",
-  BACKGROUNDED_MODE: "b",
-  MUTE: "m",
-  UNMUTE: "um",
-  PLAYER_EXPAND: "pe",
-  PLAYER_COLLAPSE: "pc",
-  RESPONSE_RECEIVED: "rr"
-};
-
-//#endregion
-//#region src/CmcdFormatters.ts
-/**
-* The default formatters for CMCD values.
-*
-*
-* @beta
-*
-* @deprecated Use `CMCD_FORMATTER_MAP` instead.
-*/
-const CmcdFormatters = CMCD_FORMATTER_MAP;
 
 //#endregion
 //#region src/CmcdObjectType.ts
 /**
 * Common Media Client Data Object Type
 *
-*
-* @beta
+* @public
 *
 * @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#object-type | CTA-5004-B Object Type}
 */
-const CmcdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmObjectType;
+const CmcdObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
 
 //#endregion
 //#region src/CmcdPlayerState.ts
@@ -15775,7 +15462,9 @@ const CmcdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmObjectType;
 *
 * @enum
 *
-* @beta
+* @public
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#state | CTA-5004-B State}
 */
 const CmcdPlayerState = {
   STARTING: "s",
@@ -15791,18 +15480,400 @@ const CmcdPlayerState = {
 };
 
 //#endregion
-//#region src/CmcdReportingMode.ts
+//#region src/CmcdTransmissionMode.ts
 /**
-* CMCD reporting mode types.
+* CMCD `query` transmission mode.
 *
+* @public
+*/
+const CMCD_QUERY = "query";
+/**
+* CMCD `headers` transmission mode.
+*
+* @public
+*/
+const CMCD_HEADERS = "headers";
+/**
+* CMCD `json` transmission mode.
+*
+* @public
+*
+* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
+*/
+const CMCD_JSON = "json";
+/**
+* CMCD transmission modes.
 *
 * @enum
 *
-* @beta
+* @public
 */
-const CmcdReportingMode = {
-  REQUEST: CMCD_REQUEST_MODE,
-  EVENT: CMCD_EVENT_MODE
+const CmcdTransmissionMode = {
+  JSON: CMCD_JSON,
+  QUERY: CMCD_QUERY,
+  HEADERS: CMCD_HEADERS
+};
+
+//#endregion
+//#region src/CmcdReporter.ts
+function createEncodingOptions(reportingMode, config, baseUrl) {
+  const enabledKeySet = new Set(config.enabledKeys ?? []);
+  return {
+    version: config.version || CMCD_V2,
+    reportingMode,
+    filter: key => enabledKeySet.has(key),
+    baseUrl
+  };
+}
+function defaultRequester(request) {
+  const {
+    url,
+    ...init
+  } = request;
+  return fetch(url, init);
+}
+function createCmcdReporterConfig(config) {
+  const {
+    version = CMCD_V2,
+    eventTargets = [],
+    sid = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.uuid)(),
+    transmissionMode = CMCD_QUERY,
+    ...rest
+  } = config;
+  return {
+    ...rest,
+    version,
+    transmissionMode,
+    sid,
+    eventTargets: eventTargets.reduce((acc, target) => {
+      if (target?.url && target.events?.length) acc.push({
+        version: target.version || CMCD_V2,
+        enabledKeys: target.enabledKeys?.slice() || [],
+        url: target.url,
+        events: target.events.slice(),
+        interval: target.interval ?? CMCD_DEFAULT_TIME_INTERVAL,
+        batchSize: target.batchSize || 1
+      });
+      return acc;
+    }, [])
+  };
+}
+/**
+* The CMCD reporter.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reporting-modes-when-we-send-data | CTA-5004-B Reporting Modes}
+*
+* @public
+*/
+var CmcdReporter = class {
+  /**
+  * Creates a new CMCD reporter.
+  *
+  * @param config - The configuration for the CMCD reporter.
+  * @param requester - The function to use to send the request.
+  *                    The default is a simple wrapper around the
+  *                    native `fetch` API.
+  */
+  constructor(config, requester = defaultRequester) {
+    this.timeOrigin = performance.timeOrigin || performance.timing?.fetchStart || Date.now() - performance.now();
+    this.data = {};
+    this.msd = NaN;
+    this.eventTargets = /* @__PURE__ */new Map();
+    this.requestTarget = {
+      sn: 0,
+      msdSent: false
+    };
+    this.config = createCmcdReporterConfig(config);
+    this.data = {
+      cid: this.config.cid,
+      sid: this.config.sid,
+      v: this.config.version
+    };
+    this.requester = requester;
+    for (const target of this.config.eventTargets) this.eventTargets.set(target, {
+      intervalId: void 0,
+      sn: 0,
+      msdSent: false,
+      queue: []
+    });
+  }
+  /**
+  * Starts the CMCD reporter. Called by the player when the reporter is enabled.
+  *
+  * Note: This fires an initial time-interval event immediately (synchronously)
+  * before the first interval elapses. Ensure CMCD data (sid, cid, etc.) is
+  * populated before calling start().
+  */
+  start() {
+    this.eventTargets.forEach((target, config) => {
+      this.disarmInterval(target);
+      if (config.interval === 0 || !config.events.includes(CmcdEventType.TIME_INTERVAL)) return;
+      const timeIntervalEvent = () => {
+        this.recordTargetEvent(target, config, CMCD_EVENT_TIME_INTERVAL);
+        this.processEventTargets();
+      };
+      target.intervalId = setInterval(timeIntervalEvent, config.interval * 1e3);
+      timeIntervalEvent();
+    });
+  }
+  /**
+  * Stops the CMCD reporter. Called by the player when the reporter is disabled.
+  *
+  * @param flush - Whether to flush the event targets.
+  */
+  stop(flush = false) {
+    if (flush) this.flush();
+    this.eventTargets.forEach(target => {
+      this.disarmInterval(target);
+    });
+  }
+  /**
+  * Forces the sending of all event reports, regardless of the batch size or interval.
+  * Useful for sending outstanding reports when the player is destroyed or a playback
+  * session ends.
+  */
+  flush() {
+    this.processEventTargets(true);
+  }
+  /**
+  * Updates the CMCD data. Called by the player when the data changes.
+  *
+  * @param data - The data to update.
+  */
+  update(data) {
+    if (data.sid && data.sid !== this.data.sid) this.resetSession();
+    if (data.msd && !isNaN(data.msd)) this.msd = data.msd;
+    this.data = {
+      ...this.data,
+      ...data,
+      msd: void 0
+    };
+  }
+  /**
+  * Records an event. Called by the player when an event occurs.
+  *
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event. This data
+  *               only applies to this event report. Persistent data should
+  *               be updated using `update()`.
+  */
+  recordEvent(type, data = {}) {
+    this.eventTargets.forEach((target, config) => {
+      this.recordTargetEvent(target, config, type, data);
+    });
+    this.processEventTargets();
+  }
+  /**
+  * Records an event for a target. Called by the reporter when an event occurs.
+  *
+  * @param target - The target to record the event for.
+  * @param config - The configuration for the target.
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event. This data
+  *               only applies to this event report. Persistent data should
+  *               be updated using `update()`.
+  */
+  recordTargetEvent(target, config, type, data = {}) {
+    if (!config.events.includes(type)) return;
+    const item = {
+      ...this.data,
+      ...data,
+      e: type,
+      ts: data.ts ?? Date.now(),
+      sn: target.sn++
+    };
+    if (!isNaN(this.msd) && !target.msdSent) {
+      item.msd = this.msd;
+      target.msdSent = true;
+    }
+    target.queue.push(item);
+  }
+  /**
+  * Records a response-received event. Called by the player when a media
+  * request response has been fully received.
+  *
+  * This method automatically derives the `rr` event keys from the
+  *
+  * - `url` - the original requested URL (before any redirects)
+  * - `rc` - the HTTP response status code
+  * - `ts` - the request initiation time (from `resourceTiming.startTime`)
+  * - `ttfb` - time to first byte (from `resourceTiming.responseStart`)
+  * - `ttlb` - time to last byte (from `resourceTiming.duration`)
+  *
+  * Additional keys like `ttfbb`, `cmsdd`, `cmsds`, and `smrt` can be
+  * supplied via the `data` parameter if the player has access to them.
+  *
+  * @param response - The HTTP response received.
+  * @param data - Additional CMCD data to include with the event.
+  *               Values provided here override any auto-derived values.
+  */
+  recordResponseReceived(response, data = {}) {
+    const {
+      request
+    } = response;
+    const url = data.url ?? request?.url;
+    if (!url) return;
+    const urlObj = new URL(url);
+    urlObj.searchParams.delete(CMCD_PARAM);
+    const derived = {
+      url: urlObj.toString(),
+      rc: response.status
+    };
+    const timing = response.resourceTiming;
+    if (timing) {
+      if (timing.startTime != null) {
+        derived.ts = Math.round(this.timeOrigin + timing.startTime);
+        if (timing.responseStart != null) derived.ttfb = Math.round(timing.responseStart - timing.startTime);
+      }
+      if (timing.duration != null) derived.ttlb = Math.round(timing.duration);
+    }
+    const cmcd = request.customData?.cmcd ?? {};
+    this.recordEvent(CMCD_EVENT_RESPONSE_RECEIVED, {
+      ...cmcd,
+      ...derived,
+      ...data
+    });
+  }
+  /**
+  * Applies the CMCD request report data to the request. Called by the player
+  * before sending the request.
+  *
+  * @param req - The request to apply the CMCD request report to.
+  * @returns The request with the CMCD request report applied.
+  *
+  * @deprecated Use {@link CmcdReporter.createRequestReport} instead.
+  */
+  applyRequestReport(req) {
+    return this.createRequestReport(req) ?? req;
+  }
+  /**
+  * Checks if the request reporting is enabled.
+  *
+  * @returns `true` if the request reporting is enabled, `false` otherwise.
+  */
+  isRequestReportingEnabled() {
+    return !!this.config.enabledKeys?.length;
+  }
+  /**
+  * Creates a new request with the CMCD request report data applied. Called by the player
+  * before sending the request.
+  *
+  * @param request - The request to apply the CMCD request report to.
+  * @param data - The data to apply to the request. This data only
+  *               applies to this request report. Persistent data
+  *               should be updated using `update()`.
+  * @returns The request with the CMCD request report applied.
+  */
+  createRequestReport(request, data) {
+    const {
+      customData = {},
+      headers = {},
+      ...rest
+    } = request;
+    const report = {
+      ...rest,
+      headers: {
+        ...headers
+      },
+      customData: {
+        ...customData,
+        cmcd: {}
+      }
+    };
+    if (!this.config.enabledKeys?.length || !report.url) return report;
+    const url = new URL(report.url);
+    const cmcdData = {
+      ...this.data,
+      ...data,
+      sn: this.requestTarget.sn++
+    };
+    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
+    if (!isNaN(this.msd) && !this.requestTarget.msdSent) {
+      cmcdData.msd = this.msd;
+      this.requestTarget.msdSent = true;
+    }
+    const cmcd = report.customData.cmcd = prepareCmcdData(cmcdData, options);
+    switch (this.config.transmissionMode) {
+      case CMCD_QUERY:
+        const param = encodePreparedCmcd(cmcd);
+        if (param) {
+          url.searchParams.set(CMCD_PARAM, param);
+          report.url = url.toString();
+        }
+        break;
+      case CMCD_HEADERS:
+        Object.assign(report.headers, toPreparedCmcdHeaders(cmcd, options.customHeaderMap));
+        break;
+    }
+    return report;
+  }
+  /**
+  * Processes the event targets. Called by the reporter when an event occurs.
+  *
+  * @param flush - Whether to flush the event targets.
+  */
+  processEventTargets(flush = false) {
+    let reprocess = false;
+    this.eventTargets.forEach((target, config) => {
+      const {
+        queue
+      } = target;
+      if (!queue.length) return;
+      if (queue.length < config.batchSize && !flush) return;
+      const deleteCount = flush ? queue.length : config.batchSize;
+      const events = queue.splice(0, deleteCount);
+      this.sendEventReport(config, events).catch(() => {
+        target.queue.unshift(...events);
+      });
+      reprocess ||= queue.length > 0;
+    });
+    if (reprocess) this.processEventTargets();
+  }
+  /**
+  * Sends an event report. Called by the reporter when a batch is ready to be sent.
+  *
+  * @param config - The target config to send the event report to.
+  * @param data - The data to send in the event report.
+  */
+  async sendEventReport(config, data) {
+    const options = createEncodingOptions(CMCD_EVENT_MODE, config);
+    const {
+      status
+    } = await this.requester({
+      url: config.url,
+      method: "POST",
+      headers: {
+        "Content-Type": CMCD_MIME_TYPE
+      },
+      body: data.map(item => encodeCmcd(item, options)).join("\n") + "\n"
+    });
+    if (status === 410) this.disposeEventTarget(config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
+  }
+  /**
+  * Cancels the time-interval timer for an event target and clears the stored id.
+  * Safe to call when no timer is armed (clearInterval(undefined) is a no-op).
+  */
+  disarmInterval(target) {
+    clearInterval(target.intervalId);
+    target.intervalId = void 0;
+  }
+  /**
+  * Permanently removes an event target: cancels its timer and removes it from the
+  * eventTargets map. Used when the collector signals the target is gone (HTTP 410).
+  */
+  disposeEventTarget(config) {
+    const target = this.eventTargets.get(config);
+    if (!target) return;
+    this.disarmInterval(target);
+    this.eventTargets.delete(config);
+  }
+  /**
+  * Resets the session related data. Called when the session ID changes.
+  */
+  resetSession() {
+    this.eventTargets.forEach(target => target.sn = 0);
+    this.requestTarget.sn = 0;
+  }
 };
 
 //#endregion
@@ -15810,24 +15881,84 @@ const CmcdReportingMode = {
 /**
 * Common Media Client Data Streaming Format
 *
-*
 * @enum
 *
-* @beta
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#streaming-format | CTA-5004-B Streaming Format}
+*
+* @public
 */
-const CmcdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamingFormat;
+const CmcdStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
 
 //#endregion
 //#region src/CmcdStreamType.ts
 /**
 * Common Media Client Data Stream Type
 *
-*
 * @enum
 *
-* @beta
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#stream-type | CTA-5004-B Stream Type}
+*
+* @public
 */
-const CmcdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_1__.CmStreamType;
+const CmcdStreamType = {
+  VOD: "v",
+  LIVE: "l",
+  LOW_LATENCY: "ll"
+};
+
+//#endregion
+//#region src/CmcdValidationSeverity.ts
+/**
+* CMCD validation severity level: error.
+*
+* @public
+*/
+const CMCD_VALIDATION_SEVERITY_ERROR = "error";
+/**
+* CMCD validation severity level: warning.
+*
+* @public
+*/
+const CMCD_VALIDATION_SEVERITY_WARNING = "warning";
+/**
+* CMCD validation severity level.
+*
+* @public
+*/
+const CmcdValidationSeverity = {
+  ERROR: CMCD_VALIDATION_SEVERITY_ERROR,
+  WARNING: CMCD_VALIDATION_SEVERITY_WARNING
+};
+
+//#endregion
+//#region src/upConvertToV2.ts
+/**
+* Up-convert V1 CMCD data to V2 format.
+*
+* - Wraps plain scalar values in arrays for inner-list keys.
+* - Wraps `nor` string in an array.
+*
+* If the data is already V2 (has `v: 2`), it is returned unchanged.
+*
+* @internal
+*/
+function upConvertToV2(obj) {
+  if (obj["v"] === CMCD_V2) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(value)) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
+  }
+  return result;
+}
 
 //#endregion
 //#region src/decodeCmcd.ts
@@ -15835,158 +15966,869 @@ function reduceValue(value) {
   if (Array.isArray(value)) return value.map(reduceValue);
   if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
   if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
-  if (typeof value === "string") return decodeURIComponent(value);
+  if (typeof value === "string") return value;
   return value;
 }
-/**
-* Decode a CMCD string to an object.
-*
-* @param cmcd - The CMCD string to decode.
-*
-* @returns The decoded CMCD object.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/decodeCmcd.test.ts#example}
-*/
-function decodeCmcd(cmcd) {
+function decodeCmcd(cmcd, options) {
   if (!cmcd) return {};
   const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
-  return Object.entries(sfDict).reduce((acc, [key, item]) => {
-    acc[key] = reduceValue(item.value);
-    return acc;
-  }, {});
+  const result = {};
+  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item.value);
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
+//#region src/ensureHeaders.ts
+/**
+* Converts a record of header fields to a `Headers` instance if necessary.
+*
+* @param headers - A `Headers` instance or a plain record of header fields.
+* @returns A `Headers` instance.
+*
+* @internal
+*/
+function ensureHeaders(headers) {
+  return headers instanceof Headers ? headers : new Headers(headers);
 }
 
 //#endregion
 //#region src/fromCmcdHeaders.ts
-const keys = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
-/**
-* Decode CMCD data from request headers.
-*
-* @param headers - The request headers to decode.
-*
-* @returns The decoded CMCD data.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/fromCmcdHeaders.test.ts#example}
-*/
-function fromCmcdHeaders(headers) {
-  if (!(headers instanceof Headers)) headers = new Headers(headers);
-  return keys.reduce((acc, key) => {
-    const value = headers.get(key);
-    return Object.assign(acc, decodeCmcd(value));
-  }, {});
+function fromCmcdHeaders(headers, options) {
+  const h = ensureHeaders(headers);
+  const result = {};
+  for (const field of CMCD_HEADER_FIELDS) {
+    const value = h.get(field);
+    if (value) Object.assign(result, decodeCmcd(value));
+  }
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
 }
 
 //#endregion
 //#region src/fromCmcdQuery.ts
-/**
-* Decode CMCD data from a query string.
-*
-* @param query - The query string to decode.
-*
-* @returns The decoded CMCD data.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/fromCmcdQuery.test.ts#example}
-*/
-function fromCmcdQuery(query) {
+function fromCmcdQuery(query, options) {
   if (typeof query === "string") query = new URLSearchParams(query);
-  return decodeCmcd(query.get(CMCD_PARAM));
+  return decodeCmcd(query.get(CMCD_PARAM) ?? "", options);
 }
 
 //#endregion
 //#region src/fromCmcdUrl.ts
-/**
-* Decode CMCD data from a url encoded string.
-*
-* @param url - The url encoded string to decode.
-*
-* @returns The decoded CMCD data.
-*
-*
-* @beta
-*
-* @example
-* {@includeCode ../test/fromCmcdUrl.test.ts#example}
-*/
-function fromCmcdUrl(url) {
-  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")));
+function fromCmcdUrl(url, options) {
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")), options);
 }
 
 //#endregion
-//#region src/toCmcdJson.ts
+//#region src/isCmcdV1Data.ts
 /**
-* Convert a CMCD data object to JSON.
+* Check if a CMCD data object is version 1.
 *
-* @param cmcd - The CMCD object to convert.
-* @param options - Options for encoding the CMCD object.
+* @param data - The CMCD data object to check.
 *
-* @returns The CMCD JSON.
+* @returns `true` if the data is version 1, `false` otherwise.
 *
+* @public
 *
-* @beta
-*
-* @deprecated Sending CMCD as JSON objects is deprecated. Use `toCmcdUrl` to create an array of url strings instead.
+* @example
+* {@includeCode ../test/isCmcdV1Data.test.ts#example}
 */
-function toCmcdJson(cmcd, options) {
-  const data = prepareCmcdData(cmcd, options);
-  return JSON.stringify(data, (_, value) => typeof value === "symbol" || value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value) : value);
+function isCmcdV1Data(data) {
+  return data.v !== CMCD_V2;
 }
 
 //#endregion
-//#region src/toCmcdReport.ts
+//#region src/isCmcdV2Data.ts
 /**
-* Converts CMCD data into a report format.
+* Check if a CMCD data object is version 2.
 *
-* @param data - The CMCD data to be transformed into a report
-* @param target - The target configuration for the CMCD report
+* @param data - The CMCD data object to check.
 *
-* @return A CMCD report object
+* @returns `true` if the data is version 2, `false` otherwise.
 *
-*
-* @beta
+* @public
 *
 * @example
-* {@includeCode ../test/toCmcdReport.test.ts#example}
+* {@includeCode ../test/isCmcdV2Data.test.ts#example}
 */
-function toCmcdReport(data, target) {
-  if (!target || !target.url) return null;
-  const url = new URL(target.url);
-  const method = target.method || "GET";
-  const headers = {};
-  const transimissionMode = target.transmissionMode || CMCD_QUERY;
-  const options = {
-    version: target.version,
-    reportingMode: target.reportingMode
+function isCmcdV2Data(data) {
+  return data.v === CMCD_V2;
+}
+
+//#endregion
+//#region src/toCmcdValue.ts
+/**
+* Convert a value to a CMCD value.
+*
+* @param value - The value to convert to a CMCD value.
+* @param params - The parameters to convert to a CMCD value.
+* @returns The CMCD value.
+*
+* @public
+*/
+function toCmcdValue(value, params) {
+  return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(value, params);
+}
+
+//#endregion
+//#region src/mergeValidationResults.ts
+/**
+* Merges multiple validation results into a single result.
+*
+* @internal
+*/
+function mergeValidationResults(...results) {
+  const issues = results.flatMap(r => r.issues);
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
   };
-  const {
-    enabledKeys
-  } = target;
-  if (enabledKeys) options.filter = key => enabledKeys.includes(key);
-  switch (transimissionMode) {
-    case CMCD_QUERY:
-      const param = encodeCmcd(data, options);
-      if (param) url.searchParams.set(CMCD_PARAM, param);
-      break;
-    case CMCD_HEADERS:
-      Object.assign(headers, toCmcdHeaders(data, options));
-      break;
+}
+
+//#endregion
+//#region src/resolveVersion.ts
+/**
+* Resolves the CMCD version from explicit options, the payload's `v` key, or the default (v1).
+*
+* @internal
+*/
+function resolveVersion(data, options) {
+  if (options?.version === 1 || options?.version === 2) return options.version;
+  const payloadVersion = data["v"];
+  if (payloadVersion === 1 || payloadVersion === 2) return payloadVersion;
+  return CMCD_V1;
+}
+
+//#endregion
+//#region src/validateCmcdKeys.ts
+const CMCD_V1_KEY_SET = new Set(CMCD_V1_KEYS);
+const CMCD_KEY_SET = new Set(CMCD_KEYS);
+/**
+* Validates that all keys in a CMCD payload are recognized spec keys or valid custom keys.
+*
+* @example
+* {@includeCode ../test/validateCmcdKeys.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reserved-keys | CTA-5004-B Reserved Keys}
+*
+* @public
+*/
+function validateCmcdKeys(data, options) {
+  const version = resolveVersion(data, options);
+  const validKeySet = version === CMCD_V1 ? CMCD_V1_KEY_SET : CMCD_KEY_SET;
+  const issues = [];
+  for (const key of Object.keys(data)) {
+    if (isCmcdCustomKey(key)) continue;
+    if (!validKeySet.has(key)) issues.push({
+      key,
+      message: `Unknown CMCD key "${key}" for version ${version}.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
   }
   return {
-    url: url.toString(),
-    method,
-    headers
+    valid: issues.length === 0,
+    issues
   };
+}
+
+//#endregion
+//#region src/validateCmcdStructure.ts
+/**
+* Validates the structural rules of a CMCD payload.
+*
+* @example
+* {@includeCode ../test/validateCmcdStructure.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#data-payload-definition-what-data-to-send | CTA-5004-B Data Payload Definition}
+*
+* @public
+*/
+function validateCmcdStructure(data, options) {
+  const version = resolveVersion(data, options);
+  const issues = [];
+  if (options?.reportingMode === CMCD_REQUEST_MODE) {
+    for (const key of CMCD_EVENT_KEYS) if (key in data) issues.push({
+      key,
+      message: `Event key "${key}" must not be present in request mode.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    for (const key of CMCD_RESPONSE_KEYS) if (key in data) issues.push({
+      key,
+      message: `Response key "${key}" must not be present in request mode.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if (options?.reportingMode === CMCD_EVENT_MODE) {
+    if (!("e" in data)) issues.push({
+      key: "e",
+      message: "Event mode requires the \"e\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (!("ts" in data)) issues.push({
+      key: "ts",
+      message: "Event mode requires the \"ts\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if ("e" in data) {
+    if (data["e"] === CMCD_EVENT_CUSTOM_EVENT) {
+      if (!("cen" in data)) issues.push({
+        key: "cen",
+        message: "Custom event (e=\"ce\") requires the \"cen\" key to be present.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if ("cen" in data) issues.push({
+      key: "cen",
+      message: "The \"cen\" key must only be present when e=\"ce\".",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_RESPONSE_RECEIVED) {
+      if (!("url" in data)) issues.push({
+        key: "url",
+        message: "Response received event (e=\"rr\") requires the \"url\" key to be present.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else for (const key of CMCD_RESPONSE_KEYS) if (key in data) issues.push({
+      key,
+      message: `Response key "${key}" must only be present when e="rr".`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
+      key: "sta",
+      message: "Play state event (e=\"ps\") requires the \"sta\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
+      key: "ec",
+      message: "Error event (e=\"e\") requires the \"ec\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if ("v" in data && data["v"] !== 1 && data["v"] !== 2) issues.push({
+    key: "v",
+    message: `Unsupported CMCD version "${String(data["v"])}". Expected 1 or 2.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else if (version > 1 && !("v" in data)) issues.push({
+    key: "v",
+    message: "Version 2 payloads require the \"v\" key to be present.",
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else if (version === CMCD_V1 && "v" in data) issues.push({
+    key: "v",
+    message: "Version 1 payloads should omit the \"v\" key (v1 is the default).",
+    severity: CMCD_VALIDATION_SEVERITY_WARNING
+  });
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
+  };
+}
+
+//#endregion
+//#region src/CMCD_KEY_TYPES.ts
+/**
+* CMCD key value type: inner list of numbers with token identifiers.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_NUMBER_LIST = "number[]";
+/**
+* CMCD key value type: inner list of strings.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_STRING_LIST = "string[]";
+/**
+* CMCD key value type: integer.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_INTEGER = "integer";
+/**
+* CMCD key value type: number (decimal).
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_NUMBER = "number";
+/**
+* CMCD key value type: boolean.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_BOOLEAN = "boolean";
+/**
+* CMCD key value type: string.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_STRING = "string";
+/**
+* CMCD key value type: token.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_TOKEN = "token";
+/**
+* Maps each CMCD spec key to its expected value type for v2.
+* Keys that differ between v1 and v2 are handled by CMCD_V1_KEY_TYPE_OVERRIDES.
+*
+* @internal
+*/
+const CMCD_KEY_TYPES = {
+  ab: CMCD_KEY_TYPE_NUMBER_LIST,
+  bl: CMCD_KEY_TYPE_NUMBER_LIST,
+  br: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsa: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsd: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsda: CMCD_KEY_TYPE_NUMBER_LIST,
+  lab: CMCD_KEY_TYPE_NUMBER_LIST,
+  lb: CMCD_KEY_TYPE_NUMBER_LIST,
+  mtp: CMCD_KEY_TYPE_NUMBER_LIST,
+  pb: CMCD_KEY_TYPE_NUMBER_LIST,
+  tab: CMCD_KEY_TYPE_NUMBER_LIST,
+  tb: CMCD_KEY_TYPE_NUMBER_LIST,
+  tbl: CMCD_KEY_TYPE_NUMBER_LIST,
+  tpb: CMCD_KEY_TYPE_NUMBER_LIST,
+  ec: CMCD_KEY_TYPE_STRING_LIST,
+  nor: CMCD_KEY_TYPE_STRING_LIST,
+  d: CMCD_KEY_TYPE_INTEGER,
+  dfa: CMCD_KEY_TYPE_INTEGER,
+  dl: CMCD_KEY_TYPE_INTEGER,
+  ltc: CMCD_KEY_TYPE_INTEGER,
+  msd: CMCD_KEY_TYPE_INTEGER,
+  pt: CMCD_KEY_TYPE_INTEGER,
+  rc: CMCD_KEY_TYPE_INTEGER,
+  rtp: CMCD_KEY_TYPE_INTEGER,
+  sn: CMCD_KEY_TYPE_INTEGER,
+  ts: CMCD_KEY_TYPE_INTEGER,
+  ttfb: CMCD_KEY_TYPE_INTEGER,
+  ttfbb: CMCD_KEY_TYPE_INTEGER,
+  ttlb: CMCD_KEY_TYPE_INTEGER,
+  v: CMCD_KEY_TYPE_INTEGER,
+  pr: CMCD_KEY_TYPE_NUMBER,
+  bg: CMCD_KEY_TYPE_BOOLEAN,
+  bs: CMCD_KEY_TYPE_BOOLEAN,
+  nr: CMCD_KEY_TYPE_BOOLEAN,
+  su: CMCD_KEY_TYPE_BOOLEAN,
+  cdn: CMCD_KEY_TYPE_STRING,
+  cen: CMCD_KEY_TYPE_STRING,
+  cid: CMCD_KEY_TYPE_STRING,
+  cmsdd: CMCD_KEY_TYPE_STRING,
+  cmsds: CMCD_KEY_TYPE_STRING,
+  cs: CMCD_KEY_TYPE_STRING,
+  h: CMCD_KEY_TYPE_STRING,
+  nrr: CMCD_KEY_TYPE_STRING,
+  sid: CMCD_KEY_TYPE_STRING,
+  smrt: CMCD_KEY_TYPE_STRING,
+  url: CMCD_KEY_TYPE_STRING,
+  e: CMCD_KEY_TYPE_TOKEN,
+  ot: CMCD_KEY_TYPE_TOKEN,
+  sf: CMCD_KEY_TYPE_TOKEN,
+  st: CMCD_KEY_TYPE_TOKEN,
+  sta: CMCD_KEY_TYPE_TOKEN
+};
+/**
+* Maps keys to their v1-specific types when they differ from v2.
+*
+* @internal
+*/
+const CMCD_V1_KEY_TYPE_OVERRIDES = {
+  bl: CMCD_KEY_TYPE_INTEGER,
+  br: CMCD_KEY_TYPE_NUMBER,
+  mtp: CMCD_KEY_TYPE_INTEGER,
+  tb: CMCD_KEY_TYPE_NUMBER,
+  nor: CMCD_KEY_TYPE_STRING
+};
+
+//#endregion
+//#region src/CMCD_STRING_LENGTH_LIMITS.ts
+/**
+* Maps CMCD keys to their maximum string length.
+*
+* @internal
+*/
+const CMCD_STRING_LENGTH_LIMITS = {
+  sid: 64,
+  cid: 128,
+  cdn: 128,
+  h: 128,
+  cen: 64
+};
+/**
+* Maximum length for custom key values.
+*
+* @internal
+*/
+const CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH = 64;
+
+//#endregion
+//#region src/CMCD_TOKEN_VALUES.ts
+/**
+* Maps token keys to their valid values.
+*
+* @internal
+*/
+const CMCD_TOKEN_VALUES = {
+  e: ["bc", "ps", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
+  ot: ["m", "a", "v", "av", "i", "c", "tt", "k", "o"],
+  sf: ["d", "h", "s", "o"],
+  st: ["v", "l", "ll"],
+  sta: ["s", "p", "k", "r", "a", "w", "e", "f", "q", "d"]
+};
+
+//#endregion
+//#region src/validateCmcdValues.ts
+const HUNDRED_ROUNDING_KEYS = new Set(["bl", "dl", "mtp", "rtp", "tbl"]);
+const INTEGER_ROUNDING_KEYS = new Set(["br", "d", "tb"]);
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+function validateListValue(key, value, issues) {
+  if (!Array.isArray(value)) {
+    issues.push({
+      key,
+      message: `Key "${key}" must be an array.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return;
+  }
+  for (let i = 0; i < value.length; i++) {
+    const element = value[i];
+    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+      if (!isFiniteNumber(element.value)) issues.push({
+        key,
+        message: `Key "${key}" array element [${i}] must be a finite number.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if (!isFiniteNumber(element)) issues.push({
+      key,
+      message: `Key "${key}" array element [${i}] must be a finite number.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+}
+function validateStringArrayValue(key, value, issues) {
+  if (!Array.isArray(value)) {
+    issues.push({
+      key,
+      message: `Key "${key}" must be an array.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return;
+  }
+  for (let i = 0; i < value.length; i++) {
+    const element = value[i];
+    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+      if (typeof element.value !== "string") issues.push({
+        key,
+        message: `Key "${key}" array element [${i}] must be a string.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if (typeof element !== "string") issues.push({
+      key,
+      message: `Key "${key}" array element [${i}] must be a string.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+}
+/**
+* Validates that all values in a CMCD payload conform to the expected types and constraints.
+*
+* @example
+* {@includeCode ../test/validateCmcdValues.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reserved-keys | CTA-5004-B Reserved Keys}
+*
+* @public
+*/
+function validateCmcdValues(data, options) {
+  const version = resolveVersion(data, options);
+  const issues = [];
+  for (const [key, value] of Object.entries(data)) {
+    if (isCmcdCustomKey(key)) {
+      if (typeof value !== "string") issues.push({
+        key,
+        message: `Custom key "${key}" value must be a string or token.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });else if (value.length > CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH) issues.push({
+        key,
+        message: `Custom key "${key}" value exceeds maximum length of ${CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH}.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    if (key === "v") {
+      if (value !== 1 && value !== 2) issues.push({
+        key,
+        message: `Key "v" must be 1 or 2.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    let expectedType = CMCD_KEY_TYPES[key];
+    if (!expectedType) continue;
+    if (version === CMCD_V1 && key in CMCD_V1_KEY_TYPE_OVERRIDES) expectedType = CMCD_V1_KEY_TYPE_OVERRIDES[key];
+    switch (expectedType) {
+      case CMCD_KEY_TYPE_INTEGER:
+        if (!isFiniteNumber(value) || !Number.isInteger(value)) issues.push({
+          key,
+          message: `Key "${key}" must be a finite integer.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to the nearest 100.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });
+        break;
+      case CMCD_KEY_TYPE_NUMBER:
+        if (!isFiniteNumber(value)) issues.push({
+          key,
+          message: `Key "${key}" must be a finite number.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to the nearest 100.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });else if (INTEGER_ROUNDING_KEYS.has(key) && !Number.isInteger(value)) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to an integer.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });
+        break;
+      case CMCD_KEY_TYPE_BOOLEAN:
+        if (typeof value !== "boolean") issues.push({
+          key,
+          message: `Key "${key}" must be a boolean.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });
+        break;
+      case CMCD_KEY_TYPE_STRING:
+        if (typeof value !== "string") issues.push({
+          key,
+          message: `Key "${key}" must be a string.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (key in CMCD_STRING_LENGTH_LIMITS && value.length > CMCD_STRING_LENGTH_LIMITS[key]) issues.push({
+          key,
+          message: `Key "${key}" exceeds maximum length of ${CMCD_STRING_LENGTH_LIMITS[key]}.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });
+        break;
+      case CMCD_KEY_TYPE_TOKEN:
+        {
+          const validValues = CMCD_TOKEN_VALUES[key];
+          if (validValues && !validValues.includes(value)) issues.push({
+            key,
+            message: `Key "${key}" has invalid token value "${String(value)}". Expected one of: ${validValues.join(", ")}.`,
+            severity: CMCD_VALIDATION_SEVERITY_ERROR
+          });
+          break;
+        }
+      case CMCD_KEY_TYPE_NUMBER_LIST:
+        validateListValue(key, value, issues);
+        break;
+      case CMCD_KEY_TYPE_STRING_LIST:
+        validateStringArrayValue(key, value, issues);
+        break;
+    }
+  }
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
+  };
+}
+
+//#endregion
+//#region src/validateCmcd.ts
+/**
+* Validates a CMCD payload by checking keys, values, and structure.
+*
+* @example
+* {@includeCode ../test/validateCmcd.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#data-payload-definition-what-data-to-send | CTA-5004-B Data Payload Definition}
+*
+* @public
+*/
+function validateCmcd(data, options) {
+  return mergeValidationResults(validateCmcdKeys(data, options), validateCmcdValues(data, options), validateCmcdStructure(data, options));
+}
+
+//#endregion
+//#region src/validateCmcdEvents.ts
+/**
+* Validates a raw CMCD string as an event-mode payload.
+*
+* This function decodes the string internally and validates it with
+* `reportingMode` set to `'event'`. The input may contain multiple
+* newline-separated events (e.g. an `application/cmcd` POST body), in which
+* case each line is validated independently and the results are merged.
+*
+* @param cmcd - The raw CMCD-encoded string to validate. May contain
+*   multiple newline-separated event lines.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data per event line.
+*
+* @example
+* {@includeCode ../test/validateCmcdEvents.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#body-definition | CTA-5004-B Body Definition}
+*
+* @public
+*/
+function validateCmcdEvents(cmcd, options) {
+  const opts = {
+    ...options,
+    reportingMode: CMCD_EVENT_MODE
+  };
+  const lines = cmcd.split(/\r?\n/).filter(line => line.length > 0);
+  if (lines.length === 0) return {
+    valid: false,
+    issues: [{
+      message: "Empty event mode payload. At least one event line is required.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    }],
+    data: []
+  };
+  const decodedLines = [];
+  const lineResults = [];
+  for (let i = 0; i < lines.length; i++) try {
+    const data = decodeCmcd(lines[i]);
+    decodedLines.push(data);
+    lineResults.push(validateCmcd(data, opts));
+  } catch {
+    decodedLines.push({});
+    lineResults.push({
+      valid: false,
+      issues: [{
+        message: `Failed to decode event line ${i + 1}: invalid structured field syntax.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      }]
+    });
+  }
+  return {
+    ...mergeValidationResults(...lineResults),
+    data: decodedLines
+  };
+}
+
+//#endregion
+//#region src/validateCmcdEventReport.ts
+/**
+* Validates a full HTTP request as an event-mode payload.
+*
+* Accepts an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
+*
+* This function validates that the request uses the POST method and has
+* the correct `Content-Type` header (`application/cmcd`) in addition to
+* validating the body content via {@link validateCmcdEvents}.
+*
+* @param request - An `HttpRequest` to validate.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data per event line.
+*
+* @example {@includeCode ../test/validateCmcdEventReport.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event-mode | CTA-5004-B Event Mode}
+*
+* @public
+*/
+function validateCmcdEventReport(request, options) {
+  const issues = [];
+  if (request.method !== "POST") issues.push({
+    message: `Invalid HTTP method '${request.method ?? "GET"}'. Event reports must use POST.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
+  const contentType = request.headers ? ensureHeaders(request.headers).get("Content-Type") : void 0;
+  if (!contentType) issues.push({
+    message: `Missing Content-Type header. Event reports must use '${CMCD_MIME_TYPE}'.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else {
+    const mediaType = contentType.split(";")[0].trim().toLowerCase();
+    if (mediaType !== CMCD_MIME_TYPE) issues.push({
+      message: `Invalid Content-Type '${mediaType}'. Event reports must use '${CMCD_MIME_TYPE}'.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  const body = request.body;
+  if (body === void 0 || body === null) {
+    issues.push({
+      message: "Missing request body. Event reports must include a body.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return {
+      valid: false,
+      issues,
+      data: []
+    };
+  }
+  if (typeof body !== "string") {
+    issues.push({
+      message: "Request body must be a string.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return {
+      valid: false,
+      issues,
+      data: []
+    };
+  }
+  const bodyResult = validateCmcdEvents(body, options);
+  return {
+    valid: issues.length === 0 && bodyResult.valid,
+    issues: [...issues, ...bodyResult.issues],
+    data: bodyResult.data
+  };
+}
+
+//#endregion
+//#region src/validateCmcdHeaders.ts
+/**
+* Validates CMCD HTTP headers by checking shard placement and payload validity.
+*
+* This function accepts raw CMCD header strings, decodes each shard
+* internally, verifies that each key is placed in its correct header shard,
+* then merges all shards and runs full payload validation (keys, values, and
+* structure) on the merged data.
+*
+* @example
+* {@includeCode ../test/validateCmcdHeaders.test.ts#example}
+*
+* @param headers - A `Headers` instance or a record of CMCD header fields to their raw encoded string values.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
+*
+* @public
+*/
+function validateCmcdHeaders(headers, options) {
+  const h = ensureHeaders(headers);
+  const issues = [];
+  const decoded = {};
+  for (const headerField of CMCD_HEADER_FIELDS) {
+    const raw = h.get(headerField);
+    if (!raw) continue;
+    let shard;
+    try {
+      shard = decodeCmcd(raw);
+    } catch {
+      issues.push({
+        key: headerField,
+        message: `Failed to decode "${headerField}" header: invalid structured field syntax.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    decoded[headerField] = shard;
+    for (const key of Object.keys(shard)) {
+      if (isCmcdCustomKey(key)) continue;
+      const expectedHeader = CMCD_HEADER_MAP[key];
+      if (expectedHeader && expectedHeader !== headerField) issues.push({
+        key,
+        message: `Key "${key}" is in "${headerField}" but should be in "${expectedHeader}".`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    }
+  }
+  const shardResult = {
+    valid: issues.length === 0,
+    issues
+  };
+  const merged = Object.assign({}, ...CMCD_HEADER_FIELDS.map(f => decoded[f]).filter(Boolean));
+  return {
+    ...mergeValidationResults(shardResult, validateCmcd(merged, {
+      ...options,
+      reportingMode: CMCD_REQUEST_MODE
+    })),
+    data: merged
+  };
+}
+
+//#endregion
+//#region src/validateCmcdRequest.ts
+/**
+* Validates CMCD data from a request as a request-mode payload.
+*
+* Accepts a
+* {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request}
+* object or an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
+*
+* The function checks for CMCD data in the HTTP headers first. If CMCD
+* headers are found, validation includes shard-placement checks via
+* {@link validateCmcdHeaders}. Otherwise, the CMCD query parameter is
+* extracted from the URL and validated.
+*
+* @param request - A `Request` or `HttpRequest` to validate.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data.
+*
+* @example
+* {@includeCode ../test/validateCmcdRequest.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#request-mode | CTA-5004-B Request Mode}
+*
+* @public
+*/
+function validateCmcdRequest(request, options) {
+  const headers = extractHeaderRecord(request.headers);
+  if (headers) return validateCmcdHeaders(headers, options);
+  const param = new URL(request.url).searchParams.get(CMCD_PARAM);
+  if (!param) return {
+    valid: false,
+    issues: [{
+      message: "No CMCD data found in request headers or query parameters.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    }],
+    data: {}
+  };
+  let data;
+  try {
+    data = decodeCmcd(param);
+  } catch {
+    return {
+      valid: false,
+      issues: [{
+        message: "Failed to decode CMCD query parameter: invalid structured field syntax.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      }],
+      data: {}
+    };
+  }
+  return {
+    ...validateCmcd(data, {
+      ...options,
+      reportingMode: CMCD_REQUEST_MODE
+    }),
+    data
+  };
+}
+function extractHeaderRecord(headers) {
+  if (!headers) return;
+  const h = ensureHeaders(headers);
+  const result = {};
+  let found = false;
+  for (const field of CMCD_HEADER_FIELDS) {
+    const value = h.get(field);
+    if (value) {
+      result[field] = value;
+      found = true;
+    }
+  }
+  return found ? result : void 0;
 }
 
 //#endregion
@@ -16023,8 +16865,7 @@ __webpack_require__.r(__webpack_exports__);
 /**
 * CMSD dynamic header name.
 *
-*
-* @beta
+* @public
 */
 const CMSD_DYNAMIC = "CMSD-Dynamic";
 
@@ -16033,8 +16874,7 @@ const CMSD_DYNAMIC = "CMSD-Dynamic";
 /**
 * CMSD static header name.
 *
-*
-* @beta
+* @public
 */
 const CMSD_STATIC = "CMSD-Static";
 
@@ -16043,8 +16883,7 @@ const CMSD_STATIC = "CMSD-Static";
 /**
 * CMSD Version 1
 *
-*
-* @beta
+* @public
 */
 const CMSD_V1 = 1;
 
@@ -16056,7 +16895,7 @@ const CMSD_V1 = 1;
 *
 * @enum
 *
-* @beta
+* @public
 */
 const CmsdHeaderField = {
   STATIC: CMSD_STATIC,
@@ -16071,7 +16910,7 @@ const CmsdHeaderField = {
 *
 * @enum
 *
-* @beta
+* @public
 */
 const CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
 
@@ -16083,7 +16922,7 @@ const CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
 *
 * @enum
 *
-* @beta
+* @public
 */
 const CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
 
@@ -16095,7 +16934,7 @@ const CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreami
 *
 * @enum
 *
-* @beta
+* @public
 */
 const CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
 
@@ -16108,8 +16947,7 @@ const CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
 *
 * @returns The decoded CMSD object.
 *
-*
-* @beta
+* @public
 */
 function decodeCmsdDynamic(cmsd) {
   if (!cmsd) return [];
@@ -16125,8 +16963,7 @@ function decodeCmsdDynamic(cmsd) {
 *
 * @returns The decoded CMSD object.
 *
-*
-* @beta
+* @public
 */
 function decodeCmsdStatic(cmsd) {
   if (!cmsd) return {};
@@ -16179,8 +17016,7 @@ function processCmsd(obj, options) {
 *
 * @returns The encoded CMSD string.
 *
-*
-* @beta
+* @public
 */
 function encodeCmsdStatic(cmsd, options) {
   if (!cmsd) return "";
@@ -16307,7 +17143,7 @@ __webpack_require__.r(__webpack_exports__);
 * @param frameRate - The frame rate string to parse.
 * @returns The frame rate as a number.
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/parseFrameRate.test.ts#example}
@@ -16334,7 +17170,7 @@ const TOKENS = /\$(RepresentationID|Number|SubNumber|Bandwidth|Time)?(?:%0([0-9]
 *
 * @returns Processed URI template.
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/processUriTemplate.test.ts#example}
@@ -16396,8 +17232,7 @@ function processUriTemplate(uriTemplate, representationId, number, subNumber, ba
 /**
 * The scheme ID URI for thumbnail tiles in DASH.
 *
-*
-* @beta
+* @public
 */
 const THUMBNAIL_TILE_SCHEME_ID_URI = "http://dashif.org/guidelines/thumbnail_tile";
 
@@ -16442,7 +17277,6 @@ __webpack_require__.r(__webpack_exports__);
 * @returns `true` if an ID3 header is found
 *
 * @internal
-*
 */
 function isId3Header(data, offset) {
   if (offset + 10 <= data.length) {
@@ -16466,7 +17300,6 @@ function isId3Header(data, offset) {
 * @returns The size
 *
 * @internal
-*
 */
 function readId3Size(data, offset) {
   let size = 0;
@@ -16487,8 +17320,7 @@ function readId3Size(data, offset) {
 *
 * @returns `true` if an ID3 tag is found
 *
-*
-* @beta
+* @public
 */
 function canParseId3(data, offset) {
   return isId3Header(data, offset) && readId3Size(data, offset + 6) + 10 <= data.length - offset;
@@ -16505,7 +17337,6 @@ function canParseId3(data, offset) {
 * @returns `true` if an ID3 footer is found
 *
 * @internal
-*
 */
 function isId3Footer(data, offset) {
   if (offset + 10 <= data.length) {
@@ -16551,7 +17382,7 @@ function getId3Data(data, offset) {
 * @internal
 */
 function toArrayBuffer(view$1) {
-  if (view$1 instanceof ArrayBuffer) return view$1;else {
+  if ((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.isArrayBufferLike)(view$1)) return view$1;else {
     if (view$1.byteOffset == 0 && view$1.byteLength == view$1.buffer.byteLength) return view$1.buffer;
     return new Uint8Array(view$1).buffer;
   }
@@ -16576,10 +17407,10 @@ function view(data, offset, length, Type) {
   return new Type(buffer, start, Math.floor(Math.min(start + Math.max(length, 0), dataEnd)) - start);
 }
 function unsafeGetArrayBuffer(view$1) {
-  if (view$1 instanceof ArrayBuffer) return view$1;else return view$1.buffer;
+  if ((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.isArrayBufferLike)(view$1)) return view$1;else return view$1.buffer;
 }
 function isArrayBufferView(obj) {
-  return obj && obj.buffer instanceof ArrayBuffer && obj.byteLength !== void 0 && obj.byteOffset !== void 0;
+  return obj && (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.isArrayBufferLike)(obj.buffer) && obj.byteLength !== void 0 && obj.byteOffset !== void 0;
 }
 
 //#endregion
@@ -16604,6 +17435,15 @@ function utf8ArrayToStr(array, exitOnNull = false) {
 
 //#endregion
 //#region src/util/decodeId3ImageFrame.ts
+/**
+* Decode an ID3 APIC frame.
+*
+* @param frame - the ID3 APIC frame
+*
+* @returns The decoded ID3 APIC frame
+*
+* @internal
+*/
 function decodeId3ImageFrame(frame) {
   const metadataFrame = {
     key: frame.type,
@@ -16644,7 +17484,6 @@ function decodeId3ImageFrame(frame) {
 * @returns The decoded ID3 PRIV frame
 *
 * @internal
-*
 */
 function decodeId3PrivFrame(frame) {
   if (frame.size < 2) return;
@@ -16667,7 +17506,6 @@ function decodeId3PrivFrame(frame) {
 * @returns The decoded ID3 text frame
 *
 * @internal
-*
 */
 function decodeId3TextFrame(frame) {
   if (frame.size < 2) return;
@@ -16703,7 +17541,6 @@ function decodeId3TextFrame(frame) {
 * @returns The decoded ID3 URL frame
 *
 * @internal
-*
 */
 function decodeId3UrlFrame(frame) {
   if (frame.type === "WXXX") {
@@ -16736,7 +17573,6 @@ function decodeId3UrlFrame(frame) {
 * @returns The decoded ID3 frame
 *
 * @internal
-*
 */
 function decodeId3Frame(frame) {
   if (frame.type === "PRIV") return decodeId3PrivFrame(frame);else if (frame.type[0] === "W") return decodeId3UrlFrame(frame);else if (frame.type === "APIC") return decodeId3ImageFrame(frame);
@@ -16753,7 +17589,6 @@ function decodeId3Frame(frame) {
 * @returns The data of the ID3 frame
 *
 * @internal
-*
 */
 function getId3FrameData(data) {
   const type = String.fromCharCode(data[0], data[1], data[2], data[3]);
@@ -16777,8 +17612,7 @@ const FRAME_SIZE = 10;
 *
 * @returns Array of ID3 frame objects
 *
-*
-* @beta
+* @public
 */
 function getId3Frames(id3Data) {
   let offset = 0;
@@ -16825,7 +17659,6 @@ function isId3TimestampFrame(frame) {
 * @returns The timestamp
 *
 * @internal
-*
 */
 function readId3Timestamp(timeStampFrame) {
   if (timeStampFrame.data.byteLength === 8) {
@@ -16847,8 +17680,7 @@ function readId3Timestamp(timeStampFrame) {
 *
 * @returns The timestamp
 *
-*
-* @beta
+* @public
 */
 function getId3Timestamp(data) {
   const frames = getId3Frames(data);
@@ -16860,8 +17692,7 @@ function getId3Timestamp(data) {
 /**
 * The scheme ID URI for ID3 tags.
 *
-*
-* @beta
+* @public
 *
 * @see {@link https://aomediacodec.github.io/id3-emsg/ | Carriage of ID3 Timed Metadata in the Common Media Application Format (CMAF)}
 * @see {@link https://developer.apple.com/documentation/http-live-streaming/about-the-common-media-application-format-with-http-live-streaming-hls#CMAF-Tracks-Segments-Headers-and-Fragments | CMAF Tracks, Segments, Headers, and Fragments}
@@ -16928,10 +17759,15 @@ __webpack_require__.r(__webpack_exports__);
 /**
 * Structured Field Item
 *
-*
-* @beta
+* @public
 */
 var SfItem = class SfItem {
+  /**
+  * Creates a new structured field item.
+  *
+  * @param value - The value of the item.
+  * @param params - The parameters of the item.
+  */
   constructor(value, params) {
     if (Array.isArray(value)) value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
     this.value = value;
@@ -17134,8 +17970,7 @@ function parseString(src) {
 /**
 * A class to represent structured field tokens when `Symbol` is not available.
 *
-*
-* @beta
+* @public
 */
 var SfToken = class {
   constructor(description) {
@@ -17309,8 +18144,7 @@ function parseDict(src, options) {
 * @param input - The structured field string to decode
 * @returns The structured field dictionary
 *
-*
-* @beta
+* @public
 */
 function decodeSfDict(input, options) {
   try {
@@ -17337,8 +18171,7 @@ const ITEM = "Item";
 * @param input - The structured field string to decode
 * @returns The structured field item
 *
-*
-* @beta
+* @public
 */
 function decodeSfItem(input, options) {
   try {
@@ -17384,8 +18217,7 @@ function parseList(src, options) {
 * @param input - The structured field string to decode
 * @returns The structured field list
 *
-*
-* @beta
+* @public
 */
 function decodeSfList(input, options) {
   try {
@@ -17479,8 +18311,7 @@ function serializeString(value) {
 *
 * @returns The string representation of the symbol.
 *
-*
-* @beta
+* @public
 */
 function symbolToStr(symbol) {
   return symbol.description || symbol.toString().slice(7, -1);
@@ -17596,8 +18427,7 @@ function serializeDict(dict, options = {
 *
 * @returns The structured field string
 *
-*
-* @beta
+* @public
 */
 function encodeSfDict(value, options) {
   return serializeDict(value, options);
@@ -17638,8 +18468,7 @@ function serializeList(list, options = {
 *
 * @returns The structured field string
 *
-*
-* @beta
+* @public
 */
 function encodeSfList(value, options) {
   return serializeList(value, options);
@@ -17659,7 +18488,7 @@ function encodeSfList(value, options) {
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   Encoding: function() { return /* binding */ Encoding; },
-/* harmony export */   RequestType: function() { return /* binding */ RequestType; },
+/* harmony export */   RequestResponseType: function() { return /* binding */ RequestResponseType; },
 /* harmony export */   UTF_16: function() { return /* binding */ UTF_16; },
 /* harmony export */   UTF_16_BE: function() { return /* binding */ UTF_16_BE; },
 /* harmony export */   UTF_16_LE: function() { return /* binding */ UTF_16_LE; },
@@ -17672,8 +18501,11 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; },
 /* harmony export */   decodeText: function() { return /* binding */ decodeText; },
 /* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; },
+/* harmony export */   encodeText: function() { return /* binding */ encodeText; },
 /* harmony export */   getBandwidthBps: function() { return /* binding */ getBandwidthBps; },
+/* harmony export */   getBaseUrl: function() { return /* binding */ getBaseUrl; },
 /* harmony export */   hexToArrayBuffer: function() { return /* binding */ hexToArrayBuffer; },
+/* harmony export */   isArrayBufferLike: function() { return /* binding */ isArrayBufferLike; },
 /* harmony export */   roundToEven: function() { return /* binding */ roundToEven; },
 /* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; },
 /* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; },
@@ -17688,8 +18520,7 @@ __webpack_require__.r(__webpack_exports__);
 * @param buffer - The ArrayBuffer to encode.
 * @returns The hexadecimal string representation.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/arrayBufferToHex.test.ts#example}
@@ -17706,8 +18537,7 @@ function arrayBufferToHex(buffer) {
 * @param buffer - The ArrayBuffer to convert.
 * @returns The UUID string representation.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/arrayBufferToUuid.test.ts#example}
@@ -17724,8 +18554,7 @@ function arrayBufferToUuid(buffer) {
 * @param str - The base64 encoded string to decode
 * @returns The decoded binary data
 *
-*
-* @beta
+* @public
 */
 function decodeBase64(str) {
   return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
@@ -17739,8 +18568,7 @@ function decodeBase64(str) {
 * @param str - The base64 encoded string to decode
 * @returns The decoded binary data
 *
-*
-* @beta
+* @public
 *
 * @deprecated Use {@link decodeBase64} instead.
 *
@@ -17756,8 +18584,7 @@ const base64decode = decodeBase64;
 * @param binary - The binary data to encode
 * @returns The base64 encoded string
 *
-*
-* @beta
+* @public
 */
 function encodeBase64(binary) {
   return btoa(String.fromCharCode(...binary));
@@ -17771,8 +18598,7 @@ function encodeBase64(binary) {
 * @param binary - The binary data to encode
 * @returns The base64 encoded string
 *
-*
-* @beta
+* @public
 *
 * @deprecated Use {@link encodeBase64} instead.
 *
@@ -17788,7 +18614,7 @@ const base64encode = encodeBase64;
 * @param input - The Uint8Array to convert
 * @returns A properly aligned Uint16Array
 *
-* @beta
+* @public
 */
 function convertUint8ToUint16(input) {
   if (input.length % 2 !== 0) {
@@ -17800,12 +18626,33 @@ function convertUint8ToUint16(input) {
 }
 
 //#endregion
+//#region src/isArrayBufferLike.ts
+/**
+* Checks if the given value is `ArrayBufferLike` (i.e. an `ArrayBuffer`
+* or a `SharedArrayBuffer`).
+*
+* This function safely handles environments where
+* `SharedArrayBuffer` is not defined, such as non-cross-origin
+* isolated browser contexts.
+*
+* @param value - The value to check.
+* @returns `true` if the value is an `ArrayBuffer` or `SharedArrayBuffer`.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isArrayBufferLike.test.ts#example}
+*/
+function isArrayBufferLike(value) {
+  return value instanceof ArrayBuffer || typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
+}
+
+//#endregion
 //#region src/UTF_16.ts
 /**
 * UTF-16 Encoding.
 *
-*
-* @beta
+* @public
 */
 const UTF_16 = "utf-16";
 
@@ -17814,8 +18661,7 @@ const UTF_16 = "utf-16";
 /**
 * UTF-16 Big Endian Encoding.
 *
-*
-* @beta
+* @public
 */
 const UTF_16_BE = "utf-16be";
 
@@ -17824,8 +18670,7 @@ const UTF_16_BE = "utf-16be";
 /**
 * UTF-16 Little Endian Encoding.
 *
-*
-* @beta
+* @public
 */
 const UTF_16_LE = "utf-16le";
 
@@ -17834,8 +18679,7 @@ const UTF_16_LE = "utf-16le";
 /**
 * UTF-8 Encoding.
 *
-*
-* @beta
+* @public
 */
 const UTF_8 = "utf-8";
 
@@ -17849,15 +18693,14 @@ const UTF_8 = "utf-8";
 * @param options - The options for the decoding.
 * @returns The string representation of the ArrayBuffer.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/decodeText.test.ts#example}
 */
 function decodeText(data, options = {}) {
   let view;
-  if (data instanceof ArrayBuffer) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  if (isArrayBufferLike(data)) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
   let byteOffset = 0;
   let {
     encoding
@@ -17929,12 +18772,29 @@ function decodeText(data, options = {}) {
 }
 
 //#endregion
+//#region src/encodeText.ts
+/**
+* Converts a string to a Uint8Array. Similar to `TextEncoder.encode`
+* but with a fallback for environments that don't support `TextEncoder`.
+*
+* @param data - The string to encode.
+* @returns The Uint8Array representation of the string.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/encodeText.test.ts#example}
+*/
+function encodeText(data) {
+  return new TextEncoder().encode(data);
+}
+
+//#endregion
 //#region src/Encoding.ts
 /**
 * Text encoding types.
 *
-*
-* @beta
+* @public
 */
 const Encoding = {
   UTF8: UTF_8,
@@ -17951,12 +18811,29 @@ const Encoding = {
 * @param sample - A ResourceTiming sample
 * @returns
 *
-*
-* @beta
+* @public
 */
 function getBandwidthBps(sample) {
   const durationSeconds = sample.duration / 1e3;
   return sample.encodedBodySize * 8 / durationSeconds;
+}
+
+//#endregion
+//#region src/getBaseUrl.ts
+/**
+* Get the base URL from a full URL or a URL object.
+*
+* @param fullUrl - The full URL or URL object.
+* @returns The base URL.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/getBaseUrl.test.ts#example}
+*/
+function getBaseUrl(fullUrl) {
+  const url = typeof fullUrl === "string" ? new URL(fullUrl) : fullUrl;
+  return url.origin + url.pathname.substring(0, url.pathname.lastIndexOf("/") + 1);
 }
 
 //#endregion
@@ -17967,8 +18844,7 @@ function getBandwidthBps(sample) {
 * @param hex - The hexadecimal string to decode.
 * @returns The decoded ArrayBuffer.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/hexToArrayBuffer.test.ts#example}
@@ -17981,21 +18857,21 @@ function hexToArrayBuffer(hex) {
 }
 
 //#endregion
-//#region src/RequestType.ts
+//#region src/RequestResponseType.ts
 /**
-* The content type of the request.
-*
+* The response type of the request.
 *
 * @enum
 *
-* @beta
+* @public
 */
-const RequestType = {
+const RequestResponseType = {
   TEXT: "text",
   JSON: "json",
   BLOB: "blob",
   ARRAY_BUFFER: "arrayBuffer",
-  DOCUMENT: "document"
+  DOCUMENT: "document",
+  STREAM: "stream"
 };
 
 //#endregion
@@ -18008,8 +18884,7 @@ const RequestType = {
 * @param precision - The number of decimal places to round to
 * @returns The rounded value
 *
-*
-* @beta
+* @public
 */
 function roundToEven(value, precision) {
   if (value < 0) return -roundToEven(-value, precision);
@@ -18028,8 +18903,7 @@ function roundToEven(value, precision) {
 * @param str - The string to convert
 * @returns A Uint16Array representation of the string
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/stringToUint16.test.ts#example}
@@ -18050,8 +18924,7 @@ const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g
 * @param text - The text to unescape
 * @returns The unescaped text
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/unescapeHtml.test.ts#example}
@@ -18091,15 +18964,24 @@ function unescapeHtml(text) {
 /**
 * Constructs a relative path from a URL.
 *
+* If `url` is already a relative path, or its origin differs from `base`, it is returned unchanged.
+*
 * @param url - The destination URL
 * @param base - The base URL
 * @returns The relative path
 *
+* @public
 *
-* @beta
+* @example
+* {@includeCode ../test/urlToRelativePath.test.ts#example}
 */
 function urlToRelativePath(url, base) {
-  const to = new URL(url);
+  let to;
+  try {
+    to = new URL(url);
+  } catch {
+    return url;
+  }
   const from = new URL(base);
   if (to.origin !== from.origin) return url;
   const toPath = to.pathname.split("/").slice(1);
@@ -18124,8 +19006,7 @@ function urlToRelativePath(url, base) {
 *
 * @returns A random v4 UUID
 *
-*
-* @beta
+* @public
 */
 function uuid() {
   try {
@@ -18155,8 +19036,7 @@ function uuid() {
 * @param uuid - The UUID string to convert.
 * @returns The ArrayBuffer representation.
 *
-*
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/uuidToArrayBuffer.test.ts#example}
@@ -18194,8 +19074,7 @@ __webpack_require__.r(__webpack_exports__);
 * @param found - An array to collect matching nodes.
 * @returns An array of all matching XmlNodes.
 *
-*
-* @beta
+* @public
 *
 */
 function getElementsByName(node, name, found = []) {
@@ -18207,6 +19086,17 @@ function getElementsByName(node, name, found = []) {
 
 //#endregion
 //#region src/parseXml.ts
+const OPEN_BRACKET_CC = 60;
+const CLOSE_BRACKET_CC = 62;
+const MINUS_CC = 45;
+const SLASH_CC = 47;
+const QUESTION_CC = 63;
+const EXCLAMATION_CC = 33;
+const SINGLE_QUOTE_CC = 39;
+const DOUBLE_QUOTE_CC = 34;
+const OPEN_CORNER_BRACKET_CC = 91;
+const CLOSE_CORNER_BRACKET_CC = 93;
+const NAME_SPACER_SET = new Set([13, 10, 9, 62, 47, 61, 32]);
 /**
 * Parse XML into a JS object with no validation and some failure tolerance
 *
@@ -18214,29 +19104,20 @@ function getElementsByName(node, name, found = []) {
 * @param options - Optional parsing options
 * @returns The parsed XML
 *
-* @beta
+* @public
 *
 * @example
-* {@includeCode ../test/decodeXml.test.ts#example}
+* {@includeCode ../test/parseXml.test.ts#example}
 */
 function parseXml(input, options = {}) {
   let pos = options.pos || 0;
   const length = input.length;
   const keepComments = !!options.keepComments;
   const keepWhitespace = !!options.keepWhitespace;
-  const openBracket = "<";
-  const openBracketCC = "<".charCodeAt(0);
-  const closeBracket = ">";
-  const closeBracketCC = ">".charCodeAt(0);
-  const minusCC = "-".charCodeAt(0);
-  const slashCC = "/".charCodeAt(0);
-  const questionCC = "?".charCodeAt(0);
-  const exclamationCC = "!".charCodeAt(0);
-  const singleQuoteCC = "'".charCodeAt(0);
-  const doubleQuoteCC = "\"".charCodeAt(0);
-  const openCornerBracketCC = "[".charCodeAt(0);
-  const closeCornerBracketCC = "]".charCodeAt(0);
-  const nameSpacer = "\r\n	>/= ";
+  const includeParentElement = !!options.includeParentElement;
+  /**
+  * Creates a text node
+  */
   function createTextNode(value, nodeName = "#text") {
     return {
       nodeName,
@@ -18246,33 +19127,35 @@ function parseXml(input, options = {}) {
     };
   }
   /**
-  * parsing a list of entries
+  * Parses a list of entries
   */
   function parseChildren(tagName = "") {
     const children = [];
-    while (input[pos]) if (input.charCodeAt(pos) == openBracketCC) {
-      if (input.charCodeAt(pos + 1) === slashCC) {
+    while (pos < length) if (input.charCodeAt(pos) === OPEN_BRACKET_CC) {
+      const next = input.charCodeAt(pos + 1);
+      if (next === SLASH_CC) {
         const closeStart = pos + 2;
-        pos = input.indexOf(closeBracket, pos);
+        pos = input.indexOf(">", pos);
         if (!input.startsWith(tagName, closeStart)) {
           const parsedText = input.substring(0, pos).split("\n");
           throw new Error("Unexpected close tag\nLine: " + (parsedText.length - 1) + "\nColumn: " + (parsedText[parsedText.length - 1].length + 1) + "\nChar: " + input[pos]);
         }
         if (pos + 1) pos += 1;
         return children;
-      } else if (input.charCodeAt(pos + 1) === questionCC) {
-        pos = input.indexOf(closeBracket, pos);
+      } else if (next === QUESTION_CC) {
+        pos = input.indexOf(">", pos);
         pos++;
         continue;
-      } else if (input.charCodeAt(pos + 1) === exclamationCC) {
-        if (input.charCodeAt(pos + 2) == minusCC) {
+      } else if (next === EXCLAMATION_CC) {
+        const third = input.charCodeAt(pos + 2);
+        if (third === MINUS_CC) {
           const startCommentPos = pos;
-          while (pos !== -1 && !(input.charCodeAt(pos) === closeBracketCC && input.charCodeAt(pos - 1) == minusCC && input.charCodeAt(pos - 2) == minusCC && pos != -1)) pos = input.indexOf(closeBracket, pos + 1);
+          while (pos !== -1 && !(input.charCodeAt(pos) === CLOSE_BRACKET_CC && input.charCodeAt(pos - 1) === MINUS_CC && input.charCodeAt(pos - 2) === MINUS_CC)) pos = input.indexOf(">", pos + 1);
           if (pos === -1) pos = length;
           if (keepComments) children.push(createTextNode(input.substring(startCommentPos, pos + 1), "#comment"));
-        } else if (input.charCodeAt(pos + 2) === openCornerBracketCC && input.charCodeAt(pos + 8) === openCornerBracketCC && input.startsWith("CDATA", pos + 3)) {
+        } else if (third === OPEN_CORNER_BRACKET_CC && input.charCodeAt(pos + 8) === OPEN_CORNER_BRACKET_CC && input.startsWith("CDATA", pos + 3)) {
           const cdataEndIndex = input.indexOf("]]>", pos);
-          if (cdataEndIndex == -1) {
+          if (cdataEndIndex === -1) {
             children.push(createTextNode(input.substr(pos + 9), "#cdata"));
             pos = length;
           } else {
@@ -18284,8 +19167,9 @@ function parseXml(input, options = {}) {
           const startDoctype = pos + 1;
           pos += 2;
           let encapsuled = false;
-          while ((input.charCodeAt(pos) !== closeBracketCC || encapsuled === true) && input[pos]) {
-            if (input.charCodeAt(pos) === openCornerBracketCC) encapsuled = true;else if (encapsuled === true && input.charCodeAt(pos) === closeCornerBracketCC) encapsuled = false;
+          while (pos < length && (input.charCodeAt(pos) !== CLOSE_BRACKET_CC || encapsuled)) {
+            const cc = input.charCodeAt(pos);
+            if (cc === OPEN_CORNER_BRACKET_CC) encapsuled = true;else if (encapsuled && cc === CLOSE_CORNER_BRACKET_CC) encapsuled = false;
             pos++;
           }
           children.push(createTextNode(input.substring(startDoctype, pos), "#doctype"));
@@ -18308,38 +19192,38 @@ function parseXml(input, options = {}) {
     return children;
   }
   /**
-  * returns the text outside of texts until the first '&lt;'
+  * Returns the text outside of texts until the first '&lt;'
   */
   function parseText() {
     const start = pos;
-    pos = input.indexOf(openBracket, pos) - 1;
+    pos = input.indexOf("<", pos) - 1;
     if (pos === -2) pos = length;
     return (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.unescapeHtml)(input.slice(start, pos + 1));
   }
   /**
-  * returns text until the first nonAlphabetic letter
+  * Returns text until the first nonAlphabetic letter
   */
   function parseName() {
     const start = pos;
-    while (nameSpacer.indexOf(input[pos]) === -1 && input[pos]) pos++;
+    while (pos < length && !NAME_SPACER_SET.has(input.charCodeAt(pos))) pos++;
     return input.slice(start, pos);
   }
   /**
-  * parses the attributes of a node
+  * Parses the attributes of a node
   */
   function parseAttributes() {
     const attributes = {};
-    while (input.charCodeAt(pos) !== closeBracketCC && input[pos]) {
+    while (pos < length && input.charCodeAt(pos) !== CLOSE_BRACKET_CC) {
       const c = input.charCodeAt(pos);
       if (c > 64 && c < 91 || c > 96 && c < 123) {
         const name = parseName();
         let value = "";
         let code = input.charCodeAt(pos);
-        while (code !== singleQuoteCC && code !== doubleQuoteCC) {
+        while (code !== SINGLE_QUOTE_CC && code !== DOUBLE_QUOTE_CC) {
           pos++;
           code = input.charCodeAt(pos);
         }
-        if (code === singleQuoteCC || code === doubleQuoteCC) {
+        if (code === SINGLE_QUOTE_CC || code === DOUBLE_QUOTE_CC) {
           value = parseString();
           if (pos === -1) throw new Error("Missing closing quote");
         } else pos--;
@@ -18350,7 +19234,7 @@ function parseXml(input, options = {}) {
     return attributes;
   }
   /**
-  * parses a node
+  * Parses a node
   */
   function parseNode() {
     pos++;
@@ -18366,7 +19250,7 @@ function parseXml(input, options = {}) {
     let childNodes = [];
     const prev = input.charCodeAt(pos - 1);
     pos++;
-    if (prev !== slashCC) childNodes = parseChildren(nodeName);
+    if (prev !== SLASH_CC) childNodes = parseChildren(nodeName);
     return {
       nodeName,
       nodeValue: null,
@@ -18377,7 +19261,7 @@ function parseXml(input, options = {}) {
     };
   }
   /**
-  * is parsing a string, that starts with a char and with the same usually ' or "
+  * Parses a string, that starts with a char and with the same usually ' or "
   */
   function parseString() {
     const startChar = input[pos];
@@ -18385,12 +19269,21 @@ function parseXml(input, options = {}) {
     pos = input.indexOf(startChar, startpos);
     return input.slice(startpos, pos);
   }
-  return {
+  /**
+  * Recursively sets parentElement on all nodes in the tree
+  */
+  function setParentElements(node, parent) {
+    node.parentElement = parent?.nodeName.startsWith("#") ? null : parent;
+    for (const child of node.childNodes) setParentElements(child, node);
+  }
+  const document = {
     nodeName: "#document",
     nodeValue: null,
     childNodes: parseChildren(""),
     attributes: {}
   };
+  if (includeParentElement) setParentElements(document, null);
+  return document;
 }
 
 //#endregion
@@ -18401,7 +19294,7 @@ function parseXml(input, options = {}) {
 * @param xml - The XML node to encode
 * @returns The parsed XML
 *
-* @beta
+* @public
 *
 * @example
 * {@includeCode ../test/serializeXml.test.ts#example}
@@ -18653,13176 +19546,6 @@ function cast(values, name) {
     throw new Error('Invalid ' + name + ' `' + value + '`, expected non-empty string');
   }
   return value;
-}
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-normalize/lib/fields.js":
-/*!*****************************************************!*\
-  !*** ./node_modules/bcp-47-normalize/lib/fields.js ***!
-  \*****************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   fields: function() { return /* binding */ fields; }
-/* harmony export */ });
-/**
- * @typedef {'script'|'region'|'variants'} Field
- *
- * @typedef AddOrRemove
- * @property {Field} field
- * @property {string} value
- *
- * @typedef Change
- * @property {AddOrRemove} from
- * @property {AddOrRemove} to
- */
-
-/**
- * @type {Array<Change>}
- */
-const fields = [{
-  from: {
-    field: 'script',
-    value: 'qaai'
-  },
-  to: {
-    field: 'script',
-    value: 'zinh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'bu'
-  },
-  to: {
-    field: 'region',
-    value: 'mm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'ct'
-  },
-  to: {
-    field: 'region',
-    value: 'ki'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'dd'
-  },
-  to: {
-    field: 'region',
-    value: 'de'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'dy'
-  },
-  to: {
-    field: 'region',
-    value: 'bj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'fx'
-  },
-  to: {
-    field: 'region',
-    value: 'fr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'hv'
-  },
-  to: {
-    field: 'region',
-    value: 'bf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'jt'
-  },
-  to: {
-    field: 'region',
-    value: 'um'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'mi'
-  },
-  to: {
-    field: 'region',
-    value: 'um'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'nh'
-  },
-  to: {
-    field: 'region',
-    value: 'vu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'nq'
-  },
-  to: {
-    field: 'region',
-    value: 'aq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'pu'
-  },
-  to: {
-    field: 'region',
-    value: 'um'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'pz'
-  },
-  to: {
-    field: 'region',
-    value: 'pa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'qu'
-  },
-  to: {
-    field: 'region',
-    value: 'eu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'rh'
-  },
-  to: {
-    field: 'region',
-    value: 'zw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'tp'
-  },
-  to: {
-    field: 'region',
-    value: 'tl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'uk'
-  },
-  to: {
-    field: 'region',
-    value: 'gb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'vd'
-  },
-  to: {
-    field: 'region',
-    value: 'vn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'wk'
-  },
-  to: {
-    field: 'region',
-    value: 'um'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'yd'
-  },
-  to: {
-    field: 'region',
-    value: 'ye'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: 'zr'
-  },
-  to: {
-    field: 'region',
-    value: 'cd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '230'
-  },
-  to: {
-    field: 'region',
-    value: 'et'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '280'
-  },
-  to: {
-    field: 'region',
-    value: 'de'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '736'
-  },
-  to: {
-    field: 'region',
-    value: 'sd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '886'
-  },
-  to: {
-    field: 'region',
-    value: 'ye'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '958'
-  },
-  to: {
-    field: 'region',
-    value: 'aa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '020'
-  },
-  to: {
-    field: 'region',
-    value: 'ad'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '784'
-  },
-  to: {
-    field: 'region',
-    value: 'ae'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '004'
-  },
-  to: {
-    field: 'region',
-    value: 'af'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '028'
-  },
-  to: {
-    field: 'region',
-    value: 'ag'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '660'
-  },
-  to: {
-    field: 'region',
-    value: 'ai'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '008'
-  },
-  to: {
-    field: 'region',
-    value: 'al'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '051'
-  },
-  to: {
-    field: 'region',
-    value: 'am'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '024'
-  },
-  to: {
-    field: 'region',
-    value: 'ao'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '010'
-  },
-  to: {
-    field: 'region',
-    value: 'aq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '032'
-  },
-  to: {
-    field: 'region',
-    value: 'ar'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '016'
-  },
-  to: {
-    field: 'region',
-    value: 'as'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '040'
-  },
-  to: {
-    field: 'region',
-    value: 'at'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '036'
-  },
-  to: {
-    field: 'region',
-    value: 'au'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '533'
-  },
-  to: {
-    field: 'region',
-    value: 'aw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '248'
-  },
-  to: {
-    field: 'region',
-    value: 'ax'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '031'
-  },
-  to: {
-    field: 'region',
-    value: 'az'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '070'
-  },
-  to: {
-    field: 'region',
-    value: 'ba'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '052'
-  },
-  to: {
-    field: 'region',
-    value: 'bb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '050'
-  },
-  to: {
-    field: 'region',
-    value: 'bd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '056'
-  },
-  to: {
-    field: 'region',
-    value: 'be'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '854'
-  },
-  to: {
-    field: 'region',
-    value: 'bf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '100'
-  },
-  to: {
-    field: 'region',
-    value: 'bg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '048'
-  },
-  to: {
-    field: 'region',
-    value: 'bh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '108'
-  },
-  to: {
-    field: 'region',
-    value: 'bi'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '204'
-  },
-  to: {
-    field: 'region',
-    value: 'bj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '652'
-  },
-  to: {
-    field: 'region',
-    value: 'bl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '060'
-  },
-  to: {
-    field: 'region',
-    value: 'bm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '096'
-  },
-  to: {
-    field: 'region',
-    value: 'bn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '068'
-  },
-  to: {
-    field: 'region',
-    value: 'bo'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '535'
-  },
-  to: {
-    field: 'region',
-    value: 'bq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '076'
-  },
-  to: {
-    field: 'region',
-    value: 'br'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '044'
-  },
-  to: {
-    field: 'region',
-    value: 'bs'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '064'
-  },
-  to: {
-    field: 'region',
-    value: 'bt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '104'
-  },
-  to: {
-    field: 'region',
-    value: 'mm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '074'
-  },
-  to: {
-    field: 'region',
-    value: 'bv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '072'
-  },
-  to: {
-    field: 'region',
-    value: 'bw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '112'
-  },
-  to: {
-    field: 'region',
-    value: 'by'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '084'
-  },
-  to: {
-    field: 'region',
-    value: 'bz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '124'
-  },
-  to: {
-    field: 'region',
-    value: 'ca'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '166'
-  },
-  to: {
-    field: 'region',
-    value: 'cc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '180'
-  },
-  to: {
-    field: 'region',
-    value: 'cd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '140'
-  },
-  to: {
-    field: 'region',
-    value: 'cf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '178'
-  },
-  to: {
-    field: 'region',
-    value: 'cg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '756'
-  },
-  to: {
-    field: 'region',
-    value: 'ch'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '384'
-  },
-  to: {
-    field: 'region',
-    value: 'ci'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '184'
-  },
-  to: {
-    field: 'region',
-    value: 'ck'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '152'
-  },
-  to: {
-    field: 'region',
-    value: 'cl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '120'
-  },
-  to: {
-    field: 'region',
-    value: 'cm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '156'
-  },
-  to: {
-    field: 'region',
-    value: 'cn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '170'
-  },
-  to: {
-    field: 'region',
-    value: 'co'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '188'
-  },
-  to: {
-    field: 'region',
-    value: 'cr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '192'
-  },
-  to: {
-    field: 'region',
-    value: 'cu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '132'
-  },
-  to: {
-    field: 'region',
-    value: 'cv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '531'
-  },
-  to: {
-    field: 'region',
-    value: 'cw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '162'
-  },
-  to: {
-    field: 'region',
-    value: 'cx'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '196'
-  },
-  to: {
-    field: 'region',
-    value: 'cy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '203'
-  },
-  to: {
-    field: 'region',
-    value: 'cz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '278'
-  },
-  to: {
-    field: 'region',
-    value: 'de'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '276'
-  },
-  to: {
-    field: 'region',
-    value: 'de'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '262'
-  },
-  to: {
-    field: 'region',
-    value: 'dj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '208'
-  },
-  to: {
-    field: 'region',
-    value: 'dk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '212'
-  },
-  to: {
-    field: 'region',
-    value: 'dm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '214'
-  },
-  to: {
-    field: 'region',
-    value: 'do'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '012'
-  },
-  to: {
-    field: 'region',
-    value: 'dz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '218'
-  },
-  to: {
-    field: 'region',
-    value: 'ec'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '233'
-  },
-  to: {
-    field: 'region',
-    value: 'ee'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '818'
-  },
-  to: {
-    field: 'region',
-    value: 'eg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '732'
-  },
-  to: {
-    field: 'region',
-    value: 'eh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '232'
-  },
-  to: {
-    field: 'region',
-    value: 'er'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '724'
-  },
-  to: {
-    field: 'region',
-    value: 'es'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '231'
-  },
-  to: {
-    field: 'region',
-    value: 'et'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '246'
-  },
-  to: {
-    field: 'region',
-    value: 'fi'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '242'
-  },
-  to: {
-    field: 'region',
-    value: 'fj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '238'
-  },
-  to: {
-    field: 'region',
-    value: 'fk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '583'
-  },
-  to: {
-    field: 'region',
-    value: 'fm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '234'
-  },
-  to: {
-    field: 'region',
-    value: 'fo'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '250'
-  },
-  to: {
-    field: 'region',
-    value: 'fr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '249'
-  },
-  to: {
-    field: 'region',
-    value: 'fr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '266'
-  },
-  to: {
-    field: 'region',
-    value: 'ga'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '826'
-  },
-  to: {
-    field: 'region',
-    value: 'gb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '308'
-  },
-  to: {
-    field: 'region',
-    value: 'gd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '268'
-  },
-  to: {
-    field: 'region',
-    value: 'ge'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '254'
-  },
-  to: {
-    field: 'region',
-    value: 'gf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '831'
-  },
-  to: {
-    field: 'region',
-    value: 'gg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '288'
-  },
-  to: {
-    field: 'region',
-    value: 'gh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '292'
-  },
-  to: {
-    field: 'region',
-    value: 'gi'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '304'
-  },
-  to: {
-    field: 'region',
-    value: 'gl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '270'
-  },
-  to: {
-    field: 'region',
-    value: 'gm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '324'
-  },
-  to: {
-    field: 'region',
-    value: 'gn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '312'
-  },
-  to: {
-    field: 'region',
-    value: 'gp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '226'
-  },
-  to: {
-    field: 'region',
-    value: 'gq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '300'
-  },
-  to: {
-    field: 'region',
-    value: 'gr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '239'
-  },
-  to: {
-    field: 'region',
-    value: 'gs'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '320'
-  },
-  to: {
-    field: 'region',
-    value: 'gt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '316'
-  },
-  to: {
-    field: 'region',
-    value: 'gu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '624'
-  },
-  to: {
-    field: 'region',
-    value: 'gw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '328'
-  },
-  to: {
-    field: 'region',
-    value: 'gy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '344'
-  },
-  to: {
-    field: 'region',
-    value: 'hk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '334'
-  },
-  to: {
-    field: 'region',
-    value: 'hm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '340'
-  },
-  to: {
-    field: 'region',
-    value: 'hn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '191'
-  },
-  to: {
-    field: 'region',
-    value: 'hr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '332'
-  },
-  to: {
-    field: 'region',
-    value: 'ht'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '348'
-  },
-  to: {
-    field: 'region',
-    value: 'hu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '360'
-  },
-  to: {
-    field: 'region',
-    value: 'id'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '372'
-  },
-  to: {
-    field: 'region',
-    value: 'ie'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '376'
-  },
-  to: {
-    field: 'region',
-    value: 'il'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '833'
-  },
-  to: {
-    field: 'region',
-    value: 'im'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '356'
-  },
-  to: {
-    field: 'region',
-    value: 'in'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '086'
-  },
-  to: {
-    field: 'region',
-    value: 'io'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '368'
-  },
-  to: {
-    field: 'region',
-    value: 'iq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '364'
-  },
-  to: {
-    field: 'region',
-    value: 'ir'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '352'
-  },
-  to: {
-    field: 'region',
-    value: 'is'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '380'
-  },
-  to: {
-    field: 'region',
-    value: 'it'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '832'
-  },
-  to: {
-    field: 'region',
-    value: 'je'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '388'
-  },
-  to: {
-    field: 'region',
-    value: 'jm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '400'
-  },
-  to: {
-    field: 'region',
-    value: 'jo'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '392'
-  },
-  to: {
-    field: 'region',
-    value: 'jp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '404'
-  },
-  to: {
-    field: 'region',
-    value: 'ke'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '417'
-  },
-  to: {
-    field: 'region',
-    value: 'kg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '116'
-  },
-  to: {
-    field: 'region',
-    value: 'kh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '296'
-  },
-  to: {
-    field: 'region',
-    value: 'ki'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '174'
-  },
-  to: {
-    field: 'region',
-    value: 'km'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '659'
-  },
-  to: {
-    field: 'region',
-    value: 'kn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '408'
-  },
-  to: {
-    field: 'region',
-    value: 'kp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '410'
-  },
-  to: {
-    field: 'region',
-    value: 'kr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '414'
-  },
-  to: {
-    field: 'region',
-    value: 'kw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '136'
-  },
-  to: {
-    field: 'region',
-    value: 'ky'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '398'
-  },
-  to: {
-    field: 'region',
-    value: 'kz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '418'
-  },
-  to: {
-    field: 'region',
-    value: 'la'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '422'
-  },
-  to: {
-    field: 'region',
-    value: 'lb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '662'
-  },
-  to: {
-    field: 'region',
-    value: 'lc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '438'
-  },
-  to: {
-    field: 'region',
-    value: 'li'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '144'
-  },
-  to: {
-    field: 'region',
-    value: 'lk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '430'
-  },
-  to: {
-    field: 'region',
-    value: 'lr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '426'
-  },
-  to: {
-    field: 'region',
-    value: 'ls'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '440'
-  },
-  to: {
-    field: 'region',
-    value: 'lt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '442'
-  },
-  to: {
-    field: 'region',
-    value: 'lu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '428'
-  },
-  to: {
-    field: 'region',
-    value: 'lv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '434'
-  },
-  to: {
-    field: 'region',
-    value: 'ly'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '504'
-  },
-  to: {
-    field: 'region',
-    value: 'ma'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '492'
-  },
-  to: {
-    field: 'region',
-    value: 'mc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '498'
-  },
-  to: {
-    field: 'region',
-    value: 'md'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '499'
-  },
-  to: {
-    field: 'region',
-    value: 'me'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '663'
-  },
-  to: {
-    field: 'region',
-    value: 'mf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '450'
-  },
-  to: {
-    field: 'region',
-    value: 'mg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '584'
-  },
-  to: {
-    field: 'region',
-    value: 'mh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '807'
-  },
-  to: {
-    field: 'region',
-    value: 'mk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '466'
-  },
-  to: {
-    field: 'region',
-    value: 'ml'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '496'
-  },
-  to: {
-    field: 'region',
-    value: 'mn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '446'
-  },
-  to: {
-    field: 'region',
-    value: 'mo'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '580'
-  },
-  to: {
-    field: 'region',
-    value: 'mp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '474'
-  },
-  to: {
-    field: 'region',
-    value: 'mq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '478'
-  },
-  to: {
-    field: 'region',
-    value: 'mr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '500'
-  },
-  to: {
-    field: 'region',
-    value: 'ms'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '470'
-  },
-  to: {
-    field: 'region',
-    value: 'mt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '480'
-  },
-  to: {
-    field: 'region',
-    value: 'mu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '462'
-  },
-  to: {
-    field: 'region',
-    value: 'mv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '454'
-  },
-  to: {
-    field: 'region',
-    value: 'mw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '484'
-  },
-  to: {
-    field: 'region',
-    value: 'mx'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '458'
-  },
-  to: {
-    field: 'region',
-    value: 'my'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '508'
-  },
-  to: {
-    field: 'region',
-    value: 'mz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '516'
-  },
-  to: {
-    field: 'region',
-    value: 'na'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '540'
-  },
-  to: {
-    field: 'region',
-    value: 'nc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '562'
-  },
-  to: {
-    field: 'region',
-    value: 'ne'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '574'
-  },
-  to: {
-    field: 'region',
-    value: 'nf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '566'
-  },
-  to: {
-    field: 'region',
-    value: 'ng'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '558'
-  },
-  to: {
-    field: 'region',
-    value: 'ni'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '528'
-  },
-  to: {
-    field: 'region',
-    value: 'nl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '578'
-  },
-  to: {
-    field: 'region',
-    value: 'no'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '524'
-  },
-  to: {
-    field: 'region',
-    value: 'np'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '520'
-  },
-  to: {
-    field: 'region',
-    value: 'nr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '570'
-  },
-  to: {
-    field: 'region',
-    value: 'nu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '554'
-  },
-  to: {
-    field: 'region',
-    value: 'nz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '512'
-  },
-  to: {
-    field: 'region',
-    value: 'om'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '591'
-  },
-  to: {
-    field: 'region',
-    value: 'pa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '604'
-  },
-  to: {
-    field: 'region',
-    value: 'pe'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '258'
-  },
-  to: {
-    field: 'region',
-    value: 'pf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '598'
-  },
-  to: {
-    field: 'region',
-    value: 'pg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '608'
-  },
-  to: {
-    field: 'region',
-    value: 'ph'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '586'
-  },
-  to: {
-    field: 'region',
-    value: 'pk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '616'
-  },
-  to: {
-    field: 'region',
-    value: 'pl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '666'
-  },
-  to: {
-    field: 'region',
-    value: 'pm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '612'
-  },
-  to: {
-    field: 'region',
-    value: 'pn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '630'
-  },
-  to: {
-    field: 'region',
-    value: 'pr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '275'
-  },
-  to: {
-    field: 'region',
-    value: 'ps'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '620'
-  },
-  to: {
-    field: 'region',
-    value: 'pt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '585'
-  },
-  to: {
-    field: 'region',
-    value: 'pw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '600'
-  },
-  to: {
-    field: 'region',
-    value: 'py'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '634'
-  },
-  to: {
-    field: 'region',
-    value: 'qa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '959'
-  },
-  to: {
-    field: 'region',
-    value: 'qm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '960'
-  },
-  to: {
-    field: 'region',
-    value: 'qn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '962'
-  },
-  to: {
-    field: 'region',
-    value: 'qp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '963'
-  },
-  to: {
-    field: 'region',
-    value: 'qq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '964'
-  },
-  to: {
-    field: 'region',
-    value: 'qr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '965'
-  },
-  to: {
-    field: 'region',
-    value: 'qs'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '966'
-  },
-  to: {
-    field: 'region',
-    value: 'qt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '967'
-  },
-  to: {
-    field: 'region',
-    value: 'eu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '968'
-  },
-  to: {
-    field: 'region',
-    value: 'qv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '969'
-  },
-  to: {
-    field: 'region',
-    value: 'qw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '970'
-  },
-  to: {
-    field: 'region',
-    value: 'qx'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '971'
-  },
-  to: {
-    field: 'region',
-    value: 'qy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '972'
-  },
-  to: {
-    field: 'region',
-    value: 'qz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '638'
-  },
-  to: {
-    field: 'region',
-    value: 're'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '642'
-  },
-  to: {
-    field: 'region',
-    value: 'ro'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '688'
-  },
-  to: {
-    field: 'region',
-    value: 'rs'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '643'
-  },
-  to: {
-    field: 'region',
-    value: 'ru'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '646'
-  },
-  to: {
-    field: 'region',
-    value: 'rw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '682'
-  },
-  to: {
-    field: 'region',
-    value: 'sa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '090'
-  },
-  to: {
-    field: 'region',
-    value: 'sb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '690'
-  },
-  to: {
-    field: 'region',
-    value: 'sc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '729'
-  },
-  to: {
-    field: 'region',
-    value: 'sd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '752'
-  },
-  to: {
-    field: 'region',
-    value: 'se'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '702'
-  },
-  to: {
-    field: 'region',
-    value: 'sg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '654'
-  },
-  to: {
-    field: 'region',
-    value: 'sh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '705'
-  },
-  to: {
-    field: 'region',
-    value: 'si'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '744'
-  },
-  to: {
-    field: 'region',
-    value: 'sj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '703'
-  },
-  to: {
-    field: 'region',
-    value: 'sk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '694'
-  },
-  to: {
-    field: 'region',
-    value: 'sl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '674'
-  },
-  to: {
-    field: 'region',
-    value: 'sm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '686'
-  },
-  to: {
-    field: 'region',
-    value: 'sn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '706'
-  },
-  to: {
-    field: 'region',
-    value: 'so'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '740'
-  },
-  to: {
-    field: 'region',
-    value: 'sr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '728'
-  },
-  to: {
-    field: 'region',
-    value: 'ss'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '678'
-  },
-  to: {
-    field: 'region',
-    value: 'st'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '222'
-  },
-  to: {
-    field: 'region',
-    value: 'sv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '534'
-  },
-  to: {
-    field: 'region',
-    value: 'sx'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '760'
-  },
-  to: {
-    field: 'region',
-    value: 'sy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '748'
-  },
-  to: {
-    field: 'region',
-    value: 'sz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '796'
-  },
-  to: {
-    field: 'region',
-    value: 'tc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '148'
-  },
-  to: {
-    field: 'region',
-    value: 'td'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '260'
-  },
-  to: {
-    field: 'region',
-    value: 'tf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '768'
-  },
-  to: {
-    field: 'region',
-    value: 'tg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '764'
-  },
-  to: {
-    field: 'region',
-    value: 'th'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '762'
-  },
-  to: {
-    field: 'region',
-    value: 'tj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '772'
-  },
-  to: {
-    field: 'region',
-    value: 'tk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '626'
-  },
-  to: {
-    field: 'region',
-    value: 'tl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '795'
-  },
-  to: {
-    field: 'region',
-    value: 'tm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '788'
-  },
-  to: {
-    field: 'region',
-    value: 'tn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '776'
-  },
-  to: {
-    field: 'region',
-    value: 'to'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '792'
-  },
-  to: {
-    field: 'region',
-    value: 'tr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '780'
-  },
-  to: {
-    field: 'region',
-    value: 'tt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '798'
-  },
-  to: {
-    field: 'region',
-    value: 'tv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '158'
-  },
-  to: {
-    field: 'region',
-    value: 'tw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '834'
-  },
-  to: {
-    field: 'region',
-    value: 'tz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '804'
-  },
-  to: {
-    field: 'region',
-    value: 'ua'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '800'
-  },
-  to: {
-    field: 'region',
-    value: 'ug'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '581'
-  },
-  to: {
-    field: 'region',
-    value: 'um'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '840'
-  },
-  to: {
-    field: 'region',
-    value: 'us'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '858'
-  },
-  to: {
-    field: 'region',
-    value: 'uy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '860'
-  },
-  to: {
-    field: 'region',
-    value: 'uz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '336'
-  },
-  to: {
-    field: 'region',
-    value: 'va'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '670'
-  },
-  to: {
-    field: 'region',
-    value: 'vc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '862'
-  },
-  to: {
-    field: 'region',
-    value: 've'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '092'
-  },
-  to: {
-    field: 'region',
-    value: 'vg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '850'
-  },
-  to: {
-    field: 'region',
-    value: 'vi'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '704'
-  },
-  to: {
-    field: 'region',
-    value: 'vn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '548'
-  },
-  to: {
-    field: 'region',
-    value: 'vu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '876'
-  },
-  to: {
-    field: 'region',
-    value: 'wf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '882'
-  },
-  to: {
-    field: 'region',
-    value: 'ws'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '973'
-  },
-  to: {
-    field: 'region',
-    value: 'xa'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '974'
-  },
-  to: {
-    field: 'region',
-    value: 'xb'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '975'
-  },
-  to: {
-    field: 'region',
-    value: 'xc'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '976'
-  },
-  to: {
-    field: 'region',
-    value: 'xd'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '977'
-  },
-  to: {
-    field: 'region',
-    value: 'xe'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '978'
-  },
-  to: {
-    field: 'region',
-    value: 'xf'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '979'
-  },
-  to: {
-    field: 'region',
-    value: 'xg'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '980'
-  },
-  to: {
-    field: 'region',
-    value: 'xh'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '981'
-  },
-  to: {
-    field: 'region',
-    value: 'xi'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '982'
-  },
-  to: {
-    field: 'region',
-    value: 'xj'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '983'
-  },
-  to: {
-    field: 'region',
-    value: 'xk'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '984'
-  },
-  to: {
-    field: 'region',
-    value: 'xl'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '985'
-  },
-  to: {
-    field: 'region',
-    value: 'xm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '986'
-  },
-  to: {
-    field: 'region',
-    value: 'xn'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '987'
-  },
-  to: {
-    field: 'region',
-    value: 'xo'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '988'
-  },
-  to: {
-    field: 'region',
-    value: 'xp'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '989'
-  },
-  to: {
-    field: 'region',
-    value: 'xq'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '990'
-  },
-  to: {
-    field: 'region',
-    value: 'xr'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '991'
-  },
-  to: {
-    field: 'region',
-    value: 'xs'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '992'
-  },
-  to: {
-    field: 'region',
-    value: 'xt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '993'
-  },
-  to: {
-    field: 'region',
-    value: 'xu'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '994'
-  },
-  to: {
-    field: 'region',
-    value: 'xv'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '995'
-  },
-  to: {
-    field: 'region',
-    value: 'xw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '996'
-  },
-  to: {
-    field: 'region',
-    value: 'xx'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '997'
-  },
-  to: {
-    field: 'region',
-    value: 'xy'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '998'
-  },
-  to: {
-    field: 'region',
-    value: 'xz'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '720'
-  },
-  to: {
-    field: 'region',
-    value: 'ye'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '887'
-  },
-  to: {
-    field: 'region',
-    value: 'ye'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '175'
-  },
-  to: {
-    field: 'region',
-    value: 'yt'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '710'
-  },
-  to: {
-    field: 'region',
-    value: 'za'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '894'
-  },
-  to: {
-    field: 'region',
-    value: 'zm'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '716'
-  },
-  to: {
-    field: 'region',
-    value: 'zw'
-  }
-}, {
-  from: {
-    field: 'region',
-    value: '999'
-  },
-  to: {
-    field: 'region',
-    value: 'zz'
-  }
-}, {
-  from: {
-    field: 'variants',
-    value: 'polytoni'
-  },
-  to: {
-    field: 'variants',
-    value: 'polyton'
-  }
-}, {
-  from: {
-    field: 'variants',
-    value: 'heploc'
-  },
-  to: {
-    field: 'variants',
-    value: 'alalc97'
-  }
-}];
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-normalize/lib/index.js":
-/*!****************************************************!*\
-  !*** ./node_modules/bcp-47-normalize/lib/index.js ***!
-  \****************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   bcp47Normalize: function() { return /* binding */ bcp47Normalize; }
-/* harmony export */ });
-/* harmony import */ var bcp_47__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! bcp-47 */ "./node_modules/bcp-47/lib/stringify.js");
-/* harmony import */ var bcp_47__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bcp-47 */ "./node_modules/bcp-47/lib/parse.js");
-/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js");
-/* harmony import */ var _matches_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./matches.js */ "./node_modules/bcp-47-normalize/lib/matches.js");
-/* harmony import */ var _fields_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./fields.js */ "./node_modules/bcp-47-normalize/lib/fields.js");
-/* harmony import */ var _many_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./many.js */ "./node_modules/bcp-47-normalize/lib/many.js");
-/* harmony import */ var _likely_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./likely.js */ "./node_modules/bcp-47-normalize/lib/likely.js");
-/**
- * @typedef {import('bcp-47').Warning} Warning
- * @typedef {import('bcp-47').Schema} Schema
- * @typedef {import('bcp-47').Extension} Extension
- *
- * @typedef Options
- *   Configuration (optional).
- * @property {boolean} [forgiving]
- *   Passed to `bcp-47` as `options.forgiving`.
- * @property {Warning} [warning]
- *   Passed to `bcp-47` as `options.warning`.
- *
- *   One additional warning is given:
- *
- *   | code | reason                                                     |
- *   | :--- | :--------------------------------------------------------- |
- *   | 7    | Deprecated region `CURRENT`, expected one of `SUGGESTIONS` |
- *
- *   This warning is only given if the region cannot be automatically fixed
- *   (when regions split into multiple regions).
- */
-
-
-
-
-
-
-
-const own = {}.hasOwnProperty;
-
-/**
- * @param {Schema} base
- * @param {Partial<Schema>} changes
- * @returns {Schema}
- */
-function merge(base, changes) {
-  if (!base.language) base.language = changes.language;
-  if (!base.script) base.script = changes.script;
-  if (!base.region) base.region = changes.region;
-  if (changes.variants) base.variants.push(...changes.variants);
-  return base;
-}
-
-/**
- * Mostly like:
- * <https://github.com/formatjs/formatjs/blob/a15e757/packages/intl-locale/index.ts#L254>
- * But doesn’t crash.
- *
- * @param {Schema} schema
- * @returns {string}
- */
-function addLikelySubtags(schema) {
-  const {
-    language,
-    script,
-    region
-  } = schema;
-  /** @type {string|undefined} */
-  let match;
-  if (script && region && (match = _likely_js__WEBPACK_IMPORTED_MODULE_0__.likely[(0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)({
-    language,
-    script,
-    region
-  })])) {
-    schema.script = undefined;
-    schema.region = undefined;
-  } else if (script && (match = _likely_js__WEBPACK_IMPORTED_MODULE_0__.likely[(0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)({
-    language,
-    script
-  })])) {
-    schema.script = undefined;
-  } else if (region && (match = _likely_js__WEBPACK_IMPORTED_MODULE_0__.likely[(0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)({
-    language,
-    region
-  })])) {
-    schema.region = undefined;
-  } else if (language && (match = _likely_js__WEBPACK_IMPORTED_MODULE_0__.likely[language])) {
-    // Empty.
-  }
-  if (match) {
-    schema.language = undefined;
-    merge(schema, (0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(match));
-  }
-  return (0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)(schema);
-}
-
-/**
- * @param {Schema} schema
- */
-function removeLikelySubtags(schema) {
-  addLikelySubtags(schema);
-  const {
-    language,
-    script,
-    region
-  } = schema;
-  if (!language) return schema;
-  const maxLocale = (0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)({
-    language,
-    script,
-    region
-  });
-  if (maxLocale === addLikelySubtags((0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(language))) {
-    schema.script = undefined;
-    schema.region = undefined;
-  } else if (region && maxLocale === addLikelySubtags((0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(language + '-' + region))) {
-    schema.script = undefined;
-  } else if (script && maxLocale === addLikelySubtags((0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(language + '-' + script))) {
-    schema.region = undefined;
-  }
-  return schema;
-}
-
-/**
- * Normalize the given BCP 47 tag according to Unicode CLDR suggestions.
- *
- * @param {string} tag
- *   BCP 47 tag.
- * @param {Options} [options]
- *   Configuration (optional).
- * @returns {string}
- *   Normal, canonical, and pretty BCP 47 tag.
- */
-function bcp47Normalize(tag, options) {
-  const settings = options || {};
-  // 1. normalize and lowercase the tag (`sgn-be-fr` -> `sfb`).
-  const schema = (0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(String(tag || '').toLowerCase(), settings);
-  const value = (0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)(schema);
-  if (!value) {
-    return value;
-  }
-  let index = -1;
-
-  // 2. Do fancy, expensive replaces (`ha-latn-gh` -> `ha-gh`).
-  while (++index < _matches_js__WEBPACK_IMPORTED_MODULE_3__.matches.length) {
-    let from = _matches_js__WEBPACK_IMPORTED_MODULE_3__.matches[index].from;
-    if (from.slice(0, 4) === 'und-' && schema.language) {
-      from = schema.language + from.slice(3);
-    }
-    if ((0,bcp_47_match__WEBPACK_IMPORTED_MODULE_4__.extendedFilter)(value, from).length > 0) {
-      replace(schema, from, _matches_js__WEBPACK_IMPORTED_MODULE_3__.matches[index].to);
-    }
-  }
-
-  // 3. Do basic field replaces (`en-840` -> `en-us`).
-  index = -1;
-  while (++index < _fields_js__WEBPACK_IMPORTED_MODULE_5__.fields.length) {
-    if (remove(schema, _fields_js__WEBPACK_IMPORTED_MODULE_5__.fields[index].from.field, _fields_js__WEBPACK_IMPORTED_MODULE_5__.fields[index].from.value)) {
-      add(schema, _fields_js__WEBPACK_IMPORTED_MODULE_5__.fields[index].to.field, _fields_js__WEBPACK_IMPORTED_MODULE_5__.fields[index].to.value);
-    }
-  }
-
-  // 4. Minimize.
-  removeLikelySubtags(schema);
-
-  // 5. Sort variants, and sort extensions on singleton.
-  schema.variants.sort();
-  schema.extensions.sort(compareSingleton);
-
-  // 6. Warn if fields (currently only regions) should be updated but have
-  // multiple choices.
-  if (settings.warning) {
-    /** @type {keyof many} */
-    let key;
-    for (key in _many_js__WEBPACK_IMPORTED_MODULE_6__.many) {
-      if (own.call(_many_js__WEBPACK_IMPORTED_MODULE_6__.many, key)) {
-        const map = _many_js__WEBPACK_IMPORTED_MODULE_6__.many[key];
-        const value = schema[key];
-        if (value && own.call(map, value)) {
-          const replacements = map[value];
-          settings.warning('Deprecated ' + key + ' `' + value + '`, expected one of `' + replacements.join('`, `') + '`', -1, 7);
-        }
-      }
-    }
-  }
-
-  // 7. Add proper casing back.
-  // Format script (ISO 15924) as titlecase (example: `Latn`):
-  if (schema.script) {
-    schema.script = schema.script.charAt(0).toUpperCase() + schema.script.slice(1);
-  }
-
-  // Format region (ISO 3166) as uppercase (note: this doesn’t affect numeric
-  // codes, which is fine):
-  if (schema.region) {
-    schema.region = schema.region.toUpperCase();
-  }
-  return (0,bcp_47__WEBPACK_IMPORTED_MODULE_1__.stringify)(schema);
-}
-
-/**
- * @param {Schema} schema
- * @param {string} from
- * @param {string} to
- * @returns {void}
- */
-function replace(schema, from, to) {
-  const left = (0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(from);
-  const right = (0,bcp_47__WEBPACK_IMPORTED_MODULE_2__.parse)(to);
-  /** @type {Array<string>} */
-  const removed = [];
-  /** @type {string|null|undefined} */
-  const lang = left.language;
-  /** @type {keyof schema} */
-  let key;
-
-  // Remove values from `from`:
-  for (key in left) {
-    if (own.call(left, key)) {
-      const value = left[key];
-      if (value && remove(schema, key, value)) {
-        removed.push(key);
-      }
-    }
-  }
-
-  // Add values from `to`:
-  for (key in right) {
-    if (own.call(right, key)) {
-      const value = right[key];
-      // Only add values that are defined on `to`, and that were either removed by
-      // `from` or are currently empty.
-      if (lang && value && (removed.includes(key) || !schema[key])) {
-        add(schema, key, key === 'language' && value === 'und' ? lang : value);
-      }
-    }
-  }
-}
-
-/**
- * @param {Schema} object
- * @param {keyof Schema} key
- * @param {string|Array<string>|Array<Extension>} value
- * @returns {boolean}
- */
-function remove(object, key, value) {
-  let removed = false;
-  /** @type {string|Array<string>|Array<Extension>|null|undefined} */
-  let result;
-  if (value) {
-    const current = object[key];
-    result = current;
-    if (Array.isArray(current)) {
-      result = [];
-      let index = -1;
-      while (++index < current.length) {
-        const item = current[index];
-
-        // @ts-expect-error: TS can’t handle the two lists.
-        if (value.includes(item)) {
-          removed = true;
-        } else {
-          // @ts-expect-error: TS can’t handle the two lists.
-          result.push(item);
-        }
-      }
-    } else if (current === value) {
-      result = null;
-      removed = true;
-    }
-
-    // @ts-expect-error: Assume the value matches.
-    object[key] = result;
-  }
-  return removed;
-}
-
-/**
- * @param {Schema} object
- * @param {keyof Schema} key
- * @param {string|Array<string>|Array<Extension>} value
- * @returns {void}
- */
-function add(object, key, value) {
-  /** @type {string|Array<string>|Array<Extension>|null|undefined} */
-  const current = object[key];
-  if (Array.isArray(current)) {
-    const list = Array.isArray(value) ? value : [value];
-    /** @type {number} */
-    let index = -1;
-    while (++index < list.length) {
-      const item = list[index];
-
-      // @ts-expect-error: TS can’t handle the two lists.
-      if (!current.includes(item)) {
-        // @ts-expect-error: TS can’t handle the two lists.
-        current.push(item);
-      }
-    }
-  } else {
-    // @ts-expect-error: Assume the value matches.
-    object[key] = value;
-  }
-}
-
-/**
- * @param {Extension} left
- * @param {Extension} right
- * @returns {number}
- */
-function compareSingleton(left, right) {
-  if (left.singleton > right.singleton) {
-    return 1;
-  }
-  if (left.singleton < right.singleton) {
-    return -1;
-  }
-
-  // It is invalid to have more than one extension with the same singleton so
-  // we should never reach this code.
-  return 0;
-}
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-normalize/lib/likely.js":
-/*!*****************************************************!*\
-  !*** ./node_modules/bcp-47-normalize/lib/likely.js ***!
-  \*****************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   likely: function() { return /* binding */ likely; }
-/* harmony export */ });
-/**
- * @type {Record<string, string>}
- */
-const likely = {
-  aa: 'aa-latn-et',
-  aaa: 'aaa-latn-ng',
-  aab: 'aab-latn-ng',
-  aac: 'aac-latn-pg',
-  aad: 'aad-latn-pg',
-  aae: 'aae-latn-it',
-  'aae-grek': 'aae-grek-it',
-  aaf: 'aaf-mlym-in',
-  'aaf-arab': 'aaf-arab-in',
-  aag: 'aag-latn-pg',
-  aah: 'aah-latn-pg',
-  aai: 'aai-latn-zz',
-  aak: 'aak-latn-zz',
-  aal: 'aal-latn-cm',
-  aan: 'aan-latn-br',
-  aao: 'aao-arab-dz',
-  aap: 'aap-latn-br',
-  aaq: 'aaq-latn-us',
-  aas: 'aas-latn-tz',
-  aat: 'aat-grek-gr',
-  aau: 'aau-latn-zz',
-  aaw: 'aaw-latn-pg',
-  aax: 'aax-latn-id',
-  aaz: 'aaz-latn-id',
-  ab: 'ab-cyrl-ge',
-  aba: 'aba-latn-ci',
-  abb: 'abb-latn-cm',
-  abc: 'abc-latn-ph',
-  abd: 'abd-latn-ph',
-  abe: 'abe-latn-ca',
-  abf: 'abf-latn-my',
-  abg: 'abg-latn-pg',
-  abh: 'abh-arab-tj',
-  abi: 'abi-latn-zz',
-  abl: 'abl-rjng-id',
-  'abl-latn': 'abl-latn-id',
-  abm: 'abm-latn-ng',
-  abn: 'abn-latn-ng',
-  abo: 'abo-latn-ng',
-  abp: 'abp-latn-ph',
-  abq: 'abq-cyrl-zz',
-  abr: 'abr-latn-gh',
-  abs: 'abs-latn-id',
-  abt: 'abt-latn-zz',
-  abu: 'abu-latn-ci',
-  abv: 'abv-arab-bh',
-  abw: 'abw-latn-pg',
-  abx: 'abx-latn-ph',
-  aby: 'aby-latn-zz',
-  abz: 'abz-latn-id',
-  aca: 'aca-latn-co',
-  acb: 'acb-latn-ng',
-  acd: 'acd-latn-zz',
-  ace: 'ace-latn-id',
-  acf: 'acf-latn-lc',
-  ach: 'ach-latn-ug',
-  acm: 'acm-arab-iq',
-  acn: 'acn-latn-cn',
-  acp: 'acp-latn-ng',
-  acq: 'acq-arab-ye',
-  acr: 'acr-latn-gt',
-  acs: 'acs-latn-br',
-  act: 'act-latn-nl',
-  acu: 'acu-latn-ec',
-  acv: 'acv-latn-us',
-  acw: 'acw-arab-sa',
-  acx: 'acx-arab-om',
-  acy: 'acy-latn-cy',
-  'acy-arab': 'acy-arab-cy',
-  'acy-grek': 'acy-grek-cy',
-  acz: 'acz-latn-sd',
-  ada: 'ada-latn-gh',
-  adb: 'adb-latn-tl',
-  add: 'add-latn-cm',
-  ade: 'ade-latn-zz',
-  adf: 'adf-arab-om',
-  adg: 'adg-latn-au',
-  adh: 'adh-latn-ug',
-  adi: 'adi-latn-in',
-  'adi-tibt': 'adi-tibt-cn',
-  adj: 'adj-latn-zz',
-  adl: 'adl-latn-in',
-  adn: 'adn-latn-id',
-  ado: 'ado-latn-pg',
-  adp: 'adp-tibt-bt',
-  adq: 'adq-latn-gh',
-  adr: 'adr-latn-id',
-  adt: 'adt-latn-au',
-  adu: 'adu-latn-ng',
-  adw: 'adw-latn-br',
-  adx: 'adx-tibt-cn',
-  ady: 'ady-cyrl-ru',
-  adz: 'adz-latn-zz',
-  ae: 'ae-avst-ir',
-  aea: 'aea-latn-au',
-  aeb: 'aeb-arab-tn',
-  aec: 'aec-arab-eg',
-  aee: 'aee-arab-af',
-  aek: 'aek-latn-nc',
-  ael: 'ael-latn-cm',
-  aem: 'aem-latn-vn',
-  aeq: 'aeq-arab-pk',
-  aer: 'aer-latn-au',
-  aeu: 'aeu-latn-cn',
-  aew: 'aew-latn-pg',
-  aey: 'aey-latn-zz',
-  aez: 'aez-latn-pg',
-  af: 'af-latn-za',
-  afb: 'afb-arab-kw',
-  afd: 'afd-latn-pg',
-  afe: 'afe-latn-ng',
-  afh: 'afh-latn-gh',
-  afi: 'afi-latn-pg',
-  afk: 'afk-latn-pg',
-  afn: 'afn-latn-ng',
-  afo: 'afo-latn-ng',
-  afp: 'afp-latn-pg',
-  afs: 'afs-latn-mx',
-  afu: 'afu-latn-gh',
-  afz: 'afz-latn-id',
-  aga: 'aga-latn-pe',
-  agb: 'agb-latn-ng',
-  agc: 'agc-latn-zz',
-  agd: 'agd-latn-zz',
-  age: 'age-latn-pg',
-  agf: 'agf-latn-id',
-  agg: 'agg-latn-zz',
-  agh: 'agh-latn-cd',
-  agi: 'agi-deva-in',
-  agj: 'agj-ethi-et',
-  'agj-arab': 'agj-arab-et',
-  agk: 'agk-latn-ph',
-  agl: 'agl-latn-pg',
-  agm: 'agm-latn-zz',
-  agn: 'agn-latn-ph',
-  ago: 'ago-latn-zz',
-  agq: 'agq-latn-cm',
-  agr: 'agr-latn-pe',
-  ags: 'ags-latn-cm',
-  agt: 'agt-latn-ph',
-  agu: 'agu-latn-gt',
-  agv: 'agv-latn-ph',
-  agw: 'agw-latn-sb',
-  agx: 'agx-cyrl-ru',
-  agy: 'agy-latn-ph',
-  agz: 'agz-latn-ph',
-  aha: 'aha-latn-zz',
-  ahb: 'ahb-latn-vu',
-  ahg: 'ahg-ethi-et',
-  ahh: 'ahh-latn-id',
-  ahi: 'ahi-latn-ci',
-  ahk: 'ahk-latn-mm',
-  'ahk-mymr': 'ahk-mymr-mm',
-  'ahk-th': 'ahk-latn-th',
-  'ahk-thai': 'ahk-thai-th',
-  ahl: 'ahl-latn-zz',
-  ahm: 'ahm-latn-ci',
-  ahn: 'ahn-latn-ng',
-  aho: 'aho-ahom-in',
-  ahp: 'ahp-latn-ci',
-  ahr: 'ahr-deva-in',
-  ahs: 'ahs-latn-ng',
-  aht: 'aht-latn-us',
-  aia: 'aia-latn-sb',
-  aib: 'aib-arab-cn',
-  aic: 'aic-latn-pg',
-  aid: 'aid-latn-au',
-  aie: 'aie-latn-pg',
-  aif: 'aif-latn-pg',
-  aig: 'aig-latn-ag',
-  aij: 'aij-hebr-il',
-  aik: 'aik-latn-ng',
-  ail: 'ail-latn-pg',
-  aim: 'aim-latn-in',
-  ain: 'ain-kana-jp',
-  'ain-latn': 'ain-latn-jp',
-  aio: 'aio-mymr-in',
-  aip: 'aip-latn-id',
-  aiq: 'aiq-arab-af',
-  air: 'air-latn-id',
-  ait: 'ait-latn-br',
-  aiw: 'aiw-latn-et',
-  'aiw-arab': 'aiw-arab-et',
-  'aiw-ethi': 'aiw-ethi-et',
-  aix: 'aix-latn-pg',
-  aiy: 'aiy-latn-cf',
-  aja: 'aja-latn-ss',
-  ajg: 'ajg-latn-zz',
-  aji: 'aji-latn-nc',
-  ajn: 'ajn-latn-au',
-  ajp: 'ajp-arab-jo',
-  ajt: 'ajt-arab-tn',
-  ajw: 'ajw-latn-ng',
-  ajz: 'ajz-latn-in',
-  ak: 'ak-latn-gh',
-  akb: 'akb-latn-id',
-  'akb-batk': 'akb-batk-id',
-  akc: 'akc-latn-id',
-  akd: 'akd-latn-ng',
-  ake: 'ake-latn-gy',
-  akf: 'akf-latn-ng',
-  akg: 'akg-latn-id',
-  akh: 'akh-latn-pg',
-  aki: 'aki-latn-pg',
-  akk: 'akk-xsux-iq',
-  akl: 'akl-latn-ph',
-  ako: 'ako-latn-sr',
-  akp: 'akp-latn-gh',
-  akq: 'akq-latn-pg',
-  akr: 'akr-latn-vu',
-  aks: 'aks-latn-tg',
-  akt: 'akt-latn-pg',
-  aku: 'aku-latn-cm',
-  akv: 'akv-cyrl-ru',
-  akw: 'akw-latn-cg',
-  akz: 'akz-latn-us',
-  ala: 'ala-latn-zz',
-  alc: 'alc-latn-cl',
-  ald: 'ald-latn-ci',
-  ale: 'ale-latn-us',
-  alf: 'alf-latn-ng',
-  alh: 'alh-latn-au',
-  ali: 'ali-latn-zz',
-  alj: 'alj-latn-ph',
-  alk: 'alk-laoo-la',
-  all: 'all-mlym-in',
-  alm: 'alm-latn-vu',
-  aln: 'aln-latn-xk',
-  alo: 'alo-latn-id',
-  alp: 'alp-latn-id',
-  alq: 'alq-latn-ca',
-  alr: 'alr-cyrl-ru',
-  alt: 'alt-cyrl-ru',
-  alu: 'alu-latn-sb',
-  alw: 'alw-ethi-et',
-  alx: 'alx-latn-pg',
-  aly: 'aly-latn-au',
-  alz: 'alz-latn-cd',
-  am: 'am-ethi-et',
-  ama: 'ama-latn-br',
-  amb: 'amb-latn-ng',
-  amc: 'amc-latn-pe',
-  ame: 'ame-latn-pe',
-  amf: 'amf-latn-et',
-  'amf-ethi': 'amf-ethi-et',
-  amg: 'amg-latn-au',
-  ami: 'ami-latn-tw',
-  amj: 'amj-latn-td',
-  amk: 'amk-latn-id',
-  amm: 'amm-latn-zz',
-  amn: 'amn-latn-zz',
-  amo: 'amo-latn-ng',
-  amp: 'amp-latn-zz',
-  amq: 'amq-latn-id',
-  amr: 'amr-latn-pe',
-  ams: 'ams-jpan-jp',
-  amt: 'amt-latn-pg',
-  amu: 'amu-latn-mx',
-  amv: 'amv-latn-id',
-  amw: 'amw-syrc-sy',
-  'amw-arab': 'amw-arab-sy',
-  'amw-armi': 'amw-armi-sy',
-  'amw-latn': 'amw-latn-sy',
-  amx: 'amx-latn-au',
-  amy: 'amy-latn-au',
-  amz: 'amz-latn-au',
-  an: 'an-latn-es',
-  ana: 'ana-latn-co',
-  anb: 'anb-latn-pe',
-  anc: 'anc-latn-zz',
-  and: 'and-latn-id',
-  ane: 'ane-latn-nc',
-  anf: 'anf-latn-gh',
-  ang: 'ang-latn-gb',
-  anh: 'anh-latn-pg',
-  ani: 'ani-cyrl-ru',
-  anj: 'anj-latn-pg',
-  ank: 'ank-latn-zz',
-  anl: 'anl-latn-mm',
-  anm: 'anm-latn-in',
-  ann: 'ann-latn-ng',
-  ano: 'ano-latn-co',
-  anp: 'anp-deva-in',
-  anr: 'anr-deva-in',
-  ans: 'ans-latn-co',
-  ant: 'ant-latn-au',
-  anu: 'anu-ethi-et',
-  'anu-arab': 'anu-arab-ss',
-  'anu-latn': 'anu-latn-ss',
-  anv: 'anv-latn-cm',
-  anw: 'anw-latn-ng',
-  anx: 'anx-latn-pg',
-  any: 'any-latn-zz',
-  anz: 'anz-latn-pg',
-  aoa: 'aoa-latn-st',
-  aob: 'aob-latn-pg',
-  aoc: 'aoc-latn-ve',
-  aod: 'aod-latn-pg',
-  aoe: 'aoe-latn-pg',
-  aof: 'aof-latn-pg',
-  aog: 'aog-latn-pg',
-  aoi: 'aoi-latn-au',
-  aoj: 'aoj-latn-zz',
-  aok: 'aok-latn-nc',
-  aol: 'aol-latn-id',
-  aom: 'aom-latn-zz',
-  aon: 'aon-latn-pg',
-  aor: 'aor-latn-vu',
-  aos: 'aos-latn-id',
-  aot: 'aot-beng-bd',
-  'aot-latn': 'aot-latn-in',
-  aox: 'aox-latn-gy',
-  aoz: 'aoz-latn-id',
-  apb: 'apb-latn-sb',
-  apc: 'apc-arab-sy',
-  apd: 'apd-arab-tg',
-  ape: 'ape-latn-zz',
-  apf: 'apf-latn-ph',
-  apg: 'apg-latn-id',
-  aph: 'aph-deva-np',
-  api: 'api-latn-br',
-  apj: 'apj-latn-us',
-  apk: 'apk-latn-us',
-  apl: 'apl-latn-us',
-  apm: 'apm-latn-us',
-  apn: 'apn-latn-br',
-  apo: 'apo-latn-pg',
-  app: 'app-latn-vu',
-  apr: 'apr-latn-zz',
-  aps: 'aps-latn-zz',
-  apt: 'apt-latn-in',
-  apu: 'apu-latn-br',
-  apv: 'apv-latn-br',
-  apw: 'apw-latn-us',
-  apx: 'apx-latn-id',
-  apy: 'apy-latn-br',
-  apz: 'apz-latn-zz',
-  aqc: 'aqc-cyrl-ru',
-  aqd: 'aqd-latn-ml',
-  aqg: 'aqg-latn-ng',
-  aqk: 'aqk-latn-ng',
-  aqm: 'aqm-latn-id',
-  aqn: 'aqn-latn-ph',
-  aqr: 'aqr-latn-nc',
-  aqt: 'aqt-latn-py',
-  aqz: 'aqz-latn-br',
-  ar: 'ar-arab-eg',
-  arc: 'arc-armi-ir',
-  'arc-nbat': 'arc-nbat-jo',
-  'arc-palm': 'arc-palm-sy',
-  ard: 'ard-latn-au',
-  are: 'are-latn-au',
-  arh: 'arh-latn-zz',
-  ari: 'ari-latn-us',
-  arj: 'arj-latn-br',
-  ark: 'ark-latn-br',
-  arl: 'arl-latn-pe',
-  arn: 'arn-latn-cl',
-  aro: 'aro-latn-bo',
-  arp: 'arp-latn-us',
-  arq: 'arq-arab-dz',
-  arr: 'arr-latn-br',
-  ars: 'ars-arab-sa',
-  aru: 'aru-latn-br',
-  arw: 'arw-latn-sr',
-  arx: 'arx-latn-br',
-  ary: 'ary-arab-ma',
-  arz: 'arz-arab-eg',
-  as: 'as-beng-in',
-  asa: 'asa-latn-tz',
-  asb: 'asb-latn-ca',
-  asc: 'asc-latn-id',
-  ase: 'ase-sgnw-us',
-  asg: 'asg-latn-zz',
-  ash: 'ash-latn-pe',
-  asi: 'asi-latn-id',
-  asj: 'asj-latn-cm',
-  ask: 'ask-arab-af',
-  asl: 'asl-latn-id',
-  asn: 'asn-latn-br',
-  aso: 'aso-latn-zz',
-  ass: 'ass-latn-cm',
-  ast: 'ast-latn-es',
-  asu: 'asu-latn-br',
-  asv: 'asv-latn-cd',
-  asx: 'asx-latn-pg',
-  asy: 'asy-latn-id',
-  asz: 'asz-latn-id',
-  ata: 'ata-latn-zz',
-  atb: 'atb-latn-cn',
-  'atb-lisu': 'atb-lisu-cn',
-  atc: 'atc-latn-pe',
-  atd: 'atd-latn-ph',
-  ate: 'ate-latn-pg',
-  atg: 'atg-latn-zz',
-  ati: 'ati-latn-ci',
-  atj: 'atj-latn-ca',
-  atk: 'atk-latn-ph',
-  atl: 'atl-latn-ph',
-  atm: 'atm-latn-ph',
-  atn: 'atn-arab-ir',
-  ato: 'ato-latn-cm',
-  atp: 'atp-latn-ph',
-  atq: 'atq-latn-id',
-  atr: 'atr-latn-br',
-  ats: 'ats-latn-us',
-  att: 'att-latn-ph',
-  atu: 'atu-latn-ss',
-  atv: 'atv-cyrl-ru',
-  atw: 'atw-latn-us',
-  atx: 'atx-latn-br',
-  aty: 'aty-latn-vu',
-  atz: 'atz-latn-ph',
-  aua: 'aua-latn-sb',
-  auc: 'auc-latn-ec',
-  aud: 'aud-latn-sb',
-  aug: 'aug-latn-bj',
-  auh: 'auh-latn-zm',
-  aui: 'aui-latn-pg',
-  auj: 'auj-arab-ly',
-  'auj-latn': 'auj-latn-ly',
-  'auj-tfng': 'auj-tfng-ly',
-  auk: 'auk-latn-pg',
-  aul: 'aul-latn-vu',
-  aum: 'aum-latn-ng',
-  aun: 'aun-latn-pg',
-  auo: 'auo-latn-ng',
-  aup: 'aup-latn-pg',
-  auq: 'auq-latn-id',
-  aur: 'aur-latn-pg',
-  aut: 'aut-latn-pf',
-  auu: 'auu-latn-id',
-  auw: 'auw-latn-id',
-  auy: 'auy-latn-zz',
-  auz: 'auz-arab-uz',
-  av: 'av-cyrl-ru',
-  avb: 'avb-latn-pg',
-  avd: 'avd-arab-ir',
-  avi: 'avi-latn-ci',
-  avk: 'avk-latn-001',
-  avl: 'avl-arab-zz',
-  avm: 'avm-latn-au',
-  avn: 'avn-latn-zz',
-  avo: 'avo-latn-br',
-  avs: 'avs-latn-pe',
-  avt: 'avt-latn-zz',
-  avu: 'avu-latn-zz',
-  avv: 'avv-latn-br',
-  awa: 'awa-deva-in',
-  awb: 'awb-latn-zz',
-  awc: 'awc-latn-ng',
-  awe: 'awe-latn-br',
-  awg: 'awg-latn-au',
-  awh: 'awh-latn-id',
-  awi: 'awi-latn-pg',
-  awk: 'awk-latn-au',
-  awm: 'awm-latn-pg',
-  awn: 'awn-ethi-et',
-  awo: 'awo-latn-zz',
-  awr: 'awr-latn-id',
-  aws: 'aws-latn-id',
-  awt: 'awt-latn-br',
-  awu: 'awu-latn-id',
-  awv: 'awv-latn-id',
-  aww: 'aww-latn-pg',
-  awx: 'awx-latn-zz',
-  awy: 'awy-latn-id',
-  axb: 'axb-latn-ar',
-  axe: 'axe-latn-au',
-  axg: 'axg-latn-br',
-  axk: 'axk-latn-cf',
-  axl: 'axl-latn-au',
-  axm: 'axm-armn-am',
-  axx: 'axx-latn-nc',
-  ay: 'ay-latn-bo',
-  aya: 'aya-latn-pg',
-  ayb: 'ayb-latn-zz',
-  ayc: 'ayc-latn-pe',
-  ayd: 'ayd-latn-au',
-  aye: 'aye-latn-ng',
-  ayg: 'ayg-latn-tg',
-  ayh: 'ayh-arab-ye',
-  ayi: 'ayi-latn-ng',
-  ayk: 'ayk-latn-ng',
-  ayl: 'ayl-arab-ly',
-  ayn: 'ayn-arab-ye',
-  ayo: 'ayo-latn-py',
-  ayp: 'ayp-arab-iq',
-  ayq: 'ayq-latn-pg',
-  ays: 'ays-latn-ph',
-  ayt: 'ayt-latn-ph',
-  ayu: 'ayu-latn-ng',
-  ayz: 'ayz-latn-id',
-  az: 'az-latn-az',
-  'az-arab': 'az-arab-ir',
-  'az-iq': 'az-arab-iq',
-  'az-ir': 'az-arab-ir',
-  'az-ru': 'az-cyrl-ru',
-  azb: 'azb-arab-ir',
-  'azb-cyrl': 'azb-cyrl-az',
-  'azb-latn': 'azb-latn-az',
-  azd: 'azd-latn-mx',
-  azg: 'azg-latn-mx',
-  azm: 'azm-latn-mx',
-  azn: 'azn-latn-mx',
-  azo: 'azo-latn-cm',
-  azt: 'azt-latn-ph',
-  azz: 'azz-latn-mx',
-  ba: 'ba-cyrl-ru',
-  baa: 'baa-latn-sb',
-  bab: 'bab-latn-gw',
-  bac: 'bac-latn-id',
-  bae: 'bae-latn-ve',
-  baf: 'baf-latn-cm',
-  bag: 'bag-latn-cm',
-  bah: 'bah-latn-bs',
-  baj: 'baj-latn-id',
-  bal: 'bal-arab-pk',
-  ban: 'ban-latn-id',
-  bao: 'bao-latn-co',
-  bap: 'bap-deva-np',
-  bar: 'bar-latn-at',
-  bas: 'bas-latn-cm',
-  bau: 'bau-latn-ng',
-  bav: 'bav-latn-zz',
-  baw: 'baw-latn-cm',
-  bax: 'bax-bamu-cm',
-  bay: 'bay-latn-id',
-  bba: 'bba-latn-zz',
-  bbb: 'bbb-latn-zz',
-  bbc: 'bbc-latn-id',
-  bbd: 'bbd-latn-zz',
-  bbe: 'bbe-latn-cd',
-  bbf: 'bbf-latn-pg',
-  bbg: 'bbg-latn-ga',
-  bbi: 'bbi-latn-cm',
-  bbj: 'bbj-latn-cm',
-  bbk: 'bbk-latn-cm',
-  bbl: 'bbl-geor-ge',
-  bbm: 'bbm-latn-cd',
-  bbn: 'bbn-latn-pg',
-  bbo: 'bbo-latn-bf',
-  bbp: 'bbp-latn-zz',
-  bbq: 'bbq-latn-cm',
-  bbr: 'bbr-latn-zz',
-  bbs: 'bbs-latn-ng',
-  bbt: 'bbt-latn-ng',
-  bbu: 'bbu-latn-ng',
-  bbv: 'bbv-latn-pg',
-  bbw: 'bbw-latn-cm',
-  bbx: 'bbx-latn-cm',
-  bby: 'bby-latn-cm',
-  bca: 'bca-latn-cn',
-  'bca-hani': 'bca-hani-cn',
-  bcb: 'bcb-latn-sn',
-  bcd: 'bcd-latn-id',
-  bce: 'bce-latn-cm',
-  bcf: 'bcf-latn-zz',
-  bcg: 'bcg-latn-gn',
-  bch: 'bch-latn-zz',
-  bci: 'bci-latn-ci',
-  bcj: 'bcj-latn-au',
-  bck: 'bck-latn-au',
-  bcm: 'bcm-latn-zz',
-  bcn: 'bcn-latn-zz',
-  bco: 'bco-latn-zz',
-  bcp: 'bcp-latn-cd',
-  bcq: 'bcq-ethi-zz',
-  bcr: 'bcr-latn-ca',
-  bcs: 'bcs-latn-ng',
-  bct: 'bct-latn-cd',
-  bcu: 'bcu-latn-zz',
-  bcv: 'bcv-latn-ng',
-  bcw: 'bcw-latn-cm',
-  bcy: 'bcy-latn-ng',
-  bcz: 'bcz-latn-sn',
-  bda: 'bda-latn-sn',
-  bdb: 'bdb-latn-id',
-  bdc: 'bdc-latn-co',
-  bdd: 'bdd-latn-zz',
-  bde: 'bde-latn-ng',
-  bdf: 'bdf-latn-pg',
-  bdg: 'bdg-latn-my',
-  bdh: 'bdh-latn-ss',
-  bdi: 'bdi-latn-sd',
-  bdj: 'bdj-latn-ss',
-  bdk: 'bdk-latn-az',
-  bdl: 'bdl-latn-id',
-  bdm: 'bdm-latn-td',
-  bdn: 'bdn-latn-cm',
-  bdo: 'bdo-latn-td',
-  bdp: 'bdp-latn-tz',
-  bdq: 'bdq-latn-vn',
-  bdr: 'bdr-latn-my',
-  bds: 'bds-latn-tz',
-  bdt: 'bdt-latn-cf',
-  bdu: 'bdu-latn-cm',
-  bdv: 'bdv-orya-in',
-  bdw: 'bdw-latn-id',
-  bdx: 'bdx-latn-id',
-  bdy: 'bdy-latn-au',
-  bdz: 'bdz-arab-pk',
-  be: 'be-cyrl-by',
-  bea: 'bea-latn-ca',
-  'bea-cans': 'bea-cans-ca',
-  beb: 'beb-latn-cm',
-  bec: 'bec-latn-cm',
-  bed: 'bed-latn-id',
-  bee: 'bee-deva-in',
-  bef: 'bef-latn-zz',
-  beh: 'beh-latn-zz',
-  bei: 'bei-latn-id',
-  bej: 'bej-arab-sd',
-  bek: 'bek-latn-pg',
-  bem: 'bem-latn-zm',
-  beo: 'beo-latn-pg',
-  bep: 'bep-latn-id',
-  beq: 'beq-latn-cg',
-  bes: 'bes-latn-td',
-  bet: 'bet-latn-zz',
-  beu: 'beu-latn-id',
-  bev: 'bev-latn-ci',
-  bew: 'bew-latn-id',
-  bex: 'bex-latn-zz',
-  bey: 'bey-latn-pg',
-  bez: 'bez-latn-tz',
-  bfa: 'bfa-latn-ss',
-  'bfa-arab': 'bfa-arab-ss',
-  bfb: 'bfb-deva-in',
-  bfc: 'bfc-latn-cn',
-  bfd: 'bfd-latn-cm',
-  bfe: 'bfe-latn-id',
-  bff: 'bff-latn-cf',
-  bfg: 'bfg-latn-id',
-  bfh: 'bfh-latn-pg',
-  bfj: 'bfj-latn-cm',
-  bfl: 'bfl-latn-cf',
-  bfm: 'bfm-latn-cm',
-  bfn: 'bfn-latn-tl',
-  bfo: 'bfo-latn-bf',
-  bfp: 'bfp-latn-cm',
-  bfq: 'bfq-taml-in',
-  bfs: 'bfs-latn-cn',
-  'bfs-hani': 'bfs-hani-cn',
-  bft: 'bft-arab-pk',
-  bfu: 'bfu-tibt-in',
-  'bfu-takr': 'bfu-takr-in',
-  bfw: 'bfw-orya-in',
-  bfx: 'bfx-latn-ph',
-  bfy: 'bfy-deva-in',
-  bfz: 'bfz-deva-in',
-  bg: 'bg-cyrl-bg',
-  bga: 'bga-latn-ng',
-  bgb: 'bgb-latn-id',
-  bgc: 'bgc-deva-in',
-  bgd: 'bgd-deva-in',
-  bgf: 'bgf-latn-cm',
-  bgg: 'bgg-latn-in',
-  bgi: 'bgi-latn-ph',
-  bgj: 'bgj-latn-cm',
-  bgn: 'bgn-arab-pk',
-  bgo: 'bgo-latn-gn',
-  bgp: 'bgp-arab-pk',
-  bgq: 'bgq-deva-in',
-  bgr: 'bgr-latn-in',
-  bgs: 'bgs-latn-ph',
-  bgt: 'bgt-latn-sb',
-  bgu: 'bgu-latn-ng',
-  bgv: 'bgv-latn-id',
-  bgw: 'bgw-deva-in',
-  bgx: 'bgx-grek-tr',
-  bgy: 'bgy-latn-id',
-  bgz: 'bgz-latn-id',
-  bha: 'bha-deva-in',
-  bhb: 'bhb-deva-in',
-  bhc: 'bhc-latn-id',
-  bhd: 'bhd-deva-in',
-  'bhd-arab': 'bhd-arab-in',
-  'bhd-takr': 'bhd-takr-in',
-  bhe: 'bhe-arab-pk',
-  bhf: 'bhf-latn-pg',
-  bhg: 'bhg-latn-zz',
-  bhh: 'bhh-cyrl-il',
-  'bhh-hebr': 'bhh-hebr-il',
-  'bhh-latn': 'bhh-latn-il',
-  bhi: 'bhi-deva-in',
-  bhj: 'bhj-deva-np',
-  bhl: 'bhl-latn-zz',
-  bhm: 'bhm-arab-om',
-  bhn: 'bhn-syrc-ge',
-  bho: 'bho-deva-in',
-  bhp: 'bhp-latn-id',
-  bhq: 'bhq-latn-id',
-  bhr: 'bhr-latn-mg',
-  bhs: 'bhs-latn-cm',
-  bht: 'bht-takr-in',
-  'bht-deva': 'bht-deva-in',
-  'bht-latn': 'bht-latn-in',
-  bhu: 'bhu-deva-in',
-  bhv: 'bhv-latn-id',
-  bhw: 'bhw-latn-id',
-  bhy: 'bhy-latn-zz',
-  bhz: 'bhz-latn-id',
-  bi: 'bi-latn-vu',
-  bia: 'bia-latn-au',
-  bib: 'bib-latn-zz',
-  bid: 'bid-latn-td',
-  bie: 'bie-latn-pg',
-  bif: 'bif-latn-gw',
-  big: 'big-latn-zz',
-  bik: 'bik-latn-ph',
-  bil: 'bil-latn-ng',
-  bim: 'bim-latn-zz',
-  bin: 'bin-latn-ng',
-  bio: 'bio-latn-zz',
-  bip: 'bip-latn-cd',
-  biq: 'biq-latn-zz',
-  bir: 'bir-latn-pg',
-  bit: 'bit-latn-pg',
-  biu: 'biu-latn-in',
-  biv: 'biv-latn-gh',
-  biw: 'biw-latn-cm',
-  biy: 'biy-deva-in',
-  biz: 'biz-latn-cd',
-  bja: 'bja-latn-cd',
-  bjb: 'bjb-latn-au',
-  bjc: 'bjc-latn-pg',
-  bjf: 'bjf-syrc-il',
-  bjg: 'bjg-latn-gw',
-  bjh: 'bjh-latn-zz',
-  bji: 'bji-ethi-zz',
-  bjj: 'bjj-deva-in',
-  bjk: 'bjk-latn-pg',
-  bjl: 'bjl-latn-pg',
-  bjm: 'bjm-arab-iq',
-  bjn: 'bjn-latn-id',
-  bjo: 'bjo-latn-zz',
-  bjp: 'bjp-latn-pg',
-  bjr: 'bjr-latn-zz',
-  bjs: 'bjs-latn-bb',
-  bjt: 'bjt-latn-sn',
-  bju: 'bju-latn-cm',
-  bjv: 'bjv-latn-td',
-  bjw: 'bjw-latn-ci',
-  bjx: 'bjx-latn-ph',
-  bjy: 'bjy-latn-au',
-  bjz: 'bjz-latn-zz',
-  bka: 'bka-latn-ng',
-  bkc: 'bkc-latn-zz',
-  bkd: 'bkd-latn-ph',
-  bkf: 'bkf-latn-cd',
-  bkg: 'bkg-latn-cf',
-  bkh: 'bkh-latn-cm',
-  bki: 'bki-latn-vu',
-  bkj: 'bkj-latn-cf',
-  bkl: 'bkl-latn-id',
-  bkm: 'bkm-latn-cm',
-  bkn: 'bkn-latn-id',
-  bko: 'bko-latn-cm',
-  bkp: 'bkp-latn-cd',
-  bkq: 'bkq-latn-zz',
-  bkr: 'bkr-latn-id',
-  bks: 'bks-latn-ph',
-  bkt: 'bkt-latn-cd',
-  bku: 'bku-latn-ph',
-  bkv: 'bkv-latn-zz',
-  bkw: 'bkw-latn-cg',
-  bkx: 'bkx-latn-tl',
-  bky: 'bky-latn-ng',
-  bkz: 'bkz-latn-id',
-  bla: 'bla-latn-ca',
-  blb: 'blb-latn-sb',
-  blc: 'blc-latn-ca',
-  bld: 'bld-latn-id',
-  ble: 'ble-latn-gw',
-  blf: 'blf-latn-id',
-  blg: 'blg-latn-my',
-  blh: 'blh-latn-lr',
-  bli: 'bli-latn-cd',
-  blj: 'blj-latn-id',
-  blk: 'blk-mymr-mm',
-  blm: 'blm-latn-ss',
-  bln: 'bln-latn-ph',
-  blo: 'blo-latn-bj',
-  blp: 'blp-latn-sb',
-  blq: 'blq-latn-pg',
-  blr: 'blr-latn-cn',
-  'blr-tale': 'blr-tale-cn',
-  'blr-thai': 'blr-thai-th',
-  bls: 'bls-latn-id',
-  blt: 'blt-tavt-vn',
-  blv: 'blv-latn-ao',
-  blw: 'blw-latn-ph',
-  blx: 'blx-latn-ph',
-  bly: 'bly-latn-bj',
-  blz: 'blz-latn-id',
-  bm: 'bm-latn-ml',
-  bma: 'bma-latn-ng',
-  bmb: 'bmb-latn-cd',
-  bmc: 'bmc-latn-pg',
-  bmd: 'bmd-latn-gn',
-  bme: 'bme-latn-cf',
-  bmf: 'bmf-latn-sl',
-  bmg: 'bmg-latn-cd',
-  bmh: 'bmh-latn-zz',
-  bmi: 'bmi-latn-td',
-  bmj: 'bmj-deva-np',
-  bmk: 'bmk-latn-zz',
-  bml: 'bml-latn-cd',
-  bmm: 'bmm-latn-mg',
-  bmn: 'bmn-latn-pg',
-  bmo: 'bmo-latn-cm',
-  bmp: 'bmp-latn-pg',
-  bmq: 'bmq-latn-ml',
-  bmr: 'bmr-latn-co',
-  bms: 'bms-latn-ne',
-  bmu: 'bmu-latn-zz',
-  bmv: 'bmv-latn-cm',
-  bmw: 'bmw-latn-cg',
-  bmx: 'bmx-latn-pg',
-  bmz: 'bmz-latn-pg',
-  bn: 'bn-beng-bd',
-  bna: 'bna-latn-id',
-  bnb: 'bnb-latn-my',
-  bnc: 'bnc-latn-ph',
-  bnd: 'bnd-latn-id',
-  bne: 'bne-latn-id',
-  bnf: 'bnf-latn-id',
-  bng: 'bng-latn-zz',
-  bni: 'bni-latn-cd',
-  bnj: 'bnj-latn-ph',
-  bnk: 'bnk-latn-vu',
-  bnm: 'bnm-latn-zz',
-  bnn: 'bnn-latn-tw',
-  bno: 'bno-latn-ph',
-  bnp: 'bnp-latn-zz',
-  bnq: 'bnq-latn-id',
-  bnr: 'bnr-latn-vu',
-  bns: 'bns-deva-in',
-  bnu: 'bnu-latn-id',
-  bnv: 'bnv-latn-id',
-  bnw: 'bnw-latn-pg',
-  bnx: 'bnx-latn-cd',
-  bny: 'bny-latn-my',
-  bnz: 'bnz-latn-cm',
-  bo: 'bo-tibt-cn',
-  boa: 'boa-latn-pe',
-  bob: 'bob-latn-ke',
-  boe: 'boe-latn-cm',
-  bof: 'bof-latn-bf',
-  boh: 'boh-latn-cd',
-  boj: 'boj-latn-zz',
-  bok: 'bok-latn-cg',
-  bol: 'bol-latn-ng',
-  bom: 'bom-latn-zz',
-  bon: 'bon-latn-zz',
-  boo: 'boo-latn-ml',
-  bop: 'bop-latn-pg',
-  boq: 'boq-latn-pg',
-  bor: 'bor-latn-br',
-  bot: 'bot-latn-ss',
-  bou: 'bou-latn-tz',
-  bov: 'bov-latn-gh',
-  bow: 'bow-latn-pg',
-  box: 'box-latn-bf',
-  boy: 'boy-latn-cf',
-  boz: 'boz-latn-ml',
-  'boz-arab': 'boz-arab-ml',
-  bpa: 'bpa-latn-vu',
-  bpc: 'bpc-latn-cm',
-  bpd: 'bpd-latn-cf',
-  bpe: 'bpe-latn-pg',
-  bpg: 'bpg-latn-id',
-  bph: 'bph-cyrl-ru',
-  bpi: 'bpi-latn-pg',
-  bpj: 'bpj-latn-cd',
-  bpk: 'bpk-latn-nc',
-  bpl: 'bpl-latn-au',
-  bpm: 'bpm-latn-pg',
-  bpo: 'bpo-latn-id',
-  bpp: 'bpp-latn-id',
-  bpq: 'bpq-latn-id',
-  bpr: 'bpr-latn-ph',
-  bps: 'bps-latn-ph',
-  bpt: 'bpt-latn-au',
-  bpu: 'bpu-latn-pg',
-  bpv: 'bpv-latn-id',
-  bpw: 'bpw-latn-pg',
-  bpx: 'bpx-deva-in',
-  bpy: 'bpy-beng-in',
-  bpz: 'bpz-latn-id',
-  bqa: 'bqa-latn-bj',
-  bqb: 'bqb-latn-id',
-  bqc: 'bqc-latn-zz',
-  bqd: 'bqd-latn-cm',
-  bqf: 'bqf-latn-gn',
-  'bqf-arab': 'bqf-arab-gn',
-  bqg: 'bqg-latn-tg',
-  bqi: 'bqi-arab-ir',
-  bqj: 'bqj-latn-sn',
-  bqk: 'bqk-latn-cf',
-  bql: 'bql-latn-pg',
-  bqm: 'bqm-latn-cm',
-  bqo: 'bqo-latn-cm',
-  bqp: 'bqp-latn-zz',
-  bqq: 'bqq-latn-id',
-  bqr: 'bqr-latn-id',
-  bqs: 'bqs-latn-pg',
-  bqt: 'bqt-latn-cm',
-  bqu: 'bqu-latn-cd',
-  bqv: 'bqv-latn-ci',
-  bqw: 'bqw-latn-ng',
-  bqx: 'bqx-latn-ng',
-  bqz: 'bqz-latn-cm',
-  br: 'br-latn-fr',
-  bra: 'bra-deva-in',
-  brb: 'brb-khmr-kh',
-  'brb-laoo': 'brb-laoo-la',
-  'brb-latn': 'brb-latn-vn',
-  brc: 'brc-latn-gy',
-  brd: 'brd-deva-np',
-  brf: 'brf-latn-cd',
-  brg: 'brg-latn-bo',
-  brh: 'brh-arab-pk',
-  bri: 'bri-latn-cm',
-  brj: 'brj-latn-vu',
-  brk: 'brk-arab-sd',
-  brl: 'brl-latn-bw',
-  brm: 'brm-latn-cd',
-  brn: 'brn-latn-cr',
-  brp: 'brp-latn-id',
-  brq: 'brq-latn-pg',
-  brr: 'brr-latn-sb',
-  brs: 'brs-latn-id',
-  brt: 'brt-latn-ng',
-  bru: 'bru-latn-vn',
-  'bru-laoo': 'bru-laoo-la',
-  'bru-thai': 'bru-thai-la',
-  brv: 'brv-laoo-la',
-  brx: 'brx-deva-in',
-  bry: 'bry-latn-pg',
-  brz: 'brz-latn-zz',
-  bs: 'bs-latn-ba',
-  bsa: 'bsa-latn-id',
-  bsb: 'bsb-latn-bn',
-  bsc: 'bsc-latn-sn',
-  bse: 'bse-latn-cm',
-  bsf: 'bsf-latn-ng',
-  bsh: 'bsh-arab-af',
-  bsi: 'bsi-latn-cm',
-  bsj: 'bsj-latn-zz',
-  bsk: 'bsk-arab-pk',
-  'bsk-latn': 'bsk-latn-pk',
-  bsl: 'bsl-latn-ng',
-  bsm: 'bsm-latn-id',
-  bsn: 'bsn-latn-co',
-  bso: 'bso-latn-td',
-  bsp: 'bsp-latn-gn',
-  bsq: 'bsq-bass-lr',
-  bsr: 'bsr-latn-ng',
-  bss: 'bss-latn-cm',
-  bst: 'bst-ethi-zz',
-  bsu: 'bsu-latn-id',
-  bsv: 'bsv-latn-gn',
-  'bsv-arab': 'bsv-arab-gn',
-  bsw: 'bsw-latn-et',
-  'bsw-ethi': 'bsw-ethi-et',
-  bsx: 'bsx-latn-ng',
-  bsy: 'bsy-latn-my',
-  bta: 'bta-latn-ng',
-  btc: 'btc-latn-cm',
-  btd: 'btd-batk-id',
-  bte: 'bte-latn-ng',
-  btf: 'btf-latn-td',
-  btg: 'btg-latn-ci',
-  bth: 'bth-latn-my',
-  bti: 'bti-latn-id',
-  btj: 'btj-latn-id',
-  btm: 'btm-batk-id',
-  btn: 'btn-latn-ph',
-  bto: 'bto-latn-ph',
-  btp: 'btp-latn-pg',
-  btq: 'btq-latn-my',
-  btr: 'btr-latn-vu',
-  bts: 'bts-latn-id',
-  'bts-batk': 'bts-batk-id',
-  btt: 'btt-latn-zz',
-  btu: 'btu-latn-ng',
-  btv: 'btv-deva-pk',
-  btw: 'btw-latn-ph',
-  btx: 'btx-latn-id',
-  'btx-batk': 'btx-batk-id',
-  bty: 'bty-latn-id',
-  btz: 'btz-latn-id',
-  bua: 'bua-cyrl-ru',
-  bub: 'bub-latn-td',
-  buc: 'buc-latn-yt',
-  bud: 'bud-latn-zz',
-  bue: 'bue-latn-ca',
-  buf: 'buf-latn-cd',
-  bug: 'bug-latn-id',
-  buh: 'buh-latn-cn',
-  bui: 'bui-latn-cg',
-  buj: 'buj-latn-ng',
-  buk: 'buk-latn-zz',
-  bum: 'bum-latn-cm',
-  bun: 'bun-latn-sl',
-  buo: 'buo-latn-zz',
-  bup: 'bup-latn-id',
-  buq: 'buq-latn-pg',
-  bus: 'bus-latn-zz',
-  but: 'but-latn-pg',
-  buu: 'buu-latn-zz',
-  buv: 'buv-latn-pg',
-  buw: 'buw-latn-ga',
-  bux: 'bux-latn-ng',
-  buy: 'buy-latn-sl',
-  buz: 'buz-latn-ng',
-  bva: 'bva-latn-td',
-  bvb: 'bvb-latn-gq',
-  bvc: 'bvc-latn-sb',
-  bvd: 'bvd-latn-sb',
-  bve: 'bve-latn-id',
-  bvf: 'bvf-latn-td',
-  bvg: 'bvg-latn-cm',
-  bvh: 'bvh-latn-ng',
-  bvi: 'bvi-latn-ss',
-  bvj: 'bvj-latn-ng',
-  bvk: 'bvk-latn-id',
-  bvm: 'bvm-latn-cm',
-  bvn: 'bvn-latn-pg',
-  bvo: 'bvo-latn-td',
-  bvq: 'bvq-latn-cf',
-  bvr: 'bvr-latn-au',
-  bvt: 'bvt-latn-id',
-  bvu: 'bvu-latn-id',
-  bvv: 'bvv-latn-ve',
-  bvw: 'bvw-latn-ng',
-  bvx: 'bvx-latn-cg',
-  bvy: 'bvy-latn-ph',
-  bvz: 'bvz-latn-id',
-  bwa: 'bwa-latn-nc',
-  bwb: 'bwb-latn-fj',
-  bwc: 'bwc-latn-zm',
-  bwd: 'bwd-latn-zz',
-  bwe: 'bwe-mymr-mm',
-  'bwe-latn': 'bwe-latn-mm',
-  bwf: 'bwf-latn-pg',
-  bwg: 'bwg-latn-mz',
-  bwh: 'bwh-latn-cm',
-  bwi: 'bwi-latn-ve',
-  bwj: 'bwj-latn-bf',
-  bwk: 'bwk-latn-pg',
-  bwl: 'bwl-latn-cd',
-  bwm: 'bwm-latn-pg',
-  bwo: 'bwo-latn-et',
-  'bwo-ethi': 'bwo-ethi-et',
-  bwp: 'bwp-latn-id',
-  bwq: 'bwq-latn-bf',
-  bwr: 'bwr-latn-zz',
-  bws: 'bws-latn-cd',
-  bwt: 'bwt-latn-cm',
-  bwu: 'bwu-latn-gh',
-  bww: 'bww-latn-cd',
-  bwx: 'bwx-latn-cn',
-  bwy: 'bwy-latn-bf',
-  bwz: 'bwz-latn-cg',
-  bxa: 'bxa-latn-sb',
-  bxb: 'bxb-latn-ss',
-  bxc: 'bxc-latn-gq',
-  bxf: 'bxf-latn-pg',
-  bxg: 'bxg-latn-cd',
-  bxh: 'bxh-latn-zz',
-  bxi: 'bxi-latn-au',
-  bxj: 'bxj-latn-au',
-  bxl: 'bxl-latn-bf',
-  bxm: 'bxm-cyrl-mn',
-  'bxm-latn': 'bxm-latn-mn',
-  'bxm-mong': 'bxm-mong-mn',
-  bxn: 'bxn-latn-au',
-  bxo: 'bxo-latn-ng',
-  bxp: 'bxp-latn-cm',
-  bxq: 'bxq-latn-ng',
-  bxs: 'bxs-latn-cm',
-  bxu: 'bxu-mong-cn',
-  'bxu-cyrl': 'bxu-cyrl-cn',
-  'bxu-latn': 'bxu-latn-cn',
-  bxv: 'bxv-latn-td',
-  bxw: 'bxw-latn-ml',
-  bxz: 'bxz-latn-pg',
-  bya: 'bya-latn-ph',
-  byb: 'byb-latn-cm',
-  byc: 'byc-latn-ng',
-  byd: 'byd-latn-id',
-  bye: 'bye-latn-zz',
-  byf: 'byf-latn-ng',
-  byh: 'byh-deva-np',
-  byi: 'byi-latn-cd',
-  byj: 'byj-latn-ng',
-  byk: 'byk-latn-cn',
-  byl: 'byl-latn-id',
-  bym: 'bym-latn-au',
-  byn: 'byn-ethi-er',
-  byp: 'byp-latn-ng',
-  byr: 'byr-latn-zz',
-  bys: 'bys-latn-zz',
-  byv: 'byv-latn-cm',
-  byw: 'byw-deva-np',
-  byx: 'byx-latn-zz',
-  byz: 'byz-latn-pg',
-  bza: 'bza-latn-zz',
-  bzb: 'bzb-latn-id',
-  bzc: 'bzc-latn-mg',
-  bzd: 'bzd-latn-cr',
-  bze: 'bze-latn-ml',
-  bzf: 'bzf-latn-zz',
-  bzh: 'bzh-latn-zz',
-  bzi: 'bzi-thai-th',
-  bzj: 'bzj-latn-bz',
-  bzk: 'bzk-latn-ni',
-  bzl: 'bzl-latn-id',
-  bzm: 'bzm-latn-cd',
-  bzn: 'bzn-latn-id',
-  bzo: 'bzo-latn-cd',
-  bzp: 'bzp-latn-id',
-  bzq: 'bzq-latn-id',
-  bzr: 'bzr-latn-au',
-  bzt: 'bzt-latn-001',
-  bzu: 'bzu-latn-id',
-  bzv: 'bzv-latn-cm',
-  bzw: 'bzw-latn-zz',
-  bzx: 'bzx-latn-ml',
-  bzy: 'bzy-latn-ng',
-  bzz: 'bzz-latn-ng',
-  ca: 'ca-latn-es',
-  caa: 'caa-latn-gt',
-  cab: 'cab-latn-hn',
-  cac: 'cac-latn-gt',
-  cad: 'cad-latn-us',
-  cae: 'cae-latn-sn',
-  caf: 'caf-latn-ca',
-  'caf-cans': 'caf-cans-ca',
-  cag: 'cag-latn-py',
-  cah: 'cah-latn-pe',
-  caj: 'caj-latn-ar',
-  cak: 'cak-latn-gt',
-  cal: 'cal-latn-mp',
-  cam: 'cam-latn-nc',
-  can: 'can-latn-zz',
-  cao: 'cao-latn-bo',
-  cap: 'cap-latn-bo',
-  caq: 'caq-latn-in',
-  car: 'car-latn-ve',
-  cas: 'cas-latn-bo',
-  cav: 'cav-latn-bo',
-  caw: 'caw-latn-bo',
-  cax: 'cax-latn-bo',
-  cay: 'cay-latn-ca',
-  caz: 'caz-latn-bo',
-  cbb: 'cbb-latn-co',
-  cbc: 'cbc-latn-co',
-  cbd: 'cbd-latn-co',
-  cbg: 'cbg-latn-co',
-  cbi: 'cbi-latn-ec',
-  cbj: 'cbj-latn-zz',
-  cbk: 'cbk-latn-ph',
-  'cbk-brai': 'cbk-brai-ph',
-  cbl: 'cbl-latn-mm',
-  cbn: 'cbn-thai-th',
-  cbo: 'cbo-latn-ng',
-  cbq: 'cbq-latn-ng',
-  cbr: 'cbr-latn-pe',
-  cbs: 'cbs-latn-pe',
-  cbt: 'cbt-latn-pe',
-  cbu: 'cbu-latn-pe',
-  cbv: 'cbv-latn-co',
-  cbw: 'cbw-latn-ph',
-  cby: 'cby-latn-co',
-  ccc: 'ccc-latn-pe',
-  ccd: 'ccd-latn-br',
-  cce: 'cce-latn-mz',
-  ccg: 'ccg-latn-ng',
-  cch: 'cch-latn-ng',
-  ccj: 'ccj-latn-gw',
-  ccl: 'ccl-latn-tz',
-  ccm: 'ccm-latn-my',
-  cco: 'cco-latn-mx',
-  ccp: 'ccp-cakm-bd',
-  ccr: 'ccr-latn-sv',
-  cde: 'cde-telu-in',
-  cdf: 'cdf-latn-in',
-  'cdf-beng': 'cdf-beng-in',
-  cdh: 'cdh-deva-in',
-  'cdh-takr': 'cdh-takr-in',
-  cdi: 'cdi-gujr-in',
-  cdj: 'cdj-deva-in',
-  cdm: 'cdm-deva-np',
-  'cdm-latn': 'cdm-latn-np',
-  cdo: 'cdo-hans-cn',
-  'cdo-hant': 'cdo-hant-cn',
-  'cdo-latn': 'cdo-latn-cn',
-  cdr: 'cdr-latn-ng',
-  cdz: 'cdz-beng-in',
-  ce: 'ce-cyrl-ru',
-  cea: 'cea-latn-us',
-  ceb: 'ceb-latn-ph',
-  ceg: 'ceg-latn-py',
-  cek: 'cek-latn-mm',
-  cen: 'cen-latn-ng',
-  cet: 'cet-latn-ng',
-  cey: 'cey-latn-mm',
-  cfa: 'cfa-latn-zz',
-  cfd: 'cfd-latn-ng',
-  cfg: 'cfg-latn-ng',
-  cfm: 'cfm-latn-mm',
-  'cfm-beng': 'cfm-beng-in',
-  cga: 'cga-latn-pg',
-  cgc: 'cgc-latn-ph',
-  cgg: 'cgg-latn-ug',
-  cgk: 'cgk-tibt-bt',
-  ch: 'ch-latn-gu',
-  chb: 'chb-latn-co',
-  chd: 'chd-latn-mx',
-  chf: 'chf-latn-mx',
-  chg: 'chg-arab-tm',
-  chh: 'chh-latn-us',
-  chj: 'chj-latn-mx',
-  chk: 'chk-latn-fm',
-  chl: 'chl-latn-us',
-  chm: 'chm-cyrl-ru',
-  chn: 'chn-latn-us',
-  'chn-dupl': 'chn-dupl-us',
-  cho: 'cho-latn-us',
-  chp: 'chp-latn-ca',
-  chq: 'chq-latn-mx',
-  chr: 'chr-cher-us',
-  cht: 'cht-latn-pe',
-  chw: 'chw-latn-mz',
-  chx: 'chx-deva-np',
-  chy: 'chy-latn-us',
-  chz: 'chz-latn-mx',
-  cia: 'cia-latn-id',
-  'cia-arab': 'cia-arab-id',
-  'cia-hang': 'cia-hang-id',
-  cib: 'cib-latn-bj',
-  cic: 'cic-latn-us',
-  cie: 'cie-latn-ng',
-  cih: 'cih-deva-in',
-  cim: 'cim-latn-it',
-  cin: 'cin-latn-br',
-  cip: 'cip-latn-mx',
-  cir: 'cir-latn-nc',
-  ciw: 'ciw-latn-us',
-  'ciw-cans': 'ciw-cans-us',
-  ciy: 'ciy-latn-ve',
-  cja: 'cja-arab-kh',
-  cje: 'cje-latn-vn',
-  cjh: 'cjh-latn-us',
-  cji: 'cji-cyrl-ru',
-  cjk: 'cjk-latn-ao',
-  cjm: 'cjm-cham-vn',
-  cjn: 'cjn-latn-pg',
-  cjo: 'cjo-latn-pe',
-  cjp: 'cjp-latn-cr',
-  cjs: 'cjs-latn-ru',
-  'cjs-cyrl': 'cjs-cyrl-ru',
-  cjv: 'cjv-latn-zz',
-  cjy: 'cjy-hans-cn',
-  'cjy-hant': 'cjy-hant-cn',
-  ckb: 'ckb-arab-iq',
-  ckl: 'ckl-latn-zz',
-  ckm: 'ckm-latn-hr',
-  'ckm-glag': 'ckm-glag-hr',
-  ckn: 'ckn-latn-mm',
-  cko: 'cko-latn-zz',
-  ckq: 'ckq-latn-td',
-  ckr: 'ckr-latn-pg',
-  cks: 'cks-latn-nc',
-  ckt: 'ckt-cyrl-ru',
-  cku: 'cku-latn-us',
-  ckv: 'ckv-latn-tw',
-  ckx: 'ckx-latn-cm',
-  cky: 'cky-latn-zz',
-  ckz: 'ckz-latn-gt',
-  cla: 'cla-latn-zz',
-  clc: 'clc-latn-ca',
-  cle: 'cle-latn-mx',
-  clh: 'clh-arab-pk',
-  cli: 'cli-latn-gh',
-  clj: 'clj-latn-mm',
-  clk: 'clk-latn-in',
-  'clk-tibt': 'clk-tibt-cn',
-  cll: 'cll-latn-gh',
-  clm: 'clm-latn-us',
-  clo: 'clo-latn-mx',
-  clt: 'clt-latn-mm',
-  clu: 'clu-latn-ph',
-  clw: 'clw-cyrl-ru',
-  cly: 'cly-latn-mx',
-  cma: 'cma-latn-vn',
-  cme: 'cme-latn-zz',
-  cmg: 'cmg-soyo-mn',
-  cmi: 'cmi-latn-co',
-  cml: 'cml-latn-id',
-  cmo: 'cmo-latn-vn',
-  'cmo-kh': 'cmo-latn-kh',
-  'cmo-khmr': 'cmo-khmr-kh',
-  cmr: 'cmr-latn-mm',
-  cms: 'cms-latn-it',
-  cmt: 'cmt-latn-za',
-  cna: 'cna-tibt-in',
-  cnb: 'cnb-latn-mm',
-  cnc: 'cnc-latn-vn',
-  cng: 'cng-latn-cn',
-  cnh: 'cnh-latn-mm',
-  cni: 'cni-latn-pe',
-  cnk: 'cnk-latn-mm',
-  cnl: 'cnl-latn-mx',
-  cnp: 'cnp-hans-cn',
-  'cnp-hant': 'cnp-hant-cn',
-  cnq: 'cnq-latn-cm',
-  cns: 'cns-latn-id',
-  cnt: 'cnt-latn-mx',
-  cnw: 'cnw-latn-mm',
-  cnx: 'cnx-latn-gb',
-  co: 'co-latn-fr',
-  coa: 'coa-latn-au',
-  cob: 'cob-latn-mx',
-  coc: 'coc-latn-mx',
-  cod: 'cod-latn-pe',
-  coe: 'coe-latn-co',
-  cof: 'cof-latn-ec',
-  cog: 'cog-thai-th',
-  coh: 'coh-latn-ke',
-  coj: 'coj-latn-mx',
-  cok: 'cok-latn-mx',
-  col: 'col-latn-us',
-  com: 'com-latn-us',
-  coo: 'coo-latn-ca',
-  cop: 'cop-copt-eg',
-  coq: 'coq-latn-us',
-  cot: 'cot-latn-pe',
-  cou: 'cou-latn-sn',
-  cox: 'cox-latn-pe',
-  coz: 'coz-latn-mx',
-  cpa: 'cpa-latn-mx',
-  cpb: 'cpb-latn-pe',
-  cpc: 'cpc-latn-pe',
-  cpg: 'cpg-grek-gr',
-  cpi: 'cpi-latn-nr',
-  cpn: 'cpn-latn-gh',
-  cpo: 'cpo-latn-bf',
-  cps: 'cps-latn-ph',
-  cpu: 'cpu-latn-pe',
-  cpx: 'cpx-latn-cn',
-  cpy: 'cpy-latn-pe',
-  cqd: 'cqd-latn-cn',
-  cr: 'cr-cans-ca',
-  crb: 'crb-latn-vc',
-  crc: 'crc-latn-vu',
-  crd: 'crd-latn-us',
-  crf: 'crf-latn-co',
-  crg: 'crg-latn-ca',
-  crh: 'crh-cyrl-ua',
-  cri: 'cri-latn-st',
-  crj: 'crj-cans-ca',
-  'crj-latn': 'crj-latn-ca',
-  crk: 'crk-cans-ca',
-  crl: 'crl-cans-ca',
-  crm: 'crm-cans-ca',
-  crn: 'crn-latn-mx',
-  cro: 'cro-latn-us',
-  crq: 'crq-latn-ar',
-  crs: 'crs-latn-sc',
-  crt: 'crt-latn-ar',
-  crv: 'crv-latn-in',
-  crw: 'crw-latn-vn',
-  crx: 'crx-latn-ca',
-  'crx-cans': 'crx-cans-ca',
-  cry: 'cry-latn-ng',
-  crz: 'crz-latn-us',
-  cs: 'cs-latn-cz',
-  csa: 'csa-latn-mx',
-  csb: 'csb-latn-pl',
-  csh: 'csh-mymr-mm',
-  'csh-latn': 'csh-latn-mm',
-  csj: 'csj-latn-mm',
-  csk: 'csk-latn-sn',
-  csm: 'csm-latn-us',
-  cso: 'cso-latn-mx',
-  csp: 'csp-hans-cn',
-  'csp-hant': 'csp-hant-cn',
-  css: 'css-latn-us',
-  cst: 'cst-latn-us',
-  csv: 'csv-latn-mm',
-  csw: 'csw-cans-ca',
-  csy: 'csy-latn-mm',
-  csz: 'csz-latn-us',
-  cta: 'cta-latn-mx',
-  ctc: 'ctc-latn-us',
-  ctd: 'ctd-pauc-mm',
-  cte: 'cte-latn-mx',
-  ctg: 'ctg-beng-bd',
-  'ctg-arab': 'ctg-arab-bd',
-  'ctg-latn': 'ctg-latn-bd',
-  cth: 'cth-latn-mm',
-  ctl: 'ctl-latn-mx',
-  ctm: 'ctm-latn-us',
-  ctn: 'ctn-deva-np',
-  cto: 'cto-latn-co',
-  ctp: 'ctp-latn-mx',
-  cts: 'cts-latn-ph',
-  ctt: 'ctt-taml-in',
-  ctu: 'ctu-latn-mx',
-  ctz: 'ctz-latn-mx',
-  cu: 'cu-cyrl-ru',
-  'cu-glag': 'cu-glag-bg',
-  cua: 'cua-latn-vn',
-  cub: 'cub-latn-co',
-  cuc: 'cuc-latn-mx',
-  cuh: 'cuh-latn-ke',
-  cui: 'cui-latn-co',
-  cuj: 'cuj-latn-pe',
-  cuk: 'cuk-latn-pa',
-  cul: 'cul-latn-br',
-  cuo: 'cuo-latn-ve',
-  cup: 'cup-latn-us',
-  cut: 'cut-latn-mx',
-  cuu: 'cuu-lana-cn',
-  cuv: 'cuv-latn-cm',
-  cux: 'cux-latn-mx',
-  cv: 'cv-cyrl-ru',
-  cvg: 'cvg-latn-in',
-  'cvg-tibt': 'cvg-tibt-in',
-  cvn: 'cvn-latn-mx',
-  cwa: 'cwa-latn-tz',
-  cwb: 'cwb-latn-mz',
-  cwe: 'cwe-latn-tz',
-  cwg: 'cwg-latn-my',
-  cwt: 'cwt-latn-sn',
-  cy: 'cy-latn-gb',
-  cya: 'cya-latn-mx',
-  cyb: 'cyb-latn-bo',
-  cyo: 'cyo-latn-ph',
-  czh: 'czh-hans-cn',
-  'czh-hant': 'czh-hant-cn',
-  czk: 'czk-hebr-cz',
-  czn: 'czn-latn-mx',
-  czt: 'czt-latn-mm',
-  da: 'da-latn-dk',
-  daa: 'daa-latn-td',
-  dac: 'dac-latn-pg',
-  dad: 'dad-latn-zz',
-  dae: 'dae-latn-cm',
-  daf: 'daf-latn-ci',
-  dag: 'dag-latn-zz',
-  dah: 'dah-latn-zz',
-  dai: 'dai-latn-td',
-  daj: 'daj-latn-sd',
-  dak: 'dak-latn-us',
-  dal: 'dal-latn-ke',
-  dam: 'dam-latn-ng',
-  dao: 'dao-latn-mm',
-  daq: 'daq-deva-in',
-  dar: 'dar-cyrl-ru',
-  das: 'das-latn-ci',
-  dau: 'dau-latn-td',
-  dav: 'dav-latn-ke',
-  daw: 'daw-latn-ph',
-  dax: 'dax-latn-au',
-  daz: 'daz-latn-id',
-  dba: 'dba-latn-ml',
-  dbb: 'dbb-latn-ng',
-  dbd: 'dbd-latn-zz',
-  dbe: 'dbe-latn-id',
-  dbf: 'dbf-latn-id',
-  dbg: 'dbg-latn-ml',
-  dbi: 'dbi-latn-ng',
-  dbj: 'dbj-latn-my',
-  'dbj-arab': 'dbj-arab-my',
-  dbl: 'dbl-latn-au',
-  dbm: 'dbm-latn-ng',
-  dbn: 'dbn-latn-id',
-  dbo: 'dbo-latn-ng',
-  dbp: 'dbp-latn-ng',
-  dbq: 'dbq-latn-zz',
-  dbt: 'dbt-latn-ml',
-  dbu: 'dbu-latn-ml',
-  dbv: 'dbv-latn-ng',
-  dbw: 'dbw-latn-ml',
-  dby: 'dby-latn-pg',
-  dcc: 'dcc-arab-in',
-  dcr: 'dcr-latn-vi',
-  dda: 'dda-latn-au',
-  ddd: 'ddd-latn-ss',
-  dde: 'dde-latn-cg',
-  ddg: 'ddg-latn-tl',
-  ddi: 'ddi-latn-pg',
-  ddj: 'ddj-latn-au',
-  ddn: 'ddn-latn-zz',
-  ddo: 'ddo-cyrl-ru',
-  ddr: 'ddr-latn-au',
-  dds: 'dds-latn-ml',
-  ddw: 'ddw-latn-id',
-  de: 'de-latn-de',
-  dec: 'dec-latn-sd',
-  ded: 'ded-latn-zz',
-  dee: 'dee-latn-lr',
-  def: 'def-arab-ir',
-  deg: 'deg-latn-ng',
-  deh: 'deh-arab-pk',
-  dei: 'dei-latn-id',
-  dek: 'dek-latn-cm',
-  del: 'del-latn-us',
-  dem: 'dem-latn-id',
-  den: 'den-latn-ca',
-  deq: 'deq-latn-cf',
-  der: 'der-beng-in',
-  'der-latn': 'der-latn-in',
-  des: 'des-latn-br',
-  dev: 'dev-latn-pg',
-  dez: 'dez-latn-cd',
-  dga: 'dga-latn-zz',
-  dgb: 'dgb-latn-ml',
-  dgc: 'dgc-latn-ph',
-  dgd: 'dgd-latn-bf',
-  dge: 'dge-latn-pg',
-  dgg: 'dgg-latn-pg',
-  dgh: 'dgh-latn-zz',
-  dgi: 'dgi-latn-zz',
-  dgk: 'dgk-latn-cf',
-  dgl: 'dgl-arab-zz',
-  dgn: 'dgn-latn-au',
-  dgr: 'dgr-latn-ca',
-  dgs: 'dgs-latn-bf',
-  dgt: 'dgt-latn-au',
-  dgw: 'dgw-latn-au',
-  dgx: 'dgx-latn-pg',
-  dgz: 'dgz-latn-zz',
-  dhg: 'dhg-latn-au',
-  dhi: 'dhi-deva-np',
-  dhl: 'dhl-latn-au',
-  dhm: 'dhm-latn-ao',
-  dhn: 'dhn-gujr-in',
-  dho: 'dho-deva-in',
-  dhr: 'dhr-latn-au',
-  dhs: 'dhs-latn-tz',
-  dhu: 'dhu-latn-au',
-  dhv: 'dhv-latn-nc',
-  dhw: 'dhw-deva-np',
-  dhx: 'dhx-latn-au',
-  dia: 'dia-latn-zz',
-  dib: 'dib-latn-ss',
-  dic: 'dic-latn-ci',
-  did: 'did-latn-ss',
-  dif: 'dif-latn-au',
-  dig: 'dig-latn-ke',
-  dih: 'dih-latn-mx',
-  dii: 'dii-latn-cm',
-  dij: 'dij-latn-id',
-  dil: 'dil-latn-sd',
-  din: 'din-latn-ss',
-  'din-arab': 'din-arab-ss',
-  dio: 'dio-latn-ng',
-  dip: 'dip-latn-ss',
-  dir: 'dir-latn-ng',
-  dis: 'dis-latn-in',
-  'dis-beng': 'dis-beng-in',
-  diu: 'diu-latn-na',
-  diw: 'diw-latn-ss',
-  dix: 'dix-latn-vu',
-  diy: 'diy-latn-id',
-  diz: 'diz-latn-cd',
-  dja: 'dja-latn-au',
-  djb: 'djb-latn-au',
-  djc: 'djc-latn-td',
-  djd: 'djd-latn-au',
-  dje: 'dje-latn-ne',
-  djf: 'djf-latn-au',
-  dji: 'dji-latn-au',
-  djj: 'djj-latn-au',
-  djk: 'djk-latn-sr',
-  djm: 'djm-latn-ml',
-  djn: 'djn-latn-au',
-  djo: 'djo-latn-id',
-  djr: 'djr-latn-au',
-  dju: 'dju-latn-pg',
-  djw: 'djw-latn-au',
-  dka: 'dka-tibt-bt',
-  dkg: 'dkg-latn-ng',
-  dkk: 'dkk-latn-id',
-  dkr: 'dkr-latn-my',
-  dks: 'dks-latn-ss',
-  dkx: 'dkx-latn-cm',
-  dlg: 'dlg-cyrl-ru',
-  dlm: 'dlm-latn-hr',
-  dln: 'dln-latn-in',
-  dma: 'dma-latn-ga',
-  dmb: 'dmb-latn-ml',
-  dmc: 'dmc-latn-pg',
-  dmd: 'dmd-latn-au',
-  dme: 'dme-latn-cm',
-  dmf: 'dmf-medf-ng',
-  dmg: 'dmg-latn-my',
-  dmk: 'dmk-arab-pk',
-  dml: 'dml-arab-pk',
-  dmm: 'dmm-latn-cm',
-  dmo: 'dmo-latn-cm',
-  dmr: 'dmr-latn-id',
-  dms: 'dms-latn-id',
-  dmu: 'dmu-latn-id',
-  dmv: 'dmv-latn-my',
-  dmw: 'dmw-latn-au',
-  dmx: 'dmx-latn-mz',
-  dmy: 'dmy-latn-id',
-  dna: 'dna-latn-id',
-  dnd: 'dnd-latn-pg',
-  dne: 'dne-latn-tz',
-  dng: 'dng-cyrl-kg',
-  'dng-arab': 'dng-arab-kg',
-  dni: 'dni-latn-id',
-  dnj: 'dnj-latn-ci',
-  dnk: 'dnk-latn-id',
-  dnn: 'dnn-latn-bf',
-  dno: 'dno-latn-cd',
-  dnr: 'dnr-latn-pg',
-  dnt: 'dnt-latn-id',
-  dnu: 'dnu-mymr-mm',
-  dnv: 'dnv-mymr-mm',
-  dnw: 'dnw-latn-id',
-  dny: 'dny-latn-br',
-  doa: 'doa-latn-pg',
-  dob: 'dob-latn-zz',
-  doc: 'doc-latn-cn',
-  doe: 'doe-latn-tz',
-  dof: 'dof-latn-pg',
-  doh: 'doh-latn-ng',
-  doi: 'doi-deva-in',
-  dok: 'dok-latn-id',
-  dol: 'dol-latn-pg',
-  don: 'don-latn-pg',
-  doo: 'doo-latn-cd',
-  dop: 'dop-latn-zz',
-  dor: 'dor-latn-sb',
-  dos: 'dos-latn-bf',
-  dot: 'dot-latn-ng',
-  dov: 'dov-latn-zw',
-  dow: 'dow-latn-zz',
-  dox: 'dox-ethi-et',
-  doy: 'doy-latn-gh',
-  dpp: 'dpp-latn-my',
-  drc: 'drc-latn-pt',
-  dre: 'dre-tibt-np',
-  drg: 'drg-latn-my',
-  drh: 'drh-mong-cn',
-  dri: 'dri-latn-zz',
-  drl: 'drl-latn-au',
-  drn: 'drn-latn-id',
-  dro: 'dro-latn-my',
-  drq: 'drq-deva-np',
-  drs: 'drs-ethi-zz',
-  drt: 'drt-latn-nl',
-  dru: 'dru-latn-tw',
-  dry: 'dry-deva-np',
-  dsb: 'dsb-latn-de',
-  dsh: 'dsh-latn-ke',
-  dsi: 'dsi-latn-td',
-  dsn: 'dsn-latn-id',
-  dso: 'dso-orya-in',
-  dsq: 'dsq-latn-ml',
-  'dsq-arab': 'dsq-arab-ml',
-  dta: 'dta-latn-cn',
-  'dta-cyrl': 'dta-cyrl-cn',
-  'dta-hans': 'dta-hans-cn',
-  dtb: 'dtb-latn-my',
-  dtd: 'dtd-latn-ca',
-  dth: 'dth-latn-au',
-  dti: 'dti-latn-ml',
-  dtk: 'dtk-latn-ml',
-  dtm: 'dtm-latn-ml',
-  dto: 'dto-latn-ml',
-  dtp: 'dtp-latn-my',
-  dtr: 'dtr-latn-my',
-  dts: 'dts-latn-zz',
-  dtt: 'dtt-latn-ml',
-  dtu: 'dtu-latn-ml',
-  dty: 'dty-deva-np',
-  dua: 'dua-latn-cm',
-  dub: 'dub-gujr-in',
-  duc: 'duc-latn-zz',
-  dud: 'dud-latn-zz',
-  due: 'due-latn-ph',
-  duf: 'duf-latn-nc',
-  dug: 'dug-latn-zz',
-  duh: 'duh-deva-in',
-  'duh-gujr': 'duh-gujr-in',
-  dui: 'dui-latn-pg',
-  duk: 'duk-latn-pg',
-  dul: 'dul-latn-ph',
-  dum: 'dum-latn-nl',
-  dun: 'dun-latn-id',
-  duo: 'duo-latn-ph',
-  dup: 'dup-latn-id',
-  duq: 'duq-latn-id',
-  dur: 'dur-latn-cm',
-  dus: 'dus-deva-np',
-  duu: 'duu-latn-cn',
-  duv: 'duv-latn-id',
-  duw: 'duw-latn-id',
-  dux: 'dux-latn-ml',
-  duy: 'duy-latn-ph',
-  duz: 'duz-latn-cm',
-  dv: 'dv-thaa-mv',
-  dva: 'dva-latn-zz',
-  dwa: 'dwa-latn-ng',
-  dwk: 'dwk-orya-in',
-  dwr: 'dwr-latn-et',
-  'dwr-ethi': 'dwr-ethi-et',
-  dws: 'dws-latn-001',
-  dwu: 'dwu-latn-au',
-  dww: 'dww-latn-zz',
-  dwy: 'dwy-latn-au',
-  dwz: 'dwz-deva-np',
-  dya: 'dya-latn-bf',
-  dyb: 'dyb-latn-au',
-  dyd: 'dyd-latn-au',
-  dyg: 'dyg-latn-ph',
-  dyi: 'dyi-latn-ci',
-  dym: 'dym-latn-ml',
-  dyn: 'dyn-latn-au',
-  dyo: 'dyo-latn-sn',
-  dyu: 'dyu-latn-bf',
-  dyy: 'dyy-latn-au',
-  dz: 'dz-tibt-bt',
-  dza: 'dza-latn-ng',
-  dze: 'dze-latn-au',
-  dzg: 'dzg-latn-zz',
-  dzl: 'dzl-tibt-bt',
-  dzn: 'dzn-latn-cd',
-  eaa: 'eaa-latn-au',
-  ebc: 'ebc-latn-id',
-  ebg: 'ebg-latn-ng',
-  ebk: 'ebk-latn-ph',
-  ebo: 'ebo-latn-cg',
-  ebr: 'ebr-latn-ci',
-  ebu: 'ebu-latn-ke',
-  ecr: 'ecr-grek-gr',
-  ecy: 'ecy-cprt-cy',
-  ee: 'ee-latn-gh',
-  efa: 'efa-latn-ng',
-  efe: 'efe-latn-cd',
-  efi: 'efi-latn-ng',
-  ega: 'ega-latn-ci',
-  egl: 'egl-latn-it',
-  egm: 'egm-latn-tz',
-  ego: 'ego-latn-ng',
-  egy: 'egy-egyp-eg',
-  ehu: 'ehu-latn-ng',
-  eip: 'eip-latn-id',
-  eit: 'eit-latn-pg',
-  eiv: 'eiv-latn-pg',
-  eja: 'eja-latn-gw',
-  eka: 'eka-latn-zz',
-  eke: 'eke-latn-ng',
-  ekg: 'ekg-latn-id',
-  eki: 'eki-latn-ng',
-  ekl: 'ekl-latn-bd',
-  ekm: 'ekm-latn-cm',
-  eko: 'eko-latn-mz',
-  'eko-arab': 'eko-arab-mz',
-  ekp: 'ekp-latn-ng',
-  ekr: 'ekr-latn-ng',
-  eky: 'eky-kali-mm',
-  el: 'el-grek-gr',
-  ele: 'ele-latn-pg',
-  elk: 'elk-latn-pg',
-  elm: 'elm-latn-ng',
-  elo: 'elo-latn-ke',
-  elu: 'elu-latn-pg',
-  ema: 'ema-latn-zz',
-  emb: 'emb-latn-id',
-  eme: 'eme-latn-gf',
-  emg: 'emg-deva-np',
-  emi: 'emi-latn-zz',
-  emm: 'emm-latn-mx',
-  emn: 'emn-latn-cm',
-  emp: 'emp-latn-pa',
-  ems: 'ems-latn-us',
-  'ems-cyrl': 'ems-cyrl-us',
-  emu: 'emu-deva-in',
-  emw: 'emw-latn-id',
-  emx: 'emx-latn-fr',
-  emz: 'emz-latn-cm',
-  en: 'en-latn-us',
-  'en-shaw': 'en-shaw-gb',
-  ena: 'ena-latn-pg',
-  enb: 'enb-latn-ke',
-  enc: 'enc-latn-vn',
-  end: 'end-latn-id',
-  enf: 'enf-cyrl-ru',
-  enh: 'enh-cyrl-ru',
-  enl: 'enl-latn-py',
-  enm: 'enm-latn-gb',
-  enn: 'enn-latn-zz',
-  eno: 'eno-latn-id',
-  enq: 'enq-latn-zz',
-  enr: 'enr-latn-id',
-  env: 'env-latn-ng',
-  enw: 'enw-latn-ng',
-  enx: 'enx-latn-py',
-  eo: 'eo-latn-001',
-  eot: 'eot-latn-ci',
-  epi: 'epi-latn-ng',
-  era: 'era-taml-in',
-  erg: 'erg-latn-vu',
-  erh: 'erh-latn-ng',
-  eri: 'eri-latn-zz',
-  erk: 'erk-latn-vu',
-  err: 'err-latn-au',
-  ert: 'ert-latn-id',
-  erw: 'erw-latn-id',
-  es: 'es-latn-es',
-  ese: 'ese-latn-bo',
-  esg: 'esg-gonm-in',
-  esh: 'esh-arab-ir',
-  esi: 'esi-latn-us',
-  esm: 'esm-latn-ci',
-  ess: 'ess-latn-us',
-  'ess-cyrl': 'ess-cyrl-us',
-  esu: 'esu-latn-us',
-  esy: 'esy-latn-ph',
-  et: 'et-latn-ee',
-  etb: 'etb-latn-ng',
-  etn: 'etn-latn-vu',
-  eto: 'eto-latn-cm',
-  etr: 'etr-latn-zz',
-  ets: 'ets-latn-ng',
-  ett: 'ett-ital-it',
-  etu: 'etu-latn-zz',
-  etx: 'etx-latn-zz',
-  etz: 'etz-latn-id',
-  eu: 'eu-latn-es',
-  eve: 'eve-cyrl-ru',
-  evh: 'evh-latn-ng',
-  evn: 'evn-cyrl-ru',
-  'evn-latn': 'evn-latn-cn',
-  'evn-mong': 'evn-mong-cn',
-  ewo: 'ewo-latn-cm',
-  ext: 'ext-latn-es',
-  eya: 'eya-latn-us',
-  eyo: 'eyo-latn-ke',
-  eza: 'eza-latn-zz',
-  eze: 'eze-latn-ng',
-  fa: 'fa-arab-ir',
-  faa: 'faa-latn-zz',
-  fab: 'fab-latn-zz',
-  fad: 'fad-latn-pg',
-  faf: 'faf-latn-sb',
-  fag: 'fag-latn-zz',
-  fah: 'fah-latn-ng',
-  fai: 'fai-latn-zz',
-  faj: 'faj-latn-pg',
-  fak: 'fak-latn-cm',
-  fal: 'fal-latn-cm',
-  fam: 'fam-latn-ng',
-  fan: 'fan-latn-gq',
-  fap: 'fap-latn-sn',
-  far: 'far-latn-sb',
-  fau: 'fau-latn-id',
-  fax: 'fax-latn-es',
-  fay: 'fay-arab-ir',
-  faz: 'faz-arab-ir',
-  fbl: 'fbl-latn-ph',
-  fer: 'fer-latn-ss',
-  ff: 'ff-latn-sn',
-  'ff-adlm': 'ff-adlm-gn',
-  ffi: 'ffi-latn-zz',
-  ffm: 'ffm-latn-ml',
-  fgr: 'fgr-latn-td',
-  fi: 'fi-latn-fi',
-  fia: 'fia-arab-sd',
-  fie: 'fie-latn-ng',
-  fif: 'fif-latn-sa',
-  fil: 'fil-latn-ph',
-  fip: 'fip-latn-tz',
-  fir: 'fir-latn-ng',
-  fit: 'fit-latn-se',
-  fiw: 'fiw-latn-pg',
-  fj: 'fj-latn-fj',
-  fkk: 'fkk-latn-ng',
-  fkv: 'fkv-latn-no',
-  fla: 'fla-latn-us',
-  flh: 'flh-latn-id',
-  fli: 'fli-latn-ng',
-  fll: 'fll-latn-cm',
-  fln: 'fln-latn-au',
-  flr: 'flr-latn-zz',
-  fly: 'fly-latn-za',
-  fmp: 'fmp-latn-zz',
-  fmu: 'fmu-deva-in',
-  fnb: 'fnb-latn-vu',
-  fng: 'fng-latn-za',
-  fni: 'fni-latn-td',
-  fo: 'fo-latn-fo',
-  fod: 'fod-latn-zz',
-  foi: 'foi-latn-pg',
-  fom: 'fom-latn-cd',
-  fon: 'fon-latn-bj',
-  for: 'for-latn-zz',
-  fos: 'fos-latn-tw',
-  fpe: 'fpe-latn-zz',
-  fqs: 'fqs-latn-zz',
-  fr: 'fr-latn-fr',
-  frc: 'frc-latn-us',
-  frd: 'frd-latn-id',
-  frk: 'frk-latn-de',
-  frm: 'frm-latn-fr',
-  fro: 'fro-latn-fr',
-  frp: 'frp-latn-fr',
-  frq: 'frq-latn-pg',
-  frr: 'frr-latn-de',
-  frs: 'frs-latn-de',
-  frt: 'frt-latn-vu',
-  fub: 'fub-arab-cm',
-  fud: 'fud-latn-wf',
-  fue: 'fue-latn-zz',
-  fuf: 'fuf-latn-gn',
-  fuh: 'fuh-latn-zz',
-  fui: 'fui-latn-td',
-  fum: 'fum-latn-ng',
-  fun: 'fun-latn-br',
-  fuq: 'fuq-latn-ne',
-  fur: 'fur-latn-it',
-  fut: 'fut-latn-vu',
-  fuu: 'fuu-latn-cd',
-  fuv: 'fuv-latn-ng',
-  fuy: 'fuy-latn-zz',
-  fvr: 'fvr-latn-sd',
-  fwa: 'fwa-latn-nc',
-  fwe: 'fwe-latn-na',
-  fy: 'fy-latn-nl',
-  ga: 'ga-latn-ie',
-  gaa: 'gaa-latn-gh',
-  gab: 'gab-latn-td',
-  gac: 'gac-latn-in',
-  'gac-deva': 'gac-deva-in',
-  gad: 'gad-latn-ph',
-  gae: 'gae-latn-ve',
-  gaf: 'gaf-latn-zz',
-  gag: 'gag-latn-md',
-  gah: 'gah-latn-zz',
-  gai: 'gai-latn-pg',
-  gaj: 'gaj-latn-zz',
-  gak: 'gak-latn-id',
-  gal: 'gal-latn-tl',
-  gam: 'gam-latn-zz',
-  gan: 'gan-hans-cn',
-  gao: 'gao-latn-pg',
-  gap: 'gap-latn-pg',
-  gaq: 'gaq-orya-in',
-  gar: 'gar-latn-pg',
-  gas: 'gas-gujr-in',
-  gat: 'gat-latn-pg',
-  gau: 'gau-telu-in',
-  gaw: 'gaw-latn-zz',
-  gax: 'gax-latn-et',
-  'gax-ethi': 'gax-ethi-et',
-  gay: 'gay-latn-id',
-  gba: 'gba-latn-zz',
-  gbb: 'gbb-latn-au',
-  gbd: 'gbd-latn-au',
-  gbe: 'gbe-latn-pg',
-  gbf: 'gbf-latn-zz',
-  gbg: 'gbg-latn-cf',
-  gbh: 'gbh-latn-bj',
-  gbi: 'gbi-latn-id',
-  gbj: 'gbj-orya-in',
-  gbk: 'gbk-deva-in',
-  'gbk-takr': 'gbk-takr-in',
-  gbl: 'gbl-gujr-in',
-  'gbl-deva': 'gbl-deva-in',
-  gbm: 'gbm-deva-in',
-  gbn: 'gbn-latn-ss',
-  gbp: 'gbp-latn-cf',
-  gbq: 'gbq-latn-cf',
-  gbr: 'gbr-latn-ng',
-  gbs: 'gbs-latn-bj',
-  gbu: 'gbu-latn-au',
-  gbv: 'gbv-latn-cf',
-  gbw: 'gbw-latn-au',
-  gbx: 'gbx-latn-bj',
-  gby: 'gby-latn-zz',
-  gbz: 'gbz-arab-ir',
-  gcc: 'gcc-latn-pg',
-  gcd: 'gcd-latn-au',
-  gcf: 'gcf-latn-gp',
-  gcl: 'gcl-latn-gd',
-  gcn: 'gcn-latn-pg',
-  gcr: 'gcr-latn-gf',
-  gct: 'gct-latn-ve',
-  gd: 'gd-latn-gb',
-  gdb: 'gdb-orya-in',
-  'gdb-telu': 'gdb-telu-in',
-  gdc: 'gdc-latn-au',
-  gdd: 'gdd-latn-pg',
-  gde: 'gde-latn-zz',
-  gdf: 'gdf-latn-ng',
-  gdg: 'gdg-latn-ph',
-  gdh: 'gdh-latn-au',
-  gdi: 'gdi-latn-cf',
-  gdj: 'gdj-latn-au',
-  gdk: 'gdk-latn-td',
-  gdl: 'gdl-latn-et',
-  'gdl-ethi': 'gdl-ethi-et',
-  gdm: 'gdm-latn-td',
-  gdn: 'gdn-latn-zz',
-  gdo: 'gdo-cyrl-ru',
-  gdq: 'gdq-latn-ye',
-  gdr: 'gdr-latn-zz',
-  gdt: 'gdt-latn-au',
-  gdu: 'gdu-latn-ng',
-  gdx: 'gdx-deva-in',
-  gea: 'gea-latn-ng',
-  geb: 'geb-latn-zz',
-  gec: 'gec-latn-lr',
-  ged: 'ged-latn-ng',
-  gef: 'gef-latn-id',
-  geg: 'geg-latn-ng',
-  geh: 'geh-latn-ca',
-  gei: 'gei-latn-id',
-  gej: 'gej-latn-zz',
-  gek: 'gek-latn-ng',
-  gel: 'gel-latn-zz',
-  geq: 'geq-latn-cf',
-  ges: 'ges-latn-id',
-  gev: 'gev-latn-ga',
-  gew: 'gew-latn-ng',
-  gex: 'gex-latn-so',
-  gey: 'gey-latn-cd',
-  gez: 'gez-ethi-et',
-  gfk: 'gfk-latn-zz',
-  gga: 'gga-latn-sb',
-  ggb: 'ggb-latn-lr',
-  ggd: 'ggd-latn-au',
-  gge: 'gge-latn-au',
-  ggg: 'ggg-arab-pk',
-  ggk: 'ggk-latn-au',
-  ggl: 'ggl-latn-pg',
-  ggn: 'ggn-deva-np',
-  ggt: 'ggt-latn-pg',
-  ggu: 'ggu-latn-ci',
-  ggw: 'ggw-latn-pg',
-  gha: 'gha-arab-ly',
-  'gha-latn': 'gha-latn-ly',
-  'gha-tfng': 'gha-tfng-ly',
-  ghc: 'ghc-latn-gb',
-  ghe: 'ghe-deva-np',
-  ghk: 'ghk-latn-mm',
-  ghn: 'ghn-latn-sb',
-  ghr: 'ghr-arab-pk',
-  ghs: 'ghs-latn-zz',
-  ght: 'ght-tibt-np',
-  gia: 'gia-latn-au',
-  gib: 'gib-latn-ng',
-  gic: 'gic-latn-za',
-  gid: 'gid-latn-cm',
-  gie: 'gie-latn-ci',
-  gig: 'gig-arab-pk',
-  gih: 'gih-latn-au',
-  gil: 'gil-latn-ki',
-  gim: 'gim-latn-zz',
-  gin: 'gin-cyrl-ru',
-  gip: 'gip-latn-pg',
-  giq: 'giq-latn-vn',
-  gir: 'gir-latn-vn',
-  gis: 'gis-latn-cm',
-  git: 'git-latn-ca',
-  gix: 'gix-latn-cd',
-  giy: 'giy-latn-au',
-  giz: 'giz-latn-cm',
-  gjk: 'gjk-arab-pk',
-  gjm: 'gjm-latn-au',
-  gjn: 'gjn-latn-zz',
-  gjr: 'gjr-latn-au',
-  gju: 'gju-arab-pk',
-  gka: 'gka-latn-pg',
-  gkd: 'gkd-latn-pg',
-  gke: 'gke-latn-cm',
-  gkn: 'gkn-latn-zz',
-  gko: 'gko-latn-au',
-  gkp: 'gkp-latn-zz',
-  gku: 'gku-latn-za',
-  gl: 'gl-latn-es',
-  glb: 'glb-latn-ng',
-  glc: 'glc-latn-td',
-  gld: 'gld-cyrl-ru',
-  glh: 'glh-arab-af',
-  glj: 'glj-latn-td',
-  glk: 'glk-arab-ir',
-  gll: 'gll-latn-au',
-  glo: 'glo-latn-ng',
-  glr: 'glr-latn-lr',
-  glu: 'glu-latn-td',
-  glw: 'glw-latn-ng',
-  gma: 'gma-latn-au',
-  gmb: 'gmb-latn-sb',
-  gmd: 'gmd-latn-ng',
-  gmg: 'gmg-latn-pg',
-  gmh: 'gmh-latn-de',
-  gmm: 'gmm-latn-zz',
-  gmn: 'gmn-latn-cm',
-  gmr: 'gmr-latn-au',
-  gmu: 'gmu-latn-pg',
-  gmv: 'gmv-ethi-zz',
-  gmx: 'gmx-latn-tz',
-  gmy: 'gmy-linb-gr',
-  gmz: 'gmz-latn-ng',
-  gn: 'gn-latn-py',
-  gna: 'gna-latn-bf',
-  gnb: 'gnb-latn-in',
-  gnc: 'gnc-latn-es',
-  gnd: 'gnd-latn-zz',
-  gne: 'gne-latn-ng',
-  gng: 'gng-latn-zz',
-  gnh: 'gnh-latn-ng',
-  gni: 'gni-latn-au',
-  gnj: 'gnj-latn-ci',
-  gnk: 'gnk-latn-bw',
-  gnl: 'gnl-latn-au',
-  gnm: 'gnm-latn-pg',
-  gnn: 'gnn-latn-au',
-  gnq: 'gnq-latn-my',
-  gnr: 'gnr-latn-au',
-  gnt: 'gnt-latn-pg',
-  gnu: 'gnu-latn-pg',
-  gnw: 'gnw-latn-bo',
-  gnz: 'gnz-latn-cf',
-  goa: 'goa-latn-ci',
-  gob: 'gob-latn-co',
-  goc: 'goc-latn-pg',
-  god: 'god-latn-zz',
-  goe: 'goe-tibt-bt',
-  gof: 'gof-ethi-zz',
-  gog: 'gog-latn-tz',
-  goh: 'goh-latn-de',
-  goi: 'goi-latn-zz',
-  gok: 'gok-deva-in',
-  gol: 'gol-latn-lr',
-  gom: 'gom-deva-in',
-  gon: 'gon-telu-in',
-  goo: 'goo-latn-fj',
-  gop: 'gop-latn-id',
-  goq: 'goq-latn-id',
-  gor: 'gor-latn-id',
-  gos: 'gos-latn-nl',
-  got: 'got-goth-ua',
-  gou: 'gou-latn-cm',
-  gov: 'gov-latn-ci',
-  gow: 'gow-latn-tz',
-  gox: 'gox-latn-cd',
-  goy: 'goy-latn-td',
-  gpa: 'gpa-latn-ng',
-  gpe: 'gpe-latn-gh',
-  gpn: 'gpn-latn-pg',
-  gqa: 'gqa-latn-ng',
-  gqn: 'gqn-latn-br',
-  gqr: 'gqr-latn-td',
-  gra: 'gra-deva-in',
-  'gra-gujr': 'gra-gujr-in',
-  grb: 'grb-latn-zz',
-  grc: 'grc-cprt-cy',
-  'grc-linb': 'grc-linb-gr',
-  grd: 'grd-latn-ng',
-  grg: 'grg-latn-pg',
-  grh: 'grh-latn-ng',
-  gri: 'gri-latn-sb',
-  grj: 'grj-latn-lr',
-  grm: 'grm-latn-my',
-  grq: 'grq-latn-pg',
-  grs: 'grs-latn-id',
-  grt: 'grt-beng-in',
-  gru: 'gru-ethi-et',
-  'gru-latn': 'gru-latn-et',
-  grv: 'grv-latn-lr',
-  grw: 'grw-latn-zz',
-  grx: 'grx-latn-pg',
-  gry: 'gry-latn-lr',
-  grz: 'grz-latn-pg',
-  gsl: 'gsl-latn-sn',
-  gsn: 'gsn-latn-pg',
-  gso: 'gso-latn-cf',
-  gsp: 'gsp-latn-pg',
-  gsw: 'gsw-latn-ch',
-  gta: 'gta-latn-br',
-  gtu: 'gtu-latn-au',
-  gu: 'gu-gujr-in',
-  gua: 'gua-latn-ng',
-  gub: 'gub-latn-br',
-  guc: 'guc-latn-co',
-  gud: 'gud-latn-zz',
-  gue: 'gue-latn-au',
-  guf: 'guf-latn-au',
-  guh: 'guh-latn-co',
-  gui: 'gui-latn-bo',
-  guk: 'guk-latn-et',
-  'guk-ethi': 'guk-ethi-et',
-  gul: 'gul-latn-us',
-  gum: 'gum-latn-co',
-  gun: 'gun-latn-br',
-  guo: 'guo-latn-co',
-  gup: 'gup-latn-au',
-  guq: 'guq-latn-py',
-  gur: 'gur-latn-gh',
-  gut: 'gut-latn-cr',
-  guu: 'guu-latn-ve',
-  guw: 'guw-latn-zz',
-  gux: 'gux-latn-zz',
-  guz: 'guz-latn-ke',
-  gv: 'gv-latn-im',
-  gva: 'gva-latn-py',
-  gvc: 'gvc-latn-br',
-  gve: 'gve-latn-pg',
-  gvf: 'gvf-latn-zz',
-  gvj: 'gvj-latn-br',
-  gvl: 'gvl-latn-td',
-  gvm: 'gvm-latn-ng',
-  gvn: 'gvn-latn-au',
-  gvo: 'gvo-latn-br',
-  gvp: 'gvp-latn-br',
-  gvr: 'gvr-deva-np',
-  gvs: 'gvs-latn-zz',
-  gvy: 'gvy-latn-au',
-  gwa: 'gwa-latn-ci',
-  gwb: 'gwb-latn-ng',
-  gwc: 'gwc-arab-zz',
-  gwd: 'gwd-latn-et',
-  gwe: 'gwe-latn-tz',
-  gwf: 'gwf-arab-pk',
-  gwg: 'gwg-latn-ng',
-  gwi: 'gwi-latn-ca',
-  gwj: 'gwj-latn-bw',
-  gwm: 'gwm-latn-au',
-  gwn: 'gwn-latn-ng',
-  gwr: 'gwr-latn-ug',
-  gwt: 'gwt-arab-zz',
-  gwu: 'gwu-latn-au',
-  gww: 'gww-latn-au',
-  gwx: 'gwx-latn-gh',
-  gxx: 'gxx-latn-ci',
-  gyb: 'gyb-latn-pg',
-  gyd: 'gyd-latn-au',
-  gye: 'gye-latn-ng',
-  gyf: 'gyf-latn-au',
-  gyg: 'gyg-latn-cf',
-  gyi: 'gyi-latn-zz',
-  gyl: 'gyl-latn-et',
-  'gyl-ethi': 'gyl-ethi-et',
-  gym: 'gym-latn-pa',
-  gyn: 'gyn-latn-gy',
-  gyo: 'gyo-deva-np',
-  gyr: 'gyr-latn-bo',
-  gyy: 'gyy-latn-au',
-  gyz: 'gyz-latn-ng',
-  gza: 'gza-latn-sd',
-  gzi: 'gzi-arab-ir',
-  gzn: 'gzn-latn-id',
-  ha: 'ha-latn-ng',
-  'ha-cm': 'ha-arab-cm',
-  'ha-sd': 'ha-arab-sd',
-  haa: 'haa-latn-us',
-  hac: 'hac-arab-ir',
-  had: 'had-latn-id',
-  hae: 'hae-latn-et',
-  hag: 'hag-latn-zz',
-  hah: 'hah-latn-pg',
-  hai: 'hai-latn-ca',
-  haj: 'haj-latn-in',
-  'haj-beng': 'haj-beng-in',
-  hak: 'hak-hans-cn',
-  hal: 'hal-latn-vn',
-  ham: 'ham-latn-zz',
-  han: 'han-latn-tz',
-  hao: 'hao-latn-pg',
-  hap: 'hap-latn-id',
-  haq: 'haq-latn-tz',
-  har: 'har-ethi-et',
-  'har-arab': 'har-arab-et',
-  'har-latn': 'har-latn-et',
-  has: 'has-latn-ca',
-  hav: 'hav-latn-cd',
-  haw: 'haw-latn-us',
-  hax: 'hax-latn-ca',
-  hay: 'hay-latn-tz',
-  haz: 'haz-arab-af',
-  hba: 'hba-latn-cd',
-  hbb: 'hbb-latn-zz',
-  hbn: 'hbn-latn-sd',
-  hbo: 'hbo-hebr-il',
-  hbu: 'hbu-latn-tl',
-  hch: 'hch-latn-mx',
-  hdy: 'hdy-ethi-zz',
-  he: 'he-hebr-il',
-  hed: 'hed-latn-td',
-  heg: 'heg-latn-id',
-  heh: 'heh-latn-tz',
-  hei: 'hei-latn-ca',
-  hem: 'hem-latn-cd',
-  hgm: 'hgm-latn-na',
-  hgw: 'hgw-latn-pg',
-  hhi: 'hhi-latn-pg',
-  hhr: 'hhr-latn-sn',
-  hhy: 'hhy-latn-zz',
-  hi: 'hi-deva-in',
-  'hi-latn': 'hi-latn-in',
-  hia: 'hia-latn-zz',
-  hib: 'hib-latn-pe',
-  hid: 'hid-latn-us',
-  hif: 'hif-latn-fj',
-  hig: 'hig-latn-zz',
-  hih: 'hih-latn-zz',
-  hii: 'hii-takr-in',
-  'hii-deva': 'hii-deva-in',
-  hij: 'hij-latn-cm',
-  hik: 'hik-latn-id',
-  hil: 'hil-latn-ph',
-  hio: 'hio-latn-bw',
-  hir: 'hir-latn-br',
-  hit: 'hit-xsux-tr',
-  hiw: 'hiw-latn-vu',
-  hix: 'hix-latn-br',
-  hji: 'hji-latn-id',
-  hka: 'hka-latn-tz',
-  hke: 'hke-latn-cd',
-  hkh: 'hkh-arab-in',
-  'hkh-deva': 'hkh-deva-in',
-  'hkh-latn': 'hkh-latn-in',
-  hkk: 'hkk-latn-pg',
-  hla: 'hla-latn-zz',
-  hlb: 'hlb-deva-in',
-  hld: 'hld-latn-vn',
-  hlt: 'hlt-latn-mm',
-  hlu: 'hlu-hluw-tr',
-  hma: 'hma-latn-cn',
-  hmb: 'hmb-latn-ml',
-  hmd: 'hmd-plrd-cn',
-  hmf: 'hmf-latn-vn',
-  hmj: 'hmj-bopo-cn',
-  hmm: 'hmm-latn-cn',
-  hmn: 'hmn-latn-cn',
-  'hmn-bopo': 'hmn-bopo-cn',
-  'hmn-hmng': 'hmn-hmng-cn',
-  hmp: 'hmp-latn-cn',
-  hmq: 'hmq-bopo-cn',
-  hmr: 'hmr-latn-in',
-  hms: 'hms-latn-cn',
-  hmt: 'hmt-latn-zz',
-  hmu: 'hmu-latn-id',
-  hmv: 'hmv-latn-vn',
-  hmw: 'hmw-latn-cn',
-  hmy: 'hmy-latn-cn',
-  hmz: 'hmz-latn-cn',
-  'hmz-plrd': 'hmz-plrd-cn',
-  hna: 'hna-latn-cm',
-  hnd: 'hnd-arab-pk',
-  hne: 'hne-deva-in',
-  hng: 'hng-latn-ao',
-  hnh: 'hnh-latn-bw',
-  hni: 'hni-latn-cn',
-  hnj: 'hnj-hmnp-us',
-  'hnj-au': 'hnj-laoo-au',
-  'hnj-cn': 'hnj-laoo-cn',
-  'hnj-fr': 'hnj-laoo-fr',
-  'hnj-gf': 'hnj-laoo-gf',
-  'hnj-la': 'hnj-laoo-la',
-  'hnj-laoo': 'hnj-laoo-la',
-  'hnj-mm': 'hnj-laoo-mm',
-  'hnj-sr': 'hnj-laoo-sr',
-  'hnj-th': 'hnj-laoo-th',
-  'hnj-us': 'hnj-hmnp-us',
-  'hnj-vn': 'hnj-laoo-vn',
-  hnn: 'hnn-latn-ph',
-  hno: 'hno-arab-pk',
-  hns: 'hns-latn-sr',
-  ho: 'ho-latn-pg',
-  hoa: 'hoa-latn-sb',
-  hob: 'hob-latn-pg',
-  hoc: 'hoc-deva-in',
-  hod: 'hod-latn-ng',
-  hoe: 'hoe-latn-ng',
-  hoh: 'hoh-arab-om',
-  hoi: 'hoi-latn-us',
-  hoj: 'hoj-deva-in',
-  hol: 'hol-latn-ao',
-  hom: 'hom-latn-ss',
-  hoo: 'hoo-latn-cd',
-  hop: 'hop-latn-us',
-  hor: 'hor-latn-td',
-  hot: 'hot-latn-zz',
-  hov: 'hov-latn-id',
-  how: 'how-hani-cn',
-  hoy: 'hoy-deva-in',
-  hpo: 'hpo-mymr-mm',
-  hr: 'hr-latn-hr',
-  hra: 'hra-latn-in',
-  hrc: 'hrc-latn-pg',
-  hre: 'hre-latn-vn',
-  hrk: 'hrk-latn-id',
-  hrm: 'hrm-latn-cn',
-  'hrm-hmng': 'hrm-hmng-cn',
-  hro: 'hro-latn-vn',
-  hrp: 'hrp-latn-au',
-  hrt: 'hrt-syrc-tr',
-  hru: 'hru-latn-in',
-  hrw: 'hrw-latn-pg',
-  hrx: 'hrx-latn-br',
-  hrz: 'hrz-arab-ir',
-  hsb: 'hsb-latn-de',
-  hsn: 'hsn-hans-cn',
-  hss: 'hss-arab-om',
-  ht: 'ht-latn-ht',
-  hti: 'hti-latn-id',
-  hto: 'hto-latn-co',
-  hts: 'hts-latn-tz',
-  htu: 'htu-latn-id',
-  htx: 'htx-xsux-tr',
-  hu: 'hu-latn-hu',
-  hub: 'hub-latn-pe',
-  huc: 'huc-latn-bw',
-  hud: 'hud-latn-id',
-  hue: 'hue-latn-mx',
-  huf: 'huf-latn-pg',
-  hug: 'hug-latn-pe',
-  huh: 'huh-latn-cl',
-  hui: 'hui-latn-zz',
-  huk: 'huk-latn-id',
-  hul: 'hul-latn-pg',
-  hum: 'hum-latn-cd',
-  hup: 'hup-latn-us',
-  hur: 'hur-latn-ca',
-  hus: 'hus-latn-mx',
-  hut: 'hut-deva-np',
-  'hut-tibt': 'hut-tibt-np',
-  huu: 'huu-latn-pe',
-  huv: 'huv-latn-mx',
-  huw: 'huw-latn-id',
-  hux: 'hux-latn-pe',
-  huy: 'huy-hebr-il',
-  huz: 'huz-cyrl-ru',
-  hvc: 'hvc-latn-ht',
-  hve: 'hve-latn-mx',
-  hvk: 'hvk-latn-nc',
-  hvn: 'hvn-latn-id',
-  hvv: 'hvv-latn-mx',
-  hwa: 'hwa-latn-ci',
-  hwc: 'hwc-latn-us',
-  hwo: 'hwo-latn-ng',
-  hy: 'hy-armn-am',
-  hya: 'hya-latn-cm',
-  hyw: 'hyw-armn-am',
-  hz: 'hz-latn-na',
-  ia: 'ia-latn-001',
-  iai: 'iai-latn-nc',
-  ian: 'ian-latn-zz',
-  iar: 'iar-latn-zz',
-  iba: 'iba-latn-my',
-  ibb: 'ibb-latn-ng',
-  ibd: 'ibd-latn-au',
-  ibe: 'ibe-latn-ng',
-  ibg: 'ibg-latn-ph',
-  ibh: 'ibh-latn-vn',
-  ibl: 'ibl-latn-ph',
-  ibm: 'ibm-latn-ng',
-  ibn: 'ibn-latn-ng',
-  ibr: 'ibr-latn-ng',
-  ibu: 'ibu-latn-id',
-  iby: 'iby-latn-zz',
-  ica: 'ica-latn-zz',
-  ich: 'ich-latn-zz',
-  icr: 'icr-latn-co',
-  id: 'id-latn-id',
-  ida: 'ida-latn-ke',
-  idb: 'idb-latn-in',
-  idc: 'idc-latn-ng',
-  idd: 'idd-latn-zz',
-  ide: 'ide-latn-ng',
-  idi: 'idi-latn-zz',
-  idr: 'idr-latn-ss',
-  ids: 'ids-latn-ng',
-  idt: 'idt-latn-tl',
-  idu: 'idu-latn-zz',
-  ie: 'ie-latn-001',
-  ifa: 'ifa-latn-ph',
-  ifb: 'ifb-latn-ph',
-  ife: 'ife-latn-tg',
-  iff: 'iff-latn-vu',
-  ifk: 'ifk-latn-ph',
-  ifm: 'ifm-latn-cg',
-  ifu: 'ifu-latn-ph',
-  ify: 'ify-latn-ph',
-  ig: 'ig-latn-ng',
-  igb: 'igb-latn-zz',
-  ige: 'ige-latn-zz',
-  igg: 'igg-latn-pg',
-  igl: 'igl-latn-ng',
-  igm: 'igm-latn-pg',
-  ign: 'ign-latn-bo',
-  igo: 'igo-latn-pg',
-  igs: 'igs-latn-001',
-  'igs-grek': 'igs-grek-001',
-  igw: 'igw-latn-ng',
-  ihb: 'ihb-latn-id',
-  ihi: 'ihi-latn-ng',
-  ihp: 'ihp-latn-id',
-  ihw: 'ihw-latn-au',
-  ii: 'ii-yiii-cn',
-  iin: 'iin-latn-au',
-  ijc: 'ijc-latn-ng',
-  ije: 'ije-latn-ng',
-  ijj: 'ijj-latn-zz',
-  ijn: 'ijn-latn-ng',
-  ijs: 'ijs-latn-ng',
-  ik: 'ik-latn-us',
-  iki: 'iki-latn-ng',
-  ikk: 'ikk-latn-zz',
-  ikl: 'ikl-latn-ng',
-  iko: 'iko-latn-ng',
-  ikp: 'ikp-latn-ng',
-  ikr: 'ikr-latn-au',
-  ikt: 'ikt-latn-ca',
-  'ikt-cans': 'ikt-cans-ca',
-  ikv: 'ikv-latn-ng',
-  ikw: 'ikw-latn-zz',
-  ikx: 'ikx-latn-zz',
-  ikz: 'ikz-latn-tz',
-  ila: 'ila-latn-id',
-  ilb: 'ilb-latn-zm',
-  ilg: 'ilg-latn-au',
-  ili: 'ili-latn-cn',
-  'ili-arab': 'ili-arab-cn',
-  'ili-cyrl': 'ili-cyrl-kz',
-  ilk: 'ilk-latn-ph',
-  ilm: 'ilm-latn-my',
-  ilo: 'ilo-latn-ph',
-  ilp: 'ilp-latn-ph',
-  ilu: 'ilu-latn-id',
-  ilv: 'ilv-latn-ng',
-  imi: 'imi-latn-pg',
-  iml: 'iml-latn-us',
-  imn: 'imn-latn-pg',
-  imo: 'imo-latn-zz',
-  imr: 'imr-latn-id',
-  ims: 'ims-latn-it',
-  imt: 'imt-latn-ss',
-  imy: 'imy-lyci-tr',
-  in: 'in-latn-id',
-  inb: 'inb-latn-co',
-  ing: 'ing-latn-us',
-  inh: 'inh-cyrl-ru',
-  inj: 'inj-latn-co',
-  inn: 'inn-latn-ph',
-  ino: 'ino-latn-pg',
-  inp: 'inp-latn-pe',
-  int: 'int-mymr-mm',
-  io: 'io-latn-001',
-  ior: 'ior-ethi-et',
-  iou: 'iou-latn-zz',
-  iow: 'iow-latn-us',
-  ipi: 'ipi-latn-pg',
-  ipo: 'ipo-latn-pg',
-  iqu: 'iqu-latn-pe',
-  iqw: 'iqw-latn-ng',
-  ire: 'ire-latn-id',
-  irh: 'irh-latn-id',
-  iri: 'iri-latn-zz',
-  irk: 'irk-latn-tz',
-  irn: 'irn-latn-br',
-  iru: 'iru-taml-in',
-  'iru-mlym': 'iru-mlym-in',
-  irx: 'irx-latn-id',
-  iry: 'iry-latn-ph',
-  is: 'is-latn-is',
-  isa: 'isa-latn-pg',
-  isc: 'isc-latn-pe',
-  isd: 'isd-latn-ph',
-  ish: 'ish-latn-ng',
-  isi: 'isi-latn-ng',
-  isk: 'isk-arab-af',
-  'isk-cyrl': 'isk-cyrl-tj',
-  ism: 'ism-latn-id',
-  isn: 'isn-latn-tz',
-  iso: 'iso-latn-ng',
-  ist: 'ist-latn-hr',
-  isu: 'isu-latn-cm',
-  it: 'it-latn-it',
-  itb: 'itb-latn-ph',
-  itd: 'itd-latn-id',
-  ite: 'ite-latn-bo',
-  iti: 'iti-latn-ph',
-  itk: 'itk-hebr-it',
-  itl: 'itl-cyrl-ru',
-  itm: 'itm-latn-ng',
-  ito: 'ito-latn-bo',
-  itr: 'itr-latn-pg',
-  its: 'its-latn-ng',
-  itt: 'itt-latn-ph',
-  itv: 'itv-latn-ph',
-  itw: 'itw-latn-ng',
-  itx: 'itx-latn-id',
-  ity: 'ity-latn-ph',
-  itz: 'itz-latn-gt',
-  iu: 'iu-cans-ca',
-  ium: 'ium-latn-cn',
-  'ium-hani': 'ium-hani-cn',
-  'ium-laoo': 'ium-laoo-la',
-  'ium-thai': 'ium-thai-th',
-  ivb: 'ivb-latn-ph',
-  ivv: 'ivv-latn-ph',
-  iw: 'iw-hebr-il',
-  iwk: 'iwk-latn-ph',
-  iwm: 'iwm-latn-zz',
-  iwo: 'iwo-latn-id',
-  iws: 'iws-latn-zz',
-  ixc: 'ixc-latn-mx',
-  ixl: 'ixl-latn-gt',
-  iya: 'iya-latn-ng',
-  iyo: 'iyo-latn-cm',
-  iyx: 'iyx-latn-cg',
-  izh: 'izh-latn-ru',
-  izi: 'izi-latn-zz',
-  izr: 'izr-latn-ng',
-  izz: 'izz-latn-ng',
-  ja: 'ja-jpan-jp',
-  jaa: 'jaa-latn-br',
-  jab: 'jab-latn-zz',
-  jac: 'jac-latn-gt',
-  jad: 'jad-arab-gn',
-  jae: 'jae-latn-pg',
-  jaf: 'jaf-latn-ng',
-  jah: 'jah-latn-my',
-  jaj: 'jaj-latn-sb',
-  jak: 'jak-latn-my',
-  jal: 'jal-latn-id',
-  jam: 'jam-latn-jm',
-  jan: 'jan-latn-au',
-  jao: 'jao-latn-au',
-  jaq: 'jaq-latn-id',
-  jar: 'jar-latn-zz',
-  jas: 'jas-latn-nc',
-  jat: 'jat-arab-af',
-  jau: 'jau-latn-id',
-  jax: 'jax-latn-id',
-  jay: 'jay-latn-au',
-  jaz: 'jaz-latn-nc',
-  jbe: 'jbe-hebr-il',
-  jbi: 'jbi-latn-au',
-  jbj: 'jbj-latn-id',
-  jbk: 'jbk-latn-pg',
-  jbm: 'jbm-latn-ng',
-  jbn: 'jbn-arab-ly',
-  jbo: 'jbo-latn-001',
-  jbr: 'jbr-latn-id',
-  jbt: 'jbt-latn-br',
-  jbu: 'jbu-latn-zz',
-  jbw: 'jbw-latn-au',
-  jct: 'jct-cyrl-ua',
-  'jct-latn': 'jct-latn-ua',
-  jda: 'jda-tibt-in',
-  jdg: 'jdg-arab-pk',
-  jdt: 'jdt-cyrl-ru',
-  'jdt-hebr': 'jdt-hebr-ru',
-  'jdt-latn': 'jdt-latn-az',
-  jeb: 'jeb-latn-pe',
-  jee: 'jee-deva-np',
-  jeh: 'jeh-latn-vn',
-  'jeh-laoo': 'jeh-laoo-la',
-  jei: 'jei-latn-id',
-  jek: 'jek-latn-ci',
-  jel: 'jel-latn-id',
-  jen: 'jen-latn-zz',
-  jer: 'jer-latn-ng',
-  jet: 'jet-latn-pg',
-  jeu: 'jeu-latn-td',
-  jgb: 'jgb-latn-cd',
-  jge: 'jge-geor-ge',
-  'jge-hebr': 'jge-hebr-il',
-  jgk: 'jgk-latn-zz',
-  jgo: 'jgo-latn-cm',
-  jhi: 'jhi-latn-my',
-  ji: 'ji-hebr-ua',
-  jia: 'jia-latn-cm',
-  jib: 'jib-latn-zz',
-  jic: 'jic-latn-hn',
-  jid: 'jid-latn-ng',
-  jie: 'jie-latn-ng',
-  jig: 'jig-latn-au',
-  jil: 'jil-latn-pg',
-  jim: 'jim-latn-cm',
-  jit: 'jit-latn-tz',
-  jiu: 'jiu-latn-cn',
-  jiv: 'jiv-latn-ec',
-  jiy: 'jiy-latn-cn',
-  jje: 'jje-hang-kr',
-  jjr: 'jjr-latn-ng',
-  jka: 'jka-latn-id',
-  jkm: 'jkm-mymr-mm',
-  'jkm-brai': 'jkm-brai-mm',
-  'jkm-latn': 'jkm-latn-mm',
-  jko: 'jko-latn-pg',
-  jku: 'jku-latn-ng',
-  jle: 'jle-latn-sd',
-  jma: 'jma-latn-pg',
-  jmb: 'jmb-latn-ng',
-  jmc: 'jmc-latn-tz',
-  jmd: 'jmd-latn-id',
-  jmi: 'jmi-latn-ng',
-  jml: 'jml-deva-np',
-  jmn: 'jmn-latn-mm',
-  jmr: 'jmr-latn-gh',
-  jms: 'jms-latn-ng',
-  jmw: 'jmw-latn-pg',
-  jmx: 'jmx-latn-mx',
-  jna: 'jna-takr-in',
-  jnd: 'jnd-arab-pk',
-  jng: 'jng-latn-au',
-  jni: 'jni-latn-ng',
-  jnj: 'jnj-latn-et',
-  'jnj-ethi': 'jnj-ethi-et',
-  jnl: 'jnl-deva-in',
-  jns: 'jns-deva-in',
-  'jns-latn': 'jns-latn-in',
-  'jns-takr': 'jns-takr-in',
-  job: 'job-latn-cd',
-  jod: 'jod-latn-ci',
-  jog: 'jog-arab-pk',
-  jor: 'jor-latn-bo',
-  jow: 'jow-latn-ml',
-  jpa: 'jpa-hebr-ps',
-  jpr: 'jpr-hebr-il',
-  jqr: 'jqr-latn-pe',
-  jra: 'jra-latn-zz',
-  jrr: 'jrr-latn-ng',
-  jrt: 'jrt-latn-ng',
-  jru: 'jru-latn-ve',
-  jua: 'jua-latn-br',
-  jub: 'jub-latn-ng',
-  jud: 'jud-latn-ci',
-  juh: 'juh-latn-ng',
-  jui: 'jui-latn-au',
-  juk: 'juk-latn-ng',
-  jul: 'jul-deva-np',
-  jum: 'jum-latn-sd',
-  jun: 'jun-orya-in',
-  juo: 'juo-latn-ng',
-  jup: 'jup-latn-br',
-  jur: 'jur-latn-br',
-  jut: 'jut-latn-dk',
-  juu: 'juu-latn-ng',
-  juw: 'juw-latn-ng',
-  juy: 'juy-orya-in',
-  jv: 'jv-latn-id',
-  jvd: 'jvd-latn-id',
-  jvn: 'jvn-latn-sr',
-  jw: 'jw-latn-id',
-  jwi: 'jwi-latn-gh',
-  jya: 'jya-tibt-cn',
-  jye: 'jye-hebr-il',
-  jyy: 'jyy-latn-td',
-  ka: 'ka-geor-ge',
-  kaa: 'kaa-cyrl-uz',
-  kab: 'kab-latn-dz',
-  kac: 'kac-latn-mm',
-  kad: 'kad-latn-zz',
-  kag: 'kag-latn-my',
-  kah: 'kah-latn-cf',
-  kai: 'kai-latn-zz',
-  kaj: 'kaj-latn-ng',
-  kak: 'kak-latn-ph',
-  kam: 'kam-latn-ke',
-  kao: 'kao-latn-ml',
-  kap: 'kap-cyrl-ru',
-  kaq: 'kaq-latn-pe',
-  kav: 'kav-latn-br',
-  kaw: 'kaw-kawi-id',
-  kax: 'kax-latn-id',
-  kay: 'kay-latn-br',
-  kba: 'kba-latn-au',
-  kbb: 'kbb-latn-br',
-  kbc: 'kbc-latn-br',
-  kbd: 'kbd-cyrl-ru',
-  kbe: 'kbe-latn-au',
-  kbh: 'kbh-latn-co',
-  kbi: 'kbi-latn-id',
-  kbj: 'kbj-latn-cd',
-  kbk: 'kbk-latn-pg',
-  kbl: 'kbl-latn-td',
-  kbm: 'kbm-latn-zz',
-  kbn: 'kbn-latn-cf',
-  kbo: 'kbo-latn-ss',
-  kbp: 'kbp-latn-zz',
-  kbq: 'kbq-latn-zz',
-  kbr: 'kbr-latn-et',
-  'kbr-ethi': 'kbr-ethi-et',
-  kbs: 'kbs-latn-ga',
-  kbt: 'kbt-latn-pg',
-  kbu: 'kbu-arab-pk',
-  kbv: 'kbv-latn-id',
-  kbw: 'kbw-latn-pg',
-  kbx: 'kbx-latn-zz',
-  kby: 'kby-arab-ne',
-  kbz: 'kbz-latn-ng',
-  kca: 'kca-cyrl-ru',
-  kcb: 'kcb-latn-pg',
-  kcc: 'kcc-latn-ng',
-  kcd: 'kcd-latn-id',
-  kce: 'kce-latn-ng',
-  kcf: 'kcf-latn-ng',
-  kcg: 'kcg-latn-ng',
-  kch: 'kch-latn-ng',
-  kci: 'kci-latn-ng',
-  kcj: 'kcj-latn-gw',
-  kck: 'kck-latn-zw',
-  kcl: 'kcl-latn-zz',
-  kcm: 'kcm-latn-cf',
-  kcn: 'kcn-latn-ug',
-  kco: 'kco-latn-pg',
-  kcp: 'kcp-latn-sd',
-  kcq: 'kcq-latn-ng',
-  kcs: 'kcs-latn-ng',
-  kct: 'kct-latn-zz',
-  kcu: 'kcu-latn-tz',
-  kcv: 'kcv-latn-cd',
-  kcw: 'kcw-latn-cd',
-  kcz: 'kcz-latn-tz',
-  kda: 'kda-latn-au',
-  kdc: 'kdc-latn-tz',
-  kdd: 'kdd-latn-au',
-  kde: 'kde-latn-tz',
-  kdf: 'kdf-latn-pg',
-  kdg: 'kdg-latn-cd',
-  kdh: 'kdh-latn-tg',
-  kdi: 'kdi-latn-ug',
-  kdj: 'kdj-latn-ug',
-  kdk: 'kdk-latn-nc',
-  kdl: 'kdl-latn-zz',
-  kdm: 'kdm-latn-ng',
-  kdn: 'kdn-latn-zw',
-  kdp: 'kdp-latn-ng',
-  kdq: 'kdq-beng-in',
-  kdr: 'kdr-latn-lt',
-  'kdr-cyrl': 'kdr-cyrl-ua',
-  kdt: 'kdt-thai-th',
-  kdw: 'kdw-latn-id',
-  kdx: 'kdx-latn-ng',
-  kdy: 'kdy-latn-id',
-  kdz: 'kdz-latn-cm',
-  kea: 'kea-latn-cv',
-  keb: 'keb-latn-ga',
-  kec: 'kec-latn-sd',
-  ked: 'ked-latn-tz',
-  kee: 'kee-latn-us',
-  kef: 'kef-latn-tg',
-  keg: 'keg-latn-sd',
-  keh: 'keh-latn-pg',
-  kei: 'kei-latn-id',
-  kek: 'kek-latn-gt',
-  kel: 'kel-latn-cd',
-  kem: 'kem-latn-tl',
-  ken: 'ken-latn-cm',
-  keo: 'keo-latn-ug',
-  ker: 'ker-latn-td',
-  kes: 'kes-latn-ng',
-  ket: 'ket-cyrl-ru',
-  keu: 'keu-latn-tg',
-  kew: 'kew-latn-pg',
-  kex: 'kex-deva-in',
-  'kex-gujr': 'kex-gujr-in',
-  key: 'key-telu-in',
-  kez: 'kez-latn-zz',
-  kfa: 'kfa-knda-in',
-  kfb: 'kfb-deva-in',
-  kfc: 'kfc-telu-in',
-  kfd: 'kfd-knda-in',
-  kfe: 'kfe-taml-in',
-  kff: 'kff-latn-in',
-  'kff-deva': 'kff-deva-in',
-  'kff-orya': 'kff-orya-in',
-  'kff-telu': 'kff-telu-in',
-  kfh: 'kfh-mlym-in',
-  kfi: 'kfi-taml-in',
-  'kfi-knda': 'kfi-knda-in',
-  kfk: 'kfk-deva-in',
-  'kfk-takr': 'kfk-takr-in',
-  kfl: 'kfl-latn-cm',
-  kfm: 'kfm-arab-ir',
-  kfn: 'kfn-latn-cm',
-  kfo: 'kfo-latn-ci',
-  kfp: 'kfp-deva-in',
-  kfq: 'kfq-deva-in',
-  kfr: 'kfr-deva-in',
-  kfs: 'kfs-deva-in',
-  kfv: 'kfv-latn-in',
-  kfw: 'kfw-latn-in',
-  kfx: 'kfx-deva-in',
-  'kfx-takr': 'kfx-takr-in',
-  kfy: 'kfy-deva-in',
-  kfz: 'kfz-latn-bf',
-  kg: 'kg-latn-cd',
-  kga: 'kga-latn-ci',
-  kgb: 'kgb-latn-id',
-  kge: 'kge-latn-id',
-  kgf: 'kgf-latn-zz',
-  kgj: 'kgj-deva-np',
-  kgk: 'kgk-latn-br',
-  kgl: 'kgl-latn-au',
-  kgm: 'kgm-latn-br',
-  kgo: 'kgo-latn-sd',
-  kgp: 'kgp-latn-br',
-  kgq: 'kgq-latn-id',
-  kgr: 'kgr-latn-id',
-  kgs: 'kgs-latn-au',
-  kgt: 'kgt-latn-ng',
-  kgu: 'kgu-latn-pg',
-  kgv: 'kgv-latn-id',
-  kgw: 'kgw-latn-id',
-  kgx: 'kgx-latn-id',
-  kgy: 'kgy-deva-np',
-  kha: 'kha-latn-in',
-  khb: 'khb-talu-cn',
-  khc: 'khc-latn-id',
-  khd: 'khd-latn-id',
-  khe: 'khe-latn-id',
-  khf: 'khf-thai-la',
-  khg: 'khg-tibt-cn',
-  khh: 'khh-latn-id',
-  khj: 'khj-latn-ng',
-  khl: 'khl-latn-pg',
-  khn: 'khn-deva-in',
-  khp: 'khp-latn-id',
-  khq: 'khq-latn-ml',
-  khr: 'khr-latn-in',
-  'khr-deva': 'khr-deva-in',
-  khs: 'khs-latn-zz',
-  kht: 'kht-mymr-in',
-  khu: 'khu-latn-ao',
-  khv: 'khv-cyrl-ru',
-  khw: 'khw-arab-pk',
-  khx: 'khx-latn-cd',
-  khy: 'khy-latn-cd',
-  khz: 'khz-latn-zz',
-  ki: 'ki-latn-ke',
-  kia: 'kia-latn-td',
-  kib: 'kib-latn-sd',
-  kic: 'kic-latn-us',
-  kid: 'kid-latn-cm',
-  kie: 'kie-latn-td',
-  kif: 'kif-deva-np',
-  kig: 'kig-latn-id',
-  kih: 'kih-latn-pg',
-  kij: 'kij-latn-zz',
-  kil: 'kil-latn-ng',
-  kim: 'kim-cyrl-ru',
-  kio: 'kio-latn-us',
-  kip: 'kip-deva-np',
-  kiq: 'kiq-latn-id',
-  kis: 'kis-latn-pg',
-  kit: 'kit-latn-pg',
-  kiu: 'kiu-latn-tr',
-  kiv: 'kiv-latn-tz',
-  kiw: 'kiw-latn-zz',
-  kix: 'kix-latn-in',
-  kiy: 'kiy-latn-id',
-  kiz: 'kiz-latn-tz',
-  kj: 'kj-latn-na',
-  kja: 'kja-latn-id',
-  kjb: 'kjb-latn-gt',
-  kjc: 'kjc-latn-id',
-  kjd: 'kjd-latn-zz',
-  kje: 'kje-latn-id',
-  kjg: 'kjg-laoo-la',
-  kjh: 'kjh-cyrl-ru',
-  kji: 'kji-latn-sb',
-  kjj: 'kjj-latn-az',
-  kjk: 'kjk-latn-id',
-  kjl: 'kjl-deva-np',
-  kjm: 'kjm-latn-vn',
-  kjn: 'kjn-latn-au',
-  kjo: 'kjo-deva-in',
-  kjp: 'kjp-mymr-mm',
-  'kjp-thai': 'kjp-thai-th',
-  kjq: 'kjq-latn-us',
-  kjr: 'kjr-latn-id',
-  kjs: 'kjs-latn-zz',
-  kjt: 'kjt-thai-th',
-  kju: 'kju-latn-us',
-  kjx: 'kjx-latn-pg',
-  kjy: 'kjy-latn-zz',
-  kk: 'kk-cyrl-kz',
-  'kk-af': 'kk-arab-af',
-  'kk-arab': 'kk-arab-cn',
-  'kk-cn': 'kk-arab-cn',
-  'kk-ir': 'kk-arab-ir',
-  'kk-mn': 'kk-arab-mn',
-  kka: 'kka-latn-ng',
-  kkb: 'kkb-latn-id',
-  kkc: 'kkc-latn-zz',
-  kkd: 'kkd-latn-ng',
-  kke: 'kke-latn-gn',
-  'kke-arab': 'kke-arab-gn',
-  kkf: 'kkf-tibt-in',
-  kkg: 'kkg-latn-ph',
-  kkh: 'kkh-lana-mm',
-  kki: 'kki-latn-tz',
-  kkj: 'kkj-latn-cm',
-  kkk: 'kkk-latn-sb',
-  kkl: 'kkl-latn-id',
-  kkm: 'kkm-latn-ng',
-  kko: 'kko-latn-sd',
-  kkp: 'kkp-latn-au',
-  kkq: 'kkq-latn-cd',
-  kkr: 'kkr-latn-ng',
-  kks: 'kks-latn-ng',
-  kkt: 'kkt-deva-np',
-  kku: 'kku-latn-ng',
-  kkv: 'kkv-latn-id',
-  kkw: 'kkw-latn-cg',
-  kkx: 'kkx-latn-id',
-  kky: 'kky-latn-au',
-  kkz: 'kkz-latn-ca',
-  kl: 'kl-latn-gl',
-  kla: 'kla-latn-us',
-  klb: 'klb-latn-mx',
-  klc: 'klc-latn-cm',
-  kld: 'kld-latn-au',
-  kle: 'kle-deva-np',
-  klf: 'klf-latn-td',
-  klg: 'klg-latn-ph',
-  klh: 'klh-latn-pg',
-  kli: 'kli-latn-id',
-  klj: 'klj-arab-ir',
-  klk: 'klk-latn-ng',
-  kll: 'kll-latn-ph',
-  klm: 'klm-latn-pg',
-  kln: 'kln-latn-ke',
-  klo: 'klo-latn-ng',
-  klp: 'klp-latn-pg',
-  klq: 'klq-latn-zz',
-  klr: 'klr-deva-np',
-  kls: 'kls-latn-pk',
-  'kls-arab': 'kls-arab-pk',
-  klt: 'klt-latn-zz',
-  klu: 'klu-latn-lr',
-  klv: 'klv-latn-vu',
-  klw: 'klw-latn-id',
-  klx: 'klx-latn-zz',
-  kly: 'kly-latn-id',
-  klz: 'klz-latn-id',
-  km: 'km-khmr-kh',
-  kma: 'kma-latn-gh',
-  kmb: 'kmb-latn-ao',
-  kmc: 'kmc-latn-cn',
-  'kmc-hani': 'kmc-hani-cn',
-  kmd: 'kmd-latn-ph',
-  kme: 'kme-latn-cm',
-  kmf: 'kmf-latn-pg',
-  kmg: 'kmg-latn-pg',
-  kmh: 'kmh-latn-zz',
-  kmi: 'kmi-latn-ng',
-  kmj: 'kmj-deva-in',
-  kmk: 'kmk-latn-ph',
-  kml: 'kml-latn-ph',
-  kmm: 'kmm-latn-in',
-  kmn: 'kmn-latn-pg',
-  kmo: 'kmo-latn-zz',
-  kmp: 'kmp-latn-cm',
-  kmq: 'kmq-latn-et',
-  kms: 'kms-latn-zz',
-  kmt: 'kmt-latn-id',
-  kmu: 'kmu-latn-zz',
-  kmv: 'kmv-latn-br',
-  kmw: 'kmw-latn-zz',
-  kmx: 'kmx-latn-pg',
-  kmy: 'kmy-latn-ng',
-  kmz: 'kmz-arab-ir',
-  kn: 'kn-knda-in',
-  kna: 'kna-latn-ng',
-  knb: 'knb-latn-ph',
-  knd: 'knd-latn-id',
-  kne: 'kne-latn-ph',
-  knf: 'knf-latn-gw',
-  kni: 'kni-latn-ng',
-  knj: 'knj-latn-gt',
-  knk: 'knk-latn-sl',
-  'knk-arab': 'knk-arab-sl',
-  knl: 'knl-latn-id',
-  knm: 'knm-latn-br',
-  kno: 'kno-latn-sl',
-  knp: 'knp-latn-zz',
-  knq: 'knq-latn-my',
-  knr: 'knr-latn-pg',
-  kns: 'kns-latn-my',
-  'kns-thai': 'kns-thai-th',
-  knt: 'knt-latn-br',
-  knu: 'knu-latn-gn',
-  knv: 'knv-latn-pg',
-  knw: 'knw-latn-na',
-  knx: 'knx-latn-id',
-  kny: 'kny-latn-cd',
-  knz: 'knz-latn-bf',
-  ko: 'ko-kore-kr',
-  koa: 'koa-latn-pg',
-  koc: 'koc-latn-ng',
-  kod: 'kod-latn-id',
-  koe: 'koe-latn-ss',
-  kof: 'kof-latn-ng',
-  kog: 'kog-latn-co',
-  koh: 'koh-latn-cg',
-  koi: 'koi-cyrl-ru',
-  kok: 'kok-deva-in',
-  kol: 'kol-latn-zz',
-  koo: 'koo-latn-ug',
-  kop: 'kop-latn-pg',
-  koq: 'koq-latn-ga',
-  kos: 'kos-latn-fm',
-  kot: 'kot-latn-cm',
-  kou: 'kou-latn-td',
-  kov: 'kov-latn-ng',
-  kow: 'kow-latn-ng',
-  koy: 'koy-latn-us',
-  koz: 'koz-latn-zz',
-  kpa: 'kpa-latn-ng',
-  kpc: 'kpc-latn-co',
-  kpd: 'kpd-latn-id',
-  kpe: 'kpe-latn-lr',
-  kpf: 'kpf-latn-zz',
-  kpg: 'kpg-latn-fm',
-  kph: 'kph-latn-gh',
-  kpi: 'kpi-latn-id',
-  kpj: 'kpj-latn-br',
-  kpk: 'kpk-latn-ng',
-  kpl: 'kpl-latn-cd',
-  kpm: 'kpm-latn-vn',
-  kpn: 'kpn-latn-br',
-  kpo: 'kpo-latn-zz',
-  kpq: 'kpq-latn-id',
-  kpr: 'kpr-latn-zz',
-  kps: 'kps-latn-id',
-  kpt: 'kpt-cyrl-ru',
-  kpu: 'kpu-latn-id',
-  kpw: 'kpw-latn-pg',
-  kpx: 'kpx-latn-zz',
-  kpy: 'kpy-cyrl-ru',
-  kpz: 'kpz-latn-ug',
-  kqa: 'kqa-latn-pg',
-  kqb: 'kqb-latn-zz',
-  kqc: 'kqc-latn-pg',
-  kqd: 'kqd-syrc-iq',
-  kqe: 'kqe-latn-ph',
-  kqf: 'kqf-latn-zz',
-  kqg: 'kqg-latn-bf',
-  kqh: 'kqh-latn-tz',
-  kqi: 'kqi-latn-pg',
-  kqj: 'kqj-latn-pg',
-  kqk: 'kqk-latn-bj',
-  kql: 'kql-latn-pg',
-  kqm: 'kqm-latn-ci',
-  kqn: 'kqn-latn-zm',
-  kqo: 'kqo-latn-lr',
-  kqp: 'kqp-latn-td',
-  kqq: 'kqq-latn-br',
-  kqr: 'kqr-latn-my',
-  kqs: 'kqs-latn-zz',
-  kqt: 'kqt-latn-my',
-  kqu: 'kqu-latn-za',
-  kqv: 'kqv-latn-id',
-  kqw: 'kqw-latn-pg',
-  kqx: 'kqx-latn-cm',
-  kqy: 'kqy-ethi-zz',
-  kqz: 'kqz-latn-za',
-  kr: 'kr-latn-zz',
-  kra: 'kra-deva-np',
-  krb: 'krb-latn-us',
-  krc: 'krc-cyrl-ru',
-  krd: 'krd-latn-tl',
-  kre: 'kre-latn-br',
-  krf: 'krf-latn-vu',
-  krh: 'krh-latn-ng',
-  kri: 'kri-latn-sl',
-  krj: 'krj-latn-ph',
-  krk: 'krk-cyrl-ru',
-  krl: 'krl-latn-ru',
-  krn: 'krn-latn-lr',
-  krp: 'krp-latn-ng',
-  krr: 'krr-khmr-kh',
-  krs: 'krs-latn-zz',
-  krt: 'krt-latn-ne',
-  kru: 'kru-deva-in',
-  krv: 'krv-khmr-kh',
-  krw: 'krw-latn-lr',
-  krx: 'krx-latn-sn',
-  kry: 'kry-latn-az',
-  krz: 'krz-latn-id',
-  ks: 'ks-arab-in',
-  ksa: 'ksa-latn-ng',
-  ksb: 'ksb-latn-tz',
-  ksc: 'ksc-latn-ph',
-  ksd: 'ksd-latn-zz',
-  kse: 'kse-latn-pg',
-  ksf: 'ksf-latn-cm',
-  ksg: 'ksg-latn-sb',
-  ksh: 'ksh-latn-de',
-  ksi: 'ksi-latn-pg',
-  ksj: 'ksj-latn-zz',
-  ksk: 'ksk-latn-us',
-  ksl: 'ksl-latn-pg',
-  ksm: 'ksm-latn-ng',
-  ksn: 'ksn-latn-ph',
-  kso: 'kso-latn-ng',
-  ksp: 'ksp-latn-cf',
-  ksq: 'ksq-latn-ng',
-  ksr: 'ksr-latn-zz',
-  kss: 'kss-latn-lr',
-  kst: 'kst-latn-bf',
-  ksu: 'ksu-mymr-in',
-  ksv: 'ksv-latn-cd',
-  ksw: 'ksw-mymr-mm',
-  'ksw-latn': 'ksw-latn-mm',
-  ksx: 'ksx-latn-id',
-  ksz: 'ksz-deva-in',
-  kta: 'kta-latn-vn',
-  ktb: 'ktb-ethi-zz',
-  ktc: 'ktc-latn-ng',
-  ktd: 'ktd-latn-au',
-  ktf: 'ktf-latn-cd',
-  ktg: 'ktg-latn-au',
-  kth: 'kth-latn-td',
-  kti: 'kti-latn-id',
-  ktj: 'ktj-latn-ci',
-  ktk: 'ktk-latn-pg',
-  ktl: 'ktl-arab-ir',
-  ktm: 'ktm-latn-zz',
-  ktn: 'ktn-latn-br',
-  kto: 'kto-latn-zz',
-  ktp: 'ktp-plrd-cn',
-  ktq: 'ktq-latn-ph',
-  ktr: 'ktr-latn-my',
-  kts: 'kts-latn-id',
-  ktt: 'ktt-latn-id',
-  ktu: 'ktu-latn-cd',
-  ktv: 'ktv-latn-vn',
-  ktw: 'ktw-latn-us',
-  ktx: 'ktx-latn-br',
-  kty: 'kty-latn-cd',
-  ktz: 'ktz-latn-na',
-  ku: 'ku-latn-tr',
-  'ku-arab': 'ku-arab-iq',
-  'ku-lb': 'ku-arab-lb',
-  'ku-yezi': 'ku-yezi-ge',
-  kub: 'kub-latn-zz',
-  kuc: 'kuc-latn-id',
-  kud: 'kud-latn-zz',
-  kue: 'kue-latn-zz',
-  kuf: 'kuf-laoo-la',
-  kug: 'kug-latn-ng',
-  kuh: 'kuh-latn-ng',
-  kui: 'kui-latn-br',
-  kuj: 'kuj-latn-zz',
-  kuk: 'kuk-latn-id',
-  kul: 'kul-latn-ng',
-  kum: 'kum-cyrl-ru',
-  kun: 'kun-latn-zz',
-  kuo: 'kuo-latn-pg',
-  kup: 'kup-latn-zz',
-  kuq: 'kuq-latn-br',
-  kus: 'kus-latn-zz',
-  kut: 'kut-latn-ca',
-  kuu: 'kuu-latn-us',
-  kuv: 'kuv-latn-id',
-  kuw: 'kuw-latn-cf',
-  kux: 'kux-latn-au',
-  kuy: 'kuy-latn-au',
-  kuz: 'kuz-latn-cl',
-  kv: 'kv-cyrl-ru',
-  kva: 'kva-cyrl-ru',
-  kvb: 'kvb-latn-id',
-  kvc: 'kvc-latn-pg',
-  kvd: 'kvd-latn-id',
-  kve: 'kve-latn-my',
-  kvf: 'kvf-latn-td',
-  kvg: 'kvg-latn-zz',
-  kvh: 'kvh-latn-id',
-  kvi: 'kvi-latn-td',
-  kvj: 'kvj-latn-cm',
-  kvl: 'kvl-latn-mm',
-  kvm: 'kvm-latn-cm',
-  kvn: 'kvn-latn-co',
-  kvo: 'kvo-latn-id',
-  kvp: 'kvp-latn-id',
-  kvq: 'kvq-mymr-mm',
-  'kvq-latn': 'kvq-latn-mm',
-  kvr: 'kvr-latn-id',
-  kvt: 'kvt-mymr-mm',
-  kvv: 'kvv-latn-id',
-  kvw: 'kvw-latn-id',
-  kvx: 'kvx-arab-pk',
-  kvy: 'kvy-kali-mm',
-  kvz: 'kvz-latn-id',
-  kw: 'kw-latn-gb',
-  kwa: 'kwa-latn-br',
-  kwb: 'kwb-latn-ng',
-  kwc: 'kwc-latn-cg',
-  kwd: 'kwd-latn-sb',
-  kwe: 'kwe-latn-id',
-  kwf: 'kwf-latn-sb',
-  kwg: 'kwg-latn-td',
-  kwh: 'kwh-latn-id',
-  kwi: 'kwi-latn-co',
-  kwj: 'kwj-latn-zz',
-  kwk: 'kwk-latn-ca',
-  kwl: 'kwl-latn-ng',
-  kwm: 'kwm-latn-na',
-  kwn: 'kwn-latn-na',
-  kwo: 'kwo-latn-zz',
-  kwp: 'kwp-latn-ci',
-  kwq: 'kwq-latn-zz',
-  kwr: 'kwr-latn-id',
-  kws: 'kws-latn-cd',
-  kwt: 'kwt-latn-id',
-  kwu: 'kwu-latn-cm',
-  kwv: 'kwv-latn-td',
-  kww: 'kww-latn-sr',
-  kwy: 'kwy-latn-cd',
-  kwz: 'kwz-latn-ao',
-  kxa: 'kxa-latn-zz',
-  kxb: 'kxb-latn-ci',
-  kxc: 'kxc-ethi-zz',
-  kxd: 'kxd-latn-bn',
-  'kxd-arab': 'kxd-arab-bn',
-  kxe: 'kxe-latn-zz',
-  kxf: 'kxf-mymr-mm',
-  'kxf-latn': 'kxf-latn-mm',
-  kxi: 'kxi-latn-my',
-  kxj: 'kxj-latn-td',
-  kxk: 'kxk-mymr-mm',
-  kxl: 'kxl-deva-in',
-  kxm: 'kxm-thai-th',
-  kxn: 'kxn-latn-my',
-  kxo: 'kxo-latn-br',
-  kxp: 'kxp-arab-pk',
-  kxq: 'kxq-latn-id',
-  kxr: 'kxr-latn-pg',
-  kxt: 'kxt-latn-pg',
-  kxv: 'kxv-orya-in',
-  'kxv-latn': 'kxv-latn-in',
-  'kxv-telu': 'kxv-telu-in',
-  kxw: 'kxw-latn-zz',
-  kxx: 'kxx-latn-cg',
-  kxy: 'kxy-latn-vn',
-  kxz: 'kxz-latn-zz',
-  ky: 'ky-cyrl-kg',
-  'ky-arab': 'ky-arab-cn',
-  'ky-cn': 'ky-arab-cn',
-  'ky-latn': 'ky-latn-tr',
-  'ky-tr': 'ky-latn-tr',
-  kya: 'kya-latn-tz',
-  kyb: 'kyb-latn-ph',
-  kyc: 'kyc-latn-pg',
-  kyd: 'kyd-latn-id',
-  kye: 'kye-latn-zz',
-  kyf: 'kyf-latn-ci',
-  kyg: 'kyg-latn-pg',
-  kyh: 'kyh-latn-us',
-  kyi: 'kyi-latn-my',
-  kyj: 'kyj-latn-ph',
-  kyk: 'kyk-latn-ph',
-  kyl: 'kyl-latn-us',
-  kym: 'kym-latn-cf',
-  kyn: 'kyn-latn-ph',
-  kyo: 'kyo-latn-id',
-  kyq: 'kyq-latn-td',
-  kyr: 'kyr-latn-br',
-  kys: 'kys-latn-my',
-  kyt: 'kyt-latn-id',
-  kyu: 'kyu-kali-mm',
-  'kyu-latn': 'kyu-latn-mm',
-  'kyu-mymr': 'kyu-mymr-mm',
-  kyv: 'kyv-deva-np',
-  kyw: 'kyw-deva-in',
-  'kyw-beng': 'kyw-beng-in',
-  'kyw-orya': 'kyw-orya-in',
-  kyx: 'kyx-latn-zz',
-  kyy: 'kyy-latn-pg',
-  kyz: 'kyz-latn-br',
-  kza: 'kza-latn-bf',
-  kzb: 'kzb-latn-id',
-  kzc: 'kzc-latn-ci',
-  kzd: 'kzd-latn-id',
-  kze: 'kze-latn-pg',
-  kzf: 'kzf-latn-id',
-  kzh: 'kzh-arab-zz',
-  kzi: 'kzi-latn-my',
-  kzj: 'kzj-latn-my',
-  kzk: 'kzk-latn-sb',
-  kzl: 'kzl-latn-id',
-  kzm: 'kzm-latn-id',
-  kzn: 'kzn-latn-mw',
-  kzo: 'kzo-latn-ga',
-  kzp: 'kzp-latn-id',
-  kzr: 'kzr-latn-zz',
-  kzs: 'kzs-latn-my',
-  kzt: 'kzt-latn-my',
-  kzu: 'kzu-latn-id',
-  kzv: 'kzv-latn-id',
-  kzw: 'kzw-latn-br',
-  kzx: 'kzx-latn-id',
-  kzy: 'kzy-latn-cd',
-  kzz: 'kzz-latn-id',
-  la: 'la-latn-va',
-  laa: 'laa-latn-ph',
-  lab: 'lab-lina-gr',
-  lac: 'lac-latn-mx',
-  lad: 'lad-hebr-il',
-  lae: 'lae-deva-in',
-  'lae-tibt': 'lae-tibt-in',
-  lag: 'lag-latn-tz',
-  lah: 'lah-arab-pk',
-  lai: 'lai-latn-mw',
-  laj: 'laj-latn-ug',
-  lal: 'lal-latn-cd',
-  lam: 'lam-latn-zm',
-  lan: 'lan-latn-ng',
-  lap: 'lap-latn-td',
-  laq: 'laq-latn-vn',
-  lar: 'lar-latn-gh',
-  las: 'las-latn-zz',
-  lau: 'lau-latn-id',
-  law: 'law-latn-id',
-  lax: 'lax-latn-in',
-  'lax-beng': 'lax-beng-in',
-  laz: 'laz-latn-pg',
-  lb: 'lb-latn-lu',
-  lbb: 'lbb-latn-pg',
-  lbc: 'lbc-lisu-cn',
-  lbe: 'lbe-cyrl-ru',
-  lbf: 'lbf-deva-in',
-  'lbf-tibt': 'lbf-tibt-cn',
-  lbi: 'lbi-latn-cm',
-  lbj: 'lbj-tibt-in',
-  'lbj-arab': 'lbj-arab-in',
-  lbl: 'lbl-latn-ph',
-  lbm: 'lbm-deva-in',
-  lbn: 'lbn-latn-la',
-  'lbn-laoo': 'lbn-laoo-la',
-  lbo: 'lbo-laoo-la',
-  'lbo-latn': 'lbo-latn-us',
-  lbq: 'lbq-latn-pg',
-  lbr: 'lbr-deva-np',
-  lbt: 'lbt-latn-vn',
-  lbu: 'lbu-latn-zz',
-  lbv: 'lbv-latn-pg',
-  lbw: 'lbw-latn-id',
-  lbx: 'lbx-latn-id',
-  lby: 'lby-latn-au',
-  lbz: 'lbz-latn-au',
-  lcc: 'lcc-latn-id',
-  lcd: 'lcd-latn-id',
-  lce: 'lce-latn-id',
-  lcf: 'lcf-latn-id',
-  lch: 'lch-latn-ao',
-  lcl: 'lcl-latn-id',
-  lcm: 'lcm-latn-zz',
-  lcp: 'lcp-thai-cn',
-  lcq: 'lcq-latn-id',
-  lcs: 'lcs-latn-id',
-  lda: 'lda-latn-ci',
-  ldb: 'ldb-latn-zz',
-  ldd: 'ldd-latn-ng',
-  ldg: 'ldg-latn-ng',
-  ldh: 'ldh-latn-ng',
-  ldi: 'ldi-latn-cg',
-  ldj: 'ldj-latn-ng',
-  ldk: 'ldk-latn-ng',
-  ldl: 'ldl-latn-ng',
-  ldm: 'ldm-latn-gn',
-  ldn: 'ldn-latn-001',
-  ldo: 'ldo-latn-ng',
-  ldp: 'ldp-latn-ng',
-  ldq: 'ldq-latn-ng',
-  lea: 'lea-latn-cd',
-  leb: 'leb-latn-zm',
-  lec: 'lec-latn-bo',
-  led: 'led-latn-zz',
-  lee: 'lee-latn-zz',
-  lef: 'lef-latn-gh',
-  leh: 'leh-latn-zm',
-  lei: 'lei-latn-pg',
-  lej: 'lej-latn-cd',
-  lek: 'lek-latn-pg',
-  lel: 'lel-latn-cd',
-  lem: 'lem-latn-zz',
-  len: 'len-latn-hn',
-  leo: 'leo-latn-cm',
-  lep: 'lep-lepc-in',
-  leq: 'leq-latn-zz',
-  ler: 'ler-latn-pg',
-  les: 'les-latn-cd',
-  let: 'let-latn-pg',
-  leu: 'leu-latn-zz',
-  lev: 'lev-latn-id',
-  lew: 'lew-latn-id',
-  lex: 'lex-latn-id',
-  ley: 'ley-latn-id',
-  lez: 'lez-cyrl-ru',
-  lfa: 'lfa-latn-cm',
-  lfn: 'lfn-latn-001',
-  'lfn-cyrl': 'lfn-cyrl-001',
-  lg: 'lg-latn-ug',
-  lga: 'lga-latn-sb',
-  lgb: 'lgb-latn-sb',
-  lgg: 'lgg-latn-zz',
-  lgh: 'lgh-latn-vn',
-  lgi: 'lgi-latn-id',
-  lgk: 'lgk-latn-vu',
-  lgl: 'lgl-latn-sb',
-  lgm: 'lgm-latn-cd',
-  lgn: 'lgn-latn-et',
-  lgo: 'lgo-latn-ss',
-  lgq: 'lgq-latn-gh',
-  lgr: 'lgr-latn-sb',
-  lgt: 'lgt-latn-pg',
-  lgu: 'lgu-latn-sb',
-  lgz: 'lgz-latn-cd',
-  lha: 'lha-latn-vn',
-  lhh: 'lhh-latn-id',
-  lhi: 'lhi-latn-cn',
-  lhm: 'lhm-deva-np',
-  lhn: 'lhn-latn-my',
-  lhs: 'lhs-syrc-sy',
-  lht: 'lht-latn-vu',
-  lhu: 'lhu-latn-cn',
-  li: 'li-latn-nl',
-  lia: 'lia-latn-zz',
-  lib: 'lib-latn-pg',
-  lic: 'lic-latn-cn',
-  lid: 'lid-latn-zz',
-  lie: 'lie-latn-cd',
-  lif: 'lif-deva-np',
-  'lif-limb': 'lif-limb-in',
-  lig: 'lig-latn-zz',
-  lih: 'lih-latn-zz',
-  lij: 'lij-latn-it',
-  lik: 'lik-latn-cd',
-  lil: 'lil-latn-ca',
-  lio: 'lio-latn-id',
-  lip: 'lip-latn-gh',
-  liq: 'liq-latn-et',
-  lir: 'lir-latn-lr',
-  lis: 'lis-lisu-cn',
-  liu: 'liu-latn-sd',
-  liv: 'liv-latn-lv',
-  liw: 'liw-latn-id',
-  lix: 'lix-latn-id',
-  liy: 'liy-latn-cf',
-  liz: 'liz-latn-cd',
-  lja: 'lja-latn-au',
-  lje: 'lje-latn-id',
-  lji: 'lji-latn-id',
-  ljl: 'ljl-latn-id',
-  ljp: 'ljp-latn-id',
-  ljw: 'ljw-latn-au',
-  ljx: 'ljx-latn-au',
-  lka: 'lka-latn-tl',
-  lkb: 'lkb-latn-ke',
-  lkc: 'lkc-latn-vn',
-  lkd: 'lkd-latn-br',
-  lke: 'lke-latn-ug',
-  lkh: 'lkh-tibt-bt',
-  lki: 'lki-arab-ir',
-  lkj: 'lkj-latn-my',
-  lkl: 'lkl-latn-pg',
-  lkm: 'lkm-latn-au',
-  lkn: 'lkn-latn-vu',
-  lko: 'lko-latn-ke',
-  lkr: 'lkr-latn-ss',
-  lks: 'lks-latn-ke',
-  lkt: 'lkt-latn-us',
-  lku: 'lku-latn-au',
-  lky: 'lky-latn-ss',
-  lla: 'lla-latn-ng',
-  llb: 'llb-latn-mz',
-  llc: 'llc-latn-gn',
-  lld: 'lld-latn-it',
-  lle: 'lle-latn-zz',
-  llf: 'llf-latn-pg',
-  llg: 'llg-latn-id',
-  lli: 'lli-latn-cg',
-  llj: 'llj-latn-au',
-  llk: 'llk-latn-my',
-  lll: 'lll-latn-pg',
-  llm: 'llm-latn-id',
-  lln: 'lln-latn-zz',
-  llp: 'llp-latn-vu',
-  llq: 'llq-latn-id',
-  llu: 'llu-latn-sb',
-  llx: 'llx-latn-fj',
-  lma: 'lma-latn-gn',
-  lmb: 'lmb-latn-vu',
-  lmc: 'lmc-latn-au',
-  lmd: 'lmd-latn-sd',
-  lme: 'lme-latn-td',
-  lmf: 'lmf-latn-id',
-  lmg: 'lmg-latn-pg',
-  lmh: 'lmh-deva-np',
-  lmi: 'lmi-latn-cd',
-  lmj: 'lmj-latn-id',
-  lmk: 'lmk-latn-in',
-  'lmk-mymr': 'lmk-mymr-in',
-  lml: 'lml-latn-vu',
-  lmn: 'lmn-telu-in',
-  lmo: 'lmo-latn-it',
-  lmp: 'lmp-latn-zz',
-  lmq: 'lmq-latn-id',
-  lmr: 'lmr-latn-id',
-  lmu: 'lmu-latn-vu',
-  lmv: 'lmv-latn-fj',
-  lmw: 'lmw-latn-us',
-  lmx: 'lmx-latn-cm',
-  lmy: 'lmy-latn-id',
-  ln: 'ln-latn-cd',
-  lna: 'lna-latn-cf',
-  lnb: 'lnb-latn-na',
-  lnd: 'lnd-latn-id',
-  lnh: 'lnh-latn-my',
-  lni: 'lni-latn-pg',
-  lnj: 'lnj-latn-au',
-  lnl: 'lnl-latn-cf',
-  lnm: 'lnm-latn-pg',
-  lnn: 'lnn-latn-vu',
-  lns: 'lns-latn-zz',
-  lnu: 'lnu-latn-zz',
-  lnw: 'lnw-latn-au',
-  lnz: 'lnz-latn-cd',
-  lo: 'lo-laoo-la',
-  loa: 'loa-latn-id',
-  lob: 'lob-latn-bf',
-  loc: 'loc-latn-ph',
-  loe: 'loe-latn-id',
-  log: 'log-latn-cd',
-  loh: 'loh-latn-ss',
-  loi: 'loi-latn-ci',
-  loj: 'loj-latn-zz',
-  lok: 'lok-latn-zz',
-  lol: 'lol-latn-cd',
-  lom: 'lom-latn-lr',
-  lon: 'lon-latn-mw',
-  loo: 'loo-latn-cd',
-  lop: 'lop-latn-ng',
-  loq: 'loq-latn-cd',
-  lor: 'lor-latn-zz',
-  los: 'los-latn-zz',
-  lot: 'lot-latn-ss',
-  'lot-arab': 'lot-arab-ss',
-  lou: 'lou-latn-us',
-  low: 'low-latn-my',
-  lox: 'lox-latn-id',
-  loy: 'loy-deva-np',
-  'loy-tibt': 'loy-tibt-np',
-  loz: 'loz-latn-zm',
-  lpa: 'lpa-latn-vu',
-  lpe: 'lpe-latn-id',
-  lpn: 'lpn-latn-mm',
-  lpo: 'lpo-plrd-cn',
-  'lpo-lisu': 'lpo-lisu-cn',
-  lpx: 'lpx-latn-ss',
-  lqr: 'lqr-latn-ss',
-  lra: 'lra-latn-my',
-  lrc: 'lrc-arab-ir',
-  lrg: 'lrg-latn-au',
-  lri: 'lri-latn-ke',
-  lrk: 'lrk-arab-pk',
-  lrl: 'lrl-arab-ir',
-  lrm: 'lrm-latn-ke',
-  lrn: 'lrn-latn-id',
-  lro: 'lro-latn-sd',
-  lrt: 'lrt-latn-id',
-  lrv: 'lrv-latn-vu',
-  lrz: 'lrz-latn-vu',
-  lsa: 'lsa-arab-ir',
-  lsd: 'lsd-hebr-il',
-  lse: 'lse-latn-cd',
-  lsi: 'lsi-latn-mm',
-  lsm: 'lsm-latn-ug',
-  lsr: 'lsr-latn-pg',
-  lss: 'lss-arab-pk',
-  lt: 'lt-latn-lt',
-  ltg: 'ltg-latn-lv',
-  lth: 'lth-latn-ug',
-  lti: 'lti-latn-id',
-  ltn: 'ltn-latn-br',
-  lto: 'lto-latn-ke',
-  lts: 'lts-latn-ke',
-  ltu: 'ltu-latn-id',
-  lu: 'lu-latn-cd',
-  lua: 'lua-latn-cd',
-  luc: 'luc-latn-ug',
-  lud: 'lud-latn-ru',
-  lue: 'lue-latn-zm',
-  luf: 'luf-latn-pg',
-  lui: 'lui-latn-us',
-  luj: 'luj-latn-cd',
-  luk: 'luk-tibt-bt',
-  lul: 'lul-latn-ss',
-  lum: 'lum-latn-ao',
-  lun: 'lun-latn-zm',
-  luo: 'luo-latn-ke',
-  lup: 'lup-latn-ga',
-  luq: 'luq-latn-cu',
-  lur: 'lur-latn-id',
-  lus: 'lus-latn-in',
-  'lus-beng': 'lus-beng-bd',
-  'lus-brai': 'lus-brai-in',
-  lut: 'lut-latn-us',
-  luu: 'luu-deva-np',
-  luv: 'luv-arab-om',
-  luw: 'luw-latn-cm',
-  luy: 'luy-latn-ke',
-  luz: 'luz-arab-ir',
-  lv: 'lv-latn-lv',
-  lva: 'lva-latn-tl',
-  lvi: 'lvi-latn-la',
-  lvk: 'lvk-latn-sb',
-  lvu: 'lvu-latn-id',
-  lwa: 'lwa-latn-cd',
-  lwe: 'lwe-latn-id',
-  lwg: 'lwg-latn-ke',
-  lwh: 'lwh-latn-vn',
-  lwl: 'lwl-thai-th',
-  lwm: 'lwm-thai-cn',
-  lwo: 'lwo-latn-ss',
-  'lwo-za': 'lwo-latn-za',
-  lwt: 'lwt-latn-id',
-  lww: 'lww-latn-vu',
-  lxm: 'lxm-latn-pg',
-  lya: 'lya-tibt-bt',
-  lyn: 'lyn-latn-zm',
-  lzh: 'lzh-hans-cn',
-  lzl: 'lzl-latn-vu',
-  lzn: 'lzn-latn-mm',
-  lzz: 'lzz-latn-tr',
-  maa: 'maa-latn-mx',
-  mab: 'mab-latn-mx',
-  mad: 'mad-latn-id',
-  mae: 'mae-latn-ng',
-  maf: 'maf-latn-cm',
-  mag: 'mag-deva-in',
-  mai: 'mai-deva-in',
-  maj: 'maj-latn-mx',
-  mak: 'mak-latn-id',
-  mam: 'mam-latn-gt',
-  man: 'man-latn-gm',
-  'man-gn': 'man-nkoo-gn',
-  'man-nkoo': 'man-nkoo-gn',
-  maq: 'maq-latn-mx',
-  mas: 'mas-latn-ke',
-  mat: 'mat-latn-mx',
-  mau: 'mau-latn-mx',
-  mav: 'mav-latn-br',
-  maw: 'maw-latn-zz',
-  max: 'max-latn-id',
-  maz: 'maz-latn-mx',
-  mba: 'mba-latn-ph',
-  mbb: 'mbb-latn-ph',
-  mbc: 'mbc-latn-br',
-  mbd: 'mbd-latn-ph',
-  mbf: 'mbf-latn-sg',
-  mbh: 'mbh-latn-zz',
-  mbi: 'mbi-latn-ph',
-  mbj: 'mbj-latn-br',
-  mbk: 'mbk-latn-pg',
-  mbl: 'mbl-latn-br',
-  mbm: 'mbm-latn-cg',
-  mbn: 'mbn-latn-co',
-  mbo: 'mbo-latn-zz',
-  mbp: 'mbp-latn-co',
-  mbq: 'mbq-latn-zz',
-  mbr: 'mbr-latn-co',
-  mbs: 'mbs-latn-ph',
-  mbt: 'mbt-latn-ph',
-  mbu: 'mbu-latn-zz',
-  mbv: 'mbv-latn-gn',
-  mbw: 'mbw-latn-zz',
-  mbx: 'mbx-latn-pg',
-  mby: 'mby-arab-pk',
-  mbz: 'mbz-latn-mx',
-  mca: 'mca-latn-py',
-  mcb: 'mcb-latn-pe',
-  mcc: 'mcc-latn-pg',
-  mcd: 'mcd-latn-pe',
-  mce: 'mce-latn-mx',
-  mcf: 'mcf-latn-pe',
-  mcg: 'mcg-latn-ve',
-  mch: 'mch-latn-ve',
-  mci: 'mci-latn-zz',
-  mcj: 'mcj-latn-ng',
-  mck: 'mck-latn-ao',
-  mcl: 'mcl-latn-co',
-  mcm: 'mcm-latn-my',
-  mcn: 'mcn-latn-td',
-  mco: 'mco-latn-mx',
-  mcp: 'mcp-latn-zz',
-  mcq: 'mcq-latn-zz',
-  mcr: 'mcr-latn-zz',
-  mcs: 'mcs-latn-cm',
-  mct: 'mct-latn-cm',
-  mcu: 'mcu-latn-zz',
-  mcv: 'mcv-latn-pg',
-  mcw: 'mcw-latn-td',
-  mcx: 'mcx-latn-cf',
-  mcy: 'mcy-latn-pg',
-  mcz: 'mcz-latn-pg',
-  mda: 'mda-latn-zz',
-  mdb: 'mdb-latn-pg',
-  mdc: 'mdc-latn-pg',
-  mdd: 'mdd-latn-cm',
-  mde: 'mde-arab-zz',
-  mdf: 'mdf-cyrl-ru',
-  mdg: 'mdg-latn-td',
-  mdh: 'mdh-latn-ph',
-  mdi: 'mdi-latn-cd',
-  mdj: 'mdj-latn-zz',
-  mdk: 'mdk-latn-cd',
-  mdm: 'mdm-latn-cd',
-  mdn: 'mdn-latn-cf',
-  mdp: 'mdp-latn-cd',
-  mdq: 'mdq-latn-cd',
-  mdr: 'mdr-latn-id',
-  mds: 'mds-latn-pg',
-  mdt: 'mdt-latn-cg',
-  mdu: 'mdu-latn-cg',
-  mdv: 'mdv-latn-mx',
-  mdw: 'mdw-latn-cg',
-  mdx: 'mdx-ethi-zz',
-  mdy: 'mdy-ethi-et',
-  'mdy-latn': 'mdy-latn-et',
-  mdz: 'mdz-latn-br',
-  mea: 'mea-latn-cm',
-  meb: 'meb-latn-pg',
-  mec: 'mec-latn-au',
-  med: 'med-latn-zz',
-  mee: 'mee-latn-zz',
-  meh: 'meh-latn-mx',
-  mej: 'mej-latn-id',
-  mek: 'mek-latn-zz',
-  mel: 'mel-latn-my',
-  mem: 'mem-latn-au',
-  men: 'men-latn-sl',
-  meo: 'meo-latn-my',
-  'meo-arab': 'meo-arab-my',
-  mep: 'mep-latn-au',
-  meq: 'meq-latn-cm',
-  mer: 'mer-latn-ke',
-  mes: 'mes-latn-td',
-  met: 'met-latn-zz',
-  meu: 'meu-latn-zz',
-  mev: 'mev-latn-lr',
-  mew: 'mew-latn-ng',
-  mey: 'mey-latn-mr',
-  'mey-arab': 'mey-arab-mr',
-  mez: 'mez-latn-us',
-  mfa: 'mfa-arab-th',
-  mfb: 'mfb-latn-id',
-  mfc: 'mfc-latn-cd',
-  mfd: 'mfd-latn-cm',
-  mfe: 'mfe-latn-mu',
-  mff: 'mff-latn-cm',
-  mfg: 'mfg-latn-gn',
-  'mfg-arab': 'mfg-arab-gn',
-  mfh: 'mfh-latn-cm',
-  mfi: 'mfi-arab-cm',
-  'mfi-latn': 'mfi-latn-cm',
-  mfj: 'mfj-latn-cm',
-  mfk: 'mfk-latn-cm',
-  mfl: 'mfl-latn-ng',
-  mfm: 'mfm-latn-ng',
-  mfn: 'mfn-latn-zz',
-  mfo: 'mfo-latn-zz',
-  mfp: 'mfp-latn-id',
-  mfq: 'mfq-latn-zz',
-  mfr: 'mfr-latn-au',
-  mft: 'mft-latn-pg',
-  mfu: 'mfu-latn-ao',
-  mfv: 'mfv-latn-gw',
-  mfw: 'mfw-latn-pg',
-  mfx: 'mfx-latn-et',
-  'mfx-ethi': 'mfx-ethi-et',
-  mfy: 'mfy-latn-mx',
-  mfz: 'mfz-latn-ss',
-  mg: 'mg-latn-mg',
-  mgb: 'mgb-latn-td',
-  mgc: 'mgc-latn-ss',
-  mgd: 'mgd-latn-ss',
-  'mgd-arab': 'mgd-arab-ss',
-  mge: 'mge-latn-td',
-  mgf: 'mgf-latn-id',
-  mgg: 'mgg-latn-cm',
-  mgh: 'mgh-latn-mz',
-  mgi: 'mgi-latn-ng',
-  mgj: 'mgj-latn-ng',
-  mgk: 'mgk-latn-id',
-  mgl: 'mgl-latn-zz',
-  mgm: 'mgm-latn-tl',
-  mgn: 'mgn-latn-cf',
-  mgo: 'mgo-latn-cm',
-  mgp: 'mgp-deva-np',
-  mgq: 'mgq-latn-tz',
-  mgr: 'mgr-latn-zm',
-  mgs: 'mgs-latn-tz',
-  mgt: 'mgt-latn-pg',
-  mgu: 'mgu-latn-pg',
-  mgv: 'mgv-latn-tz',
-  mgw: 'mgw-latn-tz',
-  mgy: 'mgy-latn-tz',
-  mgz: 'mgz-latn-tz',
-  mh: 'mh-latn-mh',
-  mhb: 'mhb-latn-ga',
-  mhc: 'mhc-latn-mx',
-  mhd: 'mhd-latn-tz',
-  mhe: 'mhe-latn-my',
-  mhf: 'mhf-latn-pg',
-  mhg: 'mhg-latn-au',
-  mhi: 'mhi-latn-zz',
-  mhj: 'mhj-arab-af',
-  mhk: 'mhk-latn-cm',
-  mhl: 'mhl-latn-zz',
-  mhm: 'mhm-latn-mz',
-  mhn: 'mhn-latn-it',
-  mho: 'mho-latn-zm',
-  mhp: 'mhp-latn-id',
-  mhq: 'mhq-latn-us',
-  mhs: 'mhs-latn-id',
-  mht: 'mht-latn-ve',
-  mhu: 'mhu-latn-in',
-  mhw: 'mhw-latn-bw',
-  mhx: 'mhx-latn-mm',
-  mhy: 'mhy-latn-id',
-  mhz: 'mhz-latn-id',
-  mi: 'mi-latn-nz',
-  mia: 'mia-latn-us',
-  mib: 'mib-latn-mx',
-  mic: 'mic-latn-ca',
-  mid: 'mid-mand-iq',
-  mie: 'mie-latn-mx',
-  mif: 'mif-latn-zz',
-  mig: 'mig-latn-mx',
-  mih: 'mih-latn-mx',
-  mii: 'mii-latn-mx',
-  mij: 'mij-latn-cm',
-  mik: 'mik-latn-us',
-  mil: 'mil-latn-mx',
-  mim: 'mim-latn-mx',
-  min: 'min-latn-id',
-  mio: 'mio-latn-mx',
-  mip: 'mip-latn-mx',
-  miq: 'miq-latn-ni',
-  mir: 'mir-latn-mx',
-  mit: 'mit-latn-mx',
-  miu: 'miu-latn-mx',
-  miw: 'miw-latn-zz',
-  mix: 'mix-latn-mx',
-  miy: 'miy-latn-mx',
-  miz: 'miz-latn-mx',
-  mjb: 'mjb-latn-tl',
-  mjc: 'mjc-latn-mx',
-  mjd: 'mjd-latn-us',
-  mje: 'mje-latn-td',
-  mjg: 'mjg-latn-cn',
-  mjh: 'mjh-latn-tz',
-  mji: 'mji-latn-cn',
-  mjj: 'mjj-latn-pg',
-  mjk: 'mjk-latn-pg',
-  mjl: 'mjl-deva-in',
-  'mjl-takr': 'mjl-takr-in',
-  mjm: 'mjm-latn-pg',
-  mjn: 'mjn-latn-pg',
-  mjq: 'mjq-mlym-in',
-  mjr: 'mjr-mlym-in',
-  mjs: 'mjs-latn-ng',
-  mjt: 'mjt-deva-in',
-  'mjt-beng': 'mjt-beng-bd',
-  mju: 'mju-telu-in',
-  mjv: 'mjv-mlym-in',
-  mjw: 'mjw-latn-in',
-  mjx: 'mjx-latn-bd',
-  'mjx-beng': 'mjx-beng-bd',
-  mjy: 'mjy-latn-us',
-  mjz: 'mjz-deva-np',
-  mk: 'mk-cyrl-mk',
-  mka: 'mka-latn-ci',
-  mkb: 'mkb-deva-in',
-  mkc: 'mkc-latn-pg',
-  mke: 'mke-deva-in',
-  mkf: 'mkf-latn-ng',
-  mki: 'mki-arab-zz',
-  mkj: 'mkj-latn-fm',
-  mkk: 'mkk-latn-cm',
-  mkl: 'mkl-latn-zz',
-  mkm: 'mkm-thai-th',
-  mkn: 'mkn-latn-id',
-  mko: 'mko-latn-ng',
-  mkp: 'mkp-latn-zz',
-  mkr: 'mkr-latn-pg',
-  mks: 'mks-latn-mx',
-  mkt: 'mkt-latn-nc',
-  mku: 'mku-latn-gn',
-  mkv: 'mkv-latn-vu',
-  mkw: 'mkw-latn-zz',
-  mkx: 'mkx-latn-ph',
-  mky: 'mky-latn-id',
-  mkz: 'mkz-latn-tl',
-  ml: 'ml-mlym-in',
-  mla: 'mla-latn-vu',
-  mlb: 'mlb-latn-cm',
-  mlc: 'mlc-latn-vn',
-  mle: 'mle-latn-zz',
-  mlf: 'mlf-thai-la',
-  'mlf-latn': 'mlf-latn-la',
-  mlh: 'mlh-latn-pg',
-  mli: 'mli-latn-id',
-  mlj: 'mlj-latn-td',
-  mlk: 'mlk-latn-ke',
-  mll: 'mll-latn-vu',
-  mln: 'mln-latn-sb',
-  mlo: 'mlo-latn-sn',
-  mlp: 'mlp-latn-zz',
-  mlq: 'mlq-latn-sn',
-  'mlq-arab': 'mlq-arab-sn',
-  mlr: 'mlr-latn-cm',
-  mls: 'mls-latn-sd',
-  mlu: 'mlu-latn-sb',
-  mlv: 'mlv-latn-vu',
-  mlw: 'mlw-latn-cm',
-  mlx: 'mlx-latn-vu',
-  mlz: 'mlz-latn-ph',
-  mma: 'mma-latn-ng',
-  mmb: 'mmb-latn-id',
-  mmc: 'mmc-latn-mx',
-  mmd: 'mmd-latn-cn',
-  'mmd-hans': 'mmd-hans-cn',
-  'mmd-hant': 'mmd-hant-cn',
-  mme: 'mme-latn-vu',
-  mmf: 'mmf-latn-ng',
-  mmg: 'mmg-latn-vu',
-  mmh: 'mmh-latn-br',
-  mmi: 'mmi-latn-pg',
-  mmm: 'mmm-latn-vu',
-  mmn: 'mmn-latn-ph',
-  mmo: 'mmo-latn-zz',
-  mmp: 'mmp-latn-pg',
-  mmq: 'mmq-latn-pg',
-  mmr: 'mmr-latn-cn',
-  mmt: 'mmt-latn-pg',
-  mmu: 'mmu-latn-zz',
-  mmv: 'mmv-latn-br',
-  mmw: 'mmw-latn-vu',
-  mmx: 'mmx-latn-zz',
-  mmy: 'mmy-latn-td',
-  mmz: 'mmz-latn-cd',
-  mn: 'mn-cyrl-mn',
-  'mn-cn': 'mn-mong-cn',
-  'mn-mong': 'mn-mong-cn',
-  mna: 'mna-latn-zz',
-  mnb: 'mnb-latn-id',
-  mnd: 'mnd-latn-br',
-  mne: 'mne-latn-td',
-  mnf: 'mnf-latn-zz',
-  mng: 'mng-latn-vn',
-  mnh: 'mnh-latn-cd',
-  mni: 'mni-beng-in',
-  mnj: 'mnj-arab-af',
-  mnl: 'mnl-latn-vu',
-  mnm: 'mnm-latn-pg',
-  mnn: 'mnn-latn-vn',
-  mnp: 'mnp-latn-cn',
-  mnq: 'mnq-latn-my',
-  mnr: 'mnr-latn-us',
-  mns: 'mns-cyrl-ru',
-  mnu: 'mnu-latn-id',
-  mnv: 'mnv-latn-sb',
-  mnw: 'mnw-mymr-mm',
-  mnx: 'mnx-latn-id',
-  mny: 'mny-latn-mz',
-  mnz: 'mnz-latn-id',
-  mo: 'mo-latn-ro',
-  moa: 'moa-latn-zz',
-  moc: 'moc-latn-ar',
-  mod: 'mod-latn-us',
-  moe: 'moe-latn-ca',
-  mog: 'mog-latn-id',
-  moh: 'moh-latn-ca',
-  moi: 'moi-latn-ng',
-  moj: 'moj-latn-cg',
-  mok: 'mok-latn-id',
-  mom: 'mom-latn-ni',
-  moo: 'moo-latn-vn',
-  mop: 'mop-latn-bz',
-  moq: 'moq-latn-id',
-  mor: 'mor-latn-sd',
-  mos: 'mos-latn-bf',
-  mot: 'mot-latn-co',
-  mou: 'mou-latn-td',
-  mov: 'mov-latn-us',
-  mow: 'mow-latn-cg',
-  mox: 'mox-latn-zz',
-  moy: 'moy-latn-et',
-  'moy-ethi': 'moy-ethi-et',
-  moz: 'moz-latn-td',
-  mpa: 'mpa-latn-tz',
-  mpb: 'mpb-latn-au',
-  mpc: 'mpc-latn-au',
-  mpd: 'mpd-latn-br',
-  mpe: 'mpe-latn-et',
-  'mpe-ethi': 'mpe-ethi-et',
-  mpg: 'mpg-latn-td',
-  mph: 'mph-latn-au',
-  mpi: 'mpi-latn-cm',
-  mpj: 'mpj-latn-au',
-  mpk: 'mpk-latn-td',
-  mpl: 'mpl-latn-pg',
-  mpm: 'mpm-latn-mx',
-  mpn: 'mpn-latn-pg',
-  mpo: 'mpo-latn-pg',
-  mpp: 'mpp-latn-zz',
-  mpq: 'mpq-latn-br',
-  mpr: 'mpr-latn-sb',
-  mps: 'mps-latn-zz',
-  mpt: 'mpt-latn-zz',
-  mpu: 'mpu-latn-br',
-  mpv: 'mpv-latn-pg',
-  mpw: 'mpw-latn-br',
-  mpx: 'mpx-latn-zz',
-  mpy: 'mpy-latn-id',
-  mpz: 'mpz-thai-th',
-  mqa: 'mqa-latn-id',
-  mqb: 'mqb-latn-cm',
-  mqc: 'mqc-latn-id',
-  mqe: 'mqe-latn-pg',
-  mqf: 'mqf-latn-id',
-  mqg: 'mqg-latn-id',
-  mqh: 'mqh-latn-mx',
-  mqi: 'mqi-latn-id',
-  mqj: 'mqj-latn-id',
-  mqk: 'mqk-latn-ph',
-  mql: 'mql-latn-zz',
-  mqm: 'mqm-latn-pf',
-  mqn: 'mqn-latn-id',
-  mqo: 'mqo-latn-id',
-  mqp: 'mqp-latn-id',
-  mqq: 'mqq-latn-my',
-  mqr: 'mqr-latn-id',
-  mqs: 'mqs-latn-id',
-  mqu: 'mqu-latn-ss',
-  mqv: 'mqv-latn-pg',
-  mqw: 'mqw-latn-pg',
-  mqx: 'mqx-latn-id',
-  'mqx-bugi': 'mqx-bugi-id',
-  mqy: 'mqy-latn-id',
-  mqz: 'mqz-latn-pg',
-  mr: 'mr-deva-in',
-  mra: 'mra-thai-th',
-  mrb: 'mrb-latn-vu',
-  mrc: 'mrc-latn-us',
-  mrd: 'mrd-deva-np',
-  mrf: 'mrf-latn-id',
-  mrg: 'mrg-latn-in',
-  'mrg-beng': 'mrg-beng-in',
-  'mrg-deva': 'mrg-deva-in',
-  mrh: 'mrh-latn-in',
-  mrj: 'mrj-cyrl-ru',
-  mrk: 'mrk-latn-nc',
-  mrl: 'mrl-latn-fm',
-  mrm: 'mrm-latn-vu',
-  mrn: 'mrn-latn-sb',
-  mro: 'mro-mroo-bd',
-  mrp: 'mrp-latn-vu',
-  mrq: 'mrq-latn-pf',
-  mrr: 'mrr-deva-in',
-  mrs: 'mrs-latn-vu',
-  mrt: 'mrt-latn-ng',
-  mru: 'mru-latn-cm',
-  mrv: 'mrv-latn-pf',
-  mrw: 'mrw-latn-ph',
-  'mrw-arab': 'mrw-arab-ph',
-  mrx: 'mrx-latn-id',
-  mry: 'mry-latn-ph',
-  mrz: 'mrz-latn-id',
-  ms: 'ms-latn-my',
-  'ms-cc': 'ms-arab-cc',
-  msb: 'msb-latn-ph',
-  msc: 'msc-latn-gn',
-  mse: 'mse-latn-td',
-  msf: 'msf-latn-id',
-  msg: 'msg-latn-id',
-  msh: 'msh-latn-mg',
-  msi: 'msi-latn-my',
-  msj: 'msj-latn-cd',
-  msk: 'msk-latn-ph',
-  msl: 'msl-latn-id',
-  msm: 'msm-latn-ph',
-  msn: 'msn-latn-vu',
-  mso: 'mso-latn-id',
-  msp: 'msp-latn-br',
-  msq: 'msq-latn-nc',
-  mss: 'mss-latn-id',
-  msu: 'msu-latn-pg',
-  msv: 'msv-latn-cm',
-  msw: 'msw-latn-gw',
-  msx: 'msx-latn-pg',
-  msy: 'msy-latn-pg',
-  msz: 'msz-latn-pg',
-  mt: 'mt-latn-mt',
-  mta: 'mta-latn-ph',
-  mtb: 'mtb-latn-ci',
-  mtc: 'mtc-latn-zz',
-  mtd: 'mtd-latn-id',
-  mte: 'mte-latn-sb',
-  mtf: 'mtf-latn-zz',
-  mtg: 'mtg-latn-id',
-  mth: 'mth-latn-id',
-  mti: 'mti-latn-zz',
-  mtj: 'mtj-latn-id',
-  mtk: 'mtk-latn-cm',
-  mtl: 'mtl-latn-ng',
-  mtm: 'mtm-cyrl-ru',
-  mtn: 'mtn-latn-ni',
-  mto: 'mto-latn-mx',
-  mtp: 'mtp-latn-bo',
-  mtq: 'mtq-latn-vn',
-  mtr: 'mtr-deva-in',
-  mts: 'mts-latn-pe',
-  mtt: 'mtt-latn-vu',
-  mtu: 'mtu-latn-mx',
-  mtv: 'mtv-latn-pg',
-  mtw: 'mtw-latn-ph',
-  mtx: 'mtx-latn-mx',
-  mty: 'mty-latn-pg',
-  mua: 'mua-latn-cm',
-  mub: 'mub-latn-td',
-  muc: 'muc-latn-cm',
-  mud: 'mud-cyrl-ru',
-  mue: 'mue-latn-ec',
-  mug: 'mug-latn-cm',
-  muh: 'muh-latn-ss',
-  mui: 'mui-latn-id',
-  muj: 'muj-latn-td',
-  muk: 'muk-tibt-np',
-  mum: 'mum-latn-pg',
-  muo: 'muo-latn-cm',
-  muq: 'muq-latn-cn',
-  mur: 'mur-latn-zz',
-  mus: 'mus-latn-us',
-  mut: 'mut-deva-in',
-  muu: 'muu-latn-ke',
-  muv: 'muv-taml-in',
-  mux: 'mux-latn-pg',
-  muy: 'muy-latn-cm',
-  muz: 'muz-ethi-et',
-  'muz-latn': 'muz-latn-et',
-  mva: 'mva-latn-zz',
-  mvd: 'mvd-latn-id',
-  mvf: 'mvf-mong-cn',
-  'mvf-phag': 'mvf-phag-cn',
-  mvg: 'mvg-latn-mx',
-  mvh: 'mvh-latn-td',
-  mvk: 'mvk-latn-pg',
-  mvl: 'mvl-latn-au',
-  mvn: 'mvn-latn-zz',
-  mvo: 'mvo-latn-sb',
-  mvp: 'mvp-latn-id',
-  mvq: 'mvq-latn-pg',
-  mvr: 'mvr-latn-id',
-  mvs: 'mvs-latn-id',
-  mvt: 'mvt-latn-vu',
-  mvu: 'mvu-latn-td',
-  mvv: 'mvv-latn-my',
-  mvw: 'mvw-latn-tz',
-  mvx: 'mvx-latn-id',
-  mvy: 'mvy-arab-pk',
-  mvz: 'mvz-ethi-et',
-  'mvz-arab': 'mvz-arab-et',
-  mwa: 'mwa-latn-pg',
-  mwb: 'mwb-latn-pg',
-  mwc: 'mwc-latn-pg',
-  mwe: 'mwe-latn-tz',
-  mwf: 'mwf-latn-au',
-  mwg: 'mwg-latn-pg',
-  mwh: 'mwh-latn-pg',
-  mwi: 'mwi-latn-vu',
-  mwk: 'mwk-latn-ml',
-  mwl: 'mwl-latn-pt',
-  mwm: 'mwm-latn-td',
-  mwn: 'mwn-latn-zm',
-  mwo: 'mwo-latn-vu',
-  mwp: 'mwp-latn-au',
-  mwq: 'mwq-latn-mm',
-  mwr: 'mwr-deva-in',
-  mws: 'mws-latn-ke',
-  mwt: 'mwt-mymr-mm',
-  'mwt-thai': 'mwt-thai-th',
-  mwu: 'mwu-latn-ss',
-  mwv: 'mwv-latn-id',
-  mww: 'mww-hmnp-us',
-  mwz: 'mwz-latn-cd',
-  mxa: 'mxa-latn-mx',
-  mxb: 'mxb-latn-mx',
-  mxc: 'mxc-latn-zw',
-  mxd: 'mxd-latn-id',
-  mxe: 'mxe-latn-vu',
-  mxf: 'mxf-latn-cm',
-  mxg: 'mxg-latn-ao',
-  mxh: 'mxh-latn-cd',
-  mxi: 'mxi-latn-es',
-  mxj: 'mxj-latn-in',
-  mxk: 'mxk-latn-pg',
-  mxl: 'mxl-latn-bj',
-  mxm: 'mxm-latn-zz',
-  mxn: 'mxn-latn-id',
-  mxo: 'mxo-latn-zm',
-  mxp: 'mxp-latn-mx',
-  mxq: 'mxq-latn-mx',
-  mxr: 'mxr-latn-my',
-  mxs: 'mxs-latn-mx',
-  mxt: 'mxt-latn-mx',
-  mxu: 'mxu-latn-cm',
-  mxv: 'mxv-latn-mx',
-  mxw: 'mxw-latn-pg',
-  mxx: 'mxx-latn-ci',
-  mxy: 'mxy-latn-mx',
-  mxz: 'mxz-latn-id',
-  my: 'my-mymr-mm',
-  myb: 'myb-latn-td',
-  myc: 'myc-latn-cd',
-  mye: 'mye-latn-ga',
-  myf: 'myf-latn-et',
-  myg: 'myg-latn-cm',
-  myh: 'myh-latn-us',
-  myj: 'myj-latn-ss',
-  myk: 'myk-latn-zz',
-  myl: 'myl-latn-id',
-  mym: 'mym-ethi-zz',
-  myp: 'myp-latn-br',
-  myr: 'myr-latn-pe',
-  myu: 'myu-latn-br',
-  myv: 'myv-cyrl-ru',
-  myw: 'myw-latn-zz',
-  myx: 'myx-latn-ug',
-  myy: 'myy-latn-co',
-  myz: 'myz-mand-ir',
-  mza: 'mza-latn-mx',
-  mzd: 'mzd-latn-cm',
-  mze: 'mze-latn-pg',
-  mzh: 'mzh-latn-ar',
-  mzi: 'mzi-latn-mx',
-  mzj: 'mzj-latn-lr',
-  mzk: 'mzk-latn-zz',
-  mzl: 'mzl-latn-mx',
-  mzm: 'mzm-latn-zz',
-  mzn: 'mzn-arab-ir',
-  mzo: 'mzo-latn-br',
-  mzp: 'mzp-latn-zz',
-  mzq: 'mzq-latn-id',
-  mzr: 'mzr-latn-br',
-  mzt: 'mzt-latn-my',
-  mzu: 'mzu-latn-pg',
-  mzv: 'mzv-latn-cf',
-  mzw: 'mzw-latn-zz',
-  mzx: 'mzx-latn-gy',
-  mzz: 'mzz-latn-zz',
-  na: 'na-latn-nr',
-  naa: 'naa-latn-id',
-  nab: 'nab-latn-br',
-  nac: 'nac-latn-zz',
-  nae: 'nae-latn-id',
-  naf: 'naf-latn-zz',
-  nag: 'nag-latn-in',
-  naj: 'naj-latn-gn',
-  nak: 'nak-latn-zz',
-  nal: 'nal-latn-pg',
-  nam: 'nam-latn-au',
-  nan: 'nan-hans-cn',
-  nao: 'nao-deva-np',
-  nap: 'nap-latn-it',
-  naq: 'naq-latn-na',
-  nar: 'nar-latn-ng',
-  nas: 'nas-latn-zz',
-  nat: 'nat-latn-ng',
-  naw: 'naw-latn-gh',
-  nax: 'nax-latn-pg',
-  nay: 'nay-latn-au',
-  naz: 'naz-latn-mx',
-  nb: 'nb-latn-no',
-  nba: 'nba-latn-ao',
-  nbb: 'nbb-latn-ng',
-  nbc: 'nbc-latn-in',
-  nbd: 'nbd-latn-cd',
-  nbe: 'nbe-latn-in',
-  nbh: 'nbh-latn-ng',
-  nbi: 'nbi-latn-in',
-  nbj: 'nbj-latn-au',
-  nbk: 'nbk-latn-pg',
-  nbm: 'nbm-latn-cf',
-  nbn: 'nbn-latn-id',
-  nbo: 'nbo-latn-ng',
-  nbp: 'nbp-latn-ng',
-  nbq: 'nbq-latn-id',
-  nbr: 'nbr-latn-ng',
-  nbt: 'nbt-latn-in',
-  'nbt-deva': 'nbt-deva-in',
-  nbu: 'nbu-latn-in',
-  nbv: 'nbv-latn-cm',
-  nbw: 'nbw-latn-cd',
-  nby: 'nby-latn-pg',
-  nca: 'nca-latn-zz',
-  ncb: 'ncb-latn-in',
-  'ncb-deva': 'ncb-deva-in',
-  ncc: 'ncc-latn-pg',
-  ncd: 'ncd-deva-np',
-  nce: 'nce-latn-zz',
-  ncf: 'ncf-latn-zz',
-  ncg: 'ncg-latn-ca',
-  nch: 'nch-latn-mx',
-  nci: 'nci-latn-mx',
-  ncj: 'ncj-latn-mx',
-  nck: 'nck-latn-au',
-  ncl: 'ncl-latn-mx',
-  ncm: 'ncm-latn-pg',
-  ncn: 'ncn-latn-pg',
-  nco: 'nco-latn-zz',
-  ncq: 'ncq-laoo-la',
-  'ncq-thai': 'ncq-thai-la',
-  ncr: 'ncr-latn-cm',
-  nct: 'nct-latn-in',
-  'nct-beng': 'nct-beng-in',
-  ncu: 'ncu-latn-zz',
-  ncx: 'ncx-latn-mx',
-  ncz: 'ncz-latn-us',
-  nd: 'nd-latn-zw',
-  nda: 'nda-latn-cg',
-  ndb: 'ndb-latn-cm',
-  ndc: 'ndc-latn-mz',
-  ndd: 'ndd-latn-ng',
-  ndf: 'ndf-cyrl-ru',
-  ndg: 'ndg-latn-tz',
-  ndh: 'ndh-latn-tz',
-  ndi: 'ndi-latn-ng',
-  ndj: 'ndj-latn-tz',
-  ndk: 'ndk-latn-cd',
-  ndl: 'ndl-latn-cd',
-  ndm: 'ndm-latn-td',
-  ndn: 'ndn-latn-cg',
-  ndp: 'ndp-latn-ug',
-  ndq: 'ndq-latn-ao',
-  ndr: 'ndr-latn-ng',
-  nds: 'nds-latn-de',
-  ndt: 'ndt-latn-cd',
-  ndu: 'ndu-latn-cm',
-  ndv: 'ndv-latn-sn',
-  ndw: 'ndw-latn-cd',
-  ndx: 'ndx-latn-id',
-  ndy: 'ndy-latn-cf',
-  'ndy-td': 'ndy-latn-td',
-  ndz: 'ndz-latn-ss',
-  ne: 'ne-deva-np',
-  nea: 'nea-latn-id',
-  neb: 'neb-latn-zz',
-  nec: 'nec-latn-id',
-  ned: 'ned-latn-ng',
-  nee: 'nee-latn-nc',
-  neg: 'neg-cyrl-ru',
-  neh: 'neh-tibt-bt',
-  nei: 'nei-xsux-tr',
-  nej: 'nej-latn-pg',
-  nek: 'nek-latn-nc',
-  nem: 'nem-latn-nc',
-  nen: 'nen-latn-nc',
-  neo: 'neo-latn-vn',
-  neq: 'neq-latn-mx',
-  ner: 'ner-latn-id',
-  net: 'net-latn-pg',
-  neu: 'neu-latn-001',
-  new: 'new-deva-np',
-  nex: 'nex-latn-zz',
-  ney: 'ney-latn-ci',
-  nez: 'nez-latn-us',
-  nfa: 'nfa-latn-id',
-  nfd: 'nfd-latn-ng',
-  nfl: 'nfl-latn-sb',
-  nfr: 'nfr-latn-zz',
-  nfu: 'nfu-latn-cm',
-  ng: 'ng-latn-na',
-  nga: 'nga-latn-zz',
-  ngb: 'ngb-latn-zz',
-  ngc: 'ngc-latn-cd',
-  ngd: 'ngd-latn-cf',
-  nge: 'nge-latn-cm',
-  ngg: 'ngg-latn-cf',
-  ngh: 'ngh-latn-za',
-  ngi: 'ngi-latn-ng',
-  ngj: 'ngj-latn-cm',
-  ngk: 'ngk-latn-au',
-  ngl: 'ngl-latn-mz',
-  ngm: 'ngm-latn-fm',
-  ngn: 'ngn-latn-cm',
-  ngp: 'ngp-latn-tz',
-  ngq: 'ngq-latn-tz',
-  ngr: 'ngr-latn-sb',
-  ngs: 'ngs-latn-ng',
-  ngt: 'ngt-laoo-la',
-  ngu: 'ngu-latn-mx',
-  ngv: 'ngv-latn-cm',
-  ngw: 'ngw-latn-ng',
-  ngx: 'ngx-latn-ng',
-  ngy: 'ngy-latn-cm',
-  ngz: 'ngz-latn-cg',
-  nha: 'nha-latn-au',
-  nhb: 'nhb-latn-zz',
-  nhc: 'nhc-latn-mx',
-  nhd: 'nhd-latn-py',
-  nhe: 'nhe-latn-mx',
-  nhf: 'nhf-latn-au',
-  nhg: 'nhg-latn-mx',
-  nhi: 'nhi-latn-mx',
-  nhk: 'nhk-latn-mx',
-  nhm: 'nhm-latn-mx',
-  nhn: 'nhn-latn-mx',
-  nho: 'nho-latn-pg',
-  nhp: 'nhp-latn-mx',
-  nhq: 'nhq-latn-mx',
-  nhr: 'nhr-latn-bw',
-  nht: 'nht-latn-mx',
-  nhu: 'nhu-latn-cm',
-  nhv: 'nhv-latn-mx',
-  nhw: 'nhw-latn-mx',
-  nhx: 'nhx-latn-mx',
-  nhy: 'nhy-latn-mx',
-  nhz: 'nhz-latn-mx',
-  nia: 'nia-latn-id',
-  nib: 'nib-latn-pg',
-  nid: 'nid-latn-au',
-  nie: 'nie-latn-td',
-  nif: 'nif-latn-zz',
-  nig: 'nig-latn-au',
-  nih: 'nih-latn-tz',
-  nii: 'nii-latn-zz',
-  nij: 'nij-latn-id',
-  nil: 'nil-latn-id',
-  nim: 'nim-latn-tz',
-  nin: 'nin-latn-zz',
-  nio: 'nio-cyrl-ru',
-  niq: 'niq-latn-ke',
-  nir: 'nir-latn-id',
-  nis: 'nis-latn-pg',
-  nit: 'nit-telu-in',
-  niu: 'niu-latn-nu',
-  niv: 'niv-cyrl-ru',
-  'niv-latn': 'niv-latn-ru',
-  niw: 'niw-latn-pg',
-  nix: 'nix-latn-cd',
-  niy: 'niy-latn-zz',
-  niz: 'niz-latn-zz',
-  nja: 'nja-latn-ng',
-  njb: 'njb-latn-in',
-  njd: 'njd-latn-tz',
-  njh: 'njh-latn-in',
-  nji: 'nji-latn-au',
-  njj: 'njj-latn-cm',
-  njl: 'njl-latn-ss',
-  njm: 'njm-latn-in',
-  njn: 'njn-latn-in',
-  njo: 'njo-latn-in',
-  njr: 'njr-latn-ng',
-  njs: 'njs-latn-id',
-  njt: 'njt-latn-sr',
-  nju: 'nju-latn-au',
-  njx: 'njx-latn-cg',
-  njy: 'njy-latn-cm',
-  njz: 'njz-latn-in',
-  'njz-beng': 'njz-beng-in',
-  nka: 'nka-latn-zm',
-  nkb: 'nkb-latn-in',
-  nkc: 'nkc-latn-cm',
-  nkd: 'nkd-latn-in',
-  nke: 'nke-latn-sb',
-  nkf: 'nkf-latn-in',
-  nkg: 'nkg-latn-zz',
-  nkh: 'nkh-latn-in',
-  nki: 'nki-latn-in',
-  'nki-beng': 'nki-beng-in',
-  nkj: 'nkj-latn-id',
-  nkk: 'nkk-latn-vu',
-  nkm: 'nkm-latn-pg',
-  nkn: 'nkn-latn-ao',
-  nko: 'nko-latn-zz',
-  nkq: 'nkq-latn-gh',
-  nkr: 'nkr-latn-fm',
-  nks: 'nks-latn-id',
-  nkt: 'nkt-latn-tz',
-  nku: 'nku-latn-ci',
-  nkv: 'nkv-latn-mw',
-  nkw: 'nkw-latn-cd',
-  nkx: 'nkx-latn-ng',
-  nkz: 'nkz-latn-ng',
-  nl: 'nl-latn-nl',
-  nla: 'nla-latn-cm',
-  nlc: 'nlc-latn-id',
-  nle: 'nle-latn-ke',
-  nlg: 'nlg-latn-sb',
-  nli: 'nli-arab-af',
-  nlj: 'nlj-latn-cd',
-  nlk: 'nlk-latn-id',
-  nlm: 'nlm-arab-pk',
-  nlo: 'nlo-latn-cd',
-  nlq: 'nlq-latn-mm',
-  nlu: 'nlu-latn-gh',
-  nlv: 'nlv-latn-mx',
-  nlw: 'nlw-latn-au',
-  nlx: 'nlx-deva-in',
-  nly: 'nly-latn-au',
-  nlz: 'nlz-latn-sb',
-  nma: 'nma-latn-in',
-  nmb: 'nmb-latn-vu',
-  nmc: 'nmc-latn-td',
-  nmd: 'nmd-latn-ga',
-  nme: 'nme-latn-in',
-  nmf: 'nmf-latn-in',
-  nmg: 'nmg-latn-cm',
-  nmh: 'nmh-latn-in',
-  nmi: 'nmi-latn-ng',
-  nmj: 'nmj-latn-cf',
-  nmk: 'nmk-latn-vu',
-  nml: 'nml-latn-cm',
-  nmm: 'nmm-deva-np',
-  'nmm-tibt': 'nmm-tibt-np',
-  nmn: 'nmn-latn-bw',
-  nmo: 'nmo-latn-in',
-  'nmo-beng': 'nmo-beng-in',
-  nmp: 'nmp-latn-au',
-  nmq: 'nmq-latn-zw',
-  nmr: 'nmr-latn-cm',
-  nms: 'nms-latn-vu',
-  nmt: 'nmt-latn-fm',
-  nmu: 'nmu-latn-us',
-  nmv: 'nmv-latn-au',
-  nmw: 'nmw-latn-pg',
-  nmx: 'nmx-latn-pg',
-  nmz: 'nmz-latn-zz',
-  nn: 'nn-latn-no',
-  nna: 'nna-latn-au',
-  nnb: 'nnb-latn-cd',
-  nnc: 'nnc-latn-td',
-  nnd: 'nnd-latn-vu',
-  nne: 'nne-latn-ao',
-  nnf: 'nnf-latn-zz',
-  nng: 'nng-latn-in',
-  'nng-beng': 'nng-beng-in',
-  nnh: 'nnh-latn-cm',
-  nni: 'nni-latn-id',
-  nnj: 'nnj-latn-et',
-  nnk: 'nnk-latn-zz',
-  nnl: 'nnl-latn-in',
-  nnm: 'nnm-latn-zz',
-  nnn: 'nnn-latn-td',
-  nnp: 'nnp-wcho-in',
-  nnq: 'nnq-latn-tz',
-  nnr: 'nnr-latn-au',
-  nnt: 'nnt-latn-us',
-  nnu: 'nnu-latn-gh',
-  nnv: 'nnv-latn-au',
-  nnw: 'nnw-latn-bf',
-  nny: 'nny-latn-au',
-  nnz: 'nnz-latn-cm',
-  no: 'no-latn-no',
-  noa: 'noa-latn-co',
-  noc: 'noc-latn-pg',
-  nod: 'nod-lana-th',
-  noe: 'noe-deva-in',
-  nof: 'nof-latn-pg',
-  nog: 'nog-cyrl-ru',
-  noh: 'noh-latn-pg',
-  noi: 'noi-deva-in',
-  noj: 'noj-latn-co',
-  nok: 'nok-latn-us',
-  nom: 'nom-latn-pe',
-  non: 'non-runr-se',
-  nop: 'nop-latn-zz',
-  noq: 'noq-latn-cd',
-  nos: 'nos-yiii-cn',
-  not: 'not-latn-pe',
-  nou: 'nou-latn-zz',
-  nov: 'nov-latn-001',
-  now: 'now-latn-tz',
-  noy: 'noy-latn-td',
-  npb: 'npb-tibt-bt',
-  npg: 'npg-latn-mm',
-  nph: 'nph-latn-in',
-  npl: 'npl-latn-mx',
-  npn: 'npn-latn-pg',
-  npo: 'npo-latn-in',
-  nps: 'nps-latn-id',
-  npu: 'npu-latn-in',
-  npx: 'npx-latn-sb',
-  npy: 'npy-latn-id',
-  nqg: 'nqg-latn-bj',
-  nqk: 'nqk-latn-bj',
-  nql: 'nql-latn-ao',
-  nqm: 'nqm-latn-id',
-  nqn: 'nqn-latn-pg',
-  nqo: 'nqo-nkoo-gn',
-  nqq: 'nqq-latn-mm',
-  nqt: 'nqt-latn-ng',
-  nqy: 'nqy-latn-mm',
-  nr: 'nr-latn-za',
-  nra: 'nra-latn-ga',
-  nrb: 'nrb-latn-zz',
-  nre: 'nre-latn-in',
-  nrf: 'nrf-latn-je',
-  nrg: 'nrg-latn-vu',
-  nri: 'nri-latn-in',
-  nrk: 'nrk-latn-au',
-  nrl: 'nrl-latn-au',
-  nrm: 'nrm-latn-my',
-  nrp: 'nrp-latn-it',
-  nru: 'nru-latn-cn',
-  'nru-hans': 'nru-hans-cn',
-  'nru-hant': 'nru-hant-cn',
-  nrx: 'nrx-latn-au',
-  nrz: 'nrz-latn-pg',
-  nsa: 'nsa-latn-in',
-  nsb: 'nsb-latn-za',
-  nsc: 'nsc-latn-ng',
-  nsd: 'nsd-yiii-cn',
-  nse: 'nse-latn-zm',
-  nsf: 'nsf-yiii-cn',
-  nsg: 'nsg-latn-tz',
-  nsh: 'nsh-latn-cm',
-  nsk: 'nsk-cans-ca',
-  nsm: 'nsm-latn-in',
-  nsn: 'nsn-latn-zz',
-  nso: 'nso-latn-za',
-  nsq: 'nsq-latn-us',
-  nss: 'nss-latn-zz',
-  nst: 'nst-tnsa-in',
-  nsu: 'nsu-latn-mx',
-  nsv: 'nsv-yiii-cn',
-  nsw: 'nsw-latn-vu',
-  nsx: 'nsx-latn-ao',
-  nsy: 'nsy-latn-id',
-  nsz: 'nsz-latn-us',
-  ntd: 'ntd-latn-my',
-  nte: 'nte-latn-mz',
-  ntg: 'ntg-latn-au',
-  nti: 'nti-latn-bf',
-  ntj: 'ntj-latn-au',
-  ntk: 'ntk-latn-tz',
-  ntm: 'ntm-latn-zz',
-  nto: 'nto-latn-cd',
-  ntp: 'ntp-latn-mx',
-  ntr: 'ntr-latn-zz',
-  ntu: 'ntu-latn-sb',
-  ntx: 'ntx-latn-mm',
-  nty: 'nty-yiii-vn',
-  ntz: 'ntz-arab-ir',
-  nua: 'nua-latn-nc',
-  nuc: 'nuc-latn-br',
-  nud: 'nud-latn-pg',
-  nue: 'nue-latn-cd',
-  nuf: 'nuf-latn-cn',
-  nug: 'nug-latn-au',
-  nuh: 'nuh-latn-ng',
-  nui: 'nui-latn-zz',
-  nuj: 'nuj-latn-ug',
-  nuk: 'nuk-latn-ca',
-  num: 'num-latn-to',
-  nun: 'nun-latn-mm',
-  nuo: 'nuo-latn-vn',
-  nup: 'nup-latn-zz',
-  nuq: 'nuq-latn-pg',
-  nur: 'nur-latn-pg',
-  nus: 'nus-latn-ss',
-  nut: 'nut-latn-vn',
-  nuu: 'nuu-latn-cd',
-  nuv: 'nuv-latn-zz',
-  nuw: 'nuw-latn-fm',
-  nux: 'nux-latn-zz',
-  nuy: 'nuy-latn-au',
-  nuz: 'nuz-latn-mx',
-  nv: 'nv-latn-us',
-  nvh: 'nvh-latn-vu',
-  nvm: 'nvm-latn-pg',
-  nvo: 'nvo-latn-cm',
-  nwb: 'nwb-latn-zz',
-  nwc: 'nwc-newa-np',
-  'nwc-brah': 'nwc-brah-np',
-  'nwc-deva': 'nwc-deva-np',
-  'nwc-sidd': 'nwc-sidd-np',
-  nwe: 'nwe-latn-cm',
-  nwg: 'nwg-latn-au',
-  nwi: 'nwi-latn-vu',
-  nwm: 'nwm-latn-ss',
-  nwo: 'nwo-latn-au',
-  nwr: 'nwr-latn-pg',
-  nww: 'nww-latn-tz',
-  nwx: 'nwx-deva-np',
-  nxa: 'nxa-latn-tl',
-  nxd: 'nxd-latn-cd',
-  nxe: 'nxe-latn-id',
-  nxg: 'nxg-latn-id',
-  nxi: 'nxi-latn-tz',
-  nxl: 'nxl-latn-id',
-  nxn: 'nxn-latn-au',
-  nxo: 'nxo-latn-ga',
-  nxq: 'nxq-latn-cn',
-  nxr: 'nxr-latn-zz',
-  nxx: 'nxx-latn-id',
-  ny: 'ny-latn-mw',
-  nyb: 'nyb-latn-gh',
-  nyc: 'nyc-latn-cd',
-  nyd: 'nyd-latn-ke',
-  nye: 'nye-latn-ao',
-  nyf: 'nyf-latn-ke',
-  nyg: 'nyg-latn-cd',
-  nyh: 'nyh-latn-au',
-  nyi: 'nyi-latn-sd',
-  nyj: 'nyj-latn-cd',
-  nyk: 'nyk-latn-ao',
-  nyl: 'nyl-thai-th',
-  nym: 'nym-latn-tz',
-  nyn: 'nyn-latn-ug',
-  nyo: 'nyo-latn-ug',
-  nyp: 'nyp-latn-ug',
-  nyq: 'nyq-arab-ir',
-  nyr: 'nyr-latn-mw',
-  nys: 'nys-latn-au',
-  nyt: 'nyt-latn-au',
-  nyu: 'nyu-latn-mz',
-  nyv: 'nyv-latn-au',
-  nyx: 'nyx-latn-au',
-  nyy: 'nyy-latn-tz',
-  nza: 'nza-latn-cm',
-  nzb: 'nzb-latn-ga',
-  nzd: 'nzd-latn-cd',
-  nzi: 'nzi-latn-gh',
-  nzk: 'nzk-latn-cf',
-  nzm: 'nzm-latn-in',
-  nzu: 'nzu-latn-cg',
-  nzy: 'nzy-latn-td',
-  nzz: 'nzz-latn-ml',
-  oaa: 'oaa-cyrl-ru',
-  oac: 'oac-cyrl-ru',
-  oar: 'oar-syrc-sy',
-  oav: 'oav-geor-ge',
-  obi: 'obi-latn-us',
-  obk: 'obk-latn-ph',
-  obl: 'obl-latn-cm',
-  obm: 'obm-phnx-jo',
-  obo: 'obo-latn-ph',
-  obr: 'obr-mymr-mm',
-  obt: 'obt-latn-fr',
-  obu: 'obu-latn-ng',
-  oc: 'oc-latn-fr',
-  oca: 'oca-latn-pe',
-  oco: 'oco-latn-gb',
-  ocu: 'ocu-latn-mx',
-  oda: 'oda-latn-ng',
-  odk: 'odk-arab-pk',
-  odt: 'odt-latn-nl',
-  odu: 'odu-latn-ng',
-  ofu: 'ofu-latn-ng',
-  ogb: 'ogb-latn-ng',
-  ogc: 'ogc-latn-zz',
-  ogg: 'ogg-latn-ng',
-  ogo: 'ogo-latn-ng',
-  ogu: 'ogu-latn-ng',
-  oht: 'oht-xsux-tr',
-  oia: 'oia-latn-id',
-  oie: 'oie-latn-ss',
-  oin: 'oin-latn-pg',
-  oj: 'oj-cans-ca',
-  ojb: 'ojb-latn-ca',
-  'ojb-cans': 'ojb-cans-ca',
-  ojc: 'ojc-latn-ca',
-  ojs: 'ojs-cans-ca',
-  ojv: 'ojv-latn-sb',
-  ojw: 'ojw-latn-ca',
-  'ojw-cans': 'ojw-cans-ca',
-  oka: 'oka-latn-ca',
-  okb: 'okb-latn-ng',
-  okc: 'okc-latn-cd',
-  okd: 'okd-latn-ng',
-  oke: 'oke-latn-ng',
-  okg: 'okg-latn-au',
-  oki: 'oki-latn-ke',
-  okk: 'okk-latn-pg',
-  okm: 'okm-hang-kr',
-  oko: 'oko-hani-kr',
-  okr: 'okr-latn-zz',
-  oks: 'oks-latn-ng',
-  oku: 'oku-latn-cm',
-  okv: 'okv-latn-zz',
-  okx: 'okx-latn-ng',
-  okz: 'okz-khmr-kh',
-  ola: 'ola-deva-np',
-  'ola-tibt': 'ola-tibt-cn',
-  old: 'old-latn-tz',
-  ole: 'ole-tibt-bt',
-  olk: 'olk-latn-au',
-  olm: 'olm-latn-ng',
-  olo: 'olo-latn-ru',
-  olr: 'olr-latn-vu',
-  olt: 'olt-latn-lt',
-  olu: 'olu-latn-ao',
-  om: 'om-latn-et',
-  oma: 'oma-latn-us',
-  omb: 'omb-latn-vu',
-  omc: 'omc-latn-pe',
-  omg: 'omg-latn-pe',
-  omi: 'omi-latn-cd',
-  omk: 'omk-cyrl-ru',
-  oml: 'oml-latn-cd',
-  omo: 'omo-latn-pg',
-  omp: 'omp-mtei-in',
-  omr: 'omr-modi-in',
-  omt: 'omt-latn-ke',
-  omu: 'omu-latn-pe',
-  omw: 'omw-latn-pg',
-  ona: 'ona-latn-ar',
-  one: 'one-latn-ca',
-  ong: 'ong-latn-zz',
-  oni: 'oni-latn-id',
-  onj: 'onj-latn-pg',
-  onk: 'onk-latn-pg',
-  onn: 'onn-latn-zz',
-  ono: 'ono-latn-ca',
-  onp: 'onp-latn-in',
-  'onp-deva': 'onp-deva-in',
-  onr: 'onr-latn-pg',
-  ons: 'ons-latn-zz',
-  ont: 'ont-latn-pg',
-  onu: 'onu-latn-vu',
-  onx: 'onx-latn-id',
-  ood: 'ood-latn-us',
-  oon: 'oon-deva-in',
-  oor: 'oor-latn-za',
-  opa: 'opa-latn-ng',
-  opk: 'opk-latn-id',
-  opm: 'opm-latn-zz',
-  opo: 'opo-latn-pg',
-  opt: 'opt-latn-mx',
-  opy: 'opy-latn-br',
-  or: 'or-orya-in',
-  ora: 'ora-latn-sb',
-  orc: 'orc-latn-ke',
-  ore: 'ore-latn-pe',
-  org: 'org-latn-ng',
-  orn: 'orn-latn-my',
-  oro: 'oro-latn-zz',
-  orr: 'orr-latn-ng',
-  ors: 'ors-latn-my',
-  ort: 'ort-telu-in',
-  oru: 'oru-arab-zz',
-  orv: 'orv-cyrl-ru',
-  orw: 'orw-latn-br',
-  orx: 'orx-latn-ng',
-  orz: 'orz-latn-id',
-  os: 'os-cyrl-ge',
-  osa: 'osa-osge-us',
-  osc: 'osc-ital-it',
-  'osc-latn': 'osc-latn-it',
-  osi: 'osi-java-id',
-  oso: 'oso-latn-ng',
-  osp: 'osp-latn-es',
-  ost: 'ost-latn-cm',
-  osu: 'osu-latn-pg',
-  osx: 'osx-latn-de',
-  ota: 'ota-arab-zz',
-  otb: 'otb-tibt-cn',
-  otd: 'otd-latn-id',
-  ote: 'ote-latn-mx',
-  oti: 'oti-latn-br',
-  otk: 'otk-orkh-mn',
-  otl: 'otl-latn-mx',
-  otm: 'otm-latn-mx',
-  otn: 'otn-latn-mx',
-  otq: 'otq-latn-mx',
-  otr: 'otr-latn-sd',
-  ots: 'ots-latn-mx',
-  ott: 'ott-latn-mx',
-  otu: 'otu-latn-br',
-  otw: 'otw-latn-ca',
-  otx: 'otx-latn-mx',
-  oty: 'oty-gran-in',
-  otz: 'otz-latn-mx',
-  oub: 'oub-latn-lr',
-  oue: 'oue-latn-pg',
-  oui: 'oui-ougr-143',
-  oum: 'oum-latn-pg',
-  ovd: 'ovd-latn-se',
-  owi: 'owi-latn-pg',
-  owl: 'owl-latn-gb',
-  oyd: 'oyd-latn-et',
-  oym: 'oym-latn-br',
-  oyy: 'oyy-latn-pg',
-  ozm: 'ozm-latn-zz',
-  pa: 'pa-guru-in',
-  'pa-arab': 'pa-arab-pk',
-  'pa-pk': 'pa-arab-pk',
-  pab: 'pab-latn-br',
-  pac: 'pac-latn-vn',
-  pad: 'pad-latn-br',
-  pae: 'pae-latn-cd',
-  paf: 'paf-latn-br',
-  pag: 'pag-latn-ph',
-  pah: 'pah-latn-br',
-  pai: 'pai-latn-ng',
-  pak: 'pak-latn-br',
-  pal: 'pal-phli-ir',
-  'pal-phlp': 'pal-phlp-cn',
-  pam: 'pam-latn-ph',
-  pao: 'pao-latn-us',
-  pap: 'pap-latn-cw',
-  paq: 'paq-cyrl-tj',
-  par: 'par-latn-us',
-  pas: 'pas-latn-id',
-  pau: 'pau-latn-pw',
-  pav: 'pav-latn-br',
-  paw: 'paw-latn-us',
-  pax: 'pax-latn-br',
-  pay: 'pay-latn-hn',
-  paz: 'paz-latn-br',
-  pbb: 'pbb-latn-co',
-  pbc: 'pbc-latn-gy',
-  pbe: 'pbe-latn-mx',
-  pbf: 'pbf-latn-mx',
-  pbg: 'pbg-latn-ve',
-  pbh: 'pbh-latn-ve',
-  pbi: 'pbi-latn-zz',
-  pbl: 'pbl-latn-ng',
-  pbm: 'pbm-latn-mx',
-  pbn: 'pbn-latn-ng',
-  pbo: 'pbo-latn-gw',
-  pbp: 'pbp-latn-gn',
-  pbr: 'pbr-latn-tz',
-  pbs: 'pbs-latn-mx',
-  pbt: 'pbt-arab-af',
-  pbv: 'pbv-latn-in',
-  pby: 'pby-latn-pg',
-  pca: 'pca-latn-mx',
-  pcb: 'pcb-khmr-kh',
-  pcc: 'pcc-latn-cn',
-  'pcc-hani': 'pcc-hani-cn',
-  pcd: 'pcd-latn-fr',
-  pce: 'pce-mymr-mm',
-  'pce-thai': 'pce-thai-th',
-  pcf: 'pcf-mlym-in',
-  pcg: 'pcg-mlym-in',
-  'pcg-knda': 'pcg-knda-in',
-  'pcg-taml': 'pcg-taml-in',
-  pch: 'pch-deva-in',
-  pci: 'pci-deva-in',
-  'pci-orya': 'pci-orya-in',
-  pcj: 'pcj-telu-in',
-  pck: 'pck-latn-in',
-  pcm: 'pcm-latn-ng',
-  pcn: 'pcn-latn-ng',
-  pcp: 'pcp-latn-bo',
-  pcw: 'pcw-latn-ng',
-  pda: 'pda-latn-pg',
-  pdc: 'pdc-latn-us',
-  pdn: 'pdn-latn-id',
-  pdo: 'pdo-latn-id',
-  pdt: 'pdt-latn-ca',
-  pdu: 'pdu-latn-mm',
-  'pdu-mymr': 'pdu-mymr-mm',
-  pea: 'pea-latn-id',
-  peb: 'peb-latn-us',
-  ped: 'ped-latn-zz',
-  pee: 'pee-latn-id',
-  peg: 'peg-orya-in',
-  pei: 'pei-latn-mx',
-  pek: 'pek-latn-pg',
-  pel: 'pel-latn-id',
-  pem: 'pem-latn-cd',
-  peo: 'peo-xpeo-ir',
-  pep: 'pep-latn-pg',
-  peq: 'peq-latn-us',
-  pev: 'pev-latn-ve',
-  pex: 'pex-latn-zz',
-  pey: 'pey-latn-id',
-  pez: 'pez-latn-my',
-  pfa: 'pfa-latn-fm',
-  pfe: 'pfe-latn-cm',
-  pfl: 'pfl-latn-de',
-  pga: 'pga-latn-ss',
-  pgd: 'pgd-khar-pk',
-  pgg: 'pgg-deva-in',
-  pgi: 'pgi-latn-pg',
-  pgk: 'pgk-latn-vu',
-  pgl: 'pgl-ogam-ie',
-  pgn: 'pgn-ital-it',
-  pgs: 'pgs-latn-ng',
-  pgu: 'pgu-latn-id',
-  phd: 'phd-deva-in',
-  phg: 'phg-latn-vn',
-  phh: 'phh-latn-vn',
-  phk: 'phk-mymr-in',
-  phl: 'phl-arab-zz',
-  phm: 'phm-latn-mz',
-  phn: 'phn-phnx-lb',
-  pho: 'pho-laoo-la',
-  phr: 'phr-arab-pk',
-  pht: 'pht-thai-th',
-  phv: 'phv-arab-af',
-  phw: 'phw-deva-np',
-  pi: 'pi-sinh-in',
-  'pi-brah': 'pi-brah-in',
-  'pi-deva': 'pi-deva-in',
-  'pi-khar': 'pi-khar-in',
-  'pi-khmr': 'pi-khmr-in',
-  'pi-mymr': 'pi-mymr-in',
-  'pi-thai': 'pi-thai-in',
-  pia: 'pia-latn-mx',
-  pib: 'pib-latn-pe',
-  pic: 'pic-latn-ga',
-  pid: 'pid-latn-ve',
-  pif: 'pif-latn-fm',
-  pig: 'pig-latn-pe',
-  pih: 'pih-latn-nf',
-  pij: 'pij-latn-co',
-  pil: 'pil-latn-zz',
-  pim: 'pim-latn-us',
-  pin: 'pin-latn-pg',
-  pio: 'pio-latn-co',
-  pip: 'pip-latn-zz',
-  pir: 'pir-latn-br',
-  pis: 'pis-latn-sb',
-  pit: 'pit-latn-au',
-  piu: 'piu-latn-au',
-  piv: 'piv-latn-sb',
-  piw: 'piw-latn-tz',
-  pix: 'pix-latn-pg',
-  piy: 'piy-latn-ng',
-  piz: 'piz-latn-nc',
-  pjt: 'pjt-latn-au',
-  pka: 'pka-brah-in',
-  pkb: 'pkb-latn-ke',
-  pkg: 'pkg-latn-pg',
-  pkh: 'pkh-latn-bd',
-  'pkh-deva': 'pkh-deva-bd',
-  pkn: 'pkn-latn-au',
-  pko: 'pko-latn-ke',
-  pkp: 'pkp-latn-ck',
-  pkr: 'pkr-mlym-in',
-  pku: 'pku-latn-id',
-  pl: 'pl-latn-pl',
-  pla: 'pla-latn-zz',
-  plb: 'plb-latn-vu',
-  plc: 'plc-latn-ph',
-  pld: 'pld-latn-gb',
-  ple: 'ple-latn-id',
-  plg: 'plg-latn-ar',
-  plh: 'plh-latn-id',
-  plj: 'plj-latn-ng',
-  plk: 'plk-arab-pk',
-  pll: 'pll-mymr-mm',
-  pln: 'pln-latn-co',
-  plo: 'plo-latn-mx',
-  plr: 'plr-latn-ci',
-  pls: 'pls-latn-mx',
-  plu: 'plu-latn-br',
-  plv: 'plv-latn-ph',
-  plw: 'plw-latn-ph',
-  plz: 'plz-latn-my',
-  pma: 'pma-latn-vu',
-  pmb: 'pmb-latn-cd',
-  pmd: 'pmd-latn-au',
-  pme: 'pme-latn-nc',
-  pmf: 'pmf-latn-id',
-  pmh: 'pmh-brah-in',
-  pmi: 'pmi-latn-cn',
-  pmj: 'pmj-latn-cn',
-  pml: 'pml-latn-tn',
-  pmm: 'pmm-latn-cm',
-  pmn: 'pmn-latn-cm',
-  pmo: 'pmo-latn-id',
-  pmq: 'pmq-latn-mx',
-  pmr: 'pmr-latn-pg',
-  pms: 'pms-latn-it',
-  pmt: 'pmt-latn-pf',
-  pmw: 'pmw-latn-us',
-  pmx: 'pmx-latn-in',
-  pmy: 'pmy-latn-id',
-  pmz: 'pmz-latn-mx',
-  pna: 'pna-latn-my',
-  pnc: 'pnc-latn-id',
-  pnd: 'pnd-latn-ao',
-  pne: 'pne-latn-my',
-  png: 'png-latn-zz',
-  pnh: 'pnh-latn-ck',
-  pni: 'pni-latn-id',
-  pnj: 'pnj-latn-au',
-  pnk: 'pnk-latn-bo',
-  pnl: 'pnl-latn-bf',
-  pnm: 'pnm-latn-my',
-  pnn: 'pnn-latn-zz',
-  pno: 'pno-latn-pe',
-  pnp: 'pnp-latn-id',
-  pnq: 'pnq-latn-bf',
-  pnr: 'pnr-latn-pg',
-  pns: 'pns-latn-id',
-  pnt: 'pnt-grek-gr',
-  pnv: 'pnv-latn-au',
-  pnw: 'pnw-latn-au',
-  pny: 'pny-latn-cm',
-  pnz: 'pnz-latn-cf',
-  poc: 'poc-latn-gt',
-  poe: 'poe-latn-mx',
-  pof: 'pof-latn-cd',
-  pog: 'pog-latn-br',
-  poh: 'poh-latn-gt',
-  poi: 'poi-latn-mx',
-  pok: 'pok-latn-br',
-  pom: 'pom-latn-us',
-  pon: 'pon-latn-fm',
-  poo: 'poo-latn-us',
-  pop: 'pop-latn-nc',
-  poq: 'poq-latn-mx',
-  pos: 'pos-latn-mx',
-  pot: 'pot-latn-us',
-  pov: 'pov-latn-gw',
-  pow: 'pow-latn-mx',
-  poy: 'poy-latn-tz',
-  ppa: 'ppa-deva-in',
-  ppe: 'ppe-latn-pg',
-  ppi: 'ppi-latn-mx',
-  ppk: 'ppk-latn-id',
-  ppl: 'ppl-latn-sv',
-  ppm: 'ppm-latn-id',
-  ppn: 'ppn-latn-pg',
-  ppo: 'ppo-latn-zz',
-  ppp: 'ppp-latn-cd',
-  ppq: 'ppq-latn-pg',
-  pps: 'pps-latn-mx',
-  ppt: 'ppt-latn-pg',
-  pqa: 'pqa-latn-ng',
-  pqm: 'pqm-latn-ca',
-  pra: 'pra-khar-pk',
-  prc: 'prc-arab-af',
-  prd: 'prd-arab-ir',
-  pre: 'pre-latn-st',
-  prf: 'prf-latn-ph',
-  prg: 'prg-latn-001',
-  prh: 'prh-latn-ph',
-  pri: 'pri-latn-nc',
-  prk: 'prk-latn-mm',
-  prm: 'prm-latn-pg',
-  pro: 'pro-latn-fr',
-  prp: 'prp-gujr-in',
-  prq: 'prq-latn-pe',
-  prr: 'prr-latn-br',
-  prt: 'prt-thai-th',
-  pru: 'pru-latn-id',
-  prw: 'prw-latn-pg',
-  prx: 'prx-arab-in',
-  'prx-tibt': 'prx-tibt-in',
-  ps: 'ps-arab-af',
-  psa: 'psa-latn-id',
-  pse: 'pse-latn-id',
-  psh: 'psh-arab-af',
-  psi: 'psi-arab-af',
-  psm: 'psm-latn-bo',
-  psn: 'psn-latn-id',
-  psq: 'psq-latn-pg',
-  pss: 'pss-latn-zz',
-  pst: 'pst-arab-pk',
-  psw: 'psw-latn-vu',
-  pt: 'pt-latn-br',
-  pta: 'pta-latn-py',
-  pth: 'pth-latn-br',
-  pti: 'pti-latn-au',
-  ptn: 'ptn-latn-id',
-  pto: 'pto-latn-br',
-  ptp: 'ptp-latn-zz',
-  ptr: 'ptr-latn-vu',
-  ptt: 'ptt-latn-id',
-  ptu: 'ptu-latn-id',
-  ptv: 'ptv-latn-vu',
-  pua: 'pua-latn-mx',
-  pub: 'pub-latn-in',
-  puc: 'puc-latn-id',
-  pud: 'pud-latn-id',
-  pue: 'pue-latn-ar',
-  puf: 'puf-latn-id',
-  pug: 'pug-latn-bf',
-  pui: 'pui-latn-co',
-  puj: 'puj-latn-id',
-  pum: 'pum-deva-np',
-  puo: 'puo-latn-vn',
-  pup: 'pup-latn-pg',
-  puq: 'puq-latn-pe',
-  pur: 'pur-latn-br',
-  put: 'put-latn-id',
-  puu: 'puu-latn-ga',
-  puw: 'puw-latn-fm',
-  pux: 'pux-latn-pg',
-  puy: 'puy-latn-us',
-  pwa: 'pwa-latn-zz',
-  pwb: 'pwb-latn-ng',
-  pwg: 'pwg-latn-pg',
-  pwm: 'pwm-latn-ph',
-  pwn: 'pwn-latn-tw',
-  pwo: 'pwo-mymr-mm',
-  pwr: 'pwr-deva-in',
-  pww: 'pww-thai-th',
-  pxm: 'pxm-latn-mx',
-  pye: 'pye-latn-ci',
-  pym: 'pym-latn-ng',
-  pyn: 'pyn-latn-br',
-  pyu: 'pyu-latn-tw',
-  'pyu-hani': 'pyu-hani-tw',
-  pyx: 'pyx-mymr-mm',
-  pyy: 'pyy-latn-mm',
-  pzh: 'pzh-latn-tw',
-  pzn: 'pzn-latn-mm',
-  qu: 'qu-latn-pe',
-  qua: 'qua-latn-us',
-  qub: 'qub-latn-pe',
-  quc: 'quc-latn-gt',
-  qud: 'qud-latn-ec',
-  quf: 'quf-latn-pe',
-  qug: 'qug-latn-ec',
-  qui: 'qui-latn-us',
-  quk: 'quk-latn-pe',
-  qul: 'qul-latn-bo',
-  qum: 'qum-latn-gt',
-  qun: 'qun-latn-us',
-  qup: 'qup-latn-pe',
-  quq: 'quq-latn-es',
-  qur: 'qur-latn-pe',
-  qus: 'qus-latn-ar',
-  quv: 'quv-latn-gt',
-  quw: 'quw-latn-ec',
-  qux: 'qux-latn-pe',
-  quy: 'quy-latn-pe',
-  qva: 'qva-latn-pe',
-  qvc: 'qvc-latn-pe',
-  qve: 'qve-latn-pe',
-  qvh: 'qvh-latn-pe',
-  qvi: 'qvi-latn-ec',
-  qvj: 'qvj-latn-ec',
-  qvl: 'qvl-latn-pe',
-  qvm: 'qvm-latn-pe',
-  qvn: 'qvn-latn-pe',
-  qvo: 'qvo-latn-pe',
-  qvp: 'qvp-latn-pe',
-  qvs: 'qvs-latn-pe',
-  qvw: 'qvw-latn-pe',
-  qvz: 'qvz-latn-ec',
-  qwa: 'qwa-latn-pe',
-  qwc: 'qwc-latn-pe',
-  qwh: 'qwh-latn-pe',
-  qwm: 'qwm-latn-ru',
-  'qwm-cyrl': 'qwm-cyrl-ru',
-  'qwm-runr': 'qwm-runr-ru',
-  qws: 'qws-latn-pe',
-  qwt: 'qwt-latn-us',
-  qxa: 'qxa-latn-pe',
-  qxc: 'qxc-latn-pe',
-  qxh: 'qxh-latn-pe',
-  qxl: 'qxl-latn-ec',
-  qxn: 'qxn-latn-pe',
-  qxo: 'qxo-latn-pe',
-  qxp: 'qxp-latn-pe',
-  qxq: 'qxq-arab-ir',
-  qxr: 'qxr-latn-ec',
-  qxt: 'qxt-latn-pe',
-  qxu: 'qxu-latn-pe',
-  qxw: 'qxw-latn-pe',
-  qya: 'qya-latn-001',
-  qyp: 'qyp-latn-us',
-  raa: 'raa-deva-np',
-  rab: 'rab-deva-np',
-  rac: 'rac-latn-id',
-  rad: 'rad-latn-vn',
-  raf: 'raf-deva-np',
-  rag: 'rag-latn-ke',
-  rah: 'rah-beng-in',
-  'rah-latn': 'rah-latn-in',
-  rai: 'rai-latn-zz',
-  raj: 'raj-deva-in',
-  rak: 'rak-latn-pg',
-  ram: 'ram-latn-br',
-  ran: 'ran-latn-id',
-  rao: 'rao-latn-zz',
-  rap: 'rap-latn-cl',
-  rar: 'rar-latn-ck',
-  rav: 'rav-deva-np',
-  raw: 'raw-latn-mm',
-  rax: 'rax-latn-ng',
-  ray: 'ray-latn-pf',
-  raz: 'raz-latn-id',
-  rbb: 'rbb-mymr-mm',
-  rbk: 'rbk-latn-ph',
-  rbl: 'rbl-latn-ph',
-  rbp: 'rbp-latn-au',
-  rcf: 'rcf-latn-re',
-  rdb: 'rdb-arab-ir',
-  rea: 'rea-latn-pg',
-  reb: 'reb-latn-id',
-  ree: 'ree-latn-my',
-  reg: 'reg-latn-tz',
-  rei: 'rei-orya-in',
-  'rei-telu': 'rei-telu-in',
-  rej: 'rej-latn-id',
-  rel: 'rel-latn-zz',
-  rem: 'rem-latn-pe',
-  ren: 'ren-latn-vn',
-  res: 'res-latn-zz',
-  ret: 'ret-latn-id',
-  rey: 'rey-latn-bo',
-  rga: 'rga-latn-vu',
-  rgn: 'rgn-latn-it',
-  rgr: 'rgr-latn-pe',
-  rgs: 'rgs-latn-vn',
-  rgu: 'rgu-latn-id',
-  rhg: 'rhg-rohg-mm',
-  rhp: 'rhp-latn-pg',
-  ria: 'ria-latn-in',
-  rif: 'rif-latn-ma',
-  ril: 'ril-latn-mm',
-  rim: 'rim-latn-tz',
-  rin: 'rin-latn-ng',
-  rir: 'rir-latn-id',
-  rit: 'rit-latn-au',
-  riu: 'riu-latn-id',
-  rjg: 'rjg-latn-id',
-  rji: 'rji-deva-np',
-  rjs: 'rjs-deva-np',
-  rka: 'rka-khmr-kh',
-  rkb: 'rkb-latn-br',
-  rkh: 'rkh-latn-ck',
-  rki: 'rki-mymr-mm',
-  rkm: 'rkm-latn-bf',
-  rkt: 'rkt-beng-bd',
-  rkw: 'rkw-latn-au',
-  rm: 'rm-latn-ch',
-  rma: 'rma-latn-ni',
-  rmb: 'rmb-latn-au',
-  rmc: 'rmc-latn-sk',
-  rmd: 'rmd-latn-dk',
-  rme: 'rme-latn-gb',
-  rmf: 'rmf-latn-fi',
-  rmg: 'rmg-latn-no',
-  rmh: 'rmh-latn-id',
-  rmi: 'rmi-armn-am',
-  rmk: 'rmk-latn-pg',
-  rml: 'rml-latn-pl',
-  'rml-cyrl': 'rml-cyrl-by',
-  rmm: 'rmm-latn-id',
-  rmn: 'rmn-latn-rs',
-  'rmn-cyrl': 'rmn-cyrl-bg',
-  'rmn-grek': 'rmn-grek-gr',
-  rmo: 'rmo-latn-ch',
-  rmp: 'rmp-latn-pg',
-  rmq: 'rmq-latn-es',
-  rmt: 'rmt-arab-ir',
-  rmu: 'rmu-latn-se',
-  rmw: 'rmw-latn-gb',
-  rmx: 'rmx-latn-vn',
-  rmz: 'rmz-mymr-in',
-  rn: 'rn-latn-bi',
-  rna: 'rna-latn-zz',
-  rnd: 'rnd-latn-cd',
-  rng: 'rng-latn-mz',
-  rnl: 'rnl-latn-in',
-  rnn: 'rnn-latn-id',
-  rnr: 'rnr-latn-au',
-  rnw: 'rnw-latn-tz',
-  ro: 'ro-latn-ro',
-  rob: 'rob-latn-id',
-  roc: 'roc-latn-vn',
-  rod: 'rod-latn-ng',
-  roe: 'roe-latn-pg',
-  rof: 'rof-latn-tz',
-  rog: 'rog-latn-vn',
-  rol: 'rol-latn-ph',
-  rom: 'rom-latn-ro',
-  'rom-cyrl': 'rom-cyrl-ro',
-  roo: 'roo-latn-zz',
-  rop: 'rop-latn-au',
-  ror: 'ror-latn-id',
-  rou: 'rou-latn-td',
-  row: 'row-latn-id',
-  rpn: 'rpn-latn-vu',
-  rpt: 'rpt-latn-pg',
-  rri: 'rri-latn-sb',
-  rro: 'rro-latn-zz',
-  rrt: 'rrt-latn-au',
-  rsk: 'rsk-cyrl-rs',
-  rtc: 'rtc-latn-mm',
-  rth: 'rth-latn-id',
-  rtm: 'rtm-latn-fj',
-  rtw: 'rtw-deva-in',
-  ru: 'ru-cyrl-ru',
-  rub: 'rub-latn-ug',
-  ruc: 'ruc-latn-ug',
-  rue: 'rue-cyrl-ua',
-  ruf: 'ruf-latn-tz',
-  rug: 'rug-latn-sb',
-  rui: 'rui-latn-tz',
-  ruk: 'ruk-latn-ng',
-  ruo: 'ruo-latn-hr',
-  rup: 'rup-latn-ro',
-  'rup-grek': 'rup-grek-gr',
-  ruq: 'ruq-latn-gr',
-  rut: 'rut-cyrl-ru',
-  'rut-latn': 'rut-latn-az',
-  ruu: 'ruu-latn-my',
-  ruy: 'ruy-latn-ng',
-  ruz: 'ruz-latn-ng',
-  rw: 'rw-latn-rw',
-  rwa: 'rwa-latn-pg',
-  rwk: 'rwk-latn-tz',
-  rwl: 'rwl-latn-tz',
-  rwm: 'rwm-latn-ug',
-  rwo: 'rwo-latn-zz',
-  rwr: 'rwr-deva-in',
-  rxd: 'rxd-latn-au',
-  rxw: 'rxw-latn-au',
-  ryu: 'ryu-kana-jp',
-  sa: 'sa-deva-in',
-  saa: 'saa-latn-td',
-  sab: 'sab-latn-pa',
-  sac: 'sac-latn-us',
-  sad: 'sad-latn-tz',
-  sae: 'sae-latn-br',
-  saf: 'saf-latn-gh',
-  sah: 'sah-cyrl-ru',
-  saj: 'saj-latn-id',
-  sak: 'sak-latn-ga',
-  sam: 'sam-samr-ps',
-  'sam-hebr': 'sam-hebr-ps',
-  'sam-syrc': 'sam-syrc-ps',
-  sao: 'sao-latn-id',
-  saq: 'saq-latn-ke',
-  sar: 'sar-latn-bo',
-  sas: 'sas-latn-id',
-  sat: 'sat-olck-in',
-  sau: 'sau-latn-id',
-  sav: 'sav-latn-sn',
-  saw: 'saw-latn-id',
-  sax: 'sax-latn-vu',
-  say: 'say-latn-ng',
-  saz: 'saz-saur-in',
-  sba: 'sba-latn-zz',
-  sbb: 'sbb-latn-sb',
-  sbc: 'sbc-latn-pg',
-  sbd: 'sbd-latn-bf',
-  sbe: 'sbe-latn-zz',
-  sbg: 'sbg-latn-id',
-  sbh: 'sbh-latn-pg',
-  sbi: 'sbi-latn-pg',
-  sbj: 'sbj-latn-td',
-  sbk: 'sbk-latn-tz',
-  sbl: 'sbl-latn-ph',
-  sbm: 'sbm-latn-tz',
-  sbn: 'sbn-arab-pk',
-  sbo: 'sbo-latn-my',
-  sbp: 'sbp-latn-tz',
-  sbq: 'sbq-latn-pg',
-  sbr: 'sbr-latn-id',
-  sbs: 'sbs-latn-na',
-  sbt: 'sbt-latn-id',
-  sbu: 'sbu-tibt-in',
-  'sbu-deva': 'sbu-deva-in',
-  sbv: 'sbv-latn-it',
-  sbw: 'sbw-latn-ga',
-  sbx: 'sbx-latn-id',
-  sby: 'sby-latn-zm',
-  sbz: 'sbz-latn-cf',
-  sc: 'sc-latn-it',
-  scb: 'scb-latn-vn',
-  sce: 'sce-latn-cn',
-  'sce-arab': 'sce-arab-cn',
-  scf: 'scf-latn-pa',
-  scg: 'scg-latn-id',
-  sch: 'sch-latn-in',
-  sci: 'sci-latn-lk',
-  sck: 'sck-deva-in',
-  scl: 'scl-arab-zz',
-  scn: 'scn-latn-it',
-  sco: 'sco-latn-gb',
-  scp: 'scp-deva-np',
-  scs: 'scs-latn-ca',
-  'scs-cans': 'scs-cans-ca',
-  sct: 'sct-laoo-la',
-  scu: 'scu-takr-in',
-  scv: 'scv-latn-ng',
-  scw: 'scw-latn-ng',
-  scx: 'scx-grek-it',
-  sd: 'sd-arab-pk',
-  'sd-deva': 'sd-deva-in',
-  'sd-in': 'sd-deva-in',
-  'sd-khoj': 'sd-khoj-in',
-  'sd-sind': 'sd-sind-in',
-  sda: 'sda-latn-id',
-  sdb: 'sdb-arab-iq',
-  sdc: 'sdc-latn-it',
-  sde: 'sde-latn-ng',
-  sdf: 'sdf-arab-iq',
-  sdg: 'sdg-arab-af',
-  sdh: 'sdh-arab-ir',
-  sdj: 'sdj-latn-cg',
-  sdk: 'sdk-latn-pg',
-  sdn: 'sdn-latn-it',
-  sdo: 'sdo-latn-my',
-  sdq: 'sdq-latn-id',
-  sds: 'sds-arab-tn',
-  sdu: 'sdu-latn-id',
-  sdx: 'sdx-latn-my',
-  se: 'se-latn-no',
-  sea: 'sea-latn-my',
-  seb: 'seb-latn-ci',
-  sec: 'sec-latn-ca',
-  sed: 'sed-latn-vn',
-  see: 'see-latn-us',
-  sef: 'sef-latn-ci',
-  seg: 'seg-latn-tz',
-  seh: 'seh-latn-mz',
-  sei: 'sei-latn-mx',
-  sej: 'sej-latn-pg',
-  sek: 'sek-latn-ca',
-  'sek-cans': 'sek-cans-ca',
-  sel: 'sel-cyrl-ru',
-  sen: 'sen-latn-bf',
-  seo: 'seo-latn-pg',
-  sep: 'sep-latn-bf',
-  seq: 'seq-latn-bf',
-  ser: 'ser-latn-us',
-  ses: 'ses-latn-ml',
-  set: 'set-latn-id',
-  seu: 'seu-latn-id',
-  sev: 'sev-latn-ci',
-  sew: 'sew-latn-pg',
-  sey: 'sey-latn-ec',
-  sez: 'sez-latn-mm',
-  sfe: 'sfe-latn-ph',
-  sfm: 'sfm-plrd-cn',
-  sfw: 'sfw-latn-gh',
-  sg: 'sg-latn-cf',
-  sga: 'sga-ogam-ie',
-  sgb: 'sgb-latn-ph',
-  sgc: 'sgc-latn-ke',
-  sgd: 'sgd-latn-ph',
-  sge: 'sge-latn-id',
-  sgh: 'sgh-cyrl-tj',
-  'sgh-arab': 'sgh-arab-af',
-  'sgh-latn': 'sgh-latn-tj',
-  sgi: 'sgi-latn-cm',
-  sgj: 'sgj-deva-in',
-  sgm: 'sgm-latn-ke',
-  sgp: 'sgp-latn-in',
-  sgr: 'sgr-arab-ir',
-  sgs: 'sgs-latn-lt',
-  sgt: 'sgt-tibt-bt',
-  sgu: 'sgu-latn-id',
-  sgw: 'sgw-ethi-zz',
-  sgy: 'sgy-arab-af',
-  sgz: 'sgz-latn-zz',
-  sha: 'sha-latn-ng',
-  shb: 'shb-latn-br',
-  shc: 'shc-latn-cd',
-  shd: 'shd-arab-pk',
-  she: 'she-latn-et',
-  shg: 'shg-latn-bw',
-  shh: 'shh-latn-us',
-  shi: 'shi-tfng-ma',
-  shj: 'shj-latn-sd',
-  shk: 'shk-latn-zz',
-  shm: 'shm-arab-ir',
-  shn: 'shn-mymr-mm',
-  sho: 'sho-latn-ng',
-  shp: 'shp-latn-pe',
-  shq: 'shq-latn-zm',
-  shr: 'shr-latn-cd',
-  shs: 'shs-latn-ca',
-  sht: 'sht-latn-us',
-  shu: 'shu-arab-zz',
-  shv: 'shv-arab-om',
-  shw: 'shw-latn-sd',
-  shy: 'shy-latn-dz',
-  'shy-arab': 'shy-arab-dz',
-  'shy-tfng': 'shy-tfng-dz',
-  shz: 'shz-latn-ml',
-  si: 'si-sinh-lk',
-  sia: 'sia-cyrl-ru',
-  sib: 'sib-latn-my',
-  sid: 'sid-latn-et',
-  sie: 'sie-latn-zm',
-  sif: 'sif-latn-bf',
-  sig: 'sig-latn-zz',
-  sih: 'sih-latn-nc',
-  sii: 'sii-latn-in',
-  sij: 'sij-latn-pg',
-  sik: 'sik-latn-br',
-  sil: 'sil-latn-zz',
-  sim: 'sim-latn-zz',
-  sip: 'sip-tibt-in',
-  siq: 'siq-latn-pg',
-  sir: 'sir-latn-ng',
-  sis: 'sis-latn-us',
-  siu: 'siu-latn-pg',
-  siv: 'siv-latn-pg',
-  siw: 'siw-latn-pg',
-  six: 'six-latn-pg',
-  siy: 'siy-arab-ir',
-  siz: 'siz-arab-eg',
-  sja: 'sja-latn-co',
-  sjb: 'sjb-latn-id',
-  sjd: 'sjd-cyrl-ru',
-  sje: 'sje-latn-se',
-  sjg: 'sjg-latn-td',
-  sjl: 'sjl-latn-in',
-  sjm: 'sjm-latn-ph',
-  sjp: 'sjp-deva-in',
-  'sjp-beng': 'sjp-beng-in',
-  sjr: 'sjr-latn-zz',
-  sjt: 'sjt-cyrl-ru',
-  sju: 'sju-latn-se',
-  sjw: 'sjw-latn-us',
-  sk: 'sk-latn-sk',
-  ska: 'ska-latn-us',
-  skb: 'skb-thai-th',
-  skc: 'skc-latn-zz',
-  skd: 'skd-latn-us',
-  ske: 'ske-latn-vu',
-  skf: 'skf-latn-br',
-  skg: 'skg-latn-mg',
-  skh: 'skh-latn-id',
-  ski: 'ski-latn-id',
-  skj: 'skj-deva-np',
-  skm: 'skm-latn-pg',
-  skn: 'skn-latn-ph',
-  sko: 'sko-latn-id',
-  skp: 'skp-latn-my',
-  skq: 'skq-latn-bf',
-  skr: 'skr-arab-pk',
-  sks: 'sks-latn-zz',
-  skt: 'skt-latn-cd',
-  sku: 'sku-latn-vu',
-  skv: 'skv-latn-id',
-  skw: 'skw-latn-gy',
-  skx: 'skx-latn-id',
-  sky: 'sky-latn-sb',
-  skz: 'skz-latn-id',
-  sl: 'sl-latn-si',
-  slc: 'slc-latn-co',
-  sld: 'sld-latn-zz',
-  slg: 'slg-latn-id',
-  slh: 'slh-latn-us',
-  sli: 'sli-latn-pl',
-  slj: 'slj-latn-br',
-  sll: 'sll-latn-zz',
-  slm: 'slm-latn-ph',
-  sln: 'sln-latn-us',
-  slp: 'slp-latn-id',
-  slq: 'slq-arab-ir',
-  slr: 'slr-latn-cn',
-  slu: 'slu-latn-id',
-  slw: 'slw-latn-pg',
-  slx: 'slx-latn-cd',
-  sly: 'sly-latn-id',
-  slz: 'slz-latn-id',
-  sm: 'sm-latn-ws',
-  sma: 'sma-latn-se',
-  smb: 'smb-latn-pg',
-  smc: 'smc-latn-pg',
-  smd: 'smd-latn-ao',
-  smf: 'smf-latn-pg',
-  smg: 'smg-latn-pg',
-  smh: 'smh-yiii-cn',
-  smj: 'smj-latn-se',
-  smk: 'smk-latn-ph',
-  sml: 'sml-latn-ph',
-  smn: 'smn-latn-fi',
-  smp: 'smp-samr-il',
-  smq: 'smq-latn-zz',
-  smr: 'smr-latn-id',
-  sms: 'sms-latn-fi',
-  smt: 'smt-latn-in',
-  smu: 'smu-khmr-kh',
-  smw: 'smw-latn-id',
-  smx: 'smx-latn-cd',
-  smy: 'smy-arab-ir',
-  smz: 'smz-latn-pg',
-  sn: 'sn-latn-zw',
-  snb: 'snb-latn-my',
-  snc: 'snc-latn-zz',
-  sne: 'sne-latn-my',
-  snf: 'snf-latn-sn',
-  sng: 'sng-latn-cd',
-  'sng-brai': 'sng-brai-cd',
-  sni: 'sni-latn-pe',
-  snj: 'snj-latn-cf',
-  snk: 'snk-latn-ml',
-  snl: 'snl-latn-ph',
-  snm: 'snm-latn-ug',
-  snn: 'snn-latn-co',
-  sno: 'sno-latn-us',
-  snp: 'snp-latn-zz',
-  snq: 'snq-latn-ga',
-  snr: 'snr-latn-pg',
-  sns: 'sns-latn-vu',
-  snu: 'snu-latn-id',
-  snv: 'snv-latn-my',
-  snw: 'snw-latn-gh',
-  snx: 'snx-latn-zz',
-  sny: 'sny-latn-zz',
-  snz: 'snz-latn-pg',
-  so: 'so-latn-so',
-  soa: 'soa-tavt-th',
-  'soa-thai': 'soa-thai-th',
-  sob: 'sob-latn-id',
-  soc: 'soc-latn-cd',
-  sod: 'sod-latn-cd',
-  soe: 'soe-latn-cd',
-  sog: 'sog-sogd-uz',
-  soi: 'soi-deva-np',
-  sok: 'sok-latn-zz',
-  sol: 'sol-latn-pg',
-  soo: 'soo-latn-cd',
-  sop: 'sop-latn-cd',
-  soq: 'soq-latn-zz',
-  sor: 'sor-latn-td',
-  sos: 'sos-latn-bf',
-  sou: 'sou-thai-th',
-  sov: 'sov-latn-pw',
-  sow: 'sow-latn-pg',
-  sox: 'sox-latn-cm',
-  soy: 'soy-latn-zz',
-  soz: 'soz-latn-tz',
-  spb: 'spb-latn-id',
-  spc: 'spc-latn-ve',
-  spd: 'spd-latn-zz',
-  spe: 'spe-latn-pg',
-  spg: 'spg-latn-my',
-  spi: 'spi-latn-id',
-  spk: 'spk-latn-pg',
-  spl: 'spl-latn-zz',
-  spm: 'spm-latn-pg',
-  spn: 'spn-latn-py',
-  spo: 'spo-latn-us',
-  spp: 'spp-latn-ml',
-  spq: 'spq-latn-pe',
-  spr: 'spr-latn-id',
-  sps: 'sps-latn-zz',
-  spt: 'spt-tibt-in',
-  spv: 'spv-orya-in',
-  sq: 'sq-latn-al',
-  sqa: 'sqa-latn-ng',
-  sqh: 'sqh-latn-ng',
-  sqm: 'sqm-latn-cf',
-  sqo: 'sqo-arab-ir',
-  sqq: 'sqq-laoo-la',
-  sqt: 'sqt-arab-ye',
-  'sqt-latn': 'sqt-latn-ye',
-  squ: 'squ-latn-ca',
-  sr: 'sr-cyrl-rs',
-  'sr-me': 'sr-latn-me',
-  'sr-ro': 'sr-latn-ro',
-  'sr-ru': 'sr-latn-ru',
-  'sr-tr': 'sr-latn-tr',
-  sra: 'sra-latn-pg',
-  srb: 'srb-sora-in',
-  sre: 'sre-latn-id',
-  srf: 'srf-latn-pg',
-  srg: 'srg-latn-ph',
-  srh: 'srh-arab-cn',
-  sri: 'sri-latn-co',
-  srk: 'srk-latn-my',
-  srl: 'srl-latn-id',
-  srm: 'srm-latn-sr',
-  srn: 'srn-latn-sr',
-  sro: 'sro-latn-it',
-  srq: 'srq-latn-bo',
-  srr: 'srr-latn-sn',
-  srs: 'srs-latn-ca',
-  srt: 'srt-latn-id',
-  sru: 'sru-latn-br',
-  srv: 'srv-latn-ph',
-  srw: 'srw-latn-id',
-  srx: 'srx-deva-in',
-  sry: 'sry-latn-pg',
-  srz: 'srz-arab-ir',
-  ss: 'ss-latn-za',
-  ssb: 'ssb-latn-ph',
-  ssc: 'ssc-latn-tz',
-  ssd: 'ssd-latn-zz',
-  sse: 'sse-latn-ph',
-  'sse-arab': 'sse-arab-ph',
-  ssf: 'ssf-latn-tw',
-  ssg: 'ssg-latn-zz',
-  ssh: 'ssh-arab-ae',
-  ssj: 'ssj-latn-pg',
-  ssl: 'ssl-latn-gh',
-  ssm: 'ssm-latn-my',
-  ssn: 'ssn-latn-ke',
-  sso: 'sso-latn-pg',
-  ssq: 'ssq-latn-id',
-  sss: 'sss-laoo-la',
-  'sss-thai': 'sss-thai-th',
-  sst: 'sst-latn-pg',
-  ssu: 'ssu-latn-pg',
-  ssv: 'ssv-latn-vu',
-  ssx: 'ssx-latn-pg',
-  ssy: 'ssy-latn-er',
-  ssz: 'ssz-latn-pg',
-  st: 'st-latn-za',
-  sta: 'sta-latn-zm',
-  stb: 'stb-latn-ph',
-  ste: 'ste-latn-id',
-  stf: 'stf-latn-pg',
-  stg: 'stg-latn-vn',
-  sth: 'sth-latn-ie',
-  sti: 'sti-latn-vn',
-  'sti-kh': 'sti-latn-kh',
-  stj: 'stj-latn-bf',
-  stk: 'stk-latn-zz',
-  stl: 'stl-latn-nl',
-  stm: 'stm-latn-pg',
-  stn: 'stn-latn-sb',
-  sto: 'sto-latn-ca',
-  stp: 'stp-latn-mx',
-  stq: 'stq-latn-de',
-  str: 'str-latn-ca',
-  sts: 'sts-arab-af',
-  stt: 'stt-latn-vn',
-  stv: 'stv-ethi-et',
-  'stv-arab': 'stv-arab-et',
-  stw: 'stw-latn-fm',
-  sty: 'sty-cyrl-ru',
-  su: 'su-latn-id',
-  sua: 'sua-latn-zz',
-  sub: 'sub-latn-cd',
-  suc: 'suc-latn-ph',
-  sue: 'sue-latn-zz',
-  sug: 'sug-latn-pg',
-  sui: 'sui-latn-pg',
-  suj: 'suj-latn-tz',
-  suk: 'suk-latn-tz',
-  suo: 'suo-latn-pg',
-  suq: 'suq-latn-et',
-  'suq-ethi': 'suq-ethi-et',
-  sur: 'sur-latn-zz',
-  sus: 'sus-latn-gn',
-  sut: 'sut-latn-ni',
-  suv: 'suv-latn-in',
-  'suv-beng': 'suv-beng-in',
-  'suv-deva': 'suv-deva-in',
-  suw: 'suw-latn-tz',
-  suy: 'suy-latn-br',
-  suz: 'suz-deva-np',
-  sv: 'sv-latn-se',
-  sva: 'sva-geor-ge',
-  'sva-cyrl': 'sva-cyrl-ge',
-  'sva-latn': 'sva-latn-ge',
-  svb: 'svb-latn-pg',
-  svc: 'svc-latn-vc',
-  sve: 'sve-latn-id',
-  svm: 'svm-latn-it',
-  svs: 'svs-latn-sb',
-  sw: 'sw-latn-tz',
-  swb: 'swb-arab-yt',
-  swc: 'swc-latn-cd',
-  swf: 'swf-latn-cd',
-  swg: 'swg-latn-de',
-  swi: 'swi-hani-cn',
-  swj: 'swj-latn-ga',
-  swk: 'swk-latn-mw',
-  swm: 'swm-latn-pg',
-  swo: 'swo-latn-br',
-  swp: 'swp-latn-zz',
-  swq: 'swq-latn-cm',
-  swr: 'swr-latn-id',
-  sws: 'sws-latn-id',
-  swt: 'swt-latn-id',
-  swu: 'swu-latn-id',
-  swv: 'swv-deva-in',
-  sww: 'sww-latn-vu',
-  swx: 'swx-latn-br',
-  swy: 'swy-latn-td',
-  sxb: 'sxb-latn-ke',
-  sxe: 'sxe-latn-ga',
-  sxn: 'sxn-latn-id',
-  sxr: 'sxr-latn-tw',
-  sxs: 'sxs-latn-ng',
-  sxu: 'sxu-latn-de',
-  'sxu-runr': 'sxu-runr-de',
-  sxw: 'sxw-latn-zz',
-  sya: 'sya-latn-id',
-  syb: 'syb-latn-ph',
-  syc: 'syc-syrc-tr',
-  syi: 'syi-latn-ga',
-  syk: 'syk-latn-ng',
-  syl: 'syl-beng-bd',
-  sym: 'sym-latn-bf',
-  syn: 'syn-syrc-ir',
-  syo: 'syo-latn-kh',
-  syr: 'syr-syrc-iq',
-  sys: 'sys-latn-td',
-  syw: 'syw-deva-np',
-  syx: 'syx-latn-ga',
-  sza: 'sza-latn-my',
-  szb: 'szb-latn-id',
-  szc: 'szc-latn-my',
-  szd: 'szd-latn-my',
-  szg: 'szg-latn-cd',
-  szl: 'szl-latn-pl',
-  szn: 'szn-latn-id',
-  szp: 'szp-latn-id',
-  szv: 'szv-latn-cm',
-  szw: 'szw-latn-id',
-  szy: 'szy-latn-tw',
-  ta: 'ta-taml-in',
-  taa: 'taa-latn-us',
-  tab: 'tab-cyrl-ru',
-  tac: 'tac-latn-mx',
-  tad: 'tad-latn-id',
-  tae: 'tae-latn-br',
-  taf: 'taf-latn-br',
-  tag: 'tag-latn-sd',
-  taj: 'taj-deva-np',
-  tak: 'tak-latn-ng',
-  tal: 'tal-latn-zz',
-  tan: 'tan-latn-zz',
-  tao: 'tao-latn-tw',
-  tap: 'tap-latn-cd',
-  taq: 'taq-latn-zz',
-  tar: 'tar-latn-mx',
-  tas: 'tas-latn-vn',
-  tau: 'tau-latn-us',
-  tav: 'tav-latn-co',
-  taw: 'taw-latn-pg',
-  tax: 'tax-latn-td',
-  tay: 'tay-latn-tw',
-  'tay-hans': 'tay-hans-tw',
-  'tay-hant': 'tay-hant-tw',
-  taz: 'taz-latn-sd',
-  tba: 'tba-latn-br',
-  tbc: 'tbc-latn-zz',
-  tbd: 'tbd-latn-zz',
-  tbe: 'tbe-latn-sb',
-  tbf: 'tbf-latn-zz',
-  tbg: 'tbg-latn-zz',
-  tbh: 'tbh-latn-au',
-  tbi: 'tbi-latn-sd',
-  tbj: 'tbj-latn-pg',
-  tbk: 'tbk-tagb-ph',
-  'tbk-hano': 'tbk-hano-ph',
-  'tbk-latn': 'tbk-latn-ph',
-  tbl: 'tbl-latn-ph',
-  tbm: 'tbm-latn-cd',
-  tbn: 'tbn-latn-co',
-  tbo: 'tbo-latn-zz',
-  tbp: 'tbp-latn-id',
-  tbs: 'tbs-latn-pg',
-  tbt: 'tbt-latn-cd',
-  tbu: 'tbu-latn-mx',
-  tbv: 'tbv-latn-pg',
-  tbw: 'tbw-latn-ph',
-  tbx: 'tbx-latn-pg',
-  tby: 'tby-latn-id',
-  tbz: 'tbz-latn-zz',
-  tca: 'tca-latn-br',
-  tcb: 'tcb-latn-us',
-  tcc: 'tcc-latn-tz',
-  tcd: 'tcd-latn-gh',
-  tce: 'tce-latn-ca',
-  tcf: 'tcf-latn-mx',
-  tcg: 'tcg-latn-id',
-  tch: 'tch-latn-tc',
-  tci: 'tci-latn-zz',
-  tck: 'tck-latn-ga',
-  tcm: 'tcm-latn-id',
-  tcn: 'tcn-tibt-np',
-  tco: 'tco-mymr-mm',
-  tcp: 'tcp-latn-mm',
-  tcq: 'tcq-latn-id',
-  tcs: 'tcs-latn-au',
-  tcu: 'tcu-latn-mx',
-  tcw: 'tcw-latn-mx',
-  tcx: 'tcx-taml-in',
-  tcy: 'tcy-knda-in',
-  tcz: 'tcz-latn-in',
-  tda: 'tda-tfng-ne',
-  'tda-arab': 'tda-arab-ne',
-  'tda-latn': 'tda-latn-ne',
-  tdb: 'tdb-deva-in',
-  'tdb-beng': 'tdb-beng-in',
-  'tdb-kthi': 'tdb-kthi-in',
-  tdc: 'tdc-latn-co',
-  tdd: 'tdd-tale-cn',
-  tde: 'tde-latn-ml',
-  tdg: 'tdg-deva-np',
-  tdh: 'tdh-deva-np',
-  tdi: 'tdi-latn-id',
-  tdj: 'tdj-latn-id',
-  tdk: 'tdk-latn-ng',
-  tdl: 'tdl-latn-ng',
-  tdm: 'tdm-latn-gy',
-  tdn: 'tdn-latn-id',
-  tdo: 'tdo-latn-ng',
-  tdq: 'tdq-latn-ng',
-  tdr: 'tdr-latn-vn',
-  tds: 'tds-latn-id',
-  tdt: 'tdt-latn-tl',
-  tdu: 'tdu-latn-my',
-  tdv: 'tdv-latn-ng',
-  tdx: 'tdx-latn-mg',
-  tdy: 'tdy-latn-ph',
-  te: 'te-telu-in',
-  tea: 'tea-latn-my',
-  teb: 'teb-latn-ec',
-  tec: 'tec-latn-ke',
-  ted: 'ted-latn-zz',
-  tee: 'tee-latn-mx',
-  teg: 'teg-latn-ga',
-  teh: 'teh-latn-ar',
-  tei: 'tei-latn-pg',
-  tek: 'tek-latn-cd',
-  tem: 'tem-latn-sl',
-  ten: 'ten-latn-co',
-  teo: 'teo-latn-ug',
-  tep: 'tep-latn-mx',
-  teq: 'teq-latn-sd',
-  ter: 'ter-latn-br',
-  tes: 'tes-java-id',
-  tet: 'tet-latn-tl',
-  teu: 'teu-latn-ug',
-  tev: 'tev-latn-id',
-  tew: 'tew-latn-us',
-  tex: 'tex-latn-ss',
-  tey: 'tey-latn-sd',
-  tfi: 'tfi-latn-zz',
-  tfn: 'tfn-latn-us',
-  tfo: 'tfo-latn-id',
-  tfr: 'tfr-latn-pa',
-  tft: 'tft-latn-id',
-  tg: 'tg-cyrl-tj',
-  'tg-arab': 'tg-arab-pk',
-  'tg-pk': 'tg-arab-pk',
-  tga: 'tga-latn-ke',
-  tgb: 'tgb-latn-my',
-  tgc: 'tgc-latn-zz',
-  tgd: 'tgd-latn-ng',
-  tge: 'tge-deva-np',
-  tgf: 'tgf-tibt-bt',
-  tgh: 'tgh-latn-tt',
-  tgi: 'tgi-latn-pg',
-  tgj: 'tgj-latn-in',
-  tgn: 'tgn-latn-ph',
-  tgo: 'tgo-latn-zz',
-  tgp: 'tgp-latn-vu',
-  tgq: 'tgq-latn-my',
-  tgs: 'tgs-latn-vu',
-  tgt: 'tgt-latn-ph',
-  'tgt-hano': 'tgt-hano-ph',
-  'tgt-tagb': 'tgt-tagb-ph',
-  tgu: 'tgu-latn-zz',
-  tgv: 'tgv-latn-br',
-  tgw: 'tgw-latn-ci',
-  tgx: 'tgx-latn-ca',
-  tgy: 'tgy-latn-ss',
-  tgz: 'tgz-latn-au',
-  th: 'th-thai-th',
-  thd: 'thd-latn-au',
-  the: 'the-deva-np',
-  thf: 'thf-deva-np',
-  thh: 'thh-latn-mx',
-  thi: 'thi-tale-la',
-  thk: 'thk-latn-ke',
-  thl: 'thl-deva-np',
-  thm: 'thm-thai-th',
-  thp: 'thp-latn-ca',
-  'thp-dupl': 'thp-dupl-ca',
-  thq: 'thq-deva-np',
-  thr: 'thr-deva-np',
-  ths: 'ths-deva-np',
-  tht: 'tht-latn-ca',
-  thu: 'thu-latn-ss',
-  thv: 'thv-latn-dz',
-  'thv-arab': 'thv-arab-dz',
-  'thv-tfng': 'thv-tfng-dz',
-  thy: 'thy-latn-ng',
-  thz: 'thz-latn-ne',
-  'thz-tfng': 'thz-tfng-ne',
-  ti: 'ti-ethi-et',
-  tic: 'tic-latn-sd',
-  tif: 'tif-latn-zz',
-  tig: 'tig-ethi-er',
-  tih: 'tih-latn-my',
-  tii: 'tii-latn-cd',
-  tij: 'tij-deva-np',
-  tik: 'tik-latn-zz',
-  til: 'til-latn-us',
-  tim: 'tim-latn-zz',
-  tin: 'tin-cyrl-ru',
-  tio: 'tio-latn-zz',
-  tip: 'tip-latn-id',
-  tiq: 'tiq-latn-bf',
-  tis: 'tis-latn-ph',
-  tit: 'tit-latn-co',
-  tiu: 'tiu-latn-ph',
-  tiv: 'tiv-latn-ng',
-  tiw: 'tiw-latn-au',
-  tix: 'tix-latn-us',
-  tiy: 'tiy-latn-ph',
-  tja: 'tja-latn-lr',
-  tjg: 'tjg-latn-id',
-  tji: 'tji-latn-cn',
-  tjj: 'tjj-latn-au',
-  tjl: 'tjl-mymr-mm',
-  tjn: 'tjn-latn-ci',
-  tjo: 'tjo-arab-dz',
-  tjp: 'tjp-latn-au',
-  tjs: 'tjs-latn-cn',
-  tju: 'tju-latn-au',
-  tjw: 'tjw-latn-au',
-  tk: 'tk-latn-tm',
-  tka: 'tka-latn-br',
-  tkb: 'tkb-deva-in',
-  tkd: 'tkd-latn-tl',
-  tke: 'tke-latn-mz',
-  tkf: 'tkf-latn-br',
-  tkg: 'tkg-latn-mg',
-  tkl: 'tkl-latn-tk',
-  tkp: 'tkp-latn-sb',
-  tkq: 'tkq-latn-ng',
-  tkr: 'tkr-latn-az',
-  tks: 'tks-arab-ir',
-  tkt: 'tkt-deva-np',
-  tku: 'tku-latn-mx',
-  tkv: 'tkv-latn-pg',
-  tkw: 'tkw-latn-sb',
-  tkx: 'tkx-latn-id',
-  tkz: 'tkz-latn-vn',
-  tl: 'tl-latn-ph',
-  tla: 'tla-latn-mx',
-  tlb: 'tlb-latn-id',
-  tlc: 'tlc-latn-mx',
-  tld: 'tld-latn-id',
-  tlf: 'tlf-latn-zz',
-  tlg: 'tlg-latn-id',
-  tli: 'tli-latn-us',
-  'tli-cyrl': 'tli-cyrl-us',
-  tlj: 'tlj-latn-ug',
-  tlk: 'tlk-latn-id',
-  tll: 'tll-latn-cd',
-  tlm: 'tlm-latn-vu',
-  tln: 'tln-latn-id',
-  tlp: 'tlp-latn-mx',
-  tlq: 'tlq-latn-mm',
-  tlr: 'tlr-latn-sb',
-  tls: 'tls-latn-vu',
-  tlt: 'tlt-latn-id',
-  tlu: 'tlu-latn-id',
-  tlv: 'tlv-latn-id',
-  tlx: 'tlx-latn-zz',
-  tly: 'tly-latn-az',
-  tma: 'tma-latn-td',
-  tmb: 'tmb-latn-vu',
-  tmc: 'tmc-latn-td',
-  tmd: 'tmd-latn-pg',
-  tme: 'tme-latn-br',
-  tmf: 'tmf-latn-py',
-  tmg: 'tmg-latn-id',
-  tmh: 'tmh-latn-ne',
-  tmi: 'tmi-latn-vu',
-  tmj: 'tmj-latn-id',
-  tmk: 'tmk-deva-np',
-  tml: 'tml-latn-id',
-  tmm: 'tmm-latn-vn',
-  tmn: 'tmn-latn-id',
-  tmo: 'tmo-latn-my',
-  tmq: 'tmq-latn-pg',
-  tmr: 'tmr-syrc-il',
-  tmt: 'tmt-latn-vu',
-  tmu: 'tmu-latn-id',
-  tmv: 'tmv-latn-cd',
-  tmw: 'tmw-latn-my',
-  tmy: 'tmy-latn-zz',
-  tmz: 'tmz-latn-ve',
-  tn: 'tn-latn-za',
-  tna: 'tna-latn-bo',
-  tnb: 'tnb-latn-co',
-  tnc: 'tnc-latn-co',
-  tnd: 'tnd-latn-co',
-  tng: 'tng-latn-td',
-  tnh: 'tnh-latn-zz',
-  tni: 'tni-latn-id',
-  tnk: 'tnk-latn-vu',
-  tnl: 'tnl-latn-vu',
-  tnm: 'tnm-latn-id',
-  tnn: 'tnn-latn-vu',
-  tno: 'tno-latn-bo',
-  tnp: 'tnp-latn-vu',
-  tnq: 'tnq-latn-pr',
-  tnr: 'tnr-latn-sn',
-  tns: 'tns-latn-pg',
-  tnt: 'tnt-latn-id',
-  tnv: 'tnv-cakm-bd',
-  tnw: 'tnw-latn-id',
-  tnx: 'tnx-latn-sb',
-  tny: 'tny-latn-tz',
-  to: 'to-latn-to',
-  tob: 'tob-latn-ar',
-  toc: 'toc-latn-mx',
-  tod: 'tod-latn-gn',
-  tof: 'tof-latn-zz',
-  tog: 'tog-latn-mw',
-  toh: 'toh-latn-mz',
-  toi: 'toi-latn-zm',
-  toj: 'toj-latn-mx',
-  tok: 'tok-latn-001',
-  tol: 'tol-latn-us',
-  tom: 'tom-latn-id',
-  too: 'too-latn-mx',
-  top: 'top-latn-mx',
-  toq: 'toq-latn-zz',
-  tor: 'tor-latn-cd',
-  tos: 'tos-latn-mx',
-  tou: 'tou-latn-vn',
-  tov: 'tov-arab-ir',
-  tow: 'tow-latn-us',
-  tox: 'tox-latn-pw',
-  toy: 'toy-latn-id',
-  toz: 'toz-latn-cm',
-  tpa: 'tpa-latn-pg',
-  tpc: 'tpc-latn-mx',
-  tpe: 'tpe-latn-bd',
-  'tpe-beng': 'tpe-beng-bd',
-  tpf: 'tpf-latn-id',
-  tpg: 'tpg-latn-id',
-  tpi: 'tpi-latn-pg',
-  tpj: 'tpj-latn-py',
-  tpk: 'tpk-latn-br',
-  tpl: 'tpl-latn-mx',
-  tpm: 'tpm-latn-zz',
-  tpn: 'tpn-latn-br',
-  tpp: 'tpp-latn-mx',
-  tpr: 'tpr-latn-br',
-  tpt: 'tpt-latn-mx',
-  tpu: 'tpu-khmr-kh',
-  tpv: 'tpv-latn-mp',
-  tpx: 'tpx-latn-mx',
-  tpy: 'tpy-latn-br',
-  tpz: 'tpz-latn-zz',
-  tqb: 'tqb-latn-br',
-  tql: 'tql-latn-vu',
-  tqm: 'tqm-latn-pg',
-  tqn: 'tqn-latn-us',
-  tqo: 'tqo-latn-zz',
-  tqp: 'tqp-latn-pg',
-  tqt: 'tqt-latn-mx',
-  tqu: 'tqu-latn-sb',
-  tqw: 'tqw-latn-us',
-  tr: 'tr-latn-tr',
-  tra: 'tra-arab-af',
-  trb: 'trb-latn-pg',
-  trc: 'trc-latn-mx',
-  tre: 'tre-latn-id',
-  trf: 'trf-latn-tt',
-  trg: 'trg-hebr-il',
-  trh: 'trh-latn-pg',
-  tri: 'tri-latn-sr',
-  trj: 'trj-latn-td',
-  trl: 'trl-latn-gb',
-  trm: 'trm-arab-af',
-  trn: 'trn-latn-bo',
-  tro: 'tro-latn-in',
-  trp: 'trp-latn-in',
-  'trp-beng': 'trp-beng-in',
-  trq: 'trq-latn-mx',
-  trr: 'trr-latn-pe',
-  trs: 'trs-latn-mx',
-  trt: 'trt-latn-id',
-  tru: 'tru-latn-tr',
-  trv: 'trv-latn-tw',
-  trw: 'trw-arab-pk',
-  trx: 'trx-latn-my',
-  try: 'try-latn-in',
-  trz: 'trz-latn-br',
-  ts: 'ts-latn-za',
-  tsa: 'tsa-latn-cg',
-  tsb: 'tsb-latn-et',
-  tsc: 'tsc-latn-mz',
-  tsd: 'tsd-grek-gr',
-  tsf: 'tsf-deva-np',
-  tsg: 'tsg-latn-ph',
-  tsh: 'tsh-latn-cm',
-  tsi: 'tsi-latn-ca',
-  tsj: 'tsj-tibt-bt',
-  tsl: 'tsl-latn-vn',
-  tsp: 'tsp-latn-bf',
-  tsr: 'tsr-latn-vu',
-  tst: 'tst-latn-ml',
-  tsu: 'tsu-latn-tw',
-  tsv: 'tsv-latn-ga',
-  tsw: 'tsw-latn-zz',
-  tsx: 'tsx-latn-pg',
-  tsz: 'tsz-latn-mx',
-  tt: 'tt-cyrl-ru',
-  ttb: 'ttb-latn-ng',
-  ttc: 'ttc-latn-gt',
-  ttd: 'ttd-latn-zz',
-  tte: 'tte-latn-zz',
-  ttf: 'ttf-latn-cm',
-  tth: 'tth-laoo-la',
-  tti: 'tti-latn-id',
-  ttj: 'ttj-latn-ug',
-  ttk: 'ttk-latn-co',
-  ttl: 'ttl-latn-zm',
-  ttm: 'ttm-latn-ca',
-  ttn: 'ttn-latn-id',
-  tto: 'tto-laoo-la',
-  ttp: 'ttp-latn-id',
-  ttr: 'ttr-latn-zz',
-  tts: 'tts-thai-th',
-  ttt: 'ttt-latn-az',
-  ttu: 'ttu-latn-pg',
-  ttv: 'ttv-latn-pg',
-  ttw: 'ttw-latn-my',
-  tty: 'tty-latn-id',
-  tua: 'tua-latn-pg',
-  tub: 'tub-latn-us',
-  tuc: 'tuc-latn-pg',
-  tud: 'tud-latn-br',
-  tue: 'tue-latn-co',
-  tuf: 'tuf-latn-co',
-  tug: 'tug-latn-td',
-  tuh: 'tuh-latn-zz',
-  tui: 'tui-latn-cm',
-  tuj: 'tuj-latn-id',
-  tul: 'tul-latn-zz',
-  tum: 'tum-latn-mw',
-  tun: 'tun-latn-us',
-  tuo: 'tuo-latn-br',
-  tuq: 'tuq-latn-zz',
-  tus: 'tus-latn-ca',
-  tuu: 'tuu-latn-us',
-  tuv: 'tuv-latn-ke',
-  tux: 'tux-latn-br',
-  tuy: 'tuy-latn-ke',
-  tuz: 'tuz-latn-bf',
-  tva: 'tva-latn-sb',
-  tvd: 'tvd-latn-zz',
-  tve: 'tve-latn-id',
-  tvk: 'tvk-latn-vu',
-  tvl: 'tvl-latn-tv',
-  tvm: 'tvm-latn-id',
-  tvn: 'tvn-mymr-mm',
-  tvo: 'tvo-latn-id',
-  tvs: 'tvs-latn-ke',
-  tvt: 'tvt-latn-in',
-  tvu: 'tvu-latn-zz',
-  tvw: 'tvw-latn-id',
-  tvx: 'tvx-latn-tw',
-  twa: 'twa-latn-us',
-  twb: 'twb-latn-ph',
-  twd: 'twd-latn-nl',
-  twe: 'twe-latn-id',
-  twf: 'twf-latn-us',
-  twg: 'twg-latn-id',
-  twh: 'twh-latn-zz',
-  twl: 'twl-latn-mz',
-  twm: 'twm-deva-in',
-  twn: 'twn-latn-cm',
-  two: 'two-latn-bw',
-  twp: 'twp-latn-pg',
-  twq: 'twq-latn-ne',
-  twr: 'twr-latn-mx',
-  twt: 'twt-latn-br',
-  twu: 'twu-latn-id',
-  tww: 'tww-latn-pg',
-  twx: 'twx-latn-mz',
-  twy: 'twy-latn-id',
-  txa: 'txa-latn-my',
-  txe: 'txe-latn-id',
-  txg: 'txg-tang-cn',
-  txi: 'txi-latn-br',
-  txj: 'txj-latn-ng',
-  txm: 'txm-latn-id',
-  txn: 'txn-latn-id',
-  txo: 'txo-toto-in',
-  txq: 'txq-latn-id',
-  txs: 'txs-latn-id',
-  txt: 'txt-latn-id',
-  txu: 'txu-latn-br',
-  txx: 'txx-latn-my',
-  txy: 'txy-latn-mg',
-  ty: 'ty-latn-pf',
-  tya: 'tya-latn-zz',
-  tye: 'tye-latn-ng',
-  tyh: 'tyh-latn-vn',
-  tyi: 'tyi-latn-cg',
-  tyj: 'tyj-latn-vn',
-  tyl: 'tyl-latn-vn',
-  tyn: 'tyn-latn-id',
-  typ: 'typ-latn-au',
-  tyr: 'tyr-tavt-vn',
-  tys: 'tys-latn-vn',
-  tyt: 'tyt-latn-vn',
-  'tyt-tavt': 'tyt-tavt-vn',
-  tyu: 'tyu-latn-bw',
-  tyv: 'tyv-cyrl-ru',
-  tyx: 'tyx-latn-cg',
-  tyy: 'tyy-latn-ng',
-  tyz: 'tyz-latn-vn',
-  tzh: 'tzh-latn-mx',
-  tzj: 'tzj-latn-gt',
-  tzl: 'tzl-latn-001',
-  tzm: 'tzm-latn-ma',
-  tzn: 'tzn-latn-id',
-  tzo: 'tzo-latn-mx',
-  tzx: 'tzx-latn-pg',
-  uam: 'uam-latn-br',
-  uar: 'uar-latn-pg',
-  uba: 'uba-latn-ng',
-  ubi: 'ubi-latn-td',
-  ubl: 'ubl-latn-ph',
-  ubr: 'ubr-latn-pg',
-  ubu: 'ubu-latn-zz',
-  uda: 'uda-latn-ng',
-  ude: 'ude-cyrl-ru',
-  udg: 'udg-mlym-in',
-  udi: 'udi-aghb-ru',
-  udj: 'udj-latn-id',
-  udl: 'udl-latn-cm',
-  udm: 'udm-cyrl-ru',
-  udu: 'udu-latn-sd',
-  ues: 'ues-latn-id',
-  ufi: 'ufi-latn-pg',
-  ug: 'ug-arab-cn',
-  'ug-cyrl': 'ug-cyrl-kz',
-  'ug-kz': 'ug-cyrl-kz',
-  'ug-mn': 'ug-cyrl-mn',
-  uga: 'uga-ugar-sy',
-  ugb: 'ugb-latn-au',
-  uge: 'uge-latn-sb',
-  ugh: 'ugh-cyrl-ru',
-  ugo: 'ugo-thai-th',
-  uha: 'uha-latn-ng',
-  uhn: 'uhn-latn-id',
-  uis: 'uis-latn-pg',
-  uiv: 'uiv-latn-cm',
-  uji: 'uji-latn-ng',
-  uk: 'uk-cyrl-ua',
-  uka: 'uka-latn-id',
-  ukg: 'ukg-latn-pg',
-  ukh: 'ukh-latn-cf',
-  uki: 'uki-orya-in',
-  ukk: 'ukk-latn-mm',
-  ukp: 'ukp-latn-ng',
-  ukq: 'ukq-latn-ng',
-  uku: 'uku-latn-ng',
-  ukv: 'ukv-latn-ss',
-  ukw: 'ukw-latn-ng',
-  uky: 'uky-latn-au',
-  ula: 'ula-latn-ng',
-  ulb: 'ulb-latn-ng',
-  ulc: 'ulc-cyrl-ru',
-  ule: 'ule-latn-ar',
-  ulf: 'ulf-latn-id',
-  uli: 'uli-latn-fm',
-  ulk: 'ulk-latn-au',
-  ulm: 'ulm-latn-id',
-  uln: 'uln-latn-pg',
-  ulu: 'ulu-latn-id',
-  ulw: 'ulw-latn-ni',
-  uma: 'uma-latn-us',
-  umb: 'umb-latn-ao',
-  umd: 'umd-latn-au',
-  umg: 'umg-latn-au',
-  umi: 'umi-latn-my',
-  umm: 'umm-latn-ng',
-  umn: 'umn-latn-mm',
-  umo: 'umo-latn-br',
-  ump: 'ump-latn-au',
-  umr: 'umr-latn-au',
-  ums: 'ums-latn-id',
-  una: 'una-latn-pg',
-  und: 'en-latn-us',
-  'und-002': 'en-latn-ng',
-  'und-003': 'en-latn-us',
-  'und-005': 'pt-latn-br',
-  'und-009': 'en-latn-au',
-  'und-011': 'en-latn-ng',
-  'und-013': 'es-latn-mx',
-  'und-014': 'sw-latn-tz',
-  'und-015': 'ar-arab-eg',
-  'und-017': 'sw-latn-cd',
-  'und-018': 'en-latn-za',
-  'und-019': 'en-latn-us',
-  'und-021': 'en-latn-us',
-  'und-029': 'es-latn-cu',
-  'und-030': 'zh-hans-cn',
-  'und-034': 'hi-deva-in',
-  'und-035': 'id-latn-id',
-  'und-039': 'it-latn-it',
-  'und-053': 'en-latn-au',
-  'und-054': 'en-latn-pg',
-  'und-057': 'en-latn-gu',
-  'und-061': 'sm-latn-ws',
-  'und-142': 'zh-hans-cn',
-  'und-143': 'uz-latn-uz',
-  'und-145': 'ar-arab-sa',
-  'und-150': 'ru-cyrl-ru',
-  'und-151': 'ru-cyrl-ru',
-  'und-154': 'en-latn-gb',
-  'und-155': 'de-latn-de',
-  'und-202': 'en-latn-ng',
-  'und-419': 'es-latn-419',
-  'und-ad': 'ca-latn-ad',
-  'und-adlm': 'ff-adlm-gn',
-  'und-ae': 'ar-arab-ae',
-  'und-af': 'fa-arab-af',
-  'und-aghb': 'udi-aghb-ru',
-  'und-ahom': 'aho-ahom-in',
-  'und-al': 'sq-latn-al',
-  'und-am': 'hy-armn-am',
-  'und-ao': 'pt-latn-ao',
-  'und-aq': 'und-latn-aq',
-  'und-ar': 'es-latn-ar',
-  'und-arab': 'ar-arab-eg',
-  'und-arab-cc': 'ms-arab-cc',
-  'und-arab-cn': 'ug-arab-cn',
-  'und-arab-gb': 'ur-arab-gb',
-  'und-arab-id': 'ms-arab-id',
-  'und-arab-in': 'ur-arab-in',
-  'und-arab-kh': 'cja-arab-kh',
-  'und-arab-mm': 'rhg-arab-mm',
-  'und-arab-mn': 'kk-arab-mn',
-  'und-arab-mu': 'ur-arab-mu',
-  'und-arab-ng': 'ha-arab-ng',
-  'und-arab-pk': 'ur-arab-pk',
-  'und-arab-tg': 'apd-arab-tg',
-  'und-arab-th': 'mfa-arab-th',
-  'und-arab-tj': 'fa-arab-tj',
-  'und-arab-tr': 'apc-arab-tr',
-  'und-arab-yt': 'swb-arab-yt',
-  'und-armi': 'arc-armi-ir',
-  'und-armn': 'hy-armn-am',
-  'und-as': 'sm-latn-as',
-  'und-at': 'de-latn-at',
-  'und-avst': 'ae-avst-ir',
-  'und-aw': 'nl-latn-aw',
-  'und-ax': 'sv-latn-ax',
-  'und-az': 'az-latn-az',
-  'und-ba': 'bs-latn-ba',
-  'und-bali': 'ban-bali-id',
-  'und-bamu': 'bax-bamu-cm',
-  'und-bass': 'bsq-bass-lr',
-  'und-batk': 'bbc-batk-id',
-  'und-bd': 'bn-beng-bd',
-  'und-be': 'nl-latn-be',
-  'und-beng': 'bn-beng-bd',
-  'und-bf': 'fr-latn-bf',
-  'und-bg': 'bg-cyrl-bg',
-  'und-bh': 'ar-arab-bh',
-  'und-bhks': 'sa-bhks-in',
-  'und-bi': 'rn-latn-bi',
-  'und-bj': 'fr-latn-bj',
-  'und-bl': 'fr-latn-bl',
-  'und-bn': 'ms-latn-bn',
-  'und-bo': 'es-latn-bo',
-  'und-bopo': 'zh-bopo-tw',
-  'und-bq': 'pap-latn-bq',
-  'und-br': 'pt-latn-br',
-  'und-brah': 'pka-brah-in',
-  'und-brai': 'fr-brai-fr',
-  'und-bt': 'dz-tibt-bt',
-  'und-bugi': 'bug-bugi-id',
-  'und-buhd': 'bku-buhd-ph',
-  'und-bv': 'und-latn-bv',
-  'und-by': 'be-cyrl-by',
-  'und-cakm': 'ccp-cakm-bd',
-  'und-cans': 'iu-cans-ca',
-  'und-cari': 'xcr-cari-tr',
-  'und-cd': 'sw-latn-cd',
-  'und-cf': 'fr-latn-cf',
-  'und-cg': 'fr-latn-cg',
-  'und-ch': 'de-latn-ch',
-  'und-cham': 'cjm-cham-vn',
-  'und-cher': 'chr-cher-us',
-  'und-chrs': 'xco-chrs-uz',
-  'und-ci': 'fr-latn-ci',
-  'und-cl': 'es-latn-cl',
-  'und-cm': 'fr-latn-cm',
-  'und-cn': 'zh-hans-cn',
-  'und-co': 'es-latn-co',
-  'und-copt': 'cop-copt-eg',
-  'und-cp': 'und-latn-cp',
-  'und-cpmn': 'und-cpmn-cy',
-  'und-cpmn-cy': 'und-cpmn-cy',
-  'und-cprt': 'grc-cprt-cy',
-  'und-cr': 'es-latn-cr',
-  'und-cu': 'es-latn-cu',
-  'und-cv': 'pt-latn-cv',
-  'und-cw': 'pap-latn-cw',
-  'und-cy': 'el-grek-cy',
-  'und-cyrl': 'ru-cyrl-ru',
-  'und-cyrl-al': 'mk-cyrl-al',
-  'und-cyrl-ba': 'sr-cyrl-ba',
-  'und-cyrl-ge': 'ab-cyrl-ge',
-  'und-cyrl-gr': 'mk-cyrl-gr',
-  'und-cyrl-md': 'uk-cyrl-md',
-  'und-cyrl-ro': 'bg-cyrl-ro',
-  'und-cyrl-sk': 'uk-cyrl-sk',
-  'und-cyrl-tr': 'kbd-cyrl-tr',
-  'und-cyrl-xk': 'sr-cyrl-xk',
-  'und-cz': 'cs-latn-cz',
-  'und-de': 'de-latn-de',
-  'und-deva': 'hi-deva-in',
-  'und-deva-bt': 'ne-deva-bt',
-  'und-deva-fj': 'hif-deva-fj',
-  'und-deva-mu': 'bho-deva-mu',
-  'und-deva-pk': 'btv-deva-pk',
-  'und-diak': 'dv-diak-mv',
-  'und-dj': 'aa-latn-dj',
-  'und-dk': 'da-latn-dk',
-  'und-do': 'es-latn-do',
-  'und-dogr': 'doi-dogr-in',
-  'und-dupl': 'fr-dupl-fr',
-  'und-dz': 'ar-arab-dz',
-  'und-ea': 'es-latn-ea',
-  'und-ec': 'es-latn-ec',
-  'und-ee': 'et-latn-ee',
-  'und-eg': 'ar-arab-eg',
-  'und-egyp': 'egy-egyp-eg',
-  'und-eh': 'ar-arab-eh',
-  'und-elba': 'sq-elba-al',
-  'und-elym': 'arc-elym-ir',
-  'und-er': 'ti-ethi-er',
-  'und-es': 'es-latn-es',
-  'und-et': 'am-ethi-et',
-  'und-ethi': 'am-ethi-et',
-  'und-eu': 'en-latn-ie',
-  'und-ez': 'de-latn-ez',
-  'und-fi': 'fi-latn-fi',
-  'und-fo': 'fo-latn-fo',
-  'und-fr': 'fr-latn-fr',
-  'und-ga': 'fr-latn-ga',
-  'und-ge': 'ka-geor-ge',
-  'und-geor': 'ka-geor-ge',
-  'und-gf': 'fr-latn-gf',
-  'und-gh': 'ak-latn-gh',
-  'und-gl': 'kl-latn-gl',
-  'und-glag': 'cu-glag-bg',
-  'und-gn': 'fr-latn-gn',
-  'und-gong': 'wsg-gong-in',
-  'und-gonm': 'esg-gonm-in',
-  'und-goth': 'got-goth-ua',
-  'und-gp': 'fr-latn-gp',
-  'und-gq': 'es-latn-gq',
-  'und-gr': 'el-grek-gr',
-  'und-gran': 'sa-gran-in',
-  'und-grek': 'el-grek-gr',
-  'und-grek-tr': 'bgx-grek-tr',
-  'und-gs': 'und-latn-gs',
-  'und-gt': 'es-latn-gt',
-  'und-gujr': 'gu-gujr-in',
-  'und-guru': 'pa-guru-in',
-  'und-gw': 'pt-latn-gw',
-  'und-hanb': 'zh-hanb-tw',
-  'und-hang': 'ko-hang-kr',
-  'und-hani': 'zh-hani-cn',
-  'und-hano': 'hnn-hano-ph',
-  'und-hans': 'zh-hans-cn',
-  'und-hant': 'zh-hant-tw',
-  'und-hant-ca': 'yue-hant-ca',
-  'und-hebr': 'he-hebr-il',
-  'und-hebr-se': 'yi-hebr-se',
-  'und-hebr-ua': 'yi-hebr-ua',
-  'und-hebr-us': 'yi-hebr-us',
-  'und-hira': 'ja-hira-jp',
-  'und-hk': 'zh-hant-hk',
-  'und-hluw': 'hlu-hluw-tr',
-  'und-hm': 'und-latn-hm',
-  'und-hmng': 'hnj-hmng-la',
-  'und-hmnp': 'hnj-hmnp-us',
-  'und-hn': 'es-latn-hn',
-  'und-hr': 'hr-latn-hr',
-  'und-ht': 'ht-latn-ht',
-  'und-hu': 'hu-latn-hu',
-  'und-hung': 'hu-hung-hu',
-  'und-ic': 'es-latn-ic',
-  'und-id': 'id-latn-id',
-  'und-il': 'he-hebr-il',
-  'und-in': 'hi-deva-in',
-  'und-iq': 'ar-arab-iq',
-  'und-ir': 'fa-arab-ir',
-  'und-is': 'is-latn-is',
-  'und-it': 'it-latn-it',
-  'und-ital': 'ett-ital-it',
-  'und-jamo': 'ko-jamo-kr',
-  'und-java': 'jv-java-id',
-  'und-jo': 'ar-arab-jo',
-  'und-jp': 'ja-jpan-jp',
-  'und-jpan': 'ja-jpan-jp',
-  'und-kali': 'eky-kali-mm',
-  'und-kana': 'ja-kana-jp',
-  'und-kawi': 'kaw-kawi-id',
-  'und-ke': 'sw-latn-ke',
-  'und-kg': 'ky-cyrl-kg',
-  'und-kh': 'km-khmr-kh',
-  'und-khar': 'pra-khar-pk',
-  'und-khmr': 'km-khmr-kh',
-  'und-khoj': 'sd-khoj-in',
-  'und-kits': 'zkt-kits-cn',
-  'und-km': 'ar-arab-km',
-  'und-knda': 'kn-knda-in',
-  'und-kore': 'ko-kore-kr',
-  'und-kp': 'ko-kore-kp',
-  'und-kr': 'ko-kore-kr',
-  'und-kthi': 'bho-kthi-in',
-  'und-kw': 'ar-arab-kw',
-  'und-kz': 'ru-cyrl-kz',
-  'und-la': 'lo-laoo-la',
-  'und-lana': 'nod-lana-th',
-  'und-laoo': 'lo-laoo-la',
-  'und-laoo-au': 'hnj-laoo-au',
-  'und-laoo-cn': 'hnj-laoo-cn',
-  'und-laoo-fr': 'hnj-laoo-fr',
-  'und-laoo-gf': 'hnj-laoo-gf',
-  'und-laoo-mm': 'hnj-laoo-mm',
-  'und-laoo-sr': 'hnj-laoo-sr',
-  'und-laoo-th': 'hnj-laoo-th',
-  'und-laoo-us': 'hnj-laoo-us',
-  'und-laoo-vn': 'hnj-laoo-vn',
-  'und-latn-af': 'tk-latn-af',
-  'und-latn-am': 'ku-latn-am',
-  'und-latn-cn': 'za-latn-cn',
-  'und-latn-cy': 'tr-latn-cy',
-  'und-latn-dz': 'fr-latn-dz',
-  'und-latn-et': 'en-latn-et',
-  'und-latn-ge': 'ku-latn-ge',
-  'und-latn-ir': 'tk-latn-ir',
-  'und-latn-km': 'fr-latn-km',
-  'und-latn-ma': 'fr-latn-ma',
-  'und-latn-mk': 'sq-latn-mk',
-  'und-latn-mm': 'kac-latn-mm',
-  'und-latn-mo': 'pt-latn-mo',
-  'und-latn-mr': 'fr-latn-mr',
-  'und-latn-ru': 'krl-latn-ru',
-  'und-latn-sy': 'fr-latn-sy',
-  'und-latn-tn': 'fr-latn-tn',
-  'und-latn-tw': 'trv-latn-tw',
-  'und-latn-ua': 'pl-latn-ua',
-  'und-lb': 'ar-arab-lb',
-  'und-lepc': 'lep-lepc-in',
-  'und-li': 'de-latn-li',
-  'und-limb': 'lif-limb-in',
-  'und-lina': 'lab-lina-gr',
-  'und-linb': 'grc-linb-gr',
-  'und-lisu': 'lis-lisu-cn',
-  'und-lk': 'si-sinh-lk',
-  'und-ls': 'st-latn-ls',
-  'und-lt': 'lt-latn-lt',
-  'und-lu': 'fr-latn-lu',
-  'und-lv': 'lv-latn-lv',
-  'und-ly': 'ar-arab-ly',
-  'und-lyci': 'xlc-lyci-tr',
-  'und-lydi': 'xld-lydi-tr',
-  'und-ma': 'ar-arab-ma',
-  'und-mahj': 'hi-mahj-in',
-  'und-maka': 'mak-maka-id',
-  'und-mand': 'myz-mand-ir',
-  'und-mani': 'xmn-mani-cn',
-  'und-marc': 'bo-marc-cn',
-  'und-mc': 'fr-latn-mc',
-  'und-md': 'ro-latn-md',
-  'und-me': 'sr-latn-me',
-  'und-medf': 'dmf-medf-ng',
-  'und-mend': 'men-mend-sl',
-  'und-merc': 'xmr-merc-sd',
-  'und-mero': 'xmr-mero-sd',
-  'und-mf': 'fr-latn-mf',
-  'und-mg': 'mg-latn-mg',
-  'und-mk': 'mk-cyrl-mk',
-  'und-ml': 'bm-latn-ml',
-  'und-mlym': 'ml-mlym-in',
-  'und-mm': 'my-mymr-mm',
-  'und-mn': 'mn-cyrl-mn',
-  'und-mo': 'zh-hant-mo',
-  'und-modi': 'mr-modi-in',
-  'und-mong': 'mn-mong-cn',
-  'und-mq': 'fr-latn-mq',
-  'und-mr': 'ar-arab-mr',
-  'und-mroo': 'mro-mroo-bd',
-  'und-mt': 'mt-latn-mt',
-  'und-mtei': 'mni-mtei-in',
-  'und-mu': 'mfe-latn-mu',
-  'und-mult': 'skr-mult-pk',
-  'und-mv': 'dv-thaa-mv',
-  'und-mx': 'es-latn-mx',
-  'und-my': 'ms-latn-my',
-  'und-mymr': 'my-mymr-mm',
-  'und-mymr-in': 'kht-mymr-in',
-  'und-mymr-th': 'mnw-mymr-th',
-  'und-mz': 'pt-latn-mz',
-  'und-na': 'af-latn-na',
-  'und-nagm': 'unr-nagm-in',
-  'und-nand': 'sa-nand-in',
-  'und-narb': 'xna-narb-sa',
-  'und-nbat': 'arc-nbat-jo',
-  'und-nc': 'fr-latn-nc',
-  'und-ne': 'ha-latn-ne',
-  'und-newa': 'new-newa-np',
-  'und-ni': 'es-latn-ni',
-  'und-nkoo': 'man-nkoo-gn',
-  'und-nl': 'nl-latn-nl',
-  'und-no': 'nb-latn-no',
-  'und-np': 'ne-deva-np',
-  'und-nshu': 'zhx-nshu-cn',
-  'und-ogam': 'sga-ogam-ie',
-  'und-olck': 'sat-olck-in',
-  'und-om': 'ar-arab-om',
-  'und-orkh': 'otk-orkh-mn',
-  'und-orya': 'or-orya-in',
-  'und-osge': 'osa-osge-us',
-  'und-osma': 'so-osma-so',
-  'und-ougr': 'oui-ougr-143',
-  'und-pa': 'es-latn-pa',
-  'und-palm': 'arc-palm-sy',
-  'und-pauc': 'ctd-pauc-mm',
-  'und-pe': 'es-latn-pe',
-  'und-perm': 'kv-perm-ru',
-  'und-pf': 'fr-latn-pf',
-  'und-pg': 'tpi-latn-pg',
-  'und-ph': 'fil-latn-ph',
-  'und-phag': 'lzh-phag-cn',
-  'und-phli': 'pal-phli-ir',
-  'und-phlp': 'pal-phlp-cn',
-  'und-phnx': 'phn-phnx-lb',
-  'und-pk': 'ur-arab-pk',
-  'und-pl': 'pl-latn-pl',
-  'und-plrd': 'hmd-plrd-cn',
-  'und-pm': 'fr-latn-pm',
-  'und-pr': 'es-latn-pr',
-  'und-prti': 'xpr-prti-ir',
-  'und-ps': 'ar-arab-ps',
-  'und-pt': 'pt-latn-pt',
-  'und-pw': 'pau-latn-pw',
-  'und-py': 'gn-latn-py',
-  'und-qa': 'ar-arab-qa',
-  'und-qo': 'en-latn-dg',
-  'und-re': 'fr-latn-re',
-  'und-rjng': 'rej-rjng-id',
-  'und-ro': 'ro-latn-ro',
-  'und-rohg': 'rhg-rohg-mm',
-  'und-rs': 'sr-cyrl-rs',
-  'und-ru': 'ru-cyrl-ru',
-  'und-runr': 'non-runr-se',
-  'und-rw': 'rw-latn-rw',
-  'und-sa': 'ar-arab-sa',
-  'und-samr': 'smp-samr-il',
-  'und-sarb': 'xsa-sarb-ye',
-  'und-saur': 'saz-saur-in',
-  'und-sc': 'fr-latn-sc',
-  'und-sd': 'ar-arab-sd',
-  'und-se': 'sv-latn-se',
-  'und-sgnw': 'ase-sgnw-us',
-  'und-shaw': 'en-shaw-gb',
-  'und-shrd': 'sa-shrd-in',
-  'und-si': 'sl-latn-si',
-  'und-sidd': 'sa-sidd-in',
-  'und-sind': 'sd-sind-in',
-  'und-sinh': 'si-sinh-lk',
-  'und-sj': 'nb-latn-sj',
-  'und-sk': 'sk-latn-sk',
-  'und-sm': 'it-latn-sm',
-  'und-sn': 'fr-latn-sn',
-  'und-so': 'so-latn-so',
-  'und-sogd': 'sog-sogd-uz',
-  'und-sogo': 'sog-sogo-uz',
-  'und-sora': 'srb-sora-in',
-  'und-soyo': 'cmg-soyo-mn',
-  'und-sr': 'nl-latn-sr',
-  'und-st': 'pt-latn-st',
-  'und-sund': 'su-sund-id',
-  'und-sv': 'es-latn-sv',
-  'und-sy': 'ar-arab-sy',
-  'und-sylo': 'syl-sylo-bd',
-  'und-syrc': 'syr-syrc-iq',
-  'und-tagb': 'tbw-tagb-ph',
-  'und-takr': 'doi-takr-in',
-  'und-tale': 'tdd-tale-cn',
-  'und-talu': 'khb-talu-cn',
-  'und-taml': 'ta-taml-in',
-  'und-tang': 'txg-tang-cn',
-  'und-tavt': 'blt-tavt-vn',
-  'und-td': 'fr-latn-td',
-  'und-telu': 'te-telu-in',
-  'und-tf': 'fr-latn-tf',
-  'und-tfng': 'zgh-tfng-ma',
-  'und-tg': 'fr-latn-tg',
-  'und-tglg': 'fil-tglg-ph',
-  'und-th': 'th-thai-th',
-  'und-thaa': 'dv-thaa-mv',
-  'und-thai': 'th-thai-th',
-  'und-thai-cn': 'lcp-thai-cn',
-  'und-thai-kh': 'kdt-thai-kh',
-  'und-thai-la': 'kdt-thai-la',
-  'und-tibt': 'bo-tibt-cn',
-  'und-tirh': 'mai-tirh-in',
-  'und-tj': 'tg-cyrl-tj',
-  'und-tk': 'tkl-latn-tk',
-  'und-tl': 'pt-latn-tl',
-  'und-tm': 'tk-latn-tm',
-  'und-tn': 'ar-arab-tn',
-  'und-tnsa': 'nst-tnsa-in',
-  'und-to': 'to-latn-to',
-  'und-toto': 'txo-toto-in',
-  'und-tr': 'tr-latn-tr',
-  'und-tv': 'tvl-latn-tv',
-  'und-tw': 'zh-hant-tw',
-  'und-tz': 'sw-latn-tz',
-  'und-ua': 'uk-cyrl-ua',
-  'und-ug': 'sw-latn-ug',
-  'und-ugar': 'uga-ugar-sy',
-  'und-uy': 'es-latn-uy',
-  'und-uz': 'uz-latn-uz',
-  'und-va': 'it-latn-va',
-  'und-vaii': 'vai-vaii-lr',
-  'und-ve': 'es-latn-ve',
-  'und-vith': 'sq-vith-al',
-  'und-vn': 'vi-latn-vn',
-  'und-vu': 'bi-latn-vu',
-  'und-wara': 'hoc-wara-in',
-  'und-wcho': 'nnp-wcho-in',
-  'und-wf': 'fr-latn-wf',
-  'und-ws': 'sm-latn-ws',
-  'und-xk': 'sq-latn-xk',
-  'und-xpeo': 'peo-xpeo-ir',
-  'und-xsux': 'akk-xsux-iq',
-  'und-ye': 'ar-arab-ye',
-  'und-yezi': 'ku-yezi-ge',
-  'und-yiii': 'ii-yiii-cn',
-  'und-yt': 'fr-latn-yt',
-  'und-zanb': 'cmg-zanb-mn',
-  'und-zw': 'sn-latn-zw',
-  une: 'une-latn-ng',
-  ung: 'ung-latn-au',
-  uni: 'uni-latn-pg',
-  unk: 'unk-latn-br',
-  unm: 'unm-latn-us',
-  unn: 'unn-latn-au',
-  unr: 'unr-beng-in',
-  'unr-deva': 'unr-deva-np',
-  'unr-np': 'unr-deva-np',
-  unu: 'unu-latn-pg',
-  unx: 'unx-beng-in',
-  unz: 'unz-latn-id',
-  uok: 'uok-latn-zz',
-  uon: 'uon-latn-tw',
-  upi: 'upi-latn-pg',
-  upv: 'upv-latn-vu',
-  ur: 'ur-arab-pk',
-  ura: 'ura-latn-pe',
-  urb: 'urb-latn-br',
-  urc: 'urc-latn-au',
-  ure: 'ure-latn-bo',
-  urf: 'urf-latn-au',
-  urg: 'urg-latn-pg',
-  urh: 'urh-latn-ng',
-  uri: 'uri-latn-zz',
-  urk: 'urk-thai-th',
-  urm: 'urm-latn-pg',
-  urn: 'urn-latn-id',
-  uro: 'uro-latn-pg',
-  urp: 'urp-latn-br',
-  urr: 'urr-latn-vu',
-  urt: 'urt-latn-zz',
-  uru: 'uru-latn-br',
-  urv: 'urv-latn-pg',
-  urw: 'urw-latn-zz',
-  urx: 'urx-latn-pg',
-  ury: 'ury-latn-id',
-  urz: 'urz-latn-br',
-  usa: 'usa-latn-zz',
-  ush: 'ush-arab-pk',
-  usi: 'usi-latn-bd',
-  'usi-beng': 'usi-beng-bd',
-  usk: 'usk-latn-cm',
-  usp: 'usp-latn-gt',
-  uss: 'uss-latn-ng',
-  usu: 'usu-latn-pg',
-  uta: 'uta-latn-ng',
-  ute: 'ute-latn-us',
-  uth: 'uth-latn-zz',
-  utp: 'utp-latn-sb',
-  utr: 'utr-latn-zz',
-  utu: 'utu-latn-pg',
-  uum: 'uum-grek-ge',
-  'uum-cyrl': 'uum-cyrl-ge',
-  uur: 'uur-latn-vu',
-  uve: 'uve-latn-nc',
-  uvh: 'uvh-latn-zz',
-  uvl: 'uvl-latn-zz',
-  uwa: 'uwa-latn-au',
-  uya: 'uya-latn-ng',
-  uz: 'uz-latn-uz',
-  'uz-af': 'uz-arab-af',
-  'uz-arab': 'uz-arab-af',
-  'uz-cn': 'uz-cyrl-cn',
-  uzs: 'uzs-arab-af',
-  vaa: 'vaa-taml-in',
-  vae: 'vae-latn-cf',
-  vaf: 'vaf-arab-ir',
-  vag: 'vag-latn-zz',
-  vah: 'vah-deva-in',
-  vai: 'vai-vaii-lr',
-  vaj: 'vaj-latn-na',
-  val: 'val-latn-pg',
-  vam: 'vam-latn-pg',
-  van: 'van-latn-zz',
-  vao: 'vao-latn-vu',
-  vap: 'vap-latn-in',
-  var: 'var-latn-mx',
-  vas: 'vas-deva-in',
-  'vas-gujr': 'vas-gujr-in',
-  vau: 'vau-latn-cd',
-  vav: 'vav-deva-in',
-  'vav-gujr': 'vav-gujr-in',
-  vay: 'vay-deva-np',
-  vbb: 'vbb-latn-id',
-  vbk: 'vbk-latn-ph',
-  ve: 've-latn-za',
-  vec: 'vec-latn-it',
-  vem: 'vem-latn-ng',
-  veo: 'veo-latn-us',
-  vep: 'vep-latn-ru',
-  ver: 'ver-latn-ng',
-  vgr: 'vgr-arab-pk',
-  vi: 'vi-latn-vn',
-  vic: 'vic-latn-sx',
-  vid: 'vid-latn-tz',
-  vif: 'vif-latn-cg',
-  vig: 'vig-latn-bf',
-  vil: 'vil-latn-ar',
-  vin: 'vin-latn-tz',
-  vit: 'vit-latn-ng',
-  viv: 'viv-latn-zz',
-  vka: 'vka-latn-au',
-  vkj: 'vkj-latn-td',
-  vkk: 'vkk-latn-id',
-  vkl: 'vkl-latn-id',
-  vkm: 'vkm-latn-br',
-  vkn: 'vkn-latn-ng',
-  vko: 'vko-latn-id',
-  vkp: 'vkp-latn-in',
-  'vkp-deva': 'vkp-deva-in',
-  vkt: 'vkt-latn-id',
-  vku: 'vku-latn-au',
-  vkz: 'vkz-latn-ng',
-  vlp: 'vlp-latn-vu',
-  vls: 'vls-latn-be',
-  vma: 'vma-latn-au',
-  vmb: 'vmb-latn-au',
-  vmc: 'vmc-latn-mx',
-  vmd: 'vmd-knda-in',
-  vme: 'vme-latn-id',
-  vmf: 'vmf-latn-de',
-  vmg: 'vmg-latn-pg',
-  vmh: 'vmh-arab-ir',
-  vmi: 'vmi-latn-au',
-  vmj: 'vmj-latn-mx',
-  vmk: 'vmk-latn-mz',
-  vml: 'vml-latn-au',
-  vmm: 'vmm-latn-mx',
-  vmp: 'vmp-latn-mx',
-  vmq: 'vmq-latn-mx',
-  vmr: 'vmr-latn-mz',
-  vms: 'vms-latn-id',
-  vmu: 'vmu-latn-au',
-  vmw: 'vmw-latn-mz',
-  vmx: 'vmx-latn-mx',
-  vmy: 'vmy-latn-mx',
-  vmz: 'vmz-latn-mx',
-  vnk: 'vnk-latn-sb',
-  vnm: 'vnm-latn-vu',
-  vnp: 'vnp-latn-vu',
-  vo: 'vo-latn-001',
-  vor: 'vor-latn-ng',
-  vot: 'vot-latn-ru',
-  vra: 'vra-latn-vu',
-  vro: 'vro-latn-ee',
-  vrs: 'vrs-latn-sb',
-  vrt: 'vrt-latn-vu',
-  vto: 'vto-latn-id',
-  vum: 'vum-latn-ga',
-  vun: 'vun-latn-tz',
-  vut: 'vut-latn-zz',
-  vwa: 'vwa-latn-cn',
-  'vwa-mymr': 'vwa-mymr-cn',
-  wa: 'wa-latn-be',
-  waa: 'waa-latn-us',
-  wab: 'wab-latn-pg',
-  wac: 'wac-latn-us',
-  wad: 'wad-latn-id',
-  wae: 'wae-latn-ch',
-  waf: 'waf-latn-br',
-  wag: 'wag-latn-pg',
-  wah: 'wah-latn-id',
-  wai: 'wai-latn-id',
-  waj: 'waj-latn-zz',
-  wal: 'wal-ethi-et',
-  wam: 'wam-latn-us',
-  wan: 'wan-latn-zz',
-  wap: 'wap-latn-gy',
-  waq: 'waq-latn-au',
-  war: 'war-latn-ph',
-  was: 'was-latn-us',
-  wat: 'wat-latn-pg',
-  wau: 'wau-latn-br',
-  wav: 'wav-latn-ng',
-  waw: 'waw-latn-br',
-  wax: 'wax-latn-pg',
-  way: 'way-latn-sr',
-  waz: 'waz-latn-pg',
-  wba: 'wba-latn-ve',
-  wbb: 'wbb-latn-id',
-  wbe: 'wbe-latn-id',
-  wbf: 'wbf-latn-bf',
-  wbh: 'wbh-latn-tz',
-  wbi: 'wbi-latn-tz',
-  wbj: 'wbj-latn-tz',
-  wbk: 'wbk-arab-af',
-  wbl: 'wbl-latn-pk',
-  'wbl-arab': 'wbl-arab-af',
-  'wbl-cyrl': 'wbl-cyrl-tj',
-  wbm: 'wbm-latn-cn',
-  wbp: 'wbp-latn-au',
-  wbq: 'wbq-telu-in',
-  wbr: 'wbr-deva-in',
-  wbt: 'wbt-latn-au',
-  wbv: 'wbv-latn-au',
-  wbw: 'wbw-latn-id',
-  wca: 'wca-latn-br',
-  wci: 'wci-latn-zz',
-  wdd: 'wdd-latn-ga',
-  wdg: 'wdg-latn-pg',
-  wdj: 'wdj-latn-au',
-  wdk: 'wdk-latn-au',
-  wdt: 'wdt-latn-ca',
-  wdu: 'wdu-latn-au',
-  wdy: 'wdy-latn-au',
-  wec: 'wec-latn-ci',
-  wed: 'wed-latn-pg',
-  weg: 'weg-latn-au',
-  weh: 'weh-latn-cm',
-  wei: 'wei-latn-pg',
-  wem: 'wem-latn-bj',
-  weo: 'weo-latn-id',
-  wep: 'wep-latn-de',
-  wer: 'wer-latn-zz',
-  wes: 'wes-latn-cm',
-  wet: 'wet-latn-id',
-  weu: 'weu-latn-mm',
-  wew: 'wew-latn-id',
-  wfg: 'wfg-latn-id',
-  wga: 'wga-latn-au',
-  wgb: 'wgb-latn-pg',
-  wgg: 'wgg-latn-au',
-  wgi: 'wgi-latn-zz',
-  wgo: 'wgo-latn-id',
-  wgu: 'wgu-latn-au',
-  wgy: 'wgy-latn-au',
-  wha: 'wha-latn-id',
-  whg: 'whg-latn-zz',
-  whk: 'whk-latn-id',
-  whu: 'whu-latn-id',
-  wib: 'wib-latn-zz',
-  wic: 'wic-latn-us',
-  wie: 'wie-latn-au',
-  wif: 'wif-latn-au',
-  wig: 'wig-latn-au',
-  wih: 'wih-latn-au',
-  wii: 'wii-latn-pg',
-  wij: 'wij-latn-au',
-  wik: 'wik-latn-au',
-  wil: 'wil-latn-au',
-  wim: 'wim-latn-au',
-  win: 'win-latn-us',
-  wir: 'wir-latn-br',
-  wiu: 'wiu-latn-zz',
-  wiv: 'wiv-latn-zz',
-  wiy: 'wiy-latn-us',
-  wja: 'wja-latn-zz',
-  wji: 'wji-latn-zz',
-  wka: 'wka-latn-tz',
-  wkd: 'wkd-latn-id',
-  wkr: 'wkr-latn-au',
-  wkw: 'wkw-latn-au',
-  wky: 'wky-latn-au',
-  wla: 'wla-latn-pg',
-  wlg: 'wlg-latn-au',
-  wlh: 'wlh-latn-tl',
-  wli: 'wli-latn-id',
-  wlm: 'wlm-latn-gb',
-  wlo: 'wlo-arab-id',
-  wlr: 'wlr-latn-vu',
-  wls: 'wls-latn-wf',
-  wlu: 'wlu-latn-au',
-  wlv: 'wlv-latn-ar',
-  wlw: 'wlw-latn-id',
-  wlx: 'wlx-latn-gh',
-  wma: 'wma-latn-ng',
-  wmb: 'wmb-latn-au',
-  wmc: 'wmc-latn-pg',
-  wmd: 'wmd-latn-br',
-  wme: 'wme-deva-np',
-  wmh: 'wmh-latn-tl',
-  wmi: 'wmi-latn-au',
-  wmm: 'wmm-latn-id',
-  wmn: 'wmn-latn-nc',
-  wmo: 'wmo-latn-zz',
-  wms: 'wms-latn-id',
-  wmt: 'wmt-latn-au',
-  wmw: 'wmw-latn-mz',
-  'wmw-arab': 'wmw-arab-mz',
-  wmx: 'wmx-latn-pg',
-  wnb: 'wnb-latn-pg',
-  wnc: 'wnc-latn-zz',
-  wnd: 'wnd-latn-au',
-  wne: 'wne-arab-pk',
-  wng: 'wng-latn-id',
-  wni: 'wni-arab-km',
-  wnk: 'wnk-latn-id',
-  wnm: 'wnm-latn-au',
-  wnn: 'wnn-latn-au',
-  wno: 'wno-latn-id',
-  wnp: 'wnp-latn-pg',
-  wnu: 'wnu-latn-zz',
-  wnw: 'wnw-latn-us',
-  wny: 'wny-latn-au',
-  wo: 'wo-latn-sn',
-  woa: 'woa-latn-au',
-  wob: 'wob-latn-zz',
-  woc: 'woc-latn-pg',
-  wod: 'wod-latn-id',
-  woe: 'woe-latn-fm',
-  wof: 'wof-latn-gm',
-  'wof-arab': 'wof-arab-gm',
-  wog: 'wog-latn-pg',
-  woi: 'woi-latn-id',
-  wok: 'wok-latn-cm',
-  wom: 'wom-latn-ng',
-  won: 'won-latn-cd',
-  woo: 'woo-latn-id',
-  wor: 'wor-latn-id',
-  wos: 'wos-latn-zz',
-  wow: 'wow-latn-id',
-  wpc: 'wpc-latn-ve',
-  wrb: 'wrb-latn-au',
-  wrg: 'wrg-latn-au',
-  wrh: 'wrh-latn-au',
-  wri: 'wri-latn-au',
-  wrk: 'wrk-latn-au',
-  wrl: 'wrl-latn-au',
-  wrm: 'wrm-latn-au',
-  wro: 'wro-latn-au',
-  wrp: 'wrp-latn-id',
-  wrr: 'wrr-latn-au',
-  wrs: 'wrs-latn-zz',
-  wru: 'wru-latn-id',
-  wrv: 'wrv-latn-pg',
-  wrw: 'wrw-latn-au',
-  wrx: 'wrx-latn-id',
-  wrz: 'wrz-latn-au',
-  wsa: 'wsa-latn-id',
-  wsg: 'wsg-gong-in',
-  wsi: 'wsi-latn-vu',
-  wsk: 'wsk-latn-zz',
-  wsr: 'wsr-latn-pg',
-  wss: 'wss-latn-gh',
-  wsu: 'wsu-latn-br',
-  wsv: 'wsv-arab-af',
-  wtf: 'wtf-latn-pg',
-  wth: 'wth-latn-au',
-  wti: 'wti-latn-et',
-  wtk: 'wtk-latn-pg',
-  wtm: 'wtm-deva-in',
-  wtw: 'wtw-latn-id',
-  'wtw-bugi': 'wtw-bugi-id',
-  wua: 'wua-latn-au',
-  wub: 'wub-latn-au',
-  wud: 'wud-latn-tg',
-  wul: 'wul-latn-id',
-  wum: 'wum-latn-ga',
-  wun: 'wun-latn-tz',
-  wur: 'wur-latn-au',
-  wut: 'wut-latn-pg',
-  wuu: 'wuu-hans-cn',
-  wuv: 'wuv-latn-zz',
-  wux: 'wux-latn-au',
-  wuy: 'wuy-latn-id',
-  wwa: 'wwa-latn-zz',
-  wwb: 'wwb-latn-au',
-  wwo: 'wwo-latn-vu',
-  wwr: 'wwr-latn-au',
-  www: 'www-latn-cm',
-  wxw: 'wxw-latn-au',
-  wyb: 'wyb-latn-au',
-  wyi: 'wyi-latn-au',
-  wym: 'wym-latn-pl',
-  wyn: 'wyn-latn-us',
-  wyr: 'wyr-latn-br',
-  wyy: 'wyy-latn-fj',
-  xaa: 'xaa-latn-es',
-  xab: 'xab-latn-ng',
-  xai: 'xai-latn-br',
-  xaj: 'xaj-latn-br',
-  xak: 'xak-latn-ve',
-  xal: 'xal-cyrl-ru',
-  xam: 'xam-latn-za',
-  xan: 'xan-ethi-et',
-  xao: 'xao-latn-vn',
-  xar: 'xar-latn-pg',
-  xas: 'xas-cyrl-ru',
-  xat: 'xat-latn-br',
-  xau: 'xau-latn-id',
-  xav: 'xav-latn-br',
-  xaw: 'xaw-latn-us',
-  xay: 'xay-latn-id',
-  xbb: 'xbb-latn-au',
-  xbd: 'xbd-latn-au',
-  xbe: 'xbe-latn-au',
-  xbg: 'xbg-latn-au',
-  xbi: 'xbi-latn-zz',
-  xbj: 'xbj-latn-au',
-  xbm: 'xbm-latn-fr',
-  xbn: 'xbn-latn-my',
-  xbp: 'xbp-latn-au',
-  xbr: 'xbr-latn-id',
-  xbw: 'xbw-latn-br',
-  xby: 'xby-latn-au',
-  xch: 'xch-latn-us',
-  xco: 'xco-chrs-uz',
-  xcr: 'xcr-cari-tr',
-  xda: 'xda-latn-au',
-  xdk: 'xdk-latn-au',
-  xdo: 'xdo-latn-ao',
-  xdq: 'xdq-cyrl-ru',
-  xdy: 'xdy-latn-id',
-  xed: 'xed-latn-cm',
-  xeg: 'xeg-latn-za',
-  xem: 'xem-latn-id',
-  xer: 'xer-latn-br',
-  xes: 'xes-latn-zz',
-  xet: 'xet-latn-br',
-  xeu: 'xeu-latn-pg',
-  xgb: 'xgb-latn-ci',
-  xgd: 'xgd-latn-au',
-  xgg: 'xgg-latn-au',
-  xgi: 'xgi-latn-au',
-  xgm: 'xgm-latn-au',
-  xgu: 'xgu-latn-au',
-  xgw: 'xgw-latn-au',
-  xh: 'xh-latn-za',
-  xhe: 'xhe-arab-pk',
-  xhm: 'xhm-khmr-kh',
-  xhv: 'xhv-latn-vn',
-  xii: 'xii-latn-za',
-  xin: 'xin-latn-gt',
-  xir: 'xir-latn-br',
-  xis: 'xis-orya-in',
-  xiy: 'xiy-latn-br',
-  xjb: 'xjb-latn-au',
-  xjt: 'xjt-latn-au',
-  xka: 'xka-arab-pk',
-  xkb: 'xkb-latn-bj',
-  xkc: 'xkc-arab-ir',
-  xkd: 'xkd-latn-id',
-  xke: 'xke-latn-id',
-  xkg: 'xkg-latn-ml',
-  xkj: 'xkj-arab-ir',
-  xkl: 'xkl-latn-id',
-  xkn: 'xkn-latn-id',
-  xkp: 'xkp-arab-ir',
-  xkq: 'xkq-latn-id',
-  xkr: 'xkr-latn-br',
-  xks: 'xks-latn-id',
-  xkt: 'xkt-latn-gh',
-  xku: 'xku-latn-cg',
-  xkv: 'xkv-latn-bw',
-  xkw: 'xkw-latn-id',
-  xkx: 'xkx-latn-pg',
-  xky: 'xky-latn-my',
-  xkz: 'xkz-latn-bt',
-  xla: 'xla-latn-zz',
-  xlc: 'xlc-lyci-tr',
-  xld: 'xld-lydi-tr',
-  xly: 'xly-elym-ir',
-  xma: 'xma-latn-so',
-  xmb: 'xmb-latn-cm',
-  xmc: 'xmc-latn-mz',
-  xmd: 'xmd-latn-cm',
-  xmf: 'xmf-geor-ge',
-  xmg: 'xmg-latn-cm',
-  xmh: 'xmh-latn-au',
-  xmj: 'xmj-latn-cm',
-  xmm: 'xmm-latn-id',
-  xmn: 'xmn-mani-cn',
-  xmo: 'xmo-latn-br',
-  xmp: 'xmp-latn-au',
-  xmq: 'xmq-latn-au',
-  xmr: 'xmr-merc-sd',
-  xmt: 'xmt-latn-id',
-  xmu: 'xmu-latn-au',
-  xmv: 'xmv-latn-mg',
-  xmw: 'xmw-latn-mg',
-  xmx: 'xmx-latn-id',
-  xmy: 'xmy-latn-au',
-  xmz: 'xmz-latn-id',
-  xna: 'xna-narb-sa',
-  xnb: 'xnb-latn-tw',
-  xni: 'xni-latn-au',
-  xnj: 'xnj-latn-tz',
-  xnk: 'xnk-latn-au',
-  xnm: 'xnm-latn-au',
-  xnn: 'xnn-latn-ph',
-  xnq: 'xnq-latn-mz',
-  xnr: 'xnr-deva-in',
-  xnt: 'xnt-latn-us',
-  xnu: 'xnu-latn-au',
-  xny: 'xny-latn-au',
-  xnz: 'xnz-latn-eg',
-  'xnz-arab': 'xnz-arab-eg',
-  xoc: 'xoc-latn-ng',
-  xod: 'xod-latn-id',
-  xog: 'xog-latn-ug',
-  xoi: 'xoi-latn-pg',
-  xok: 'xok-latn-br',
-  xom: 'xom-latn-sd',
-  'xom-ethi': 'xom-ethi-et',
-  xon: 'xon-latn-zz',
-  xoo: 'xoo-latn-br',
-  xop: 'xop-latn-pg',
-  xor: 'xor-latn-br',
-  xow: 'xow-latn-pg',
-  xpa: 'xpa-latn-au',
-  xpb: 'xpb-latn-au',
-  xpd: 'xpd-latn-au',
-  xpf: 'xpf-latn-au',
-  xpg: 'xpg-grek-tr',
-  xph: 'xph-latn-au',
-  xpi: 'xpi-ogam-gb',
-  xpj: 'xpj-latn-au',
-  xpk: 'xpk-latn-br',
-  xpl: 'xpl-latn-au',
-  xpm: 'xpm-cyrl-ru',
-  xpn: 'xpn-latn-br',
-  xpo: 'xpo-latn-mx',
-  xpq: 'xpq-latn-us',
-  xpr: 'xpr-prti-ir',
-  xpt: 'xpt-latn-au',
-  xpv: 'xpv-latn-au',
-  xpw: 'xpw-latn-au',
-  xpx: 'xpx-latn-au',
-  xpz: 'xpz-latn-au',
-  xra: 'xra-latn-br',
-  xrb: 'xrb-latn-zz',
-  xrd: 'xrd-latn-au',
-  xre: 'xre-latn-br',
-  xrg: 'xrg-latn-au',
-  xri: 'xri-latn-br',
-  xrm: 'xrm-cyrl-ru',
-  xrn: 'xrn-cyrl-ru',
-  xrr: 'xrr-latn-it',
-  xru: 'xru-latn-au',
-  xrw: 'xrw-latn-pg',
-  xsa: 'xsa-sarb-ye',
-  xsb: 'xsb-latn-ph',
-  xse: 'xse-latn-id',
-  xsh: 'xsh-latn-ng',
-  xsi: 'xsi-latn-zz',
-  xsm: 'xsm-latn-zz',
-  xsn: 'xsn-latn-ng',
-  xsp: 'xsp-latn-pg',
-  xsq: 'xsq-latn-mz',
-  xsr: 'xsr-deva-np',
-  xss: 'xss-cyrl-ru',
-  xsu: 'xsu-latn-ve',
-  xsy: 'xsy-latn-tw',
-  xta: 'xta-latn-mx',
-  xtb: 'xtb-latn-mx',
-  xtc: 'xtc-latn-sd',
-  xtd: 'xtd-latn-mx',
-  xte: 'xte-latn-id',
-  xth: 'xth-latn-au',
-  xti: 'xti-latn-mx',
-  xtj: 'xtj-latn-mx',
-  xtl: 'xtl-latn-mx',
-  xtm: 'xtm-latn-mx',
-  xtn: 'xtn-latn-mx',
-  xtp: 'xtp-latn-mx',
-  xts: 'xts-latn-mx',
-  xtt: 'xtt-latn-mx',
-  xtu: 'xtu-latn-mx',
-  xtv: 'xtv-latn-au',
-  xtw: 'xtw-latn-br',
-  xty: 'xty-latn-mx',
-  xub: 'xub-taml-in',
-  'xub-knda': 'xub-knda-in',
-  'xub-mlym': 'xub-mlym-in',
-  xud: 'xud-latn-au',
-  xuj: 'xuj-taml-in',
-  xul: 'xul-latn-au',
-  xum: 'xum-latn-it',
-  'xum-ital': 'xum-ital-it',
-  xun: 'xun-latn-au',
-  xuo: 'xuo-latn-td',
-  xut: 'xut-latn-au',
-  xuu: 'xuu-latn-na',
-  xve: 'xve-ital-it',
-  xvi: 'xvi-arab-af',
-  xvn: 'xvn-latn-es',
-  xvo: 'xvo-latn-it',
-  xvs: 'xvs-latn-it',
-  xwa: 'xwa-latn-br',
-  xwd: 'xwd-latn-au',
-  xwe: 'xwe-latn-zz',
-  xwj: 'xwj-latn-au',
-  xwk: 'xwk-latn-au',
-  xwl: 'xwl-latn-bj',
-  xwo: 'xwo-cyrl-ru',
-  xwr: 'xwr-latn-id',
-  xwt: 'xwt-latn-au',
-  xww: 'xww-latn-au',
-  xxb: 'xxb-latn-gh',
-  xxk: 'xxk-latn-id',
-  xxm: 'xxm-latn-au',
-  xxr: 'xxr-latn-br',
-  xxt: 'xxt-latn-id',
-  xya: 'xya-latn-au',
-  xyb: 'xyb-latn-au',
-  xyj: 'xyj-latn-au',
-  xyk: 'xyk-latn-au',
-  xyl: 'xyl-latn-br',
-  xyt: 'xyt-latn-au',
-  xyy: 'xyy-latn-au',
-  xzh: 'xzh-marc-cn',
-  xzp: 'xzp-latn-mx',
-  yaa: 'yaa-latn-pe',
-  yab: 'yab-latn-br',
-  yac: 'yac-latn-id',
-  yad: 'yad-latn-pe',
-  yae: 'yae-latn-ve',
-  yaf: 'yaf-latn-cd',
-  yag: 'yag-latn-cl',
-  yai: 'yai-cyrl-tj',
-  yaj: 'yaj-latn-cf',
-  yak: 'yak-latn-us',
-  yal: 'yal-latn-gn',
-  'yal-arab': 'yal-arab-gn',
-  yam: 'yam-latn-zz',
-  yan: 'yan-latn-ni',
-  yao: 'yao-latn-mz',
-  yap: 'yap-latn-fm',
-  yaq: 'yaq-latn-mx',
-  yar: 'yar-latn-ve',
-  yas: 'yas-latn-zz',
-  yat: 'yat-latn-zz',
-  yau: 'yau-latn-ve',
-  yav: 'yav-latn-cm',
-  yaw: 'yaw-latn-br',
-  yax: 'yax-latn-ao',
-  yay: 'yay-latn-zz',
-  yaz: 'yaz-latn-zz',
-  yba: 'yba-latn-zz',
-  ybb: 'ybb-latn-cm',
-  ybe: 'ybe-latn-cn',
-  'ybe-ougr': 'ybe-ougr-cn',
-  ybh: 'ybh-deva-np',
-  ybi: 'ybi-deva-np',
-  ybj: 'ybj-latn-ng',
-  ybl: 'ybl-latn-ng',
-  ybm: 'ybm-latn-pg',
-  ybn: 'ybn-latn-br',
-  ybo: 'ybo-latn-pg',
-  ybx: 'ybx-latn-pg',
-  yby: 'yby-latn-zz',
-  ycl: 'ycl-latn-cn',
-  ycn: 'ycn-latn-co',
-  yda: 'yda-latn-au',
-  yde: 'yde-latn-pg',
-  ydg: 'ydg-arab-pk',
-  ydk: 'ydk-latn-pg',
-  yea: 'yea-mlym-in',
-  'yea-knda': 'yea-knda-in',
-  yec: 'yec-latn-de',
-  yee: 'yee-latn-pg',
-  yei: 'yei-latn-cm',
-  yej: 'yej-grek-il',
-  yel: 'yel-latn-cd',
-  yer: 'yer-latn-zz',
-  yes: 'yes-latn-ng',
-  yet: 'yet-latn-id',
-  yeu: 'yeu-telu-in',
-  yev: 'yev-latn-pg',
-  yey: 'yey-latn-bw',
-  yga: 'yga-latn-au',
-  ygi: 'ygi-latn-au',
-  ygl: 'ygl-latn-pg',
-  ygm: 'ygm-latn-pg',
-  ygp: 'ygp-plrd-cn',
-  ygr: 'ygr-latn-zz',
-  ygu: 'ygu-latn-au',
-  ygw: 'ygw-latn-zz',
-  yhd: 'yhd-hebr-il',
-  yi: 'yi-hebr-001',
-  yia: 'yia-latn-au',
-  yig: 'yig-yiii-cn',
-  yih: 'yih-hebr-de',
-  yii: 'yii-latn-au',
-  yij: 'yij-latn-au',
-  yil: 'yil-latn-au',
-  yim: 'yim-latn-in',
-  yir: 'yir-latn-id',
-  yis: 'yis-latn-pg',
-  yiv: 'yiv-yiii-cn',
-  yka: 'yka-latn-ph',
-  'yka-arab': 'yka-arab-ph',
-  ykg: 'ykg-cyrl-ru',
-  yki: 'yki-latn-id',
-  ykk: 'ykk-latn-pg',
-  ykm: 'ykm-latn-pg',
-  yko: 'yko-latn-zz',
-  ykr: 'ykr-latn-pg',
-  yky: 'yky-latn-cf',
-  yla: 'yla-latn-pg',
-  ylb: 'ylb-latn-pg',
-  yle: 'yle-latn-zz',
-  ylg: 'ylg-latn-zz',
-  yli: 'yli-latn-id',
-  yll: 'yll-latn-zz',
-  ylr: 'ylr-latn-au',
-  ylu: 'ylu-latn-pg',
-  yly: 'yly-latn-nc',
-  ymb: 'ymb-latn-pg',
-  yme: 'yme-latn-pe',
-  ymg: 'ymg-latn-cd',
-  ymk: 'ymk-latn-mz',
-  'ymk-arab': 'ymk-arab-mz',
-  yml: 'yml-latn-zz',
-  ymm: 'ymm-latn-so',
-  ymn: 'ymn-latn-id',
-  ymo: 'ymo-latn-pg',
-  ymp: 'ymp-latn-pg',
-  yna: 'yna-plrd-cn',
-  ynd: 'ynd-latn-au',
-  yng: 'yng-latn-cd',
-  ynk: 'ynk-cyrl-ru',
-  ynl: 'ynl-latn-pg',
-  ynq: 'ynq-latn-ng',
-  yns: 'yns-latn-cd',
-  ynu: 'ynu-latn-co',
-  yo: 'yo-latn-ng',
-  yob: 'yob-latn-pg',
-  yog: 'yog-latn-ph',
-  yoi: 'yoi-jpan-jp',
-  yok: 'yok-latn-us',
-  yol: 'yol-latn-gb',
-  yom: 'yom-latn-cd',
-  yon: 'yon-latn-zz',
-  yot: 'yot-latn-ng',
-  yoy: 'yoy-thai-th',
-  yra: 'yra-latn-pg',
-  yrb: 'yrb-latn-zz',
-  yre: 'yre-latn-zz',
-  yrk: 'yrk-cyrl-ru',
-  yrl: 'yrl-latn-br',
-  yrm: 'yrm-latn-au',
-  yro: 'yro-latn-br',
-  yrs: 'yrs-latn-id',
-  yrw: 'yrw-latn-pg',
-  yry: 'yry-latn-au',
-  ysd: 'ysd-yiii-cn',
-  ysn: 'ysn-yiii-cn',
-  ysp: 'ysp-yiii-cn',
-  ysr: 'ysr-cyrl-ru',
-  yss: 'yss-latn-zz',
-  ysy: 'ysy-plrd-cn',
-  ytw: 'ytw-latn-pg',
-  yty: 'yty-latn-au',
-  yua: 'yua-latn-mx',
-  yub: 'yub-latn-au',
-  yuc: 'yuc-latn-us',
-  yud: 'yud-hebr-il',
-  yue: 'yue-hant-hk',
-  'yue-cn': 'yue-hans-cn',
-  'yue-hans': 'yue-hans-cn',
-  yuf: 'yuf-latn-us',
-  yug: 'yug-cyrl-ru',
-  yui: 'yui-latn-co',
-  yuj: 'yuj-latn-zz',
-  yul: 'yul-latn-cf',
-  yum: 'yum-latn-us',
-  yun: 'yun-latn-ng',
-  yup: 'yup-latn-co',
-  yuq: 'yuq-latn-bo',
-  yur: 'yur-latn-us',
-  yut: 'yut-latn-zz',
-  yuw: 'yuw-latn-zz',
-  yux: 'yux-cyrl-ru',
-  yuz: 'yuz-latn-bo',
-  yva: 'yva-latn-id',
-  yvt: 'yvt-latn-ve',
-  ywa: 'ywa-latn-pg',
-  ywg: 'ywg-latn-au',
-  ywn: 'ywn-latn-br',
-  ywq: 'ywq-plrd-cn',
-  'ywq-yiii': 'ywq-yiii-cn',
-  ywr: 'ywr-latn-au',
-  ywu: 'ywu-plrd-cn',
-  'ywu-yiii': 'ywu-yiii-cn',
-  yww: 'yww-latn-au',
-  yxa: 'yxa-latn-au',
-  yxg: 'yxg-latn-au',
-  yxl: 'yxl-latn-au',
-  yxm: 'yxm-latn-au',
-  yxu: 'yxu-latn-au',
-  yxy: 'yxy-latn-au',
-  yyr: 'yyr-latn-au',
-  yyu: 'yyu-latn-pg',
-  za: 'za-latn-cn',
-  zaa: 'zaa-latn-mx',
-  zab: 'zab-latn-mx',
-  zac: 'zac-latn-mx',
-  zad: 'zad-latn-mx',
-  zae: 'zae-latn-mx',
-  zaf: 'zaf-latn-mx',
-  zag: 'zag-latn-sd',
-  zah: 'zah-latn-ng',
-  zaj: 'zaj-latn-tz',
-  zak: 'zak-latn-tz',
-  zam: 'zam-latn-mx',
-  zao: 'zao-latn-mx',
-  zap: 'zap-latn-mx',
-  zaq: 'zaq-latn-mx',
-  zar: 'zar-latn-mx',
-  zas: 'zas-latn-mx',
-  zat: 'zat-latn-mx',
-  zau: 'zau-tibt-in',
-  'zau-arab': 'zau-arab-in',
-  zav: 'zav-latn-mx',
-  zaw: 'zaw-latn-mx',
-  zax: 'zax-latn-mx',
-  zay: 'zay-latn-et',
-  'zay-ethi': 'zay-ethi-et',
-  zaz: 'zaz-latn-ng',
-  zba: 'zba-arab-001',
-  zbc: 'zbc-latn-my',
-  zbe: 'zbe-latn-my',
-  zbt: 'zbt-latn-id',
-  zbu: 'zbu-latn-ng',
-  zbw: 'zbw-latn-my',
-  zca: 'zca-latn-mx',
-  zch: 'zch-hani-cn',
-  zdj: 'zdj-arab-km',
-  zea: 'zea-latn-nl',
-  zeg: 'zeg-latn-pg',
-  zeh: 'zeh-hani-cn',
-  zen: 'zen-tfng-mr',
-  'zen-arab': 'zen-arab-mr',
-  zga: 'zga-latn-tz',
-  zgb: 'zgb-hani-cn',
-  zgh: 'zgh-tfng-ma',
-  zgm: 'zgm-hani-cn',
-  zgn: 'zgn-hani-cn',
-  zgr: 'zgr-latn-pg',
-  zh: 'zh-hans-cn',
-  'zh-au': 'zh-hant-au',
-  'zh-bn': 'zh-hant-bn',
-  'zh-bopo': 'zh-bopo-tw',
-  'zh-gb': 'zh-hant-gb',
-  'zh-gf': 'zh-hant-gf',
-  'zh-hanb': 'zh-hanb-tw',
-  'zh-hant': 'zh-hant-tw',
-  'zh-hk': 'zh-hant-hk',
-  'zh-id': 'zh-hant-id',
-  'zh-mo': 'zh-hant-mo',
-  'zh-pa': 'zh-hant-pa',
-  'zh-pf': 'zh-hant-pf',
-  'zh-ph': 'zh-hant-ph',
-  'zh-sr': 'zh-hant-sr',
-  'zh-th': 'zh-hant-th',
-  'zh-tw': 'zh-hant-tw',
-  'zh-us': 'zh-hant-us',
-  'zh-vn': 'zh-hant-vn',
-  zhd: 'zhd-hani-cn',
-  'zhd-latn': 'zhd-latn-vn',
-  zhi: 'zhi-latn-ng',
-  zhn: 'zhn-latn-cn',
-  'zhn-hani': 'zhn-hani-cn',
-  zhw: 'zhw-latn-cm',
-  zhx: 'zhx-nshu-cn',
-  zia: 'zia-latn-zz',
-  zik: 'zik-latn-pg',
-  zil: 'zil-latn-gn',
-  zim: 'zim-latn-td',
-  zin: 'zin-latn-tz',
-  ziw: 'ziw-latn-tz',
-  ziz: 'ziz-latn-ng',
-  zka: 'zka-latn-id',
-  zkb: 'zkb-cyrl-ru',
-  zkd: 'zkd-latn-mm',
-  zko: 'zko-cyrl-ru',
-  zkp: 'zkp-latn-br',
-  zkt: 'zkt-kits-cn',
-  zku: 'zku-latn-au',
-  zkz: 'zkz-cyrl-ru',
-  zla: 'zla-latn-cd',
-  zlj: 'zlj-hani-cn',
-  'zlj-latn': 'zlj-latn-cn',
-  zlm: 'zlm-latn-tg',
-  zln: 'zln-hani-cn',
-  zlq: 'zlq-hani-cn',
-  zma: 'zma-latn-au',
-  zmb: 'zmb-latn-cd',
-  zmc: 'zmc-latn-au',
-  zmd: 'zmd-latn-au',
-  zme: 'zme-latn-au',
-  zmf: 'zmf-latn-cd',
-  zmg: 'zmg-latn-au',
-  zmh: 'zmh-latn-pg',
-  zmi: 'zmi-latn-my',
-  zmj: 'zmj-latn-au',
-  zmk: 'zmk-latn-au',
-  zml: 'zml-latn-au',
-  zmm: 'zmm-latn-au',
-  zmn: 'zmn-latn-ga',
-  zmo: 'zmo-latn-sd',
-  zmp: 'zmp-latn-cd',
-  zmq: 'zmq-latn-cd',
-  zmr: 'zmr-latn-au',
-  zms: 'zms-latn-cd',
-  zmt: 'zmt-latn-au',
-  zmu: 'zmu-latn-au',
-  zmv: 'zmv-latn-au',
-  zmw: 'zmw-latn-cd',
-  zmx: 'zmx-latn-cg',
-  zmy: 'zmy-latn-au',
-  zmz: 'zmz-latn-cd',
-  zna: 'zna-latn-td',
-  zne: 'zne-latn-zz',
-  zng: 'zng-latn-vn',
-  znk: 'znk-latn-au',
-  zns: 'zns-latn-ng',
-  zoc: 'zoc-latn-mx',
-  zoh: 'zoh-latn-mx',
-  zom: 'zom-latn-in',
-  zoo: 'zoo-latn-mx',
-  zoq: 'zoq-latn-mx',
-  zor: 'zor-latn-mx',
-  zos: 'zos-latn-mx',
-  zpa: 'zpa-latn-mx',
-  zpb: 'zpb-latn-mx',
-  zpc: 'zpc-latn-mx',
-  zpd: 'zpd-latn-mx',
-  zpe: 'zpe-latn-mx',
-  zpf: 'zpf-latn-mx',
-  zpg: 'zpg-latn-mx',
-  zph: 'zph-latn-mx',
-  zpi: 'zpi-latn-mx',
-  zpj: 'zpj-latn-mx',
-  zpk: 'zpk-latn-mx',
-  zpl: 'zpl-latn-mx',
-  zpm: 'zpm-latn-mx',
-  zpn: 'zpn-latn-mx',
-  zpo: 'zpo-latn-mx',
-  zpp: 'zpp-latn-mx',
-  zpq: 'zpq-latn-mx',
-  zpr: 'zpr-latn-mx',
-  zps: 'zps-latn-mx',
-  zpt: 'zpt-latn-mx',
-  zpu: 'zpu-latn-mx',
-  zpv: 'zpv-latn-mx',
-  zpw: 'zpw-latn-mx',
-  zpx: 'zpx-latn-mx',
-  zpy: 'zpy-latn-mx',
-  zpz: 'zpz-latn-mx',
-  zqe: 'zqe-hani-cn',
-  'zqe-latn': 'zqe-latn-cn',
-  zrn: 'zrn-latn-td',
-  zro: 'zro-latn-ec',
-  zrp: 'zrp-hebr-fr',
-  zrs: 'zrs-latn-id',
-  zsa: 'zsa-latn-pg',
-  zsr: 'zsr-latn-mx',
-  zsu: 'zsu-latn-pg',
-  zte: 'zte-latn-mx',
-  ztg: 'ztg-latn-mx',
-  ztl: 'ztl-latn-mx',
-  ztm: 'ztm-latn-mx',
-  ztn: 'ztn-latn-mx',
-  ztp: 'ztp-latn-mx',
-  ztq: 'ztq-latn-mx',
-  zts: 'zts-latn-mx',
-  ztt: 'ztt-latn-mx',
-  ztu: 'ztu-latn-mx',
-  ztx: 'ztx-latn-mx',
-  zty: 'zty-latn-mx',
-  zu: 'zu-latn-za',
-  zua: 'zua-latn-ng',
-  zuh: 'zuh-latn-pg',
-  zum: 'zum-arab-om',
-  zun: 'zun-latn-us',
-  zuy: 'zuy-latn-cm',
-  zyg: 'zyg-hani-cn',
-  zyj: 'zyj-latn-cn',
-  'zyj-hani': 'zyj-hani-cn',
-  zyn: 'zyn-hani-cn',
-  zyp: 'zyp-latn-mm',
-  zza: 'zza-latn-tr',
-  zzj: 'zzj-hani-cn'
-};
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-normalize/lib/many.js":
-/*!***************************************************!*\
-  !*** ./node_modules/bcp-47-normalize/lib/many.js ***!
-  \***************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   many: function() { return /* binding */ many; }
-/* harmony export */ });
-/**
- * @typedef {'script'|'region'|'variants'} Field
- */
-
-/**
- * @type {{region: Record<string, Array<string>>}}
- */
-const many = {
-  region: {
-    172: ['ru', 'am', 'az', 'by', 'ge', 'kg', 'kz', 'md', 'tj', 'tm', 'ua', 'uz'],
-    200: ['cz', 'sk'],
-    530: ['cw', 'sx', 'bq'],
-    532: ['cw', 'sx', 'bq'],
-    536: ['sa', 'iq'],
-    582: ['fm', 'mh', 'mp', 'pw'],
-    810: ['ru', 'am', 'az', 'by', 'ee', 'ge', 'kz', 'kg', 'lv', 'lt', 'md', 'tj', 'tm', 'ua', 'uz'],
-    830: ['je', 'gg'],
-    890: ['rs', 'me', 'si', 'hr', 'mk', 'ba'],
-    891: ['rs', 'me'],
-    an: ['cw', 'sx', 'bq'],
-    cs: ['rs', 'me'],
-    fq: ['aq', 'tf'],
-    nt: ['sa', 'iq'],
-    pc: ['fm', 'mh', 'mp', 'pw'],
-    su: ['ru', 'am', 'az', 'by', 'ee', 'ge', 'kz', 'kg', 'lv', 'lt', 'md', 'tj', 'tm', 'ua', 'uz'],
-    yu: ['rs', 'me'],
-    '062': ['034', '143'],
-    ant: ['cw', 'sx', 'bq'],
-    scg: ['rs', 'me'],
-    ntz: ['sa', 'iq'],
-    sun: ['ru', 'am', 'az', 'by', 'ee', 'ge', 'kz', 'kg', 'lv', 'lt', 'md', 'tj', 'tm', 'ua', 'uz'],
-    yug: ['rs', 'me']
-  }
-};
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47-normalize/lib/matches.js":
-/*!******************************************************!*\
-  !*** ./node_modules/bcp-47-normalize/lib/matches.js ***!
-  \******************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   matches: function() { return /* binding */ matches; }
-/* harmony export */ });
-/**
- * @typedef Change
- * @property {string} from
- * @property {string} to
- */
-
-/**
- * @type {Array<Change>}
- */
-const matches = [{
-  from: 'in',
-  to: 'id'
-}, {
-  from: 'iw',
-  to: 'he'
-}, {
-  from: 'ji',
-  to: 'yi'
-}, {
-  from: 'jw',
-  to: 'jv'
-}, {
-  from: 'mo',
-  to: 'ro'
-}, {
-  from: 'scc',
-  to: 'sr'
-}, {
-  from: 'scr',
-  to: 'hr'
-}, {
-  from: 'aam',
-  to: 'aas'
-}, {
-  from: 'adp',
-  to: 'dz'
-}, {
-  from: 'aue',
-  to: 'ktz'
-}, {
-  from: 'ayx',
-  to: 'nun'
-}, {
-  from: 'bgm',
-  to: 'bcg'
-}, {
-  from: 'bjd',
-  to: 'drl'
-}, {
-  from: 'ccq',
-  to: 'rki'
-}, {
-  from: 'cjr',
-  to: 'mom'
-}, {
-  from: 'cka',
-  to: 'cmr'
-}, {
-  from: 'cmk',
-  to: 'xch'
-}, {
-  from: 'coy',
-  to: 'pij'
-}, {
-  from: 'cqu',
-  to: 'quh'
-}, {
-  from: 'drh',
-  to: 'mn'
-}, {
-  from: 'drw',
-  to: 'fa-af'
-}, {
-  from: 'gav',
-  to: 'dev'
-}, {
-  from: 'gfx',
-  to: 'vaj'
-}, {
-  from: 'ggn',
-  to: 'gvr'
-}, {
-  from: 'gti',
-  to: 'nyc'
-}, {
-  from: 'guv',
-  to: 'duz'
-}, {
-  from: 'hrr',
-  to: 'jal'
-}, {
-  from: 'ibi',
-  to: 'opa'
-}, {
-  from: 'ilw',
-  to: 'gal'
-}, {
-  from: 'jeg',
-  to: 'oyb'
-}, {
-  from: 'kgc',
-  to: 'tdf'
-}, {
-  from: 'kgh',
-  to: 'kml'
-}, {
-  from: 'koj',
-  to: 'kwv'
-}, {
-  from: 'krm',
-  to: 'bmf'
-}, {
-  from: 'ktr',
-  to: 'dtp'
-}, {
-  from: 'kvs',
-  to: 'gdj'
-}, {
-  from: 'kwq',
-  to: 'yam'
-}, {
-  from: 'kxe',
-  to: 'tvd'
-}, {
-  from: 'kzj',
-  to: 'dtp'
-}, {
-  from: 'kzt',
-  to: 'dtp'
-}, {
-  from: 'lii',
-  to: 'raq'
-}, {
-  from: 'lmm',
-  to: 'rmx'
-}, {
-  from: 'meg',
-  to: 'cir'
-}, {
-  from: 'mst',
-  to: 'mry'
-}, {
-  from: 'mwj',
-  to: 'vaj'
-}, {
-  from: 'myt',
-  to: 'mry'
-}, {
-  from: 'nad',
-  to: 'xny'
-}, {
-  from: 'ncp',
-  to: 'kdz'
-}, {
-  from: 'nnx',
-  to: 'ngv'
-}, {
-  from: 'nts',
-  to: 'pij'
-}, {
-  from: 'oun',
-  to: 'vaj'
-}, {
-  from: 'pcr',
-  to: 'adx'
-}, {
-  from: 'pmc',
-  to: 'huw'
-}, {
-  from: 'pmu',
-  to: 'phr'
-}, {
-  from: 'ppa',
-  to: 'bfy'
-}, {
-  from: 'ppr',
-  to: 'lcq'
-}, {
-  from: 'pry',
-  to: 'prt'
-}, {
-  from: 'puz',
-  to: 'pub'
-}, {
-  from: 'sca',
-  to: 'hle'
-}, {
-  from: 'skk',
-  to: 'oyb'
-}, {
-  from: 'tdu',
-  to: 'dtp'
-}, {
-  from: 'thc',
-  to: 'tpo'
-}, {
-  from: 'thx',
-  to: 'oyb'
-}, {
-  from: 'tie',
-  to: 'ras'
-}, {
-  from: 'tkk',
-  to: 'twm'
-}, {
-  from: 'tlw',
-  to: 'weo'
-}, {
-  from: 'tmp',
-  to: 'tyj'
-}, {
-  from: 'tne',
-  to: 'kak'
-}, {
-  from: 'tnf',
-  to: 'fa-af'
-}, {
-  from: 'tsf',
-  to: 'taj'
-}, {
-  from: 'uok',
-  to: 'ema'
-}, {
-  from: 'xba',
-  to: 'cax'
-}, {
-  from: 'xia',
-  to: 'acn'
-}, {
-  from: 'xkh',
-  to: 'waw'
-}, {
-  from: 'xsj',
-  to: 'suj'
-}, {
-  from: 'ybd',
-  to: 'rki'
-}, {
-  from: 'yma',
-  to: 'lrr'
-}, {
-  from: 'ymt',
-  to: 'mtm'
-}, {
-  from: 'yos',
-  to: 'zom'
-}, {
-  from: 'yuu',
-  to: 'yug'
-}, {
-  from: 'asd',
-  to: 'snz'
-}, {
-  from: 'dit',
-  to: 'dif'
-}, {
-  from: 'llo',
-  to: 'ngt'
-}, {
-  from: 'myd',
-  to: 'aog'
-}, {
-  from: 'nns',
-  to: 'nbr'
-}, {
-  from: 'agp',
-  to: 'apf'
-}, {
-  from: 'ais',
-  to: 'ami'
-}, {
-  from: 'ajt',
-  to: 'aeb'
-}, {
-  from: 'baz',
-  to: 'nvo'
-}, {
-  from: 'bhk',
-  to: 'fbl'
-}, {
-  from: 'bic',
-  to: 'bir'
-}, {
-  from: 'bjq',
-  to: 'bzc'
-}, {
-  from: 'bkb',
-  to: 'ebk'
-}, {
-  from: 'blg',
-  to: 'iba'
-}, {
-  from: 'btb',
-  to: 'beb'
-}, {
-  from: 'daf',
-  to: 'dnj'
-}, {
-  from: 'dap',
-  to: 'njz'
-}, {
-  from: 'djl',
-  to: 'dze'
-}, {
-  from: 'dkl',
-  to: 'aqd'
-}, {
-  from: 'drr',
-  to: 'kzk'
-}, {
-  from: 'dud',
-  to: 'uth'
-}, {
-  from: 'duj',
-  to: 'dwu'
-}, {
-  from: 'dwl',
-  to: 'dbt'
-}, {
-  from: 'elp',
-  to: 'amq'
-}, {
-  from: 'gbc',
-  to: 'wny'
-}, {
-  from: 'ggo',
-  to: 'esg'
-}, {
-  from: 'ggr',
-  to: 'gtu'
-}, {
-  from: 'gio',
-  to: 'aou'
-}, {
-  from: 'gli',
-  to: 'kzk'
-}, {
-  from: 'ill',
-  to: 'ilm'
-}, {
-  from: 'izi',
-  to: 'eza'
-}, {
-  from: 'jar',
-  to: 'jgk'
-}, {
-  from: 'kdv',
-  to: 'zkd'
-}, {
-  from: 'kgd',
-  to: 'ncq'
-}, {
-  from: 'kpp',
-  to: 'jkm'
-}, {
-  from: 'kxl',
-  to: 'kru'
-}, {
-  from: 'kzh',
-  to: 'dgl'
-}, {
-  from: 'lak',
-  to: 'ksp'
-}, {
-  from: 'leg',
-  to: 'enl'
-}, {
-  from: 'mgx',
-  to: 'jbk'
-}, {
-  from: 'mnt',
-  to: 'wnn'
-}, {
-  from: 'mof',
-  to: 'xnt'
-}, {
-  from: 'mwd',
-  to: 'dmw'
-}, {
-  from: 'nbf',
-  to: 'nru'
-}, {
-  from: 'nbx',
-  to: 'ekc'
-}, {
-  from: 'nln',
-  to: 'azd'
-}, {
-  from: 'nlr',
-  to: 'nrk'
-}, {
-  from: 'noo',
-  to: 'dtd'
-}, {
-  from: 'nxu',
-  to: 'bpp'
-}, {
-  from: 'pat',
-  to: 'kxr'
-}, {
-  from: 'rmr',
-  to: 'emx'
-}, {
-  from: 'sap',
-  to: 'aqt'
-}, {
-  from: 'sgl',
-  to: 'isk'
-}, {
-  from: 'smd',
-  to: 'kmb'
-}, {
-  from: 'snb',
-  to: 'iba'
-}, {
-  from: 'sul',
-  to: 'sgd'
-}, {
-  from: 'sum',
-  to: 'ulw'
-}, {
-  from: 'tgg',
-  to: 'bjp'
-}, {
-  from: 'thw',
-  to: 'ola'
-}, {
-  from: 'tid',
-  to: 'itd'
-}, {
-  from: 'unp',
-  to: 'wro'
-}, {
-  from: 'wgw',
-  to: 'wgb'
-}, {
-  from: 'wit',
-  to: 'nol'
-}, {
-  from: 'wiw',
-  to: 'nwo'
-}, {
-  from: 'xrq',
-  to: 'dmw'
-}, {
-  from: 'yen',
-  to: 'ynq'
-}, {
-  from: 'yiy',
-  to: 'yrm'
-}, {
-  from: 'zir',
-  to: 'scv'
-}, {
-  from: 'sgn-br',
-  to: 'bzs'
-}, {
-  from: 'sgn-co',
-  to: 'csn'
-}, {
-  from: 'sgn-de',
-  to: 'gsg'
-}, {
-  from: 'sgn-dk',
-  to: 'dsl'
-}, {
-  from: 'sgn-fr',
-  to: 'fsl'
-}, {
-  from: 'sgn-gb',
-  to: 'bfi'
-}, {
-  from: 'sgn-gr',
-  to: 'gss'
-}, {
-  from: 'sgn-ie',
-  to: 'isg'
-}, {
-  from: 'sgn-it',
-  to: 'ise'
-}, {
-  from: 'sgn-jp',
-  to: 'jsl'
-}, {
-  from: 'sgn-mx',
-  to: 'mfs'
-}, {
-  from: 'sgn-ni',
-  to: 'ncs'
-}, {
-  from: 'sgn-nl',
-  to: 'dse'
-}, {
-  from: 'sgn-no',
-  to: 'nsi'
-}, {
-  from: 'sgn-pt',
-  to: 'psr'
-}, {
-  from: 'sgn-se',
-  to: 'swl'
-}, {
-  from: 'sgn-us',
-  to: 'ase'
-}, {
-  from: 'sgn-za',
-  to: 'sfs'
-}, {
-  from: 'sgn-es',
-  to: 'ssp'
-}, {
-  from: 'zh-cmn',
-  to: 'zh'
-}, {
-  from: 'zh-cmn-hans',
-  to: 'zh-hans'
-}, {
-  from: 'zh-cmn-hant',
-  to: 'zh-hant'
-}, {
-  from: 'zh-gan',
-  to: 'gan'
-}, {
-  from: 'zh-wuu',
-  to: 'wuu'
-}, {
-  from: 'zh-yue',
-  to: 'yue'
-}, {
-  from: 'no-bokmal',
-  to: 'nb'
-}, {
-  from: 'no-nynorsk',
-  to: 'nn'
-}, {
-  from: 'aa-saaho',
-  to: 'ssy'
-}, {
-  from: 'sh',
-  to: 'sr-latn'
-}, {
-  from: 'cnr',
-  to: 'sr-me'
-}, {
-  from: 'tl',
-  to: 'fil'
-}, {
-  from: 'aju',
-  to: 'jrb'
-}, {
-  from: 'als',
-  to: 'sq'
-}, {
-  from: 'arb',
-  to: 'ar'
-}, {
-  from: 'ayr',
-  to: 'ay'
-}, {
-  from: 'azj',
-  to: 'az'
-}, {
-  from: 'bcc',
-  to: 'bal'
-}, {
-  from: 'bcl',
-  to: 'bik'
-}, {
-  from: 'bxk',
-  to: 'luy'
-}, {
-  from: 'bxr',
-  to: 'bua'
-}, {
-  from: 'cld',
-  to: 'syr'
-}, {
-  from: 'cmn',
-  to: 'zh'
-}, {
-  from: 'cwd',
-  to: 'cr'
-}, {
-  from: 'dgo',
-  to: 'doi'
-}, {
-  from: 'dhd',
-  to: 'mwr'
-}, {
-  from: 'dik',
-  to: 'din'
-}, {
-  from: 'diq',
-  to: 'zza'
-}, {
-  from: 'lbk',
-  to: 'bnc'
-}, {
-  from: 'ekk',
-  to: 'et'
-}, {
-  from: 'emk',
-  to: 'man'
-}, {
-  from: 'esk',
-  to: 'ik'
-}, {
-  from: 'fat',
-  to: 'ak'
-}, {
-  from: 'fuc',
-  to: 'ff'
-}, {
-  from: 'gaz',
-  to: 'om'
-}, {
-  from: 'gbo',
-  to: 'grb'
-}, {
-  from: 'gno',
-  to: 'gon'
-}, {
-  from: 'gug',
-  to: 'gn'
-}, {
-  from: 'gya',
-  to: 'gba'
-}, {
-  from: 'hdn',
-  to: 'hai'
-}, {
-  from: 'hea',
-  to: 'hmn'
-}, {
-  from: 'ike',
-  to: 'iu'
-}, {
-  from: 'kmr',
-  to: 'ku'
-}, {
-  from: 'knc',
-  to: 'kr'
-}, {
-  from: 'kng',
-  to: 'kg'
-}, {
-  from: 'knn',
-  to: 'kok'
-}, {
-  from: 'kpv',
-  to: 'kv'
-}, {
-  from: 'lvs',
-  to: 'lv'
-}, {
-  from: 'mhr',
-  to: 'chm'
-}, {
-  from: 'mup',
-  to: 'raj'
-}, {
-  from: 'khk',
-  to: 'mn'
-}, {
-  from: 'npi',
-  to: 'ne'
-}, {
-  from: 'ojg',
-  to: 'oj'
-}, {
-  from: 'ory',
-  to: 'or'
-}, {
-  from: 'pbu',
-  to: 'ps'
-}, {
-  from: 'pes',
-  to: 'fa'
-}, {
-  from: 'plt',
-  to: 'mg'
-}, {
-  from: 'pnb',
-  to: 'lah'
-}, {
-  from: 'quz',
-  to: 'qu'
-}, {
-  from: 'rmy',
-  to: 'rom'
-}, {
-  from: 'spy',
-  to: 'kln'
-}, {
-  from: 'src',
-  to: 'sc'
-}, {
-  from: 'swh',
-  to: 'sw'
-}, {
-  from: 'ttq',
-  to: 'tmh'
-}, {
-  from: 'tw',
-  to: 'ak'
-}, {
-  from: 'umu',
-  to: 'del'
-}, {
-  from: 'uzn',
-  to: 'uz'
-}, {
-  from: 'xpe',
-  to: 'kpe'
-}, {
-  from: 'xsl',
-  to: 'den'
-}, {
-  from: 'ydd',
-  to: 'yi'
-}, {
-  from: 'zai',
-  to: 'zap'
-}, {
-  from: 'zsm',
-  to: 'ms'
-}, {
-  from: 'zyb',
-  to: 'za'
-}, {
-  from: 'him',
-  to: 'srx'
-}, {
-  from: 'mnk',
-  to: 'man'
-}, {
-  from: 'bh',
-  to: 'bho'
-}, {
-  from: 'prs',
-  to: 'fa-af'
-}, {
-  from: 'swc',
-  to: 'sw-cd'
-}, {
-  from: 'aar',
-  to: 'aa'
-}, {
-  from: 'abk',
-  to: 'ab'
-}, {
-  from: 'ave',
-  to: 'ae'
-}, {
-  from: 'afr',
-  to: 'af'
-}, {
-  from: 'aka',
-  to: 'ak'
-}, {
-  from: 'amh',
-  to: 'am'
-}, {
-  from: 'arg',
-  to: 'an'
-}, {
-  from: 'ara',
-  to: 'ar'
-}, {
-  from: 'asm',
-  to: 'as'
-}, {
-  from: 'ava',
-  to: 'av'
-}, {
-  from: 'aym',
-  to: 'ay'
-}, {
-  from: 'aze',
-  to: 'az'
-}, {
-  from: 'bak',
-  to: 'ba'
-}, {
-  from: 'bel',
-  to: 'be'
-}, {
-  from: 'bul',
-  to: 'bg'
-}, {
-  from: 'bih',
-  to: 'bho'
-}, {
-  from: 'bis',
-  to: 'bi'
-}, {
-  from: 'bam',
-  to: 'bm'
-}, {
-  from: 'ben',
-  to: 'bn'
-}, {
-  from: 'bod',
-  to: 'bo'
-}, {
-  from: 'bre',
-  to: 'br'
-}, {
-  from: 'bos',
-  to: 'bs'
-}, {
-  from: 'cat',
-  to: 'ca'
-}, {
-  from: 'che',
-  to: 'ce'
-}, {
-  from: 'cha',
-  to: 'ch'
-}, {
-  from: 'cos',
-  to: 'co'
-}, {
-  from: 'cre',
-  to: 'cr'
-}, {
-  from: 'ces',
-  to: 'cs'
-}, {
-  from: 'chu',
-  to: 'cu'
-}, {
-  from: 'chv',
-  to: 'cv'
-}, {
-  from: 'cym',
-  to: 'cy'
-}, {
-  from: 'dan',
-  to: 'da'
-}, {
-  from: 'deu',
-  to: 'de'
-}, {
-  from: 'div',
-  to: 'dv'
-}, {
-  from: 'dzo',
-  to: 'dz'
-}, {
-  from: 'ewe',
-  to: 'ee'
-}, {
-  from: 'ell',
-  to: 'el'
-}, {
-  from: 'eng',
-  to: 'en'
-}, {
-  from: 'epo',
-  to: 'eo'
-}, {
-  from: 'spa',
-  to: 'es'
-}, {
-  from: 'est',
-  to: 'et'
-}, {
-  from: 'eus',
-  to: 'eu'
-}, {
-  from: 'fas',
-  to: 'fa'
-}, {
-  from: 'ful',
-  to: 'ff'
-}, {
-  from: 'fin',
-  to: 'fi'
-}, {
-  from: 'fij',
-  to: 'fj'
-}, {
-  from: 'fao',
-  to: 'fo'
-}, {
-  from: 'fra',
-  to: 'fr'
-}, {
-  from: 'fry',
-  to: 'fy'
-}, {
-  from: 'gle',
-  to: 'ga'
-}, {
-  from: 'gla',
-  to: 'gd'
-}, {
-  from: 'glg',
-  to: 'gl'
-}, {
-  from: 'grn',
-  to: 'gn'
-}, {
-  from: 'guj',
-  to: 'gu'
-}, {
-  from: 'glv',
-  to: 'gv'
-}, {
-  from: 'hau',
-  to: 'ha'
-}, {
-  from: 'heb',
-  to: 'he'
-}, {
-  from: 'hin',
-  to: 'hi'
-}, {
-  from: 'hmo',
-  to: 'ho'
-}, {
-  from: 'hrv',
-  to: 'hr'
-}, {
-  from: 'hat',
-  to: 'ht'
-}, {
-  from: 'hun',
-  to: 'hu'
-}, {
-  from: 'hye',
-  to: 'hy'
-}, {
-  from: 'her',
-  to: 'hz'
-}, {
-  from: 'ina',
-  to: 'ia'
-}, {
-  from: 'ind',
-  to: 'id'
-}, {
-  from: 'ile',
-  to: 'ie'
-}, {
-  from: 'ibo',
-  to: 'ig'
-}, {
-  from: 'iii',
-  to: 'ii'
-}, {
-  from: 'ipk',
-  to: 'ik'
-}, {
-  from: 'ido',
-  to: 'io'
-}, {
-  from: 'isl',
-  to: 'is'
-}, {
-  from: 'ita',
-  to: 'it'
-}, {
-  from: 'iku',
-  to: 'iu'
-}, {
-  from: 'jpn',
-  to: 'ja'
-}, {
-  from: 'jav',
-  to: 'jv'
-}, {
-  from: 'kat',
-  to: 'ka'
-}, {
-  from: 'kon',
-  to: 'kg'
-}, {
-  from: 'kik',
-  to: 'ki'
-}, {
-  from: 'kua',
-  to: 'kj'
-}, {
-  from: 'kaz',
-  to: 'kk'
-}, {
-  from: 'kal',
-  to: 'kl'
-}, {
-  from: 'khm',
-  to: 'km'
-}, {
-  from: 'kan',
-  to: 'kn'
-}, {
-  from: 'kor',
-  to: 'ko'
-}, {
-  from: 'kau',
-  to: 'kr'
-}, {
-  from: 'kas',
-  to: 'ks'
-}, {
-  from: 'kur',
-  to: 'ku'
-}, {
-  from: 'kom',
-  to: 'kv'
-}, {
-  from: 'cor',
-  to: 'kw'
-}, {
-  from: 'kir',
-  to: 'ky'
-}, {
-  from: 'lat',
-  to: 'la'
-}, {
-  from: 'ltz',
-  to: 'lb'
-}, {
-  from: 'lug',
-  to: 'lg'
-}, {
-  from: 'lim',
-  to: 'li'
-}, {
-  from: 'lin',
-  to: 'ln'
-}, {
-  from: 'lao',
-  to: 'lo'
-}, {
-  from: 'lit',
-  to: 'lt'
-}, {
-  from: 'lub',
-  to: 'lu'
-}, {
-  from: 'lav',
-  to: 'lv'
-}, {
-  from: 'mlg',
-  to: 'mg'
-}, {
-  from: 'mah',
-  to: 'mh'
-}, {
-  from: 'mri',
-  to: 'mi'
-}, {
-  from: 'mkd',
-  to: 'mk'
-}, {
-  from: 'mal',
-  to: 'ml'
-}, {
-  from: 'mon',
-  to: 'mn'
-}, {
-  from: 'mol',
-  to: 'ro'
-}, {
-  from: 'mar',
-  to: 'mr'
-}, {
-  from: 'msa',
-  to: 'ms'
-}, {
-  from: 'mlt',
-  to: 'mt'
-}, {
-  from: 'mya',
-  to: 'my'
-}, {
-  from: 'nau',
-  to: 'na'
-}, {
-  from: 'nob',
-  to: 'nb'
-}, {
-  from: 'nde',
-  to: 'nd'
-}, {
-  from: 'nep',
-  to: 'ne'
-}, {
-  from: 'ndo',
-  to: 'ng'
-}, {
-  from: 'nld',
-  to: 'nl'
-}, {
-  from: 'nno',
-  to: 'nn'
-}, {
-  from: 'nor',
-  to: 'no'
-}, {
-  from: 'nbl',
-  to: 'nr'
-}, {
-  from: 'nav',
-  to: 'nv'
-}, {
-  from: 'nya',
-  to: 'ny'
-}, {
-  from: 'oci',
-  to: 'oc'
-}, {
-  from: 'oji',
-  to: 'oj'
-}, {
-  from: 'orm',
-  to: 'om'
-}, {
-  from: 'ori',
-  to: 'or'
-}, {
-  from: 'oss',
-  to: 'os'
-}, {
-  from: 'pan',
-  to: 'pa'
-}, {
-  from: 'pli',
-  to: 'pi'
-}, {
-  from: 'pol',
-  to: 'pl'
-}, {
-  from: 'pus',
-  to: 'ps'
-}, {
-  from: 'por',
-  to: 'pt'
-}, {
-  from: 'que',
-  to: 'qu'
-}, {
-  from: 'roh',
-  to: 'rm'
-}, {
-  from: 'run',
-  to: 'rn'
-}, {
-  from: 'ron',
-  to: 'ro'
-}, {
-  from: 'rus',
-  to: 'ru'
-}, {
-  from: 'kin',
-  to: 'rw'
-}, {
-  from: 'san',
-  to: 'sa'
-}, {
-  from: 'srd',
-  to: 'sc'
-}, {
-  from: 'snd',
-  to: 'sd'
-}, {
-  from: 'sme',
-  to: 'se'
-}, {
-  from: 'sag',
-  to: 'sg'
-}, {
-  from: 'hbs',
-  to: 'sr-latn'
-}, {
-  from: 'sin',
-  to: 'si'
-}, {
-  from: 'slk',
-  to: 'sk'
-}, {
-  from: 'slv',
-  to: 'sl'
-}, {
-  from: 'smo',
-  to: 'sm'
-}, {
-  from: 'sna',
-  to: 'sn'
-}, {
-  from: 'som',
-  to: 'so'
-}, {
-  from: 'sqi',
-  to: 'sq'
-}, {
-  from: 'srp',
-  to: 'sr'
-}, {
-  from: 'ssw',
-  to: 'ss'
-}, {
-  from: 'sot',
-  to: 'st'
-}, {
-  from: 'sun',
-  to: 'su'
-}, {
-  from: 'swe',
-  to: 'sv'
-}, {
-  from: 'swa',
-  to: 'sw'
-}, {
-  from: 'tam',
-  to: 'ta'
-}, {
-  from: 'tel',
-  to: 'te'
-}, {
-  from: 'tgk',
-  to: 'tg'
-}, {
-  from: 'tha',
-  to: 'th'
-}, {
-  from: 'tir',
-  to: 'ti'
-}, {
-  from: 'tuk',
-  to: 'tk'
-}, {
-  from: 'tgl',
-  to: 'fil'
-}, {
-  from: 'tsn',
-  to: 'tn'
-}, {
-  from: 'ton',
-  to: 'to'
-}, {
-  from: 'tur',
-  to: 'tr'
-}, {
-  from: 'tso',
-  to: 'ts'
-}, {
-  from: 'tat',
-  to: 'tt'
-}, {
-  from: 'twi',
-  to: 'ak'
-}, {
-  from: 'tah',
-  to: 'ty'
-}, {
-  from: 'uig',
-  to: 'ug'
-}, {
-  from: 'ukr',
-  to: 'uk'
-}, {
-  from: 'urd',
-  to: 'ur'
-}, {
-  from: 'uzb',
-  to: 'uz'
-}, {
-  from: 'ven',
-  to: 've'
-}, {
-  from: 'vie',
-  to: 'vi'
-}, {
-  from: 'vol',
-  to: 'vo'
-}, {
-  from: 'wln',
-  to: 'wa'
-}, {
-  from: 'wol',
-  to: 'wo'
-}, {
-  from: 'xho',
-  to: 'xh'
-}, {
-  from: 'yid',
-  to: 'yi'
-}, {
-  from: 'yor',
-  to: 'yo'
-}, {
-  from: 'zha',
-  to: 'za'
-}, {
-  from: 'zho',
-  to: 'zh'
-}, {
-  from: 'zul',
-  to: 'zu'
-}, {
-  from: 'alb',
-  to: 'sq'
-}, {
-  from: 'arm',
-  to: 'hy'
-}, {
-  from: 'baq',
-  to: 'eu'
-}, {
-  from: 'bur',
-  to: 'my'
-}, {
-  from: 'chi',
-  to: 'zh'
-}, {
-  from: 'cze',
-  to: 'cs'
-}, {
-  from: 'dut',
-  to: 'nl'
-}, {
-  from: 'fre',
-  to: 'fr'
-}, {
-  from: 'geo',
-  to: 'ka'
-}, {
-  from: 'ger',
-  to: 'de'
-}, {
-  from: 'gre',
-  to: 'el'
-}, {
-  from: 'ice',
-  to: 'is'
-}, {
-  from: 'mac',
-  to: 'mk'
-}, {
-  from: 'mao',
-  to: 'mi'
-}, {
-  from: 'may',
-  to: 'ms'
-}, {
-  from: 'per',
-  to: 'fa'
-}, {
-  from: 'rum',
-  to: 'ro'
-}, {
-  from: 'slo',
-  to: 'sk'
-}, {
-  from: 'tib',
-  to: 'bo'
-}, {
-  from: 'wel',
-  to: 'cy'
-}, {
-  from: 'und-aaland',
-  to: 'und-ax'
-}, {
-  from: 'hy-arevmda',
-  to: 'hyw'
-}, {
-  from: 'und-arevmda',
-  to: 'und'
-}, {
-  from: 'und-arevela',
-  to: 'und'
-}, {
-  from: 'und-lojban',
-  to: 'und'
-}, {
-  from: 'und-saaho',
-  to: 'und'
-}, {
-  from: 'und-bokmal',
-  to: 'und'
-}, {
-  from: 'und-nynorsk',
-  to: 'und'
-}, {
-  from: 'und-hakka',
-  to: 'und'
-}, {
-  from: 'und-xiang',
-  to: 'und'
-}, {
-  from: 'und-hepburn-heploc',
-  to: 'und-alalc97'
-}];
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47/lib/normal.js":
-/*!*******************************************!*\
-  !*** ./node_modules/bcp-47/lib/normal.js ***!
-  \*******************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   normal: function() { return /* binding */ normal; }
-/* harmony export */ });
-/** @type {Record<string, string|null>} */
-const normal = {
-  'en-gb-oed': 'en-GB-oxendict',
-  'i-ami': 'ami',
-  'i-bnn': 'bnn',
-  'i-default': null,
-  'i-enochian': null,
-  'i-hak': 'hak',
-  'i-klingon': 'tlh',
-  'i-lux': 'lb',
-  'i-mingo': null,
-  'i-navajo': 'nv',
-  'i-pwn': 'pwn',
-  'i-tao': 'tao',
-  'i-tay': 'tay',
-  'i-tsu': 'tsu',
-  'sgn-be-fr': 'sfb',
-  'sgn-be-nl': 'vgt',
-  'sgn-ch-de': 'sgg',
-  'art-lojban': 'jbo',
-  'cel-gaulish': null,
-  'no-bok': 'nb',
-  'no-nyn': 'nn',
-  'zh-guoyu': 'cmn',
-  'zh-hakka': 'hak',
-  'zh-min': null,
-  'zh-min-nan': 'nan',
-  'zh-xiang': 'hsn'
-};
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47/lib/parse.js":
-/*!******************************************!*\
-  !*** ./node_modules/bcp-47/lib/parse.js ***!
-  \******************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   parse: function() { return /* binding */ parse; }
-/* harmony export */ });
-/* harmony import */ var is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! is-alphanumerical */ "./node_modules/is-alphanumerical/index.js");
-/* harmony import */ var is_alphabetical__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! is-alphabetical */ "./node_modules/is-alphabetical/index.js");
-/* harmony import */ var is_decimal__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! is-decimal */ "./node_modules/is-decimal/index.js");
-/* harmony import */ var _regular_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./regular.js */ "./node_modules/bcp-47/lib/regular.js");
-/* harmony import */ var _normal_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./normal.js */ "./node_modules/bcp-47/lib/normal.js");
-/**
- * @callback Warning
- * @param {string} reason
- * @param {number} code
- * @param {number} offset
- * @returns {void}
- *
- * @typedef Options
- * @property {boolean} [normalize=true]
- * @property {boolean} [forgiving=false]
- * @property {Warning} [warning]
- *
- * @typedef Extension
- * @property {string} singleton
- * @property {Array<string>} extensions
- *
- * @typedef Schema
- * @property {string|null|undefined} language
- * @property {Array<string>} extendedLanguageSubtags
- * @property {string|null|undefined} script
- * @property {string|null|undefined} region
- * @property {Array<string>} variants
- * @property {Array<Extension>} extensions
- * @property {Array<string>} privateuse
- * @property {string|null|undefined} irregular
- * @property {string|null|undefined} regular
- */
-
-
-
-
-
-
-const own = {}.hasOwnProperty;
-
-/**
- * Parse a BCP 47 language tag.
- *
- * @param {string} tag
- * @param {Options} [options]
- * @returns {Schema}
- */
-function parse(tag, options = {}) {
-  const result = empty();
-  const source = String(tag);
-  const value = source.toLowerCase();
-  let index = 0;
-
-  // Check input.
-  if (tag === null || tag === undefined) {
-    throw new Error('Expected string, got `' + tag + '`');
-  }
-
-  // Let’s start.
-  // First: the edge cases.
-  if (own.call(_normal_js__WEBPACK_IMPORTED_MODULE_0__.normal, value)) {
-    const replacement = _normal_js__WEBPACK_IMPORTED_MODULE_0__.normal[value];
-    if ((options.normalize === undefined || options.normalize === null || options.normalize) && typeof replacement === 'string') {
-      return parse(replacement);
-    }
-    result[_regular_js__WEBPACK_IMPORTED_MODULE_1__.regular.includes(value) ? 'regular' : 'irregular'] = source;
-    return result;
-  }
-
-  // Now, to actually parse, eat what could be a language.
-  while ((0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index)) && index < 9) index++;
-
-  // A language.
-  if (index > 1 /* Min 639. */ && index < 9 /* Max subtag. */) {
-    // 5 and up is a subtag.
-    // 4 is the size of reserved languages.
-    // 3 an ISO 639-2 or ISO 639-3.
-    // 2 is an ISO 639-1.
-    // <https://github.com/wooorm/iso-639-2>
-    // <https://github.com/wooorm/iso-639-3>
-    result.language = source.slice(0, index);
-    if (index < 4 /* Max 639. */) {
-      let groups = 0;
-      while (value.charCodeAt(index) === 45 /* `-` */ && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 1)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 2)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 3)) && !(0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 4))) {
-        if (groups > 2 /* Max extended language subtag count. */) {
-          return fail(index, 3, 'Too many extended language subtags, expected at most 3 subtags');
-        }
-
-        // Extended language subtag.
-        result.extendedLanguageSubtags.push(source.slice(index + 1, index + 4));
-        index += 4;
-        groups++;
-      }
-    }
-
-    // ISO 15924 script.
-    // <https://github.com/wooorm/iso-15924>
-    if (value.charCodeAt(index) === 45 /* `-` */ && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 1)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 2)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 3)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 4)) && !(0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 5))) {
-      result.script = source.slice(index + 1, index + 5);
-      index += 5;
-    }
-    if (value.charCodeAt(index) === 45 /* `-` */) {
-      // ISO 3166-1 region.
-      // <https://github.com/wooorm/iso-3166>
-      if ((0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 1)) && (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 2)) && !(0,is_alphabetical__WEBPACK_IMPORTED_MODULE_2__.isAlphabetical)(value.charCodeAt(index + 3))) {
-        result.region = source.slice(index + 1, index + 3);
-        index += 3;
-      }
-      // UN M49 region.
-      // <https://github.com/wooorm/un-m49>
-      else if ((0,is_decimal__WEBPACK_IMPORTED_MODULE_3__.isDecimal)(value.charCodeAt(index + 1)) && (0,is_decimal__WEBPACK_IMPORTED_MODULE_3__.isDecimal)(value.charCodeAt(index + 2)) && (0,is_decimal__WEBPACK_IMPORTED_MODULE_3__.isDecimal)(value.charCodeAt(index + 3)) && !(0,is_decimal__WEBPACK_IMPORTED_MODULE_3__.isDecimal)(value.charCodeAt(index + 4))) {
-        result.region = source.slice(index + 1, index + 4);
-        index += 4;
-      }
-    }
-    while (value.charCodeAt(index) === 45 /* `-` */) {
-      const start = index + 1;
-      let offset = start;
-      while ((0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset))) {
-        if (offset - start > 7 /* Max variant. */) {
-          return fail(offset, 1, 'Too long variant, expected at most 8 characters');
-        }
-        offset++;
-      }
-      if (
-      // Long variant.
-      offset - start > 4 /* Min alpha numeric variant. */ ||
-      // Short variant.
-      offset - start > 3 /* Min variant. */ && (0,is_decimal__WEBPACK_IMPORTED_MODULE_3__.isDecimal)(value.charCodeAt(start))) {
-        result.variants.push(source.slice(start, offset));
-        index = offset;
-      }
-      // Something else.
-      else {
-        break;
-      }
-    }
-
-    // Extensions.
-    while (value.charCodeAt(index) === 45 /* `-` */) {
-      // Exit if this isn’t an extension.
-      if (value.charCodeAt(index + 1) === 120 /* `x` */ || !(0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(index + 1)) || value.charCodeAt(index + 2) !== 45 /* `-` */ || !(0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(index + 3))) {
-        break;
-      }
-      let offset = index + 2;
-      let groups = 0;
-      while (value.charCodeAt(offset) === 45 /* `-` */ && (0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset + 1)) && (0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset + 2))) {
-        const start = offset + 1;
-        offset = start + 2;
-        groups++;
-        while ((0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset))) {
-          if (offset - start > 7 /* Max extension. */) {
-            return fail(offset, 2, 'Too long extension, expected at most 8 characters');
-          }
-          offset++;
-        }
-      }
-      if (!groups) {
-        return fail(offset, 4, 'Empty extension, extensions must have at least 2 characters of content');
-      }
-      result.extensions.push({
-        singleton: source.charAt(index + 1),
-        extensions: source.slice(index + 3, offset).split('-')
-      });
-      index = offset;
-    }
-  }
-  // Not a language.
-  else {
-    index = 0;
-  }
-
-  // Private use.
-  if (index === 0 && value.charCodeAt(index) === 120 /* `x` */ || value.charCodeAt(index) === 45 /* `-` */ && value.charCodeAt(index + 1) === 120 /* `x` */) {
-    index = index ? index + 2 : 1;
-    let offset = index;
-    while (value.charCodeAt(offset) === 45 /* `-` */ && (0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset + 1))) {
-      const start = index + 1;
-      offset = start;
-      while ((0,is_alphanumerical__WEBPACK_IMPORTED_MODULE_4__.isAlphanumerical)(value.charCodeAt(offset))) {
-        if (offset - start > 7 /* Max private use. */) {
-          return fail(offset, 5, 'Too long private-use area, expected at most 8 characters');
-        }
-        offset++;
-      }
-      result.privateuse.push(source.slice(index + 1, offset));
-      index = offset;
-    }
-  }
-  if (index !== source.length) {
-    return fail(index, 6, 'Found superfluous content after tag');
-  }
-  return result;
-
-  /**
-   * Create an empty results object.
-   *
-   * @param {number} offset
-   * @param {number} code
-   * @param {string} reason
-   * @returns {Schema}
-   */
-  function fail(offset, code, reason) {
-    if (options.warning) options.warning(reason, code, offset);
-    return options.forgiving ? result : empty();
-  }
-}
-
-/**
- * Create an empty results object.
- *
- * @returns {Schema}
- */
-function empty() {
-  return {
-    language: null,
-    extendedLanguageSubtags: [],
-    script: null,
-    region: null,
-    variants: [],
-    extensions: [],
-    privateuse: [],
-    irregular: null,
-    regular: null
-  };
-}
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47/lib/regular.js":
-/*!********************************************!*\
-  !*** ./node_modules/bcp-47/lib/regular.js ***!
-  \********************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   regular: function() { return /* binding */ regular; }
-/* harmony export */ });
-/** @type {Array<string>} */
-const regular = ['art-lojban', 'cel-gaulish', 'no-bok', 'no-nyn', 'zh-guoyu', 'zh-hakka', 'zh-min', 'zh-min-nan', 'zh-xiang'];
-
-/***/ }),
-
-/***/ "./node_modules/bcp-47/lib/stringify.js":
-/*!**********************************************!*\
-  !*** ./node_modules/bcp-47/lib/stringify.js ***!
-  \**********************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   stringify: function() { return /* binding */ stringify; }
-/* harmony export */ });
-/**
- * @typedef {Partial<import('./parse.js').Schema>} Schema
- * @typedef {Partial<import('./parse.js').Extension>} Extension
- */
-
-/**
- * Compile a language schema to a BCP 47 language tag.
- *
- * @param {Schema} schema
- * @returns {string}
- */
-function stringify(schema = {}) {
-  /** @type {Array<string>} */
-  let result = [];
-  if (schema.irregular) {
-    return schema.irregular;
-  }
-  if (schema.regular) {
-    return schema.regular;
-  }
-  if (schema.language) {
-    result = result.concat(schema.language, schema.extendedLanguageSubtags || [], schema.script || [], schema.region || [], schema.variants || []);
-    const values = schema.extensions || [];
-    let index = -1;
-    while (++index < values.length) {
-      const value = values[index];
-      if (value.singleton && value.extensions && value.extensions.length > 0) {
-        result.push(value.singleton, ...value.extensions);
-      }
-    }
-  }
-  if (schema.privateuse && schema.privateuse.length > 0) {
-    result.push('x', ...schema.privateuse);
-  }
-  return result.join('-');
-}
-
-/***/ }),
-
-/***/ "./node_modules/is-alphabetical/index.js":
-/*!***********************************************!*\
-  !*** ./node_modules/is-alphabetical/index.js ***!
-  \***********************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isAlphabetical: function() { return /* binding */ isAlphabetical; }
-/* harmony export */ });
-/**
- * Check if the given character code, or the character code at the first
- * character, is alphabetical.
- *
- * @param {string|number} character
- * @returns {boolean} Whether `character` is alphabetical.
- */
-function isAlphabetical(character) {
-  const code = typeof character === 'string' ? character.charCodeAt(0) : character;
-  return code >= 97 && code <= 122 /* a-z */ || code >= 65 && code <= 90 /* A-Z */;
-}
-
-/***/ }),
-
-/***/ "./node_modules/is-alphanumerical/index.js":
-/*!*************************************************!*\
-  !*** ./node_modules/is-alphanumerical/index.js ***!
-  \*************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isAlphanumerical: function() { return /* binding */ isAlphanumerical; }
-/* harmony export */ });
-/* harmony import */ var is_alphabetical__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! is-alphabetical */ "./node_modules/is-alphabetical/index.js");
-/* harmony import */ var is_decimal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! is-decimal */ "./node_modules/is-decimal/index.js");
-
-
-
-/**
- * Check if the given character code, or the character code at the first
- * character, is alphanumerical.
- *
- * @param {string|number} character
- * @returns {boolean} Whether `character` is alphanumerical.
- */
-function isAlphanumerical(character) {
-  return (0,is_alphabetical__WEBPACK_IMPORTED_MODULE_0__.isAlphabetical)(character) || (0,is_decimal__WEBPACK_IMPORTED_MODULE_1__.isDecimal)(character);
-}
-
-/***/ }),
-
-/***/ "./node_modules/is-decimal/index.js":
-/*!******************************************!*\
-  !*** ./node_modules/is-decimal/index.js ***!
-  \******************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   isDecimal: function() { return /* binding */ isDecimal; }
-/* harmony export */ });
-/**
- * Check if the given character code, or the character code at the first
- * character, is decimal.
- *
- * @param {string|number} character
- * @returns {boolean} Whether `character` is a decimal
- */
-function isDecimal(character) {
-  const code = typeof character === 'string' ? character.charCodeAt(0) : character;
-  return code >= 48 && code <= 57; /* 0-9 */
 }
 
 /***/ }),
@@ -32113,7 +19836,7 @@ function EventBus() {
     if (idx < 0) {
       return;
     }
-    handlers[type][idx] = null;
+    handlers[type].splice(idx, 1);
   }
   function trigger(type, payload = {}, filters = {}) {
     if (!type || !handlers[type]) {
@@ -32532,6 +20255,7 @@ __webpack_require__.r(__webpack_exports__);
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
+ *            cacheInitSegmentsLimit: 50,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -32550,8 +20274,8 @@ __webpack_require__.r(__webpack_exports__);
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
  *               useMediaCapabilitiesApi: true,
- *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterVideoColorimetryEssentialProperties: true,
+ *               filterHDRMetadataFormatEssentialProperties: true,
  *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
@@ -32575,7 +20299,7 @@ __webpack_require__.r(__webpack_exports__);
  *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false
+ *                ignoreKeyStatuses: false,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -32648,6 +20372,11 @@ __webpack_require__.r(__webpack_exports__);
  *            liveCatchup: {
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
+ *                step: {
+ *                  start: { min: NaN, max: NaN },
+ *                  stop: { min: NaN, max: NaN }
+ *                },
+ *                liveThreshold: -1,
  *                playbackBufferMin: 0.5,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -32666,6 +20395,7 @@ __webpack_require__.r(__webpack_exports__);
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+ *            blacklistExpiryTime: -1,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -32678,6 +20408,7 @@ __webpack_require__.r(__webpack_exports__);
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.LICENSE]: 1000,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 1000,
  *                [HTTPRequest.OTHER_TYPE]: 1000,
  *                lowLatencyReductionFactor: 10
  *            },
@@ -32690,6 +20421,7 @@ __webpack_require__.r(__webpack_exports__);
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.LICENSE]: 3,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 3,
  *                [HTTPRequest.OTHER_TYPE]: 3,
  *                lowLatencyMultiplyFactor: 5
  *            },
@@ -32784,6 +20516,7 @@ __webpack_require__.r(__webpack_exports__);
  *                 }
  *             },
  *            cmcd: {
+ *                applyParametersFromMpd: true,
  *                enabled: false,
  *                sid: null,
  *                cid: null,
@@ -32792,7 +20525,8 @@ __webpack_require__.r(__webpack_exports__);
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
- *                version: 1
+ *                version: 1,
+ *                eventTargets: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -32810,7 +20544,10 @@ __webpack_require__.r(__webpack_exports__);
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
- *            }
+ *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -32824,7 +20561,7 @@ __webpack_require__.r(__webpack_exports__);
  * @typedef {Object} TimeShiftBuffer
  * @property {boolean} [calcFromSegmentTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
- *  * @property {boolean} [fallbackToSegmentTimeline=true]
+ * @property {boolean} [fallbackToSegmentTimeline=true]
  * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
  */
 
@@ -33028,6 +20765,8 @@ __webpack_require__.r(__webpack_exports__);
  * Value to be used in case enableStallFix is set to true
  * @property {number} [seekOffset=0]
  * An additional offset in seconds that is applied when performing a seek to jump a gap.
+ * @property {number} [checkInterval=250]
+ * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster but increase CPU usage. Default is 250ms.
  */
 
 /**
@@ -33110,7 +20849,19 @@ __webpack_require__.r(__webpack_exports__);
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
- * If 0, then seeking operations won't be used for fixing latency deviations.
+ * If a value less than zero is set (-1), then seeking operations won't be used for fixing latency deviations.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
+ * This object is used for setting the window parameters for "step" mode.
+ *
+ * It is only applicable if the Catchup mechanism used is of mode "step".
+ *
+ * The parameters are all percentages of the target latency. Where 1 is on target.
+ *
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ *
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
@@ -33130,6 +20881,8 @@ __webpack_require__.r(__webpack_exports__);
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=-1]
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -33137,7 +20890,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ * Options: One of "liveCatchupModeDefault", "liveCatchupModeLOLP" or "liveCatchupModeStep".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -33187,7 +20940,7 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
- */
+ *
 
 /**
  * @typedef {Object} Capabilities
@@ -33197,10 +20950,10 @@ __webpack_require__.r(__webpack_exports__);
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
- * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
+ * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
- * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
+ * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
  * @property {boolean} [filterAudioChannelConfiguration=false]
  * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
@@ -33212,6 +20965,8 @@ __webpack_require__.r(__webpack_exports__);
  * If true, the size of the video portal will limit the max chosen video resolution.
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ * @property {number} [limitBitrateByPortalMinimum=0]
+ * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AbrRules} [rules]
@@ -33406,6 +21161,26 @@ __webpack_require__.r(__webpack_exports__);
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdEventTarget>} [eventTargets]
+ * List of CMCD reporting targets.
+ */
+
+/**
+ * @typedef {Object} CmcdEventTarget
+ * @property {boolean} [enabled]
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} [url]
+ * The reporting endpoint URL.
+ * @property {string} [events]
+ * The events that should trigger the CMCD reporting.
+ * @property {number} [interval]
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * @property {Array.<string>} [enabledKeys]
+ * CMCD keys to include in the report.
+ * @property {Array.<string>} [includeInRequests]
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {number} [batchSize]
+ * The batch size for the CMCD reporting.
  */
 
 /**
@@ -33422,6 +21197,12 @@ __webpack_require__.r(__webpack_exports__);
  * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
  * @property {number} [etpWeightRatio=0]
  * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
+ */
+
+/**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Override DVB reporting url in manifest with a custom one
  */
 
 /**
@@ -33454,6 +21235,8 @@ __webpack_require__.r(__webpack_exports__);
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
+ * @property {number} [cacheInitSegmentsLimit=50]
+ * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently used entries are evicted.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
@@ -33535,6 +21318,10 @@ __webpack_require__.r(__webpack_exports__);
  * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
  * This mode makes the player select the track with a widest range of bitrates.
  *
+ * @property {number} [blacklistExpiryTime=-1]
+ * The time in seconds that a Service Location remains on the blacklist.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -33565,6 +21352,8 @@ __webpack_require__.r(__webpack_exports__);
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
+ * Settings related to DVB metrics reporting.
  */
 
 /**
@@ -33610,6 +21399,7 @@ function Settings() {
       manifestUpdateRetryInterval: 100,
       liveUpdateTimeThresholdInMilliseconds: 0,
       cacheInitSegments: false,
+      cacheInitSegmentsLimit: 50,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
       applyContentSteering: true,
@@ -33641,8 +21431,8 @@ function Settings() {
           };
         })],
         useMediaCapabilitiesApi: true,
-        filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false,
+        filterVideoColorimetryEssentialProperties: true,
+        filterHDRMetadataFormatEssentialProperties: true,
         filterAudioChannelConfiguration: false
       },
       events: {
@@ -33701,7 +21491,8 @@ function Settings() {
         enableSeekFix: true,
         enableStallFix: false,
         stallSeek: 0.1,
-        seekOffset: 0
+        seekOffset: 0,
+        checkInterval: 250
       },
       utcSynchronization: {
         enabled: true,
@@ -33742,6 +21533,17 @@ function Settings() {
           min: NaN,
           max: NaN
         },
+        step: {
+          start: {
+            min: NaN,
+            max: NaN
+          },
+          stop: {
+            min: NaN,
+            max: NaN
+          }
+        },
+        liveThreshold: -1,
         playbackBufferMin: 0.5,
         enabled: null,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
@@ -33769,6 +21571,7 @@ function Settings() {
       prioritizeRoleMain: true,
       assumeDefaultRoleAsMain: true,
       selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+      blacklistExpiryTime: -1,
       fragmentRequestTimeout: 20000,
       fragmentRequestProgressTimeout: -1,
       manifestRequestTimeout: 10000,
@@ -33781,6 +21584,7 @@ function Settings() {
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE]: 1000,
+        [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE_CERTIFICATE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE]: 1000,
         lowLatencyReductionFactor: 10
       },
@@ -33793,12 +21597,14 @@ function Settings() {
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE]: 3,
+        [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE_CERTIFICATE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE]: 3,
         lowLatencyMultiplyFactor: 5
       },
       abr: {
         limitBitrateByPortal: false,
         usePixelRatioInLimitBitrateByPortal: false,
+        limitBitrateByPortalMinimum: 0,
         enableSupplementalPropertyAdaptationSetSwitching: true,
         rules: {
           throughputRule: {
@@ -33903,9 +21709,10 @@ function Settings() {
         rtp: null,
         rtpSafetyFactor: 5,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_MODE_QUERY,
-        enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_AVAILABLE_KEYS,
+        enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_KEYS,
         includeInRequests: ['segment', 'mpd'],
-        version: 1
+        version: 1,
+        eventTargets: []
       },
       cmsd: {
         enabled: false,
@@ -33923,6 +21730,9 @@ function Settings() {
         audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
         role: 'urn:mpeg:dash:role:2011',
         accessibility: 'urn:mpeg:dash:role:2011'
+      },
+      dvbReporting: {
+        reportingUrl: null
       }
     },
     errors: {
@@ -34010,8 +21820,7 @@ let factory = _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingle
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
-/* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
-/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -34047,7 +21856,6 @@ __webpack_require__.r(__webpack_exports__);
  * @class
  * @ignore
  */
-
 
 
 
@@ -34233,8 +22041,24 @@ class Utils {
   }
   static parseUserAgent(ua = null) {
     try {
-      const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
-      return (0,ua_parser_js__WEBPACK_IMPORTED_MODULE_1__.UAParser)(uaString);
+      const uaString = typeof ua === 'string' ? ua.toLowerCase() : typeof navigator !== 'undefined' && navigator.userAgent ? navigator.userAgent.toLowerCase() : '';
+      const browser = {
+        name: ''
+      };
+      if (/edg/.test(uaString)) {
+        browser.name = 'edge';
+      } else if (/opr|opios/.test(uaString)) {
+        browser.name = 'opera';
+      } else if (/chrome|crios/.test(uaString)) {
+        browser.name = 'chrome';
+      } else if (/firefox|fxios/.test(uaString)) {
+        browser.name = 'firefox';
+      } else if (/safari/.test(uaString)) {
+        browser.name = 'safari';
+      }
+      return {
+        browser
+      };
     } catch (e) {
       return {};
     }
@@ -34300,7 +22124,7 @@ class Utils {
           case '69':
           case '6b':
           case '40.34':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.MP3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.MP3;
           case '66':
           case '67':
           case '68':
@@ -34310,23 +22134,23 @@ class Utils {
           case '40.05':
           case '40.29':
           case '40.42':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AAC;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AAC;
           case 'a5':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AC3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AC3;
           case 'e6':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.EC3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.EC3;
           case 'b2':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.DTSX;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.DTSX;
           case 'a9':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.DTSC;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.DTSC;
         }
         break;
       case 'avc1':
       case 'avc3':
-        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AVC;
+        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AVC;
       case 'hvc1':
       case 'hvc3':
-        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.HEVC;
+        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.HEVC;
       default:
         return base;
     }
@@ -34355,7 +22179,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   getVersionString: function() { return /* binding */ getVersionString; }
 /* harmony export */ });
-const VERSION = '5.1.1';
+const VERSION = '5.2.0';
 function getVersionString() {
   return VERSION;
 }
@@ -34856,10 +22680,10 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
 /* harmony import */ var _models_PatchManifestModel_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./models/PatchManifestModel.js */ "./src/dash/models/PatchManifestModel.js");
 /* harmony import */ var _vo_Representation_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./vo/Representation.js */ "./src/dash/vo/Representation.js");
-/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/lib/index.js");
-/* harmony import */ var _svta_cml_id3__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! @svta/cml-id3 */ "./node_modules/@svta/cml-id3/dist/index.js");
-/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _streaming_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../streaming/utils/BCP47Utils.js */ "./src/streaming/utils/BCP47Utils.js");
+/* harmony import */ var _svta_cml_id3__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-id3 */ "./node_modules/@svta/cml-id3/dist/index.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -34917,7 +22741,7 @@ function DashAdapter() {
   function setup() {
     dashManifestModel = (0,_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
     patchManifestModel = (0,_models_PatchManifestModel_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-    settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
+    settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
     reset();
   }
 
@@ -34979,7 +22803,7 @@ function DashAdapter() {
    */
   function getIsMain(adaptation) {
     return dashManifestModel.getRolesForAdaptation(adaptation).filter(function (role) {
-      return role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].DASH_ROLE_SCHEME_ID && role.value === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MAIN;
+      return role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].DASH_ROLE_SCHEME_ID && role.value === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].MAIN;
     })[0];
   }
 
@@ -35039,6 +22863,9 @@ function DashAdapter() {
       data = adaptations[i];
       idx = dashManifestModel.getIndexForAdaptation(data, manifest, streamInfo.index);
       media = convertAdaptationToMediaInfo(voAdaptations[idx]);
+      if (!media) {
+        continue;
+      }
       if (embeddedText) {
         let accessibilityLength = media.accessibility.length;
         for (j = 0; j < accessibilityLength; j++) {
@@ -35316,7 +23143,7 @@ function DashAdapter() {
       event.calculatedPresentationTime = calculatedPresentationTime;
       event.messageData = messageData;
       event.presentationTimeDelta = presentationTimeDelta;
-      event.parsedMessageData = schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].ID3_SCHEME_ID_URI ? (0,_svta_cml_id3__WEBPACK_IMPORTED_MODULE_9__.getId3Frames)(messageData) : null;
+      event.parsedMessageData = schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].ID3_SCHEME_ID_URI ? (0,_svta_cml_id3__WEBPACK_IMPORTED_MODULE_10__.getId3Frames)(messageData) : null;
       return event;
     } catch (e) {
       return null;
@@ -35853,7 +23680,7 @@ function DashAdapter() {
     mediaInfo.index = adaptation.index;
     mediaInfo.codec = dashManifestModel.getCodec(realAdaptation);
     const enhancementCodecs = settings.get().streaming.enhancement.codecs;
-    mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec)) ? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].ENHANCEMENT : adaptation.type;
+    mediaInfo.type = enhancementCodecs.some(codec => mediaInfo.codec?.includes(codec)) ? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].ENHANCEMENT : adaptation.type;
     mediaInfo.streamInfo = convertPeriodToStreamInfo(adaptation.period);
     mediaInfo.representationCount = dashManifestModel.getRepresentationCount(realAdaptation);
     mediaInfo.labels = dashManifestModel.getLabelsForAdaptation(realAdaptation);
@@ -35974,8 +23801,8 @@ function DashAdapter() {
     });
     if (adaptationSetSwitching && adaptationSetSwitching.length > 0) {
       const ids = adaptationSetSwitching[0].value.toString().split(',');
-      adaptationSetSwitchingCompatibleIds = ids.map(id => {
-        return id;
+      adaptationSetSwitchingCompatibleIds = ids.filter(id => {
+        return id !== mediaInfo.id;
       });
     }
     return adaptationSetSwitchingCompatibleIds;
@@ -35987,7 +23814,7 @@ function DashAdapter() {
     mediaInfo.codec = 'cea-608-in-SEI';
     mediaInfo.isEmbedded = true;
     mediaInfo.isFragmented = false;
-    mediaInfo.lang = (0,bcp_47_normalize__WEBPACK_IMPORTED_MODULE_12__.bcp47Normalize)(lang);
+    mediaInfo.lang = (0,_streaming_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_9__.normalizeBcp47)(lang);
     mediaInfo.roles = [{
       schemeIdUri: 'urn:mpeg:dash:role:2011',
       value: 'caption'
@@ -36060,6 +23887,7 @@ function DashAdapter() {
   instance = {
     applyPatchToManifest,
     areMediaInfosEqual,
+    convertAdaptationToMediaInfo,
     getAllMediaInfoForType,
     getAvailabilityStartTime,
     getBandwidthForRepresentation,
@@ -37042,36 +24870,36 @@ function DashMetrics(config) {
     metricsModel.addDVBErrors(errors);
   }
   instance = {
-    getCurrentRepresentationSwitch,
-    getCurrentBufferState,
-    getCurrentBufferLevel,
-    getCurrentHttpRequest,
-    getHttpRequests,
-    getCurrentDroppedFrames,
-    getCurrentSchedulingInfo,
-    getCurrentDVRInfo,
-    getCurrentManifestUpdate,
-    getLatestFragmentRequestHeaderValueByID,
-    getLatestMPDRequestHeaderValueByID,
-    addRepresentationSwitch,
-    addDVRInfo,
-    updateManifestUpdateInfo,
-    addManifestUpdateStreamInfo,
-    addManifestUpdateRepresentationInfo,
-    addManifestUpdate,
-    addHttpRequest,
-    addSchedulingInfo,
-    addRequestsQueue,
     addBufferLevel,
     addBufferState,
-    addDroppedFrames,
-    addPlayList,
     addDVBErrors,
+    addDVRInfo,
+    addDroppedFrames,
+    addHttpRequest,
+    addManifestUpdate,
+    addManifestUpdateRepresentationInfo,
+    addManifestUpdateStreamInfo,
+    addPlayList,
+    addRepresentationSwitch,
+    addRequestsQueue,
+    addSchedulingInfo,
+    clearAllCurrentMetrics,
     createPlaylistMetrics,
     createPlaylistTraceMetrics,
-    updatePlayListTraceMetrics,
+    getCurrentBufferLevel,
+    getCurrentBufferState,
+    getCurrentDVRInfo,
+    getCurrentDroppedFrames,
+    getCurrentHttpRequest,
+    getCurrentManifestUpdate,
+    getCurrentRepresentationSwitch,
+    getCurrentSchedulingInfo,
+    getHttpRequests,
+    getLatestFragmentRequestHeaderValueByID,
+    getLatestMPDRequestHeaderValueByID,
     pushPlayListTraceMetrics,
-    clearAllCurrentMetrics
+    updateManifestUpdateInfo,
+    updatePlayListTraceMetrics
   };
   setup();
   return instance;
@@ -37856,8 +25684,10 @@ __webpack_require__.r(__webpack_exports__);
   INDEX_RANGE: 'indexRange',
   INITIALIZATION: 'Initialization',
   INITIALIZATION_MINUS: 'initialization',
+  K: 'k',
   LA_URL: 'Laurl',
   LA_URL_LOWER_CASE: 'laurl',
+  CERT_URL: 'Certurl',
   LABEL: 'Label',
   LANG: 'lang',
   LOCATION: 'Location',
@@ -38452,7 +26282,7 @@ function ContentSteeringController() {
           break;
         // 429 Too Many Requests. Replace existing TTL value with Retry-After header if present
         case 429:
-          const retryAfter = response && response.getResponseHeader ? response.getResponseHeader('retry-after') : null;
+          const retryAfter = response && response.headers && response.headers['retry-after'];
           if (retryAfter !== null) {
             if (!currentSteeringResponseData) {
               currentSteeringResponseData = {};
@@ -39461,10 +27291,10 @@ function ServiceDescriptionController() {
     };
   }
   instance = {
-    getServiceDescriptionSettings,
-    getProducerReferenceTimeOffsets,
-    calculateProducerReferenceTimeOffsets,
     applyServiceDescription,
+    calculateProducerReferenceTimeOffsets,
+    getProducerReferenceTimeOffsets,
+    getServiceDescriptionSettings,
     reset,
     setConfig
   };
@@ -40065,7 +27895,7 @@ function DashManifestModel() {
     }
 
     // now, only return properties present on all Representations
-    // repr.legth is always >= 2
+    // repr.length is always >= 2
     return propertiesOfFirstRepresentation.filter(prop => {
       return repr.slice(1).every(currRep => {
         return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some(e => {
@@ -40079,11 +27909,18 @@ function DashManifestModel() {
       return [];
     }
     let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].REPRESENTATION]);
-    if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
-      allProperties.push(...adaptation[propertyType]);
-    }
-    // we don't check whether there are duplicates on AdaptationSets and Representations
 
+    // now, only take those Properties from AdaptationSet which we didn't already get from Representations
+    if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
+      adaptation[propertyType].forEach(adaptationProp => {
+        const alreadyPresent = allProperties.some(d => {
+          return d.schemeIdUri === adaptationProp.schemeIdUri && d.value === adaptationProp.value;
+        });
+        if (!alreadyPresent) {
+          allProperties.push(adaptationProp);
+        }
+      });
+    }
     return allProperties.map(essentialProperty => {
       const s = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
       s.init(essentialProperty);
@@ -40284,9 +28121,13 @@ function DashManifestModel() {
       voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
     } else if (segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE) {
       voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+      voRepresentation.k = _getKValue(segmentInfo.SegmentTimeline);
     }
     if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MEDIA)) {
       voRepresentation.media = segmentInfo.media;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K)) {
+      voRepresentation.k = segmentInfo.k || 1;
     }
     if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].START_NUMBER)) {
       voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
@@ -40327,6 +28168,13 @@ function DashManifestModel() {
     let s0 = segmentTimeline.S[0];
     let s1 = segmentTimeline.S[1];
     return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
+  }
+  function _getKValue(segmentTimeline) {
+    if (!segmentTimeline || !segmentTimeline.S) {
+      return 1;
+    }
+    const s0 = segmentTimeline.S[0];
+    return s0.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s0.k : 1;
   }
   function _calcMseTimeOffset(representation) {
     // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
@@ -40802,7 +28650,11 @@ function DashManifestModel() {
   }
   function _createClientDataReportingInstance(element) {
     const entry = new _vo_ClientDataReporting_js__WEBPACK_IMPORTED_MODULE_3__["default"]();
-    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS) && element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS].schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CTA_5004_2023_SCHEME) {
+
+    // Check if schemeIdUri is either in ClientDataReporting (v2) or CMCDParameters (v1)
+    const schemeIdUri = element.schemeIdUri || element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS]?.schemeIdUri;
+    const isCmcdSupported = [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CTA_5004_2023_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CTA_5004_2025_SCHEME].includes(schemeIdUri);
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS) && isCmcdSupported) {
       entry.cmcdParameters = new _vo_CMCDParameters_js__WEBPACK_IMPORTED_MODULE_2__["default"]();
       entry.cmcdParameters.init(element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS]);
     }
@@ -41320,65 +29172,6 @@ DashParser.__dashjs_factory_name = 'DashParser';
 
 /***/ }),
 
-/***/ "./src/dash/parser/maps/CommonProperty.js":
-/*!************************************************!*\
-  !*** ./src/dash/parser/maps/CommonProperty.js ***!
-  \************************************************/
-/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
-
-__webpack_require__.r(__webpack_exports__);
-/**
- * The copyright in this software is being made available under the BSD License,
- * included below. This software may be subject to other third party and contributor
- * rights, including patent rights, and no such rights are granted under this license.
- *
- * Copyright (c) 2013, Dash Industry Forum.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without modification,
- * are permitted provided that the following conditions are met:
- *  * Redistributions of source code must retain the above copyright notice, this
- *  list of conditions and the following disclaimer.
- *  * Redistributions in binary form must reproduce the above copyright notice,
- *  this list of conditions and the following disclaimer in the documentation and/or
- *  other materials provided with the distribution.
- *  * Neither the name of Dash Industry Forum nor the names of its
- *  contributors may be used to endorse or promote products derived from this software
- *  without specific prior written permission.
- *
- *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
- *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
- *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
- *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
- *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
- *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- *  POSSIBILITY OF SUCH DAMAGE.
- */
-/**
- * @classdesc a property belonging to a MapNode
- * @ignore
- */
-
-class CommonProperty {
-  constructor(name) {
-    const getDefaultMergeForName = n => n && n.length && n.charAt(0) === n.charAt(0).toUpperCase();
-    this._name = name;
-    this._merge = getDefaultMergeForName(name);
-  }
-  get name() {
-    return this._name;
-  }
-  get merge() {
-    return this._merge;
-  }
-}
-/* harmony default export */ __webpack_exports__["default"] = (CommonProperty);
-
-/***/ }),
-
 /***/ "./src/dash/parser/maps/MapNode.js":
 /*!*****************************************!*\
   !*** ./src/dash/parser/maps/MapNode.js ***!
@@ -41386,7 +29179,6 @@ class CommonProperty {
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _CommonProperty_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CommonProperty.js */ "./src/dash/parser/maps/CommonProperty.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -41422,15 +29214,11 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 class MapNode {
-  constructor(name, properties, children) {
+  constructor(name, properties, exceptions, children) {
     this._name = name || '';
-    this._properties = [];
+    this._properties = properties || [];
+    this._exceptions = exceptions || {};
     this._children = children || [];
-    if (Array.isArray(properties)) {
-      properties.forEach(p => {
-        this._properties.push(new _CommonProperty_js__WEBPACK_IMPORTED_MODULE_0__["default"](p));
-      });
-    }
   }
   get name() {
     return this._name;
@@ -41440,6 +29228,9 @@ class MapNode {
   }
   get properties() {
     return this._properties;
+  }
+  get exceptions() {
+    return this._exceptions;
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (MapNode);
@@ -41455,6 +29246,7 @@ class MapNode {
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MapNode_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MapNode.js */ "./src/dash/parser/maps/MapNode.js");
 /* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -41490,10 +29282,21 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 class RepresentationBaseValuesMap extends _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
-    const commonProperties = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_SAMPLING_RATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODING_DEPENDENCY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAMERATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MAXIMUM_SAP_PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SAR, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].START_WITH_SAP, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH];
-    super(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_REPRESENTATION, commonProperties)])]);
+    const commonProperties = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_CHANNEL_CONFIGURATION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].AUDIO_SAMPLING_RATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODECS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODING_DEPENDENCY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CONTENT_PROTECTION, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAMERATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].FRAME_PACKING, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].HEIGHT, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].INBAND_EVENT_STREAM, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MAXIMUM_SAP_PERIOD, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MAX_PLAYOUT_RATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].MIME_TYPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PROFILES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SAR, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SCAN_TYPE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_PROFILES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_SEQUENCE_PROPERTIES, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].START_WITH_SAP, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_CODECS, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].WIDTH];
+
+    // RegEx are supported
+    const exceptions = {
+      [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUPPLEMENTAL_PROPERTY]: {
+        schemeIdUri: [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].EXT_URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ADV_URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].URL_QUERY_STATE_PREFIX]
+      },
+      [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ESSENTIAL_PROPERTY]: {
+        schemeIdUri: [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].EXT_URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ADV_URL_QUERY_INFO_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].URL_QUERY_STATE_PREFIX]
+      }
+    };
+    super(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, exceptions, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties, exceptions, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SUB_REPRESENTATION, commonProperties, exceptions)])]);
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (RepresentationBaseValuesMap);
@@ -41547,7 +29350,8 @@ __webpack_require__.r(__webpack_exports__);
 class SegmentValuesMap extends _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
   constructor() {
     const commonProperties = [_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_BASE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_TEMPLATE, _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].SEGMENT_LIST];
-    super(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, commonProperties, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties)])]);
+    const exceptions = {};
+    super(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD, commonProperties, exceptions, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ADAPTATION_SET, commonProperties, exceptions, [new _MapNode_js__WEBPACK_IMPORTED_MODULE_0__["default"](_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REPRESENTATION, commonProperties, exceptions)])]);
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (SegmentValuesMap);
@@ -41772,7 +29576,7 @@ class DurationMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["defa
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./BaseMatcher.js */ "./src/dash/parser/matchers/BaseMatcher.js");
 /* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
-/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/lib/index.js");
+/* harmony import */ var _streaming_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../streaming/utils/BCP47Utils.js */ "./src/streaming/utils/BCP47Utils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -41830,7 +29634,7 @@ class LangMatcher extends _BaseMatcher_js__WEBPACK_IMPORTED_MODULE_0__["default"
       }
       return false;
     }, str => {
-      let lang = (0,bcp_47_normalize__WEBPACK_IMPORTED_MODULE_2__.bcp47Normalize)(str);
+      let lang = (0,_streaming_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_2__.normalizeBcp47)(str);
       if (lang) {
         return lang;
       }
@@ -41937,35 +29741,60 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 function ObjectIron(mappers) {
-  function mergeValues(parentItem, childItem) {
-    for (let name in parentItem) {
-      if (!childItem.hasOwnProperty(name)) {
-        childItem[name] = parentItem[name];
+  function _mergeValues(parentItem, childItem) {
+    if (typeof parentItem === 'object') {
+      for (let name in parentItem) {
+        if (!childItem.hasOwnProperty(name)) {
+          childItem[name] = parentItem[name];
+        }
       }
     }
   }
-  function mapProperties(properties, parent, child) {
-    for (let i = 0, len = properties.length; i < len; ++i) {
-      const property = properties[i];
-      if (parent[property.name]) {
-        if (child[property.name]) {
-          // check to see if we should merge
-          if (property.merge) {
-            const parentValue = parent[property.name];
-            const childValue = child[property.name];
-
-            // complex objects; merge properties
-            if (typeof parentValue === 'object' && typeof childValue === 'object') {
-              mergeValues(parentValue, childValue);
-            }
-            // simple objects; merge them together
-            else {
-              child[property.name] = parentValue + childValue;
-            }
-          }
+  function _mappingAllowed(element, exception) {
+    let allowMapping = true;
+    if (exception) {
+      for (const [key, values] of Object.entries(exception)) {
+        let attr = element[key];
+        if (values.some(v => attr.match(v))) {
+          allowMapping = false;
+        }
+      }
+    }
+    return allowMapping;
+  }
+  function _conditionallyMapProperty(exception, propertyName, propertyIsArray, propertyElementFromParent, childNode) {
+    if (_mappingAllowed(propertyElementFromParent, exception)) {
+      if (childNode[propertyName]) {
+        // property already exists
+        if (propertyIsArray) {
+          childNode[propertyName].push(propertyElementFromParent);
         } else {
-          // just add the property
-          child[property.name] = parent[property.name];
+          // non-Array Properties can be:
+          // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or 
+          // - attributes (e.g. codecs)
+          _mergeValues(propertyElementFromParent, childNode[propertyName]);
+        }
+      } else {
+        // just add the property
+        if (propertyIsArray) {
+          childNode[propertyName] = [propertyElementFromParent];
+        } else {
+          childNode[propertyName] = propertyElementFromParent;
+        }
+      }
+    }
+  }
+  function mapProperties(properties, exceptions, parentNode, childNode) {
+    for (let i = 0, len = properties.length; i < len; ++i) {
+      const propertyName = properties[i];
+      if (parentNode[propertyName]) {
+        const propertyFromParentElement = parentNode[propertyName];
+        if (Array.isArray(propertyFromParentElement)) {
+          propertyFromParentElement.forEach(propParentEl => {
+            _conditionallyMapProperty(exceptions[propertyName], propertyName, true, propParentEl, childNode);
+          });
+        } else {
+          _conditionallyMapProperty(exceptions[propertyName], propertyName, false, propertyFromParentElement, childNode);
         }
       }
     }
@@ -41977,7 +29806,7 @@ function ObjectIron(mappers) {
       if (array) {
         for (let v = 0, len2 = array.length; v < len2; ++v) {
           const childNode = array[v];
-          mapProperties(item.properties, node, childNode);
+          mapProperties(item.properties, item.exceptions, node, childNode);
           mapItem(childItem, childNode);
         }
       }
@@ -43584,6 +31413,7 @@ BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -43617,6 +31447,7 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /**
  * @class
  * @ignore
@@ -43634,12 +31465,12 @@ class CMCDParameters extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__["de
   init(data) {
     super.init(data);
     if (data) {
-      this.version = data.version;
+      this.version = data.version ? parseInt(data.version) : null;
       this.sessionID = data.sessionID;
       this.contentID = data.contentID;
       this.mode = data.mode ?? 'query';
       this.keys = data.keys ? data.keys.split(' ') : null;
-      this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : ['segment'];
+      this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CMCD_DEFAULT_INCLUDE_IN_REQUESTS];
       this.schemeIdUri = data.schemeIdUri;
     }
   }
@@ -43709,8 +31540,9 @@ class ClientDataReporting {
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
-/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _streaming_utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../streaming/utils/CertUrlUtils.js */ "./src/streaming/utils/CertUrlUtils.js");
+/* harmony import */ var _DescriptorType_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -43744,11 +31576,12 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 /**
  * @class
  * @ignore
  */
-class ContentProtection extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+class ContentProtection extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_1__["default"] {
   constructor() {
     super();
     this.ref = null;
@@ -43759,17 +31592,21 @@ class ContentProtection extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__[
     this.pssh = null;
     this.pro = null;
     this.laUrl = null;
+    this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]. dash.js treats certType as an opaque label.
   }
   init(data) {
     super.init(data);
     if (data) {
-      this.ref = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REF) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REF] : null;
-      this.refId = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REF_ID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].REF_ID] : null;
-      this.robustness = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROBUSTNESS) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].ROBUSTNESS] : null;
-      this.cencDefaultKid = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CENC_DEFAULT_KID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CENC_DEFAULT_KID] : null;
-      this.pssh = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PSSH) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PSSH] : null;
-      this.pro = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRO) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].PRO] : null;
-      this.laUrl = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LA_URL) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LA_URL] : data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LA_URL_LOWER_CASE) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"].LA_URL_LOWER_CASE] : null;
+      this.ref = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF] : null;
+      this.refId = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF_ID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF_ID] : null;
+      this.robustness = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ROBUSTNESS) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ROBUSTNESS] : null;
+      this.cencDefaultKid = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CENC_DEFAULT_KID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CENC_DEFAULT_KID] : null;
+      this.pssh = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PSSH) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PSSH] : null;
+      this.pro = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PRO) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PRO] : null;
+      this.laUrl = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL] : data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL_LOWER_CASE) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL_LOWER_CASE] : null;
+      const certKey = Object.keys(data).find(k => k.toLowerCase() === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CERT_URL.toLowerCase());
+      const rawCert = certKey ? data[certKey] : null;
+      this.certUrls = _streaming_utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_0__["default"].normalizeCertUrls(rawCert);
     }
   }
   mergeAttributesFromReference(reference) {
@@ -43779,6 +31616,19 @@ class ContentProtection extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__[
         this[attribute] = reference[attribute];
       }
     });
+    // Merge certUrls: append any from reference that we don't already have (by URL + certType)
+    if (reference.certUrls && reference.certUrls.length) {
+      const existing = new Set(this.certUrls.map(c => `${c.url}||${c.certType || ''}`));
+      reference.certUrls.forEach(c => {
+        const key = `${c.url}||${c.certType || ''}`;
+        if (!existing.has(key)) {
+          this.certUrls.push({
+            url: c.url,
+            certType: c.certType || null
+          });
+        }
+      });
+    }
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (ContentProtection);
@@ -44840,6 +32690,7 @@ class Representation {
     this.id = null;
     this.indexRange = null;
     this.initialization = null;
+    this.k = 1;
     this.maxPlayoutRate = NaN;
     this.mediaFinishedInformation = {
       numberOfSegments: 0,
@@ -44867,6 +32718,14 @@ class Representation {
   }
   hasSegments() {
     return this.segmentInfoType !== _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].BASE_URL && this.segmentInfoType !== _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].SEGMENT_BASE && !this.indexRange;
+  }
+  isBootstrapRepresentation() {
+    if (!this.segmentSequenceProperties || this.segmentSequenceProperties.length === 0) {
+      return false;
+    }
+    return this.segmentSequenceProperties.some(ssp => {
+      return ssp.isBootstrapConfiguration();
+    });
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (Representation);
@@ -45008,6 +32867,9 @@ class SegmentSequenceProperties {
       this.event = data.event !== undefined ? data.event : true;
       this.alignment = data.alignment !== undefined ? data.alignment : null;
     }
+  }
+  isBootstrapConfiguration() {
+    return this.cadence === 1 && (this.sapType === 0 || this.sapType === 1);
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (SegmentSequenceProperties);
@@ -45600,8 +33462,7 @@ function FragmentLoader(config) {
       urlUtils: urlUtils,
       constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"],
       boxParser: config.boxParser,
-      dashConstants: config.dashConstants,
-      requestTimeout: config.settings.get().streaming.fragmentRequestTimeout
+      dashConstants: config.dashConstants
     });
   }
   function checkForExistence(request) {
@@ -45790,8 +33651,7 @@ function ManifestLoader(config) {
       urlUtils: urlUtils,
       constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"],
       dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_1__["default"],
-      errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-      requestTimeout: config.settings.get().streaming.manifestRequestTimeout
+      errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_10__["default"]
     });
     xlinkController = (0,_controllers_XlinkController_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).create({
       errHandler: errHandler,
@@ -46311,50 +34171,52 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./utils/BoxParser.js */ "./src/streaming/utils/BoxParser.js");
 /* harmony import */ var _utils_Capabilities_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./utils/Capabilities.js */ "./src/streaming/utils/Capabilities.js");
 /* harmony import */ var _utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./utils/CapabilitiesFilter.js */ "./src/streaming/utils/CapabilitiesFilter.js");
-/* harmony import */ var _controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./controllers/CatchupController.js */ "./src/streaming/controllers/CatchupController.js");
-/* harmony import */ var _controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./controllers/ClientDataReportingController.js */ "./src/streaming/controllers/ClientDataReportingController.js");
-/* harmony import */ var _models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./models/CmcdModel.js */ "./src/streaming/models/CmcdModel.js");
+/* harmony import */ var _controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./controllers/CmcdController.js */ "./src/streaming/controllers/CmcdController.js");
+/* harmony import */ var _controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./controllers/CatchupController.js */ "./src/streaming/controllers/CatchupController.js");
+/* harmony import */ var _controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./controllers/ClientDataReportingController.js */ "./src/streaming/controllers/ClientDataReportingController.js");
 /* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
 /* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /* harmony import */ var _dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../dash/controllers/ContentSteeringController.js */ "./src/dash/controllers/ContentSteeringController.js");
 /* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ./models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
 /* harmony import */ var _utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ./utils/DOMStorage.js */ "./src/streaming/utils/DOMStorage.js");
-/* harmony import */ var _dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../dash/DashAdapter.js */ "./src/dash/DashAdapter.js");
-/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
-/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ./vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../dash/DashMetrics.js */ "./src/dash/DashMetrics.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./utils/ErrorHandler.js */ "./src/streaming/utils/ErrorHandler.js");
-/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./../core/errors/Errors.js */ "./src/core/errors/Errors.js");
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./../core/EventBus.js */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./../core/events/Events.js */ "./src/core/events/Events.js");
-/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _controllers_GapController_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ./controllers/GapController.js */ "./src/streaming/controllers/GapController.js");
-/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
-/* harmony import */ var _ManifestLoader_js__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! ./ManifestLoader.js */ "./src/streaming/ManifestLoader.js");
-/* harmony import */ var _models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./models/ManifestModel.js */ "./src/streaming/models/ManifestModel.js");
-/* harmony import */ var _ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./ManifestUpdater.js */ "./src/streaming/ManifestUpdater.js");
-/* harmony import */ var _controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./controllers/MediaController.js */ "./src/streaming/controllers/MediaController.js");
-/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./models/MediaPlayerModel.js */ "./src/streaming/models/MediaPlayerModel.js");
-/* harmony import */ var _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./constants/MetricsConstants.js */ "./src/streaming/constants/MetricsConstants.js");
-/* harmony import */ var _controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./controllers/PlaybackController.js */ "./src/streaming/controllers/PlaybackController.js");
-/* harmony import */ var _net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./net/SchemeLoaderFactory.js */ "./src/streaming/net/SchemeLoaderFactory.js");
-/* harmony import */ var _dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ../dash/controllers/SegmentBaseController.js */ "./src/dash/controllers/SegmentBaseController.js");
-/* harmony import */ var _dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../dash/controllers/ServiceDescriptionController.js */ "./src/dash/controllers/ServiceDescriptionController.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
-/* harmony import */ var _controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ./controllers/StreamController.js */ "./src/streaming/controllers/StreamController.js");
-/* harmony import */ var _text_TextController_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./text/TextController.js */ "./src/streaming/text/TextController.js");
-/* harmony import */ var _controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./controllers/ThroughputController.js */ "./src/streaming/controllers/ThroughputController.js");
-/* harmony import */ var _dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ../dash/utils/TimelineConverter.js */ "./src/dash/utils/TimelineConverter.js");
-/* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ./models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
-/* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
-/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
-/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
+/* harmony import */ var _utils_InitCache_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ./utils/InitCache.js */ "./src/streaming/utils/InitCache.js");
+/* harmony import */ var _dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../dash/DashAdapter.js */ "./src/dash/DashAdapter.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../dash/DashMetrics.js */ "./src/dash/DashMetrics.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./utils/ErrorHandler.js */ "./src/streaming/utils/ErrorHandler.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ./vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _controllers_GapController_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ./controllers/GapController.js */ "./src/streaming/controllers/GapController.js");
+/* harmony import */ var codem_isoboxer__WEBPACK_IMPORTED_MODULE_27__ = __webpack_require__(/*! codem-isoboxer */ "./node_modules/codem-isoboxer/dist/iso_boxer.js");
+/* harmony import */ var _ManifestLoader_js__WEBPACK_IMPORTED_MODULE_28__ = __webpack_require__(/*! ./ManifestLoader.js */ "./src/streaming/ManifestLoader.js");
+/* harmony import */ var _models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_29__ = __webpack_require__(/*! ./models/ManifestModel.js */ "./src/streaming/models/ManifestModel.js");
+/* harmony import */ var _ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_30__ = __webpack_require__(/*! ./ManifestUpdater.js */ "./src/streaming/ManifestUpdater.js");
+/* harmony import */ var _controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_31__ = __webpack_require__(/*! ./controllers/MediaController.js */ "./src/streaming/controllers/MediaController.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__ = __webpack_require__(/*! ./MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_33__ = __webpack_require__(/*! ./models/MediaPlayerModel.js */ "./src/streaming/models/MediaPlayerModel.js");
+/* harmony import */ var _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_34__ = __webpack_require__(/*! ./constants/MetricsConstants.js */ "./src/streaming/constants/MetricsConstants.js");
+/* harmony import */ var _controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_35__ = __webpack_require__(/*! ./controllers/PlaybackController.js */ "./src/streaming/controllers/PlaybackController.js");
+/* harmony import */ var _net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_36__ = __webpack_require__(/*! ./net/SchemeLoaderFactory.js */ "./src/streaming/net/SchemeLoaderFactory.js");
+/* harmony import */ var _dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_37__ = __webpack_require__(/*! ../dash/controllers/SegmentBaseController.js */ "./src/dash/controllers/SegmentBaseController.js");
+/* harmony import */ var _dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_38__ = __webpack_require__(/*! ../dash/controllers/ServiceDescriptionController.js */ "./src/dash/controllers/ServiceDescriptionController.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_39__ = __webpack_require__(/*! ../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__ = __webpack_require__(/*! ./controllers/StreamController.js */ "./src/streaming/controllers/StreamController.js");
+/* harmony import */ var _text_TextController_js__WEBPACK_IMPORTED_MODULE_41__ = __webpack_require__(/*! ./text/TextController.js */ "./src/streaming/text/TextController.js");
+/* harmony import */ var _controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_42__ = __webpack_require__(/*! ./controllers/ThroughputController.js */ "./src/streaming/controllers/ThroughputController.js");
+/* harmony import */ var _dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_43__ = __webpack_require__(/*! ../dash/utils/TimelineConverter.js */ "./src/dash/utils/TimelineConverter.js");
+/* harmony import */ var _models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__ = __webpack_require__(/*! ./models/URIFragmentModel.js */ "./src/streaming/models/URIFragmentModel.js");
+/* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_45__ = __webpack_require__(/*! ../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_46__ = __webpack_require__(/*! ./utils/CertUrlUtils.js */ "./src/streaming/utils/CertUrlUtils.js");
+/* harmony import */ var _models_VideoModel_js__WEBPACK_IMPORTED_MODULE_47__ = __webpack_require__(/*! ./models/VideoModel.js */ "./src/streaming/models/VideoModel.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_48__ = __webpack_require__(/*! ./vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__ = __webpack_require__(/*! ./utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _core_Version_js__WEBPACK_IMPORTED_MODULE_50__ = __webpack_require__(/*! ../core/Version.js */ "./src/core/Version.js");
+/* harmony import */ var _svta_cml_608__WEBPACK_IMPORTED_MODULE_51__ = __webpack_require__(/*! @svta/cml-608 */ "./node_modules/@svta/cml-608/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -46385,6 +34247,8 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 
 
@@ -46479,12 +34343,12 @@ function MediaPlayer() {
    */
   const ARRAY_NOT_SUPPORTED_ERROR = 'Array type not supported for settings!';
   const context = this.context;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_21__["default"])(context).getInstance();
-  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_38__["default"])(context).getInstance();
-  const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance({
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_22__["default"])(context).getInstance();
+  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
+  const debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_19__["default"])(context).getInstance({
     settings: settings
   });
-  let instance, logger, source, protectionData, mediaPlayerInitialized, streamingInitialized, playbackInitialized, autoPlay, providedStartTime, abrController, throughputController, schemeLoaderFactory, timelineConverter, mediaController, protectionController, metricsReportingController, mssHandler, offlineController, adapter, mediaPlayerModel, customParametersModel, errHandler, baseURLController, capabilities, capabilitiesFilter, streamController, textController, gapController, playbackController, serviceDescriptionController, contentSteeringController, catchupController, dashMetrics, manifestModel, cmcdModel, cmsdModel, videoModel, uriFragmentModel, domStorage, segmentBaseController, clientDataReportingController;
+  let instance, logger, source, protectionData, mediaPlayerInitialized, streamingInitialized, playbackInitialized, autoPlay, providedStartTime, abrController, throughputController, schemeLoaderFactory, timelineConverter, mediaController, protectionController, metricsReportingController, mssHandler, offlineController, adapter, mediaPlayerModel, customParametersModel, errHandler, baseURLController, capabilities, capabilitiesFilter, streamController, textController, gapController, playbackController, serviceDescriptionController, contentSteeringController, catchupController, dashMetrics, manifestModel, cmcdController, cmsdModel, videoModel, uriFragmentModel, domStorage, segmentBaseController, clientDataReportingController, retrieveManifestRequest;
 
   /*
   ---------------------------------------------------------------------------
@@ -46503,11 +34367,11 @@ function MediaPlayer() {
     protectionData = null;
     adapter = null;
     segmentBaseController = null;
-    _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].extend(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__["default"]);
-    mediaPlayerModel = (0,_models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_32__["default"])(context).getInstance();
+    _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"]);
+    mediaPlayerModel = (0,_models_MediaPlayerModel_js__WEBPACK_IMPORTED_MODULE_33__["default"])(context).getInstance();
     customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
-    videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_45__["default"])(context).getInstance();
-    uriFragmentModel = (0,_models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_43__["default"])(context).getInstance();
+    videoModel = (0,_models_VideoModel_js__WEBPACK_IMPORTED_MODULE_47__["default"])(context).getInstance();
+    uriFragmentModel = (0,_models_URIFragmentModel_js__WEBPACK_IMPORTED_MODULE_44__["default"])(context).getInstance();
   }
 
   /**
@@ -46606,43 +34470,43 @@ function MediaPlayer() {
       });
     }
     if (!errHandler) {
-      errHandler = (0,_utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_19__["default"])(context).getInstance();
+      errHandler = (0,_utils_ErrorHandler_js__WEBPACK_IMPORTED_MODULE_20__["default"])(context).getInstance();
     }
     if (!capabilities.supportsMediaSource()) {
-      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_16__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
+      errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_17__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].CAPABILITY_MEDIASOURCE_ERROR_CODE, _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].CAPABILITY_MEDIASOURCE_ERROR_MESSAGE));
       return;
     }
     if (!mediaPlayerInitialized) {
       mediaPlayerInitialized = true;
 
       // init some controllers and models
-      timelineConverter = (0,_dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_42__["default"])(context).getInstance();
+      timelineConverter = (0,_dash_utils_TimelineConverter_js__WEBPACK_IMPORTED_MODULE_43__["default"])(context).getInstance();
       if (!throughputController) {
-        throughputController = (0,_controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_41__["default"])(context).getInstance();
+        throughputController = (0,_controllers_ThroughputController_js__WEBPACK_IMPORTED_MODULE_42__["default"])(context).getInstance();
       }
       if (!abrController) {
         abrController = (0,_controllers_AbrController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
       }
       if (!schemeLoaderFactory) {
-        schemeLoaderFactory = (0,_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance();
+        schemeLoaderFactory = (0,_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance();
       }
       if (!playbackController) {
-        playbackController = (0,_controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_34__["default"])(context).getInstance();
+        playbackController = (0,_controllers_PlaybackController_js__WEBPACK_IMPORTED_MODULE_35__["default"])(context).getInstance();
       }
       if (!mediaController) {
-        mediaController = (0,_controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_30__["default"])(context).getInstance();
+        mediaController = (0,_controllers_MediaController_js__WEBPACK_IMPORTED_MODULE_31__["default"])(context).getInstance();
       }
       if (!streamController) {
-        streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
+        streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
       }
       if (!gapController) {
-        gapController = (0,_controllers_GapController_js__WEBPACK_IMPORTED_MODULE_25__["default"])(context).getInstance();
+        gapController = (0,_controllers_GapController_js__WEBPACK_IMPORTED_MODULE_26__["default"])(context).getInstance();
       }
       if (!catchupController) {
-        catchupController = (0,_controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
+        catchupController = (0,_controllers_CatchupController_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
       }
       if (!serviceDescriptionController) {
-        serviceDescriptionController = (0,_dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_37__["default"])(context).getInstance();
+        serviceDescriptionController = (0,_dash_controllers_ServiceDescriptionController_js__WEBPACK_IMPORTED_MODULE_38__["default"])(context).getInstance();
       }
       if (!contentSteeringController) {
         contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
@@ -46650,12 +34514,12 @@ function MediaPlayer() {
       if (!capabilitiesFilter) {
         capabilitiesFilter = (0,_utils_CapabilitiesFilter_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
       }
-      adapter = (0,_dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
-      manifestModel = (0,_models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_28__["default"])(context).getInstance();
-      cmcdModel = (0,_models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+      adapter = (0,_dash_DashAdapter_js__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance();
+      manifestModel = (0,_models_ManifestModel_js__WEBPACK_IMPORTED_MODULE_29__["default"])(context).getInstance();
+      cmcdController = (0,_controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
       cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
-      clientDataReportingController = (0,_controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-      dashMetrics = (0,_dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_17__["default"])(context).getInstance({
+      clientDataReportingController = (0,_controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+      dashMetrics = (0,_dash_DashMetrics_js__WEBPACK_IMPORTED_MODULE_18__["default"])(context).getInstance({
         settings: settings
       });
       domStorage = (0,_utils_DOMStorage_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance({
@@ -46663,7 +34527,7 @@ function MediaPlayer() {
       });
       adapter.setConfig({
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_49__.Cta608Parser(),
+        cea608parser: new _svta_cml_608__WEBPACK_IMPORTED_MODULE_51__.Cta608Parser(),
         errHandler: errHandler,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"]
       });
@@ -46678,16 +34542,16 @@ function MediaPlayer() {
         adapter
       });
       if (!segmentBaseController) {
-        segmentBaseController = (0,_dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_36__["default"])(context).getInstance({
+        segmentBaseController = (0,_dash_controllers_SegmentBaseController_js__WEBPACK_IMPORTED_MODULE_37__["default"])(context).getInstance({
           dashMetrics: dashMetrics,
           mediaPlayerModel: mediaPlayerModel,
           errHandler: errHandler,
           baseURLController: baseURLController,
-          events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
+          events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
           eventBus: eventBus,
           debug: debug,
           boxParser: (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance(),
-          errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"]
+          errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"]
         });
       }
 
@@ -46758,6 +34622,10 @@ function MediaPlayer() {
       offlineController.reset();
       offlineController = null;
     }
+    if (retrieveManifestRequest) {
+      retrieveManifestRequest.resetLoader();
+      retrieveManifestRequest = null;
+    }
   }
 
   /**
@@ -46768,7 +34636,7 @@ function MediaPlayer() {
    */
   function destroy() {
     reset();
-    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_24__["default"].deleteSingletonInstances(context);
+    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].deleteSingletonInstances(context);
   }
 
   /**
@@ -46831,7 +34699,7 @@ function MediaPlayer() {
    * @instance
    */
   function getVersion() {
-    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_48__.getVersionString)();
+    return (0,_core_Version_js__WEBPACK_IMPORTED_MODULE_50__.getVersionString)();
   }
 
   /**
@@ -46843,6 +34711,16 @@ function MediaPlayer() {
    */
   function getDebug() {
     return debug;
+  }
+
+  /**
+   * Returns the InitCache instance for debugging/testing purposes.
+   * @returns {object} InitCache instance
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function getInitCache() {
+    return (0,_utils_InitCache_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
   }
 
   /*
@@ -46935,7 +34813,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'number');
     if (isNaN(value)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -46965,7 +34843,7 @@ function MediaPlayer() {
     if (!playbackInitialized) {
       throw PLAYBACK_NOT_INITIALIZED_ERROR;
     }
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(seektime, 'number');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(seektime, 'number');
     if (isNaN(seektime)) {
       throw _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].BAD_ARGUMENT_ERROR;
     }
@@ -47073,7 +34951,7 @@ function MediaPlayer() {
    * @instance
    */
   function setMute(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'boolean');
     getVideoElement().muted = value;
   }
 
@@ -47320,7 +35198,7 @@ function MediaPlayer() {
    *
    */
   function setAutoPlay(value) {
-    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_47__.checkParameterType)(value, 'boolean');
+    (0,_utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_49__.checkParameterType)(value, 'boolean');
     autoPlay = value;
   }
 
@@ -47860,6 +35738,8 @@ function MediaPlayer() {
   }
 
   /**
+   * This method returns the list of all available representations for a given media type. The returned list is filtered according to the current ABR rules (e.g. max/min bitrate and limitBitrateByPortal).
+   * If you want to get the unfiltered list of representations then use getRepresentationsByTypeUnfiltered() instead.
    * @param {MediaType} type
    * @param {string} streamId
    * @returns {Array}
@@ -47868,11 +35748,28 @@ function MediaPlayer() {
    * @instance
    */
   function getRepresentationsByType(type, streamId = null) {
+    return _getRepresentations(type, streamId, true);
+  }
+
+  /**
+   * This method returns the list of all available representations for a given media type. The returned list is unfiltered and settings like max/min bitrate and limitBitrateByPortal are not taken into account.
+   * If you want to get the filtered list of representations then use getRepresentationsByType() instead.
+   * @param {MediaType} type
+   * @param {string} streamId
+   * @returns {Array}
+   * @memberof module:MediaPlayer
+   * @throws {@link module:MediaPlayer~STREAMING_NOT_INITIALIZED_ERROR STREAMING_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+   * @instance
+   */
+  function getRepresentationsByTypeUnfiltered(type, streamId = null) {
+    return _getRepresentations(type, streamId, false);
+  }
+  function _getRepresentations(type, streamId, filterBySettings = true) {
     if (!streamingInitialized) {
       throw STREAMING_NOT_INITIALIZED_ERROR;
     }
     let stream = streamId ? streamController.getStreamById(streamId) : getActiveStream();
-    return stream ? stream.getRepresentationsByType(type) : [];
+    return stream ? stream.getRepresentationsByType(type, filterBySettings) : [];
   }
 
   /**
@@ -48047,6 +35944,8 @@ function MediaPlayer() {
   /**
    * Registers a custom initial track selection function. Only one function is allowed. Calling this method will overwrite a potentially existing function.
    * @param {function} customFunc - the custom function that returns the initial track
+   * @memberof module:MediaPlayer
+   * @instance
    */
   function setCustomInitialTrackSelectionFunction(customFunc) {
     customParametersModel.setCustomInitialTrackSelectionFunction(customFunc);
@@ -48054,6 +35953,8 @@ function MediaPlayer() {
 
   /**
    * Resets the custom initial track selection
+   * @memberof module:MediaPlayer
+   * @instance
    */
   function resetCustomInitialTrackSelectionFunction() {
     customParametersModel.resetCustomInitialTrackSelectionFunction(null);
@@ -48066,7 +35967,7 @@ function MediaPlayer() {
    * @instance
    */
   function addExternalSubtitle(externalSubtitle) {
-    if (!(externalSubtitle instanceof _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_23__["default"])) {
+    if (!(externalSubtitle instanceof _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_24__["default"])) {
       logger.error('Invalid external subtitle object. Must be an instance of dashjs.ExternalSubtitle');
     }
     customParametersModel.addExternalSubtitle(externalSubtitle);
@@ -48137,6 +36038,50 @@ function MediaPlayer() {
    */
   function removeResponseInterceptor(interceptor) {
     customParametersModel.removeResponseInterceptor(interceptor);
+  }
+
+  /**
+   * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerCertificateRequestFilter(filter) {
+    customParametersModel.registerCertificateRequestFilter(filter);
+  }
+
+  /**
+   * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function registerCertificateResponseFilter(filter) {
+    customParametersModel.registerCertificateResponseFilter(filter);
+  }
+
+  /**
+   * Unregisters a certificate request filter.
+   * @param {function} filter - the license request filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterCertificateRequestFilter(filter) {
+    customParametersModel.unregisterCertificateRequestFilter(filter);
+  }
+
+  /**
+   * Unregisters a certificate response filter.
+   * @param {function} filter - the license response filter callback
+   * @memberof module:MediaPlayer
+   * @instance
+   */
+  function unregisterCertificateResponseFilter(filter) {
+    customParametersModel.unregisterCertificateResponseFilter(filter);
   }
 
   /**
@@ -48220,12 +36165,16 @@ function MediaPlayer() {
    * @instance
    */
   function setProtectionData(value) {
-    protectionData = value;
+    const sanitizedValue = _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_46__["default"].sanitizeProtectionDataCertUrls(value);
+    protectionData = sanitizedValue;
 
     // Propagate changes in case StreamController is already created
     if (streamController) {
       streamController.setProtectionData(protectionData);
     }
+  }
+  function getProtectionData() {
+    return streamController ? streamController.getProtectionData() : null;
   }
 
   /*
@@ -48278,18 +36227,30 @@ function MediaPlayer() {
    * @instance
    */
   function retrieveManifest(url, callback) {
-    let manifestLoader = _createManifestLoader();
-    let self = this;
-    const handler = function (e) {
-      if (!e.error) {
-        callback(e.manifest);
-      } else {
-        callback(null, e.error);
-      }
-      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+    if (retrieveManifestRequest) {
+      retrieveManifestRequest.resetLoader();
+    }
+    const manifestLoader = _createManifestLoader();
+    const resetLoader = () => {
+      eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
       manifestLoader.reset();
+      retrieveManifestRequest = null;
     };
-    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+    retrieveManifestRequest = {
+      manifestLoader,
+      resetLoader
+    };
+    const handler = e => {
+      if (typeof callback == 'function') {
+        if (!e.error) {
+          callback(e.manifest);
+        } else {
+          callback(null, e.error);
+        }
+      }
+      resetLoader();
+    };
+    eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, this);
     uriFragmentModel.initialize(url);
     manifestLoader.load(url);
   }
@@ -48376,14 +36337,14 @@ function MediaPlayer() {
     let self = this;
     if (typeof callback === 'function') {
       const handler = function (e) {
-        eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+        eventBus.off(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
         if (e.error) {
           callback(null, e.error);
           return;
         }
         callback(e.manifest);
       };
-      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
+      eventBus.on(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].INTERNAL_MANIFEST_LOADED, handler, self);
     }
     streamController.refreshManifest();
   }
@@ -48494,7 +36455,7 @@ function MediaPlayer() {
    * @instance
    */
   function extend(parentNameString, childInstance, override) {
-    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_24__["default"].extend(parentNameString, childInstance, override, context);
+    _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].extend(parentNameString, childInstance, override, context);
   }
 
   /**
@@ -48606,7 +36567,7 @@ function MediaPlayer() {
       }
     }
     textController.reset();
-    cmcdModel.reset();
+    cmcdController.reset();
     cmsdModel.reset();
   }
   function _resetPlaybackSessionSpecificSettings() {
@@ -48616,97 +36577,99 @@ function MediaPlayer() {
     // creates or get objects instances
     const manifestLoader = _createManifestLoader();
     if (!streamController) {
-      streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_39__["default"])(context).getInstance();
+      streamController = (0,_controllers_StreamController_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).getInstance();
     }
     if (!textController) {
-      textController = (0,_text_TextController_js__WEBPACK_IMPORTED_MODULE_40__["default"])(context).create({
+      textController = (0,_text_TextController_js__WEBPACK_IMPORTED_MODULE_41__["default"])(context).create({
+        adapter,
+        baseURLController,
         errHandler,
         manifestModel,
-        adapter,
         mediaController,
-        baseURLController,
-        videoModel,
-        settings
+        settings,
+        videoModel
       });
     }
     capabilitiesFilter.setConfig({
+      adapter,
       capabilities,
       customParametersModel,
-      adapter,
-      settings,
-      protectionController,
+      errHandler,
       manifestModel,
-      errHandler
+      protectionController,
+      settings
     });
     streamController.setConfig({
+      abrController,
+      adapter,
+      baseURLController,
       capabilities,
       capabilitiesFilter,
-      manifestLoader,
-      manifestModel,
-      mediaPlayerModel,
+      contentSteeringController,
       customParametersModel,
-      protectionController,
-      textController,
-      adapter,
       dashMetrics,
       errHandler,
-      timelineConverter,
-      videoModel,
-      playbackController,
-      serviceDescriptionController,
-      contentSteeringController,
-      abrController,
-      throughputController,
+      manifestLoader,
+      manifestModel,
       mediaController,
+      mediaPlayerModel,
+      playbackController,
+      protectionController,
+      segmentBaseController,
+      serviceDescriptionController,
       settings,
-      baseURLController,
+      textController,
+      throughputController,
+      timelineConverter,
       uriFragmentModel,
-      segmentBaseController
+      videoModel
     });
     gapController.setConfig({
-      settings,
+      adapter,
       playbackController,
+      settings,
       streamController,
-      videoModel,
       timelineConverter,
-      adapter
+      videoModel
     });
     playbackController.setConfig({
-      streamController,
-      serviceDescriptionController,
-      dashMetrics,
       adapter,
-      videoModel,
+      dashMetrics,
+      serviceDescriptionController,
+      settings,
+      streamController,
       timelineConverter,
-      settings
+      videoModel
     });
     catchupController.setConfig({
-      streamController,
-      playbackController,
       mediaPlayerModel,
-      videoModel,
-      settings
+      playbackController,
+      settings,
+      streamController,
+      videoModel
     });
     throughputController.setConfig({
       settings,
       playbackController
     });
     abrController.setConfig({
-      streamController,
+      adapter,
       capabilities,
+      cmsdModel,
+      customParametersModel,
+      dashMetrics,
       domStorage,
       mediaPlayerModel,
-      customParametersModel,
+      settings,
+      streamController,
       throughputController,
-      cmsdModel,
-      dashMetrics,
-      adapter,
-      videoModel,
-      settings
+      videoModel
     });
-    cmcdModel.setConfig({
+    cmcdController.setConfig({
       abrController,
       dashMetrics,
+      errHandler,
+      mediaPlayerModel,
       playbackController,
       serviceDescriptionController,
       throughputController
@@ -48724,13 +36687,13 @@ function MediaPlayer() {
     textController.initialize();
     gapController.initialize();
     catchupController.initialize();
-    cmcdModel.initialize(autoPlay);
+    cmcdController.initialize(autoPlay);
     cmsdModel.initialize();
     contentSteeringController.initialize();
     segmentBaseController.initialize();
   }
   function _createManifestLoader() {
-    return (0,_ManifestLoader_js__WEBPACK_IMPORTED_MODULE_27__["default"])(context).create({
+    return (0,_ManifestLoader_js__WEBPACK_IMPORTED_MODULE_28__["default"])(context).create({
       debug: debug,
       errHandler: errHandler,
       dashMetrics: dashMetrics,
@@ -48751,11 +36714,11 @@ function MediaPlayer() {
     if (typeof detectedProtection === 'function') {
       //TODO need a better way to register/detect plugin components
       let protection = detectedProtection(context).create();
-      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].extend(detectedProtection.events);
-      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__["default"].extend(detectedProtection.events, {
+      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(detectedProtection.events);
+      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].extend(detectedProtection.events, {
         publicOnly: true
       });
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"].extend(detectedProtection.errors);
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedProtection.errors);
       protectionController = protection.createProtectionSystem({
         debug,
         errHandler,
@@ -48763,10 +36726,10 @@ function MediaPlayer() {
         customParametersModel,
         capabilities,
         eventBus,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        cmcdModel,
+        cmcdController,
         settings
       });
       if (!capabilities) {
@@ -48793,9 +36756,9 @@ function MediaPlayer() {
         adapter: adapter,
         dashMetrics: dashMetrics,
         mediaPlayerModel: mediaPlayerModel,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
-        metricsConstants: _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_33__["default"]
+        metricsConstants: _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_34__["default"]
       });
     }
   }
@@ -48808,7 +36771,7 @@ function MediaPlayer() {
     let detectedMssHandler = dashjs.MssHandler;
     if (typeof detectedMssHandler === 'function') {
       //TODO need a better way to register/detect plugin components
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"].extend(detectedMssHandler.errors);
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedMssHandler.errors);
       mssHandler = detectedMssHandler(context).create({
         eventBus: eventBus,
         mediaPlayerModel: mediaPlayerModel,
@@ -48819,12 +36782,12 @@ function MediaPlayer() {
         protectionController: protectionController,
         baseURLController: baseURLController,
         errHandler: errHandler,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
         debug: debug,
-        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_46__.HTTPRequest.INIT_SEGMENT_TYPE,
+        initSegmentType: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_48__.HTTPRequest.INIT_SEGMENT_TYPE,
         BASE64: _externals_base64_js__WEBPACK_IMPORTED_MODULE_1__["default"],
-        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_26__,
+        ISOBoxer: codem_isoboxer__WEBPACK_IMPORTED_MODULE_27__,
         settings: settings
       });
     }
@@ -48844,13 +36807,13 @@ function MediaPlayer() {
     let detectedOfflineController = dashjs.OfflineController;
     if (typeof detectedOfflineController === 'function') {
       //TODO need a better way to register/detect plugin components
-      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"].extend(detectedOfflineController.events);
-      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__["default"].extend(detectedOfflineController.events, {
+      _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"].extend(detectedOfflineController.events);
+      _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].extend(detectedOfflineController.events, {
         publicOnly: true
       });
-      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"].extend(detectedOfflineController.errors);
+      _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"].extend(detectedOfflineController.errors);
       const manifestLoader = _createManifestLoader();
-      const manifestUpdater = (0,_ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_29__["default"])(context).create();
+      const manifestUpdater = (0,_ManifestUpdater_js__WEBPACK_IMPORTED_MODULE_30__["default"])(context).create();
       manifestUpdater.setConfig({
         manifestModel,
         adapter,
@@ -48874,12 +36837,12 @@ function MediaPlayer() {
         segmentBaseController: segmentBaseController,
         schemeLoaderFactory: schemeLoaderFactory,
         eventBus: eventBus,
-        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_22__["default"],
-        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"],
+        events: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_23__["default"],
+        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"],
         constants: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"],
         settings: settings,
-        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"],
-        urlUtils: (0,_streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_44__["default"])(context).getInstance()
+        dashConstants: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__["default"],
+        urlUtils: (0,_streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_45__["default"])(context).getInstance()
       });
       return offlineController;
     }
@@ -48926,7 +36889,7 @@ function MediaPlayer() {
 
       // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
       if (output.role.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_10__["default"].DASH_ROLE_SCHEME_ID && output.role.value === 'Main') {
-        output.role.value = _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_15__["default"].MAIN;
+        output.role.value = _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_16__["default"].MAIN;
       }
     }
     if (value.accessibility !== undefined) {
@@ -48955,7 +36918,7 @@ function MediaPlayer() {
     }
     if (!playbackInitialized && isReady()) {
       playbackInitialized = true;
-      eventBus.trigger(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__["default"].PLAYBACK_INITIALIZED);
+      eventBus.trigger(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"].PLAYBACK_INITIALIZED);
       logger.info('Playback Initialized');
     }
   }
@@ -48997,14 +36960,17 @@ function MediaPlayer() {
     getDvrSeekOffset,
     getDvrWindow,
     getExternalSubtitles,
+    getInitCache,
     getInitialMediaSettingsFor,
     getLowLatencyModeEnabled,
     getManifest,
     getOfflineController,
     getPlaybackRate,
     getProtectionController,
+    getProtectionData,
     getRawThroughputData,
     getRepresentationsByType,
+    getRepresentationsByTypeUnfiltered,
     getSafeAverageThroughput,
     getSettings,
     getSource,
@@ -49031,6 +36997,8 @@ function MediaPlayer() {
     preload,
     provideThumbnail,
     refreshManifest,
+    registerCertificateRequestFilter,
+    registerCertificateResponseFilter,
     registerCustomCapabilitiesFilter,
     registerLicenseRequestFilter,
     registerLicenseResponseFilter,
@@ -49067,6 +37035,8 @@ function MediaPlayer() {
     timeInDvrWindow,
     trigger,
     triggerSteeringRequest,
+    unregisterCertificateRequestFilter,
+    unregisterCertificateResponseFilter,
     unregisterCustomCapabilitiesFilter,
     unregisterLicenseRequestFilter,
     unregisterLicenseResponseFilter,
@@ -49077,10 +37047,10 @@ function MediaPlayer() {
   return instance;
 }
 MediaPlayer.__dashjs_factory_name = 'MediaPlayer';
-const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_24__["default"].getClassFactory(MediaPlayer);
-factory.events = _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_31__["default"];
-factory.errors = _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_20__["default"];
-_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_24__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].getClassFactory(MediaPlayer);
+factory.events = _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_32__["default"];
+factory.errors = _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_21__["default"];
+_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_25__["default"].updateClassFactory(MediaPlayer.__dashjs_factory_name, factory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
 
 /***/ }),
@@ -49694,28 +37664,32 @@ function MediaPlayerFactory() {
   };
 }
 let instance = MediaPlayerFactory();
-let loadInterval;
-function loadHandler() {
-  window.removeEventListener('load', loadHandler);
-  instance.createAll();
-}
-function loadIntervalHandler() {
-  if (window.dashjs) {
-    window.clearInterval(loadInterval);
+
+// Only execute auto-creation logic in browser environment (SSR-safe)
+if (typeof window !== 'undefined' && window) {
+  let loadInterval;
+  function loadHandler() {
+    window.removeEventListener('load', loadHandler);
     instance.createAll();
   }
-}
-let avoidAutoCreate = typeof window !== 'undefined' && window && window.dashjs && window.dashjs.skipAutoCreate;
-if (!avoidAutoCreate && typeof window !== 'undefined' && window && window.addEventListener) {
-  if (window.document.readyState === 'complete') {
+  function loadIntervalHandler() {
     if (window.dashjs) {
+      window.clearInterval(loadInterval);
       instance.createAll();
-    } else {
-      // If loaded asynchronously, window.readyState may be 'complete' even if dashjs hasn't loaded yet
-      loadInterval = window.setInterval(loadIntervalHandler, 500);
     }
-  } else {
-    window.addEventListener('load', loadHandler);
+  }
+  let avoidAutoCreate = window.dashjs && window.dashjs.skipAutoCreate;
+  if (!avoidAutoCreate && window.addEventListener) {
+    if (window.document.readyState === 'complete') {
+      if (window.dashjs) {
+        instance.createAll();
+      } else {
+        // If loaded asynchronously, window.readyState may be 'complete' even if dashjs hasn't loaded yet
+        loadInterval = window.setInterval(loadIntervalHandler, 500);
+      }
+    } else {
+      window.addEventListener('load', loadHandler);
+    }
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (instance);
@@ -49775,6 +37749,7 @@ __webpack_require__.r(__webpack_exports__);
 function PreBufferSink(onAppendedCallback) {
   const context = this.context;
   let instance, logger, outstandingInit;
+  let initSegments = [];
   let chunks = [];
   let onAppended = onAppendedCallback;
   function setup() {
@@ -49782,19 +37757,22 @@ function PreBufferSink(onAppendedCallback) {
   }
   function reset() {
     chunks = [];
+    initSegments = [];
     outstandingInit = null;
     onAppended = null;
   }
   function append(chunk) {
     if (chunk.segmentType !== 'InitializationSegment') {
-      //Init segments are stored in the initCache.
       chunks.push(chunk);
       chunks.sort(function (a, b) {
         return a.start - b.start;
       });
       outstandingInit = null;
     } else {
-      //We need to hold an init chunk for when a corresponding media segment is being downloaded when the discharge happens.
+      if (!initSegments.includes(chunk)) {
+        initSegments.push(chunk);
+      }
+      //We might be in the process of downloading a media segment, this would be its init pair.
       outstandingInit = chunk;
     }
     logger.debug('PreBufferSink appended chunk s: ' + chunk.start + '; e: ' + chunk.end);
@@ -49806,7 +37784,7 @@ function PreBufferSink(onAppendedCallback) {
     return Promise.resolve();
   }
   function remove(start, end) {
-    chunks = chunks.filter(a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start))); //The opposite of the getChunks predicate.
+    chunks = chunks.filter(a => !((isNaN(end) || a.start < end) && (isNaN(start) || a.end > start)));
     return Promise.resolve();
   }
 
@@ -49851,26 +37829,27 @@ function PreBufferSink(onAppendedCallback) {
     return this;
   }
 
-  /**
-   * Return the all chunks in the buffer the lie between times start and end.
-   * Because a chunk cannot be split, this returns the full chunk if any part of its time lies in the requested range.
-   * Chunks are removed from the buffer when they are discharged.
-   * @function PreBufferSink#discharge
-   * @param {?Number} start The start time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
-   * @param {?Number} end The end time from which to discharge from the buffer. If NaN, it is regarded as unbounded.
-   * @returns {Array} The set of chunks from the buffer within the time ranges.
-   */
-  function discharge(start, end) {
-    const result = getChunksAt(start, end);
+  //Return an array of all chunks along with init segments in the order to append to the SourceBuffer.
+  //Chunks are removed from PreBuffer when they are discharged.
+  function discharge() {
+    const result = chunks;
+    let lastInit = null;
+    for (let i = 0; i < result.length; i++) {
+      if (!lastInit || result[i].representation.id != lastInit.representation.id) {
+        lastInit = initSegments.find(init => init.representation.id === result[i].representation.id);
+        if (lastInit) {
+          result.splice(i, 0, lastInit);
+          i++;
+        }
+      }
+    }
     if (outstandingInit) {
       result.push(outstandingInit);
       outstandingInit = null;
     }
-    remove(start, end);
+    chunks = [];
+    initSegments = [];
     return result;
-  }
-  function getChunksAt(start, end) {
-    return chunks.filter(a => (isNaN(end) || a.start < end) && (isNaN(start) || a.end > start));
   }
   function waitForUpdateEnd(callback) {
     callback();
@@ -49985,15 +37964,35 @@ function SourceBufferSink(config) {
   }
   function changeType(representation) {
     const codec = _getCodecStringForRepresentation(representation);
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       _waitForUpdateEnd(() => {
-        if (buffer.changeType) {
-          logger.debug(`Changing SourceBuffer codec to ${codec}`);
-          buffer.changeType(codec);
+        if (buffer && buffer.changeType) {
+          try {
+            logger.debug(`Changing SourceBuffer codec to ${codec}`);
+            buffer.changeType(codec);
+            resolve();
+          } catch (e) {
+            _handleChangeTypeError(e);
+            reject();
+          }
+        } else {
+          resolve();
         }
-        resolve();
       });
     });
+  }
+  function _handleChangeTypeError(e) {
+    logger.error(e);
+    if (typeof e?.name === 'string' && e.name === 'NotSupportedError') {
+      settings.update({
+        streaming: {
+          buffer: {
+            useChangeType: false,
+            resetSourceBuffersForTrackSwitch: true
+          }
+        }
+      });
+    }
   }
   function _copyPreviousSinkData(oldSourceBufferSink) {
     buffer = oldSourceBufferSink.getBuffer();
@@ -50306,8 +38305,8 @@ function SourceBufferSink(config) {
     }
   }
   function _updateEndHandler() {
-    // if updating is still in progress do nothing and wait for the next check again.
-    if (buffer.updating) {
+    // if buffer is null or updating is still in progress do nothing and wait for the next check again.
+    if (!buffer || buffer.updating) {
       return;
     }
 
@@ -50471,7 +38470,8 @@ function Stream(config) {
       boxParser = (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
       segmentBlacklistController = (0,_controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
         updateEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SEGMENT_LOCATION_BLACKLIST_CHANGED,
-        addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SEGMENT_LOCATION_BLACKLIST_ADD
+        addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_8__["default"].SEGMENT_LOCATION_BLACKLIST_ADD,
+        enableExpiry: false
       });
       fragmentController = (0,_controllers_FragmentController_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).create({
         streamInfo: streamInfo,
@@ -50645,7 +38645,7 @@ function Stream(config) {
         }
       });
       Promise.all(promises).then(() => {
-        return _createBufferSinks(previousSourceBufferSinks);
+        return _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod);
       }).then(bufferSinks => {
         if (streamProcessors.length === 0) {
           const msg = 'No streams to play.';
@@ -50843,14 +38843,16 @@ function Stream(config) {
   /**
    * Creates the SourceBufferSink objects for all StreamProcessors
    * @param {array} previousSourceBufferSinks
+   * @param {array} representationsFromPreviousPeriod
    * @return {Promise<object>}
    * @private
    */
-  function _createBufferSinks(previousSourceBufferSinks) {
+  function _createBufferSinks(previousSourceBufferSinks, representationsFromPreviousPeriod) {
     return new Promise(resolve => {
       const buffers = {};
       const promises = streamProcessors.map(sp => {
-        const oldRepresentation = sp.getRepresentation();
+        const spRepresentation = sp.getRepresentation();
+        const oldRepresentation = representationsFromPreviousPeriod.find(r => r.mediaInfo.type === spRepresentation.mediaInfo.type);
         return sp.createBufferSinks(previousSourceBufferSinks, oldRepresentation);
       });
       Promise.all(promises).then(bufferSinks => {
@@ -51002,10 +39004,11 @@ function Stream(config) {
 
   /**
    * @param {string} type
+   * @param filterBySettings
    * @returns {Array}
    * @memberof Stream#
    */
-  function getRepresentationsByType(type) {
+  function getRepresentationsByType(type, filterBySettings = true) {
     checkConfig();
     if (type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].IMAGE) {
       if (!thumbnailController) {
@@ -51014,7 +39017,7 @@ function Stream(config) {
       return thumbnailController.getPossibleVoRepresentations();
     }
     const mediaInfo = _getMediaInfo(type);
-    return abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true);
+    return filterBySettings ? abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo, true) : abrController.getPossibleVoRepresentations(mediaInfo, true);
   }
 
   /**
@@ -51948,6 +39951,9 @@ function StreamProcessor(config) {
     scheduleController.startScheduleTimer(scheduleTimeout);
   }
   function _onDataUpdateCompleted() {
+    if (!bufferController || !representationController) {
+      return;
+    }
     const currentRepresentation = representationController.getCurrentCompositeRepresentation();
     if (!bufferController.getIsBufferingCompleted()) {
       bufferController.updateBufferTimestampOffset(currentRepresentation);
@@ -52245,8 +40251,15 @@ function StreamProcessor(config) {
       const bufferLevel = bufferController.getBufferLevel();
       const abandonmentState = abrController.getAbandonmentStateFor(streamInfo.id, type);
 
+      // In scalable dual-track mode, `newRepresentation.bandwidth` reflects the
+      // combined bandwidth of the base and enhancement layers. However, in the
+      // base layer stream processor (type VIDEO), `request.bandwidth` refers only
+      // to the base layer. Therefore, the comparison should use the base layer
+      // bandwidth (`dependentRepresentation`) only.
+      const newBandwidth = type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && newRepresentation.dependentRepresentation ? newRepresentation.dependentRepresentation.bandwidth : newRepresentation.bandwidth;
+
       // The new quality is higher than the one we originally requested
-      if (request.bandwidth < newRepresentation.bandwidth && bufferLevel >= safeBufferLevel && abandonmentState === _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ALLOW_LOAD) {
+      if (request.bandwidth < newBandwidth && bufferLevel >= safeBufferLevel && abandonmentState === _constants_MetricsConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ALLOW_LOAD) {
         bufferController.prepareForFastQualitySwitch(newRepresentation, oldRepresentation).then(() => {
           _fastQualitySwitchPreparationDone(time, safeBufferLevel);
         }).catch(() => {
@@ -52967,6 +40980,850 @@ XlinkLoader.__dashjs_factory_name = 'XlinkLoader';
 
 /***/ }),
 
+/***/ "./src/streaming/cmcd/config/CmcdConfigAccessor.js":
+/*!*********************************************************!*\
+  !*** ./src/streaming/cmcd/config/CmcdConfigAccessor.js ***!
+  \*********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _CmcdPropertyMap_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CmcdPropertyMap.js */ "./src/streaming/cmcd/config/CmcdPropertyMap.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+/**
+ * @module CmcdConfigAccessor
+ * @description Provides unified access to CMCD configuration properties.
+ *
+ * This accessor abstracts away the differences between:
+ * - Player settings (settings.get().streaming.cmcd)
+ * - Manifest parameters (CMCDParameters from MPD)
+ * - CMCD versions (v1 and v2)
+ *
+ * It uses CmcdPropertyMap for declarative configuration and provides
+ * a version-agnostic API for accessing CMCD properties with automatic
+ * fallback resolution.
+ *
+ * @example
+ * const cmcdConfig = CmcdConfigAccessor(context).getInstance();
+ * cmcdConfig.setManifestParams(manifestParams);
+ *
+ * const version = cmcdConfig.getVersion();        // 1 or 2
+ * const keys = cmcdConfig.get('keys');            // Resolves with fallback
+ * const isEnabled = cmcdConfig.isEnabled();       // Boolean
+ *
+ * @ignore
+ */
+function CmcdConfigAccessor() {
+  let instance;
+  let settings;
+  let manifestParams;
+  let manifestParamsProviderFunction;
+  const context = this.context;
+
+  /**
+   * Initialize the accessor
+   * @private
+   */
+  function setup() {
+    settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
+    manifestParams = null;
+    manifestParamsProviderFunction = null;
+  }
+
+  /**
+   * Set a provider function for live access to manifest params
+   * This enables lazy loading of CMCDParameters, resolving timing issues
+   * where params are needed before they're available in the manifest
+   *
+   * @param {Function} providerFn - Function that returns CMCDParameters object or null
+   * @public
+   *
+   * @example
+   * cmcdConfig.setManifestParamsProvider(() => {
+   *   return serviceDescriptionController.getServiceDescriptionSettings()
+   *     ?.clientDataReporting?.cmcdParameters || null;
+   * });
+   */
+  function setManifestParamsProviderFunction(providerFn) {
+    manifestParamsProviderFunction = providerFn;
+  }
+
+  /**
+   * Get CMCDParameters from the provider function
+   * @returns {Object|null} CMCDParameters or null if provider not set or returns nothing
+   * @private
+   */
+  function _getManifestParamsFromProvider() {
+    if (typeof manifestParamsProviderFunction !== 'function') {
+      return null;
+    }
+    try {
+      return manifestParamsProviderFunction();
+    } catch (e) {
+      // Provider not ready yet or threw an error
+      return null;
+    }
+  }
+
+  /**
+   * Get the effective manifest params (live from provider, or cached)
+   * Prefers live access from provider when available
+   * @returns {Object|null} CMCDParameters
+   * @private
+   */
+  function _getEffectiveManifestParams() {
+    // Try live access first (resolves timing issues)
+    const liveParams = _getManifestParamsFromProvider();
+    if (liveParams && Object.keys(liveParams).length > 0) {
+      return liveParams;
+    }
+    // Fall back to cached params
+    return manifestParams;
+  }
+
+  /**
+   * Set manifest parameters from MPD CMCDParameters
+   * @param {Object} params - CMCDParameters from manifest
+   * @public
+   */
+  function setManifestParams(params) {
+    manifestParams = params;
+  }
+
+  /**
+   * Detect the CMCD version from available sources
+   * Priority: manifest > settings > default (1)
+   * @returns {number} CMCD version (1 or 2)
+   * @private
+   */
+  function _detectVersion() {
+    // Check manifest parameters first (use live access for timing safety)
+    const effectiveManifestParams = _getEffectiveManifestParams();
+    if (effectiveManifestParams && effectiveManifestParams.version) {
+      return parseInt(effectiveManifestParams.version, 10);
+    }
+
+    // Check settings (don't cache - settings can change dynamically)
+    const cmcdSettings = settings.get().streaming.cmcd;
+    if (cmcdSettings && cmcdSettings.version) {
+      return parseInt(cmcdSettings.version, 10);
+    }
+
+    // Default
+    return _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_DEFAULT_VERSION;
+  }
+
+  /**
+   * Resolve a dot-notation path in an object with support for array notation and context variables
+   * @param {Object} obj - Object to traverse
+   * @param {string} path - Dot-notation path (e.g., 'streaming.cmcd.version')
+   * @param {Object} pathContext - Context variables for path interpolation (e.g., {targetIndex: 0})
+   * @returns {*} Resolved value or undefined
+   * @private
+   *
+   * @example
+   * // Simple path
+   * _resolvePath(obj, 'settings.streaming.cmcd.version')
+   *
+   * // Array notation
+   * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[0].url')
+   *
+   * // Context variables
+   * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[{targetIndex}].url', {targetIndex: 0})
+   */
+  function _resolvePath(obj, path, pathContext = {}) {
+    if (!obj || !path) {
+      return undefined;
+    }
+
+    // Replace contextual variables in the path
+    // Example: 'eventTargets[{targetIndex}].batchSize' with {targetIndex: 0} -> 'eventTargets[0].batchSize'
+    let resolvedPath = path;
+    for (const [key, value] of Object.entries(pathContext)) {
+      resolvedPath = resolvedPath.replace(`{${key}}`, value);
+    }
+
+    // Split path by dots
+    const parts = resolvedPath.split('.');
+    let current = obj;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+
+      // Handle array notation: eventTargets[0]
+      const arrayMatch = part.match(/^([^\[]+)\[(\d+)\]$/);
+      if (arrayMatch) {
+        const [, arrayName, arrayIndex] = arrayMatch;
+
+        // First get the array
+        current = current[arrayName];
+
+        // Check if it's actually an array
+        if (!Array.isArray(current)) {
+          return undefined;
+        }
+
+        // Then access the specific index
+        const index = parseInt(arrayIndex, 10);
+        current = current[index];
+      } else {
+        // Normal property access
+        current = current[part];
+      }
+    }
+    return current;
+  }
+
+  /**
+   * Get the available data context for property resolution
+   * @returns {Object} Context object with settings and manifestParams
+   * @private
+   */
+  function _getContext() {
+    return {
+      settings: settings.get(),
+      manifestParams: _getEffectiveManifestParams() || {}
+    };
+  }
+
+  /**
+   * Get a CMCD property value with automatic fallback resolution
+   * @param {string} property - Property name from CmcdPropertyMap
+   * @param {Object} options - Optional configuration
+   * @param {*} options.defaultValue - Override default value
+   * @param {number} options.targetIndex - Target index for V2 contextual properties
+   * @returns {*} Property value or default
+   * @public
+   */
+  function get(property, options = {}) {
+    const propertyMapping = _CmcdPropertyMap_js__WEBPACK_IMPORTED_MODULE_1__["default"][property];
+    if (!propertyMapping) {
+      return options.defaultValue !== undefined ? options.defaultValue : undefined;
+    }
+    const version = _detectVersion();
+    const dataContext = _getContext();
+
+    // Check if this mapping applies to the current version
+    if (propertyMapping.version && !propertyMapping.version.includes(version)) {
+      return options.defaultValue !== undefined ? options.defaultValue : undefined;
+    }
+
+    // Build path context for interpolation (e.g., {targetIndex: 0})
+    const pathContext = {};
+    if (options.targetIndex !== undefined) {
+      pathContext.targetIndex = options.targetIndex;
+    }
+
+    // Check if we should skip manifest params (avoid circular dependency by checking settings directly)
+    const applyParametersFromMpd = property === 'applyParametersFromMpd' ? true : dataContext.settings?.streaming?.cmcd?.applyParametersFromMpd ?? true;
+
+    // Sort sources by priority (lower number = higher priority)
+    const sortedSources = [...propertyMapping.sources].sort((a, b) => a.priority - b.priority);
+
+    // First pass: Try to find an actual value from any source
+    for (const source of sortedSources) {
+      // Skip manifestParams sources if applyParametersFromMpd is false
+      if (!applyParametersFromMpd && source.path.startsWith('manifestParams')) {
+        continue;
+      }
+      const value = _resolvePath(dataContext, source.path, pathContext);
+
+      // Check if value exists and is not null/undefined
+      if (value !== null && value !== undefined) {
+        // Apply transformation if provided
+        if (typeof source.transform === 'function') {
+          return source.transform(value);
+        }
+        return value;
+      }
+    }
+
+    // Second pass: If no actual value found, look for the highest-priority default
+    for (const source of sortedSources) {
+      // Skip manifestParams sources if applyParametersFromMpd is false
+      if (!applyParametersFromMpd && source.path.startsWith('manifestParams')) {
+        continue;
+      }
+      if (source.default !== undefined) {
+        return source.default;
+      }
+    }
+
+    // No value or default found in any source, return override default or undefined
+    return options.defaultValue !== undefined ? options.defaultValue : undefined;
+  }
+
+  /**
+   * Check if a property has a non-null/undefined value
+   * @param {string} property - Property name from CmcdPropertyMap
+   * @returns {boolean} True if property has a value
+   * @public
+   */
+  function has(property) {
+    const value = get(property);
+    return value !== null && value !== undefined;
+  }
+
+  /**
+   * Get the detected CMCD version
+   * @returns {number} CMCD version (1 or 2)
+   * @public
+   */
+  function getVersion() {
+    return _detectVersion();
+  }
+
+  /**
+   * Check if manifest CMCDParameters are available
+   * @returns {boolean} True if manifest params exist with a version
+   * @public
+   */
+  function hasManifestParams() {
+    const effectiveManifestParams = _getEffectiveManifestParams();
+    return !!(effectiveManifestParams && effectiveManifestParams.version);
+  }
+
+  /**
+   * Check if CMCD is enabled
+   *
+   * CMCD is considered enabled if:
+   * 1. Manifest has CMCDParameters configured (presence implies enabled), OR
+   * 2. Player settings explicitly set enabled: true
+   *
+   * Note: 'enabled' attribute does not exist in the manifest standard,
+   * only in player configuration.
+   *
+   * @returns {boolean} True if CMCD is enabled
+   * @public
+   */
+  function isEnabled() {
+    const cmcdSettings = settings.get().streaming.cmcd;
+
+    // Check if manifest has CMCDParameters (only if applyParametersFromMpd is not false)
+    // Manifest CMCDParameters override player settings including enabled: false
+    const applyFromMpd = cmcdSettings?.applyParametersFromMpd ?? true;
+    if (applyFromMpd) {
+      const effectiveManifestParams = _getEffectiveManifestParams();
+      if (effectiveManifestParams && effectiveManifestParams.version) {
+        return true;
+      }
+    }
+
+    // No manifest params (or applyParametersFromMpd is false) — use player settings
+    if (cmcdSettings && cmcdSettings.enabled === false) {
+      return false;
+    }
+
+    // Fall back to player settings configuration
+    return get('enabled') === true;
+  }
+
+  /**
+   * Reset the accessor state
+   * @public
+   */
+  function reset() {
+    manifestParams = null;
+    manifestParamsProviderFunction = null;
+  }
+
+  /**
+   * Get the array of reporting targets (V2 only)
+   * @returns {Array} Array of target objects, empty array if V1 or no targets
+   * @public
+   *
+   * @example
+   * const targets = cmcdConfig.getEventTargets();
+   * targets.forEach((target, index) => {
+   *   const targetAccessor = cmcdConfig.getEventTarget(index);
+   *   const keys = targetAccessor.get('targetKeys');
+   * });
+   */
+  function getEventTargets() {
+    const version = _detectVersion();
+
+    // Only V2 supports targets
+    if (version !== 2) {
+      return [];
+    }
+    const targets = get('eventTargets');
+    return Array.isArray(targets) ? targets : [];
+  }
+
+  /**
+   * Get a target accessor for a specific target index (V2 only)
+   * @param {number} index - Target index
+   * @returns {Object|null} Target accessor object or null if invalid index
+   * @public
+   *
+   * @example
+   * const target = cmcdConfig.getEventTarget(0);
+   * if (target) {
+   *   const url = target.get('targetUrl');
+   *   const keys = target.get('targetKeys');
+   *   const events = target.get('targetEvents');
+   * }
+   */
+  function getEventTarget(index) {
+    const targets = getEventTargets();
+
+    // Validate index
+    if (index < 0 || index >= targets.length) {
+      return null;
+    }
+
+    // Return accessor object for this specific target
+    return {
+      /**
+       * Get a target-specific property value
+       * @param {string} property - Property name (should be target-specific like 'targetUrl', 'targetKeys', etc.)
+       * @returns {*} Property value
+       */
+      get: property => {
+        return get(property, {
+          targetIndex: index
+        });
+      },
+      /**
+       * Check if a target-specific property has a value
+       * @param {string} property - Property name
+       * @returns {boolean} True if property has a value
+       */
+      has: property => {
+        const value = get(property, {
+          targetIndex: index
+        });
+        return value !== null && value !== undefined;
+      },
+      /**
+       * Target index
+       * @type {number}
+       */
+      index: index,
+      /**
+       * Raw target object from settings/manifest
+       * @type {Object}
+       */
+      raw: targets[index]
+    };
+  }
+  instance = {
+    get,
+    getEventTarget,
+    getEventTargets,
+    getVersion,
+    has,
+    hasManifestParams,
+    isEnabled,
+    reset,
+    setManifestParams,
+    setManifestParamsProviderFunction
+  };
+  setup();
+  return instance;
+}
+CmcdConfigAccessor.__dashjs_factory_name = 'CmcdConfigAccessor';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(CmcdConfigAccessor));
+
+/***/ }),
+
+/***/ "./src/streaming/cmcd/config/CmcdPropertyMap.js":
+/*!******************************************************!*\
+  !*** ./src/streaming/cmcd/config/CmcdPropertyMap.js ***!
+  \******************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @module CmcdPropertyMap
+ * @description Declarative configuration for CMCD property mappings.
+ *
+ * Maps logical property names to physical paths in different sources (manifest, settings)
+ * with version awareness, priority-based fallback, and optional transformations.
+ *
+ * This centralized configuration allows handling structure changes in CMCD settings
+ * without modifying business logic across the codebase.
+ *
+ * @typedef {Object} PropertySource
+ * @property {string} path - Dot-notation path to property (e.g., 'settings.streaming.cmcd.version')
+ * @property {number} priority - Order of precedence (1 = highest)
+ * @property {string} [type] - Expected data type ('string', 'number', 'boolean', 'array', 'object')
+ * @property {Function} [transform] - Optional transformation function
+ * @property {*} [default] - Default value if not found
+ * @property {boolean} [deprecated] - Mark as deprecated for backward compatibility
+ *
+ * @typedef {Object} PropertyMapping
+ * @property {number[]} [version] - CMCD versions this mapping applies to (omit for all versions)
+ * @property {PropertySource[]} sources - Ordered list of sources to check
+ */
+
+/**
+ * Property mappings for CMCD configuration
+ * @type {Object.<string, PropertyMapping>}
+ */
+const CmcdPropertyMap = {
+  /**
+   * CMCD version number
+   * Priority: manifest > settings > default (1)
+   */
+  version: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.version',
+      priority: 1,
+      type: 'number'
+    }, {
+      path: 'settings.streaming.cmcd.version',
+      priority: 2,
+      type: 'number',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_DEFAULT_VERSION
+    }]
+  },
+  /**
+   * CMCD enabled flag
+   * Note: This only exists in player settings, not in manifest.
+   * Manifest presence (CMCDParameters tag) implies enabled=true.
+   * Priority: settings > default (false)
+   */
+  enabled: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.enabled',
+      priority: 1,
+      type: 'boolean',
+      default: false
+    }]
+  },
+  /**
+   * Session ID (sid)
+   * Priority: manifest > settings > null
+   */
+  sessionID: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.sessionID',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.sid',
+      priority: 2,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * Content ID (cid)
+   * Priority: manifest > settings > null
+   */
+  contentID: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.contentID',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.cid',
+      priority: 2,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * Transmission mode (query, header, body)
+   * Priority: manifest > settings > default (query)
+   *
+   * V1: Single global mode
+   * V2: Can be per-target or global
+   */
+  mode: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.mode',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.mode',
+      priority: 2,
+      type: 'string',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_MODE_QUERY
+    }]
+  },
+  /**
+   * Requested throughput (rtp)
+   * Priority: settings > null (calculated dynamically if null)
+   */
+  rtp: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.rtp',
+      priority: 1,
+      type: 'number',
+      default: null
+    }]
+  },
+  /**
+   * RTP safety factor for throughput calculation
+   * Priority: settings > default (5)
+   */
+  rtpSafetyFactor: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.rtpSafetyFactor',
+      priority: 1,
+      type: 'number',
+      default: 5
+    }]
+  },
+  /**
+   * Global enabled CMCD keys
+   * Priority: manifest > settings > default (all keys)
+   *
+   * Note: In V1, this is a global setting.
+   * In V2, keys can be per-target (see targetKeys), and this serves as a fallback.
+   */
+  keys: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.keys',
+      priority: 1,
+      type: 'array',
+      transform: val => {
+        // If string with spaces, split into array
+        if (typeof val === 'string') {
+          return val.split(' ');
+        }
+        return val;
+      }
+    }, {
+      path: 'settings.streaming.cmcd.enabledKeys',
+      priority: 2,
+      type: 'array',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_KEYS
+    }]
+  },
+  /**
+   * Request types to include CMCD data in
+   * Priority: manifest > settings > default (['segment', 'mpd'])
+   */
+  includeInRequests: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.includeInRequests',
+      priority: 1,
+      type: 'array',
+      transform: val => {
+        // If string with spaces, split into array
+        if (typeof val === 'string') {
+          return val.split(' ');
+        }
+        return val;
+      }
+    }, {
+      path: 'settings.streaming.cmcd.includeInRequests',
+      priority: 2,
+      type: 'array',
+      default: ['segment', 'mpd']
+    }]
+  },
+  /**
+   * Apply CMCD parameters from MPD manifest
+   * Priority: settings > default (true)
+   */
+  applyParametersFromMpd: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.applyParametersFromMpd',
+      priority: 1,
+      type: 'boolean',
+      default: true
+    }]
+  },
+  /**
+   * V2: Reporting eventTargets array
+   * Priority: settings > default ([])
+   */
+  eventTargets: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target enabled flag
+   * Note: This is target-specific, requires context
+   */
+  targetEnabled: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabled',
+      priority: 1,
+      type: 'boolean',
+      default: true
+    }]
+  },
+  /**
+   * V2: Target URL for event reporting
+   * Note: This is target-specific, requires context
+   */
+  targetUrl: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].url',
+      priority: 1,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * V2: Target enabled keys (can override global keys)
+   * Note: This is target-specific, requires context
+   */
+  targetKeys: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabledKeys',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target events to report
+   * Note: This is target-specific, requires context
+   */
+  targetEvents: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].events',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target time interval for periodic reporting
+   * Note: This is target-specific, requires context
+   */
+  targetInterval: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].interval',
+      priority: 1,
+      type: 'number',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_DEFAULT_TIME_INTERVAL
+    }]
+  },
+  /**
+   * V2: Target batch size for batched reporting
+   * Note: This is target-specific, requires context
+   */
+  targetBatchSize: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].batchSize',
+      priority: 1,
+      type: 'number',
+      default: 0
+    }]
+  },
+  /**
+   * V2: Target includeInRequests filter
+   * Note: This is target-specific, requires context
+   */
+  targetIncludeInRequests: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+      priority: 1,
+      type: 'array'
+    }, {
+      path: 'settings.streaming.cmcd.includeInRequests',
+      priority: 2,
+      type: 'array',
+      default: ['segment', 'mpd']
+    }]
+  }
+};
+/* harmony default export */ __webpack_exports__["default"] = (CmcdPropertyMap);
+
+/***/ }),
+
 /***/ "./src/streaming/constants/ConformanceViolationConstants.js":
 /*!******************************************************************!*\
   !*** ./src/streaming/constants/ConformanceViolationConstants.js ***!
@@ -53036,6 +41893,7 @@ __webpack_require__.r(__webpack_exports__);
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -53066,6 +41924,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 /**
  * Constants declaration
@@ -53156,6 +42015,12 @@ __webpack_require__.r(__webpack_exports__);
    */
   LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP',
   /**
+   *  @constant {string} LIVE_CATCHUP_MODE_STEP Throughput calculation based on moof parsing
+   *  @memberof Constants#
+   *  @static
+   */
+  LIVE_CATCHUP_MODE_STEP: 'liveCatchupModeStep',
+  /**
    *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
    *  @memberof Constants#
    *  @static
@@ -53226,37 +42091,81 @@ __webpack_require__.r(__webpack_exports__);
    *  @memberof Constants#
    *  @static
    */
-  CMCD_QUERY_KEY: 'CMCD',
+  CMCD_QUERY_KEY: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_PARAM,
   /**
    *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_MODE_QUERY: 'query',
+  CMCD_MODE_QUERY: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdTransmissionMode.QUERY,
   /**
-   *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+   *  @constant {string} CMCD_MODE_HEADERS specifies to attach CMCD metrics as HTTP headers.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_MODE_HEADER: 'header',
+  CMCD_MODE_HEADERS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdTransmissionMode.HEADERS,
   /**
-   *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
+   *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
-  /**
-   *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
-   *  @memberof Constants#
-   *  @static
-   */
-  CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
+  CMCD_MODE_BODY: 'body',
   /**
    *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
    *  @memberof Constants#
    *  @static
    */
   CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+  /**
+   *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_DEFAULT_TIME_INTERVAL: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_DEFAULT_TIME_INTERVAL,
+  /**
+   *  @constant {string} CMCD_REPORTING_MODE specifies all the available modes for CMCD.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_REPORTING_MODE: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdReportingMode,
+  /**
+   *  @constant {string} CMCD_KEYS specifies all the available keys for CMCD.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_KEYS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_KEYS,
+  /**
+   *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_REPORTING_EVENTS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdEventType,
+  /**
+   *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_PLAYER_STATES: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdPlayerState,
+  /**
+   *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_DEFAULT_VERSION: 1,
+  /**
+   *  @constant {string} CMCD_DEFAULT_INCLUDE_IN_REQUESTS specifies default requests type to include CMCD data.
+   *  @memberof Constants#
+   *  @static
+  */
+  CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
+  /**
+   *  @constant {string} CMCD_CONTENT_TYPE_HEADER specifies content type for cmcd batching
+   *  @memberof Constants#
+   *  @static
+  */
+  CMCD_CONTENT_TYPE_HEADER: {
+    'Content-Type': 'text/cmcd'
+  },
   INITIALIZE: 'initialize',
   TEXT_SHOWING: 'showing',
   TEXT_HIDDEN: 'hidden',
@@ -53270,11 +42179,14 @@ __webpack_require__.r(__webpack_exports__);
   SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
   SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
   CTA_5004_2023_SCHEME: 'urn:mpeg:dash:cta-5004:2023',
+  CTA_5004_2025_SCHEME: 'urn:dashif:cta-5004:2025',
   THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
   FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
   COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
   URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
   EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
+  ADV_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2025',
+  URL_QUERY_STATE_PREFIX: /urn:mpeg:dash:state:/,
   MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
   TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
   SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',
@@ -53485,32 +42397,20 @@ __webpack_require__.r(__webpack_exports__);
  */
 /* harmony default export */ __webpack_exports__["default"] = ({
   CLEARKEY_KEYSTEM_STRING: 'org.w3.clearkey',
-  WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
-  PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
-  PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
-  WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed',
-  PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
   CLEARKEY_UUID: 'e2719d58-a985-b3c9-781a-b030af78d30e',
-  W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
+  ENCRYPTION_SCHEME_CBCS: 'cbcs',
+  ENCRYPTION_SCHEME_CENC: 'cenc',
+  FAIRPLAY_KEYSTEM_STRING: 'com.apple.fps',
+  FAIRPLAY_UUID: '94ce86fb-07ff-4f43-adb8-93d2fa968ca2',
   INITIALIZATION_DATA_TYPE_CENC: 'cenc',
   INITIALIZATION_DATA_TYPE_KEYIDS: 'keyids',
+  INITIALIZATION_DATA_TYPE_SINF: 'sinf',
   INITIALIZATION_DATA_TYPE_WEBM: 'webm',
-  ENCRYPTION_SCHEME_CENC: 'cenc',
-  ENCRYPTION_SCHEME_CBCS: 'cbcs',
   MEDIA_KEY_MESSAGE_TYPES: {
     LICENSE_REQUEST: 'license-request',
     LICENSE_RENEWAL: 'license-renewal',
     LICENSE_RELEASE: 'license-release',
     INDIVIDUALIZATION_REQUEST: 'individualization-request'
-  },
-  ROBUSTNESS_STRINGS: {
-    WIDEVINE: {
-      SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
-      SW_SECURE_DECODE: 'SW_SECURE_DECODE',
-      HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
-      HW_SECURE_DECODE: 'HW_SECURE_DECODE',
-      HW_SECURE_ALL: 'HW_SECURE_ALL'
-    }
   },
   MEDIA_KEY_STATUSES: {
     USABLE: 'usable',
@@ -53520,7 +42420,22 @@ __webpack_require__.r(__webpack_exports__);
     OUTPUT_DOWNSCALED: 'output-downscaled',
     STATUS_PENDING: 'status-pending',
     INTERNAL_ERROR: 'internal-error'
-  }
+  },
+  PLAYREADY_KEYSTEM_STRING: 'com.microsoft.playready',
+  PLAYREADY_RECOMMENDATION_KEYSTEM_STRING: 'com.microsoft.playready.recommendation',
+  PLAYREADY_UUID: '9a04f079-9840-4286-ab92-e65be0885f95',
+  ROBUSTNESS_STRINGS: {
+    WIDEVINE: {
+      SW_SECURE_CRYPTO: 'SW_SECURE_CRYPTO',
+      SW_SECURE_DECODE: 'SW_SECURE_DECODE',
+      HW_SECURE_CRYPTO: 'HW_SECURE_CRYPTO',
+      HW_SECURE_DECODE: 'HW_SECURE_DECODE',
+      HW_SECURE_ALL: 'HW_SECURE_ALL'
+    }
+  },
+  W3C_CLEARKEY_UUID: '1077efec-c0b2-4d02-ace3-3c1e52e2fb4b',
+  WIDEVINE_KEYSTEM_STRING: 'com.widevine.alpha',
+  WIDEVINE_UUID: 'edef8ba9-79d6-4ace-a3c8-27dcd51d21ed'
 });
 
 /***/ }),
@@ -53878,11 +42793,12 @@ function AbrController() {
       if (!settings.get().streaming.abr.limitBitrateByPortal) {
         return voRepresentations;
       }
+      const minimum = settings.get().streaming.abr.limitBitrateByPortalMinimum * 1000 || 0;
       const {
         elementWidth
       } = videoModel.getVideoElementSize();
       const filteredArray = voRepresentations.filter(voRepresentation => {
-        return voRepresentation.mediaInfo.type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIDEO || voRepresentation.width <= elementWidth;
+        return voRepresentation.mediaInfo.type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].VIDEO || voRepresentation.width <= elementWidth || voRepresentation.bandwidth <= minimum;
       });
       if (filteredArray.length > 0) {
         return filteredArray;
@@ -53953,27 +42869,43 @@ function AbrController() {
   }
   function _sortByDefaultParameters(voRepresentations) {
     voRepresentations.sort((a, b) => {
-      // In case both Representations are coming from the same MediaInfo then choose the one with the highest resolution and highest bitrate
       if (adapter.areMediaInfosEqual(a.mediaInfo, b.mediaInfo)) {
-        if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
-          return a.pixelsPerSecond - b.pixelsPerSecond;
-        } else {
-          return a.bandwidth - b.bandwidth;
-        }
+        return _sortForSameMediaInfos(a, b);
       }
-
-      // In case the Representations are coming from different MediaInfos they might have different codecs. The bandwidth is not a good indicator, use bits per pixel instead
-      else {
-        if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
-          return a.pixelsPerSecond - b.pixelsPerSecond;
-        } else if (!isNaN(a.bitsPerPixel) && !isNaN(b.bitsPerPixel)) {
-          return b.bitsPerPixel - a.bitsPerPixel;
-        } else {
-          return a.bandwidth - b.bandwidth;
-        }
-      }
+      return _sortForDifferentMediaInfos(a, b);
     });
     return voRepresentations;
+  }
+  function _sortForSameMediaInfos(a, b) {
+    if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+      return a.pixelsPerSecond - b.pixelsPerSecond;
+    }
+    const bwDiff = a.bandwidth - b.bandwidth;
+    if (bwDiff !== 0) {
+      return bwDiff;
+    }
+    return _sortBySegmentSequenceProperties(a, b);
+  }
+  function _sortForDifferentMediaInfos(a, b) {
+    if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
+      return a.pixelsPerSecond - b.pixelsPerSecond;
+    }
+    if (!isNaN(a.bitsPerPixel) && !isNaN(b.bitsPerPixel) && a.bitsPerPixel !== b.bitsPerPixel) {
+      return b.bitsPerPixel - a.bitsPerPixel;
+    }
+    const bwDiff = a.bandwidth - b.bandwidth;
+    if (bwDiff !== 0) {
+      return bwDiff;
+    }
+    return _sortBySegmentSequenceProperties(a, b);
+  }
+  function _sortBySegmentSequenceProperties(a, b) {
+    const isABootstrapRepresentation = a.isBootstrapRepresentation();
+    const isBBootstrapRepresentation = b.isBootstrapRepresentation();
+    if (isABootstrapRepresentation !== isBBootstrapRepresentation) {
+      return isABootstrapRepresentation ? -1 : 1;
+    }
+    return b.k - a.k;
   }
   function _resolveDependencies(voRepresentations) {
     voRepresentations.forEach(rep => {
@@ -54016,11 +42948,11 @@ function AbrController() {
   }
   function _onVideoElementResized() {
     if (settings.get().streaming.abr.limitBitrateByPortal) {
-      Object.keys(streamProcessorDict).forEach(streamId => {
-        Object.keys(streamProcessorDict[streamId]).forEach(mediaType => {
+      for (const streamId in streamProcessorDict) {
+        for (const mediaType in streamProcessorDict[streamId]) {
           checkPlaybackQuality(mediaType, streamId);
-        });
-      });
+        }
+      }
     }
   }
   function _createRulesContext(streamProcessor, currentRequest) {
@@ -54593,6 +43525,8 @@ BaseURLController.__dashjs_factory_name = 'BaseURLController';
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../dash/controllers/ContentSteeringController.js */ "./src/dash/controllers/ContentSteeringController.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -54626,36 +43560,60 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 function BlackListController(config) {
   config = config || {};
   let instance;
   let blacklist = [];
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__["default"])(this.context).getInstance();
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(this.context).getInstance();
+  const contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_3__["default"])(this.context).getInstance();
   const updateEventName = config.updateEventName;
   const addBlacklistEventName = config.addBlacklistEventName;
   function contains(query) {
     if (!blacklist.length || !query || !query.length) {
       return false;
     }
-    return blacklist.indexOf(query) !== -1;
+    return blacklist.findIndex(item => item.entry === query) !== -1;
   }
   function add(entry) {
-    if (blacklist.indexOf(entry) !== -1) {
+    if (blacklist.findIndex(item => item.entry === entry) !== -1) {
       return;
     }
-    blacklist.push(entry);
+    const expiry = config.enableExpiry ? getBlacklistExpiry() : NaN;
+    if (config.enableExpiry && expiry && expiry > 0) {
+      const timeoutId = setTimeout(() => {
+        remove(entry);
+      }, expiry * 1000);
+      blacklist.push({
+        entry: entry,
+        timeoutId: timeoutId
+      });
+    } else {
+      blacklist.push({
+        entry: entry
+      });
+    }
     eventBus.trigger(updateEventName, {
       entry: entry
     });
   }
   function remove(entry) {
-    const index = blacklist.indexOf(entry);
+    const index = blacklist.findIndex(item => item.entry === entry);
     if (index !== -1) {
       blacklist.splice(index, 1);
     }
   }
   function onAddBlackList(e) {
     add(e.entry);
+  }
+  function getBlacklistExpiry() {
+    const currentSteeringResponseData = contentSteeringController ? contentSteeringController.getCurrentSteeringResponseData() : null;
+    if (currentSteeringResponseData && Number.isFinite(currentSteeringResponseData.ttl)) {
+      return currentSteeringResponseData.ttl;
+    }
+    return settings.get().streaming.blacklistExpiryTime;
   }
   function setup() {
     if (addBlacklistEventName) {
@@ -54665,6 +43623,11 @@ function BlackListController(config) {
   function reset() {
     if (addBlacklistEventName) {
       eventBus.off(addBlacklistEventName, onAddBlackList, instance);
+    }
+    for (const item of blacklist) {
+      if (item.timeoutId) {
+        clearTimeout(item.timeoutId);
+      }
     }
     blacklist = [];
   }
@@ -54926,19 +43889,8 @@ function BufferController(config) {
       //A list of fragments to supress bytesAppended events for. This makes transferring from a prebuffer to a sourcebuffer silent.
       dischargeFragments = [];
       let chunks = dischargeBuffer.discharge();
-      let lastInit = null;
       for (let j = 0; j < chunks.length; j++) {
         const chunk = chunks[j];
-        if (chunk.segmentType !== _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_10__.HTTPRequest.INIT_SEGMENT_TYPE) {
-          const initChunk = initCache.extract(chunk.streamId, chunk.representation.id);
-          if (initChunk) {
-            if (lastInit !== initChunk) {
-              dischargeFragments.push(initChunk);
-              sourceBufferSink.append(initChunk);
-              lastInit = initChunk;
-            }
-          }
-        }
         dischargeFragments.push(chunk);
         sourceBufferSink.append(chunk);
       }
@@ -55018,19 +43970,7 @@ function BufferController(config) {
   }
   function _onAppended(e) {
     if (e.error) {
-      // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
-      if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
-        _handleQuotaExceededError();
-      }
-      if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
-        logger.warn('Clearing playback buffer to overcome quota exceed situation');
-        // Notify ScheduleController to stop scheduling until buffer has been pruned
-        _triggerEvent(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].QUOTA_EXCEEDED, {
-          criticalBufferLevel: criticalBufferLevel,
-          quotaExceededTime: e.chunk.start
-        });
-        clearBuffers(getClearRanges());
-      }
+      _handleAppendedError(e);
       return;
     }
 
@@ -55070,6 +44010,21 @@ function BufferController(config) {
         mediaType: type,
         representationId: appendedBytesInfo.representation.id
       });
+    }
+  }
+  function _handleAppendedError(e) {
+    // If we receive a QUOTA_EXCEEDED_ERROR_CODE we should adjust the target buffer times to avoid this error in the future.
+    if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE) {
+      _handleQuotaExceededError();
+    }
+    if (e.error.code === QUOTA_EXCEEDED_ERROR_CODE || !hasEnoughSpaceToAppend()) {
+      logger.warn('Clearing playback buffer to overcome quota exceed situation');
+      // Notify ScheduleController to stop scheduling until buffer has been pruned
+      _triggerEvent(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].QUOTA_EXCEEDED, {
+        criticalBufferLevel: criticalBufferLevel,
+        quotaExceededTime: e.chunk.start
+      });
+      clearBuffers(getClearRanges());
     }
   }
 
@@ -55353,7 +44308,7 @@ function BufferController(config) {
     return null;
   }
   function _onPlaybackProgression() {
-    if (!replacingBuffer || type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT && textController.isTextEnabled()) {
+    if (!replacingBuffer && (type !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT || textController.isTextEnabled())) {
       _updateBufferLevel();
     }
   }
@@ -55431,7 +44386,7 @@ function BufferController(config) {
     }
     return null;
   }
-  function getBufferLength(time, tolerance) {
+  function _getBufferLength(time, tolerance) {
     let range, length;
 
     // Consider gap/discontinuity limit as tolerance
@@ -55454,7 +44409,7 @@ function BufferController(config) {
         referenceTime = !isNaN(seekTarget) ? seekTarget : 0;
       }
       const tolerance = settings.get().streaming.gaps.jumpGaps && !isNaN(settings.get().streaming.gaps.smallGapLimit) ? settings.get().streaming.gaps.smallGapLimit : NaN;
-      bufferLevel = Math.max(getBufferLength(referenceTime, tolerance), 0);
+      bufferLevel = Math.max(_getBufferLength(referenceTime, tolerance), 0);
       _triggerEvent(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_6__["default"].BUFFER_LEVEL_UPDATED, {
         mediaType: type,
         bufferLevel: bufferLevel
@@ -56025,7 +44980,7 @@ function CatchupController() {
    * Apply catchup mode. We either seek back to the target live edge or increase the playback rate.
    */
   function _startPlaybackCatchUp() {
-    // we are seeking dont do anything for now
+    // we are seeking don't do anything for now
     if (isCatchupSeekInProgress) {
       return;
     }
@@ -56035,13 +44990,22 @@ function CatchupController() {
       const liveCatchupPlaybackRates = mediaPlayerModel.getCatchupPlaybackRates();
       const bufferLevel = playbackController.getBufferLevel();
       const deltaLatency = _getLatencyDrift();
+      const deltaLatencyAbsolute = _getAbsoluteLatencyDrift();
+      const liveThreshold = settings.get().streaming.liveCatchup.liveThreshold;
+      const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
 
       // we reached the maxDrift. Do a seek
-      const maxDrift = mediaPlayerModel.getCatchupMaxDrift();
       if (!isNaN(maxDrift) && maxDrift > 0 && deltaLatency > maxDrift) {
         logger.info('[CatchupController]: Low Latency catchup mechanism. Latency too high, doing a seek to live point');
         isCatchupSeekInProgress = true;
         playbackController.seekToCurrentLive(true, false);
+
+        // we're outside the liveThreshold. Give the client what they want
+      } else if (!isNaN(liveThreshold) && liveThreshold > 0 && deltaLatencyAbsolute > liveThreshold) {
+        if (currentPlaybackRate > 1) {
+          logger.info(`[CatchupController]: Past live threshold, setting playback rate to 1.0`);
+          videoModel.setPlaybackRate(1.0);
+        }
       }
 
       // try to reach the target latency by adjusting the playback rate
@@ -56052,6 +45016,9 @@ function CatchupController() {
           // Custom playback control: Based on buffer level
           const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
           newRate = _calculateNewPlaybackRateLolP(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, playbackBufferMin, bufferLevel);
+        } else if (_getCatchupMode() === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_STEP) {
+          // Custom playback control: Based on minimising playback rate changes
+          newRate = _calculateNewPlaybackRateStep(liveCatchupPlaybackRates, targetLiveDelay, bufferLevel);
         } else {
           // Default playback control: Based on target and current latency
           newRate = _calculateNewPlaybackRateDefault(liveCatchupPlaybackRates, currentLiveLatency, targetLiveDelay, bufferLevel);
@@ -56083,12 +45050,30 @@ function CatchupController() {
   }
 
   /**
+   * Calculates the drift between the current latency and the absolute target latency specified in the service description or settings
+   * @return {number}
+   * @private
+   */
+  function _getAbsoluteLatencyDrift() {
+    const currentLiveLatency = playbackController.getCurrentLiveLatency();
+    const targetLiveDelay = playbackController.getOriginalLiveDelay();
+    return currentLiveLatency - targetLiveDelay;
+  }
+
+  /**
    * Checks whether the catchup mechanism should be enabled. We use different subfunctions here depending on the catchup mode.
    * @return {boolean}
    */
   function _shouldStartCatchUp() {
     try {
-      if (!playbackController.getTime() > 0 || isCatchupSeekInProgress) {
+      if (playbackController.getTime() <= 0 || isCatchupSeekInProgress) {
+        return false;
+      }
+
+      // Don't catchup during synthetic stalls -
+      // prevents edge case where Catchup Controller and Synthetic Stalls Event
+      // "fight" over the playback rate
+      if (playbackStalled && videoModel.getPlaybackRate() === 0) {
         return false;
       }
       const catchupMode = _getCatchupMode();
@@ -56096,6 +45081,8 @@ function CatchupController() {
         const currentBuffer = playbackController.getBufferLevel();
         const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
         return _lolpNeedToCatchUpCustom(currentBuffer, playbackBufferMin);
+      } else if (catchupMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_STEP) {
+        return _stepNeedToCatchUp();
       } else {
         return _defaultNeedToCatchUp();
       }
@@ -56111,7 +45098,13 @@ function CatchupController() {
    */
   function _getCatchupMode() {
     const playbackBufferMin = settings.get().streaming.liveCatchup.playbackBufferMin;
-    return settings.get().streaming.liveCatchup.mode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin) ? _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP : _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT;
+    let catchupMode = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT;
+    if (settings.get().streaming.liveCatchup.mode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_STEP) {
+      catchupMode = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_STEP;
+    } else if (settings.get().streaming.liveCatchup.mode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP && playbackBufferMin !== null && !isNaN(playbackBufferMin)) {
+      catchupMode = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_LOLP;
+    }
+    return catchupMode;
   }
 
   /**
@@ -56139,6 +45132,30 @@ function CatchupController() {
     try {
       const latencyDrift = Math.abs(_getLatencyDrift());
       return latencyDrift > 0 || currentBuffer < playbackBufferMin;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /**
+   * Step-based algorithm to determine if catchup mode should be enabled
+   * @return {boolean}
+   * @private
+   */
+  function _stepNeedToCatchUp() {
+    try {
+      const stepSettings = mediaPlayerModel.getCatchupStepSettings();
+      const deltaLatency = _getAbsoluteLatencyDrift();
+
+      //If latency is outside of the acceptable window, consider a new speed
+      if (deltaLatency < stepSettings.start.min * -1 || deltaLatency > stepSettings.start.max) {
+        logger.debug(`[_stepNeedToCatchUp] latency offset ${deltaLatency}`);
+        return true;
+      }
+      //If we're already catching up, consider a new speed
+      if (playbackController.getPlaybackRate() !== 1) {
+        return true;
+      }
     } catch (e) {
       return false;
     }
@@ -56227,6 +45244,56 @@ function CatchupController() {
       }
       logger.debug('[LoL+ playback control_latency-based] latency: ' + currentLiveLatency + ', newRate: ' + newRate);
     }
+    return newRate;
+  }
+
+  /**
+  * Step algorithm to calculate the new playback rate
+  * @param {object} liveCatchUpPlaybackRates
+  * @param {number} liveCatchUpPlaybackRates.min - minimum playback rate decrease limit
+  * @param {number} liveCatchUpPlaybackRates.max - maximum playback rate increase limit
+  * @param {number} currentLiveLatency
+  * @param {number} liveDelay
+  * @param {number} bufferLevel
+  * @return {number}
+  * @private
+  */
+  function _calculateNewPlaybackRateStep(liveCatchUpPlaybackRates, liveDelay, bufferLevel) {
+    let newRate = 1.0;
+    const stepSettings = mediaPlayerModel.getCatchupStepSettings();
+
+    // Only adjust playback rates if playback has not stalled
+    if (!playbackStalled) {
+      const deltaLatency = _getAbsoluteLatencyDrift();
+
+      // Check if we need to need to speed up
+      if (deltaLatency > stepSettings.stop.max && deltaLatency > 0) {
+        newRate = 1 + liveCatchUpPlaybackRates.max;
+      }
+      // or slow down
+      else if (deltaLatency < stepSettings.stop.min * -1 && deltaLatency < 0) {
+        newRate = 1 + liveCatchUpPlaybackRates.min;
+      }
+
+      // Check if we need to return to 1.0
+      if (deltaLatency > stepSettings.stop.min * -1 && deltaLatency < 0) {
+        newRate = 1.0;
+      } else if (deltaLatency < stepSettings.stop.max && deltaLatency > 0) {
+        newRate = 1.0;
+      } else if (deltaLatency === 0) {
+        newRate = 1.0;
+      }
+
+      // take into account situations in which there are buffer stalls,
+      // in which increasing playbackRate to reach target latency will
+      // just cause more and more stall situations
+      if (playbackController.getPlaybackStalled()) {
+        if (bufferLevel <= liveDelay / 2 && deltaLatency > 0) {
+          newRate = 1.0;
+        }
+      }
+    }
+    logger.debug(`[_calculateNewPlaybackRateStep] rate should be ${newRate}`);
     return newRate;
   }
   function _checkPlaybackRates() {
@@ -56322,6 +45389,566 @@ function ClientDataReportingController() {
 }
 ClientDataReportingController.__dashjs_factory_name = 'ClientDataReportingController';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ClientDataReportingController));
+
+/***/ }),
+
+/***/ "./src/streaming/controllers/CmcdController.js":
+/*!*****************************************************!*\
+  !*** ./src/streaming/controllers/CmcdController.js ***!
+  \*****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../metrics/MetricsReportingEvents.js */ "./src/streaming/metrics/MetricsReportingEvents.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_vo_CmcdReportRequest_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../streaming/vo/CmcdReportRequest.js */ "./src/streaming/vo/CmcdReportRequest.js");
+/* harmony import */ var _net_URLLoader_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../net/URLLoader.js */ "./src/streaming/net/URLLoader.js");
+/* harmony import */ var _models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../models/CmcdModel.js */ "./src/streaming/models/CmcdModel.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+function CmcdController() {
+  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, instance, logger, mediaPlayerModel, reporterNeedsRebuild, urlLoader;
+  let context = this.context;
+  let eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
+  let debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+  const playbackStateMap = {
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_INITIALIZED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.STARTING,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PAUSED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.PAUSED,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_ERROR]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.FATAL_ERROR,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_ENDED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.ENDED
+  };
+  let playbackStateHandlers = {};
+  cmcdModel = (0,_models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
+  cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+  function _setup() {
+    logger = debug.getLogger(instance);
+    reset();
+  }
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.dashMetrics) {
+      dashMetrics = config.dashMetrics;
+    }
+    if (config.mediaPlayerModel) {
+      mediaPlayerModel = config.mediaPlayerModel;
+    }
+    if (config.errHandler) {
+      errHandler = config.errHandler;
+    }
+    if (config.urlLoader) {
+      urlLoader = config.urlLoader;
+    }
+
+    // Set up a provider function for CmcdConfigAccessor to get manifest params
+    // This resolves timing issues where CMCDParameters are needed before they're available
+    // Using a provider pattern keeps CmcdConfigAccessor decoupled from ServiceDescriptionController
+    if (config.serviceDescriptionController) {
+      cmcdConfigAccessor.setManifestParamsProviderFunction(() => {
+        const serviceDescription = config.serviceDescriptionController.getServiceDescriptionSettings();
+        return serviceDescription?.clientDataReporting?.cmcdParameters || null;
+      });
+    }
+    cmcdModel.setConfig(config);
+  }
+  function initialize(autoPlay) {
+    _resetInitialSettings();
+    _initializeEventBus(autoPlay);
+    if (!urlLoader) {
+      urlLoader = (0,_net_URLLoader_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create({
+        errHandler,
+        mediaPlayerModel,
+        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__["default"],
+        dashMetrics
+      });
+    }
+    cmcdReporter = _createCmcdReporter();
+    cmcdReporter.start();
+    _initializePlaybackStateListeners();
+  }
+  function _resetInitialSettings() {
+    reporterNeedsRebuild = false;
+  }
+  function _initializeEventBus(autoPlay) {
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+    if (autoPlay) {
+      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+    } else {
+      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
+    }
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].ERROR, _onPlayerError, instance);
+  }
+  function _initializePlaybackStateListeners() {
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+    Object.entries(playbackStateMap).forEach(([event, state]) => {
+      if (!playbackStateHandlers[event]) {
+        playbackStateHandlers[event] = () => _onPlaybackStateChange(state);
+      }
+      eventBus.on(event, playbackStateHandlers[event], instance);
+    });
+  }
+  function _onPlaybackStateChange(state) {
+    // Update CmcdReporter with the new player state
+    if (cmcdReporter) {
+      cmcdReporter.update({
+        sta: state
+      });
+    }
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE);
+  }
+  function _createCmcdReporter() {
+    const cmcdConfig = {
+      version: cmcdConfigAccessor.getVersion(),
+      transmissionMode: cmcdConfigAccessor.get('mode') === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_HEADERS : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_QUERY,
+      enabledKeys: cmcdConfigAccessor.get('keys'),
+      eventTargets: _buildReporterTargets()
+    };
+
+    // Only pass sid/cid if they have actual values, so CmcdReporter
+    // uses its own defaults (e.g., auto-generated uuid for sid)
+    const sid = cmcdConfigAccessor.get('sessionID');
+    if (sid) {
+      cmcdConfig.sid = sid;
+    }
+    const cid = cmcdConfigAccessor.get('contentID');
+    if (cid) {
+      cmcdConfig.cid = cid;
+    }
+    return new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter(cmcdConfig, _customRequester);
+  }
+  function _buildReporterTargets() {
+    const targets = cmcdConfigAccessor.getEventTargets();
+    return targets.reduce((result, _target, index) => {
+      if (!isCmcdEnabled(index)) {
+        return result;
+      }
+      const accessor = cmcdConfigAccessor.getEventTarget(index);
+      result.push({
+        url: accessor.get('targetUrl'),
+        events: accessor.get('targetEvents'),
+        interval: accessor.get('targetInterval') ?? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_DEFAULT_TIME_INTERVAL,
+        batchSize: accessor.get('targetBatchSize') || 1,
+        enabledKeys: accessor.get('targetKeys')
+      });
+      return result;
+    }, []);
+  }
+  function _customRequester(request) {
+    return new Promise(resolve => {
+      const httpRequest = new _streaming_vo_CmcdReportRequest_js__WEBPACK_IMPORTED_MODULE_8__["default"]();
+      httpRequest.url = request.url;
+      httpRequest.method = request.method;
+      httpRequest.headers = request.headers;
+      httpRequest.body = request.body;
+      httpRequest.type = _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT;
+      urlLoader.load({
+        request: httpRequest,
+        success: () => resolve({
+          status: 200
+        }),
+        error: e => resolve({
+          status: e?.status || 500
+        })
+      });
+    });
+  }
+  function _onPeriodSwitchComplete() {
+    cmcdModel.onPeriodSwitchComplete();
+  }
+  function _onPlaybackStarted() {
+    cmcdModel.onPlaybackStarted();
+  }
+  function _onPlaybackPlaying() {
+    cmcdModel.onPlaybackPlaying();
+    _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.PLAYING);
+  }
+  function _onPlayerError(errorData) {
+    if (errorData.error?.data?.request?.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
+      return;
+    }
+    // Update CmcdReporter with the error code
+    if (cmcdReporter) {
+      const errorCode = errorData.error?.code || errorData.error?.data?.code;
+      if (errorCode) {
+        cmcdReporter.update({
+          ec: errorCode
+        });
+      }
+    }
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.ERROR);
+  }
+  function _rebuildReporterIfNeeded() {
+    if (!reporterNeedsRebuild || !cmcdReporter) {
+      return;
+    }
+
+    // Only rebuild if manifest params are available and enabled.
+    // Without manifest params, the reporter config hasn't changed
+    // and rebuilding would unnecessarily reset sid and sn.
+    // IMPORTANT: Don't reset reporterNeedsRebuild until we actually rebuild,
+    // otherwise a race condition can occur where params aren't available yet
+    // and we never get another chance to rebuild.
+    const applyFromMpd = cmcdConfigAccessor.get('applyParametersFromMpd') ?? true;
+    if (!applyFromMpd || !cmcdConfigAccessor.hasManifestParams()) {
+      return;
+    }
+
+    // Reset flag only after confirming we will rebuild
+    reporterNeedsRebuild = false;
+    cmcdReporter.stop(true);
+    cmcdReporter = _createCmcdReporter();
+    cmcdReporter.start();
+  }
+
+  /**
+   * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
+   * @param event
+   */
+  function triggerCmcdEventMode(event) {
+    if (!cmcdReporter) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+    const cmcdData = cmcdModel.getEventModeData();
+
+    // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
+    const msdData = cmcdModel.calculateMsd();
+    if (msdData.msd !== undefined) {
+      cmcdReporter.update(msdData);
+    }
+
+    // Pass event-mode data as transient per-event data (not persisted)
+    cmcdReporter.recordEvent(event, cmcdData);
+  }
+
+  /**
+   * Applies CMCD data to a request by decorating its URL and/or headers.
+   * Delegates to CmcdReporter.createRequestReport() which handles
+   * transmission mode (query vs header) internally.
+   *
+   * @param {object} request - The request object with at least { url, type }.
+   *                           Will be mutated with CMCD-decorated url/headers.
+   */
+  function applyCmcdToRequest(request) {
+    if (!cmcdReporter || !isCmcdEnabled()) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+    try {
+      const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
+
+      // Route MSD through update() for the reporter's internal send-once tracking
+      const msdData = cmcdModel.calculateMsd();
+      if (msdData.msd !== undefined) {
+        cmcdReporter.update(msdData);
+      }
+      const decorated = cmcdReporter.createRequestReport(request, cmcdData);
+      request.url = decorated.url;
+      request.headers = decorated.headers;
+      request.cmcd = decorated.customData?.cmcd || {};
+      _triggerCmcdDataGeneratedEvent(request);
+    } catch (e) {
+      logger.warn(e);
+      return null;
+    }
+  }
+  function _triggerCmcdDataGeneratedEvent(request) {
+    const effectiveMode = cmcdConfigAccessor.get('mode');
+    const eventData = {
+      url: request.url,
+      mediaType: request.mediaType,
+      requestType: request.type,
+      cmcdData: request.cmcd,
+      mode: effectiveMode
+    };
+    if (effectiveMode === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS) {
+      eventData.headers = request.headers;
+    } else {
+      try {
+        const url = new URL(request.url);
+        eventData.cmcdString = url.searchParams.get(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_PARAM) || '';
+      } catch (e) {
+        eventData.cmcdString = '';
+      }
+    }
+    eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].CMCD_DATA_GENERATED, eventData);
+  }
+  function isCmcdEnabled(targetIndex = null) {
+    if (targetIndex !== null) {
+      return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+    } else {
+      return _canBeEnabled() && _checkIncludeInRequests();
+    }
+  }
+  function _canBeEnabled() {
+    const version = cmcdConfigAccessor.getVersion();
+    if (version !== 1 && version !== 2) {
+      logger.error(`version parameter must be 1 or 2, got ${version}.`);
+      return false;
+    }
+    return cmcdConfigAccessor.isEnabled();
+  }
+  function _checkIncludeInRequests() {
+    const version = cmcdConfigAccessor.getVersion();
+    if (version === 2) {
+      return true; // Skip this validation for version 2
+    }
+
+    // Version 1 validation
+    const enabledRequests = cmcdConfigAccessor.get('includeInRequests');
+    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
+    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+    if (invalidRequests.length === enabledRequests.length) {
+      logger.error(`None of the request types are supported.`);
+      return false;
+    }
+    invalidRequests.forEach(k => {
+      logger.warn(`request type ${k} is not supported.`);
+    });
+    return true;
+  }
+  function _targetCanBeEnabled(targetIndex) {
+    const cmcdVersion = cmcdConfigAccessor.getVersion();
+    if (cmcdVersion !== 2) {
+      logger.warn('CMCD version 2 is required for target configuration');
+      return false;
+    }
+    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
+    const enabled = targetAccessor.get('targetEnabled');
+    const url = targetAccessor.get('targetUrl');
+    if (!url) {
+      logger.warn('Target URL is not configured');
+      return false;
+    }
+    return enabled && url;
+  }
+  function _checkTargetIncludeInRequests(targetIndex) {
+    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
+    let enabledRequests = targetAccessor.get('targetIncludeInRequests');
+    if (!enabledRequests) {
+      return true;
+    }
+    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
+    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+    if (invalidRequests.length === enabledRequests.length) {
+      logger.error(`None of the request types are supported.`);
+      return false;
+    }
+    invalidRequests.forEach(k => {
+      logger.warn(`request type ${k} is not supported.`);
+    });
+    return true;
+  }
+  function _onPlaybackRateChanged(data) {
+    const prData = cmcdModel.onPlaybackRateChanged(data);
+    if (cmcdReporter && prData) {
+      cmcdReporter.update(prData);
+    }
+  }
+  function _onManifestLoaded(data) {
+    _updateCmcdManifestParamsInCmcdConfigAccessor();
+
+    // Mark reporter for rebuild so it picks up sid, cid, and keys from manifest params.
+    // We can't rebuild here because ServiceDescriptionController may not have processed
+    // the manifest yet (MANIFEST_LOADED fires before service description is available).
+    // The reporter will be rebuilt lazily before the next request or event.
+    reporterNeedsRebuild = true;
+    if (cmcdReporter) {
+      const streamFormatInfo = cmcdModel.onManifestLoaded(data);
+      cmcdReporter.update(streamFormatInfo);
+    }
+  }
+  function _onBufferLevelStateChanged(data) {
+    cmcdModel.onBufferLevelStateChanged(data);
+  }
+  function _onPlaybackSeeking() {
+    cmcdModel.onPlaybackSeeking();
+    _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.SEEKING);
+  }
+  function _onPlaybackSeeked() {
+    cmcdModel.onPlaybackSeeked();
+  }
+  function _onPlaybackWaiting() {
+    if (cmcdModel.wasPlaying()) {
+      const mediaType = cmcdModel.getLastMediaTypeRequest();
+      cmcdModel.onRebufferingStarted(mediaType);
+      _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.REBUFFERING);
+    } else {
+      _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.WAITING);
+    }
+  }
+  function getCmcdRequestInterceptors() {
+    return [_cmcdRequestModeInterceptor];
+  }
+  function _cmcdRequestModeInterceptor(commonMediaRequest) {
+    const requestType = commonMediaRequest.customData.request.type;
+    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
+      commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+      return commonMediaRequest;
+    }
+    let request = commonMediaRequest.customData.request;
+    applyCmcdToRequest(request);
+    commonMediaRequest = {
+      ...commonMediaRequest,
+      url: request.url,
+      headers: request.headers,
+      cmcd: request.cmcd,
+      customData: {
+        ...commonMediaRequest.customData,
+        cmcd: request.cmcd
+      }
+    };
+    return commonMediaRequest;
+  }
+  function getCmcdResponseReceivedInterceptors() {
+    return [_cmcdResponseReceivedInterceptor];
+  }
+  function _cmcdResponseReceivedInterceptor(response) {
+    const requestType = response.request?.customData?.request?.type;
+    if (requestType === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
+      return response;
+    }
+    _handleResponseReceived(response);
+    return response;
+  }
+  function _handleResponseReceived(response) {
+    if (!cmcdReporter) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+
+    // Collect event-mode data from the model
+    const eventData = cmcdModel.getEventModeData();
+
+    // Route MSD through update() for the reporter's internal send-once tracking
+    const msdData = cmcdModel.calculateMsd();
+    if (msdData.msd !== undefined) {
+      cmcdReporter.update(msdData);
+    }
+
+    // Collect dash.js-specific additional data
+    const additionalData = {};
+    if (response.headers) {
+      try {
+        const cmsdStaticHeader = response.headers['cmsd-static'];
+        if (cmsdStaticHeader) {
+          additionalData.cmsds = btoa(cmsdStaticHeader);
+        }
+        const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
+        if (cmsdDynamicHeader) {
+          additionalData.cmsdd = btoa(cmsdDynamicHeader);
+        }
+      } catch (e) {
+        logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
+      }
+    }
+    try {
+      cmcdReporter.recordResponseReceived(response, {
+        ...eventData,
+        ...additionalData
+      });
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  function getCmcdParametersFromManifest() {
+    return cmcdModel.getCmcdParametersFromManifest();
+  }
+  function _updateCmcdManifestParamsInCmcdConfigAccessor() {
+    cmcdModel.updateCmcdManifestParamsInCmcdConfigAccessor();
+  }
+  function reset() {
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].ERROR, _onPlayerError, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+    Object.keys(playbackStateMap).forEach(event => {
+      eventBus.off(event, playbackStateHandlers[event], instance);
+    });
+    if (cmcdReporter) {
+      cmcdReporter.stop(true);
+      cmcdReporter = null;
+    }
+    cmcdModel.resetInitialSettings();
+  }
+  instance = {
+    applyCmcdToRequest,
+    getCmcdRequestInterceptors,
+    getCmcdResponseReceivedInterceptors,
+    getCmcdParametersFromManifest,
+    initialize,
+    isCmcdEnabled,
+    reset,
+    setConfig
+  };
+  _setup();
+  return instance;
+}
+CmcdController.__dashjs_factory_name = 'CmcdController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getSingletonFactory(CmcdController));
 
 /***/ }),
 
@@ -56479,6 +46106,21 @@ function EventController() {
     UPDATED: 'updated',
     ADDED: 'added'
   };
+
+  /**
+   * Check if an object has no own properties (faster than Object.keys().length === 0)
+   * @param {object} obj
+   * @returns {boolean}
+   * @private
+   */
+  function _isEmptyObject(obj) {
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return false;
+      }
+    }
+    return true;
+  }
   const context = this.context;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   let instance, logger, inlineEvents,
@@ -56611,8 +46253,8 @@ function EventController() {
   function _removeOutdatedEventObjects(events) {
     try {
       for (const key in events) {
-        if (events.hasOwnProperty(key)) {
-          if (Object.keys(events[key]).length === 0) {
+        if (Object.prototype.hasOwnProperty.call(events, key)) {
+          if (_isEmptyObject(events[key])) {
             delete events[key];
           }
         }
@@ -56810,17 +46452,16 @@ function EventController() {
   function _iterateAndTriggerCallback(events, callback) {
     try {
       if (events) {
-        const periodIds = Object.keys(events);
-        for (let i = 0; i < periodIds.length; i++) {
-          const currentPeriod = events[periodIds[i]];
-          const schemeIdUris = Object.keys(currentPeriod);
-          for (let j = 0; j < schemeIdUris.length; j++) {
-            const schemeIdEvents = currentPeriod[schemeIdUris[j]];
-            schemeIdEvents.forEach(event => {
+        for (const periodId in events) {
+          const currentPeriod = events[periodId];
+          for (const schemeIdUri in currentPeriod) {
+            const schemeIdEvents = currentPeriod[schemeIdUri];
+            for (let i = 0; i < schemeIdEvents.length; i++) {
+              const event = schemeIdEvents[i];
               if (event !== undefined) {
                 callback(event);
               }
-            });
+            }
           }
         }
       }
@@ -57446,7 +47087,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-const GAP_HANDLER_INTERVAL = 100;
 const THRESHOLD_TO_STALLS = 10;
 const GAP_JUMP_WAITING_TIME_OFFSET = 0.1;
 function GapController() {
@@ -57588,9 +47228,13 @@ function GapController() {
     if (!streamController.getActiveStream()) {
       return false;
     }
-    const trackSwitchInProgress = Object.keys(trackSwitchByMediaType).some(key => {
-      return trackSwitchByMediaType[key];
-    });
+    let trackSwitchInProgress = false;
+    for (const key in trackSwitchByMediaType) {
+      if (trackSwitchByMediaType[key]) {
+        trackSwitchInProgress = true;
+        break;
+      }
+    }
     const shouldIgnoreSeekingState = checkSeekingState ? _shouldIgnoreSeekingState() : false;
     return !trackSwitchInProgress && settings.get().streaming.gaps.jumpGaps && streamController.getActiveStreamProcessors().length > 0 && (!playbackController.isSeeking() || shouldIgnoreSeekingState) && !playbackController.isPaused() && !streamController.getIsStreamSwitchInProgress() && !streamController.getHasMediaOrInitialisationError();
   }
@@ -57663,7 +47307,7 @@ function GapController() {
           }
           const currentTime = playbackController.getTime();
           _jumpGap(currentTime);
-        }, GAP_HANDLER_INTERVAL);
+        }, settings.get().streaming.gaps.checkInterval);
       }
     } catch (e) {}
   }
@@ -57687,11 +47331,12 @@ function GapController() {
    * @private
    */
   function _jumpGap(currentTime, playbackStalled = false) {
-    const enableStallFix = settings.get().streaming.gaps.enableStallFix;
-    const stallSeek = settings.get().streaming.gaps.stallSeek;
-    const smallGapLimit = settings.get().streaming.gaps.smallGapLimit;
-    const jumpLargeGaps = settings.get().streaming.gaps.jumpLargeGaps;
-    const seekOffset = settings.get().streaming.gaps.seekOffset;
+    const gapSettings = settings.get().streaming.gaps;
+    const enableStallFix = gapSettings.enableStallFix;
+    const stallSeek = gapSettings.stallSeek;
+    const smallGapLimit = gapSettings.smallGapLimit;
+    const jumpLargeGaps = gapSettings.jumpLargeGaps;
+    const seekOffset = gapSettings.seekOffset;
     const ranges = videoModel.getBufferRange();
     let nextRangeIndex;
     let seekToPosition = NaN;
@@ -57771,11 +47416,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! bcp-47-normalize */ "./node_modules/bcp-47-normalize/lib/index.js");
-/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js");
-/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
-/* harmony import */ var _utils_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../utils/AudioChannelConfiguration.js */ "./src/streaming/utils/AudioChannelConfiguration.js");
+/* harmony import */ var _utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../utils/BCP47Utils.js */ "./src/streaming/utils/BCP47Utils.js");
+/* harmony import */ var bcp_47_match__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! bcp-47-match */ "./node_modules/bcp-47-match/index.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _utils_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../utils/AudioChannelConfiguration.js */ "./src/streaming/utils/AudioChannelConfiguration.js");
+/* harmony import */ var _utils_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../utils/ObjectUtils.js */ "./src/streaming/utils/ObjectUtils.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -57806,6 +47452,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 
 
@@ -57848,10 +47495,10 @@ function MediaController() {
     _registerEvents();
   }
   function _registerEvents() {
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_5__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
   }
   function _unRegisterEvents() {
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_5__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_6__["default"].REPRESENTATION_SWITCH, _onRepresentationSwitched, instance);
   }
 
   /**
@@ -57930,9 +47577,9 @@ function MediaController() {
     if (!track) {
       return;
     }
-    logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\'');
     const mediaType = track.type;
     if (!_isMultiTrackSupportedByType(mediaType)) {
+      logger.info('track not added (_isMultiTrackSupportedByType), track.index=' + track.index);
       return;
     }
     let streamId = track.streamInfo.id;
@@ -57943,9 +47590,11 @@ function MediaController() {
     for (let i = 0, len = mediaTracks.length; i < len; ++i) {
       //track is already set.
       if (areTracksEqual(mediaTracks[i], track)) {
+        logger.info('track not added as it is already set (this track-index=' + track.index + ' - existing track.index=' + mediaTracks[i].index + ')');
         return;
       }
     }
+    logger.info('addTrack with track.codec=\'' + track.codec + '\', track.type=\'' + track.type + '\', track.id=\'' + track.id + '\', track.index=' + track.index);
     mediaTracks.push(track);
   }
 
@@ -58095,14 +47744,17 @@ function MediaController() {
     if (t1.isPreselection !== t2.isPreselection) {
       return false;
     }
+    let objectUtils = (0,_utils_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
     const sameId = t1.id === t2.id;
-    const sameViewpoint = JSON.stringify(t1.viewpoint) === JSON.stringify(t2.viewpoint);
+    const sameViewpoint = objectUtils.areEqual(t1.viewpoint, t2.viewpoint);
     const sameLang = t1.lang === t2.lang;
     const sameCodec = t1.codec === t2.codec;
-    const sameRoles = JSON.stringify(t1.roles) === JSON.stringify(t2.roles);
-    const sameAccessibility = JSON.stringify(t1.accessibility) === JSON.stringify(t2.accessibility);
-    const sameAudioChannelConfiguration = JSON.stringify(t1.audioChannelConfiguration) === JSON.stringify(t2.audioChannelConfiguration);
-    return sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration;
+    const sameRoles = objectUtils.areEqual(t1.roles, t2.roles);
+    const sameAccessibility = objectUtils.areEqual(t1.accessibility, t2.accessibility);
+    const sameAudioChannelConfiguration = objectUtils.areEqual(t1.audioChannelConfiguration, t2.audioChannelConfiguration);
+    const sameSupplementalProps = objectUtils.areEqual(t1.supplementalProperties, t2.supplementalProperties);
+    const sameEssentialProps = objectUtils.areEqual(t1.essentialProperties, t2.essentialProperties);
+    return sameId && sameCodec && sameViewpoint && sameLang && sameRoles && sameAccessibility && sameAudioChannelConfiguration && sameSupplementalProps && sameEssentialProps;
   }
 
   /**
@@ -58135,11 +47787,12 @@ function MediaController() {
       }
     });
     if (tracksAfterMatcher.length !== 0) {
+      logger.info('Filter-Function (' + filterFn.name + ') resulted in ' + tracksAfterMatcher.length + ' tracks');
       return tracksAfterMatcher;
     }
     if (filterFn === matchSettingsRole && settings.get().streaming.assumeDefaultRoleAsMain && _compareDescriptorType(preferences.role, {
       schemeIdUri: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DASH_ROLE_SCHEME_ID,
-      value: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].MAIN
+      value: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN
     })) {
       logger.info('no track with Role set to main - assuming main as default and searching again');
       tracksAfterMatcher = filterTracksBySettings(tracks, _matchRoleAbsent, null);
@@ -58152,7 +47805,7 @@ function MediaController() {
   }
   function matchSettingsLang(settings, track) {
     try {
-      return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_8__.extendedFilter)(track.lang, (0,bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9__.bcp47Normalize)(settings.lang)).length > 0 : false;
+      return !settings.lang || settings.lang instanceof RegExp ? track.lang.match(settings.lang) : track.lang !== '' ? (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_10__.extendedFilter)(track.lang, (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(settings.lang)).length > 0 : false;
     } catch (e) {
       return false;
     }
@@ -58219,9 +47872,9 @@ function MediaController() {
 
       // If the track has a language and we can normalize the target language check if we got a match
       else if (track.lang !== '') {
-        const normalizedSettingsLang = (0,bcp_47_normalize__WEBPACK_IMPORTED_MODULE_9__.bcp47Normalize)(settings.lang);
+        const normalizedSettingsLang = (0,_utils_BCP47Utils_js__WEBPACK_IMPORTED_MODULE_5__.normalizeBcp47)(settings.lang);
         if (normalizedSettingsLang) {
-          matchLang = (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_8__.extendedFilter)(track.lang, normalizedSettingsLang).length > 0;
+          matchLang = (0,bcp_47_match__WEBPACK_IMPORTED_MODULE_10__.extendedFilter)(track.lang, normalizedSettingsLang).length > 0;
         }
       }
       const matchIndex = settings.index === undefined || settings.index === null || track.index === settings.index;
@@ -58239,8 +47892,8 @@ function MediaController() {
       })[0];
       return matchLang && matchIndex && matchViewPoint && (matchRole || track.type === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO && isTrackActive) && matchAccessibility && matchAudioChannelConfiguration;
     } catch (e) {
-      return false;
       logger.error(e);
+      return false;
     }
   }
   function resetInitialSettings() {
@@ -58314,7 +47967,7 @@ function MediaController() {
     // since this should not happen per IOP
     trackArr.forEach(function (track) {
       const tmp = track.audioChannelConfiguration.reduce(function (acc, audioChanCfg) {
-        let nChan = (0,_utils_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_7__["default"])(audioChanCfg) || 0;
+        let nChan = (0,_utils_AudioChannelConfiguration_js__WEBPACK_IMPORTED_MODULE_8__["default"])(audioChanCfg) || 0;
         return acc + nChan;
       }, 0);
       let avgChan = tmp / track.audioChannelConfiguration.length;
@@ -58352,13 +48005,13 @@ function MediaController() {
     }
     return trackArr;
   }
-  function _getTracksWithPartialIdrSegments(trackArr) {
+  function _getL3DBootstrapTracks(trackArr) {
     return trackArr.filter(track => {
       if (!track.segmentSequenceProperties || track.segmentSequenceProperties.length === 0) {
         return false;
       }
       return track.segmentSequenceProperties.some(ssp => {
-        return ssp.cadence === 1 && (ssp.sapType === 0 || ssp.sapType === 1);
+        return ssp.isBootstrapConfiguration();
       });
     });
   }
@@ -58406,7 +48059,7 @@ function MediaController() {
         tmpArr = filterTracksBySettings(tmpArr, matchSettingsRole, {
           role: {
             schemeIdUri: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DASH_ROLE_SCHEME_ID,
-            value: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].MAIN
+            value: _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN
           }
         });
       }
@@ -58445,7 +48098,7 @@ function MediaController() {
     const filteredMediaInfos = mediaInfos.filter(mediaInfo => {
       if (mediaInfo && mediaInfo.roles && mediaInfo.roles.length > 0) {
         return mediaInfo.roles.every(role => {
-          return role.schemeIdUri !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DASH_ROLE_SCHEME_ID || role.value !== _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FORCED_SUBTITLE;
+          return role.schemeIdUri !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DASH_ROLE_SCHEME_ID || role.value !== _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FORCED_SUBTITLE;
         });
       }
       return true;
@@ -58581,7 +48234,7 @@ function MediaController() {
     return tmpArr;
   }
   function _trackSelectionModeLowestStartupDelay(tracks) {
-    let tmpArr = _getTracksWithPartialIdrSegments(tracks);
+    let tmpArr = _getL3DBootstrapTracks(tracks);
     const targetTracks = tmpArr.length > 0 ? tmpArr : tracks;
     return _trackSelectionModeHighestEfficiency(targetTracks);
   }
@@ -59002,8 +48655,6 @@ function PlaybackController() {
    * Triggers play() on the video element
    */
   function play(adjustLiveDelay = false) {
-    '';
-
     if (streamInfo && videoModel && videoModel.getElement()) {
       if (adjustLiveDelay && isDynamic) {
         _adjustLiveDelayAfterUserInteraction(getTime());
@@ -59275,7 +48926,7 @@ function PlaybackController() {
       delay = suggestedPresentationDelay;
     }
 
-    // We found a fragment duration, use that to calculcate live delay
+    // We found a fragment duration, use that to calculate live delay
     else if (!isNaN(adjustedFragmentDuration)) {
       delay = adjustedFragmentDuration * FRAGMENT_DURATION_FACTOR;
     }
@@ -59612,7 +49263,7 @@ function PlaybackController() {
   }
 
   /**
-   * We enable low latency playback if for the current representation availabilityTimeComplete is set to false
+   * We enable low latency playback if for the current representation availabilityTimeComplete is set to false or there is a k value larger than 1 in the segment template
    * @param e
    * @private
    */
@@ -59621,7 +49272,7 @@ function PlaybackController() {
     if (!e || !activeStreamInfo || !e.currentRepresentation || !e.streamId || e.streamId !== activeStreamInfo.id || !e.mediaType || e.mediaType !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].VIDEO && e.mediaType !== _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].AUDIO) {
       return;
     }
-    lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false;
+    lowLatencyModeEnabled = e.currentRepresentation.availabilityTimeComplete === false || e.currentRepresentation.k > 1;
 
     // If we enable low latency mode for the first time we also enable the catchup mechanism. This can be deactivated again for instance if the user seeks within the DVR window. We leave deactivation up to the application but also do not activate automatically again.
     if (lowLatencyModeEnabled && !initialCatchupModeActivated) {
@@ -59787,19 +49438,19 @@ __webpack_require__.r(__webpack_exports__);
 
 function ScheduleController(config) {
   config = config || {};
-  const context = this.context;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
-  const dashMetrics = config.dashMetrics;
-  const mediaPlayerModel = config.mediaPlayerModel;
-  const fragmentModel = config.fragmentModel;
   const abrController = config.abrController;
-  const playbackController = config.playbackController;
-  const textController = config.textController;
-  const type = config.type;
   const bufferController = config.bufferController;
+  const context = this.context;
+  const dashMetrics = config.dashMetrics;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
+  const fragmentModel = config.fragmentModel;
+  const mediaPlayerModel = config.mediaPlayerModel;
+  const playbackController = config.playbackController;
   const representationController = config.representationController;
   const settings = config.settings;
-  let shouldCheckPlaybackQuality, hasVideoTrack, initSegmentRequired, instance, lastFragmentRequest, lastInitializedRepresentationId, logger, managedMediaSourceAllowsRequest, scheduleTimeout, streamInfo, switchTrack, timeToLoadDelay;
+  const textController = config.textController;
+  const type = config.type;
+  let hasVideoTrack, initSegmentRequired, instance, lastFragmentRequest, lastInitializedRepresentationId, logger, managedMediaSourceAllowsRequest, scheduleTimeout, streamInfo, switchTrack, timeToLoadDelay, shouldCheckPlaybackQuality;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
     resetInitialSettings();
@@ -60535,7 +50186,7 @@ function StreamController() {
 
       // Compute and set the live delay
       if (adapter.getIsDynamic()) {
-        const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+        const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
         playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
       }
 
@@ -60977,7 +50628,7 @@ function StreamController() {
       const streamsInfo = adapter.getStreamsInfo();
       if (streamsInfo.length > 0) {
         const manifestInfo = streamsInfo[0].manifestInfo;
-        const fragmentDuration = _getFragmentDurationForLiveDelayCalculation(streamsInfo, manifestInfo);
+        const fragmentDuration = _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo);
         playbackController.computeAndSetLiveDelay(fragmentDuration, manifestInfo);
       }
     }
@@ -61402,21 +51053,18 @@ function StreamController() {
   }
 
   /**
-   * In order to calculate the initial live delay we might required the duration of the segments.
+   * In order to calculate the initial live delay we might require the duration of the segments.
    * @param {array} streamInfos
    * @param {object} manifestInfo
    * @return {number}
    * @private
    */
-  function _getFragmentDurationForLiveDelayCalculation(streamInfos, manifestInfo) {
+  function _getMaxFragmentDurationForLiveDelayCalculation(manifestInfo) {
     try {
-      let segmentDuration = NaN;
-
-      //  We use the maxFragmentDuration attribute if present
-      if (manifestInfo && !isNaN(manifestInfo.maxFragmentDuration) && isFinite(manifestInfo.maxFragmentDuration)) {
+      if (manifestInfo && Number.isFinite(manifestInfo.maxFragmentDuration)) {
         return manifestInfo.maxFragmentDuration;
       }
-      return isFinite(segmentDuration) ? segmentDuration : NaN;
+      return NaN;
     } catch (e) {
       return NaN;
     }
@@ -61735,6 +51383,9 @@ function StreamController() {
       protectionController.setProtectionData(protectionData);
     }
   }
+  function getProtectionData() {
+    return protectionController ? protectionController.getProtectionData() : null;
+  }
   function resetInitialSettings() {
     streams = [];
     providedStartTime = NaN;
@@ -61819,6 +51470,7 @@ function StreamController() {
     getHasMediaOrInitialisationError,
     getInitialPlayback,
     getIsStreamSwitchInProgress,
+    getProtectionData,
     getStreamById,
     getStreamForTime,
     getStreams,
@@ -63965,7 +53617,11 @@ function BufferLevelHandler(config) {
   }
   function handleNewMetric(metric, vo, type) {
     if (metric === metricsConstants.BUFFER_LEVEL) {
-      storedVOs[type] = vo;
+      if (vo.level < 0) {
+        delete storedVOs[type];
+      } else {
+        storedVOs[type] = vo;
+      }
     }
   }
   instance = {
@@ -64329,6 +53985,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_RNG_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils/RNG.js */ "./src/streaming/metrics/utils/RNG.js");
 /* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../../core/Settings.js */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -64364,11 +54021,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function DVBReporting(config) {
   config = config || {};
   let instance;
   let context = this.context;
   let metricSerialiser, customParametersModel, randomNumberGenerator, reportingPlayerStatusDecided, isReportingPlayer, reportingUrl, rangeController;
+  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   let USE_DRAFT_DVB_SPEC = true;
   let allowPendingRequestsToCompleteOnReset = true;
   let pendingRequests = [];
@@ -64451,12 +54110,12 @@ function DVBReporting(config) {
   function initialize(entry, rc) {
     let probability;
     rangeController = rc;
-    reportingUrl = entry.dvbReportingUrl;
+    reportingUrl = settings.get().streaming.dvbReporting.reportingUrl || entry.dvbReportingUrl;
 
     // If a required attribute is missing, the Reporting descriptor may
     // be ignored by the Player
     if (!reportingUrl) {
-      throw new Error('required parameter missing (dvb:reportingUrl)');
+      throw new Error('MPD parameter missing "dvb:reportingUrl" or URL not provided in player settings');
     }
 
     // A Player's status, as a reporting Player or not, shall remain
@@ -65508,17 +55167,14 @@ BaseURLTreeModel.__dashjs_factory_name = 'BaseURLTreeModel';
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
-/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
-/* harmony import */ var _metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../metrics/MetricsReportingEvents.js */ "./src/streaming/metrics/MetricsReportingEvents.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
-/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
+/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -65558,34 +55214,38 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
-const DEFAULT_CMCD_VERSION = 1;
-const DEFAULT_INCLUDE_IN_REQUESTS = 'segment';
 const RTP_SAFETY_FACTOR = 5;
+const REQUEST_TYPE_TO_CMCD_FILTER = {
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE]: 'mpd',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other'
+};
 function CmcdModel() {
-  let dashManifestModel, instance, logger, internalData, abrController, dashMetrics, playbackController, serviceDescriptionController, throughputController, streamProcessors, _lastMediaTypeRequest, _isStartup, _bufferLevelStarved, _initialMediaRequestsDone, _playbackStartedTime, _msdSent;
+  let instance,
+    dashMetrics,
+    serviceDescriptionController,
+    playbackController,
+    abrController,
+    throughputController,
+    cmcdConfigAccessor,
+    _lastMediaTypeRequest,
+    _isStartup,
+    _bufferLevelStarved,
+    _initialMediaRequestsDone,
+    _playbackStartedTime,
+    _isSeeking,
+    streamProcessors,
+    _rebufferingStartTime = {},
+    _rebufferingDuration = {},
+    _streamType,
+    _streamingFormat;
   let context = this.context;
-  let eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
-  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
-  let debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
   function setup() {
-    dashManifestModel = (0,_dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-    logger = debug.getLogger(instance);
-    _resetInitialSettings();
-  }
-  function initialize(autoPlay) {
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
-    if (autoPlay) {
-      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
-    } else {
-      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
-    }
-    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+    resetInitialSettings();
   }
   function setConfig(config) {
     if (!config) {
@@ -65597,286 +55257,79 @@ function CmcdModel() {
     if (config.dashMetrics) {
       dashMetrics = config.dashMetrics;
     }
-    if (config.throughputController) {
-      throughputController = config.throughputController;
-    }
     if (config.playbackController) {
       playbackController = config.playbackController;
+    }
+    if (config.throughputController) {
+      throughputController = config.throughputController;
     }
     if (config.serviceDescriptionController) {
       serviceDescriptionController = config.serviceDescriptionController;
     }
   }
-  function _resetInitialSettings() {
-    internalData = {
-      pr: 1,
-      nor: null,
-      st: null,
-      sf: null,
-      sid: `${_core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].generateUuid()}`,
-      cid: null
-    };
-    _bufferLevelStarved = {};
-    _isStartup = {};
-    _initialMediaRequestsDone = {};
-    _lastMediaTypeRequest = undefined;
-    _playbackStartedTime = undefined;
-    _msdSent = false;
-    _updateStreamProcessors();
+  function _isValidValue(value) {
+    return value !== null && value !== undefined && !isNaN(value) && isFinite(value);
   }
-  function _onPeriodSwitchComplete() {
-    _updateStreamProcessors();
-  }
-  function _onPlaybackStarted() {
-    if (!_playbackStartedTime) {
-      _playbackStartedTime = Date.now();
+  function _toInnerList(videoValue, audioValue) {
+    const values = [];
+    if (_isValidValue(videoValue)) {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(videoValue, {
+        v: true
+      }));
     }
-  }
-  function _onPlaybackPlaying() {
-    if (!_playbackStartedTime || internalData.msd) {
-      return;
+    if (_isValidValue(audioValue)) {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(audioValue, {
+        a: true
+      }));
     }
-    internalData.msd = Date.now() - _playbackStartedTime;
+    return values.length > 0 ? values : null;
   }
-  function _updateStreamProcessors() {
-    if (!playbackController) {
-      return;
-    }
-    const streamController = playbackController.getStreamController();
-    if (!streamController) {
-      return;
-    }
-    if (typeof streamController.getActiveStream !== 'function') {
-      return;
-    }
-    const activeStream = streamController.getActiveStream();
-    if (!activeStream) {
-      return;
-    }
-    streamProcessors = activeStream.getStreamProcessors();
-  }
-  function getQueryParameter(request) {
-    try {
-      if (isCmcdEnabled()) {
-        const cmcdData = getCmcdData(request);
-        const filteredCmcdData = _applyWhitelist(cmcdData);
-        const finalPayloadString = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.encodeCmcd)(filteredCmcdData);
-        eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
-          url: request.url,
-          mediaType: request.mediaType,
-          cmcdData,
-          cmcdString: finalPayloadString
-        });
-        return {
-          key: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CMCD_PARAM,
-          value: finalPayloadString
-        };
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function _applyWhitelist(cmcdData) {
-    try {
-      const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-      const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-      return Object.keys(cmcdData).filter(key => enabledCMCDKeys.includes(key)).reduce((obj, key) => {
-        obj[key] = cmcdData[key];
-        return obj;
-      }, {});
-    } catch (e) {
-      return cmcdData;
-    }
-  }
-  function getHeaderParameters(request) {
-    try {
-      if (isCmcdEnabled()) {
-        const cmcdData = getCmcdData(request);
-        const filteredCmcdData = _applyWhitelist(cmcdData);
-        const options = _createCmcdV2HeadersCustomMap();
-        const headers = (0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.toCmcdHeaders)(filteredCmcdData, options);
-        eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMCD_DATA_GENERATED, {
-          url: request.url,
-          mediaType: request.mediaType,
-          cmcdData,
-          headers
-        });
-        return headers;
-      }
-      return null;
-    } catch (e) {
-      return null;
-    }
-  }
-  function isCmcdEnabled() {
-    const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-    return _canBeEnabled(cmcdParametersFromManifest) && _checkIncludeInRequests(cmcdParametersFromManifest) && _checkAvailableKeys(cmcdParametersFromManifest);
-  }
-  function _canBeEnabled(cmcdParametersFromManifest) {
-    if (Object.keys(cmcdParametersFromManifest).length) {
-      if (parseInt(cmcdParametersFromManifest.version) !== 1) {
-        logger.error(`version parameter must be defined in 1.`);
-        return false;
-      }
-      if (!cmcdParametersFromManifest.keys) {
-        logger.error(`keys parameter must be defined.`);
-        return false;
-      }
-    }
-    const isEnabledFromManifest = cmcdParametersFromManifest.version;
-    const isEnabledFromSettings = settings.get().streaming.cmcd && settings.get().streaming.cmcd.enabled;
-    return isEnabledFromManifest || isEnabledFromSettings;
-  }
-  function _checkIncludeInRequests(cmcdParametersFromManifest) {
-    let enabledRequests = settings.get().streaming.cmcd.includeInRequests;
-    if (cmcdParametersFromManifest.version) {
-      enabledRequests = cmcdParametersFromManifest.includeInRequests ?? [DEFAULT_INCLUDE_IN_REQUESTS];
-    }
-    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].CMCD_AVAILABLE_REQUESTS;
-    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
-    if (invalidRequests.length === enabledRequests.length) {
-      logger.error(`None of the request types are supported.`);
-      return false;
-    }
-    invalidRequests.map(k => {
-      logger.warn(`request type ${k} is not supported.`);
-    });
-    return true;
-  }
-  function _checkAvailableKeys(cmcdParametersFromManifest) {
-    const defaultAvailableKeys = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].CMCD_AVAILABLE_KEYS;
-    const defaultV2AvailableKeys = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].CMCD_V2_AVAILABLE_KEYS;
-    const enabledCMCDKeys = cmcdParametersFromManifest.version ? cmcdParametersFromManifest.keys : settings.get().streaming.cmcd.enabledKeys;
-    const cmcdVersion = settings.get().streaming.cmcd.version;
-    const invalidKeys = enabledCMCDKeys.filter(k => !defaultAvailableKeys.includes(k) && !(cmcdVersion === 2 && defaultV2AvailableKeys.includes(k)));
-    if (invalidKeys.length === enabledCMCDKeys.length && enabledCMCDKeys.length > 0) {
-      logger.error(`None of the keys are implemented for CMCD version ${cmcdVersion}.`);
-      return false;
-    }
-    invalidKeys.map(k => {
-      logger.warn(`key parameter ${k} is not implemented for CMCD version ${cmcdVersion}.`);
-    });
-    return true;
-  }
-  function getCmcdParametersFromManifest() {
-    let cmcdParametersFromManifest = {};
-    if (serviceDescriptionController) {
-      const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
-      if (settings.get().streaming.cmcd.applyParametersFromMpd && serviceDescription.clientDataReporting && serviceDescription.clientDataReporting.cmcdParameters) {
-        cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
-      }
-    }
-    return cmcdParametersFromManifest;
-  }
-  function _isIncludedInRequestFilter(type) {
-    const cmcdParametersFromManifest = getCmcdParametersFromManifest();
-    let includeInRequestsArray = settings.get().streaming.cmcd.includeInRequests;
-    if (cmcdParametersFromManifest.version) {
-      includeInRequestsArray = cmcdParametersFromManifest.includeInRequests ? cmcdParametersFromManifest.includeInRequests : [DEFAULT_INCLUDE_IN_REQUESTS];
-    }
-    const filtersTypes = {
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.MPD_TYPE]: 'mpd',
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
-      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.OTHER_TYPE]: 'other'
-    };
-    return includeInRequestsArray.some(t => filtersTypes[type] === t);
-  }
-  function getCmcdData(request) {
-    try {
-      let cmcdData = null;
-      _updateLastMediaTypeRequest(request.type, request.mediaType);
-      if (_isIncludedInRequestFilter(request.type)) {
-        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.MPD_TYPE) {
-          return _getCmcdDataForMpd(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
-          _initForMediaType(request.mediaType);
-          return _getCmcdDataForMediaSegment(request, request.mediaType);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.INIT_SEGMENT_TYPE) {
-          return _getCmcdDataForInitSegment(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.XLINK_EXPANSION_TYPE) {
-          return _getCmcdDataForOther(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.LICENSE) {
-          return _getCmcdDataForLicense(request);
-        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_6__.HTTPRequest.CONTENT_STEERING_TYPE) {
-          return _getCmcdDataForSteering(request);
-        }
-      }
-      return cmcdData;
-    } catch (e) {
-      return null;
-    }
-  }
-  function _updateLastMediaTypeRequest(type, mediatype) {
-    // Video > Audio > None
-    if (mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO || mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) {
-      if (!_lastMediaTypeRequest || _lastMediaTypeRequest == _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) {
-        _lastMediaTypeRequest = mediatype;
-      }
-    }
-  }
-  function _getCmcdDataForSteering(request) {
-    const data = !_lastMediaTypeRequest ? _getGenericCmcdData(request) : _getCmcdDataForMediaSegment(request, _lastMediaTypeRequest);
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
-    return data;
-  }
-  function _getCmcdDataForLicense(request) {
-    const data = _getGenericCmcdData(request);
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.KEY;
-    return data;
-  }
-  function _getCmcdDataForMpd() {
-    const data = _getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.MANIFEST;
-    return data;
-  }
-  function _getCmcdDataForMediaSegment(request, mediaType) {
+  function _calculateCmcdDataForRequestForMediaSegment(request, mediaType) {
     _initForMediaType(mediaType);
-    const data = _getGenericCmcdData();
+    const data = getGenericCmcdData(mediaType);
     const encodedBitrate = _getBitrateByRequest(request);
     const d = _getObjectDurationByRequest(request);
     const mtp = _getMeasuredThroughputByType(mediaType);
     const dl = _getDeadlineByType(mediaType);
     const bl = _getBufferLevelByType(mediaType);
     const tb = _getTopBitrateByType(request.representation?.mediaInfo);
-    const pr = internalData.pr;
+    const tpb = _getTopPlayableBitrate(mediaType);
+    const pb = _getPlayheadBitrate(mediaType);
     const nextRequest = _probeNextRequest(mediaType);
     let ot;
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].VIDEO) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.VIDEO;
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.VIDEO;
     }
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].AUDIO) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.AUDIO;
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.AUDIO;
     }
-    if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].ENHANCEMENT) {
-      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
+    if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].ENHANCEMENT) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
     }
-    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_5__["default"].TEXT) {
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].TEXT) {
       if (request.representation.mediaInfo.mimeType === 'application/mp4') {
-        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.TIMED_TEXT;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.TIMED_TEXT;
       } else {
-        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.CAPTION;
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.CAPTION;
       }
     }
-    let rtp = settings.get().streaming.cmcd.rtp;
-    if (!rtp) {
-      rtp = _calculateRtp(request);
-    }
+    const rtp = cmcdConfigAccessor.has('rtp') ? cmcdConfigAccessor.get('rtp') : _calculateRtp(request);
     if (!isNaN(rtp)) {
       data.rtp = rtp;
     }
     if (nextRequest) {
       if (request.url !== nextRequest.url) {
-        data.nor = encodeURIComponent(_core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].getRelativeUrl(request.url, nextRequest.url));
-      } else if (nextRequest.range) {
-        data.nrr = nextRequest.range;
+        const relativeUrl = _core_Utils_js__WEBPACK_IMPORTED_MODULE_3__["default"].getRelativeUrl(request.url, nextRequest.url);
+        const params = nextRequest.range ? {
+          r: nextRequest.range
+        } : undefined;
+        data.nor = [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(relativeUrl, params)];
       }
     }
     if (encodedBitrate) {
-      data.br = encodedBitrate;
+      const videoBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? encodedBitrate : null;
+      const audioBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? encodedBitrate : null;
+      data.br = _toInnerList(videoBr, audioBr) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(encodedBitrate, {})];
     }
     if (ot) {
       data.ot = ot;
@@ -65885,29 +55338,49 @@ function CmcdModel() {
       data.d = d;
     }
     if (!isNaN(mtp)) {
-      data.mtp = mtp;
+      const videoMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? mtp : null;
+      const audioMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? mtp : null;
+      data.mtp = _toInnerList(videoMtp, audioMtp) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(mtp, {})];
     }
     if (!isNaN(dl)) {
       data.dl = dl;
     }
     if (!isNaN(bl)) {
-      data.bl = bl;
+      const videoBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? bl : null;
+      const audioBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? bl : null;
+      data.bl = _toInnerList(videoBl, audioBl) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(bl, {})];
     }
-    if (!isNaN(tb)) {
-      data.tb = tb;
+    if (!isNaN(tb) && isFinite(tb)) {
+      const videoTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? tb : null;
+      const audioTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? tb : null;
+      data.tb = _toInnerList(videoTb, audioTb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(tb, {})];
     }
-    if (!isNaN(pr) && pr !== 1) {
-      data.pr = pr;
+    if (tpb !== null && !isNaN(tpb)) {
+      const videoTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? tpb : null;
+      const audioTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? tpb : null;
+      data.tpb = _toInnerList(videoTpb, audioTpb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(tpb, {})];
+    }
+    if (pb !== null && !isNaN(pb)) {
+      const videoPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? pb : null;
+      const audioPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? pb : null;
+      data.pb = _toInnerList(videoPb, audioPb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(pb, {})];
     }
     if (_bufferLevelStarved[mediaType]) {
       data.bs = true;
       _bufferLevelStarved[mediaType] = false;
+    }
+    if (_rebufferingDuration[mediaType]) {
+      const videoBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? _rebufferingDuration[mediaType] : null;
+      const audioBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? _rebufferingDuration[mediaType] : null;
+      data.bsd = _toInnerList(videoBsd, audioBsd) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(_rebufferingDuration[mediaType], {})];
+      delete _rebufferingDuration[mediaType];
     }
     if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
       data.su = true;
       _isStartup[mediaType] = false;
       _initialMediaRequestsDone[mediaType] = true;
     }
+    Object.assign(data, _getAggregatedBitrateData());
     return data;
   }
   function _initForMediaType(mediaType) {
@@ -65921,59 +55394,32 @@ function CmcdModel() {
       _bufferLevelStarved[mediaType] = false;
     }
   }
-  function _getCmcdDataForInitSegment() {
-    const data = _getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.INIT;
+  function _calculateCmcdDataForRequestForInitSegment() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.INIT;
     data.su = true;
     return data;
   }
-  function _getCmcdDataForOther() {
-    const data = _getGenericCmcdData();
-    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdObjectType.OTHER;
+  function _calculateCmcdDataForRequestForOther() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
     return data;
   }
-  function _getGenericCmcdData() {
-    const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+  function _getEncodedBitrateData() {
     const data = {};
-    let cid = settings.get().streaming.cmcd.cid ? settings.get().streaming.cmcd.cid : internalData.cid;
-    cid = cmcdParametersFromManifest.contentID ? cmcdParametersFromManifest.contentID : cid;
-    data.v = settings.get().streaming.cmcd.version ?? DEFAULT_CMCD_VERSION;
-    data.sid = settings.get().streaming.cmcd.sid ? settings.get().streaming.cmcd.sid : internalData.sid;
-    data.sid = cmcdParametersFromManifest.sessionID ? cmcdParametersFromManifest.sessionID : data.sid;
-    data.sid = `${data.sid}`;
-    if (cid) {
-      data.cid = `${cid}`;
+    const activeStream = playbackController.getStreamController()?.getActiveStream();
+    if (!activeStream) {
+      return data;
     }
-    if (!isNaN(internalData.pr) && internalData.pr !== 1 && internalData.pr !== null) {
-      data.pr = internalData.pr;
-    }
-    if (internalData.st) {
-      data.st = internalData.st;
-    }
-    if (internalData.sf) {
-      data.sf = internalData.sf;
-    }
-    if (data.v === 2) {
-      let ltc = playbackController.getCurrentLiveLatency() * 1000;
-      if (!isNaN(ltc)) {
-        data.ltc = ltc;
-      }
-      const msd = internalData.msd;
-      if (!_msdSent && !isNaN(msd)) {
-        data.msd = msd;
-        _msdSent = true;
-      }
+    const videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const videoBr = videoRep ? Math.round(videoRep.bitrateInKbit) : null;
+    const audioBr = audioRep ? Math.round(audioRep.bitrateInKbit) : null;
+    const brValues = _toInnerList(videoBr, audioBr);
+    if (brValues) {
+      data.br = brValues;
     }
     return data;
-  }
-  function _createCmcdV2HeadersCustomMap() {
-    const cmcdVersion = settings.get().streaming.cmcd.version;
-    return cmcdVersion === 1 ? {} : {
-      customHeaderMap: {
-        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.REQUEST]: ['ltc'],
-        [_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdHeaderField.SESSION]: ['msd']
-      }
-    };
   }
   function _getBitrateByRequest(request) {
     try {
@@ -65992,6 +55438,77 @@ function CmcdModel() {
       return null;
     }
   }
+  function _getPlayheadBitrate(mediaType) {
+    try {
+      if (!streamProcessors || streamProcessors.length === 0) {
+        return null;
+      }
+      const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+      const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+      if (bitrate !== undefined && !isNaN(bitrate)) {
+        return Math.round(bitrate);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getPlayheadBitrateData() {
+    const data = {};
+    const videoPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const pbValues = _toInnerList(videoPb, audioPb);
+    if (pbValues) {
+      data.pb = pbValues;
+    }
+    return data;
+  }
+  function _getTopBitrateDataForType(mediaType) {
+    if (!streamProcessors || streamProcessors.length === 0) {
+      return null;
+    }
+    const sp = streamProcessors.find(p => p.getType() === mediaType);
+    if (!sp) {
+      return null;
+    }
+    const mediaInfo = sp.getMediaInfo();
+    const tb = _getTopBitrateByType(mediaInfo);
+    return isFinite(tb) && tb > 0 ? tb : null;
+  }
+  function _getTopBitrateData() {
+    const data = {};
+    const videoTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const tbValues = _toInnerList(videoTb, audioTb);
+    if (tbValues) {
+      data.tb = tbValues;
+    }
+    const videoTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const tpbValues = _toInnerList(videoTpb, audioTpb);
+    if (tpbValues) {
+      data.tpb = tpbValues;
+    }
+    return data;
+  }
+  function _getTopPlayableBitrate(mediaType) {
+    try {
+      if (!streamProcessors || streamProcessors.length === 0) {
+        return null;
+      }
+      const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+      if (streamProcessor) {
+        const mediaInfo = streamProcessor.getMediaInfo();
+        const topBitrate = _getTopBitrateByType(mediaInfo);
+
+        // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+        return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
   function _getObjectDurationByRequest(request) {
     try {
       return !isNaN(request.duration) ? Math.round(request.duration * 1000) : NaN;
@@ -66006,9 +55523,19 @@ function CmcdModel() {
       return null;
     }
   }
+  function _getMeasuredThroughputData() {
+    const data = {};
+    const videoMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const mtpValues = _toInnerList(videoMtp, audioMtp);
+    if (mtpValues) {
+      data.mtp = mtpValues;
+    }
+    return data;
+  }
   function _getDeadlineByType(mediaType) {
     try {
-      const playbackRate = internalData.pr;
+      const playbackRate = playbackController ? playbackController.getPlaybackRate() : 1;
       const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
       if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
         return parseInt(bufferLevel / playbackRate * 10) * 100;
@@ -66029,24 +55556,20 @@ function CmcdModel() {
       return null;
     }
   }
-  function _onPlaybackRateChanged(data) {
-    try {
-      internalData.pr = data.playbackRate;
-    } catch (e) {}
+  function _getBufferLevelData() {
+    const data = {};
+    const videoBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const blValues = _toInnerList(videoBl, audioBl);
+    if (blValues) {
+      data.bl = blValues;
+    }
+    return data;
   }
-  function _onManifestLoaded(data) {
-    try {
-      const isDynamic = dashManifestModel.getIsDynamic(data.data);
-      const st = isDynamic ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.LIVE : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamType.VOD;
-      const sf = data.protocol && data.protocol === 'MSS' ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.SMOOTH : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_10__.CmcdStreamingFormat.DASH;
-      internalData.st = `${st}`;
-      internalData.sf = `${sf}`;
-    } catch (e) {}
-  }
-  function _onBufferLevelStateChanged(data) {
+  function onBufferLevelStateChanged(data) {
     try {
       if (data.state && data.mediaType) {
-        if (data.state === _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].BUFFER_EMPTY) {
+        if (data.state === _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].BUFFER_EMPTY) {
           if (!_bufferLevelStarved[data.mediaType]) {
             _bufferLevelStarved[data.mediaType] = true;
           }
@@ -66057,7 +55580,11 @@ function CmcdModel() {
       }
     } catch (e) {}
   }
-  function _onPlaybackSeeked() {
+  function onPlaybackSeeking() {
+    _isSeeking = true;
+  }
+  function onPlaybackSeeked() {
+    _isSeeking = false;
     for (let key in _bufferLevelStarved) {
       if (_bufferLevelStarved.hasOwnProperty(key)) {
         _bufferLevelStarved[key] = true;
@@ -66069,6 +55596,9 @@ function CmcdModel() {
       }
     }
   }
+  function wasPlaying() {
+    return !_isSeeking && _playbackStartedTime;
+  }
   function _probeNextRequest(mediaType) {
     if (!streamProcessors || streamProcessors.length === 0) {
       return;
@@ -66079,9 +55609,108 @@ function CmcdModel() {
       }
     }
   }
+  function onPeriodSwitchComplete() {
+    _updateStreamProcessors();
+  }
+  function onPlaybackStarted() {
+    if (!_playbackStartedTime) {
+      _playbackStartedTime = Date.now();
+    }
+  }
+  function onPlaybackPlaying() {
+    for (const mediaType in _rebufferingStartTime) {
+      if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
+        onRebufferingCompleted(mediaType);
+      }
+    }
+  }
+  function onRebufferingStarted(mediaType) {
+    if (mediaType && !_rebufferingStartTime[mediaType]) {
+      _rebufferingStartTime[mediaType] = Date.now();
+    }
+  }
+  function onRebufferingCompleted(mediaType) {
+    if (_rebufferingStartTime[mediaType] != null) {
+      _rebufferingDuration[mediaType] = Date.now() - _rebufferingStartTime[mediaType];
+      delete _rebufferingStartTime[mediaType];
+    }
+  }
+  function _calculateMsd() {
+    if (!_playbackStartedTime) {
+      return null;
+    }
+    return Date.now() - _playbackStartedTime;
+  }
+  function getGenericCmcdData(mediaType) {
+    const data = {};
+
+    // Note: ts, st, sf, pr are handled by CmcdReporter:
+    // - ts: auto-generated by recordEvent() / recordResponseReceived()
+    // - st, sf: persisted via cmcdReporter.update() in _onManifestLoaded
+    // - pr: persisted via cmcdReporter.update() in _onPlaybackRateChanged
+
+    let ltc = playbackController.getCurrentLiveLatency() * 1000;
+    if (!isNaN(ltc)) {
+      data.ltc = ltc;
+    }
+    if (typeof document !== 'undefined' && document.hidden) {
+      data.bg = true;
+    }
+    if (mediaType && _shouldIncludeDroppedFrames(mediaType)) {
+      const droppedFrames = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+      if (droppedFrames > 0) {
+        data.df = droppedFrames;
+      }
+    }
+    return data;
+  }
+  function _shouldIncludeDroppedFrames(mediaType) {
+    return mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].OTHER;
+  }
+  function getEventModeData() {
+    const cmcdData = {
+      ...getGenericCmcdData(),
+      ..._getAggregatedBitrateData(),
+      ..._getEncodedBitrateData(),
+      ..._getBufferLevelData(),
+      ..._getMeasuredThroughputData(),
+      ..._getPlayheadBitrateData(),
+      ..._getTopBitrateData()
+    };
+    return cmcdData;
+  }
+  function resetInitialSettings() {
+    _bufferLevelStarved = {};
+    _isStartup = {};
+    _initialMediaRequestsDone = {};
+    _isSeeking = false;
+    _lastMediaTypeRequest = undefined;
+    _playbackStartedTime = undefined;
+    _rebufferingStartTime = {};
+    _rebufferingDuration = {};
+    _streamType = undefined;
+    _streamingFormat = undefined;
+    _updateStreamProcessors();
+  }
+  function _updateStreamProcessors() {
+    if (!playbackController) {
+      return;
+    }
+    const streamController = playbackController.getStreamController();
+    if (!streamController) {
+      return;
+    }
+    if (typeof streamController.getActiveStream !== 'function') {
+      return;
+    }
+    const activeStream = streamController.getActiveStream();
+    if (!activeStream) {
+      return;
+    }
+    streamProcessors = activeStream.getStreamProcessors();
+  }
   function _calculateRtp(request) {
     try {
-      // Get the values we need
       let playbackRate = playbackController.getPlaybackRate();
       if (!playbackRate) {
         playbackRate = 1;
@@ -66105,7 +55734,9 @@ function CmcdModel() {
       let segmentSize = bandwidth * duration / 1000; // Calculate file size in kilobits
       let timeToLoad = currentBufferLevel / playbackRate / 1000; // Calculate time available to load file in seconds
       let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
-      let rtpSafetyFactor = settings.get().streaming.cmcd.rtpSafetyFactor && !isNaN(settings.get().streaming.cmcd.rtpSafetyFactor) ? settings.get().streaming.cmcd.rtpSafetyFactor : RTP_SAFETY_FACTOR;
+      const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', {
+        defaultValue: RTP_SAFETY_FACTOR
+      });
       let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
 
       // Round to the next multiple of 100
@@ -66114,30 +55745,188 @@ function CmcdModel() {
       return NaN;
     }
   }
+  function calculateMsd() {
+    const data = {};
+    const msd = _calculateMsd();
+    if (msd !== null && !isNaN(msd)) {
+      data.msd = msd;
+    }
+    return data;
+  }
+  function onPlaybackRateChanged(data) {
+    if (data.playbackRate !== undefined) {
+      return {
+        pr: data.playbackRate
+      };
+    }
+    return null;
+  }
+  function onManifestLoaded(data) {
+    try {
+      const dashManifestModel = (0,_dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
+      const isDynamic = dashManifestModel.getIsDynamic(data.data);
+      _streamType = isDynamic ? `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamType.LIVE}` : `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamType.VOD}`;
+      _streamingFormat = data.protocol && data.protocol === 'MSS' ? `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamingFormat.SMOOTH}` : `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamingFormat.DASH}`;
+      return {
+        st: _streamType,
+        sf: _streamingFormat
+      };
+    } catch (e) {
+      return {};
+    }
+  }
+  function getCmcdParametersFromManifest() {
+    let cmcdParametersFromManifest = {};
+    if (serviceDescriptionController) {
+      const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+      if (serviceDescription.clientDataReporting && serviceDescription.clientDataReporting.cmcdParameters) {
+        cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
+      }
+    }
+    return cmcdParametersFromManifest;
+  }
+  function updateCmcdManifestParamsInCmcdConfigAccessor() {
+    const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+
+    // Update CmcdConfigAccessor with manifest parameters if available
+    // Note: Always update accessor when params exist, regardless of applyParametersFromMpd
+    // The accessor uses priority-based resolution, so manifest params will only be used
+    // when they have higher priority in the PropertyMap configuration
+    if (cmcdConfigAccessor && Object.keys(cmcdParametersFromManifest).length > 0) {
+      cmcdConfigAccessor.setManifestParams(cmcdParametersFromManifest);
+    } else if (cmcdConfigAccessor) {
+      // Clear manifest params if none are available
+      cmcdConfigAccessor.setManifestParams(null);
+    }
+  }
+  function deriveCmcdDataForRequest(request) {
+    try {
+      _updateLastMediaTypeRequest(request.type, request.mediaType);
+      let cmcdData = {};
+      if (isIncludedInRequestFilter(request.type)) {
+        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
+          return _calculateCmcdDataForRequestForMpd(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+          _initForMediaType(request.mediaType);
+          return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
+          return _calculateCmcdDataForRequestForInitSegment(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
+          return _calculateCmcdDataForRequestForOther(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
+          return _calculateCmcdDataForRequestForLicense(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
+          return _calculateCmcdDataForRequestForSteering(request);
+        }
+      }
+      return cmcdData;
+    } catch (e) {
+      return null;
+    }
+  }
+  function isIncludedInRequestFilter(type, includeInRequests) {
+    const includeInRequestsArray = includeInRequests ?? cmcdConfigAccessor.get('includeInRequests');
+    const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
+    return filterType !== undefined && includeInRequestsArray.includes(filterType);
+  }
   function reset() {
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, this);
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].MANIFEST_LOADED, _onManifestLoaded, this);
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
-    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
-    _resetInitialSettings();
+    resetInitialSettings();
+  }
+  function _updateLastMediaTypeRequest(type, mediatype) {
+    // Video > Audio > None
+    if (mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO || mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+      if (!_lastMediaTypeRequest || _lastMediaTypeRequest === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+        _lastMediaTypeRequest = mediatype;
+      }
+    }
+  }
+  function _calculateCmcdDataForRequestForSteering(request) {
+    const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
+    return data;
+  }
+  function _calculateCmcdDataForRequestForLicense() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.KEY;
+    return data;
+  }
+  function _calculateCmcdDataForRequestForMpd() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.MANIFEST;
+    return data;
+  }
+  function _getAggregatedBitrateData() {
+    // defining data to return
+    const data = {};
+    // accessing active stream
+    const activeStream = playbackController.getStreamController()?.getActiveStream();
+    if (!activeStream) {
+      return data;
+    }
+
+    // Get current representations
+    const videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
+    const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
+
+    // Calculate aggregated bitrate
+    const abValues = _toInnerList(currentVideoBitrate > 0 ? Math.round(currentVideoBitrate) : null, currentAudioBitrate > 0 ? Math.round(currentAudioBitrate) : null);
+    if (abValues) {
+      data.ab = abValues;
+    }
+
+    // Calculate top aggregated bitrate
+    const allVideoReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO) || [];
+    const allAudioReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) || [];
+    const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+    const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+    const tabValues = _toInnerList(topVideoBitrate > 0 ? Math.round(topVideoBitrate) : null, topAudioBitrate > 0 ? Math.round(topAudioBitrate) : null);
+    if (tabValues) {
+      data.tab = tabValues;
+    }
+
+    // Calculate lowest aggregated bitrate
+    const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
+    const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+    const labValues = _toInnerList(lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null, lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null);
+    if (labValues) {
+      data.lab = labValues;
+    }
+    return data;
+  }
+  function getLastMediaTypeRequest() {
+    return _lastMediaTypeRequest;
   }
   instance = {
-    getCmcdData,
-    getQueryParameter,
-    getHeaderParameters,
+    calculateMsd,
+    deriveCmcdDataForRequest,
     getCmcdParametersFromManifest,
-    setConfig,
+    getEventModeData,
+    getLastMediaTypeRequest,
+    isIncludedInRequestFilter,
+    onBufferLevelStateChanged,
+    onManifestLoaded,
+    onPeriodSwitchComplete,
+    onPlaybackPlaying,
+    onPlaybackRateChanged,
+    onPlaybackSeeked,
+    onPlaybackSeeking,
+    onPlaybackStarted,
+    onRebufferingCompleted,
+    onRebufferingStarted,
     reset,
-    initialize,
-    isCmcdEnabled
+    resetInitialSettings,
+    setConfig,
+    setup,
+    updateCmcdManifestParamsInCmcdConfigAccessor,
+    wasPlaying
   };
   setup();
   return instance;
 }
 CmcdModel.__dashjs_factory_name = 'CmcdModel';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__["default"].getSingletonFactory(CmcdModel));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__["default"].getSingletonFactory(CmcdModel));
 
 /***/ }),
 
@@ -66369,7 +56158,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
 /* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
 /* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
+/* harmony import */ var _controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../controllers/CmcdController.js */ "./src/streaming/controllers/CmcdController.js");
+/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -66406,26 +56196,32 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 function CustomParametersModel() {
-  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules;
+  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, certificateRequestFilters, certificateResponseFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
   const context = this.context;
   const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   function setup() {
     xhrWithCredentials = {
       default: DEFAULT_XHR_WITH_CREDENTIALS
     };
+    cmcdController = (0,_controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
     _resetInitialSettings();
   }
   function _resetInitialSettings() {
-    requestInterceptors = [];
-    responseInterceptors = [];
     licenseRequestFilters = [];
     licenseResponseFilters = [];
+    certificateRequestFilters = [];
+    certificateResponseFilters = [];
     customCapabilitiesFilters = [];
     customAbrRules = [];
     customInitialTrackSelectionFunction = null;
     utcTimingSources = [];
+
+    // Initialize request interceptors with default CMCD interceptors
+    requestInterceptors = cmcdController.getCmcdRequestInterceptors();
+    responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
     externalSubtitles = new Set();
   }
   function reset() {
@@ -66457,6 +56253,58 @@ function CustomParametersModel() {
    */
   function getCustomInitialTrackSelectionFunction() {
     return customInitialTrackSelectionFunction;
+  }
+
+  /**
+   * Returns all certificate request filters
+   * @return {array}
+   */
+  function getCertificateRequestFilters() {
+    return certificateRequestFilters;
+  }
+
+  /**
+   * Returns all certificate response filters
+   * @return {array}
+   */
+  function getCertificateResponseFilters() {
+    return certificateResponseFilters;
+  }
+
+  /**
+   * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license request filter callback
+   */
+  function registerCertificateRequestFilter(filter) {
+    certificateRequestFilters.push(filter);
+  }
+
+  /**
+   * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license response filter callback
+   */
+  function registerCertificateResponseFilter(filter) {
+    certificateResponseFilters.push(filter);
+  }
+
+  /**
+   * Unregisters a certificate request filter.
+   * @param {function} filter - the license request filter callback
+   */
+  function unregisterCertificateRequestFilter(filter) {
+    _unregisterFilter(certificateRequestFilters, filter);
+  }
+
+  /**
+   * Unregisters a certificate response filter.
+   * @param {function} filter - the license response filter callback
+   */
+  function unregisterCertificateResponseFilter(filter) {
+    _unregisterFilter(certificateResponseFilters, filter);
   }
 
   /**
@@ -66689,7 +56537,7 @@ function CustomParametersModel() {
     if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
       return;
     }
-    const externalSubtitle = new _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_5__["default"](externalSubtitleObj);
+    const externalSubtitle = new _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_6__["default"](externalSubtitleObj);
     if (!_hasExternalSubtitleByKeyValue('url', externalSubtitle.url) && !_hasExternalSubtitleByKeyValue('id', externalSubtitle.id)) {
       externalSubtitles.add(externalSubtitle);
     }
@@ -66792,6 +56640,8 @@ function CustomParametersModel() {
     addUTCTimingSource,
     clearDefaultUTCTimingSources,
     getAbrCustomRules,
+    getCertificateRequestFilters,
+    getCertificateResponseFilters,
     getCustomCapabilitiesFilters,
     getCustomInitialTrackSelectionFunction,
     getExternalSubtitles,
@@ -66801,6 +56651,8 @@ function CustomParametersModel() {
     getResponseInterceptors,
     getUTCTimingSources,
     getXHRWithCredentialsForType,
+    registerCertificateRequestFilter,
+    registerCertificateResponseFilter,
     registerCustomCapabilitiesFilter,
     registerLicenseRequestFilter,
     registerLicenseResponseFilter,
@@ -66818,6 +56670,8 @@ function CustomParametersModel() {
     setConfig,
     setCustomInitialTrackSelectionFunction,
     setXHRWithCredentialsForType,
+    unregisterCertificateRequestFilter,
+    unregisterCertificateResponseFilter,
     unregisterCustomCapabilitiesFilter,
     unregisterLicenseRequestFilter,
     unregisterLicenseResponseFilter
@@ -67287,6 +57141,11 @@ const DEFAULT_MIN_BUFFER_TIME = 12;
 const DEFAULT_MIN_BUFFER_TIME_FAST_SWITCH = 20;
 const LOW_LATENCY_MULTIPLY_FACTOR = 5;
 const LOW_LATENCY_REDUCTION_FACTOR = 10;
+const CATCHUP_STEP_TUNING_MIN_LIMIT = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_START_MAX = 1;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN = 0;
+const DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX = 1;
 
 /**
  * We use this model as a wrapper/proxy between Settings.js and classes that are using parameters from Settings.js.
@@ -67364,11 +57223,37 @@ function MediaPlayerModel() {
   ;
 
   /**
+   * Checks the supplied min value for the step algorithm is a valid value and within supported limits
+   * @param {number} value - Supplied min value (seconds)
+   * @param {boolean} log - whether to shown warning or not 
+   * @returns {number} corrected min playback rate
+  */
+  function _checkStepSettings(value, log) {
+    if (isNaN(value)) {
+      return 0;
+    }
+    if (value < 0) {
+      if (log) {
+        logger.warn(`Supplied step algorithm value is a negative value when it should be positive or 0. The supplied value will not be applied and set to 0.`);
+      }
+      return 0;
+    }
+    if (value < CATCHUP_STEP_TUNING_MIN_LIMIT) {
+      if (log) {
+        logger.warn(`Supplied step algorithm value is out of range and will be limited to ${CATCHUP_STEP_TUNING_MIN_LIMIT}`);
+      }
+      return CATCHUP_STEP_TUNING_MIN_LIMIT;
+    }
+    return value;
+  }
+  ;
+
+  /**
    * Returns the maximum drift allowed before applying a seek back to the live edge when the catchup mode is enabled
    * @return {number}
    */
   function getCatchupMaxDrift() {
-    if (!isNaN(settings.get().streaming.liveCatchup.maxDrift) && settings.get().streaming.liveCatchup.maxDrift >= 0) {
+    if (!isNaN(settings.get().streaming.liveCatchup.maxDrift)) {
       return settings.get().streaming.liveCatchup.maxDrift;
     }
     const serviceDescriptionSettings = serviceDescriptionController.getServiceDescriptionSettings();
@@ -67402,6 +57287,37 @@ function MediaPlayerModel() {
     return {
       min: DEFAULT_CATCHUP_PLAYBACK_RATE_MIN,
       max: DEFAULT_CATCHUP_PLAYBACK_RATE_MAX
+    };
+  }
+
+  /**
+   * Returns the tuning parameters to be used when applying the catchup mode "step"
+   * If only one of the min/max values has been set then the other will default to 0 (no playback rate change).
+   * @return {number}
+   */
+  function getCatchupStepSettings(log) {
+    const settingsStep = settings.get().streaming.liveCatchup.step;
+    if (!isNaN(settingsStep.start.min) || !isNaN(settingsStep.start.max) || !isNaN(settingsStep.stop.min) || !isNaN(settingsStep.stop.max)) {
+      return {
+        start: {
+          min: _checkStepSettings(settingsStep.start.min, log),
+          max: _checkStepSettings(settingsStep.start.max, log)
+        },
+        stop: {
+          min: _checkStepSettings(settingsStep.stop.min, log),
+          max: _checkStepSettings(settingsStep.stop.max, log)
+        }
+      };
+    }
+    return {
+      start: {
+        min: DEFAULT_CATCHUP_STEP_TUNING_START_MIN,
+        max: DEFAULT_CATCHUP_STEP_TUNING_START_MAX
+      },
+      stop: {
+        min: DEFAULT_CATCHUP_STEP_TUNING_STOP_MIN,
+        max: DEFAULT_CATCHUP_STEP_TUNING_STOP_MAX
+      }
     };
   }
 
@@ -67508,6 +57424,7 @@ function MediaPlayerModel() {
     getCatchupMaxDrift,
     getCatchupModeEnabled,
     getCatchupPlaybackRates,
+    getCatchupStepSettings,
     getFastSwitchEnabled,
     getInitialBufferLevel,
     getRetryAttemptsForType,
@@ -68949,9 +58866,6 @@ function FetchLoader() {
   }
   function _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse) {
     _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse);
-    if (!fetchResponse.ok) {
-      commonMediaRequest.customData.onloadend();
-    }
     let totalBytesReceived = 0;
     let signaledFirstByte = false;
     let receivedData = new Uint8Array();
@@ -69331,20 +59245,18 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
-/* harmony import */ var _models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../models/CmcdModel.js */ "./src/streaming/models/CmcdModel.js");
-/* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
-/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
-/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
-/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
-/* harmony import */ var _controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../controllers/CommonAccessTokenController.js */ "./src/streaming/controllers/CommonAccessTokenController.js");
-/* harmony import */ var _controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../controllers/ClientDataReportingController.js */ "./src/streaming/controllers/ClientDataReportingController.js");
-/* harmony import */ var _controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../controllers/ExtUrlQueryInfoController.js */ "./src/streaming/controllers/ExtUrlQueryInfoController.js");
-/* harmony import */ var _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../vo/CommonMediaRequest.js */ "./src/streaming/vo/CommonMediaRequest.js");
-/* harmony import */ var _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../vo/CommonMediaResponse.js */ "./src/streaming/vo/CommonMediaResponse.js");
+/* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
+/* harmony import */ var _controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../controllers/CommonAccessTokenController.js */ "./src/streaming/controllers/CommonAccessTokenController.js");
+/* harmony import */ var _controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../controllers/ExtUrlQueryInfoController.js */ "./src/streaming/controllers/ExtUrlQueryInfoController.js");
+/* harmony import */ var _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../vo/CommonMediaRequest.js */ "./src/streaming/vo/CommonMediaRequest.js");
+/* harmony import */ var _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../vo/CommonMediaResponse.js */ "./src/streaming/vo/CommonMediaResponse.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -69393,8 +59305,6 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
-
 /**
  * @module HTTPLoader
  * @ignore
@@ -69409,21 +59319,18 @@ function HTTPLoader(cfg) {
   const mediaPlayerModel = cfg.mediaPlayerModel;
   const boxParser = cfg.boxParser;
   const errors = cfg.errors;
-  const requestTimeout = cfg.requestTimeout || 0;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
-  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_11__["default"])(context).getInstance();
-  let instance, httpRequests, delayedRequests, retryRequests, downloadErrorToRequestTypeMap, cmcdModel, cmsdModel, xhrLoader, fetchLoader, customParametersModel, commonAccessTokenController, clientDataReportingController, extUrlQueryInfoController, logger;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
+  let instance, httpRequests, delayedRequests, retryRequests, downloadErrorToRequestTypeMap, cmsdModel, xhrLoader, fetchLoader, customParametersModel, commonAccessTokenController, extUrlQueryInfoController, logger;
   function setup() {
-    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance().getLogger(instance);
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance().getLogger(instance);
     httpRequests = [];
     delayedRequests = [];
     retryRequests = [];
-    cmcdModel = (0,_models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
-    clientDataReportingController = (0,_controllers_ClientDataReportingController_js__WEBPACK_IMPORTED_MODULE_15__["default"])(context).getInstance();
-    cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
-    customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
-    commonAccessTokenController = (0,_controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
-    extUrlQueryInfoController = (0,_controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_16__["default"])(context).getInstance();
+    cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
+    customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+    commonAccessTokenController = (0,_controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
+    extUrlQueryInfoController = (0,_controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
     downloadErrorToRequestTypeMap = {
       [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
       [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.XLINK_EXPANSION_TYPE]: errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
@@ -69580,11 +59487,15 @@ function HTTPLoader(cfg) {
         }
         if (requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
           dashMetrics.addManifestUpdate(requestObject);
-          eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_10__["default"].MANIFEST_LOADING_FINISHED, {
+          eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__["default"].MANIFEST_LOADING_FINISHED, {
             requestObject
           });
         }
-        if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && commonMediaResponse.data) {
+
+        // POST requests are allowed to have empty response bodies (e.g. CMCD event reporting endpoints).
+        // GET requests still need a body since dash.js consumes it (manifests, segments).
+        const hasUsableBody = !!commonMediaResponse.data || requestObject.method === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.POST;
+        if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && hasUsableBody) {
           if (config.success) {
             config.success(commonMediaResponse.data, commonMediaResponse.statusText, commonMediaResponse.url);
           }
@@ -69598,7 +59509,7 @@ function HTTPLoader(cfg) {
               // Only trigger a sync if the loading failed for the first time
               const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE);
               if (initialNumberOfAttempts === remainingAttempts) {
-                eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_10__["default"].ATTEMPT_BACKGROUND_SYNC);
+                eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__["default"].ATTEMPT_BACKGROUND_SYNC);
               }
             }
           } catch (e) {}
@@ -69612,7 +59523,8 @@ function HTTPLoader(cfg) {
       requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
     };
     const _updateResourceTimingInfo = function () {
-      commonMediaResponse.resourceTiming.responseEnd = Date.now();
+      commonMediaResponse.resourceTiming.responseEnd = performance.now();
+      commonMediaResponse.resourceTiming.duration = commonMediaResponse.resourceTiming.responseEnd - commonMediaResponse.resourceTiming.startTime;
 
       // If enabled the ResourceTimingApi we add the corresponding information to the request object.
       // These values are more accurate and can be used by the ThroughputController later
@@ -69622,11 +59534,12 @@ function HTTPLoader(cfg) {
       return new Promise(resolve => {
         _applyRequestInterceptors(httpRequest).then(_httpRequest => {
           httpRequest = _httpRequest;
+          httpResponse.request = httpRequest;
           httpRequest.customData.onloadend = _onloadend;
           httpRequest.customData.onprogress = _onprogress;
           httpRequest.customData.onabort = _onabort;
           httpRequest.customData.ontimeout = _ontimeout;
-          httpResponse.resourceTiming.startTime = Date.now();
+          httpResponse.resourceTiming.startTime = performance.now();
           loader.load(httpRequest, httpResponse);
           resolve();
         });
@@ -69672,6 +59585,23 @@ function HTTPLoader(cfg) {
       }
     };
 
+    /**
+     * Returns the request timeout value from Settings based on the request type.
+     * This reads the value dynamically so that runtime changes via updateSettings() take effect.
+     * @param {Object} requestObject
+     * @returns {number}
+     * @private
+     */
+    function _getRequestTimeout(requestObject) {
+      if (requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
+        return settings.get().streaming.manifestRequestTimeout || 0;
+      }
+      if (_isFragmentRequest(requestObject)) {
+        return settings.get().streaming.fragmentRequestTimeout || 0;
+      }
+      return 0;
+    }
+
     // Main code after inline functions
     const requestObject = config.request;
     const traces = [];
@@ -69693,28 +59623,28 @@ function HTTPLoader(cfg) {
     const loaderInformation = _getLoader(requestObject);
     const loader = loaderInformation.loader;
     requestObject.fileLoaderType = loaderInformation.fileLoaderType;
-    requestObject.headers = {};
+    requestObject.headers = requestObject.headers || {};
     _updateRequestUrlAndHeaders(requestObject);
     if (requestObject.range) {
       requestObject.headers['Range'] = 'bytes=' + requestObject.range;
     }
     const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
-    commonMediaRequest = new _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_17__["default"]({
+    commonMediaRequest = new _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
       url: requestObject.url,
-      method: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET,
+      method: requestObject.method || _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET,
       responseType: requestObject.responseType,
       headers: requestObject.headers,
       credentials: withCredentials ? 'include' : 'omit',
-      timeout: requestTimeout,
-      cmcd: cmcdModel.getCmcdData(requestObject),
+      timeout: _getRequestTimeout(requestObject),
+      body: requestObject.body,
       customData: {
         request: requestObject
       }
     });
-    commonMediaResponse = new _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_18__["default"]({
+    commonMediaResponse = new _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_16__["default"]({
       request: commonMediaRequest,
       resourceTiming: {
-        startTime: Date.now(),
+        startTime: performance.now(),
         encodedBodySize: 0
       },
       status: 0
@@ -69750,6 +59680,9 @@ function HTTPLoader(cfg) {
       }, requestObject.delayLoadingTime - now);
       return Promise.resolve();
     }
+  }
+  function _isFragmentRequest(request) {
+    return request && request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INIT_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INDEX_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE;
   }
   function _applyRequestInterceptors(httpRequest) {
     const interceptors = customParametersModel.getRequestInterceptors();
@@ -69821,7 +59754,7 @@ function HTTPLoader(cfg) {
     // Update CommonMediaResponse Resource Timing info
     httpResponse.resourceTiming.startTime = resource.startTime;
     httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
-    httpResponse.resourceTiming.responseStart = resource.startTime;
+    httpResponse.resourceTiming.responseStart = resource.responseStart;
     httpResponse.resourceTiming.responseEnd = resource.responseEnd;
     httpResponse.resourceTiming.duration = resource.duration;
   }
@@ -69854,13 +59787,13 @@ function HTTPLoader(cfg) {
         });
       }
       loader = fetchLoader;
-      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].FILE_LOADER_TYPES.FETCH;
+      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FILE_LOADER_TYPES.FETCH;
     } else {
       if (!xhrLoader) {
         xhrLoader = (0,_XHRLoader_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create();
       }
       loader = xhrLoader;
-      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].FILE_LOADER_TYPES.XHR;
+      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FILE_LOADER_TYPES.XHR;
     }
     return {
       loader,
@@ -69874,7 +59807,6 @@ function HTTPLoader(cfg) {
    * @private
    */
   function _updateRequestUrlAndHeaders(request) {
-    _updateRequestUrlAndHeadersWithCmcd(request);
     if (request.retryAttempts === 0) {
       _addExtUrlQueryParameters(request);
     }
@@ -69885,66 +59817,26 @@ function HTTPLoader(cfg) {
     // Add ExtUrlQueryInfo parameters
     let finalQueryString = extUrlQueryInfoController.getFinalQueryString(request);
     if (finalQueryString) {
-      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_7__["default"].addAdditionalQueryParameterToUrl(request.url, finalQueryString);
+      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].addAdditionalQueryParameterToUrl(request.url, finalQueryString);
     }
   }
   function _addPathwayCloningParameters(request) {
     // Add queryParams that came from pathway cloning
     if (request.queryParams) {
-      const queryParams = Object.keys(request.queryParams).map(key => {
-        return {
+      const queryParams = [];
+      for (const key in request.queryParams) {
+        queryParams.push({
           key,
           value: request.queryParams[key]
-        };
-      });
-      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_7__["default"].addAdditionalQueryParameterToUrl(request.url, queryParams);
+        });
+      }
+      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].addAdditionalQueryParameterToUrl(request.url, queryParams);
     }
   }
   function _addCommonAccessToken(request) {
     const commonAccessToken = commonAccessTokenController.getCommonAccessTokenForUrl(request.url);
     if (commonAccessToken) {
-      request.headers[_constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken;
-    }
-  }
-
-  /**
-   * Updates the request url and headers with CMCD data
-   * @param request
-   * @private
-   */
-  function _updateRequestUrlAndHeadersWithCmcd(request) {
-    const currentServiceLocation = request?.serviceLocation;
-    const currentAdaptationSetId = request?.mediaInfo?.id?.toString();
-    const isIncludedFilters = clientDataReportingController.isServiceLocationIncluded(request.type, currentServiceLocation) && clientDataReportingController.isAdaptationsIncluded(currentAdaptationSetId);
-    if (isIncludedFilters && cmcdModel.isCmcdEnabled()) {
-      const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
-      const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
-      if (cmcdMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].CMCD_MODE_QUERY) {
-        request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_7__["default"].removeQueryParameterFromUrl(request.url, _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].CMCD_QUERY_KEY);
-        const additionalQueryParameter = _getAdditionalQueryParameter(request);
-        request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_7__["default"].addAdditionalQueryParameterToUrl(request.url, additionalQueryParameter);
-      } else if (cmcdMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_12__["default"].CMCD_MODE_HEADER) {
-        request.headers = Object.assign(request.headers, cmcdModel.getHeaderParameters(request));
-      }
-    }
-  }
-
-  /**
-   * Generates the additional query parameters to be appended to the request url
-   * @param {object} request
-   * @return {array}
-   * @private
-   */
-  function _getAdditionalQueryParameter(request) {
-    try {
-      const additionalQueryParameter = [];
-      const cmcdQueryParameter = cmcdModel.getQueryParameter(request);
-      if (cmcdQueryParameter) {
-        additionalQueryParameter.push(cmcdQueryParameter);
-      }
-      return additionalQueryParameter;
-    } catch (e) {
-      return [];
+      request.headers[_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken;
     }
   }
 
@@ -70174,7 +60066,6 @@ function URLLoader(cfg) {
         constants: cfg.constants ? cfg.constants : null,
         dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
         urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
-        requestTimeout: !isNaN(cfg.requestTimeout) ? cfg.requestTimeout : 0,
         errors: cfg.errors
       });
     }
@@ -70300,14 +60191,19 @@ function XHRLoader() {
       xhr.onabort = commonMediaRequest.customData.onabort;
       xhr.ontimeout = commonMediaRequest.customData.ontimeout;
     }
-    xhr.send();
+    let body = commonMediaRequest.body || null;
+    xhr.send(body);
     commonMediaRequest.customData.abort = abort.bind(this);
     return true;
   }
   function abort() {
     if (xhr) {
-      xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null; // Remove event listeners
+      // Clear most handlers before abort to prevent unwanted callbacks
+      xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null;
+      // Call abort - this will trigger onabort callback if set
       xhr.abort();
+      // Clear remaining handlers after abort to prevent memory leaks
+      xhr.onabort = xhr.ontimeout = null;
       xhr = null;
     }
   }
@@ -70729,7 +60625,7 @@ function Protection() {
     if (protectionModel) {
       controller = (0,_controllers_ProtectionController_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create({
         BASE64: config.BASE64,
-        cmcdModel: config.cmcdModel,
+        cmcdController: config.cmcdController,
         constants: config.constants,
         customParametersModel: config.customParametersModel,
         debug: config.debug,
@@ -71022,10 +60918,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_LicenseRequest_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/LicenseRequest.js */ "./src/streaming/protection/vo/LicenseRequest.js");
 /* harmony import */ var _vo_LicenseResponse_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/LicenseResponse.js */ "./src/streaming/protection/vo/LicenseResponse.js");
 /* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
-/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../../core/Utils.js */ "./src/core/Utils.js");
-/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../utils/CertUrlUtils.js */ "./src/streaming/utils/CertUrlUtils.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../../core/Utils.js */ "./src/core/Utils.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
+/* harmony import */ var _vo_CertificateRequest_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../vo/CertificateRequest.js */ "./src/streaming/protection/vo/CertificateRequest.js");
+/* harmony import */ var _vo_CertificateResponse_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../vo/CertificateResponse.js */ "./src/streaming/protection/vo/CertificateResponse.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -71069,11 +60967,16 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
 const NEEDKEY_BEFORE_INITIALIZE_RETRIES = 5;
 const NEEDKEY_BEFORE_INITIALIZE_TIMEOUT = 500;
 const LICENSE_SERVER_REQUEST_RETRIES = 3;
 const LICENSE_SERVER_REQUEST_RETRY_INTERVAL = 1000;
 const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
+const CERTIFICATE_REQUEST_RETRIES = 3;
+const CERTIFICATE_REQUEST_RETRY_INTERVAL = 500;
+const CERTIFICATE_REQUEST_DEFAULT_TIMEOUT = 8000;
 
 /**
  * @module ProtectionController
@@ -71093,7 +60996,7 @@ const LICENSE_SERVER_REQUEST_DEFAULT_TIMEOUT = 8000;
 function ProtectionController(config) {
   config = config || {};
   const BASE64 = config.BASE64;
-  const cmcdModel = config.cmcdModel;
+  const cmcdController = config.cmcdController;
   const constants = config.constants;
   const customParametersModel = config.customParametersModel;
   const debug = config.debug;
@@ -71103,7 +61006,7 @@ function ProtectionController(config) {
   const settings = config.settings;
   let protectionModel = config.protectionModel;
   let needkeyRetries = [];
-  let applicationProvidedProtectionData, instance, keyStatusMap, keySystemSelectionInProgress, licenseRequestRetryTimeout, licenseXhrRequest, logger, mediaInfoArr, pendingMediaTypesToHandle, robustnessLevel, selectedKeySystem, sessionType;
+  let applicationProvidedProtectionData, certificateCache, instance, keyStatusMap, keySystemSelectionInProgress, licenseRequestRetryTimeout, licenseXhrRequest, logger, mediaInfoArr, pendingCertificatePromise, pendingMediaTypesToHandle, robustnessLevel, selectedKeySystem, sessionType;
   function setup() {
     logger = debug.getLogger(instance);
     pendingMediaTypesToHandle = [];
@@ -71113,6 +61016,8 @@ function ProtectionController(config) {
     licenseXhrRequest = null;
     licenseRequestRetryTimeout = null;
     keyStatusMap = new Map();
+    certificateCache = new Map();
+    pendingCertificatePromise = null;
     eventBus.on(events.INTERNAL_KEY_MESSAGE, _onKeyMessage, instance);
   }
   function _checkConfig() {
@@ -71190,7 +61095,14 @@ function ProtectionController(config) {
 
     // We already selected a key system. We only need to trigger a new license exchange if the init data has changed
     else if (selectedKeySystem) {
-      _handlePendingMediaTypes();
+      // FairPlay: wait for the certificate to be applied before creating sessions
+      if (pendingCertificatePromise) {
+        pendingCertificatePromise.then(() => {
+          _handlePendingMediaTypes();
+        });
+      } else {
+        _handlePendingMediaTypes();
+      }
     }
   }
 
@@ -71239,10 +61151,250 @@ function ProtectionController(config) {
       if (protData && protData.serverCertificate && protData.serverCertificate.length > 0) {
         protectionModel.setServerCertificate(BASE64.decodeArray(protData.serverCertificate).buffer);
       }
-      _handlePendingMediaTypes();
+
+      // FairPlay requires the server certificate before generateRequest() can succeed.
+      // Wait for certificate acquisition to complete before creating key sessions.
+      if (selectedKeySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING) {
+        _handleFairplayCertificateRequired();
+      } else {
+        // For other key systems cert is optional; fire-and-forget
+        _handleCertificateRequired();
+      }
     } catch (e) {
       logger.error(e);
     }
+  }
+  function _handleFairplayCertificateRequired() {
+    // Store the promise so _onNeedKey can also wait for it
+    pendingCertificatePromise = _acquireCertificateFromManifest().then(() => {
+      pendingCertificatePromise = null;
+      _handlePendingMediaTypes();
+    }).catch(e => {
+      // Even if cert acquisition fails, proceed — the app may have set it via protData
+      logger.warn('DRM: Certificate acquisition failed for FairPlay: ' + (e && e.message ? e.message : e) + '. Proceeding anyway.');
+      pendingCertificatePromise = null;
+      _handlePendingMediaTypes();
+    });
+  }
+  function _handleCertificateRequired() {
+    _acquireCertificateFromManifest().catch(e => {
+      logger.error(e);
+    });
+    _handlePendingMediaTypes();
+  }
+
+  /**
+   * Attempt to acquire and set a server certificate using Certurl entries from the manifest
+   * Only runs if no certificate already applied via protData
+   * @private
+   */
+  function _acquireCertificateFromManifest() {
+    if (!selectedKeySystem) {
+      return Promise.resolve();
+    }
+    const ksString = selectedKeySystem.systemString;
+    const cacheEntry = certificateCache.get(ksString);
+    if (cacheEntry && (cacheEntry.applied || cacheEntry.inProgress)) {
+      return Promise.resolve();
+    }
+    // Gather certUrls from collected mediaInfoArr contentProtection entries matching this key system
+    const certCandidates = _getCertificateUrlsForSelectedKeySystem();
+    if (!certCandidates.length) {
+      logger.debug('DRM: No Certificate Server URLs found for ' + ksString + '. Skipping certificate acquisition.');
+      return Promise.resolve();
+    }
+    logger.debug('DRM: Found ' + certCandidates.length + ' certificate candidate(s) for ' + ksString + '. Starting acquisition.');
+    const protData = _getProtDataForKeySystem(selectedKeySystem) || {};
+    const entry = cacheEntry || {
+      applied: false,
+      inProgress: true,
+      attempts: 0
+    };
+    entry.inProgress = true;
+    certificateCache.set(ksString, entry);
+    return _fetchAndApplyCertificateSequentially(certCandidates, 0, protData, ksString, entry);
+  }
+
+  /**
+   * Collect certificate URL objects for the selected key system from mediaInfo content protection data
+   * @param {string|null} preferredType
+   * @return {Array<{url:string, certType:string|null}>}
+   * @private
+   */
+  function _getCertificateUrlsForSelectedKeySystem() {
+    const urls = [];
+    // 1. API-provided certUrls (protData) take priority
+    const protData = _getProtDataForKeySystem(selectedKeySystem);
+    if (protData && Array.isArray(protData.certUrls) && protData.certUrls.length) {
+      protData.certUrls.forEach(c => {
+        urls.push(c);
+      });
+    }
+    // 2. Manifest-provided certUrls
+    mediaInfoArr.forEach(mediaInfo => {
+      if (!mediaInfo || !mediaInfo.contentProtection) {
+        return;
+      }
+      mediaInfo.contentProtection.forEach(contentProtection => {
+        if (contentProtection && Array.isArray(contentProtection.certUrls) && contentProtection.certUrls.length && contentProtection.schemeIdUri.toLowerCase() === selectedKeySystem.schemeIdURI) {
+          contentProtection.certUrls.forEach(c => {
+            urls.push(c);
+          });
+        }
+      });
+    });
+    return _utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_8__["default"].dedupeCertUrls(urls);
+  }
+  function _fetchAndApplyCertificateSequentially(candidates, index, protData, ksString, cacheEntry) {
+    if (index >= candidates.length) {
+      return _handleAllCertificateRequestsFailed(cacheEntry, ksString);
+    }
+    const candidate = candidates[index];
+    const retryAttempts = !isNaN(settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE_CERTIFICATE]) ? settings.get().streaming.retryAttempts[_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE_CERTIFICATE] : CERTIFICATE_REQUEST_RETRIES;
+    logger.debug('DRM: Attempting certificate download (' + (index + 1) + '/' + candidates.length + ') url=' + candidate.url);
+    return _buildCertificateRequest(candidate, protData).then(certificateRequest => {
+      return _sendCertificateRequest(certificateRequest, protData, retryAttempts);
+    }).then(arrayBuffer => {
+      return _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry);
+    }).then(() => {
+      _logCertificateSuccess(candidate, ksString, cacheEntry);
+    }).catch(err => {
+      cacheEntry.attempts++;
+      cacheEntry.lastError = err && err.message ? err.message : err;
+      logger.warn('DRM: Certificate attempt failed (' + candidate.url + '): ' + cacheEntry.lastError);
+      return _fetchAndApplyCertificateSequentially(candidates, index + 1, protData, ksString, cacheEntry);
+    });
+  }
+  function _buildCertificateRequest(candidate, protData) {
+    const certificateRequestFilters = customParametersModel.getCertificateRequestFilters();
+    let withCredentials = false;
+    if (protData && typeof protData.withCredentials === 'boolean') {
+      withCredentials = protData.withCredentials;
+    }
+    const reqHeaders = {};
+    if (protData) {
+      _updateHeaders(reqHeaders, protData.httpRequestHeaders);
+    }
+    const certificateRequest = new _vo_CertificateRequest_js__WEBPACK_IMPORTED_MODULE_12__["default"](candidate.url, reqHeaders, withCredentials);
+    return _applyFilters(certificateRequestFilters, certificateRequest).then(() => certificateRequest);
+  }
+  function _processCertificateResponse(arrayBuffer, candidate, ksString, cacheEntry) {
+    if (!arrayBuffer || !arrayBuffer.byteLength) {
+      throw new Error('Empty certificate response');
+    }
+    cacheEntry.urlUsed = candidate.url;
+    cacheEntry.buffer = arrayBuffer;
+    return _applyServerCertificate(arrayBuffer, ksString, cacheEntry).then(applied => {
+      if (!applied) {
+        throw new Error('CDM rejected certificate');
+      }
+      cacheEntry.applied = true;
+      cacheEntry.inProgress = false;
+    });
+  }
+  function _logCertificateSuccess(candidate, ksString, cacheEntry) {
+    const typeSuffix = candidate.certType ? ' certType=' + candidate.certType : '';
+    logger.info('DRM: Server certificate applied successfully from ' + cacheEntry.urlUsed + typeSuffix + ' for ' + ksString + '.');
+  }
+  function _handleAllCertificateRequestsFailed(cacheEntry, ksString) {
+    cacheEntry.inProgress = false;
+    cacheEntry.error = cacheEntry.error || 'All certificate candidates failed';
+    logger.warn('DRM: All certificate candidates failed for ' + ksString + '.');
+    return Promise.reject(new Error(cacheEntry.error));
+  }
+
+  /**
+   * Download a certificate binary with retries.
+   * @param {CertificateRequest} certificateRequest
+   * @param {object} protData
+   * @param {number} retries
+   * @return {Promise<ArrayBuffer>}
+   * @private
+   */
+  function _sendCertificateRequest(certificateRequest, protData, retries) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(certificateRequest.method, certificateRequest.url, true);
+      xhr.responseType = certificateRequest.responseType;
+      const timeout = protData && !isNaN(protData.httpTimeout) ? protData.httpTimeout : CERTIFICATE_REQUEST_DEFAULT_TIMEOUT;
+      if (timeout > 0) {
+        xhr.timeout = timeout;
+      }
+      xhr.withCredentials = certificateRequest.withCredentials;
+      for (const key of Object.keys(certificateRequest.headers)) {
+        xhr.setRequestHeader(key, certificateRequest.headers[key]);
+      }
+      const _attemptFail = reason => {
+        if (retries > 0) {
+          const remaining = retries - 1;
+          const retryInterval = !isNaN(settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE_CERTIFICATE]) ? settings.get().streaming.retryIntervals[_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE_CERTIFICATE] : CERTIFICATE_REQUEST_RETRY_INTERVAL;
+          logger.debug('DRM: Certificate request failed (' + reason + '). Retrying... remaining=' + remaining);
+          setTimeout(() => {
+            _sendCertificateRequest(certificateRequest, protData, remaining).then(resolve).catch(reject);
+          }, retryInterval);
+        } else {
+          reject(new Error(reason));
+        }
+      };
+      xhr.onload = function () {
+        if (this.status >= 200 && this.status <= 299) {
+          const responseHeaders = _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+          const certificateResponseFilters = customParametersModel.getCertificateResponseFilters();
+          const certificateResponse = new _vo_CertificateResponse_js__WEBPACK_IMPORTED_MODULE_13__["default"](xhr.responseURL, responseHeaders, this.response);
+          _applyFilters(certificateResponseFilters, certificateResponse).then(() => {
+            resolve(this.response);
+          }).catch(() => {
+            resolve(this.response);
+          });
+        } else {
+          _attemptFail('HTTP ' + this.status);
+        }
+      };
+      xhr.onerror = function () {
+        _attemptFail('network error');
+      };
+      xhr.ontimeout = function () {
+        _attemptFail('timeout');
+      };
+      xhr.onabort = function () {
+        _attemptFail('aborted');
+      };
+      try {
+        xhr.send(certificateRequest.body);
+      } catch (e) {
+        reject(e);
+      }
+    });
+  }
+
+  /**
+   * Apply the certificate to the CDM; supports both sync and promise-returning implementations.
+   * @param {ArrayBuffer} buffer
+   * @param {string} ksString
+   * @param {object} cacheEntry
+   * @return {Promise<boolean>}
+   * @private
+   */
+  function _applyServerCertificate(buffer, ksString, cacheEntry) {
+    return new Promise((resolve, reject) => {
+      try {
+        const result = protectionModel.setServerCertificate(buffer);
+        if (result && typeof result.then === 'function') {
+          result.then(val => {
+            resolve(typeof val === 'boolean' ? val : true);
+          }).catch(e => {
+            cacheEntry.error = e && e.message ? e.message : e;
+            reject(e);
+          });
+        } else {
+          resolve(true);
+        }
+      } catch (e) {
+        cacheEntry.error = e && e.message ? e.message : e;
+        logger.warn('DRM: setServerCertificate threw for ' + ksString + ': ' + cacheEntry.error);
+        reject(e);
+      }
+    });
   }
 
   /**
@@ -71303,17 +61455,24 @@ function ProtectionController(config) {
     const protData = keySystemData.protData;
     const audioCapabilities = [];
     const videoCapabilities = [];
-    const initDataTypes = protData && protData.initDataTypes && protData.initDataTypes.length > 0 ? protData.initDataTypes : [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC];
+    let defaultInitDataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC;
+    if (keySystemData.ks && keySystemData.ks.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING) {
+      defaultInitDataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_SINF;
+    }
+    const initDataTypes = protData && protData.initDataTypes && protData.initDataTypes.length > 0 ? protData.initDataTypes : [defaultInitDataType];
     const audioRobustness = protData && protData.audioRobustness && protData.audioRobustness.length > 0 ? protData.audioRobustness : robustnessLevel;
     const videoRobustness = protData && protData.videoRobustness && protData.videoRobustness.length > 0 ? protData.videoRobustness : robustnessLevel;
     const ksSessionType = keySystemData.sessionType;
     const distinctiveIdentifier = protData && protData.distinctiveIdentifier ? protData.distinctiveIdentifier : 'optional';
     const persistentState = protData && protData.persistentState ? protData.persistentState : ksSessionType === 'temporary' ? 'optional' : 'required';
+
+    // FairPlay uses CBCS encryption exclusively
+    const encryptionScheme = keySystemData.ks && keySystemData.ks.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING ? _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].ENCRYPTION_SCHEME_CBCS : undefined;
     mediaInfoArr.forEach(media => {
       if (media.type === constants.AUDIO) {
-        audioCapabilities.push(new _vo_MediaCapability_js__WEBPACK_IMPORTED_MODULE_1__["default"](media.codec, audioRobustness));
+        audioCapabilities.push(new _vo_MediaCapability_js__WEBPACK_IMPORTED_MODULE_1__["default"](media.codec, audioRobustness, encryptionScheme));
       } else if (media.type === constants.VIDEO) {
-        videoCapabilities.push(new _vo_MediaCapability_js__WEBPACK_IMPORTED_MODULE_1__["default"](media.codec, videoRobustness));
+        videoCapabilities.push(new _vo_MediaCapability_js__WEBPACK_IMPORTED_MODULE_1__["default"](media.codec, videoRobustness, encryptionScheme));
       }
     });
     return new _vo_KeySystemConfiguration_js__WEBPACK_IMPORTED_MODULE_2__["default"](audioCapabilities, videoCapabilities, distinctiveIdentifier, persistentState, [ksSessionType], initDataTypes);
@@ -71646,6 +61805,17 @@ function ProtectionController(config) {
   }
 
   /**
+   * Returns the protection data set by the application for use in license acquisition with EME
+   *
+   * @memberof module:ProtectionController
+   * @instance
+   * @ignore
+   */
+  function getProtectionData() {
+    return applicationProvidedProtectionData;
+  }
+
+  /**
    * Stop method is called when current playback is stopped/resetted.
    *
    * @memberof module:ProtectionController
@@ -71676,6 +61846,7 @@ function ProtectionController(config) {
     selectedKeySystem = null;
     keySystemSelectionInProgress = false;
     keyStatusMap = new Map();
+    certificateCache = new Map();
     if (protectionModel) {
       protectionModel.reset();
       protectionModel = null;
@@ -71799,7 +61970,7 @@ function ProtectionController(config) {
         return;
       }
       if (xhr.status >= 200 && xhr.status <= 299) {
-        const responseHeaders = _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
+        const responseHeaders = _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].parseHttpHeaders(xhr.getAllResponseHeaders ? xhr.getAllResponseHeaders() : null);
         let licenseResponse = new _vo_LicenseResponse_js__WEBPACK_IMPORTED_MODULE_6__["default"](xhr.responseURL, responseHeaders, xhr.response);
         const licenseResponseFilters = customParametersModel.getLicenseResponseFilters();
         _applyFilters(licenseResponseFilters, licenseResponse).then(() => {
@@ -71846,19 +62017,17 @@ function ProtectionController(config) {
    */
   function _doLicenseRequest(request, retriesCount, timeout, onLoad, onAbort, onError) {
     const xhr = new XMLHttpRequest();
-    const cmcdParameters = cmcdModel.getCmcdParametersFromManifest();
-    if (cmcdModel.isCmcdEnabled()) {
-      const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
-      if (cmcdMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_9__["default"].CMCD_MODE_QUERY) {
-        const cmcdParams = cmcdModel.getQueryParameter({
-          url: request.url,
-          type: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE
-        });
-        if (cmcdParams) {
-          request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__["default"].addAdditionalQueryParameterToUrl(request.url, [cmcdParams]);
-        }
-      }
-    }
+
+    // Apply CMCD data to the license request (handles both query and header modes)
+    const cmcdRequest = {
+      url: request.url,
+      type: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE,
+      method: request.method,
+      headers: request.headers || {}
+    };
+    cmcdController.applyCmcdToRequest(cmcdRequest);
+    request.url = cmcdRequest.url;
+    request.headers = cmcdRequest.headers;
     xhr.open(request.method, request.url, true);
     xhr.responseType = request.responseType;
     xhr.withCredentials = request.withCredentials;
@@ -71867,23 +62036,6 @@ function ProtectionController(config) {
     }
     for (const key in request.headers) {
       xhr.setRequestHeader(key, request.headers[key]);
-    }
-    if (cmcdModel.isCmcdEnabled()) {
-      const cmcdMode = cmcdParameters.mode ? cmcdParameters.mode : settings.get().streaming.cmcd.mode;
-      if (cmcdMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_9__["default"].CMCD_MODE_HEADER) {
-        const cmcdHeaders = cmcdModel.getHeaderParameters({
-          url: request.url,
-          type: _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_7__.HTTPRequest.LICENSE
-        });
-        if (cmcdHeaders) {
-          for (const header in cmcdHeaders) {
-            let value = cmcdHeaders[header];
-            if (value) {
-              xhr.setRequestHeader(header, value);
-            }
-          }
-        }
-      }
     }
     const _retryRequest = function () {
       // fail silently and retry
@@ -72059,9 +62211,9 @@ function ProtectionController(config) {
     }
     logger.debug('DRM: onNeedKey');
 
-    // Ignore non-cenc initData
-    if (event.key.initDataType !== _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC) {
-      logger.warn('DRM:  Only \'cenc\' initData is supported!  Ignoring initData of type: ' + event.key.initDataType);
+    // Ignore unsupported initData types (only cenc and sinf are supported)
+    if (event.key.initDataType !== _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_CENC && event.key.initDataType !== _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_SINF) {
+      logger.warn('DRM:  Only \'cenc\' and \'sinf\' initData are supported!  Ignoring initData of type: ' + event.key.initDataType);
       return;
     }
     if (mediaInfoArr.length === 0) {
@@ -72081,19 +62233,21 @@ function ProtectionController(config) {
     if (ArrayBuffer.isView(abInitData)) {
       abInitData = abInitData.buffer;
     }
-
-    // If key system has already been selected and initData already seen, then do nothing
+    const isSinf = event.key.initDataType === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].INITIALIZATION_DATA_TYPE_SINF;
     if (selectedKeySystem) {
-      const initDataForKS = _CommonEncryption_js__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, abInitData);
-      if (initDataForKS) {
-        // Check for duplicate initData
-        if (_isInitDataDuplicate(initDataForKS)) {
-          return;
-        }
+      const initDataForCheck = isSinf ? abInitData : _CommonEncryption_js__WEBPACK_IMPORTED_MODULE_0__["default"].getPSSHForKeySystem(selectedKeySystem, abInitData);
+      if (initDataForCheck && _isInitDataDuplicate(initDataForCheck)) {
+        return;
       }
     }
     logger.debug('DRM: initData:', String.fromCharCode.apply(null, new Uint8Array(abInitData)));
-    const supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+    let supportedKeySystemsMetadata;
+    if (isSinf) {
+      // sinf data is FairPlay-specific; match against the FairPlay key system directly
+      supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataForSinf(abInitData, applicationProvidedProtectionData, sessionType);
+    } else {
+      supportedKeySystemsMetadata = protectionKeyController.getSupportedKeySystemMetadataFromSegmentPssh(abInitData, applicationProvidedProtectionData, sessionType);
+    }
     if (supportedKeySystemsMetadata.length === 0) {
       logger.debug('DRM: Received needkey event with initData, but we don\'t support any of the key systems!');
       return;
@@ -72125,13 +62279,13 @@ function ProtectionController(config) {
       }
       e.sessionToken.hasTriggeredKeyStatusMapUpdate = true;
       const parsedKeyStatuses = e.parsedKeyStatuses;
-      const ua = _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__["default"].parseUserAgent();
+      const ua = _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].parseUserAgent();
       const isEdgeBrowser = ua && ua.browser && ua.browser.name && ua.browser.name.toLowerCase() === 'edge';
       parsedKeyStatuses.forEach(keyStatus => {
         if (isEdgeBrowser && selectedKeySystem.uuid === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYREADY_UUID && keyStatus.keyId && keyStatus.keyId.byteLength === 16) {
           _handlePlayreadyKeyId(keyStatus.keyId);
         }
-        const keyIdInHex = _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__["default"].bufferSourceToHex(keyStatus.keyId).slice(0, 32);
+        const keyIdInHex = _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].bufferSourceToHex(keyStatus.keyId).slice(0, 32);
         if (keyIdInHex && keyIdInHex !== '') {
           keyStatusMap.set(keyIdInHex, keyStatus.status);
         }
@@ -72144,7 +62298,7 @@ function ProtectionController(config) {
     }
   }
   function _handlePlayreadyKeyId(keyId) {
-    const dataView = _core_Utils_js__WEBPACK_IMPORTED_MODULE_8__["default"].bufferSourceToDataView(keyId);
+    const dataView = _core_Utils_js__WEBPACK_IMPORTED_MODULE_9__["default"].bufferSourceToDataView(keyId);
     const part0 = dataView.getUint32(0, /* LE= */true);
     const part1 = dataView.getUint16(4, /* LE= */true);
     const part2 = dataView.getUint16(6, /* LE= */true);
@@ -72213,6 +62367,7 @@ function ProtectionController(config) {
     closeKeySession,
     createKeySession,
     getKeySystems,
+    getProtectionData,
     getSupportedKeySystemMetadataFromContentProtection,
     handleKeySystemFromManifest,
     initializeForMedia,
@@ -72248,13 +62403,15 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _drm_KeySystemW3CClearKey_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./../drm/KeySystemW3CClearKey.js */ "./src/streaming/protection/drm/KeySystemW3CClearKey.js");
 /* harmony import */ var _drm_KeySystemWidevine_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./../drm/KeySystemWidevine.js */ "./src/streaming/protection/drm/KeySystemWidevine.js");
 /* harmony import */ var _drm_KeySystemPlayReady_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ./../drm/KeySystemPlayReady.js */ "./src/streaming/protection/drm/KeySystemPlayReady.js");
-/* harmony import */ var _servers_DRMToday_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./../servers/DRMToday.js */ "./src/streaming/protection/servers/DRMToday.js");
-/* harmony import */ var _servers_PlayReady_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./../servers/PlayReady.js */ "./src/streaming/protection/servers/PlayReady.js");
-/* harmony import */ var _servers_Widevine_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./../servers/Widevine.js */ "./src/streaming/protection/servers/Widevine.js");
-/* harmony import */ var _servers_ClearKey_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./../servers/ClearKey.js */ "./src/streaming/protection/servers/ClearKey.js");
-/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../vo/KeySystemMetadata.js */ "./src/streaming/protection/vo/KeySystemMetadata.js");
+/* harmony import */ var _drm_KeySystemFairPlay_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ./../drm/KeySystemFairPlay.js */ "./src/streaming/protection/drm/KeySystemFairPlay.js");
+/* harmony import */ var _servers_DRMToday_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./../servers/DRMToday.js */ "./src/streaming/protection/servers/DRMToday.js");
+/* harmony import */ var _servers_PlayReady_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ./../servers/PlayReady.js */ "./src/streaming/protection/servers/PlayReady.js");
+/* harmony import */ var _servers_Widevine_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ./../servers/Widevine.js */ "./src/streaming/protection/servers/Widevine.js");
+/* harmony import */ var _servers_FairPlay_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ./../servers/FairPlay.js */ "./src/streaming/protection/servers/FairPlay.js");
+/* harmony import */ var _servers_ClearKey_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ./../servers/ClearKey.js */ "./src/streaming/protection/servers/ClearKey.js");
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../vo/KeySystemMetadata.js */ "./src/streaming/protection/vo/KeySystemMetadata.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -72285,6 +62442,8 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
+
 
 
 
@@ -72336,6 +62495,10 @@ function ProtectionKeyController() {
     keySystem = (0,_drm_KeySystemWidevine_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance({
       BASE64: BASE64
     });
+    keySystems.push(keySystem);
+
+    // FairPlay
+    keySystem = (0,_drm_KeySystemFairPlay_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
     keySystems.push(keySystem);
 
     // ClearKey
@@ -72476,7 +62639,7 @@ function ProtectionKeyController() {
         if (contentProtectionElement.schemeIdUri.toLowerCase() === keySystem.schemeIdURI) {
           // Look for DRM-specific ContentProtection
           let initData = keySystem.getInitData(contentProtectionElement, mp4ProtectionElement);
-          const keySystemMetadata = new _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_11__["default"]({
+          const keySystemMetadata = new _vo_KeySystemMetadata_js__WEBPACK_IMPORTED_MODULE_13__["default"]({
             ks: keySystems[ksIdx],
             keyId: contentProtectionElement.keyId,
             initData: initData,
@@ -72537,6 +62700,80 @@ function ProtectionKeyController() {
   }
 
   /**
+   * Build key system metadata for sinf (FairPlay) initData.
+   * Since sinf data has no PSSH UUIDs, we match against the FairPlay key system directly.
+   * @param {ArrayBuffer} initData
+   * @return {Array}
+   * @private
+   */
+  function getSupportedKeySystemMetadataForSinf(initData, applicationProvidedProtectionData, sessionType) {
+    const fairplayKs = getKeySystemBySystemString(_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING);
+    if (!fairplayKs) {
+      return [];
+    }
+    const keyId = _extractKeyIdFromSinf(initData);
+    const protData = applicationProvidedProtectionData ? applicationProvidedProtectionData[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING] || null : null;
+    return [{
+      ks: fairplayKs,
+      keyId: keyId,
+      initData: initData,
+      protData: protData,
+      cdmData: fairplayKs.getCDMData(protData ? protData.cdmData : null),
+      sessionType: sessionType
+    }];
+  }
+
+  /**
+   * Extract the defaultKID from the tenc box inside a sinf initData.
+   * Safari sends sinf initData as JSON: {"sinf": ["<base64-encoded sinf box>"]}
+   * The sinf box contains: sinf > schi > tenc, where the KID is 12 bytes after the 'tenc' fourcc.
+   * @param {ArrayBuffer} initData
+   * @return {string|null} key ID as UUID string, or null if not found
+   * @private
+   */
+  function _extractKeyIdFromSinf(initData) {
+    if (!initData || initData.byteLength < 12) {
+      return null;
+    }
+    let sinfBytes;
+    try {
+      // Safari wraps sinf in JSON: {"sinf": ["<base64>"]}
+      const text = String.fromCharCode.apply(null, new Uint8Array(initData));
+      const json = JSON.parse(text);
+      if (json.sinf && json.sinf.length > 0) {
+        const binaryString = atob(json.sinf[0]);
+        sinfBytes = new Uint8Array(binaryString.length);
+        for (let i = 0; i < binaryString.length; i++) {
+          sinfBytes[i] = binaryString.charCodeAt(i);
+        }
+      }
+    } catch (e) {
+      // Not JSON — treat as raw binary sinf
+      sinfBytes = new Uint8Array(initData);
+    }
+    if (!sinfBytes || sinfBytes.length < 12) {
+      return null;
+    }
+
+    // Search for 'tenc' fourcc (0x74 0x65 0x6E 0x63)
+    for (let i = 0; i < sinfBytes.length - 28; i++) {
+      if (sinfBytes[i] === 0x74 && sinfBytes[i + 1] === 0x65 && sinfBytes[i + 2] === 0x6E && sinfBytes[i + 3] === 0x63) {
+        // tenc found: KID is 12 bytes after the fourcc
+        // [tenc fourcc (4)] [version (1) + flags (3)] [reserved/crypt (1) + reserved/skip (1)] [isProtected (1) + ivSize (1)] = 12 bytes
+        const kidOffset = i + 12;
+        if (kidOffset + 16 > sinfBytes.length) {
+          return null;
+        }
+        const kid = sinfBytes.subarray(kidOffset, kidOffset + 16);
+        // Format as UUID: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+        const hex = Array.from(kid).map(b => b.toString(16).padStart(2, '0')).join('');
+        return hex.slice(0, 8) + '-' + hex.slice(8, 12) + '-' + hex.slice(12, 16) + '-' + hex.slice(16, 20) + '-' + hex.slice(20, 32);
+      }
+    }
+    return null;
+  }
+
+  /**
    * Returns the license server implementation data that should be used for this request.
    *
    * @param {KeySystem} keySystem the key system
@@ -72556,20 +62793,22 @@ function ProtectionKeyController() {
   function getLicenseServerModelInstance(keySystem, protData, messageType) {
     // Our default server implementations do not do anything with "license-release" or
     // "individualization-request" messages, so we just send a success event
-    if (messageType === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__["default"].MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE || messageType === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__["default"].MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
+    if (messageType === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].MEDIA_KEY_MESSAGE_TYPES.LICENSE_RELEASE || messageType === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].MEDIA_KEY_MESSAGE_TYPES.INDIVIDUALIZATION_REQUEST) {
       return null;
     }
     let licenseServerData = null;
     if (protData && protData.hasOwnProperty('drmtoday')) {
-      licenseServerData = (0,_servers_DRMToday_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance({
+      licenseServerData = (0,_servers_DRMToday_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance({
         BASE64: BASE64
       });
-    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__["default"].WIDEVINE_KEYSTEM_STRING) {
-      licenseServerData = (0,_servers_Widevine_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
-    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__["default"].PLAYREADY_KEYSTEM_STRING) {
-      licenseServerData = (0,_servers_PlayReady_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
-    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_9__["default"].CLEARKEY_KEYSTEM_STRING) {
-      licenseServerData = (0,_servers_ClearKey_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].WIDEVINE_KEYSTEM_STRING) {
+      licenseServerData = (0,_servers_Widevine_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FAIRPLAY_KEYSTEM_STRING) {
+      licenseServerData = (0,_servers_FairPlay_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].PLAYREADY_KEYSTEM_STRING) {
+      licenseServerData = (0,_servers_PlayReady_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_11__["default"].CLEARKEY_KEYSTEM_STRING) {
+      licenseServerData = (0,_servers_ClearKey_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
     }
     return licenseServerData;
   }
@@ -72631,6 +62870,7 @@ function ProtectionKeyController() {
     getKeySystemBySystemString,
     getKeySystems,
     getLicenseServerModelInstance,
+    getSupportedKeySystemMetadataForSinf,
     getSupportedKeySystemMetadataFromContentProtection,
     getSupportedKeySystemMetadataFromSegmentPssh,
     initDataEquals,
@@ -72644,7 +62884,7 @@ function ProtectionKeyController() {
   return instance;
 }
 ProtectionKeyController.__dashjs_factory_name = 'ProtectionKeyController';
-/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_10__["default"].getSingletonFactory(ProtectionKeyController));
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_12__["default"].getSingletonFactory(ProtectionKeyController));
 
 /***/ }),
 
@@ -72793,6 +63033,102 @@ function KeySystemClearKey(config) {
 }
 KeySystemClearKey.__dashjs_factory_name = 'KeySystemClearKey';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_4__["default"].getSingletonFactory(KeySystemClearKey));
+
+/***/ }),
+
+/***/ "./src/streaming/protection/drm/KeySystemFairPlay.js":
+/*!***********************************************************!*\
+  !*** ./src/streaming/protection/drm/KeySystemFairPlay.js ***!
+  \***********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/ProtectionConstants.js */ "./src/streaming/constants/ProtectionConstants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2026, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Apple FairPlay Streaming DRM
+ *
+ * @class
+ * @implements MediaPlayer.dependencies.protection.KeySystem
+ */
+
+
+
+const uuid = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].FAIRPLAY_UUID;
+const systemString = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].FAIRPLAY_KEYSTEM_STRING;
+const schemeIdURI = 'urn:uuid:' + uuid;
+function KeySystemFairPlay() {
+  let instance;
+
+  /**
+   * FairPlay has no PSSH in the manifest. Init data comes from the encrypted event with sinf type.
+   */
+  function getInitData(/*cp*/
+  ) {
+    return null;
+  }
+  function getRequestHeadersFromMessage(/*message*/
+  ) {
+    return {
+      'Content-Type': 'application/octet-stream'
+    };
+  }
+  function getLicenseRequestFromMessage(message) {
+    return new Uint8Array(message);
+  }
+  function getLicenseServerURLFromInitData(/*initData*/
+  ) {
+    return null;
+  }
+  function getCDMData(/*cdmData*/
+  ) {
+    return null;
+  }
+  instance = {
+    uuid,
+    schemeIdURI,
+    systemString,
+    getInitData,
+    getRequestHeadersFromMessage,
+    getLicenseRequestFromMessage,
+    getLicenseServerURLFromInitData,
+    getCDMData
+  };
+  return instance;
+}
+KeySystemFairPlay.__dashjs_factory_name = 'KeySystemFairPlay';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__["default"].getSingletonFactory(KeySystemFairPlay));
 
 /***/ }),
 
@@ -73482,6 +63818,7 @@ __webpack_require__.r(__webpack_exports__);
 const SYSTEM_STRING_PRIORITY = {};
 SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_KEYSTEM_STRING, _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].PLAYREADY_RECOMMENDATION_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].WIDEVINE_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].WIDEVINE_KEYSTEM_STRING];
+SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING];
 SYSTEM_STRING_PRIORITY[_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING] = [_constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING];
 function DefaultProtectionModel(config) {
   config = config || {};
@@ -73701,16 +64038,16 @@ function DefaultProtectionModel(config) {
     }
   }
   function setServerCertificate(serverCertificate) {
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
       mediaKeys.setServerCertificate(serverCertificate).then(function () {
         logger.info('DRM: License server certificate successfully updated.');
         eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED);
         resolve();
       }).catch(error => {
+        reject(error);
         eventBus.trigger(events.SERVER_CERTIFICATE_UPDATED, {
           error: new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_3__["default"](_errors_ProtectionErrors_js__WEBPACK_IMPORTED_MODULE_2__["default"].SERVER_CERTIFICATE_UPDATED_ERROR_CODE, _errors_ProtectionErrors_js__WEBPACK_IMPORTED_MODULE_2__["default"].SERVER_CERTIFICATE_UPDATED_ERROR_MESSAGE + error.name)
         });
-        resolve();
       });
     });
   }
@@ -73726,8 +64063,18 @@ function DefaultProtectionModel(config) {
     const mediaKeySession = mediaKeys.createSession(keySystemMetadata.sessionType);
     const sessionToken = _createSessionToken(mediaKeySession, keySystemMetadata);
 
-    // The "keyids" type is used for Clearkey when keys are provided directly in the protection data and a request to a license server is not needed
-    const dataType = keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys) ? _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_KEYIDS : _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_CENC;
+    // Determine the initDataType for generateRequest():
+    // - ClearKey with keys: use 'keyids'
+    // - FairPlay: use 'sinf'
+    // - All others: use 'cenc'
+    let dataType;
+    if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].CLEARKEY_KEYSTEM_STRING && (keySystemMetadata.initData || keySystemMetadata.protData && keySystemMetadata.protData.clearkeys)) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_KEYIDS;
+    } else if (keySystem.systemString === _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].FAIRPLAY_KEYSTEM_STRING) {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_SINF;
+    } else {
+      dataType = _constants_ProtectionConstants_js__WEBPACK_IMPORTED_MODULE_6__["default"].INITIALIZATION_DATA_TYPE_CENC;
+    }
     mediaKeySession.generateRequest(dataType, keySystemMetadata.initData).then(function () {
       logger.debug('DRM: Session created.  SessionID = ' + sessionToken.getSessionId());
       eventBus.trigger(events.KEY_SESSION_CREATED, {
@@ -74286,7 +64633,6 @@ function ProtectionModel_01b(config) {
   }
   function setServerCertificate(/*serverCertificate*/
   ) {
-    /* Not supported */
     return Promise.resolve();
   }
   function loadKeySession(/*ksInfo*/
@@ -75082,6 +65428,145 @@ DRMToday.__dashjs_factory_name = 'DRMToday';
 
 /***/ }),
 
+/***/ "./src/streaming/protection/servers/FairPlay.js":
+/*!******************************************************!*\
+  !*** ./src/streaming/protection/servers/FairPlay.js ***!
+  \******************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2026, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @ignore
+ */
+function FairPlay() {
+  let instance;
+  function getServerURLFromMessage(url /*, message, messageType*/) {
+    return url;
+  }
+  function getHTTPMethod(/*messageType*/
+  ) {
+    return 'POST';
+  }
+  function getResponseType(/*keySystemStr, messageType*/
+  ) {
+    return 'arraybuffer';
+  }
+
+  /**
+   * FairPlay license servers may return the CKC in various formats:
+   * - Raw binary CKC (ideal, pass through)
+   * - Base64-encoded CKC as text
+   * - XML-wrapped: <ckc>base64</ckc>
+   * - JSON-wrapped: {"ckc": "base64"} or {"CkcMessage": "base64"} or {"License": "base64"}
+   *
+   * This function detects text-based formats and decodes the base64 CKC.
+   */
+  function getLicenseMessage(serverResponse /*, keySystemStr, messageType*/) {
+    if (!serverResponse || !serverResponse.byteLength) {
+      return serverResponse;
+    }
+
+    // Try to interpret as text
+    let responseText;
+    try {
+      responseText = String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+    } catch (e) {
+      // Large responses may fail with apply(); use iterative approach
+      const bytes = new Uint8Array(serverResponse);
+      let str = '';
+      for (let i = 0; i < bytes.length; i++) {
+        str += String.fromCharCode(bytes[i]);
+      }
+      responseText = str;
+    }
+    if (!responseText) {
+      return serverResponse;
+    }
+    responseText = responseText.trim();
+
+    // Check for <ckc> XML wrapper
+    if (responseText.substr(0, 5) === '<ckc>' && responseText.substr(-6) === '</ckc>') {
+      return _base64DecodeToArrayBuffer(responseText.slice(5, -6));
+    }
+
+    // Check for JSON wrapper
+    try {
+      const obj = JSON.parse(responseText);
+      const ckc = obj['ckc'] || obj['CkcMessage'] || obj['License'];
+      if (ckc) {
+        return _base64DecodeToArrayBuffer(ckc);
+      }
+    } catch (e) {
+      // Not JSON
+    }
+
+    // Check if the entire response looks like base64 (no binary bytes, valid chars)
+    if (/^[A-Za-z0-9+/\r\n]+=*$/.test(responseText) && responseText.length > 0) {
+      return _base64DecodeToArrayBuffer(responseText);
+    }
+
+    // Raw binary CKC — pass through
+    return serverResponse;
+  }
+  function _base64DecodeToArrayBuffer(base64) {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+  function getErrorResponse(serverResponse /*, keySystemStr, messageType*/) {
+    return String.fromCharCode.apply(null, new Uint8Array(serverResponse));
+  }
+  instance = {
+    getErrorResponse,
+    getHTTPMethod,
+    getLicenseMessage,
+    getResponseType,
+    getServerURLFromMessage
+  };
+  return instance;
+}
+FairPlay.__dashjs_factory_name = 'FairPlay';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(FairPlay));
+
+/***/ }),
+
 /***/ "./src/streaming/protection/servers/PlayReady.js":
 /*!*******************************************************!*\
   !*** ./src/streaming/protection/servers/PlayReady.js ***!
@@ -75299,6 +65784,134 @@ function Widevine() {
 }
 Widevine.__dashjs_factory_name = 'Widevine';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(Widevine));
+
+/***/ }),
+
+/***/ "./src/streaming/protection/vo/CertificateRequest.js":
+/*!***********************************************************!*\
+  !*** ./src/streaming/protection/vo/CertificateRequest.js ***!
+  \***********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @classdesc Defines a Certificate request
+ * @ignore
+ */
+class CertificateRequest {
+  /**
+   * Defines a certificate request
+   *
+   * @class
+   */
+  constructor(url, headers, withCredentials) {
+    this.url = url;
+    this.method = 'GET';
+    this.responseType = 'arraybuffer';
+    this.headers = headers;
+    this.body = null;
+    this.withCredentials = withCredentials;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CertificateRequest);
+
+/***/ }),
+
+/***/ "./src/streaming/protection/vo/CertificateResponse.js":
+/*!************************************************************!*\
+  !*** ./src/streaming/protection/vo/CertificateResponse.js ***!
+  \************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @classdesc Defines a license response
+ */
+class CertificateResponse {
+  /**
+   * Defines a license response
+   *
+   * @class
+   * @ignore
+   */
+  constructor(url, headers, data) {
+    /**
+     * The url that was loaded, that can be redirected from original request url
+     */
+    this.url = url;
+
+    /**
+     * The HTP response headers
+     */
+    this.headers = headers;
+
+    /**
+     * The certificate response data
+     */
+    this.data = data;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CertificateResponse);
 
 /***/ }),
 
@@ -75927,12 +66540,14 @@ class MediaCapability {
   /**
    * @param {string} contentType MIME type and codecs (RFC6386)
    * @param {string} robustness
+   * @param {string | null} [encryptionScheme] encryption scheme (e.g. 'cenc', 'cbcs')
    * @class
    * @ignore
    */
-  constructor(contentType, robustness) {
+  constructor(contentType, robustness, encryptionScheme = null) {
     this.contentType = contentType;
     this.robustness = robustness;
+    this.encryptionScheme = encryptionScheme;
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (MediaCapability);
@@ -80788,34 +71403,34 @@ function NotFragmentedTextBufferController(config) {
     });
   }
   instance = {
-    initialize,
-    getStreamId,
-    getType,
-    getBufferControllerType,
+    appendInitSegmentFromCache,
+    clearBuffers,
     createBufferSink,
     dischargePreBuffer,
-    getBuffer,
-    getBufferLevel,
-    getRangeAt,
-    pruneBuffer,
-    hasBufferAtTime,
     getAllRangesWithSafetyFactor,
+    getBuffer,
+    getBufferControllerType,
+    getBufferLevel,
     getContinuousBufferTimeForTargetTime,
-    setMediaSource,
-    getMediaSource,
-    appendInitSegmentFromCache,
     getIsBufferingCompleted,
-    setIsBufferingCompleted,
     getIsPruningInProgress,
-    reset,
-    clearBuffers,
+    getMediaSource,
+    getRangeAt,
+    getStreamId,
+    getType,
+    hasBufferAtTime,
+    initialize,
     prepareForPlaybackSeek,
     prepareForReplacementTrackSwitch,
+    pruneAllSafely,
+    pruneBuffer,
+    reset,
+    segmentRequestingCompleted,
+    setIsBufferingCompleted,
+    setMediaSource,
     setSeekTarget,
     updateAppendWindow,
-    pruneAllSafely,
-    updateBufferTimestampOffset,
-    segmentRequestingCompleted
+    updateBufferTimestampOffset
   };
   setup();
   return instance;
@@ -81170,6 +71785,15 @@ function TextController(config) {
     // For external time text file, the only action needed to change a track is marking the track mode to showing.
     // Fragmented text tracks need the additional step of calling TextController.setTextTrack();
     allTracksAreDisabled = idx === -1;
+    if (allTracksAreDisabled) {
+      eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__["default"].BUFFER_LEVEL_UPDATED, {
+        mediaType: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT,
+        bufferLevel: -1
+      }, {
+        streamId,
+        mediaType: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].TEXT
+      });
+    }
     if (allTracksAreDisabled && mediaController) {
       mediaController.saveTextSettingsDisabled();
     }
@@ -81435,7 +72059,7 @@ function TextSourceBuffer(config) {
   const context = this.context;
   const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance();
   let embeddedInitialized = false;
-  let instance, logger, boxParser, parser, mediaInfos, fragmentModel, initializationSegmentReceived, timescale, fragmentedTracks, firstFragmentedSubtitleStart, currFragmentedTrackIdx, embeddedTracks, embeddedTimescale, embeddedLastSequenceNumber, lastChunkEnd, embeddedCea608FieldParsers, embeddedTextHtmlRender;
+  let instance, logger, boxParser, parser, mediaInfos, fragmentModel, initializationSegmentReceived, timescale, fragmentedTracks, currFragmentedTrackIdx, embeddedTracks, embeddedTimescale, embeddedLastSequenceNumber, lastChunkEnd, embeddedCea608FieldParsers, embeddedTextHtmlRender;
   function setup() {
     logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance().getLogger(instance);
     boxParser = (0,_utils_BoxParser_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance();
@@ -81448,7 +72072,6 @@ function TextSourceBuffer(config) {
     fragmentModel = null;
     timescale = NaN;
     fragmentedTracks = [];
-    firstFragmentedSubtitleStart = null;
     initializationSegmentReceived = false;
   }
   function resetInitialSettings() {
@@ -81608,9 +72231,6 @@ function TextSourceBuffer(config) {
       }
       samplesInfo = boxParser.getSamplesInfo(bytes);
       sampleList = samplesInfo.sampleList;
-      if (sampleList.length > 0) {
-        firstFragmentedSubtitleStart = sampleList[0].cts - chunk.start * timescale;
-      }
       if (codecType.search(_constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].STPP) >= 0) {
         _appendFragmentedSttp(bytes, sampleList, codecType);
       } else {
@@ -81657,7 +72277,6 @@ function TextSourceBuffer(config) {
     const captionArray = [];
     for (i = 0; i < sampleList.length; i++) {
       const sample = sampleList[i];
-      sample.cts -= firstFragmentedSubtitleStart;
       const timestampOffset = _getTimestampOffset();
       const start = timestampOffset + sample.cts / timescale;
       const end = start + sample.duration / timescale;
@@ -81910,18 +72529,18 @@ function TextSourceBuffer(config) {
     mediaInfos = [];
   }
   instance = {
-    initialize,
-    addMediaInfos,
-    resetMediaInfos,
-    getStreamId,
-    append,
     abort,
     addEmbeddedTrack,
-    resetEmbedded,
+    addMediaInfos,
+    append,
     getConfig,
-    setCurrentFragmentedTrackIdx,
+    getStreamId,
+    initialize,
     remove,
-    reset
+    reset,
+    resetEmbedded,
+    resetMediaInfos,
+    setCurrentFragmentedTrackIdx
   };
   setup();
   return instance;
@@ -83607,6 +74226,291 @@ function getNChanFromAudioChannelConfig(audioChannelConfiguration, includeLFE = 
 
 /***/ }),
 
+/***/ "./src/streaming/utils/BCP47Utils.js":
+/*!*******************************************!*\
+  !*** ./src/streaming/utils/BCP47Utils.js ***!
+  \*******************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   ISO_639_2_TO_1: function() { return /* binding */ ISO_639_2_TO_1; },
+/* harmony export */   normalizeBcp47: function() { return /* binding */ normalizeBcp47; }
+/* harmony export */ });
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Lightweight BCP-47 tag normalization.
+ *
+ * Handles:
+ * 1. Case normalization per RFC 5646 section 2.1.1
+ * 2. ISO 639-2/B and 639-2/T (3-letter) to ISO 639-1 (2-letter) conversion
+ *
+ * Replaces the heavy bcp-47-normalize package (~280 KB) which carried
+ * a full IANA subtag registry (8039 entries) that dash.js never needed.
+ */
+
+/**
+ * ISO 639-2 (3-letter) to ISO 639-1 (2-letter) mappings for languages
+ * commonly found in broadcast/streaming content (DASH, HLS, DVB).
+ * Covers both 639-2/B (bibliographic) and 639-2/T (terminological) codes.
+ */
+const ISO_639_2_TO_1 = Object.create(null, Object.getOwnPropertyDescriptors({
+  aar: 'aa',
+  abk: 'ab',
+  afr: 'af',
+  aka: 'ak',
+  alb: 'sq',
+  amh: 'am',
+  ara: 'ar',
+  arg: 'an',
+  arm: 'hy',
+  asm: 'as',
+  ava: 'av',
+  ave: 'ae',
+  aym: 'ay',
+  aze: 'az',
+  bak: 'ba',
+  bam: 'bm',
+  baq: 'eu',
+  bel: 'be',
+  ben: 'bn',
+  bis: 'bi',
+  bod: 'bo',
+  bos: 'bs',
+  bre: 'br',
+  bul: 'bg',
+  bur: 'my',
+  cat: 'ca',
+  ces: 'cs',
+  cha: 'ch',
+  che: 'ce',
+  chi: 'zh',
+  chu: 'cu',
+  chv: 'cv',
+  cor: 'kw',
+  cos: 'co',
+  cre: 'cr',
+  cym: 'cy',
+  cze: 'cs',
+  dan: 'da',
+  deu: 'de',
+  div: 'dv',
+  dut: 'nl',
+  dzo: 'dz',
+  ell: 'el',
+  eng: 'en',
+  epo: 'eo',
+  est: 'et',
+  eus: 'eu',
+  ewe: 'ee',
+  fao: 'fo',
+  fas: 'fa',
+  fij: 'fj',
+  fin: 'fi',
+  fra: 'fr',
+  fre: 'fr',
+  fry: 'fy',
+  ful: 'ff',
+  geo: 'ka',
+  ger: 'de',
+  gla: 'gd',
+  gle: 'ga',
+  glg: 'gl',
+  glv: 'gv',
+  gre: 'el',
+  grn: 'gn',
+  guj: 'gu',
+  hat: 'ht',
+  hau: 'ha',
+  heb: 'he',
+  her: 'hz',
+  hin: 'hi',
+  hmo: 'ho',
+  hrv: 'hr',
+  hun: 'hu',
+  hye: 'hy',
+  ibo: 'ig',
+  ice: 'is',
+  ido: 'io',
+  iii: 'ii',
+  iku: 'iu',
+  ile: 'ie',
+  ina: 'ia',
+  ind: 'id',
+  ipk: 'ik',
+  isl: 'is',
+  ita: 'it',
+  jav: 'jv',
+  jpn: 'ja',
+  kal: 'kl',
+  kan: 'kn',
+  kas: 'ks',
+  kat: 'ka',
+  kau: 'kr',
+  kaz: 'kk',
+  khm: 'km',
+  kik: 'ki',
+  kin: 'rw',
+  kir: 'ky',
+  kom: 'kv',
+  kon: 'kg',
+  kor: 'ko',
+  kua: 'kj',
+  kur: 'ku',
+  lao: 'lo',
+  lat: 'la',
+  lav: 'lv',
+  lim: 'li',
+  lin: 'ln',
+  lit: 'lt',
+  ltz: 'lb',
+  lub: 'lu',
+  lug: 'lg',
+  mac: 'mk',
+  mah: 'mh',
+  mal: 'ml',
+  mao: 'mi',
+  mar: 'mr',
+  may: 'ms',
+  mkd: 'mk',
+  mlg: 'mg',
+  mlt: 'mt',
+  mon: 'mn',
+  mri: 'mi',
+  msa: 'ms',
+  mya: 'my',
+  nau: 'na',
+  nav: 'nv',
+  nbl: 'nr',
+  nde: 'nd',
+  ndo: 'ng',
+  nep: 'ne',
+  nld: 'nl',
+  nno: 'nn',
+  nob: 'nb',
+  nor: 'no',
+  nya: 'ny',
+  oci: 'oc',
+  oji: 'oj',
+  ori: 'or',
+  orm: 'om',
+  oss: 'os',
+  pan: 'pa',
+  per: 'fa',
+  pli: 'pi',
+  pol: 'pl',
+  por: 'pt',
+  pus: 'ps',
+  que: 'qu',
+  roh: 'rm',
+  ron: 'ro',
+  rum: 'ro',
+  run: 'rn',
+  rus: 'ru',
+  sag: 'sg',
+  san: 'sa',
+  sin: 'si',
+  slk: 'sk',
+  slo: 'sk',
+  slv: 'sl',
+  sme: 'se',
+  smo: 'sm',
+  sna: 'sn',
+  snd: 'sd',
+  som: 'so',
+  sot: 'st',
+  spa: 'es',
+  sqi: 'sq',
+  srd: 'sc',
+  srp: 'sr',
+  ssw: 'ss',
+  sun: 'su',
+  swa: 'sw',
+  swe: 'sv',
+  tah: 'ty',
+  tam: 'ta',
+  tat: 'tt',
+  tel: 'te',
+  tgk: 'tg',
+  tgl: 'tl',
+  tha: 'th',
+  tir: 'ti',
+  ton: 'to',
+  tsn: 'tn',
+  tso: 'ts',
+  tuk: 'tk',
+  tur: 'tr',
+  twi: 'tw',
+  uig: 'ug',
+  ukr: 'uk',
+  urd: 'ur',
+  uzb: 'uz',
+  ven: 've',
+  vie: 'vi',
+  vol: 'vo',
+  wel: 'cy',
+  wln: 'wa',
+  wol: 'wo',
+  xho: 'xh',
+  yid: 'yi',
+  yor: 'yo',
+  zha: 'za',
+  zho: 'zh',
+  zul: 'zu'
+}));
+function normalizeBcp47(tag) {
+  if (!tag || typeof tag !== 'string') {
+    return tag;
+  }
+  const parts = tag.split('-');
+
+  // Language: lowercase + ISO 639-2 to 639-1 conversion
+  parts[0] = parts[0].toLowerCase();
+  parts[0] = ISO_639_2_TO_1[parts[0]] || parts[0];
+  for (let i = 1; i < parts.length; i++) {
+    if (parts[i].length === 4) {
+      // Script: titlecase (e.g. latn -> Latn)
+      parts[i] = parts[i].charAt(0).toUpperCase() + parts[i].slice(1).toLowerCase();
+    } else if (parts[i].length === 2 && /^[a-zA-Z]+$/.test(parts[i])) {
+      // Region (2 alpha): uppercase (e.g. us -> US)
+      parts[i] = parts[i].toUpperCase();
+    }
+  }
+  return parts.join('-');
+}
+
+/***/ }),
+
 /***/ "./src/streaming/utils/BaseURLSelector.js":
 /*!************************************************!*\
   !*** ./src/streaming/utils/BaseURLSelector.js ***!
@@ -83675,7 +74579,8 @@ function BaseURLSelector() {
   function setup() {
     serviceLocationBlacklistController = (0,_controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).create({
       updateEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED,
-      addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD
+      addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].SERVICE_LOCATION_BASE_URL_BLACKLIST_ADD,
+      enableExpiry: true
     });
     basicSelector = (0,_baseUrlResolution_BasicSelector_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).create({
       blacklistController: serviceLocationBlacklistController
@@ -83735,7 +74640,6 @@ function BaseURLSelector() {
     return selectedBaseUrl;
   }
   function reset() {
-    contentSteeringSelector.reset();
     serviceLocationBlacklistController.reset();
   }
   instance = {
@@ -84686,6 +75590,7 @@ function CapabilitiesFilter() {
   }
 
   /* Build the configuration object for capability requests based on primary element (Representation or Preselection) */
+
   /* In case Preselection elements are present, attributes of this element override their counterparts from the Representation element */
   function _createConfiguration(type, primaryElement, codec, prslCommonRepresentation) {
     let config = null;
@@ -84880,13 +75785,18 @@ function CapabilitiesFilter() {
         const adaptationSetEssentialProperties = adapter.getEssentialProperties(as);
         const doesSupportEssentialProperties = _doesSupportEssentialProperties(adaptationSetEssentialProperties);
         if (!doesSupportEssentialProperties) {
+          logger.warn(`[CapabilitiesFilter] removed AdaptationSet (id: ${as.id}) with unsupported EssentialProperty`);
           return false;
         }
         as.Representation = as.Representation.filter(rep => {
           const essentialProperties = adapter.getEssentialProperties(rep);
           return _doesSupportEssentialProperties(essentialProperties);
         });
-        return as.Representation && as.Representation.length > 0;
+        const isSupported = as.Representation && as.Representation.length > 0;
+        if (!isSupported) {
+          logger.warn(`[CapabilitiesFilter] removed AdaptationSet (id: ${as.id}) with unsupported EssentialProperty on all Representations`);
+        }
+        return isSupported;
       });
       if (period.Preselection && period.Preselection.length) {
         period.Preselection = period.Preselection.filter(prsl => {
@@ -85027,6 +75937,149 @@ function CapabilitiesFilter() {
 }
 CapabilitiesFilter.__dashjs_factory_name = 'CapabilitiesFilter';
 /* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(CapabilitiesFilter));
+
+/***/ }),
+
+/***/ "./src/streaming/utils/CertUrlUtils.js":
+/*!*********************************************!*\
+  !*** ./src/streaming/utils/CertUrlUtils.js ***!
+  \*********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Utility functions for DASH Certurl normalization.
+ * Shared by ContentProtection parsing and protData handling.
+ *
+ * A Certurl entry may appear as:
+ *  - String: 'https://example.com/cert'
+ *  - Object parsed from XML: { __text: 'https://example.com/cert', '@certType': 'primary' }
+ *  - Pre-normalized object: { url: 'https://example.com/cert', certType: 'primary' }
+ *  - Array of any of the above
+ *
+ * The normalization returns an array of objects: { url: string, certType: string|null }
+ * Empty or invalid entries are filtered out. Whitespace is trimmed.
+ */
+function normalizeCertUrls(raw) {
+  if (!raw) {
+    return [];
+  }
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr.map(item => {
+    if (!item) {
+      return null;
+    }
+    if (typeof item === 'string') {
+      const url = item.trim();
+      return url ? {
+        url,
+        certType: null
+      } : null;
+    }
+    if (typeof item === 'object') {
+      let url = (item.__text || item.text || '').trim();
+      if (!url && typeof item.url === 'string') {
+        // fallback if pre-normalized
+        url = item.url.trim();
+      }
+      let certType = item.certType || item['@certType'] || null;
+      if (certType && typeof certType === 'string') {
+        certType = certType.trim();
+        if (certType === '') {
+          certType = null;
+        }
+      } else {
+        certType = null;
+      }
+      return url ? {
+        url,
+        certType
+      } : null;
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+/**
+ * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
+ * Keeps first occurrence order stable.
+ * @param {Array<{url:string, certType:string|null}>} list
+ * @returns {Array<{url:string, certType:string|null}>}
+ */
+function dedupeCertUrls(list) {
+  if (!Array.isArray(list) || list.length === 0) {
+    return [];
+  }
+  const seen = new Set();
+  const result = [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (!item || !item.url) {
+      continue;
+    }
+    const key = item.url + '||' + (item.certType || '');
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
+/**
+ * Iterates over a ProtectionDataSet object and normalizes & deduplicates any certUrls arrays in-place.
+ * Returns the same object reference for convenience.
+ * @param {Object} protData - keySystem -> config object
+ * @returns {Object} protData
+ */
+function sanitizeProtectionDataCertUrls(protData) {
+  if (protData && typeof protData === 'object') {
+    Object.keys(protData).forEach(keySystem => {
+      const entry = protData[keySystem];
+      if (entry && Array.isArray(entry.certUrls)) {
+        entry.certUrls = dedupeCertUrls(normalizeCertUrls(entry.certUrls));
+      }
+    });
+  }
+  return protData;
+}
+/* harmony default export */ __webpack_exports__["default"] = ({
+  normalizeCertUrls,
+  dedupeCertUrls,
+  sanitizeProtectionDataCertUrls
+});
 
 /***/ }),
 
@@ -86055,6 +77108,7 @@ ErrorHandler.__dashjs_factory_name = 'ErrorHandler';
 
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -86091,13 +77145,37 @@ __webpack_require__.r(__webpack_exports__);
  */
 
 
+
 function InitCache() {
+  const context = this.context;
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
   let data = {};
+  let accessOrder = [];
   function save(chunk) {
     const id = chunk.streamId;
     const representationId = chunk.representation.id;
     data[id] = data[id] || {};
+    const isNewEntry = !data[id][representationId];
     data[id][representationId] = chunk;
+    if (isNewEntry) {
+      accessOrder.push({
+        streamId: id,
+        representationId: representationId
+      });
+      _enforceCacheLimit();
+    }
+  }
+  function _enforceCacheLimit() {
+    const maxCacheSize = settings.get().streaming.cacheInitSegmentsLimit;
+    while (accessOrder.length > maxCacheSize) {
+      const oldest = accessOrder.shift();
+      if (data[oldest.streamId] && data[oldest.streamId][oldest.representationId]) {
+        delete data[oldest.streamId][oldest.representationId];
+        if (Object.keys(data[oldest.streamId]).length === 0) {
+          delete data[oldest.streamId];
+        }
+      }
+    }
   }
   function extract(streamId, representationId) {
     if (data && data[streamId] && data[streamId][representationId]) {
@@ -86108,11 +77186,31 @@ function InitCache() {
   }
   function reset() {
     data = {};
+    accessOrder = [];
+  }
+
+  /**
+   * Get cache statistics for debugging/testing
+   * @returns {object} Cache stats including entry count and stream count
+   */
+  function getStats() {
+    const streamCount = Object.keys(data).length;
+    let entryCount = 0;
+    for (const streamId in data) {
+      entryCount += Object.keys(data[streamId]).length;
+    }
+    return {
+      entryCount: entryCount,
+      streamCount: streamCount,
+      maxSize: settings.get().streaming.cacheInitSegmentsLimit,
+      accessOrderLength: accessOrder.length
+    };
   }
   const instance = {
     save: save,
     extract: extract,
-    reset: reset
+    reset: reset,
+    getStats: getStats
   };
   return instance;
 }
@@ -86297,7 +77395,8 @@ function LocationSelector() {
   function setup() {
     blacklistController = (0,_controllers_BlacklistController_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create({
       updateEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__["default"].SERVICE_LOCATION_LOCATION_BLACKLIST_CHANGED,
-      addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__["default"].SERVICE_LOCATION_LOCATION_BLACKLIST_ADD
+      addBlacklistEventName: _core_events_Events_js__WEBPACK_IMPORTED_MODULE_0__["default"].SERVICE_LOCATION_LOCATION_BLACKLIST_ADD,
+      enableExpiry: false
     });
     contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   }
@@ -86652,7 +77751,7 @@ function TTMLParser() {
       if (isd.contents.some(topLevelContents => topLevelContents.contents.length)) {
         //be sure that mediaTimeEvents values are in the mp4 segment time ranges.
         startTime = mediaTimeEvents[i] + offsetTime;
-        endTime = mediaTimeEvents[i + 1] + offsetTime;
+        endTime = i + 1 < mediaTimeEvents.length ? mediaTimeEvents[i + 1] + offsetTime : endTimeSegment;
         if (startTime < endTime) {
           captionArray.push({
             start: startTime,
@@ -87325,7 +78424,6 @@ BasicSelector.__dashjs_factory_name = 'BasicSelector';
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../dash/controllers/ContentSteeringController.js */ "./src/dash/controllers/ContentSteeringController.js");
-/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/EventBus.js */ "./src/core/EventBus.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -87359,14 +78457,9 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
-
 function ContentSteeringSelector() {
   const context = this.context;
-  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
-  let instance,
-    contentSteeringController,
-    blacklistController,
-    blacklistResetTimeout = [];
+  let instance, contentSteeringController, blacklistController;
   function setup() {
     contentSteeringController = (0,_dash_controllers_ContentSteeringController_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
   }
@@ -87377,7 +78470,6 @@ function ContentSteeringSelector() {
     if (config.contentSteeringController) {
       contentSteeringController = config.contentSteeringController;
     }
-    eventBus.on(config.addBlacklistEventName, _onAddBlackList, instance);
   }
   function selectBaseUrlIndex(data) {
     let steeringIndex = NaN;
@@ -87397,10 +78489,6 @@ function ContentSteeringSelector() {
     }
     return steeringIndex;
   }
-  function reset() {
-    blacklistResetTimeout.forEach(timer => clearTimeout(timer));
-    blacklistResetTimeout = [];
-  }
   function _findexIndexOfServiceLocation(pathwayPriority = [], baseUrls = []) {
     let i = 0;
     let steeringIndex = NaN;
@@ -87417,22 +78505,9 @@ function ContentSteeringSelector() {
     }
     return steeringIndex;
   }
-  function _onAddBlackList(e) {
-    const currentSteeringResponseData = contentSteeringController.getCurrentSteeringResponseData();
-    if (!currentSteeringResponseData) {
-      return;
-    }
-    const entry = e.entry;
-    const timer = setTimeout(() => {
-      blacklistController.remove(entry);
-      blacklistResetTimeout.splice(blacklistResetTimeout.indexOf(timer, 1));
-    }, currentSteeringResponseData.ttl * 1000);
-    blacklistResetTimeout.push(timer);
-  }
   instance = {
     selectBaseUrlIndex,
-    setConfig,
-    reset
+    setConfig
   };
   setup();
   return instance;
@@ -87544,8 +78619,8 @@ function DVBSelector(config) {
           cumulWeights.push(totalWeight);
         });
 
-        // pick a random number between zero and totalWeight
-        rn = Math.floor(Math.random() * (totalWeight - 1));
+        // pick a random number between zero (inclusive) and totalWeight (exclusive)
+        rn = Math.floor(Math.random() * totalWeight);
 
         // select the index for the range rn falls within
         cumulWeights.every((limit, index) => {
@@ -87572,6 +78647,59 @@ DVBSelector.__dashjs_factory_name = 'DVBSelector';
 
 /***/ }),
 
+/***/ "./src/streaming/vo/CmcdReportRequest.js":
+/*!***********************************************!*\
+  !*** ./src/streaming/vo/CmcdReportRequest.js ***!
+  \***********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _FragmentRequest_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FragmentRequest.js */ "./src/streaming/vo/FragmentRequest.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+
+class CmcdReportRequest extends _FragmentRequest_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(method) {
+    super();
+    this.method = method || null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CmcdReportRequest);
+
+/***/ }),
+
 /***/ "./src/streaming/vo/CommonMediaRequest.js":
 /*!************************************************!*\
   !*** ./src/streaming/vo/CommonMediaRequest.js ***!
@@ -87584,24 +78712,24 @@ class CommonMediaRequest {
    * @param {Object} params
    * @param {string} params.url
    * @param {string} params.method
+   * @param {BodyInit} [params.body]
    * @param {string} [params.responseType]
    * @param {Object<string, string>} [params.headers]
    * @param {RequestCredentials} [params.credentials]
    * @param {RequestMode} [params.mode]
    * @param {number} [params.timeout]
-   * @param {Cmcd} [params.cmcd]
-   * @param {any} [params.customData]
+   * @param {Object} [params.customData]
    */
   constructor(params) {
     this.url = params.url;
     this.method = params.method;
+    this.body = params.body !== undefined ? params.body : null;
     this.responseType = params.responseType !== undefined ? params.responseType : null;
     this.headers = params.headers !== undefined ? params.headers : {};
     this.credentials = params.credentials !== undefined ? params.credentials : null;
     this.mode = params.mode !== undefined ? params.mode : null;
     this.timeout = params.timeout !== undefined ? params.timeout : 0;
-    this.cmcd = params.cmcd !== undefined ? params.cmcd : null;
-    this.customData = params.customData !== undefined ? params.customData : null;
+    this.customData = params.customData !== undefined ? params.customData : {};
   }
 }
 /* harmony default export */ __webpack_exports__["default"] = (CommonMediaRequest);
@@ -88936,6 +80064,7 @@ class HTTPRequest {
      * - Index Fragment
      * - Media Fragment
      * - Bitstream Switching Fragment
+     * - CMCD Response
      * - other
      * @public
      */
@@ -89048,19 +80177,22 @@ class HTTPRequestTrace {
     this.b = [];
   }
 }
-HTTPRequest.GET = 'GET';
-HTTPRequest.HEAD = 'HEAD';
-HTTPRequest.MPD_TYPE = 'MPD';
-HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
-HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
-HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
-HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
-HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
-HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
-HTTPRequest.LICENSE = 'license';
 HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
+HTTPRequest.GET = 'GET';
+HTTPRequest.POST = 'POST';
+HTTPRequest.HEAD = 'HEAD';
+HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
+HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
+HTTPRequest.LICENSE = 'license';
+HTTPRequest.LICENSE_CERTIFICATE = 'licenseCertificate';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.CMCD_EVENT = 'CmcdEvent';
 HTTPRequest.OTHER_TYPE = 'other';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 
 
 /***/ }),
@@ -89669,18 +80801,13 @@ class SchedulingInfo {
 /******/ 	};
 /******/ 
 /******/ 	// Execute the module function
-/******/ 	__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 	__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 
 /******/ 	// Return the exports of the module
 /******/ 	return module.exports;
 /******/ }
 /******/ 
 /************************************************************************/
-/******/ /* webpack/runtime/amd options */
-/******/ !function() {
-/******/ 	__webpack_require__.amdO = {};
-/******/ }();
-/******/ 
 /******/ /* webpack/runtime/define property getters */
 /******/ !function() {
 /******/ 	// define getter functions for harmony exports

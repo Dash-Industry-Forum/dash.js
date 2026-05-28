@@ -9,7 +9,48 @@
 		root["dashjs"] = factory();
 })(self, function() {
 return /******/ (function() { // webpackBootstrap
+/******/ 	"use strict";
 /******/ 	var __webpack_modules__ = ({
+
+/***/ "./node_modules/fast-deep-equal/index.js":
+/*!***********************************************!*\
+  !*** ./node_modules/fast-deep-equal/index.js ***!
+  \***********************************************/
+/***/ (function(module) {
+
+
+
+// do not edit .js files directly - edit src/index.jst
+module.exports = function equal(a, b) {
+  if (a === b) return true;
+  if (a && b && typeof a == 'object' && typeof b == 'object') {
+    if (a.constructor !== b.constructor) return false;
+    var length, i, keys;
+    if (Array.isArray(a)) {
+      length = a.length;
+      if (length != b.length) return false;
+      for (i = length; i-- !== 0;) if (!equal(a[i], b[i])) return false;
+      return true;
+    }
+    if (a.constructor === RegExp) return a.source === b.source && a.flags === b.flags;
+    if (a.valueOf !== Object.prototype.valueOf) return a.valueOf() === b.valueOf();
+    if (a.toString !== Object.prototype.toString) return a.toString() === b.toString();
+    keys = Object.keys(a);
+    length = keys.length;
+    if (length !== Object.keys(b).length) return false;
+    for (i = length; i-- !== 0;) if (!Object.prototype.hasOwnProperty.call(b, keys[i])) return false;
+    for (i = length; i-- !== 0;) {
+      var key = keys[i];
+      if (!equal(a[key], b[key])) return false;
+    }
+    return true;
+  }
+
+  // true if both NaN, false otherwise
+  return a !== a && b !== b;
+};
+
+/***/ }),
 
 /***/ "./node_modules/path-browserify/index.js":
 /*!***********************************************!*\
@@ -17,7 +58,6 @@ return /******/ (function() { // webpackBootstrap
   \***********************************************/
 /***/ (function(module) {
 
-"use strict";
 // 'path' module extracted from Node.js v8.11.1 (only the posix part)
 // transplited with Babel
 
@@ -483,768 +523,3962 @@ module.exports = posix;
 
 /***/ }),
 
-/***/ "./node_modules/ua-parser-js/src/ua-parser.js":
-/*!****************************************************!*\
-  !*** ./node_modules/ua-parser-js/src/ua-parser.js ***!
-  \****************************************************/
-/***/ (function(module, exports, __webpack_require__) {
+/***/ "./node_modules/@svta/cml-cmcd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmcd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-var __WEBPACK_AMD_DEFINE_RESULT__;/////////////////////////////////////////////////////////////////////////////////
-/* UAParser.js v1.0.38
-   Copyright © 2012-2021 Faisal Salman <f@faisalman.com>
-   MIT License */ /*
-                  Detect Browser, Engine, OS, CPU, and Device type/model from User-Agent data.
-                  Supports browser & node.js environment. 
-                  Demo   : https://faisalman.github.io/ua-parser-js
-                  Source : https://github.com/faisalman/ua-parser-js */
-/////////////////////////////////////////////////////////////////////////////////
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMCD_DEFAULT_TIME_INTERVAL: function() { return /* binding */ CMCD_DEFAULT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_AD_BREAK_END: function() { return /* binding */ CMCD_EVENT_AD_BREAK_END; },
+/* harmony export */   CMCD_EVENT_AD_BREAK_START: function() { return /* binding */ CMCD_EVENT_AD_BREAK_START; },
+/* harmony export */   CMCD_EVENT_AD_END: function() { return /* binding */ CMCD_EVENT_AD_END; },
+/* harmony export */   CMCD_EVENT_AD_START: function() { return /* binding */ CMCD_EVENT_AD_START; },
+/* harmony export */   CMCD_EVENT_BACKGROUNDED_MODE: function() { return /* binding */ CMCD_EVENT_BACKGROUNDED_MODE; },
+/* harmony export */   CMCD_EVENT_BITRATE_CHANGE: function() { return /* binding */ CMCD_EVENT_BITRATE_CHANGE; },
+/* harmony export */   CMCD_EVENT_CONTENT_ID: function() { return /* binding */ CMCD_EVENT_CONTENT_ID; },
+/* harmony export */   CMCD_EVENT_CUSTOM_EVENT: function() { return /* binding */ CMCD_EVENT_CUSTOM_EVENT; },
+/* harmony export */   CMCD_EVENT_ERROR: function() { return /* binding */ CMCD_EVENT_ERROR; },
+/* harmony export */   CMCD_EVENT_KEYS: function() { return /* binding */ CMCD_EVENT_KEYS; },
+/* harmony export */   CMCD_EVENT_MODE: function() { return /* binding */ CMCD_EVENT_MODE; },
+/* harmony export */   CMCD_EVENT_MUTE: function() { return /* binding */ CMCD_EVENT_MUTE; },
+/* harmony export */   CMCD_EVENT_PLAYER_COLLAPSE: function() { return /* binding */ CMCD_EVENT_PLAYER_COLLAPSE; },
+/* harmony export */   CMCD_EVENT_PLAYER_EXPAND: function() { return /* binding */ CMCD_EVENT_PLAYER_EXPAND; },
+/* harmony export */   CMCD_EVENT_PLAY_STATE: function() { return /* binding */ CMCD_EVENT_PLAY_STATE; },
+/* harmony export */   CMCD_EVENT_RESPONSE_RECEIVED: function() { return /* binding */ CMCD_EVENT_RESPONSE_RECEIVED; },
+/* harmony export */   CMCD_EVENT_SKIP: function() { return /* binding */ CMCD_EVENT_SKIP; },
+/* harmony export */   CMCD_EVENT_TIME_INTERVAL: function() { return /* binding */ CMCD_EVENT_TIME_INTERVAL; },
+/* harmony export */   CMCD_EVENT_UNMUTE: function() { return /* binding */ CMCD_EVENT_UNMUTE; },
+/* harmony export */   CMCD_FORMATTER_MAP: function() { return /* binding */ CMCD_FORMATTER_MAP; },
+/* harmony export */   CMCD_HEADERS: function() { return /* binding */ CMCD_HEADERS; },
+/* harmony export */   CMCD_HEADER_FIELDS: function() { return /* binding */ CMCD_HEADER_FIELDS; },
+/* harmony export */   CMCD_HEADER_MAP: function() { return /* binding */ CMCD_HEADER_MAP; },
+/* harmony export */   CMCD_JSON: function() { return /* binding */ CMCD_JSON; },
+/* harmony export */   CMCD_KEYS: function() { return /* binding */ CMCD_KEYS; },
+/* harmony export */   CMCD_MIME_TYPE: function() { return /* binding */ CMCD_MIME_TYPE; },
+/* harmony export */   CMCD_OBJECT: function() { return /* binding */ CMCD_OBJECT; },
+/* harmony export */   CMCD_PARAM: function() { return /* binding */ CMCD_PARAM; },
+/* harmony export */   CMCD_QUERY: function() { return /* binding */ CMCD_QUERY; },
+/* harmony export */   CMCD_REQUEST: function() { return /* binding */ CMCD_REQUEST; },
+/* harmony export */   CMCD_REQUEST_KEYS: function() { return /* binding */ CMCD_REQUEST_KEYS; },
+/* harmony export */   CMCD_REQUEST_MODE: function() { return /* binding */ CMCD_REQUEST_MODE; },
+/* harmony export */   CMCD_RESPONSE_KEYS: function() { return /* binding */ CMCD_RESPONSE_KEYS; },
+/* harmony export */   CMCD_SESSION: function() { return /* binding */ CMCD_SESSION; },
+/* harmony export */   CMCD_STATUS: function() { return /* binding */ CMCD_STATUS; },
+/* harmony export */   CMCD_V1: function() { return /* binding */ CMCD_V1; },
+/* harmony export */   CMCD_V1_KEYS: function() { return /* binding */ CMCD_V1_KEYS; },
+/* harmony export */   CMCD_V2: function() { return /* binding */ CMCD_V2; },
+/* harmony export */   CMCD_VALIDATION_SEVERITY_ERROR: function() { return /* binding */ CMCD_VALIDATION_SEVERITY_ERROR; },
+/* harmony export */   CMCD_VALIDATION_SEVERITY_WARNING: function() { return /* binding */ CMCD_VALIDATION_SEVERITY_WARNING; },
+/* harmony export */   CmcdEventType: function() { return /* binding */ CmcdEventType; },
+/* harmony export */   CmcdHeaderField: function() { return /* binding */ CmcdHeaderField; },
+/* harmony export */   CmcdObjectType: function() { return /* binding */ CmcdObjectType; },
+/* harmony export */   CmcdPlayerState: function() { return /* binding */ CmcdPlayerState; },
+/* harmony export */   CmcdReporter: function() { return /* binding */ CmcdReporter; },
+/* harmony export */   CmcdReportingMode: function() { return /* binding */ CmcdReportingMode; },
+/* harmony export */   CmcdStreamType: function() { return /* binding */ CmcdStreamType; },
+/* harmony export */   CmcdStreamingFormat: function() { return /* binding */ CmcdStreamingFormat; },
+/* harmony export */   CmcdTransmissionMode: function() { return /* binding */ CmcdTransmissionMode; },
+/* harmony export */   CmcdValidationSeverity: function() { return /* binding */ CmcdValidationSeverity; },
+/* harmony export */   appendCmcdHeaders: function() { return /* binding */ appendCmcdHeaders; },
+/* harmony export */   appendCmcdQuery: function() { return /* binding */ appendCmcdQuery; },
+/* harmony export */   decodeCmcd: function() { return /* binding */ decodeCmcd; },
+/* harmony export */   encodeCmcd: function() { return /* binding */ encodeCmcd; },
+/* harmony export */   fromCmcdHeaders: function() { return /* binding */ fromCmcdHeaders; },
+/* harmony export */   fromCmcdQuery: function() { return /* binding */ fromCmcdQuery; },
+/* harmony export */   fromCmcdUrl: function() { return /* binding */ fromCmcdUrl; },
+/* harmony export */   groupCmcdHeaders: function() { return /* binding */ groupCmcdHeaders; },
+/* harmony export */   isCmcdCustomKey: function() { return /* binding */ isCmcdCustomKey; },
+/* harmony export */   isCmcdEventKey: function() { return /* binding */ isCmcdEventKey; },
+/* harmony export */   isCmcdRequestKey: function() { return /* binding */ isCmcdRequestKey; },
+/* harmony export */   isCmcdResponseReceivedKey: function() { return /* binding */ isCmcdResponseReceivedKey; },
+/* harmony export */   isCmcdV1Data: function() { return /* binding */ isCmcdV1Data; },
+/* harmony export */   isCmcdV1Key: function() { return /* binding */ isCmcdV1Key; },
+/* harmony export */   isCmcdV2Data: function() { return /* binding */ isCmcdV2Data; },
+/* harmony export */   prepareCmcdData: function() { return /* binding */ prepareCmcdData; },
+/* harmony export */   toCmcdHeaders: function() { return /* binding */ toCmcdHeaders; },
+/* harmony export */   toCmcdQuery: function() { return /* binding */ toCmcdQuery; },
+/* harmony export */   toCmcdUrl: function() { return /* binding */ toCmcdUrl; },
+/* harmony export */   toCmcdValue: function() { return /* binding */ toCmcdValue; },
+/* harmony export */   validateCmcd: function() { return /* binding */ validateCmcd; },
+/* harmony export */   validateCmcdEventReport: function() { return /* binding */ validateCmcdEventReport; },
+/* harmony export */   validateCmcdEvents: function() { return /* binding */ validateCmcdEvents; },
+/* harmony export */   validateCmcdHeaders: function() { return /* binding */ validateCmcdHeaders; },
+/* harmony export */   validateCmcdKeys: function() { return /* binding */ validateCmcdKeys; },
+/* harmony export */   validateCmcdRequest: function() { return /* binding */ validateCmcdRequest; },
+/* harmony export */   validateCmcdStructure: function() { return /* binding */ validateCmcdStructure; },
+/* harmony export */   validateCmcdValues: function() { return /* binding */ validateCmcdValues; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
 
-(function (window, undefined) {
-  'use strict';
 
-  //////////////
-  // Constants
-  /////////////
-  var LIBVERSION = '1.0.38',
-    EMPTY = '',
-    UNKNOWN = '?',
-    FUNC_TYPE = 'function',
-    UNDEF_TYPE = 'undefined',
-    OBJ_TYPE = 'object',
-    STR_TYPE = 'string',
-    MAJOR = 'major',
-    MODEL = 'model',
-    NAME = 'name',
-    TYPE = 'type',
-    VENDOR = 'vendor',
-    VERSION = 'version',
-    ARCHITECTURE = 'architecture',
-    CONSOLE = 'console',
-    MOBILE = 'mobile',
-    TABLET = 'tablet',
-    SMARTTV = 'smarttv',
-    WEARABLE = 'wearable',
-    EMBEDDED = 'embedded',
-    UA_MAX_LENGTH = 500;
-  var AMAZON = 'Amazon',
-    APPLE = 'Apple',
-    ASUS = 'ASUS',
-    BLACKBERRY = 'BlackBerry',
-    BROWSER = 'Browser',
-    CHROME = 'Chrome',
-    EDGE = 'Edge',
-    FIREFOX = 'Firefox',
-    GOOGLE = 'Google',
-    HUAWEI = 'Huawei',
-    LG = 'LG',
-    MICROSOFT = 'Microsoft',
-    MOTOROLA = 'Motorola',
-    OPERA = 'Opera',
-    SAMSUNG = 'Samsung',
-    SHARP = 'Sharp',
-    SONY = 'Sony',
-    XIAOMI = 'Xiaomi',
-    ZEBRA = 'Zebra',
-    FACEBOOK = 'Facebook',
-    CHROMIUM_OS = 'Chromium OS',
-    MAC_OS = 'Mac OS';
 
-  ///////////
-  // Helper
-  //////////
+//#region src/CMCD_FORMATTER_MAP.ts
+const roundValue = value => {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value), value.params);
+  return Math.round(value);
+};
+const toRounded = value => {
+  if (Array.isArray(value)) return value.map(roundValue);
+  return roundValue(value);
+};
+const toUrlSafe = (value, options) => {
+  if (Array.isArray(value)) return value.map(item => toUrlSafe(item, options));
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(toUrlSafe(value.value, options), value.params);else {
+    if (options.baseUrl) value = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.urlToRelativePath)(value, (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.getBaseUrl)(options.baseUrl));
+    return options.version === 1 ? encodeURIComponent(value) : value;
+  }
+};
+const hundredValue = value => {
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(Math.round(value.value / 100) * 100, value.params);
+  return Math.round(value / 100) * 100;
+};
+const toHundred = value => {
+  if (Array.isArray(value)) return value.map(hundredValue);
+  return hundredValue(value);
+};
+const nor = (value, options) => {
+  let norValue = value;
+  if (options.version >= 2) {
+    if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && typeof value.value === "string") norValue = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem([value]);else if (typeof value === "string") norValue = [value];
+  }
+  return toUrlSafe(norValue, options);
+};
+/**
+* The default formatters for CMCD values.
+*
+* @public
+*/
+const CMCD_FORMATTER_MAP = {
+  br: toRounded,
+  d: toRounded,
+  bl: toHundred,
+  dl: toHundred,
+  mtp: toHundred,
+  nor,
+  rtp: toHundred,
+  tb: toRounded
+};
 
-  var extend = function (regexes, extensions) {
-      var mergedRegexes = {};
-      for (var i in regexes) {
-        if (extensions[i] && extensions[i].length % 2 === 0) {
-          mergedRegexes[i] = extensions[i].concat(regexes[i]);
-        } else {
-          mergedRegexes[i] = regexes[i];
-        }
-      }
-      return mergedRegexes;
-    },
-    enumerize = function (arr) {
-      var enums = {};
-      for (var i = 0; i < arr.length; i++) {
-        enums[arr[i].toUpperCase()] = arr[i];
-      }
-      return enums;
-    },
-    has = function (str1, str2) {
-      return typeof str1 === STR_TYPE ? lowerize(str2).indexOf(lowerize(str1)) !== -1 : false;
-    },
-    lowerize = function (str) {
-      return str.toLowerCase();
-    },
-    majorize = function (version) {
-      return typeof version === STR_TYPE ? version.replace(/[^\d\.]/g, EMPTY).split('.')[0] : undefined;
-    },
-    trim = function (str, len) {
-      if (typeof str === STR_TYPE) {
-        str = str.replace(/^\s\s*/, EMPTY);
-        return typeof len === UNDEF_TYPE ? str : str.substring(0, UA_MAX_LENGTH);
-      }
-    };
+//#endregion
+//#region src/CMCD_V2.ts
+/**
+* CMCD Version 2
+*
+* @public
+*/
+const CMCD_V2 = 2;
 
-  ///////////////
-  // Map helper
-  //////////////
+//#endregion
+//#region src/CmcdEventType.ts
+/**
+* CMCD event type for the 'bc' key (bitrate change).
+*
+* @public
+*/
+const CMCD_EVENT_BITRATE_CHANGE = "bc";
+/**
+* CMCD event type for the 'ps' key (play state change).
+*
+* @public
+*/
+const CMCD_EVENT_PLAY_STATE = "ps";
+/**
+* CMCD event type for the 'e' key (error).
+*
+* @public
+*/
+const CMCD_EVENT_ERROR = "e";
+/**
+* CMCD event type for the 't' key (time interval).
+*
+* @public
+*/
+const CMCD_EVENT_TIME_INTERVAL = "t";
+/**
+* CMCD event type for the 'c' key (content ID).
+*
+* @public
+*/
+const CMCD_EVENT_CONTENT_ID = "c";
+/**
+* CMCD event type for the 'b' key (backgrounded mode).
+*
+* @public
+*/
+const CMCD_EVENT_BACKGROUNDED_MODE = "b";
+/**
+* CMCD event type for the 'm' key (mute).
+*
+* @public
+*/
+const CMCD_EVENT_MUTE = "m";
+/**
+* CMCD event type for the 'um' key (unmute).
+*
+* @public
+*/
+const CMCD_EVENT_UNMUTE = "um";
+/**
+* CMCD event type for the 'pe' key (player expand).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_EXPAND = "pe";
+/**
+* CMCD event type for the 'pc' key (player collapse).
+*
+* @public
+*/
+const CMCD_EVENT_PLAYER_COLLAPSE = "pc";
+/**
+* CMCD event type for the 'rr' key (response received).
+*
+* @public
+*/
+const CMCD_EVENT_RESPONSE_RECEIVED = "rr";
+/**
+* CMCD event type for the 'as' key (ad start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_START = "as";
+/**
+* CMCD event type for the 'ae' key (ad end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_END = "ae";
+/**
+* CMCD event type for the 'abs' key (ad break start).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_START = "abs";
+/**
+* CMCD event type for the 'abe' key (ad break end).
+*
+* @public
+*/
+const CMCD_EVENT_AD_BREAK_END = "abe";
+/**
+* CMCD event type for the 'sk' key (skip).
+*
+* @public
+*/
+const CMCD_EVENT_SKIP = "sk";
+/**
+* CMCD event type for the 'ce' key (custom event).
+*
+* @public
+*/
+const CMCD_EVENT_CUSTOM_EVENT = "ce";
+/**
+* CMCD event types for the 'e' key (event mode).
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event | CTA-5004-B Event}
+*
+* @public
+*/
+const CmcdEventType = {
+  BITRATE_CHANGE: CMCD_EVENT_BITRATE_CHANGE,
+  PLAY_STATE: CMCD_EVENT_PLAY_STATE,
+  ERROR: CMCD_EVENT_ERROR,
+  TIME_INTERVAL: CMCD_EVENT_TIME_INTERVAL,
+  CONTENT_ID: CMCD_EVENT_CONTENT_ID,
+  BACKGROUNDED_MODE: CMCD_EVENT_BACKGROUNDED_MODE,
+  MUTE: CMCD_EVENT_MUTE,
+  UNMUTE: CMCD_EVENT_UNMUTE,
+  PLAYER_EXPAND: CMCD_EVENT_PLAYER_EXPAND,
+  PLAYER_COLLAPSE: CMCD_EVENT_PLAYER_COLLAPSE,
+  RESPONSE_RECEIVED: CMCD_EVENT_RESPONSE_RECEIVED,
+  AD_START: CMCD_EVENT_AD_START,
+  AD_END: CMCD_EVENT_AD_END,
+  AD_BREAK_START: CMCD_EVENT_AD_BREAK_START,
+  AD_BREAK_END: CMCD_EVENT_AD_BREAK_END,
+  SKIP: CMCD_EVENT_SKIP,
+  CUSTOM_EVENT: CMCD_EVENT_CUSTOM_EVENT
+};
 
-  var rgxMapper = function (ua, arrays) {
-      var i = 0,
-        j,
-        k,
-        p,
-        q,
-        matches,
-        match;
+//#endregion
+//#region src/CmcdReportingMode.ts
+/**
+* CMCD event mode variable name.
+*
+* @public
+*/
+const CMCD_EVENT_MODE = "event";
+/**
+* CMCD request mode variable name.
+*
+* @public
+*/
+const CMCD_REQUEST_MODE = "request";
+/**
+* CMCD reporting mode types.
+*
+* @enum
+*
+* @public
+*/
+const CmcdReportingMode = {
+  REQUEST: CMCD_REQUEST_MODE,
+  EVENT: CMCD_EVENT_MODE
+};
 
-      // loop through all regexes maps
-      while (i < arrays.length && !matches) {
-        var regex = arrays[i],
-          // even sequence (0,2,4,..)
-          props = arrays[i + 1]; // odd sequence (1,3,5,..)
-        j = k = 0;
+//#endregion
+//#region src/CMCD_EVENT_KEYS.ts
+/**
+* Defines the event-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_EVENT_KEYS = ["cen", "e", "h", "ts"];
 
-        // try matching uastring with regexes
-        while (j < regex.length && !matches) {
-          if (!regex[j]) {
-            break;
-          }
-          matches = regex[j++].exec(ua);
-          if (!!matches) {
-            for (p = 0; p < props.length; p++) {
-              match = matches[++k];
-              q = props[p];
-              // check if given property is actually array
-              if (typeof q === OBJ_TYPE && q.length > 0) {
-                if (q.length === 2) {
-                  if (typeof q[1] == FUNC_TYPE) {
-                    // assign modified match
-                    this[q[0]] = q[1].call(this, match);
-                  } else {
-                    // assign given value, ignore regex match
-                    this[q[0]] = q[1];
-                  }
-                } else if (q.length === 3) {
-                  // check whether function or regex
-                  if (typeof q[1] === FUNC_TYPE && !(q[1].exec && q[1].test)) {
-                    // call function (usually string mapper)
-                    this[q[0]] = match ? q[1].call(this, match, q[2]) : undefined;
-                  } else {
-                    // sanitize match using given regex
-                    this[q[0]] = match ? match.replace(q[1], q[2]) : undefined;
-                  }
-                } else if (q.length === 4) {
-                  this[q[0]] = match ? q[3].call(this, match.replace(q[1], q[2])) : undefined;
-                }
-              } else {
-                this[q] = match ? match : undefined;
-              }
-            }
-          }
-        }
-        i += 2;
-      }
-    },
-    strMapper = function (str, map) {
-      for (var i in map) {
-        // check if current value is array
-        if (typeof map[i] === OBJ_TYPE && map[i].length > 0) {
-          for (var j = 0; j < map[i].length; j++) {
-            if (has(map[i][j], str)) {
-              return i === UNKNOWN ? undefined : i;
-            }
-          }
-        } else if (has(map[i], str)) {
-          return i === UNKNOWN ? undefined : i;
-        }
-      }
-      return str;
-    };
+//#endregion
+//#region src/CMCD_REQUEST_KEYS.ts
+/**
+* Defines the request-specific keys for CMCD (Common Media Client Data) version 2.
+*
+* @public
+*/
+const CMCD_REQUEST_KEYS = ["ab", "bg", "bl", "br", "bs", "bsa", "bsd", "bsda", "cdn", "cid", "cs", "d", "dfa", "dl", "ec", "lab", "lb", "ltc", "msd", "mtp", "nor", "nr", "ot", "pb", "pr", "pt", "rtp", "sf", "sid", "sn", "st", "sta", "su", "tab", "tb", "tbl", "tpb", "v"];
 
-  ///////////////
-  // String map
-  //////////////
+//#endregion
+//#region src/isCmcdCustomKey.ts
+const CUSTOM_KEY_REGEX = /^[a-zA-Z0-9-.]+-[a-zA-Z0-9-.]+$/;
+/**
+* Check if a key is a custom key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a custom key, `false` otherwise.
+*
+* @public
+*/
+function isCmcdCustomKey(key) {
+  return CUSTOM_KEY_REGEX.test(key);
+}
 
-  // Safari < 3.0
-  var oldSafariMap = {
-      '1.0': '/8',
-      '1.2': '/1',
-      '1.3': '/3',
-      '2.0': '/412',
-      '2.0.2': '/416',
-      '2.0.3': '/417',
-      '2.0.4': '/419',
-      '?': '/'
-    },
-    windowsVersionMap = {
-      'ME': '4.90',
-      'NT 3.11': 'NT3.51',
-      'NT 4.0': 'NT4.0',
-      '2000': 'NT 5.0',
-      'XP': ['NT 5.1', 'NT 5.2'],
-      'Vista': 'NT 6.0',
-      '7': 'NT 6.1',
-      '8': 'NT 6.2',
-      '8.1': 'NT 6.3',
-      '10': ['NT 6.4', 'NT 10.0'],
-      'RT': 'ARM'
-    };
+//#endregion
+//#region src/isCmcdRequestKey.ts
+const CMCD_REQUEST_KEY_SET = new Set(CMCD_REQUEST_KEYS);
+/**
+* Check if a key is a valid CMCD request key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdRequestKey.test.ts#example}
+*/
+function isCmcdRequestKey(key) {
+  return CMCD_REQUEST_KEY_SET.has(key) || isCmcdCustomKey(key);
+}
 
-  //////////////
-  // Regex map
-  /////////////
+//#endregion
+//#region src/CMCD_RESPONSE_KEYS.ts
+/**
+* CMCD v2 - Response-only and timing keys.
+*
+* @public
+*/
+const CMCD_RESPONSE_KEYS = ["cmsdd", "cmsds", "rc", "smrt", "ttfb", "ttfbb", "ttlb", "url"];
 
-  var regexes = {
-    browser: [[/\b(?:crmo|crios)\/([\w\.]+)/i // Chrome for Android/iOS
-    ], [VERSION, [NAME, 'Chrome']], [/edg(?:e|ios|a)?\/([\w\.]+)/i // Microsoft Edge
-    ], [VERSION, [NAME, 'Edge']], [
-    // Presto based
-    /(opera mini)\/([-\w\.]+)/i,
-    // Opera Mini
-    /(opera [mobiletab]{3,6})\b.+version\/([-\w\.]+)/i,
-    // Opera Mobi/Tablet
-    /(opera)(?:.+version\/|[\/ ]+)([\w\.]+)/i // Opera
-    ], [NAME, VERSION], [/opios[\/ ]+([\w\.]+)/i // Opera mini on iphone >= 8.0
-    ], [VERSION, [NAME, OPERA + ' Mini']], [/\bop(?:rg)?x\/([\w\.]+)/i // Opera GX
-    ], [VERSION, [NAME, OPERA + ' GX']], [/\bopr\/([\w\.]+)/i // Opera Webkit
-    ], [VERSION, [NAME, OPERA]], [
-    // Mixed
-    /\bb[ai]*d(?:uhd|[ub]*[aekoprswx]{5,6})[\/ ]?([\w\.]+)/i // Baidu
-    ], [VERSION, [NAME, 'Baidu']], [/(kindle)\/([\w\.]+)/i,
-    // Kindle
-    /(lunascape|maxthon|netfront|jasmine|blazer)[\/ ]?([\w\.]*)/i,
-    // Lunascape/Maxthon/Netfront/Jasmine/Blazer
-    // Trident based
-    /(avant|iemobile|slim)\s?(?:browser)?[\/ ]?([\w\.]*)/i,
-    // Avant/IEMobile/SlimBrowser
-    /(?:ms|\()(ie) ([\w\.]+)/i,
-    // Internet Explorer
+//#endregion
+//#region src/isCmcdResponseReceivedKey.ts
+const CMCD_RESPONSE_KEY_SET = new Set(CMCD_RESPONSE_KEYS);
+/**
+* Check if a key is a valid CMCD response key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD request key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdResponseReceivedKey.test.ts#example}
+*/
+function isCmcdResponseReceivedKey(key) {
+  return CMCD_RESPONSE_KEY_SET.has(key);
+}
 
-    // Webkit/KHTML based                                               // Flock/RockMelt/Midori/Epiphany/Silk/Skyfire/Bolt/Iron/Iridium/PhantomJS/Bowser/QupZilla/Falkon
-    /(flock|rockmelt|midori|epiphany|silk|skyfire|bolt|iron|vivaldi|iridium|phantomjs|bowser|quark|qupzilla|falkon|rekonq|puffin|brave|whale(?!.+naver)|qqbrowserlite|qq|duckduckgo)\/([-\w\.]+)/i,
-    // Rekonq/Puffin/Brave/Whale/QQBrowserLite/QQ, aka ShouQ
-    /(heytap|ovi)browser\/([\d\.]+)/i,
-    // Heytap/Ovi
-    /(weibo)__([\d\.]+)/i // Weibo
-    ], [NAME, VERSION], [/\bddg\/([\w\.]+)/i // DuckDuckGo
-    ], [VERSION, [NAME, 'DuckDuckGo']], [/(?:\buc? ?browser|(?:juc.+)ucweb)[\/ ]?([\w\.]+)/i // UCBrowser
-    ], [VERSION, [NAME, 'UC' + BROWSER]], [/microm.+\bqbcore\/([\w\.]+)/i,
-    // WeChat Desktop for Windows Built-in Browser
-    /\bqbcore\/([\w\.]+).+microm/i, /micromessenger\/([\w\.]+)/i // WeChat
-    ], [VERSION, [NAME, 'WeChat']], [/konqueror\/([\w\.]+)/i // Konqueror
-    ], [VERSION, [NAME, 'Konqueror']], [/trident.+rv[: ]([\w\.]{1,9})\b.+like gecko/i // IE11
-    ], [VERSION, [NAME, 'IE']], [/ya(?:search)?browser\/([\w\.]+)/i // Yandex
-    ], [VERSION, [NAME, 'Yandex']], [/slbrowser\/([\w\.]+)/i // Smart Lenovo Browser
-    ], [VERSION, [NAME, 'Smart Lenovo ' + BROWSER]], [/(avast|avg)\/([\w\.]+)/i // Avast/AVG Secure Browser
-    ], [[NAME, /(.+)/, '$1 Secure ' + BROWSER], VERSION], [/\bfocus\/([\w\.]+)/i // Firefox Focus
-    ], [VERSION, [NAME, FIREFOX + ' Focus']], [/\bopt\/([\w\.]+)/i // Opera Touch
-    ], [VERSION, [NAME, OPERA + ' Touch']], [/coc_coc\w+\/([\w\.]+)/i // Coc Coc Browser
-    ], [VERSION, [NAME, 'Coc Coc']], [/dolfin\/([\w\.]+)/i // Dolphin
-    ], [VERSION, [NAME, 'Dolphin']], [/coast\/([\w\.]+)/i // Opera Coast
-    ], [VERSION, [NAME, OPERA + ' Coast']], [/miuibrowser\/([\w\.]+)/i // MIUI Browser
-    ], [VERSION, [NAME, 'MIUI ' + BROWSER]], [/fxios\/([-\w\.]+)/i // Firefox for iOS
-    ], [VERSION, [NAME, FIREFOX]], [/\bqihu|(qi?ho?o?|360)browser/i // 360
-    ], [[NAME, '360 ' + BROWSER]], [/(oculus|sailfish|huawei|vivo)browser\/([\w\.]+)/i], [[NAME, /(.+)/, '$1 ' + BROWSER], VERSION], [
-    // Oculus/Sailfish/HuaweiBrowser/VivoBrowser
-    /samsungbrowser\/([\w\.]+)/i // Samsung Internet
-    ], [VERSION, [NAME, SAMSUNG + ' Internet']], [/(comodo_dragon)\/([\w\.]+)/i // Comodo Dragon
-    ], [[NAME, /_/g, ' '], VERSION], [/metasr[\/ ]?([\d\.]+)/i // Sogou Explorer
-    ], [VERSION, [NAME, 'Sogou Explorer']], [/(sogou)mo\w+\/([\d\.]+)/i // Sogou Mobile
-    ], [[NAME, 'Sogou Mobile'], VERSION], [/(electron)\/([\w\.]+) safari/i,
-    // Electron-based App
-    /(tesla)(?: qtcarbrowser|\/(20\d\d\.[-\w\.]+))/i,
-    // Tesla
-    /m?(qqbrowser|2345Explorer)[\/ ]?([\w\.]+)/i // QQBrowser/2345 Browser
-    ], [NAME, VERSION], [/(lbbrowser)/i,
-    // LieBao Browser
-    /\[(linkedin)app\]/i // LinkedIn App for iOS & Android
-    ], [NAME], [
-    // WebView
-    /((?:fban\/fbios|fb_iab\/fb4a)(?!.+fbav)|;fbav\/([\w\.]+);)/i // Facebook App for iOS & Android
-    ], [[NAME, FACEBOOK], VERSION], [/(Klarna)\/([\w\.]+)/i,
-    // Klarna Shopping Browser for iOS & Android
-    /(kakao(?:talk|story))[\/ ]([\w\.]+)/i,
-    // Kakao App
-    /(naver)\(.*?(\d+\.[\w\.]+).*\)/i,
-    // Naver InApp
-    /safari (line)\/([\w\.]+)/i,
-    // Line App for iOS
-    /\b(line)\/([\w\.]+)\/iab/i,
-    // Line App for Android
-    /(alipay)client\/([\w\.]+)/i,
-    // Alipay
-    /(twitter)(?:and| f.+e\/([\w\.]+))/i,
-    // Twitter
-    /(chromium|instagram|snapchat)[\/ ]([-\w\.]+)/i // Chromium/Instagram/Snapchat
-    ], [NAME, VERSION], [/\bgsa\/([\w\.]+) .*safari\//i // Google Search Appliance on iOS
-    ], [VERSION, [NAME, 'GSA']], [/musical_ly(?:.+app_?version\/|_)([\w\.]+)/i // TikTok
-    ], [VERSION, [NAME, 'TikTok']], [/headlesschrome(?:\/([\w\.]+)| )/i // Chrome Headless
-    ], [VERSION, [NAME, CHROME + ' Headless']], [/ wv\).+(chrome)\/([\w\.]+)/i // Chrome WebView
-    ], [[NAME, CHROME + ' WebView'], VERSION], [/droid.+ version\/([\w\.]+)\b.+(?:mobile safari|safari)/i // Android Browser
-    ], [VERSION, [NAME, 'Android ' + BROWSER]], [/(chrome|omniweb|arora|[tizenoka]{5} ?browser)\/v?([\w\.]+)/i // Chrome/OmniWeb/Arora/Tizen/Nokia
-    ], [NAME, VERSION], [/version\/([\w\.\,]+) .*mobile\/\w+ (safari)/i // Mobile Safari
-    ], [VERSION, [NAME, 'Mobile Safari']], [/version\/([\w(\.|\,)]+) .*(mobile ?safari|safari)/i // Safari & Safari Mobile
-    ], [VERSION, NAME], [/webkit.+?(mobile ?safari|safari)(\/[\w\.]+)/i // Safari < 3.0
-    ], [NAME, [VERSION, strMapper, oldSafariMap]], [/(webkit|khtml)\/([\w\.]+)/i], [NAME, VERSION], [
-    // Gecko based
-    /(navigator|netscape\d?)\/([-\w\.]+)/i // Netscape
-    ], [[NAME, 'Netscape'], VERSION], [/mobile vr; rv:([\w\.]+)\).+firefox/i // Firefox Reality
-    ], [VERSION, [NAME, FIREFOX + ' Reality']], [/ekiohf.+(flow)\/([\w\.]+)/i,
-    // Flow
-    /(swiftfox)/i,
-    // Swiftfox
-    /(icedragon|iceweasel|camino|chimera|fennec|maemo browser|minimo|conkeror|klar)[\/ ]?([\w\.\+]+)/i,
-    // IceDragon/Iceweasel/Camino/Chimera/Fennec/Maemo/Minimo/Conkeror/Klar
-    /(seamonkey|k-meleon|icecat|iceape|firebird|phoenix|palemoon|basilisk|waterfox)\/([-\w\.]+)$/i,
-    // Firefox/SeaMonkey/K-Meleon/IceCat/IceApe/Firebird/Phoenix
-    /(firefox)\/([\w\.]+)/i,
-    // Other Firefox-based
-    /(mozilla)\/([\w\.]+) .+rv\:.+gecko\/\d+/i,
-    // Mozilla
+//#endregion
+//#region src/isCmcdEventKey.ts
+const CMCD_EVENT_KEY_SET = new Set(CMCD_EVENT_KEYS);
+/**
+* Check if a key is a valid CMCD event key.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a valid CMCD event key, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdEventKey.test.ts#example}
+*/
+function isCmcdEventKey(key) {
+  return isCmcdRequestKey(key) || isCmcdResponseReceivedKey(key) || CMCD_EVENT_KEY_SET.has(key);
+}
 
-    // Other
-    /(polaris|lynx|dillo|icab|doris|amaya|w3m|netsurf|sleipnir|obigo|mosaic|(?:go|ice|up)[\. ]?browser)[-\/ ]?v?([\w\.]+)/i,
-    // Polaris/Lynx/Dillo/iCab/Doris/Amaya/w3m/NetSurf/Sleipnir/Obigo/Mosaic/Go/ICE/UP.Browser
-    /(links) \(([\w\.]+)/i,
-    // Links
-    /panasonic;(viera)/i // Panasonic Viera
-    ], [NAME, VERSION], [/(cobalt)\/([\w\.]+)/i // Cobalt
-    ], [NAME, [VERSION, /master.|lts./, ""]]],
-    cpu: [[/(?:(amd|x(?:(?:86|64)[-_])?|wow|win)64)[;\)]/i // AMD64 (x64)
-    ], [[ARCHITECTURE, 'amd64']], [/(ia32(?=;))/i // IA32 (quicktime)
-    ], [[ARCHITECTURE, lowerize]], [/((?:i[346]|x)86)[;\)]/i // IA32 (x86)
-    ], [[ARCHITECTURE, 'ia32']], [/\b(aarch64|arm(v?8e?l?|_?64))\b/i // ARM64
-    ], [[ARCHITECTURE, 'arm64']], [/\b(arm(?:v[67])?ht?n?[fl]p?)\b/i // ARMHF
-    ], [[ARCHITECTURE, 'armhf']], [
-    // PocketPC mistakenly identified as PowerPC
-    /windows (ce|mobile); ppc;/i], [[ARCHITECTURE, 'arm']], [/((?:ppc|powerpc)(?:64)?)(?: mac|;|\))/i // PowerPC
-    ], [[ARCHITECTURE, /ower/, EMPTY, lowerize]], [/(sun4\w)[;\)]/i // SPARC
-    ], [[ARCHITECTURE, 'sparc']], [/((?:avr32|ia64(?=;))|68k(?=\))|\barm(?=v(?:[1-7]|[5-7]1)l?|;|eabi)|(?=atmel )avr|(?:irix|mips|sparc)(?:64)?\b|pa-risc)/i
-    // IA64, 68K, ARM/64, AVR/32, IRIX/64, MIPS/64, SPARC/64, PA-RISC
-    ], [[ARCHITECTURE, lowerize]]],
-    device: [[
-    //////////////////////////
-    // MOBILES & TABLETS
-    /////////////////////////
+//#endregion
+//#region src/CMCD_INNER_LIST_KEYS.ts
+/**
+* Keys that are inner lists in V2 but plain scalars in V1.
+*
+* Used by both encoding (down-conversion) and decoding (up-conversion).
+*
+* @internal
+*/
+const CMCD_INNER_LIST_KEYS = new Set(["ab", "bl", "br", "bsa", "bsd", "bsda", "lab", "lb", "mtp", "pb", "tab", "tb", "tbl", "tpb"]);
 
-    // Samsung
-    /\b(sch-i[89]0\d|shw-m380s|sm-[ptx]\w{2,4}|gt-[pn]\d{2,4}|sgh-t8[56]9|nexus 10)/i], [MODEL, [VENDOR, SAMSUNG], [TYPE, TABLET]], [/\b((?:s[cgp]h|gt|sm)-\w+|sc[g-]?[\d]+a?|galaxy nexus)/i, /samsung[- ]([-\w]+)/i, /sec-(sgh\w+)/i], [MODEL, [VENDOR, SAMSUNG], [TYPE, MOBILE]], [
-    // Apple
-    /(?:\/|\()(ip(?:hone|od)[\w, ]*)(?:\/|;)/i // iPod/iPhone
-    ], [MODEL, [VENDOR, APPLE], [TYPE, MOBILE]], [/\((ipad);[-\w\),; ]+apple/i,
-    // iPad
-    /applecoremedia\/[\w\.]+ \((ipad)/i, /\b(ipad)\d\d?,\d\d?[;\]].+ios/i], [MODEL, [VENDOR, APPLE], [TYPE, TABLET]], [/(macintosh);/i], [MODEL, [VENDOR, APPLE]], [
-    // Sharp
-    /\b(sh-?[altvz]?\d\d[a-ekm]?)/i], [MODEL, [VENDOR, SHARP], [TYPE, MOBILE]], [
-    // Huawei
-    /\b((?:ag[rs][23]?|bah2?|sht?|btv)-a?[lw]\d{2})\b(?!.+d\/s)/i], [MODEL, [VENDOR, HUAWEI], [TYPE, TABLET]], [/(?:huawei|honor)([-\w ]+)[;\)]/i, /\b(nexus 6p|\w{2,4}e?-[atu]?[ln][\dx][012359c][adn]?)\b(?!.+d\/s)/i], [MODEL, [VENDOR, HUAWEI], [TYPE, MOBILE]], [
-    // Xiaomi
-    /\b(poco[\w ]+|m2\d{3}j\d\d[a-z]{2})(?: bui|\))/i,
-    // Xiaomi POCO
-    /\b; (\w+) build\/hm\1/i,
-    // Xiaomi Hongmi 'numeric' models
-    /\b(hm[-_ ]?note?[_ ]?(?:\d\w)?) bui/i,
-    // Xiaomi Hongmi
-    /\b(redmi[\-_ ]?(?:note|k)?[\w_ ]+)(?: bui|\))/i,
-    // Xiaomi Redmi
-    /oid[^\)]+; (m?[12][0-389][01]\w{3,6}[c-y])( bui|; wv|\))/i,
-    // Xiaomi Redmi 'numeric' models
-    /\b(mi[-_ ]?(?:a\d|one|one[_ ]plus|note lte|max|cc)?[_ ]?(?:\d?\w?)[_ ]?(?:plus|se|lite)?)(?: bui|\))/i // Xiaomi Mi
-    ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, MOBILE]], [/oid[^\)]+; (2\d{4}(283|rpbf)[cgl])( bui|\))/i,
-    // Redmi Pad
-    /\b(mi[-_ ]?(?:pad)(?:[\w_ ]+))(?: bui|\))/i // Mi Pad tablets
-    ], [[MODEL, /_/g, ' '], [VENDOR, XIAOMI], [TYPE, TABLET]], [
-    // OPPO
-    /; (\w+) bui.+ oppo/i, /\b(cph[12]\d{3}|p(?:af|c[al]|d\w|e[ar])[mt]\d0|x9007|a101op)\b/i], [MODEL, [VENDOR, 'OPPO'], [TYPE, MOBILE]], [/\b(opd2\d{3}a?) bui/i], [MODEL, [VENDOR, 'OPPO'], [TYPE, TABLET]], [
-    // Vivo
-    /vivo (\w+)(?: bui|\))/i, /\b(v[12]\d{3}\w?[at])(?: bui|;)/i], [MODEL, [VENDOR, 'Vivo'], [TYPE, MOBILE]], [
-    // Realme
-    /\b(rmx[1-3]\d{3})(?: bui|;|\))/i], [MODEL, [VENDOR, 'Realme'], [TYPE, MOBILE]], [
-    // Motorola
-    /\b(milestone|droid(?:[2-4x]| (?:bionic|x2|pro|razr))?:?( 4g)?)\b[\w ]+build\//i, /\bmot(?:orola)?[- ](\w*)/i, /((?:moto[\w\(\) ]+|xt\d{3,4}|nexus 6)(?= bui|\)))/i], [MODEL, [VENDOR, MOTOROLA], [TYPE, MOBILE]], [/\b(mz60\d|xoom[2 ]{0,2}) build\//i], [MODEL, [VENDOR, MOTOROLA], [TYPE, TABLET]], [
-    // LG
-    /((?=lg)?[vl]k\-?\d{3}) bui| 3\.[-\w; ]{10}lg?-([06cv9]{3,4})/i], [MODEL, [VENDOR, LG], [TYPE, TABLET]], [/(lm(?:-?f100[nv]?|-[\w\.]+)(?= bui|\))|nexus [45])/i, /\blg[-e;\/ ]+((?!browser|netcast|android tv)\w+)/i, /\blg-?([\d\w]+) bui/i], [MODEL, [VENDOR, LG], [TYPE, MOBILE]], [
-    // Lenovo
-    /(ideatab[-\w ]+)/i, /lenovo ?(s[56]000[-\w]+|tab(?:[\w ]+)|yt[-\d\w]{6}|tb[-\d\w]{6})/i], [MODEL, [VENDOR, 'Lenovo'], [TYPE, TABLET]], [
-    // Nokia
-    /(?:maemo|nokia).*(n900|lumia \d+)/i, /nokia[-_ ]?([-\w\.]*)/i], [[MODEL, /_/g, ' '], [VENDOR, 'Nokia'], [TYPE, MOBILE]], [
-    // Google
-    /(pixel c)\b/i // Google Pixel C
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, TABLET]], [/droid.+; (pixel[\daxl ]{0,6})(?: bui|\))/i // Google Pixel
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, MOBILE]], [
-    // Sony
-    /droid.+ (a?\d[0-2]{2}so|[c-g]\d{4}|so[-gl]\w+|xq-a\w[4-7][12])(?= bui|\).+chrome\/(?![1-6]{0,1}\d\.))/i], [MODEL, [VENDOR, SONY], [TYPE, MOBILE]], [/sony tablet [ps]/i, /\b(?:sony)?sgp\w+(?: bui|\))/i], [[MODEL, 'Xperia Tablet'], [VENDOR, SONY], [TYPE, TABLET]], [
-    // OnePlus
-    / (kb2005|in20[12]5|be20[12][59])\b/i, /(?:one)?(?:plus)? (a\d0\d\d)(?: b|\))/i], [MODEL, [VENDOR, 'OnePlus'], [TYPE, MOBILE]], [
-    // Amazon
-    /(alexa)webm/i, /(kf[a-z]{2}wi|aeo[c-r]{2})( bui|\))/i,
-    // Kindle Fire without Silk / Echo Show
-    /(kf[a-z]+)( bui|\)).+silk\//i // Kindle Fire HD
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, TABLET]], [/((?:sd|kf)[0349hijorstuw]+)( bui|\)).+silk\//i // Fire Phone
-    ], [[MODEL, /(.+)/g, 'Fire Phone $1'], [VENDOR, AMAZON], [TYPE, MOBILE]], [
-    // BlackBerry
-    /(playbook);[-\w\),; ]+(rim)/i // BlackBerry PlayBook
-    ], [MODEL, VENDOR, [TYPE, TABLET]], [/\b((?:bb[a-f]|st[hv])100-\d)/i, /\(bb10; (\w+)/i // BlackBerry 10
-    ], [MODEL, [VENDOR, BLACKBERRY], [TYPE, MOBILE]], [
-    // Asus
-    /(?:\b|asus_)(transfo[prime ]{4,10} \w+|eeepc|slider \w+|nexus 7|padfone|p00[cj])/i], [MODEL, [VENDOR, ASUS], [TYPE, TABLET]], [/ (z[bes]6[027][012][km][ls]|zenfone \d\w?)\b/i], [MODEL, [VENDOR, ASUS], [TYPE, MOBILE]], [
-    // HTC
-    /(nexus 9)/i // HTC Nexus 9
-    ], [MODEL, [VENDOR, 'HTC'], [TYPE, TABLET]], [/(htc)[-;_ ]{1,2}([\w ]+(?=\)| bui)|\w+)/i,
-    // HTC
+//#endregion
+//#region src/CMCD_V1_KEYS.ts
+/**
+* Defines the keys for CMCD (Common Media Client Data) version 1.
+*
+* @public
+*/
+const CMCD_V1_KEYS = ["bl", "br", "bs", "cid", "d", "dl", "mtp", "nor", "nrr", "ot", "pr", "rtp", "sf", "sid", "st", "su", "tb", "v"];
 
-    // ZTE
-    /(zte)[- ]([\w ]+?)(?: bui|\/|\))/i, /(alcatel|geeksphone|nexian|panasonic(?!(?:;|\.))|sony(?!-bra))[-_ ]?([-\w]*)/i // Alcatel/GeeksPhone/Nexian/Panasonic/Sony
-    ], [VENDOR, [MODEL, /_/g, ' '], [TYPE, MOBILE]], [
-    // Acer
-    /droid.+; ([ab][1-7]-?[0178a]\d\d?)/i], [MODEL, [VENDOR, 'Acer'], [TYPE, TABLET]], [
-    // Meizu
-    /droid.+; (m[1-5] note) bui/i, /\bmz-([-\w]{2,})/i], [MODEL, [VENDOR, 'Meizu'], [TYPE, MOBILE]], [
-    // Ulefone
-    /; ((?:power )?armor(?:[\w ]{0,8}))(?: bui|\))/i], [MODEL, [VENDOR, 'Ulefone'], [TYPE, MOBILE]], [
-    // MIXED
-    /(blackberry|benq|palm(?=\-)|sonyericsson|acer|asus|dell|meizu|motorola|polytron|infinix|tecno)[-_ ]?([-\w]*)/i,
-    // BlackBerry/BenQ/Palm/Sony-Ericsson/Acer/Asus/Dell/Meizu/Motorola/Polytron
-    /(hp) ([\w ]+\w)/i,
-    // HP iPAQ
-    /(asus)-?(\w+)/i,
-    // Asus
-    /(microsoft); (lumia[\w ]+)/i,
-    // Microsoft Lumia
-    /(lenovo)[-_ ]?([-\w]+)/i,
-    // Lenovo
-    /(jolla)/i,
-    // Jolla
-    /(oppo) ?([\w ]+) bui/i // OPPO
-    ], [VENDOR, MODEL, [TYPE, MOBILE]], [/(kobo)\s(ereader|touch)/i,
-    // Kobo
-    /(archos) (gamepad2?)/i,
-    // Archos
-    /(hp).+(touchpad(?!.+tablet)|tablet)/i,
-    // HP TouchPad
-    /(kindle)\/([\w\.]+)/i,
-    // Kindle
-    /(nook)[\w ]+build\/(\w+)/i,
-    // Nook
-    /(dell) (strea[kpr\d ]*[\dko])/i,
-    // Dell Streak
-    /(le[- ]+pan)[- ]+(\w{1,9}) bui/i,
-    // Le Pan Tablets
-    /(trinity)[- ]*(t\d{3}) bui/i,
-    // Trinity Tablets
-    /(gigaset)[- ]+(q\w{1,9}) bui/i,
-    // Gigaset Tablets
-    /(vodafone) ([\w ]+)(?:\)| bui)/i // Vodafone
-    ], [VENDOR, MODEL, [TYPE, TABLET]], [/(surface duo)/i // Surface Duo
-    ], [MODEL, [VENDOR, MICROSOFT], [TYPE, TABLET]], [/droid [\d\.]+; (fp\du?)(?: b|\))/i // Fairphone
-    ], [MODEL, [VENDOR, 'Fairphone'], [TYPE, MOBILE]], [/(u304aa)/i // AT&T
-    ], [MODEL, [VENDOR, 'AT&T'], [TYPE, MOBILE]], [/\bsie-(\w*)/i // Siemens
-    ], [MODEL, [VENDOR, 'Siemens'], [TYPE, MOBILE]], [/\b(rct\w+) b/i // RCA Tablets
-    ], [MODEL, [VENDOR, 'RCA'], [TYPE, TABLET]], [/\b(venue[\d ]{2,7}) b/i // Dell Venue Tablets
-    ], [MODEL, [VENDOR, 'Dell'], [TYPE, TABLET]], [/\b(q(?:mv|ta)\w+) b/i // Verizon Tablet
-    ], [MODEL, [VENDOR, 'Verizon'], [TYPE, TABLET]], [/\b(?:barnes[& ]+noble |bn[rt])([\w\+ ]*) b/i // Barnes & Noble Tablet
-    ], [MODEL, [VENDOR, 'Barnes & Noble'], [TYPE, TABLET]], [/\b(tm\d{3}\w+) b/i], [MODEL, [VENDOR, 'NuVision'], [TYPE, TABLET]], [/\b(k88) b/i // ZTE K Series Tablet
-    ], [MODEL, [VENDOR, 'ZTE'], [TYPE, TABLET]], [/\b(nx\d{3}j) b/i // ZTE Nubia
-    ], [MODEL, [VENDOR, 'ZTE'], [TYPE, MOBILE]], [/\b(gen\d{3}) b.+49h/i // Swiss GEN Mobile
-    ], [MODEL, [VENDOR, 'Swiss'], [TYPE, MOBILE]], [/\b(zur\d{3}) b/i // Swiss ZUR Tablet
-    ], [MODEL, [VENDOR, 'Swiss'], [TYPE, TABLET]], [/\b((zeki)?tb.*\b) b/i // Zeki Tablets
-    ], [MODEL, [VENDOR, 'Zeki'], [TYPE, TABLET]], [/\b([yr]\d{2}) b/i, /\b(dragon[- ]+touch |dt)(\w{5}) b/i // Dragon Touch Tablet
-    ], [[VENDOR, 'Dragon Touch'], MODEL, [TYPE, TABLET]], [/\b(ns-?\w{0,9}) b/i // Insignia Tablets
-    ], [MODEL, [VENDOR, 'Insignia'], [TYPE, TABLET]], [/\b((nxa|next)-?\w{0,9}) b/i // NextBook Tablets
-    ], [MODEL, [VENDOR, 'NextBook'], [TYPE, TABLET]], [/\b(xtreme\_)?(v(1[045]|2[015]|[3469]0|7[05])) b/i // Voice Xtreme Phones
-    ], [[VENDOR, 'Voice'], MODEL, [TYPE, MOBILE]], [/\b(lvtel\-)?(v1[12]) b/i // LvTel Phones
-    ], [[VENDOR, 'LvTel'], MODEL, [TYPE, MOBILE]], [/\b(ph-1) /i // Essential PH-1
-    ], [MODEL, [VENDOR, 'Essential'], [TYPE, MOBILE]], [/\b(v(100md|700na|7011|917g).*\b) b/i // Envizen Tablets
-    ], [MODEL, [VENDOR, 'Envizen'], [TYPE, TABLET]], [/\b(trio[-\w\. ]+) b/i // MachSpeed Tablets
-    ], [MODEL, [VENDOR, 'MachSpeed'], [TYPE, TABLET]], [/\btu_(1491) b/i // Rotor Tablets
-    ], [MODEL, [VENDOR, 'Rotor'], [TYPE, TABLET]], [/(shield[\w ]+) b/i // Nvidia Shield Tablets
-    ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, TABLET]], [/(sprint) (\w+)/i // Sprint Phones
-    ], [VENDOR, MODEL, [TYPE, MOBILE]], [/(kin\.[onetw]{3})/i // Microsoft Kin
-    ], [[MODEL, /\./g, ' '], [VENDOR, MICROSOFT], [TYPE, MOBILE]], [/droid.+; (cc6666?|et5[16]|mc[239][23]x?|vc8[03]x?)\)/i // Zebra
-    ], [MODEL, [VENDOR, ZEBRA], [TYPE, TABLET]], [/droid.+; (ec30|ps20|tc[2-8]\d[kx])\)/i], [MODEL, [VENDOR, ZEBRA], [TYPE, MOBILE]], [
-    ///////////////////
-    // SMARTTVS
-    ///////////////////
+//#endregion
+//#region src/isCmcdV1Key.ts
+const CMCD_V1_KEY_SET$1 = new Set(CMCD_V1_KEYS);
+/**
+* Filter function for CMCD v1 keys.
+*
+* @param key - The CMCD key to filter.
+*
+* @returns `true` if the key should be included, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Key.test.ts#example}
+*/
+function isCmcdV1Key(key) {
+  return CMCD_V1_KEY_SET$1.has(key) || isCmcdCustomKey(key);
+}
 
-    /smart-tv.+(samsung)/i // Samsung
-    ], [VENDOR, [TYPE, SMARTTV]], [/hbbtv.+maple;(\d+)/i], [[MODEL, /^/, 'SmartTV'], [VENDOR, SAMSUNG], [TYPE, SMARTTV]], [/(nux; netcast.+smarttv|lg (netcast\.tv-201\d|android tv))/i // LG SmartTV
-    ], [[VENDOR, LG], [TYPE, SMARTTV]], [/(apple) ?tv/i // Apple TV
-    ], [VENDOR, [MODEL, APPLE + ' TV'], [TYPE, SMARTTV]], [/crkey/i // Google Chromecast
-    ], [[MODEL, CHROME + 'cast'], [VENDOR, GOOGLE], [TYPE, SMARTTV]], [/droid.+aft(\w+)( bui|\))/i // Fire TV
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, SMARTTV]], [/\(dtv[\);].+(aquos)/i, /(aquos-tv[\w ]+)\)/i // Sharp
-    ], [MODEL, [VENDOR, SHARP], [TYPE, SMARTTV]], [/(bravia[\w ]+)( bui|\))/i // Sony
-    ], [MODEL, [VENDOR, SONY], [TYPE, SMARTTV]], [/(mitv-\w{5}) bui/i // Xiaomi
-    ], [MODEL, [VENDOR, XIAOMI], [TYPE, SMARTTV]], [/Hbbtv.*(technisat) (.*);/i // TechniSAT
-    ], [VENDOR, MODEL, [TYPE, SMARTTV]], [/\b(roku)[\dx]*[\)\/]((?:dvp-)?[\d\.]*)/i,
-    // Roku
-    /hbbtv\/\d+\.\d+\.\d+ +\([\w\+ ]*; *([\w\d][^;]*);([^;]*)/i // HbbTV devices
-    ], [[VENDOR, trim], [MODEL, trim], [TYPE, SMARTTV]], [/\b(android tv|smart[- ]?tv|opera tv|tv; rv:)\b/i // SmartTV from Unidentified Vendors
-    ], [[TYPE, SMARTTV]], [
-    ///////////////////
-    // CONSOLES
-    ///////////////////
+//#endregion
+//#region src/isTokenField.ts
+const TOKEN_FIELDS = new Set(["ot", "sf", "st", "e", "sta"]);
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return TOKEN_FIELDS.has(key);
+}
 
-    /(ouya)/i,
-    // Ouya
-    /(nintendo) ([wids3utch]+)/i // Nintendo
-    ], [VENDOR, MODEL, [TYPE, CONSOLE]], [/droid.+; (shield) bui/i // Nvidia
-    ], [MODEL, [VENDOR, 'Nvidia'], [TYPE, CONSOLE]], [/(playstation [345portablevi]+)/i // Playstation
-    ], [MODEL, [VENDOR, SONY], [TYPE, CONSOLE]], [/\b(xbox(?: one)?(?!; xbox))[\); ]/i // Microsoft Xbox
-    ], [MODEL, [VENDOR, MICROSOFT], [TYPE, CONSOLE]], [
-    ///////////////////
-    // WEARABLES
-    ///////////////////
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
 
-    /((pebble))app/i // Pebble
-    ], [VENDOR, MODEL, [TYPE, WEARABLE]], [/(watch)(?: ?os[,\/]|\d,\d\/)[\d\.]+/i // Apple Watch
-    ], [MODEL, [VENDOR, APPLE], [TYPE, WEARABLE]], [/droid.+; (glass) \d/i // Google Glass
-    ], [MODEL, [VENDOR, GOOGLE], [TYPE, WEARABLE]], [/droid.+; (wt63?0{2,3})\)/i], [MODEL, [VENDOR, ZEBRA], [TYPE, WEARABLE]], [/(quest( \d| pro)?)/i // Oculus Quest
-    ], [MODEL, [VENDOR, FACEBOOK], [TYPE, WEARABLE]], [
-    ///////////////////
-    // EMBEDDED
-    ///////////////////
-
-    /(tesla)(?: qtcarbrowser|\/[-\w\.]+)/i // Tesla
-    ], [VENDOR, [TYPE, EMBEDDED]], [/(aeobc)\b/i // Echo Dot
-    ], [MODEL, [VENDOR, AMAZON], [TYPE, EMBEDDED]], [
-    ////////////////////
-    // MIXED (GENERIC)
-    ///////////////////
-
-    /droid .+?; ([^;]+?)(?: bui|; wv\)|\) applew).+? mobile safari/i // Android Phones from Unidentified Vendors
-    ], [MODEL, [TYPE, MOBILE]], [/droid .+?; ([^;]+?)(?: bui|\) applew).+?(?! mobile) safari/i // Android Tablets from Unidentified Vendors
-    ], [MODEL, [TYPE, TABLET]], [/\b((tablet|tab)[;\/]|focus\/\d(?!.+mobile))/i // Unidentifiable Tablet
-    ], [[TYPE, TABLET]], [/(phone|mobile(?:[;\/]| [ \w\/\.]*safari)|pda(?=.+windows ce))/i // Unidentifiable Mobile
-    ], [[TYPE, MOBILE]], [/(android[-\w\. ]{0,9});.+buil/i // Generic Android Device
-    ], [MODEL, [VENDOR, 'Generic']]],
-    engine: [[/windows.+ edge\/([\w\.]+)/i // EdgeHTML
-    ], [VERSION, [NAME, EDGE + 'HTML']], [/webkit\/537\.36.+chrome\/(?!27)([\w\.]+)/i // Blink
-    ], [VERSION, [NAME, 'Blink']], [/(presto)\/([\w\.]+)/i,
-    // Presto
-    /(webkit|trident|netfront|netsurf|amaya|lynx|w3m|goanna)\/([\w\.]+)/i,
-    // WebKit/Trident/NetFront/NetSurf/Amaya/Lynx/w3m/Goanna
-    /ekioh(flow)\/([\w\.]+)/i,
-    // Flow
-    /(khtml|tasman|links)[\/ ]\(?([\w\.]+)/i,
-    // KHTML/Tasman/Links
-    /(icab)[\/ ]([23]\.[\d\.]+)/i,
-    // iCab
-    /\b(libweb)/i], [NAME, VERSION], [/rv\:([\w\.]{1,9})\b.+(gecko)/i // Gecko
-    ], [VERSION, NAME]],
-    os: [[
-    // Windows
-    /microsoft (windows) (vista|xp)/i // Windows (iTunes)
-    ], [NAME, VERSION], [/(windows (?:phone(?: os)?|mobile))[\/ ]?([\d\.\w ]*)/i // Windows Phone
-    ], [NAME, [VERSION, strMapper, windowsVersionMap]], [/windows nt 6\.2; (arm)/i,
-    // Windows RT
-    /windows[\/ ]?([ntce\d\. ]+\w)(?!.+xbox)/i, /(?:win(?=3|9|n)|win 9x )([nt\d\.]+)/i], [[VERSION, strMapper, windowsVersionMap], [NAME, 'Windows']], [
-    // iOS/macOS
-    /ip[honead]{2,4}\b(?:.*os ([\w]+) like mac|; opera)/i,
-    // iOS
-    /(?:ios;fbsv\/|iphone.+ios[\/ ])([\d\.]+)/i, /cfnetwork\/.+darwin/i], [[VERSION, /_/g, '.'], [NAME, 'iOS']], [/(mac os x) ?([\w\. ]*)/i, /(macintosh|mac_powerpc\b)(?!.+haiku)/i // Mac OS
-    ], [[NAME, MAC_OS], [VERSION, /_/g, '.']], [
-    // Mobile OSes
-    /droid ([\w\.]+)\b.+(android[- ]x86|harmonyos)/i // Android-x86/HarmonyOS
-    ], [VERSION, NAME], [
-    // Android/WebOS/QNX/Bada/RIM/Maemo/MeeGo/Sailfish OS
-    /(android|webos|qnx|bada|rim tablet os|maemo|meego|sailfish)[-\/ ]?([\w\.]*)/i, /(blackberry)\w*\/([\w\.]*)/i,
-    // Blackberry
-    /(tizen|kaios)[\/ ]([\w\.]+)/i,
-    // Tizen/KaiOS
-    /\((series40);/i // Series 40
-    ], [NAME, VERSION], [/\(bb(10);/i // BlackBerry 10
-    ], [VERSION, [NAME, BLACKBERRY]], [/(?:symbian ?os|symbos|s60(?=;)|series60)[-\/ ]?([\w\.]*)/i // Symbian
-    ], [VERSION, [NAME, 'Symbian']], [/mozilla\/[\d\.]+ \((?:mobile|tablet|tv|mobile; [\w ]+); rv:.+ gecko\/([\w\.]+)/i // Firefox OS
-    ], [VERSION, [NAME, FIREFOX + ' OS']], [/web0s;.+rt(tv)/i, /\b(?:hp)?wos(?:browser)?\/([\w\.]+)/i // WebOS
-    ], [VERSION, [NAME, 'webOS']], [/watch(?: ?os[,\/]|\d,\d\/)([\d\.]+)/i // watchOS
-    ], [VERSION, [NAME, 'watchOS']], [
-    // Google Chromecast
-    /crkey\/([\d\.]+)/i // Google Chromecast
-    ], [VERSION, [NAME, CHROME + 'cast']], [/(cros) [\w]+(?:\)| ([\w\.]+)\b)/i // Chromium OS
-    ], [[NAME, CHROMIUM_OS], VERSION], [
-    // Smart TVs
-    /panasonic;(viera)/i,
-    // Panasonic Viera
-    /(netrange)mmh/i,
-    // Netrange
-    /(nettv)\/(\d+\.[\w\.]+)/i,
-    // NetTV
-
-    // Console
-    /(nintendo|playstation) ([wids345portablevuch]+)/i,
-    // Nintendo/Playstation
-    /(xbox); +xbox ([^\);]+)/i,
-    // Microsoft Xbox (360, One, X, S, Series X, Series S)
-
-    // Other
-    /\b(joli|palm)\b ?(?:os)?\/?([\w\.]*)/i,
-    // Joli/Palm
-    /(mint)[\/\(\) ]?(\w*)/i,
-    // Mint
-    /(mageia|vectorlinux)[; ]/i,
-    // Mageia/VectorLinux
-    /([kxln]?ubuntu|debian|suse|opensuse|gentoo|arch(?= linux)|slackware|fedora|mandriva|centos|pclinuxos|red ?hat|zenwalk|linpus|raspbian|plan 9|minix|risc os|contiki|deepin|manjaro|elementary os|sabayon|linspire)(?: gnu\/linux)?(?: enterprise)?(?:[- ]linux)?(?:-gnu)?[-\/ ]?(?!chrom|package)([-\w\.]*)/i,
-    // Ubuntu/Debian/SUSE/Gentoo/Arch/Slackware/Fedora/Mandriva/CentOS/PCLinuxOS/RedHat/Zenwalk/Linpus/Raspbian/Plan9/Minix/RISCOS/Contiki/Deepin/Manjaro/elementary/Sabayon/Linspire
-    /(hurd|linux) ?([\w\.]*)/i,
-    // Hurd/Linux
-    /(gnu) ?([\w\.]*)/i,
-    // GNU
-    /\b([-frentopcghs]{0,5}bsd|dragonfly)[\/ ]?(?!amd|[ix346]{1,2}86)([\w\.]*)/i,
-    // FreeBSD/NetBSD/OpenBSD/PC-BSD/GhostBSD/DragonFly
-    /(haiku) (\w+)/i // Haiku
-    ], [NAME, VERSION], [/(sunos) ?([\w\.\d]*)/i // Solaris
-    ], [[NAME, 'Solaris'], VERSION], [/((?:open)?solaris)[-\/ ]?([\w\.]*)/i,
-    // Solaris
-    /(aix) ((\d)(?=\.|\)| )[\w\.])*/i,
-    // AIX
-    /\b(beos|os\/2|amigaos|morphos|openvms|fuchsia|hp-ux|serenityos)/i,
-    // BeOS/OS2/AmigaOS/MorphOS/OpenVMS/Fuchsia/HP-UX/SerenityOS
-    /(unix) ?([\w\.]*)/i // UNIX
-    ], [NAME, VERSION]]
+//#endregion
+//#region src/prepareCmcdData.ts
+const filterMap = {
+  [CMCD_EVENT_MODE]: isCmcdEventKey,
+  [CMCD_REQUEST_MODE]: isCmcdRequestKey
+};
+/**
+* Unwrap an inner list or SfItem value to a plain scalar.
+*/
+function unwrapValue(value, ot) {
+  if (Array.isArray(value)) {
+    let item;
+    if (ot) item = value.find(item$1 => item$1.params?.ot === ot);
+    if (!item) item = value[0];
+    return unwrapValue(item);
+  }
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) return value.value;
+  return value;
+}
+/**
+* Down-convert V2 CMCD data to V1 format.
+*
+* - Extracts `nrr` from `nor` SfItem `r` parameter.
+* - Unwraps inner-list values to plain scalars.
+*/
+function downConvertToV1(obj) {
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (key === "nor") {
+      const first = (Array.isArray(value) ? value : [value])[0];
+      if (first instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+        result["nor"] = first.value;
+        if (first.params?.r) result["nrr"] = first.params.r;
+      } else result["nor"] = first;
+    } else if (CMCD_INNER_LIST_KEYS.has(key)) result[key] = unwrapValue(value, obj["ot"]);else result[key] = value;
+  }
+  return result;
+}
+/**
+* Convert a generic object to CMCD data.
+*
+* @param obj - The CMCD object to process.
+* @param options - Options for encoding.
+*
+* @public
+*/
+function prepareCmcdData(obj, options = {}) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const version = options.version || obj["v"] || CMCD_V2;
+  const reportingMode = options.reportingMode || CMCD_REQUEST_MODE;
+  const data = version === 1 ? downConvertToV1(obj) : obj;
+  const keyFilter = version === 1 ? isCmcdV1Key : filterMap[reportingMode];
+  let keys = Object.keys(data).filter(keyFilter);
+  if (data["e"] && data["e"] !== CMCD_EVENT_RESPONSE_RECEIVED) keys = keys.filter(key => !isCmcdResponseReceivedKey(key));
+  const filter = options.filter;
+  if (typeof filter === "function") keys = keys.filter(filter);
+  const isEventMode = reportingMode === CMCD_EVENT_MODE;
+  if (isEventMode) {
+    const eventType = data["e"];
+    if (!keys.includes("e") && eventType != null) keys.push("e");
+    if (!keys.includes("ts")) keys.push("ts");
+    if (!keys.includes("cen") && data["cen"] != null && eventType === CMCD_EVENT_CUSTOM_EVENT) keys.push("cen");
+  }
+  if (keys.length === 0) return results;
+  if (version > 1 && !keys.includes("v")) keys.push("v");
+  const formatterOptions = {
+    version,
+    reportingMode,
+    baseUrl: options.baseUrl
   };
+  keys.sort();
+  for (const key of keys) {
+    let value = data[key];
+    const formatter = options.formatters?.[key] ?? CMCD_FORMATTER_MAP[key];
+    if (typeof formatter === "function") value = formatter(value, formatterOptions);
+    if (key === "v") if (version === 1) continue;else value = version;
+    if (key === "pr" && value === 1) continue;
+    if (isEventMode && key === "ts" && !Number.isFinite(value)) value = Date.now();
+    if (!isValid(value)) continue;
+    if (isTokenField(key) && typeof value === "string") value = new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfToken(value);
+    results[key] = value;
+  }
+  return results;
+}
 
-  /////////////////
-  // Constructor
-  ////////////////
+//#endregion
+//#region src/CmcdHeaderField.ts
+/**
+* CMCD object header name.
+*
+* @public
+*/
+const CMCD_OBJECT = "CMCD-Object";
+/**
+* CMCD request header name.
+*
+* @public
+*/
+const CMCD_REQUEST = "CMCD-Request";
+/**
+* CMCD session header name.
+*
+* @public
+*/
+const CMCD_SESSION = "CMCD-Session";
+/**
+* CMCD status header name.
+*
+* @public
+*/
+const CMCD_STATUS = "CMCD-Status";
+/**
+* CMCD header fields.
+*
+*
+* @enum
+*
+* @public
+*/
+const CmcdHeaderField = {
+  OBJECT: CMCD_OBJECT,
+  REQUEST: CMCD_REQUEST,
+  SESSION: CMCD_SESSION,
+  STATUS: CMCD_STATUS
+};
+/**
+* All CMCD header fields as an array.
+*
+* @public
+*/
+const CMCD_HEADER_FIELDS = [CMCD_OBJECT, CMCD_REQUEST, CMCD_SESSION, CMCD_STATUS];
 
-  var UAParser = function (ua, extensions) {
-    if (typeof ua === OBJ_TYPE) {
-      extensions = ua;
-      ua = undefined;
-    }
-    if (!(this instanceof UAParser)) {
-      return new UAParser(ua, extensions).getResult();
-    }
-    var _navigator = typeof window !== UNDEF_TYPE && window.navigator ? window.navigator : undefined;
-    var _ua = ua || (_navigator && _navigator.userAgent ? _navigator.userAgent : EMPTY);
-    var _uach = _navigator && _navigator.userAgentData ? _navigator.userAgentData : undefined;
-    var _rgxmap = extensions ? extend(regexes, extensions) : regexes;
-    var _isSelfNav = _navigator && _navigator.userAgent == _ua;
-    this.getBrowser = function () {
-      var _browser = {};
-      _browser[NAME] = undefined;
-      _browser[VERSION] = undefined;
-      rgxMapper.call(_browser, _ua, _rgxmap.browser);
-      _browser[MAJOR] = majorize(_browser[VERSION]);
-      // Brave-specific detection
-      if (_isSelfNav && _navigator && _navigator.brave && typeof _navigator.brave.isBrave == FUNC_TYPE) {
-        _browser[NAME] = 'Brave';
-      }
-      return _browser;
+//#endregion
+//#region src/CMCD_HEADER_MAP.ts
+/**
+* The map of CMCD keys to their appropriate header shard.
+*
+* Note: Event-only keys (e, ts, cen, h) and response-received keys
+* (rc, ttfb, ttlb, url, etc.) are intentionally absent. They are
+* transmitted via the event-mode POST body, not HTTP headers.
+*
+* @public
+*/
+const CMCD_HEADER_MAP = {
+  ab: CMCD_OBJECT,
+  br: CMCD_OBJECT,
+  d: CMCD_OBJECT,
+  lab: CMCD_OBJECT,
+  lb: CMCD_OBJECT,
+  ot: CMCD_OBJECT,
+  tab: CMCD_OBJECT,
+  tb: CMCD_OBJECT,
+  tpb: CMCD_OBJECT,
+  bl: CMCD_REQUEST,
+  cs: CMCD_REQUEST,
+  dfa: CMCD_REQUEST,
+  dl: CMCD_REQUEST,
+  ltc: CMCD_REQUEST,
+  mtp: CMCD_REQUEST,
+  nor: CMCD_REQUEST,
+  nrr: CMCD_REQUEST,
+  pb: CMCD_REQUEST,
+  sn: CMCD_REQUEST,
+  sta: CMCD_REQUEST,
+  su: CMCD_REQUEST,
+  tbl: CMCD_REQUEST,
+  cid: CMCD_SESSION,
+  msd: CMCD_SESSION,
+  sf: CMCD_SESSION,
+  sid: CMCD_SESSION,
+  st: CMCD_SESSION,
+  v: CMCD_SESSION,
+  bg: CMCD_STATUS,
+  bs: CMCD_STATUS,
+  bsa: CMCD_STATUS,
+  bsd: CMCD_STATUS,
+  bsda: CMCD_STATUS,
+  cdn: CMCD_STATUS,
+  ec: CMCD_STATUS,
+  nr: CMCD_STATUS,
+  pr: CMCD_STATUS,
+  pt: CMCD_STATUS,
+  rtp: CMCD_STATUS
+};
+
+//#endregion
+//#region src/groupCmcdHeaders.ts
+function createHeaderMap(headerMap) {
+  return Object.keys(headerMap).reduce((acc, field) => {
+    headerMap[field]?.forEach(key => acc[key] = field);
+    return acc;
+  }, {});
+}
+/**
+* Group a CMCD data object into header shards
+*
+* @param cmcd - The CMCD data object to convert.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+*
+* @returns The CMCD header shards.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
+*
+* @public
+*/
+function groupCmcdHeaders(cmcd, customHeaderMap) {
+  const result = {};
+  if (!cmcd) return result;
+  const keys = Object.keys(cmcd);
+  const custom = customHeaderMap ? createHeaderMap(customHeaderMap) : {};
+  for (const key of keys) {
+    const field = CMCD_HEADER_MAP[key] || custom[key] || CmcdHeaderField.REQUEST;
+    const data = result[field] ??= {};
+    data[key] = cmcd[key];
+  }
+  return result;
+}
+
+//#endregion
+//#region src/toPreparedCmcdHeaders.ts
+/**
+* Encode already-prepared CMCD data to CMCD header shards.
+*
+* @param data - The prepared CMCD data to encode.
+* @param customHeaderMap - A map of CMCD header fields to custom CMCD keys.
+* @returns The CMCD header shards.
+*
+* @internal
+*/
+function toPreparedCmcdHeaders(data, customHeaderMap) {
+  const result = {};
+  const shards = groupCmcdHeaders(data, customHeaderMap);
+  for (const [field, value] of Object.entries(shards)) {
+    const shard = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(value, {
+      whitespace: false
+    });
+    if (shard) result[field] = shard;
+  }
+  return result;
+}
+
+//#endregion
+//#region src/toCmcdHeaders.ts
+/**
+* Convert a CMCD data object to request headers
+*
+* @param cmcd - The CMCD data object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD header shards.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/toCmcdHeaders.test.ts#example}
+*/
+function toCmcdHeaders(cmcd, options = {}) {
+  if (!cmcd) return {};
+  return toPreparedCmcdHeaders(prepareCmcdData(cmcd, options), options?.customHeaderMap);
+}
+
+//#endregion
+//#region src/appendCmcdHeaders.ts
+/**
+* Append CMCD query args to a header object.
+*
+* @param headers - The headers to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Encode options.
+*
+* @returns The headers with the CMCD header shards appended.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/appendCmcdHeaders.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
+*/
+function appendCmcdHeaders(headers, cmcd, options) {
+  return Object.assign(headers, toCmcdHeaders(cmcd, options));
+}
+
+//#endregion
+//#region src/CMCD_PARAM.ts
+/**
+* CMCD parameter name.
+*
+* @public
+*/
+const CMCD_PARAM = "CMCD";
+
+//#endregion
+//#region src/encodePreparedCmcd.ts
+/**
+* Encode already-prepared CMCD data to a structured field dictionary string.
+*
+* @param data - The prepared CMCD data to encode.
+* @returns The encoded CMCD string.
+*
+* @internal
+*/
+function encodePreparedCmcd(data) {
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.encodeSfDict)(data, {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/encodeCmcd.ts
+/**
+* Encode a CMCD object to a string.
+*
+* @param cmcd - The CMCD object to encode.
+* @param options - Options for encoding.
+*
+* @returns The encoded CMCD string.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#payload-definition-for-headers-and-query-argument-transmission | CTA-5004-B Payload Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/encodeCmcd.test.ts#example}
+*/
+function encodeCmcd(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return encodePreparedCmcd(prepareCmcdData(cmcd, options));
+}
+
+//#endregion
+//#region src/toCmcdUrl.ts
+/**
+* Convert a CMCD data object to a URL encoded string.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL encoded CMCD data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*/
+function toCmcdUrl(cmcd, options = {}) {
+  if (!cmcd) return "";
+  const params = encodeCmcd(cmcd, options);
+  return encodeURIComponent(params);
+}
+
+//#endregion
+//#region src/toCmcdQuery.ts
+/**
+* Convert a CMCD data object to a query arg.
+*
+* @param cmcd - The CMCD object to convert.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The CMCD query arg.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*
+* @public
+*
+* @example
+* {@includeCode ../test/toCmcdQuery.test.ts#example}
+*/
+function toCmcdQuery(cmcd, options = {}) {
+  if (!cmcd) return "";
+  return `${CMCD_PARAM}=${toCmcdUrl(cmcd, options)}`;
+}
+
+//#endregion
+//#region src/appendCmcdQuery.ts
+const REGEX = /CMCD=[^&#]+/;
+/**
+* Append CMCD query args to a URL.
+*
+* @param url - The URL to append to.
+* @param cmcd - The CMCD object to append.
+* @param options - Options for encoding the CMCD object.
+*
+* @returns The URL with the CMCD query args appended.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/appendCmcdQuery.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#query-argument-definition | CTA-5004-B Query Argument Definition}
+*/
+function appendCmcdQuery(url, cmcd, options) {
+  const query = toCmcdQuery(cmcd, options);
+  if (!query) return url;
+  if (REGEX.test(url)) return url.replace(REGEX, query);
+  return `${url}${url.includes("?") ? "&" : "?"}${query}`;
+}
+
+//#endregion
+//#region src/CMCD_DEFAULT_TIME_INTERVAL.ts
+/**
+* The default time interval in seconds when using using event mode
+*
+* @public
+*/
+const CMCD_DEFAULT_TIME_INTERVAL = 30;
+
+//#endregion
+//#region src/CMCD_KEYS.ts
+/**
+* A list of all CMCD keys.
+*
+* @public
+*/
+const CMCD_KEYS = [...CMCD_V1_KEYS, ...CMCD_REQUEST_KEYS, ...CMCD_RESPONSE_KEYS, ...CMCD_EVENT_KEYS].filter((key, index, arr) => arr.indexOf(key) === index);
+
+//#endregion
+//#region src/CMCD_MIME_TYPE.ts
+/**
+* CMCD MIME type for event report payloads.
+*
+* @public
+*/
+const CMCD_MIME_TYPE = "application/cmcd";
+
+//#endregion
+//#region src/CMCD_V1.ts
+/**
+* CMCD Version 1
+*
+* @public
+*/
+const CMCD_V1 = 1;
+
+//#endregion
+//#region src/CmcdObjectType.ts
+/**
+* Common Media Client Data Object Type
+*
+* @public
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#object-type | CTA-5004-B Object Type}
+*/
+const CmcdObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmcdPlayerState.ts
+/**
+* CMCD v2 player states for the 'sta' key.
+*
+*
+* @enum
+*
+* @public
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#state | CTA-5004-B State}
+*/
+const CmcdPlayerState = {
+  STARTING: "s",
+  PLAYING: "p",
+  SEEKING: "k",
+  REBUFFERING: "r",
+  PAUSED: "a",
+  WAITING: "w",
+  ENDED: "e",
+  FATAL_ERROR: "f",
+  QUIT: "q",
+  PRELOADING: "d"
+};
+
+//#endregion
+//#region src/CmcdTransmissionMode.ts
+/**
+* CMCD `query` transmission mode.
+*
+* @public
+*/
+const CMCD_QUERY = "query";
+/**
+* CMCD `headers` transmission mode.
+*
+* @public
+*/
+const CMCD_HEADERS = "headers";
+/**
+* CMCD `json` transmission mode.
+*
+* @public
+*
+* @deprecated JSON transmission mode is deprecated and will be removed in future versions.
+*/
+const CMCD_JSON = "json";
+/**
+* CMCD transmission modes.
+*
+* @enum
+*
+* @public
+*/
+const CmcdTransmissionMode = {
+  JSON: CMCD_JSON,
+  QUERY: CMCD_QUERY,
+  HEADERS: CMCD_HEADERS
+};
+
+//#endregion
+//#region src/CmcdReporter.ts
+function createEncodingOptions(reportingMode, config, baseUrl) {
+  const enabledKeySet = new Set(config.enabledKeys ?? []);
+  return {
+    version: config.version || CMCD_V2,
+    reportingMode,
+    filter: key => enabledKeySet.has(key),
+    baseUrl
+  };
+}
+function defaultRequester(request) {
+  const {
+    url,
+    ...init
+  } = request;
+  return fetch(url, init);
+}
+function createCmcdReporterConfig(config) {
+  const {
+    version = CMCD_V2,
+    eventTargets = [],
+    sid = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_1__.uuid)(),
+    transmissionMode = CMCD_QUERY,
+    ...rest
+  } = config;
+  return {
+    ...rest,
+    version,
+    transmissionMode,
+    sid,
+    eventTargets: eventTargets.reduce((acc, target) => {
+      if (target?.url && target.events?.length) acc.push({
+        version: target.version || CMCD_V2,
+        enabledKeys: target.enabledKeys?.slice() || [],
+        url: target.url,
+        events: target.events.slice(),
+        interval: target.interval ?? CMCD_DEFAULT_TIME_INTERVAL,
+        batchSize: target.batchSize || 1
+      });
+      return acc;
+    }, [])
+  };
+}
+/**
+* The CMCD reporter.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reporting-modes-when-we-send-data | CTA-5004-B Reporting Modes}
+*
+* @public
+*/
+var CmcdReporter = class {
+  /**
+  * Creates a new CMCD reporter.
+  *
+  * @param config - The configuration for the CMCD reporter.
+  * @param requester - The function to use to send the request.
+  *                    The default is a simple wrapper around the
+  *                    native `fetch` API.
+  */
+  constructor(config, requester = defaultRequester) {
+    this.timeOrigin = performance.timeOrigin || performance.timing?.fetchStart || Date.now() - performance.now();
+    this.data = {};
+    this.msd = NaN;
+    this.eventTargets = /* @__PURE__ */new Map();
+    this.requestTarget = {
+      sn: 0,
+      msdSent: false
     };
-    this.getCPU = function () {
-      var _cpu = {};
-      _cpu[ARCHITECTURE] = undefined;
-      rgxMapper.call(_cpu, _ua, _rgxmap.cpu);
-      return _cpu;
+    this.config = createCmcdReporterConfig(config);
+    this.data = {
+      cid: this.config.cid,
+      sid: this.config.sid,
+      v: this.config.version
     };
-    this.getDevice = function () {
-      var _device = {};
-      _device[VENDOR] = undefined;
-      _device[MODEL] = undefined;
-      _device[TYPE] = undefined;
-      rgxMapper.call(_device, _ua, _rgxmap.device);
-      if (_isSelfNav && !_device[TYPE] && _uach && _uach.mobile) {
-        _device[TYPE] = MOBILE;
-      }
-      // iPadOS-specific detection: identified as Mac, but has some iOS-only properties
-      if (_isSelfNav && _device[MODEL] == 'Macintosh' && _navigator && typeof _navigator.standalone !== UNDEF_TYPE && _navigator.maxTouchPoints && _navigator.maxTouchPoints > 2) {
-        _device[MODEL] = 'iPad';
-        _device[TYPE] = TABLET;
-      }
-      return _device;
-    };
-    this.getEngine = function () {
-      var _engine = {};
-      _engine[NAME] = undefined;
-      _engine[VERSION] = undefined;
-      rgxMapper.call(_engine, _ua, _rgxmap.engine);
-      return _engine;
-    };
-    this.getOS = function () {
-      var _os = {};
-      _os[NAME] = undefined;
-      _os[VERSION] = undefined;
-      rgxMapper.call(_os, _ua, _rgxmap.os);
-      if (_isSelfNav && !_os[NAME] && _uach && _uach.platform && _uach.platform != 'Unknown') {
-        _os[NAME] = _uach.platform.replace(/chrome os/i, CHROMIUM_OS).replace(/macos/i, MAC_OS); // backward compatibility
-      }
-      return _os;
-    };
-    this.getResult = function () {
-      return {
-        ua: this.getUA(),
-        browser: this.getBrowser(),
-        engine: this.getEngine(),
-        os: this.getOS(),
-        device: this.getDevice(),
-        cpu: this.getCPU()
+    this.requester = requester;
+    for (const target of this.config.eventTargets) this.eventTargets.set(target, {
+      intervalId: void 0,
+      sn: 0,
+      msdSent: false,
+      queue: []
+    });
+  }
+  /**
+  * Starts the CMCD reporter. Called by the player when the reporter is enabled.
+  *
+  * Note: This fires an initial time-interval event immediately (synchronously)
+  * before the first interval elapses. Ensure CMCD data (sid, cid, etc.) is
+  * populated before calling start().
+  */
+  start() {
+    this.eventTargets.forEach((target, config) => {
+      this.disarmInterval(target);
+      if (config.interval === 0 || !config.events.includes(CmcdEventType.TIME_INTERVAL)) return;
+      const timeIntervalEvent = () => {
+        this.recordTargetEvent(target, config, CMCD_EVENT_TIME_INTERVAL);
+        this.processEventTargets();
       };
-    };
-    this.getUA = function () {
-      return _ua;
-    };
-    this.setUA = function (ua) {
-      _ua = typeof ua === STR_TYPE && ua.length > UA_MAX_LENGTH ? trim(ua, UA_MAX_LENGTH) : ua;
-      return this;
-    };
-    this.setUA(_ua);
-    return this;
-  };
-  UAParser.VERSION = LIBVERSION;
-  UAParser.BROWSER = enumerize([NAME, VERSION, MAJOR]);
-  UAParser.CPU = enumerize([ARCHITECTURE]);
-  UAParser.DEVICE = enumerize([MODEL, VENDOR, TYPE, CONSOLE, MOBILE, SMARTTV, TABLET, WEARABLE, EMBEDDED]);
-  UAParser.ENGINE = UAParser.OS = enumerize([NAME, VERSION]);
-
-  ///////////
-  // Export
-  //////////
-
-  // check js environment
-  if (typeof exports !== UNDEF_TYPE) {
-    // nodejs env
-    if ("object" !== UNDEF_TYPE && module.exports) {
-      exports = module.exports = UAParser;
-    }
-    exports.UAParser = UAParser;
-  } else {
-    // requirejs env (optional)
-    if ("function" === FUNC_TYPE && __webpack_require__.amdO) {
-      !(__WEBPACK_AMD_DEFINE_RESULT__ = (function () {
-        return UAParser;
-      }).call(exports, __webpack_require__, exports, module),
-		__WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
-    } else if (typeof window !== UNDEF_TYPE) {
-      // browser env
-      window.UAParser = UAParser;
-    }
+      target.intervalId = setInterval(timeIntervalEvent, config.interval * 1e3);
+      timeIntervalEvent();
+    });
   }
-
-  // jQuery/Zepto specific (optional)
-  // Note:
-  //   In AMD env the global scope should be kept clean, but jQuery is an exception.
-  //   jQuery always exports to global scope, unless jQuery.noConflict(true) is used,
-  //   and we should catch that.
-  var $ = typeof window !== UNDEF_TYPE && (window.jQuery || window.Zepto);
-  if ($ && !$.ua) {
-    var parser = new UAParser();
-    $.ua = parser.getResult();
-    $.ua.get = function () {
-      return parser.getUA();
+  /**
+  * Stops the CMCD reporter. Called by the player when the reporter is disabled.
+  *
+  * @param flush - Whether to flush the event targets.
+  */
+  stop(flush = false) {
+    if (flush) this.flush();
+    this.eventTargets.forEach(target => {
+      this.disarmInterval(target);
+    });
+  }
+  /**
+  * Forces the sending of all event reports, regardless of the batch size or interval.
+  * Useful for sending outstanding reports when the player is destroyed or a playback
+  * session ends.
+  */
+  flush() {
+    this.processEventTargets(true);
+  }
+  /**
+  * Updates the CMCD data. Called by the player when the data changes.
+  *
+  * @param data - The data to update.
+  */
+  update(data) {
+    if (data.sid && data.sid !== this.data.sid) this.resetSession();
+    if (data.msd && !isNaN(data.msd)) this.msd = data.msd;
+    this.data = {
+      ...this.data,
+      ...data,
+      msd: void 0
     };
-    $.ua.set = function (ua) {
-      parser.setUA(ua);
-      var result = parser.getResult();
-      for (var prop in result) {
-        $.ua[prop] = result[prop];
+  }
+  /**
+  * Records an event. Called by the player when an event occurs.
+  *
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event. This data
+  *               only applies to this event report. Persistent data should
+  *               be updated using `update()`.
+  */
+  recordEvent(type, data = {}) {
+    this.eventTargets.forEach((target, config) => {
+      this.recordTargetEvent(target, config, type, data);
+    });
+    this.processEventTargets();
+  }
+  /**
+  * Records an event for a target. Called by the reporter when an event occurs.
+  *
+  * @param target - The target to record the event for.
+  * @param config - The configuration for the target.
+  * @param type - The type of event to record.
+  * @param data - Additional data to record with the event. This data
+  *               only applies to this event report. Persistent data should
+  *               be updated using `update()`.
+  */
+  recordTargetEvent(target, config, type, data = {}) {
+    if (!config.events.includes(type)) return;
+    const item = {
+      ...this.data,
+      ...data,
+      e: type,
+      ts: data.ts ?? Date.now(),
+      sn: target.sn++
+    };
+    if (!isNaN(this.msd) && !target.msdSent) {
+      item.msd = this.msd;
+      target.msdSent = true;
+    }
+    target.queue.push(item);
+  }
+  /**
+  * Records a response-received event. Called by the player when a media
+  * request response has been fully received.
+  *
+  * This method automatically derives the `rr` event keys from the
+  *
+  * - `url` - the original requested URL (before any redirects)
+  * - `rc` - the HTTP response status code
+  * - `ts` - the request initiation time (from `resourceTiming.startTime`)
+  * - `ttfb` - time to first byte (from `resourceTiming.responseStart`)
+  * - `ttlb` - time to last byte (from `resourceTiming.duration`)
+  *
+  * Additional keys like `ttfbb`, `cmsdd`, `cmsds`, and `smrt` can be
+  * supplied via the `data` parameter if the player has access to them.
+  *
+  * @param response - The HTTP response received.
+  * @param data - Additional CMCD data to include with the event.
+  *               Values provided here override any auto-derived values.
+  */
+  recordResponseReceived(response, data = {}) {
+    const {
+      request
+    } = response;
+    const url = data.url ?? request?.url;
+    if (!url) return;
+    const urlObj = new URL(url);
+    urlObj.searchParams.delete(CMCD_PARAM);
+    const derived = {
+      url: urlObj.toString(),
+      rc: response.status
+    };
+    const timing = response.resourceTiming;
+    if (timing) {
+      if (timing.startTime != null) {
+        derived.ts = Math.round(this.timeOrigin + timing.startTime);
+        if (timing.responseStart != null) derived.ttfb = Math.round(timing.responseStart - timing.startTime);
+      }
+      if (timing.duration != null) derived.ttlb = Math.round(timing.duration);
+    }
+    const cmcd = request.customData?.cmcd ?? {};
+    this.recordEvent(CMCD_EVENT_RESPONSE_RECEIVED, {
+      ...cmcd,
+      ...derived,
+      ...data
+    });
+  }
+  /**
+  * Applies the CMCD request report data to the request. Called by the player
+  * before sending the request.
+  *
+  * @param req - The request to apply the CMCD request report to.
+  * @returns The request with the CMCD request report applied.
+  *
+  * @deprecated Use {@link CmcdReporter.createRequestReport} instead.
+  */
+  applyRequestReport(req) {
+    return this.createRequestReport(req) ?? req;
+  }
+  /**
+  * Checks if the request reporting is enabled.
+  *
+  * @returns `true` if the request reporting is enabled, `false` otherwise.
+  */
+  isRequestReportingEnabled() {
+    return !!this.config.enabledKeys?.length;
+  }
+  /**
+  * Creates a new request with the CMCD request report data applied. Called by the player
+  * before sending the request.
+  *
+  * @param request - The request to apply the CMCD request report to.
+  * @param data - The data to apply to the request. This data only
+  *               applies to this request report. Persistent data
+  *               should be updated using `update()`.
+  * @returns The request with the CMCD request report applied.
+  */
+  createRequestReport(request, data) {
+    const {
+      customData = {},
+      headers = {},
+      ...rest
+    } = request;
+    const report = {
+      ...rest,
+      headers: {
+        ...headers
+      },
+      customData: {
+        ...customData,
+        cmcd: {}
       }
     };
+    if (!this.config.enabledKeys?.length || !report.url) return report;
+    const url = new URL(report.url);
+    const cmcdData = {
+      ...this.data,
+      ...data,
+      sn: this.requestTarget.sn++
+    };
+    const options = createEncodingOptions(CMCD_REQUEST_MODE, this.config, report.url);
+    if (!isNaN(this.msd) && !this.requestTarget.msdSent) {
+      cmcdData.msd = this.msd;
+      this.requestTarget.msdSent = true;
+    }
+    const cmcd = report.customData.cmcd = prepareCmcdData(cmcdData, options);
+    switch (this.config.transmissionMode) {
+      case CMCD_QUERY:
+        const param = encodePreparedCmcd(cmcd);
+        if (param) {
+          url.searchParams.set(CMCD_PARAM, param);
+          report.url = url.toString();
+        }
+        break;
+      case CMCD_HEADERS:
+        Object.assign(report.headers, toPreparedCmcdHeaders(cmcd, options.customHeaderMap));
+        break;
+    }
+    return report;
   }
-})(typeof window === 'object' ? window : this);
+  /**
+  * Processes the event targets. Called by the reporter when an event occurs.
+  *
+  * @param flush - Whether to flush the event targets.
+  */
+  processEventTargets(flush = false) {
+    let reprocess = false;
+    this.eventTargets.forEach((target, config) => {
+      const {
+        queue
+      } = target;
+      if (!queue.length) return;
+      if (queue.length < config.batchSize && !flush) return;
+      const deleteCount = flush ? queue.length : config.batchSize;
+      const events = queue.splice(0, deleteCount);
+      this.sendEventReport(config, events).catch(() => {
+        target.queue.unshift(...events);
+      });
+      reprocess ||= queue.length > 0;
+    });
+    if (reprocess) this.processEventTargets();
+  }
+  /**
+  * Sends an event report. Called by the reporter when a batch is ready to be sent.
+  *
+  * @param config - The target config to send the event report to.
+  * @param data - The data to send in the event report.
+  */
+  async sendEventReport(config, data) {
+    const options = createEncodingOptions(CMCD_EVENT_MODE, config);
+    const {
+      status
+    } = await this.requester({
+      url: config.url,
+      method: "POST",
+      headers: {
+        "Content-Type": CMCD_MIME_TYPE
+      },
+      body: data.map(item => encodeCmcd(item, options)).join("\n") + "\n"
+    });
+    if (status === 410) this.disposeEventTarget(config);else if (status === 429 || status > 499 && status < 600) throw new Error(`Event report failed with status ${status}`);
+  }
+  /**
+  * Cancels the time-interval timer for an event target and clears the stored id.
+  * Safe to call when no timer is armed (clearInterval(undefined) is a no-op).
+  */
+  disarmInterval(target) {
+    clearInterval(target.intervalId);
+    target.intervalId = void 0;
+  }
+  /**
+  * Permanently removes an event target: cancels its timer and removes it from the
+  * eventTargets map. Used when the collector signals the target is gone (HTTP 410).
+  */
+  disposeEventTarget(config) {
+    const target = this.eventTargets.get(config);
+    if (!target) return;
+    this.disarmInterval(target);
+    this.eventTargets.delete(config);
+  }
+  /**
+  * Resets the session related data. Called when the session ID changes.
+  */
+  resetSession() {
+    this.eventTargets.forEach(target => target.sn = 0);
+    this.requestTarget.sn = 0;
+  }
+};
+
+//#endregion
+//#region src/CmcdStreamingFormat.ts
+/**
+* Common Media Client Data Streaming Format
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#streaming-format | CTA-5004-B Streaming Format}
+*
+* @public
+*/
+const CmcdStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmcdStreamType.ts
+/**
+* Common Media Client Data Stream Type
+*
+* @enum
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#stream-type | CTA-5004-B Stream Type}
+*
+* @public
+*/
+const CmcdStreamType = {
+  VOD: "v",
+  LIVE: "l",
+  LOW_LATENCY: "ll"
+};
+
+//#endregion
+//#region src/CmcdValidationSeverity.ts
+/**
+* CMCD validation severity level: error.
+*
+* @public
+*/
+const CMCD_VALIDATION_SEVERITY_ERROR = "error";
+/**
+* CMCD validation severity level: warning.
+*
+* @public
+*/
+const CMCD_VALIDATION_SEVERITY_WARNING = "warning";
+/**
+* CMCD validation severity level.
+*
+* @public
+*/
+const CmcdValidationSeverity = {
+  ERROR: CMCD_VALIDATION_SEVERITY_ERROR,
+  WARNING: CMCD_VALIDATION_SEVERITY_WARNING
+};
+
+//#endregion
+//#region src/upConvertToV2.ts
+/**
+* Up-convert V1 CMCD data to V2 format.
+*
+* - Wraps plain scalar values in arrays for inner-list keys.
+* - Wraps `nor` string in an array.
+*
+* If the data is already V2 (has `v: 2`), it is returned unchanged.
+*
+* @internal
+*/
+function upConvertToV2(obj) {
+  if (obj["v"] === CMCD_V2) return obj;
+  const result = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (value == null) {
+      result[key] = value;
+      continue;
+    }
+    if (CMCD_INNER_LIST_KEYS.has(key) && !Array.isArray(value)) result[key] = [value];else if (key === "nor" && typeof value === "string") result[key] = [value];else result[key] = value;
+  }
+  return result;
+}
+
+//#endregion
+//#region src/decodeCmcd.ts
+function reduceValue(value) {
+  if (Array.isArray(value)) return value.map(reduceValue);
+  if (typeof value === "symbol") return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.symbolToStr)(value);
+  if (value instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem && !value.params) return reduceValue(value.value);
+  if (typeof value === "string") return value;
+  return value;
+}
+function decodeCmcd(cmcd, options) {
+  if (!cmcd) return {};
+  const sfDict = (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.decodeSfDict)(cmcd);
+  const result = {};
+  for (const [key, item] of Object.entries(sfDict)) result[key] = reduceValue(item.value);
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
+//#region src/ensureHeaders.ts
+/**
+* Converts a record of header fields to a `Headers` instance if necessary.
+*
+* @param headers - A `Headers` instance or a plain record of header fields.
+* @returns A `Headers` instance.
+*
+* @internal
+*/
+function ensureHeaders(headers) {
+  return headers instanceof Headers ? headers : new Headers(headers);
+}
+
+//#endregion
+//#region src/fromCmcdHeaders.ts
+function fromCmcdHeaders(headers, options) {
+  const h = ensureHeaders(headers);
+  const result = {};
+  for (const field of CMCD_HEADER_FIELDS) {
+    const value = h.get(field);
+    if (value) Object.assign(result, decodeCmcd(value));
+  }
+  if (options?.convertToLatest) return upConvertToV2(result);
+  return result;
+}
+
+//#endregion
+//#region src/fromCmcdQuery.ts
+function fromCmcdQuery(query, options) {
+  if (typeof query === "string") query = new URLSearchParams(query);
+  return decodeCmcd(query.get(CMCD_PARAM) ?? "", options);
+}
+
+//#endregion
+//#region src/fromCmcdUrl.ts
+function fromCmcdUrl(url, options) {
+  return decodeCmcd(decodeURIComponent(url.replace(/^CMCD=/, "")), options);
+}
+
+//#endregion
+//#region src/isCmcdV1Data.ts
+/**
+* Check if a CMCD data object is version 1.
+*
+* @param data - The CMCD data object to check.
+*
+* @returns `true` if the data is version 1, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV1Data.test.ts#example}
+*/
+function isCmcdV1Data(data) {
+  return data.v !== CMCD_V2;
+}
+
+//#endregion
+//#region src/isCmcdV2Data.ts
+/**
+* Check if a CMCD data object is version 2.
+*
+* @param data - The CMCD data object to check.
+*
+* @returns `true` if the data is version 2, `false` otherwise.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isCmcdV2Data.test.ts#example}
+*/
+function isCmcdV2Data(data) {
+  return data.v === CMCD_V2;
+}
+
+//#endregion
+//#region src/toCmcdValue.ts
+/**
+* Convert a value to a CMCD value.
+*
+* @param value - The value to convert to a CMCD value.
+* @param params - The parameters to convert to a CMCD value.
+* @returns The CMCD value.
+*
+* @public
+*/
+function toCmcdValue(value, params) {
+  return new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem(value, params);
+}
+
+//#endregion
+//#region src/mergeValidationResults.ts
+/**
+* Merges multiple validation results into a single result.
+*
+* @internal
+*/
+function mergeValidationResults(...results) {
+  const issues = results.flatMap(r => r.issues);
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
+  };
+}
+
+//#endregion
+//#region src/resolveVersion.ts
+/**
+* Resolves the CMCD version from explicit options, the payload's `v` key, or the default (v1).
+*
+* @internal
+*/
+function resolveVersion(data, options) {
+  if (options?.version === 1 || options?.version === 2) return options.version;
+  const payloadVersion = data["v"];
+  if (payloadVersion === 1 || payloadVersion === 2) return payloadVersion;
+  return CMCD_V1;
+}
+
+//#endregion
+//#region src/validateCmcdKeys.ts
+const CMCD_V1_KEY_SET = new Set(CMCD_V1_KEYS);
+const CMCD_KEY_SET = new Set(CMCD_KEYS);
+/**
+* Validates that all keys in a CMCD payload are recognized spec keys or valid custom keys.
+*
+* @example
+* {@includeCode ../test/validateCmcdKeys.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reserved-keys | CTA-5004-B Reserved Keys}
+*
+* @public
+*/
+function validateCmcdKeys(data, options) {
+  const version = resolveVersion(data, options);
+  const validKeySet = version === CMCD_V1 ? CMCD_V1_KEY_SET : CMCD_KEY_SET;
+  const issues = [];
+  for (const key of Object.keys(data)) {
+    if (isCmcdCustomKey(key)) continue;
+    if (!validKeySet.has(key)) issues.push({
+      key,
+      message: `Unknown CMCD key "${key}" for version ${version}.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  return {
+    valid: issues.length === 0,
+    issues
+  };
+}
+
+//#endregion
+//#region src/validateCmcdStructure.ts
+/**
+* Validates the structural rules of a CMCD payload.
+*
+* @example
+* {@includeCode ../test/validateCmcdStructure.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#data-payload-definition-what-data-to-send | CTA-5004-B Data Payload Definition}
+*
+* @public
+*/
+function validateCmcdStructure(data, options) {
+  const version = resolveVersion(data, options);
+  const issues = [];
+  if (options?.reportingMode === CMCD_REQUEST_MODE) {
+    for (const key of CMCD_EVENT_KEYS) if (key in data) issues.push({
+      key,
+      message: `Event key "${key}" must not be present in request mode.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    for (const key of CMCD_RESPONSE_KEYS) if (key in data) issues.push({
+      key,
+      message: `Response key "${key}" must not be present in request mode.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if (options?.reportingMode === CMCD_EVENT_MODE) {
+    if (!("e" in data)) issues.push({
+      key: "e",
+      message: "Event mode requires the \"e\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (!("ts" in data)) issues.push({
+      key: "ts",
+      message: "Event mode requires the \"ts\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if ("e" in data) {
+    if (data["e"] === CMCD_EVENT_CUSTOM_EVENT) {
+      if (!("cen" in data)) issues.push({
+        key: "cen",
+        message: "Custom event (e=\"ce\") requires the \"cen\" key to be present.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if ("cen" in data) issues.push({
+      key: "cen",
+      message: "The \"cen\" key must only be present when e=\"ce\".",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_RESPONSE_RECEIVED) {
+      if (!("url" in data)) issues.push({
+        key: "url",
+        message: "Response received event (e=\"rr\") requires the \"url\" key to be present.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else for (const key of CMCD_RESPONSE_KEYS) if (key in data) issues.push({
+      key,
+      message: `Response key "${key}" must only be present when e="rr".`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_PLAY_STATE && !("sta" in data)) issues.push({
+      key: "sta",
+      message: "Play state event (e=\"ps\") requires the \"sta\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    if (data["e"] === CMCD_EVENT_ERROR && !("ec" in data)) issues.push({
+      key: "ec",
+      message: "Error event (e=\"e\") requires the \"ec\" key to be present.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  if ("v" in data && data["v"] !== 1 && data["v"] !== 2) issues.push({
+    key: "v",
+    message: `Unsupported CMCD version "${String(data["v"])}". Expected 1 or 2.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else if (version > 1 && !("v" in data)) issues.push({
+    key: "v",
+    message: "Version 2 payloads require the \"v\" key to be present.",
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else if (version === CMCD_V1 && "v" in data) issues.push({
+    key: "v",
+    message: "Version 1 payloads should omit the \"v\" key (v1 is the default).",
+    severity: CMCD_VALIDATION_SEVERITY_WARNING
+  });
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
+  };
+}
+
+//#endregion
+//#region src/CMCD_KEY_TYPES.ts
+/**
+* CMCD key value type: inner list of numbers with token identifiers.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_NUMBER_LIST = "number[]";
+/**
+* CMCD key value type: inner list of strings.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_STRING_LIST = "string[]";
+/**
+* CMCD key value type: integer.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_INTEGER = "integer";
+/**
+* CMCD key value type: number (decimal).
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_NUMBER = "number";
+/**
+* CMCD key value type: boolean.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_BOOLEAN = "boolean";
+/**
+* CMCD key value type: string.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_STRING = "string";
+/**
+* CMCD key value type: token.
+*
+* @internal
+*/
+const CMCD_KEY_TYPE_TOKEN = "token";
+/**
+* Maps each CMCD spec key to its expected value type for v2.
+* Keys that differ between v1 and v2 are handled by CMCD_V1_KEY_TYPE_OVERRIDES.
+*
+* @internal
+*/
+const CMCD_KEY_TYPES = {
+  ab: CMCD_KEY_TYPE_NUMBER_LIST,
+  bl: CMCD_KEY_TYPE_NUMBER_LIST,
+  br: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsa: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsd: CMCD_KEY_TYPE_NUMBER_LIST,
+  bsda: CMCD_KEY_TYPE_NUMBER_LIST,
+  lab: CMCD_KEY_TYPE_NUMBER_LIST,
+  lb: CMCD_KEY_TYPE_NUMBER_LIST,
+  mtp: CMCD_KEY_TYPE_NUMBER_LIST,
+  pb: CMCD_KEY_TYPE_NUMBER_LIST,
+  tab: CMCD_KEY_TYPE_NUMBER_LIST,
+  tb: CMCD_KEY_TYPE_NUMBER_LIST,
+  tbl: CMCD_KEY_TYPE_NUMBER_LIST,
+  tpb: CMCD_KEY_TYPE_NUMBER_LIST,
+  ec: CMCD_KEY_TYPE_STRING_LIST,
+  nor: CMCD_KEY_TYPE_STRING_LIST,
+  d: CMCD_KEY_TYPE_INTEGER,
+  dfa: CMCD_KEY_TYPE_INTEGER,
+  dl: CMCD_KEY_TYPE_INTEGER,
+  ltc: CMCD_KEY_TYPE_INTEGER,
+  msd: CMCD_KEY_TYPE_INTEGER,
+  pt: CMCD_KEY_TYPE_INTEGER,
+  rc: CMCD_KEY_TYPE_INTEGER,
+  rtp: CMCD_KEY_TYPE_INTEGER,
+  sn: CMCD_KEY_TYPE_INTEGER,
+  ts: CMCD_KEY_TYPE_INTEGER,
+  ttfb: CMCD_KEY_TYPE_INTEGER,
+  ttfbb: CMCD_KEY_TYPE_INTEGER,
+  ttlb: CMCD_KEY_TYPE_INTEGER,
+  v: CMCD_KEY_TYPE_INTEGER,
+  pr: CMCD_KEY_TYPE_NUMBER,
+  bg: CMCD_KEY_TYPE_BOOLEAN,
+  bs: CMCD_KEY_TYPE_BOOLEAN,
+  nr: CMCD_KEY_TYPE_BOOLEAN,
+  su: CMCD_KEY_TYPE_BOOLEAN,
+  cdn: CMCD_KEY_TYPE_STRING,
+  cen: CMCD_KEY_TYPE_STRING,
+  cid: CMCD_KEY_TYPE_STRING,
+  cmsdd: CMCD_KEY_TYPE_STRING,
+  cmsds: CMCD_KEY_TYPE_STRING,
+  cs: CMCD_KEY_TYPE_STRING,
+  h: CMCD_KEY_TYPE_STRING,
+  nrr: CMCD_KEY_TYPE_STRING,
+  sid: CMCD_KEY_TYPE_STRING,
+  smrt: CMCD_KEY_TYPE_STRING,
+  url: CMCD_KEY_TYPE_STRING,
+  e: CMCD_KEY_TYPE_TOKEN,
+  ot: CMCD_KEY_TYPE_TOKEN,
+  sf: CMCD_KEY_TYPE_TOKEN,
+  st: CMCD_KEY_TYPE_TOKEN,
+  sta: CMCD_KEY_TYPE_TOKEN
+};
+/**
+* Maps keys to their v1-specific types when they differ from v2.
+*
+* @internal
+*/
+const CMCD_V1_KEY_TYPE_OVERRIDES = {
+  bl: CMCD_KEY_TYPE_INTEGER,
+  br: CMCD_KEY_TYPE_NUMBER,
+  mtp: CMCD_KEY_TYPE_INTEGER,
+  tb: CMCD_KEY_TYPE_NUMBER,
+  nor: CMCD_KEY_TYPE_STRING
+};
+
+//#endregion
+//#region src/CMCD_STRING_LENGTH_LIMITS.ts
+/**
+* Maps CMCD keys to their maximum string length.
+*
+* @internal
+*/
+const CMCD_STRING_LENGTH_LIMITS = {
+  sid: 64,
+  cid: 128,
+  cdn: 128,
+  h: 128,
+  cen: 64
+};
+/**
+* Maximum length for custom key values.
+*
+* @internal
+*/
+const CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH = 64;
+
+//#endregion
+//#region src/CMCD_TOKEN_VALUES.ts
+/**
+* Maps token keys to their valid values.
+*
+* @internal
+*/
+const CMCD_TOKEN_VALUES = {
+  e: ["bc", "ps", "e", "t", "c", "b", "m", "um", "pe", "pc", "rr", "as", "ae", "abs", "abe", "sk", "ce"],
+  ot: ["m", "a", "v", "av", "i", "c", "tt", "k", "o"],
+  sf: ["d", "h", "s", "o"],
+  st: ["v", "l", "ll"],
+  sta: ["s", "p", "k", "r", "a", "w", "e", "f", "q", "d"]
+};
+
+//#endregion
+//#region src/validateCmcdValues.ts
+const HUNDRED_ROUNDING_KEYS = new Set(["bl", "dl", "mtp", "rtp", "tbl"]);
+const INTEGER_ROUNDING_KEYS = new Set(["br", "d", "tb"]);
+function isFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value);
+}
+function validateListValue(key, value, issues) {
+  if (!Array.isArray(value)) {
+    issues.push({
+      key,
+      message: `Key "${key}" must be an array.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return;
+  }
+  for (let i = 0; i < value.length; i++) {
+    const element = value[i];
+    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+      if (!isFiniteNumber(element.value)) issues.push({
+        key,
+        message: `Key "${key}" array element [${i}] must be a finite number.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if (!isFiniteNumber(element)) issues.push({
+      key,
+      message: `Key "${key}" array element [${i}] must be a finite number.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+}
+function validateStringArrayValue(key, value, issues) {
+  if (!Array.isArray(value)) {
+    issues.push({
+      key,
+      message: `Key "${key}" must be an array.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return;
+  }
+  for (let i = 0; i < value.length; i++) {
+    const element = value[i];
+    if (element instanceof _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_0__.SfItem) {
+      if (typeof element.value !== "string") issues.push({
+        key,
+        message: `Key "${key}" array element [${i}] must be a string.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    } else if (typeof element !== "string") issues.push({
+      key,
+      message: `Key "${key}" array element [${i}] must be a string.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+}
+/**
+* Validates that all values in a CMCD payload conform to the expected types and constraints.
+*
+* @example
+* {@includeCode ../test/validateCmcdValues.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#reserved-keys | CTA-5004-B Reserved Keys}
+*
+* @public
+*/
+function validateCmcdValues(data, options) {
+  const version = resolveVersion(data, options);
+  const issues = [];
+  for (const [key, value] of Object.entries(data)) {
+    if (isCmcdCustomKey(key)) {
+      if (typeof value !== "string") issues.push({
+        key,
+        message: `Custom key "${key}" value must be a string or token.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });else if (value.length > CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH) issues.push({
+        key,
+        message: `Custom key "${key}" value exceeds maximum length of ${CMCD_CUSTOM_KEY_VALUE_MAX_LENGTH}.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    if (key === "v") {
+      if (value !== 1 && value !== 2) issues.push({
+        key,
+        message: `Key "v" must be 1 or 2.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    let expectedType = CMCD_KEY_TYPES[key];
+    if (!expectedType) continue;
+    if (version === CMCD_V1 && key in CMCD_V1_KEY_TYPE_OVERRIDES) expectedType = CMCD_V1_KEY_TYPE_OVERRIDES[key];
+    switch (expectedType) {
+      case CMCD_KEY_TYPE_INTEGER:
+        if (!isFiniteNumber(value) || !Number.isInteger(value)) issues.push({
+          key,
+          message: `Key "${key}" must be a finite integer.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to the nearest 100.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });
+        break;
+      case CMCD_KEY_TYPE_NUMBER:
+        if (!isFiniteNumber(value)) issues.push({
+          key,
+          message: `Key "${key}" must be a finite number.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (HUNDRED_ROUNDING_KEYS.has(key) && value % 100 !== 0) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to the nearest 100.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });else if (INTEGER_ROUNDING_KEYS.has(key) && !Number.isInteger(value)) issues.push({
+          key,
+          message: `Key "${key}" should be rounded to an integer.`,
+          severity: CMCD_VALIDATION_SEVERITY_WARNING
+        });
+        break;
+      case CMCD_KEY_TYPE_BOOLEAN:
+        if (typeof value !== "boolean") issues.push({
+          key,
+          message: `Key "${key}" must be a boolean.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });
+        break;
+      case CMCD_KEY_TYPE_STRING:
+        if (typeof value !== "string") issues.push({
+          key,
+          message: `Key "${key}" must be a string.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });else if (key in CMCD_STRING_LENGTH_LIMITS && value.length > CMCD_STRING_LENGTH_LIMITS[key]) issues.push({
+          key,
+          message: `Key "${key}" exceeds maximum length of ${CMCD_STRING_LENGTH_LIMITS[key]}.`,
+          severity: CMCD_VALIDATION_SEVERITY_ERROR
+        });
+        break;
+      case CMCD_KEY_TYPE_TOKEN:
+        {
+          const validValues = CMCD_TOKEN_VALUES[key];
+          if (validValues && !validValues.includes(value)) issues.push({
+            key,
+            message: `Key "${key}" has invalid token value "${String(value)}". Expected one of: ${validValues.join(", ")}.`,
+            severity: CMCD_VALIDATION_SEVERITY_ERROR
+          });
+          break;
+        }
+      case CMCD_KEY_TYPE_NUMBER_LIST:
+        validateListValue(key, value, issues);
+        break;
+      case CMCD_KEY_TYPE_STRING_LIST:
+        validateStringArrayValue(key, value, issues);
+        break;
+    }
+  }
+  return {
+    valid: issues.every(i => i.severity !== CMCD_VALIDATION_SEVERITY_ERROR),
+    issues
+  };
+}
+
+//#endregion
+//#region src/validateCmcd.ts
+/**
+* Validates a CMCD payload by checking keys, values, and structure.
+*
+* @example
+* {@includeCode ../test/validateCmcd.test.ts#example}
+*
+* @param data - The CMCD payload to validate.
+* @param options - Validation options.
+* @returns The validation result.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#data-payload-definition-what-data-to-send | CTA-5004-B Data Payload Definition}
+*
+* @public
+*/
+function validateCmcd(data, options) {
+  return mergeValidationResults(validateCmcdKeys(data, options), validateCmcdValues(data, options), validateCmcdStructure(data, options));
+}
+
+//#endregion
+//#region src/validateCmcdEvents.ts
+/**
+* Validates a raw CMCD string as an event-mode payload.
+*
+* This function decodes the string internally and validates it with
+* `reportingMode` set to `'event'`. The input may contain multiple
+* newline-separated events (e.g. an `application/cmcd` POST body), in which
+* case each line is validated independently and the results are merged.
+*
+* @param cmcd - The raw CMCD-encoded string to validate. May contain
+*   multiple newline-separated event lines.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data per event line.
+*
+* @example
+* {@includeCode ../test/validateCmcdEvents.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#body-definition | CTA-5004-B Body Definition}
+*
+* @public
+*/
+function validateCmcdEvents(cmcd, options) {
+  const opts = {
+    ...options,
+    reportingMode: CMCD_EVENT_MODE
+  };
+  const lines = cmcd.split(/\r?\n/).filter(line => line.length > 0);
+  if (lines.length === 0) return {
+    valid: false,
+    issues: [{
+      message: "Empty event mode payload. At least one event line is required.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    }],
+    data: []
+  };
+  const decodedLines = [];
+  const lineResults = [];
+  for (let i = 0; i < lines.length; i++) try {
+    const data = decodeCmcd(lines[i]);
+    decodedLines.push(data);
+    lineResults.push(validateCmcd(data, opts));
+  } catch {
+    decodedLines.push({});
+    lineResults.push({
+      valid: false,
+      issues: [{
+        message: `Failed to decode event line ${i + 1}: invalid structured field syntax.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      }]
+    });
+  }
+  return {
+    ...mergeValidationResults(...lineResults),
+    data: decodedLines
+  };
+}
+
+//#endregion
+//#region src/validateCmcdEventReport.ts
+/**
+* Validates a full HTTP request as an event-mode payload.
+*
+* Accepts an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
+*
+* This function validates that the request uses the POST method and has
+* the correct `Content-Type` header (`application/cmcd`) in addition to
+* validating the body content via {@link validateCmcdEvents}.
+*
+* @param request - An `HttpRequest` to validate.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data per event line.
+*
+* @example {@includeCode ../test/validateCmcdEventReport.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#event-mode | CTA-5004-B Event Mode}
+*
+* @public
+*/
+function validateCmcdEventReport(request, options) {
+  const issues = [];
+  if (request.method !== "POST") issues.push({
+    message: `Invalid HTTP method '${request.method ?? "GET"}'. Event reports must use POST.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });
+  const contentType = request.headers ? ensureHeaders(request.headers).get("Content-Type") : void 0;
+  if (!contentType) issues.push({
+    message: `Missing Content-Type header. Event reports must use '${CMCD_MIME_TYPE}'.`,
+    severity: CMCD_VALIDATION_SEVERITY_ERROR
+  });else {
+    const mediaType = contentType.split(";")[0].trim().toLowerCase();
+    if (mediaType !== CMCD_MIME_TYPE) issues.push({
+      message: `Invalid Content-Type '${mediaType}'. Event reports must use '${CMCD_MIME_TYPE}'.`,
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+  }
+  const body = request.body;
+  if (body === void 0 || body === null) {
+    issues.push({
+      message: "Missing request body. Event reports must include a body.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return {
+      valid: false,
+      issues,
+      data: []
+    };
+  }
+  if (typeof body !== "string") {
+    issues.push({
+      message: "Request body must be a string.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    });
+    return {
+      valid: false,
+      issues,
+      data: []
+    };
+  }
+  const bodyResult = validateCmcdEvents(body, options);
+  return {
+    valid: issues.length === 0 && bodyResult.valid,
+    issues: [...issues, ...bodyResult.issues],
+    data: bodyResult.data
+  };
+}
+
+//#endregion
+//#region src/validateCmcdHeaders.ts
+/**
+* Validates CMCD HTTP headers by checking shard placement and payload validity.
+*
+* This function accepts raw CMCD header strings, decodes each shard
+* internally, verifies that each key is placed in its correct header shard,
+* then merges all shards and runs full payload validation (keys, values, and
+* structure) on the merged data.
+*
+* @example
+* {@includeCode ../test/validateCmcdHeaders.test.ts#example}
+*
+* @param headers - A `Headers` instance or a record of CMCD header fields to their raw encoded string values.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data.
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#header-field-definition | CTA-5004-B Header Field Definition}
+*
+* @public
+*/
+function validateCmcdHeaders(headers, options) {
+  const h = ensureHeaders(headers);
+  const issues = [];
+  const decoded = {};
+  for (const headerField of CMCD_HEADER_FIELDS) {
+    const raw = h.get(headerField);
+    if (!raw) continue;
+    let shard;
+    try {
+      shard = decodeCmcd(raw);
+    } catch {
+      issues.push({
+        key: headerField,
+        message: `Failed to decode "${headerField}" header: invalid structured field syntax.`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+      continue;
+    }
+    decoded[headerField] = shard;
+    for (const key of Object.keys(shard)) {
+      if (isCmcdCustomKey(key)) continue;
+      const expectedHeader = CMCD_HEADER_MAP[key];
+      if (expectedHeader && expectedHeader !== headerField) issues.push({
+        key,
+        message: `Key "${key}" is in "${headerField}" but should be in "${expectedHeader}".`,
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      });
+    }
+  }
+  const shardResult = {
+    valid: issues.length === 0,
+    issues
+  };
+  const merged = Object.assign({}, ...CMCD_HEADER_FIELDS.map(f => decoded[f]).filter(Boolean));
+  return {
+    ...mergeValidationResults(shardResult, validateCmcd(merged, {
+      ...options,
+      reportingMode: CMCD_REQUEST_MODE
+    })),
+    data: merged
+  };
+}
+
+//#endregion
+//#region src/validateCmcdRequest.ts
+/**
+* Validates CMCD data from a request as a request-mode payload.
+*
+* Accepts a
+* {@link https://developer.mozilla.org/en-US/docs/Web/API/Request | Request}
+* object or an {@link @svta/cml-utils!HttpRequest | HttpRequest} object.
+*
+* The function checks for CMCD data in the HTTP headers first. If CMCD
+* headers are found, validation includes shard-placement checks via
+* {@link validateCmcdHeaders}. Otherwise, the CMCD query parameter is
+* extracted from the URL and validated.
+*
+* @param request - A `Request` or `HttpRequest` to validate.
+* @param options - Validation options (excluding `reportingMode`).
+* @returns The validation result including decoded data.
+*
+* @example
+* {@includeCode ../test/validateCmcdRequest.test.ts#example}
+*
+* @see {@link https://cta-wave.github.io/Resources/common-media-client-data--cta-5004-b.html#request-mode | CTA-5004-B Request Mode}
+*
+* @public
+*/
+function validateCmcdRequest(request, options) {
+  const headers = extractHeaderRecord(request.headers);
+  if (headers) return validateCmcdHeaders(headers, options);
+  const param = new URL(request.url).searchParams.get(CMCD_PARAM);
+  if (!param) return {
+    valid: false,
+    issues: [{
+      message: "No CMCD data found in request headers or query parameters.",
+      severity: CMCD_VALIDATION_SEVERITY_ERROR
+    }],
+    data: {}
+  };
+  let data;
+  try {
+    data = decodeCmcd(param);
+  } catch {
+    return {
+      valid: false,
+      issues: [{
+        message: "Failed to decode CMCD query parameter: invalid structured field syntax.",
+        severity: CMCD_VALIDATION_SEVERITY_ERROR
+      }],
+      data: {}
+    };
+  }
+  return {
+    ...validateCmcd(data, {
+      ...options,
+      reportingMode: CMCD_REQUEST_MODE
+    }),
+    data
+  };
+}
+function extractHeaderRecord(headers) {
+  if (!headers) return;
+  const h = ensureHeaders(headers);
+  const result = {};
+  let found = false;
+  for (const field of CMCD_HEADER_FIELDS) {
+    const value = h.get(field);
+    if (value) {
+      result[field] = value;
+      found = true;
+    }
+  }
+  return found ? result : void 0;
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cmsd/dist/index.js":
+/*!***************************************************!*\
+  !*** ./node_modules/@svta/cml-cmsd/dist/index.js ***!
+  \***************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CMSD_DYNAMIC: function() { return /* binding */ CMSD_DYNAMIC; },
+/* harmony export */   CMSD_STATIC: function() { return /* binding */ CMSD_STATIC; },
+/* harmony export */   CMSD_V1: function() { return /* binding */ CMSD_V1; },
+/* harmony export */   CmsdHeaderField: function() { return /* binding */ CmsdHeaderField; },
+/* harmony export */   CmsdObjectType: function() { return /* binding */ CmsdObjectType; },
+/* harmony export */   CmsdStreamType: function() { return /* binding */ CmsdStreamType; },
+/* harmony export */   CmsdStreamingFormat: function() { return /* binding */ CmsdStreamingFormat; },
+/* harmony export */   decodeCmsdDynamic: function() { return /* binding */ decodeCmsdDynamic; },
+/* harmony export */   decodeCmsdStatic: function() { return /* binding */ decodeCmsdStatic; },
+/* harmony export */   encodeCmsdDynamic: function() { return /* binding */ encodeCmsdDynamic; },
+/* harmony export */   encodeCmsdStatic: function() { return /* binding */ encodeCmsdStatic; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cta */ "./node_modules/@svta/cml-cta/dist/index.js");
+/* harmony import */ var _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @svta/cml-structured-field-values */ "./node_modules/@svta/cml-structured-field-values/dist/index.js");
+
+
+
+//#region src/CMSD_DYNAMIC.ts
+/**
+* CMSD dynamic header name.
+*
+* @public
+*/
+const CMSD_DYNAMIC = "CMSD-Dynamic";
+
+//#endregion
+//#region src/CMSD_STATIC.ts
+/**
+* CMSD static header name.
+*
+* @public
+*/
+const CMSD_STATIC = "CMSD-Static";
+
+//#endregion
+//#region src/CMSD_V1.ts
+/**
+* CMSD Version 1
+*
+* @public
+*/
+const CMSD_V1 = 1;
+
+//#endregion
+//#region src/CmsdHeaderField.ts
+/**
+* CMSD header fields.
+*
+*
+* @enum
+*
+* @public
+*/
+const CmsdHeaderField = {
+  STATIC: CMSD_STATIC,
+  DYNAMIC: CMSD_DYNAMIC
+};
+
+//#endregion
+//#region src/CmsdObjectType.ts
+/**
+* Common Media Server Data Object Type
+*
+*
+* @enum
+*
+* @public
+*/
+const CmsdObjectType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmObjectType;
+
+//#endregion
+//#region src/CmsdStreamingFormat.ts
+/**
+* Common Media Server Data Streaming Format
+*
+*
+* @enum
+*
+* @public
+*/
+const CmsdStreamingFormat = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamingFormat;
+
+//#endregion
+//#region src/CmsdStreamType.ts
+/**
+* Common Media Server Data Stream Type
+*
+*
+* @enum
+*
+* @public
+*/
+const CmsdStreamType = _svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.CmStreamType;
+
+//#endregion
+//#region src/decodeCmsdDynamic.ts
+/**
+* Decode a CMSD dynamic string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+* @public
+*/
+function decodeCmsdDynamic(cmsd) {
+  if (!cmsd) return [];
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfList)(cmsd);
+}
+
+//#endregion
+//#region src/decodeCmsdStatic.ts
+/**
+* Decode a CMSD Static dict string to an object.
+*
+* @param cmsd - The CMSD string to decode.
+*
+* @returns The decoded CMSD object.
+*
+* @public
+*/
+function decodeCmsdStatic(cmsd) {
+  if (!cmsd) return {};
+  return Object.entries((0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.decodeSfDict)(cmsd)).reduce((acc, [key, item]) => {
+    const {
+      value
+    } = item;
+    acc[key] = typeof value === "symbol" ? (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.symbolToStr)(value) : value;
+    return acc;
+  }, {});
+}
+
+//#endregion
+//#region src/encodeCmsdDynamic.ts
+function encodeCmsdDynamic(value, cmsd) {
+  if (!value) return "";
+  if (typeof value === "string") {
+    if (!cmsd) return "";
+    value = [new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfItem(value, cmsd)];
+  }
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfList)(value, {
+    whitespace: false
+  });
+}
+
+//#endregion
+//#region src/utils/processCmsd.ts
+function processCmsd(obj, options) {
+  const results = {};
+  if (obj == null || typeof obj !== "object") return results;
+  const keys = Object.keys(obj);
+  const useSymbol = options?.useSymbol !== false;
+  keys.forEach(key => {
+    let value = obj[key];
+    if (key === "v" && value === 1) return;
+    if (!(0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isValid)(value)) return;
+    if ((0,_svta_cml_cta__WEBPACK_IMPORTED_MODULE_0__.isTokenField)(key) && typeof value === "string") value = useSymbol ? Symbol.for(value) : new _svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.SfToken(value);
+    results[key] = value;
+  });
+  return results;
+}
+
+//#endregion
+//#region src/encodeCmsdStatic.ts
+/**
+* Encode a CMSD Static object.
+*
+* @param cmsd - The CMSD object to encode.
+* @param options - Encoding options
+*
+* @returns The encoded CMSD string.
+*
+* @public
+*/
+function encodeCmsdStatic(cmsd, options) {
+  if (!cmsd) return "";
+  return (0,_svta_cml_structured_field_values__WEBPACK_IMPORTED_MODULE_1__.encodeSfDict)(processCmsd(cmsd, options), {
+    whitespace: false
+  });
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-cta/dist/index.js":
+/*!**************************************************!*\
+  !*** ./node_modules/@svta/cml-cta/dist/index.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   CmObjectType: function() { return /* binding */ CmObjectType; },
+/* harmony export */   CmStreamType: function() { return /* binding */ CmStreamType; },
+/* harmony export */   CmStreamingFormat: function() { return /* binding */ CmStreamingFormat; },
+/* harmony export */   isTokenField: function() { return /* binding */ isTokenField; },
+/* harmony export */   isValid: function() { return /* binding */ isValid; }
+/* harmony export */ });
+//#region src/CmObjectType.ts
+/**
+* Common Media Object Type
+*
+* @internal
+*/
+const CmObjectType = {
+  MANIFEST: "m",
+  AUDIO: "a",
+  VIDEO: "v",
+  MUXED: "av",
+  INIT: "i",
+  CAPTION: "c",
+  TIMED_TEXT: "tt",
+  KEY: "k",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamingFormat.ts
+/**
+* Common Media Streaming Format
+*
+* @internal
+*/
+const CmStreamingFormat = {
+  DASH: "d",
+  HLS: "h",
+  SMOOTH: "s",
+  OTHER: "o"
+};
+
+//#endregion
+//#region src/CmStreamType.ts
+/**
+* Common Media Stream Type
+*
+* @internal
+*/
+const CmStreamType = {
+  VOD: "v",
+  LIVE: "l"
+};
+
+//#endregion
+//#region src/isTokenField.ts
+/**
+* Checks if the given key is a token field.
+*
+* @param key - The key to check.
+*
+* @returns `true` if the key is a token field.
+*
+* @internal
+*/
+function isTokenField(key) {
+  return ["ot", "sf", "st", "e", "sta"].includes(key);
+}
+
+//#endregion
+//#region src/isValid.ts
+/**
+* Checks if the given value is valid
+*
+* @param value - The value to check.
+*
+* @returns `true` if the key is a value is valid.
+*
+* @internal
+*/
+function isValid(value) {
+  if (typeof value === "number") return Number.isFinite(value);
+  return value != null && value !== "" && value !== false;
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-structured-field-values/dist/index.js":
+/*!**********************************************************************!*\
+  !*** ./node_modules/@svta/cml-structured-field-values/dist/index.js ***!
+  \**********************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   SfItem: function() { return /* binding */ SfItem; },
+/* harmony export */   SfToken: function() { return /* binding */ SfToken; },
+/* harmony export */   decodeSfDict: function() { return /* binding */ decodeSfDict; },
+/* harmony export */   decodeSfItem: function() { return /* binding */ decodeSfItem; },
+/* harmony export */   decodeSfList: function() { return /* binding */ decodeSfList; },
+/* harmony export */   encodeSfDict: function() { return /* binding */ encodeSfDict; },
+/* harmony export */   encodeSfItem: function() { return /* binding */ encodeSfItem; },
+/* harmony export */   encodeSfList: function() { return /* binding */ encodeSfList; },
+/* harmony export */   parseBareItem: function() { return /* binding */ parseBareItem; },
+/* harmony export */   parseBoolean: function() { return /* binding */ parseBoolean; },
+/* harmony export */   parseByteSequence: function() { return /* binding */ parseByteSequence; },
+/* harmony export */   parseDate: function() { return /* binding */ parseDate; },
+/* harmony export */   parseDict: function() { return /* binding */ parseDict; },
+/* harmony export */   parseError: function() { return /* binding */ parseError; },
+/* harmony export */   parseInnerList: function() { return /* binding */ parseInnerList; },
+/* harmony export */   parseIntegerOrDecimal: function() { return /* binding */ parseIntegerOrDecimal; },
+/* harmony export */   parseItem: function() { return /* binding */ parseItem; },
+/* harmony export */   parseItemOrInnerList: function() { return /* binding */ parseItemOrInnerList; },
+/* harmony export */   parseKey: function() { return /* binding */ parseKey; },
+/* harmony export */   parseList: function() { return /* binding */ parseList; },
+/* harmony export */   parseParameters: function() { return /* binding */ parseParameters; },
+/* harmony export */   parseString: function() { return /* binding */ parseString; },
+/* harmony export */   parseToken: function() { return /* binding */ parseToken; },
+/* harmony export */   serializeBareItem: function() { return /* binding */ serializeBareItem; },
+/* harmony export */   serializeBoolean: function() { return /* binding */ serializeBoolean; },
+/* harmony export */   serializeByteSequence: function() { return /* binding */ serializeByteSequence; },
+/* harmony export */   serializeDate: function() { return /* binding */ serializeDate; },
+/* harmony export */   serializeDecimal: function() { return /* binding */ serializeDecimal; },
+/* harmony export */   serializeDict: function() { return /* binding */ serializeDict; },
+/* harmony export */   serializeError: function() { return /* binding */ serializeError; },
+/* harmony export */   serializeInnerList: function() { return /* binding */ serializeInnerList; },
+/* harmony export */   serializeInteger: function() { return /* binding */ serializeInteger; },
+/* harmony export */   serializeItem: function() { return /* binding */ serializeItem; },
+/* harmony export */   serializeKey: function() { return /* binding */ serializeKey; },
+/* harmony export */   serializeList: function() { return /* binding */ serializeList; },
+/* harmony export */   serializeParams: function() { return /* binding */ serializeParams; },
+/* harmony export */   serializeString: function() { return /* binding */ serializeString; },
+/* harmony export */   serializeToken: function() { return /* binding */ serializeToken; },
+/* harmony export */   symbolToStr: function() { return /* binding */ symbolToStr; }
+/* harmony export */ });
+/* harmony import */ var _svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-utils */ "./node_modules/@svta/cml-utils/dist/index.js");
+
+
+//#region src/SfItem.ts
+/**
+* Structured Field Item
+*
+* @public
+*/
+var SfItem = class SfItem {
+  /**
+  * Creates a new structured field item.
+  *
+  * @param value - The value of the item.
+  * @param params - The parameters of the item.
+  */
+  constructor(value, params) {
+    if (Array.isArray(value)) value = value.map(v => v instanceof SfItem ? v : new SfItem(v));
+    this.value = value;
+    this.params = params;
+  }
+};
+
+//#endregion
+//#region src/utils/DICT.ts
+const DICT = "Dict";
+
+//#endregion
+//#region src/parse/ParsedValue.ts
+/**
+* @internal
+*/
+function parsedValue(value, src) {
+  return {
+    value,
+    src
+  };
+}
+
+//#endregion
+//#region src/utils/throwError.ts
+function format(value) {
+  if (Array.isArray(value)) return JSON.stringify(value);
+  if (value instanceof Map) return "Map{}";
+  if (value instanceof Set) return "Set{}";
+  if (typeof value === "object") return JSON.stringify(value);
+  return String(value);
+}
+function throwError(action, src, type, cause) {
+  return new Error(`failed to ${action} "${format(src)}" as ${type}`, {
+    cause
+  });
+}
+
+//#endregion
+//#region src/parse/parseError.ts
+/**
+* @internal
+*/
+function parseError(src, type, cause) {
+  return throwError("parse", src, type, cause);
+}
+
+//#endregion
+//#region src/utils/INNER.ts
+const INNER = "Inner List";
+
+//#endregion
+//#region src/utils/BARE_ITEM.ts
+const BARE_ITEM = "Bare Item";
+
+//#endregion
+//#region src/utils/BOOLEAN.ts
+const BOOLEAN = "Boolean";
+
+//#endregion
+//#region src/parse/parseBoolean.ts
+/**
+* @internal
+*/
+function parseBoolean(src) {
+  let i = 0;
+  if (src[i] !== "?") throw parseError(src, BOOLEAN);
+  i++;
+  if (src[i] === "1") return parsedValue(true, src.substring(++i));
+  if (src[i] === "0") return parsedValue(false, src.substring(++i));
+  throw parseError(src, BOOLEAN);
+}
+
+//#endregion
+//#region src/utils/BYTES.ts
+const BYTES = "Byte Sequence";
+
+//#endregion
+//#region src/parse/parseByteSequence.ts
+/**
+* @internal
+*/
+function parseByteSequence(src) {
+  if (src[0] !== ":") throw parseError(src, BYTES);
+  src = src.substring(1);
+  if (src.includes(":") === false) throw parseError(src, BYTES);
+  const re = /(^.*?)(:)/g;
+  const b64_content = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue((0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.decodeBase64)(b64_content), src);
+}
+
+//#endregion
+//#region src/utils/DATE.ts
+const DATE = "Date";
+
+//#endregion
+//#region src/utils/DECIMAL.ts
+const DECIMAL = "Decimal";
+
+//#endregion
+//#region src/utils/INTEGER.ts
+const INTEGER = "Integer";
+
+//#endregion
+//#region src/utils/INTEGER_DECIMAL.ts
+const INTEGER_DECIMAL = `${INTEGER} or ${DECIMAL}`;
+
+//#endregion
+//#region src/utils/isInvalidInt.ts
+function isInvalidInt(value) {
+  return value < -999999999999999 || 999999999999999 < value;
+}
+
+//#endregion
+//#region src/parse/parseIntegerOrDecimal.ts
+/**
+* @internal
+*/
+function parseIntegerOrDecimal(src) {
+  const orig = src;
+  let sign = 1;
+  let num = "";
+  let value;
+  const i = 0;
+  const error = parseError(orig, INTEGER_DECIMAL);
+  if (src[i] === "-") {
+    sign = -1;
+    src = src.substring(1);
+  }
+  if (src.length <= 0) throw error;
+  const re_integer = /^(\d+)?/g;
+  const result_integer = re_integer.exec(src);
+  if (result_integer[0].length === 0) throw error;
+  num += result_integer[1];
+  src = src.substring(re_integer.lastIndex);
+  if (src[0] === ".") {
+    if (num.length > 12) throw error;
+    const re_decimal = /^(\.\d+)?/g;
+    const result_decimal = re_decimal.exec(src);
+    src = src.substring(re_decimal.lastIndex);
+    if (result_decimal[0].length === 0 || result_decimal[1].length > 4) throw error;
+    num += result_decimal[1];
+    if (num.length > 16) throw error;
+    value = parseFloat(num) * sign;
+  } else {
+    if (num.length > 15) throw error;
+    value = parseInt(num) * sign;
+    if (isInvalidInt(value)) throw parseError(num, INTEGER_DECIMAL);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/parse/parseDate.ts
+/**
+* @internal
+*/
+function parseDate(src) {
+  let i = 0;
+  if (src[i] !== "@") throw parseError(src, DATE);
+  i++;
+  const date = parseIntegerOrDecimal(src.substring(i));
+  if (Number.isInteger(date.value) === false) throw parseError(src, DATE);
+  return parsedValue(/* @__PURE__ */new Date(date.value * 1e3), date.src);
+}
+
+//#endregion
+//#region src/utils/STRING.ts
+const STRING = "String";
+
+//#endregion
+//#region src/utils/STRING_REGEX.ts
+const STRING_REGEX = /[\x00-\x1f\x7f]+/;
+
+//#endregion
+//#region src/parse/parseString.ts
+/**
+* @internal
+*/
+function parseString(src) {
+  let output = "";
+  let i = 0;
+  if (src[i] !== `"`) throw parseError(src, STRING);
+  i++;
+  while (src.length > i) {
+    if (src[i] === `\\`) {
+      if (src.length <= i + 1) throw parseError(src, STRING);
+      i++;
+      if (src[i] !== `"` && src[i] !== `\\`) throw parseError(src, STRING);
+      output += src[i];
+    } else if (src[i] === `"`) return parsedValue(output, src.substring(++i));else if (STRING_REGEX.test(src[i])) throw parseError(src, STRING);else output += src[i];
+    i++;
+  }
+  throw parseError(src, STRING);
+}
+
+//#endregion
+//#region src/SfToken.ts
+/**
+* A class to represent structured field tokens when `Symbol` is not available.
+*
+* @public
+*/
+var SfToken = class {
+  constructor(description) {
+    this.description = description;
+  }
+};
+
+//#endregion
+//#region src/utils/TOKEN.ts
+const TOKEN = "Token";
+
+//#endregion
+//#region src/parse/parseToken.ts
+/**
+* @internal
+*/
+function parseToken(src, options) {
+  if (/^[a-zA-Z*]$/.test(src[0]) === false) throw parseError(src, TOKEN);
+  const re = /^([!#$%&'*+\-.^_`|~\w:/]+)/g;
+  const value = re.exec(src)[1];
+  src = src.substring(re.lastIndex);
+  return parsedValue(options?.useSymbol === false ? new SfToken(value) : Symbol.for(value), src);
+}
+
+//#endregion
+//#region src/parse/parseBareItem.ts
+/**
+* @internal
+*/
+function parseBareItem(src, options) {
+  const first = src[0];
+  if (first === `"`) return parseString(src);
+  if (/^[-0-9]/.test(first)) return parseIntegerOrDecimal(src);
+  if (first === `?`) return parseBoolean(src);
+  if (first === `:`) return parseByteSequence(src);
+  if (/^[a-zA-Z*]/.test(first)) return parseToken(src, options);
+  if (first === `@`) return parseDate(src);
+  throw parseError(src, BARE_ITEM);
+}
+
+//#endregion
+//#region src/utils/KEY.ts
+const KEY = "Key";
+
+//#endregion
+//#region src/parse/parseKey.ts
+/**
+* @internal
+*/
+function parseKey(src) {
+  let i = 0;
+  if (/^[a-z*]$/.test(src[i]) === false) throw parseError(src, KEY);
+  let value = "";
+  while (src.length > i) {
+    if (/^[a-z0-9_\-.*]$/.test(src[i]) === false) return parsedValue(value, src.substring(i));
+    value += src[i];
+    i++;
+  }
+  return parsedValue(value, src.substring(i));
+}
+
+//#endregion
+//#region src/parse/parseParameters.ts
+/**
+* @internal
+*/
+function parseParameters(src, options) {
+  let parameters = void 0;
+  while (src.length > 0) {
+    if (src[0] !== ";") break;
+    src = src.substring(1).trim();
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    let value = true;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      src = src.substring(1);
+      const parsedBareItem = parseBareItem(src, options);
+      value = parsedBareItem.value;
+      src = parsedBareItem.src;
+    }
+    if (parameters == null) parameters = {};
+    parameters[key] = value;
+  }
+  return parsedValue(parameters, src);
+}
+
+//#endregion
+//#region src/parse/parseItem.ts
+/**
+* @internal
+*/
+function parseItem(src, options) {
+  const parsedBareItem = parseBareItem(src, options);
+  src = parsedBareItem.src;
+  const parsedParameters = parseParameters(src, options);
+  src = parsedParameters.src;
+  return parsedValue(new SfItem(parsedBareItem.value, parsedParameters.value), src);
+}
+
+//#endregion
+//#region src/parse/parseInnerList.ts
+/**
+* @internal
+*/
+function parseInnerList(src, options) {
+  if (src[0] !== "(") throw parseError(src, INNER);
+  src = src.substring(1);
+  const innerList = [];
+  while (src.length > 0) {
+    src = src.trim();
+    if (src[0] === ")") {
+      src = src.substring(1);
+      const parsedParameters = parseParameters(src, options);
+      return parsedValue(new SfItem(innerList, parsedParameters.value), parsedParameters.src);
+    }
+    const parsedItem = parseItem(src, options);
+    innerList.push(parsedItem.value);
+    src = parsedItem.src;
+    if (src[0] !== " " && src[0] !== ")") throw parseError(src, INNER);
+  }
+  throw parseError(src, INNER);
+}
+
+//#endregion
+//#region src/parse/parseItemOrInnerList.ts
+/**
+* @internal
+*/
+function parseItemOrInnerList(src, options) {
+  if (src[0] === "(") return parseInnerList(src, options);
+  return parseItem(src, options);
+}
+
+//#endregion
+//#region src/parse/parseDict.ts
+/**
+* @internal
+*/
+function parseDict(src, options) {
+  const value = {};
+  while (src.length > 0) {
+    let member;
+    const parsedKey = parseKey(src);
+    const key = parsedKey.value;
+    src = parsedKey.src;
+    if (src[0] === "=") {
+      const parsedItemOrInnerList = parseItemOrInnerList(src.substring(1), options);
+      member = parsedItemOrInnerList.value;
+      src = parsedItemOrInnerList.src;
+    } else {
+      const parsedParameters = parseParameters(src, options);
+      member = new SfItem(true, parsedParameters.value);
+      src = parsedParameters.src;
+    }
+    value[key] = member;
+    src = src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, DICT);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, DICT);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfDict.ts
+/**
+* Decode a structured field string into a structured field dictionary
+*
+* @param input - The structured field string to decode
+* @returns The structured field dictionary
+*
+* @public
+*/
+function decodeSfDict(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseDict(input.trim(), options);
+    if (src !== "") throw parseError(src, DICT);
+    return value;
+  } catch (cause) {
+    throw parseError(input, DICT, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/ITEM.ts
+const ITEM = "Item";
+
+//#endregion
+//#region src/decodeSfItem.ts
+/**
+* Decode a structured field string into a structured field item
+*
+* @param input - The structured field string to decode
+* @returns The structured field item
+*
+* @public
+*/
+function decodeSfItem(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseItem(input.trim(), options);
+    if (src !== "") throw parseError(src, ITEM);
+    return value;
+  } catch (cause) {
+    throw parseError(input, ITEM, cause);
+  }
+}
+
+//#endregion
+//#region src/utils/LIST.ts
+const LIST = "List";
+
+//#endregion
+//#region src/parse/parseList.ts
+/**
+* @internal
+*/
+function parseList(src, options) {
+  const value = [];
+  while (src.length > 0) {
+    const parsedItemOrInnerList = parseItemOrInnerList(src, options);
+    value.push(parsedItemOrInnerList.value);
+    src = parsedItemOrInnerList.src.trim();
+    if (src.length === 0) return parsedValue(value, src);
+    if (src[0] !== ",") throw parseError(src, LIST);
+    src = src.substring(1).trim();
+    if (src.length === 0 || src[0] === ",") throw parseError(src, LIST);
+  }
+  return parsedValue(value, src);
+}
+
+//#endregion
+//#region src/decodeSfList.ts
+/**
+* Decode a structured field string into a structured field list
+*
+* @param input - The structured field string to decode
+* @returns The structured field list
+*
+* @public
+*/
+function decodeSfList(input, options) {
+  try {
+    const {
+      src,
+      value
+    } = parseList(input.trim(), options);
+    if (src !== "") throw parseError(src, LIST);
+    return value;
+  } catch (cause) {
+    throw parseError(input, LIST, cause);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeError.ts
+/**
+* @internal
+*/
+function serializeError(src, type, cause) {
+  return throwError("serialize", src, type, cause);
+}
+
+//#endregion
+//#region src/serialize/serializeBoolean.ts
+/**
+* @internal
+*/
+function serializeBoolean(value) {
+  if (typeof value !== "boolean") throw serializeError(value, BOOLEAN);
+  return value ? "?1" : "?0";
+}
+
+//#endregion
+//#region src/serialize/serializeByteSequence.ts
+/**
+* @internal
+*/
+function serializeByteSequence(value) {
+  if (ArrayBuffer.isView(value) === false) throw serializeError(value, BYTES);
+  return `:${(0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.encodeBase64)(value)}:`;
+}
+
+//#endregion
+//#region src/serialize/serializeInteger.ts
+/**
+* @internal
+*/
+function serializeInteger(value) {
+  if (isInvalidInt(value)) throw serializeError(value, INTEGER);
+  return value.toString();
+}
+
+//#endregion
+//#region src/serialize/serializeDate.ts
+/**
+* @internal
+*/
+function serializeDate(value) {
+  return `@${serializeInteger(value.getTime() / 1e3)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDecimal.ts
+/**
+* @internal
+*/
+function serializeDecimal(value) {
+  const roundedValue = (0,_svta_cml_utils__WEBPACK_IMPORTED_MODULE_0__.roundToEven)(value, 3);
+  if (Math.floor(Math.abs(roundedValue)).toString().length > 12) throw serializeError(value, DECIMAL);
+  const stringValue = roundedValue.toString();
+  return stringValue.includes(".") ? stringValue : `${stringValue}.0`;
+}
+
+//#endregion
+//#region src/serialize/serializeString.ts
+/**
+* @internal
+*/
+function serializeString(value) {
+  if (STRING_REGEX.test(value)) throw serializeError(value, STRING);
+  return `"${value.replace(/\\/g, `\\\\`).replace(/"/g, `\\"`)}"`;
+}
+
+//#endregion
+//#region src/utils/symbolToStr.ts
+/**
+* Converts a symbol to a string.
+*
+* @param symbol - The symbol to convert.
+*
+* @returns The string representation of the symbol.
+*
+* @public
+*/
+function symbolToStr(symbol) {
+  return symbol.description || symbol.toString().slice(7, -1);
+}
+
+//#endregion
+//#region src/serialize/serializeToken.ts
+/**
+* @internal
+*/
+function serializeToken(token) {
+  const value = symbolToStr(token);
+  if (/^([a-zA-Z*])([!#$%&'*+\-.^_`|~\w:/]*)$/.test(value) === false) throw serializeError(value, TOKEN);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeBareItem.ts
+/**
+* @internal
+*/
+function serializeBareItem(value) {
+  switch (typeof value) {
+    case "number":
+      if (!Number.isFinite(value)) throw serializeError(value, BARE_ITEM);
+      if (Number.isInteger(value)) return serializeInteger(value);
+      return serializeDecimal(value);
+    case "string":
+      return serializeString(value);
+    case "symbol":
+      return serializeToken(value);
+    case "boolean":
+      return serializeBoolean(value);
+    case "object":
+      if (value instanceof Date) return serializeDate(value);
+      if (value instanceof Uint8Array) return serializeByteSequence(value);
+      if (value instanceof SfToken) return serializeToken(value);
+    default:
+      throw serializeError(value, BARE_ITEM);
+  }
+}
+
+//#endregion
+//#region src/serialize/serializeKey.ts
+/**
+* @internal
+*/
+function serializeKey(value) {
+  if (/^[a-z*][a-z0-9\-_.*]*$/.test(value) === false) throw serializeError(value, KEY);
+  return value;
+}
+
+//#endregion
+//#region src/serialize/serializeParams.ts
+/**
+* @internal
+*/
+function serializeParams(params) {
+  if (params == null) return "";
+  return Object.entries(params).map(([key, value]) => {
+    if (value === true) return `;${serializeKey(key)}`;
+    return `;${serializeKey(key)}=${serializeBareItem(value)}`;
+  }).join("");
+}
+
+//#endregion
+//#region src/serialize/serializeItem.ts
+/**
+* @internal
+*/
+function serializeItem(value) {
+  if (value instanceof SfItem) return `${serializeBareItem(value.value)}${serializeParams(value.params)}`;else return serializeBareItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeInnerList.ts
+/**
+* @internal
+*/
+function serializeInnerList(value) {
+  return `(${value.value.map(serializeItem).join(" ")})${serializeParams(value.params)}`;
+}
+
+//#endregion
+//#region src/serialize/serializeDict.ts
+/**
+* @internal
+*/
+function serializeDict(dict, options = {
+  whitespace: true
+}) {
+  if (typeof dict !== "object" || dict == null) throw serializeError(dict, DICT);
+  const entries = dict instanceof Map ? dict.entries() : Object.entries(dict);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return Array.from(entries).map(([key, item]) => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    let output = serializeKey(key);
+    if (item.value === true) output += serializeParams(item.params);else {
+      output += "=";
+      if (Array.isArray(item.value)) output += serializeInnerList(item);else output += serializeItem(item);
+    }
+    return output;
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfDict.ts
+/**
+* Encode an object into a structured field dictionary
+*
+* @param value - The structured field dictionary to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+* @public
+*/
+function encodeSfDict(value, options) {
+  return serializeDict(value, options);
+}
+
+//#endregion
+//#region src/encodeSfItem.ts
+function encodeSfItem(value, params) {
+  if (!(value instanceof SfItem)) value = new SfItem(value, params);
+  return serializeItem(value);
+}
+
+//#endregion
+//#region src/serialize/serializeList.ts
+/**
+* @internal
+*/
+function serializeList(list, options = {
+  whitespace: true
+}) {
+  if (Array.isArray(list) === false) throw serializeError(list, LIST);
+  const optionalWhiteSpace = options?.whitespace ? " " : "";
+  return list.map(item => {
+    if (item instanceof SfItem === false) item = new SfItem(item);
+    const i = item;
+    if (Array.isArray(i.value)) return serializeInnerList(i);
+    return serializeItem(i);
+  }).join(`,${optionalWhiteSpace}`);
+}
+
+//#endregion
+//#region src/encodeSfList.ts
+/**
+* Encode a list into a structured field dictionary
+*
+* @param value - The structured field list to encode
+* @param options - Encoding options
+*
+* @returns The structured field string
+*
+* @public
+*/
+function encodeSfList(value, options) {
+  return serializeList(value, options);
+}
+
+//#endregion
+
+
+/***/ }),
+
+/***/ "./node_modules/@svta/cml-utils/dist/index.js":
+/*!****************************************************!*\
+  !*** ./node_modules/@svta/cml-utils/dist/index.js ***!
+  \****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   Encoding: function() { return /* binding */ Encoding; },
+/* harmony export */   RequestResponseType: function() { return /* binding */ RequestResponseType; },
+/* harmony export */   UTF_16: function() { return /* binding */ UTF_16; },
+/* harmony export */   UTF_16_BE: function() { return /* binding */ UTF_16_BE; },
+/* harmony export */   UTF_16_LE: function() { return /* binding */ UTF_16_LE; },
+/* harmony export */   UTF_8: function() { return /* binding */ UTF_8; },
+/* harmony export */   arrayBufferToHex: function() { return /* binding */ arrayBufferToHex; },
+/* harmony export */   arrayBufferToUuid: function() { return /* binding */ arrayBufferToUuid; },
+/* harmony export */   base64decode: function() { return /* binding */ base64decode; },
+/* harmony export */   base64encode: function() { return /* binding */ base64encode; },
+/* harmony export */   convertUint8ToUint16: function() { return /* binding */ convertUint8ToUint16; },
+/* harmony export */   decodeBase64: function() { return /* binding */ decodeBase64; },
+/* harmony export */   decodeText: function() { return /* binding */ decodeText; },
+/* harmony export */   encodeBase64: function() { return /* binding */ encodeBase64; },
+/* harmony export */   encodeText: function() { return /* binding */ encodeText; },
+/* harmony export */   getBandwidthBps: function() { return /* binding */ getBandwidthBps; },
+/* harmony export */   getBaseUrl: function() { return /* binding */ getBaseUrl; },
+/* harmony export */   hexToArrayBuffer: function() { return /* binding */ hexToArrayBuffer; },
+/* harmony export */   isArrayBufferLike: function() { return /* binding */ isArrayBufferLike; },
+/* harmony export */   roundToEven: function() { return /* binding */ roundToEven; },
+/* harmony export */   stringToUint16: function() { return /* binding */ stringToUint16; },
+/* harmony export */   unescapeHtml: function() { return /* binding */ unescapeHtml; },
+/* harmony export */   urlToRelativePath: function() { return /* binding */ urlToRelativePath; },
+/* harmony export */   uuid: function() { return /* binding */ uuid; },
+/* harmony export */   uuidToArrayBuffer: function() { return /* binding */ uuidToArrayBuffer; }
+/* harmony export */ });
+//#region src/arrayBufferToHex.ts
+/**
+* Encodes an ArrayBuffer as a hexadecimal string.
+*
+* @param buffer - The ArrayBuffer to encode.
+* @returns The hexadecimal string representation.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/arrayBufferToHex.test.ts#example}
+*/
+function arrayBufferToHex(buffer) {
+  return new Uint8Array(buffer).reduce((result, byte) => result + byte.toString(16).padStart(2, "0"), "");
+}
+
+//#endregion
+//#region src/arrayBufferToUuid.ts
+/**
+* Converts an ArrayBuffer to a UUID string.
+*
+* @param buffer - The ArrayBuffer to convert.
+* @returns The UUID string representation.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/arrayBufferToUuid.test.ts#example}
+*/
+function arrayBufferToUuid(buffer) {
+  return arrayBufferToHex(buffer).replace(/(.{8})(.{4})(.{4})(.{4})(.{12})/, "$1-$2-$3-$4-$5");
+}
+
+//#endregion
+//#region src/decodeBase64.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+* @public
+*/
+function decodeBase64(str) {
+  return new Uint8Array([...atob(str)].map(a => a.charCodeAt(0)));
+}
+
+//#endregion
+//#region src/base64decode.ts
+/**
+* Decodes a base64 encoded string into binary data
+*
+* @param str - The base64 encoded string to decode
+* @returns The decoded binary data
+*
+* @public
+*
+* @deprecated Use {@link decodeBase64} instead.
+*
+* @see {@link decodeBase64}
+*/
+const base64decode = decodeBase64;
+
+//#endregion
+//#region src/encodeBase64.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+* @public
+*/
+function encodeBase64(binary) {
+  return btoa(String.fromCharCode(...binary));
+}
+
+//#endregion
+//#region src/base64encode.ts
+/**
+* Encodes binary data to base64
+*
+* @param binary - The binary data to encode
+* @returns The base64 encoded string
+*
+* @public
+*
+* @deprecated Use {@link encodeBase64} instead.
+*
+* @see {@link encodeBase64}
+*/
+const base64encode = encodeBase64;
+
+//#endregion
+//#region src/convertUint8ToUint16.ts
+/**
+* Converts a Uint8Array to a Uint16Array by aligning its buffer.
+*
+* @param input - The Uint8Array to convert
+* @returns A properly aligned Uint16Array
+*
+* @public
+*/
+function convertUint8ToUint16(input) {
+  if (input.length % 2 !== 0) {
+    const padded = new Uint8Array(input.length + 1);
+    padded.set(input);
+    return new Uint16Array(padded.buffer);
+  }
+  return new Uint16Array(input.buffer);
+}
+
+//#endregion
+//#region src/isArrayBufferLike.ts
+/**
+* Checks if the given value is `ArrayBufferLike` (i.e. an `ArrayBuffer`
+* or a `SharedArrayBuffer`).
+*
+* This function safely handles environments where
+* `SharedArrayBuffer` is not defined, such as non-cross-origin
+* isolated browser contexts.
+*
+* @param value - The value to check.
+* @returns `true` if the value is an `ArrayBuffer` or `SharedArrayBuffer`.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/isArrayBufferLike.test.ts#example}
+*/
+function isArrayBufferLike(value) {
+  return value instanceof ArrayBuffer || typeof SharedArrayBuffer !== "undefined" && value instanceof SharedArrayBuffer;
+}
+
+//#endregion
+//#region src/UTF_16.ts
+/**
+* UTF-16 Encoding.
+*
+* @public
+*/
+const UTF_16 = "utf-16";
+
+//#endregion
+//#region src/UTF_16_BE.ts
+/**
+* UTF-16 Big Endian Encoding.
+*
+* @public
+*/
+const UTF_16_BE = "utf-16be";
+
+//#endregion
+//#region src/UTF_16_LE.ts
+/**
+* UTF-16 Little Endian Encoding.
+*
+* @public
+*/
+const UTF_16_LE = "utf-16le";
+
+//#endregion
+//#region src/UTF_8.ts
+/**
+* UTF-8 Encoding.
+*
+* @public
+*/
+const UTF_8 = "utf-8";
+
+//#endregion
+//#region src/decodeText.ts
+/**
+* Converts an ArrayBuffer or ArrayBufferView to a string. Similar to `TextDecoder.decode`
+* but with a fallback for environments that don't support `TextDecoder`.
+*
+* @param data - The data to decode.
+* @param options - The options for the decoding.
+* @returns The string representation of the ArrayBuffer.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/decodeText.test.ts#example}
+*/
+function decodeText(data, options = {}) {
+  let view;
+  if (isArrayBufferLike(data)) view = new DataView(data);else view = new DataView(data.buffer, data.byteOffset, data.byteLength);
+  let byteOffset = 0;
+  let {
+    encoding
+  } = options;
+  if (!encoding) {
+    const first = view.getUint8(0);
+    const second = view.getUint8(1);
+    if (first == 239 && second == 187 && view.getUint8(2) == 191) {
+      encoding = UTF_8;
+      byteOffset = 3;
+    } else if (first == 254 && second == 255) {
+      encoding = UTF_16_BE;
+      byteOffset = 2;
+    } else if (first == 255 && second == 254) {
+      encoding = UTF_16_LE;
+      byteOffset = 2;
+    } else encoding = UTF_8;
+  }
+  if (typeof TextDecoder !== "undefined") return new TextDecoder(encoding).decode(view);
+  const {
+    byteLength
+  } = view;
+  const endian = encoding !== UTF_16_BE;
+  let str = "";
+  let char;
+  while (byteOffset < byteLength) {
+    switch (encoding) {
+      case UTF_8:
+        char = view.getUint8(byteOffset);
+        if (char < 128) byteOffset++;else if (char >= 194 && char <= 223) {
+          if (byteOffset + 1 < byteLength) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            if (byte2 >= 128 && byte2 <= 191) {
+              char = (char & 31) << 6 | byte2 & 63;
+              byteOffset += 2;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 224 && char <= 239) {
+          if (byteOffset + 2 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191) {
+              char = (char & 15) << 12 | (byte2 & 63) << 6 | byte3 & 63;
+              byteOffset += 3;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else if (char >= 240 && char <= 244) {
+          if (byteOffset + 3 <= byteLength - 1) {
+            const byte2 = view.getUint8(byteOffset + 1);
+            const byte3 = view.getUint8(byteOffset + 2);
+            const byte4 = view.getUint8(byteOffset + 3);
+            if (byte2 >= 128 && byte2 <= 191 && byte3 >= 128 && byte3 <= 191 && byte4 >= 128 && byte4 <= 191) {
+              char = (char & 7) << 18 | (byte2 & 63) << 12 | (byte3 & 63) << 6 | byte4 & 63;
+              byteOffset += 4;
+            } else byteOffset++;
+          } else byteOffset++;
+        } else byteOffset++;
+        break;
+      case UTF_16_BE:
+      case UTF_16:
+      case UTF_16_LE:
+        char = view.getUint16(byteOffset, endian);
+        byteOffset += 2;
+        break;
+    }
+    str += String.fromCodePoint(char);
+  }
+  return str;
+}
+
+//#endregion
+//#region src/encodeText.ts
+/**
+* Converts a string to a Uint8Array. Similar to `TextEncoder.encode`
+* but with a fallback for environments that don't support `TextEncoder`.
+*
+* @param data - The string to encode.
+* @returns The Uint8Array representation of the string.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/encodeText.test.ts#example}
+*/
+function encodeText(data) {
+  return new TextEncoder().encode(data);
+}
+
+//#endregion
+//#region src/Encoding.ts
+/**
+* Text encoding types.
+*
+* @public
+*/
+const Encoding = {
+  UTF8: UTF_8,
+  UTF16: UTF_16,
+  UTF16BE: UTF_16_BE,
+  UTF16LE: UTF_16_LE
+};
+
+//#endregion
+//#region src/getBandwidthBps.ts
+/**
+* Converts a ResourceTiming sample to bandwidth in bits per second (bps).
+*
+* @param sample - A ResourceTiming sample
+* @returns
+*
+* @public
+*/
+function getBandwidthBps(sample) {
+  const durationSeconds = sample.duration / 1e3;
+  return sample.encodedBodySize * 8 / durationSeconds;
+}
+
+//#endregion
+//#region src/getBaseUrl.ts
+/**
+* Get the base URL from a full URL or a URL object.
+*
+* @param fullUrl - The full URL or URL object.
+* @returns The base URL.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/getBaseUrl.test.ts#example}
+*/
+function getBaseUrl(fullUrl) {
+  const url = typeof fullUrl === "string" ? new URL(fullUrl) : fullUrl;
+  return url.origin + url.pathname.substring(0, url.pathname.lastIndexOf("/") + 1);
+}
+
+//#endregion
+//#region src/hexToArrayBuffer.ts
+/**
+* Decodes a hexadecimal string into an ArrayBuffer.
+*
+* @param hex - The hexadecimal string to decode.
+* @returns The decoded ArrayBuffer.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/hexToArrayBuffer.test.ts#example}
+*/
+function hexToArrayBuffer(hex) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(hex.length / 2);
+  const view = new Uint8Array(buffer);
+  for (let i = 0; i < hex.length; i += 2) view[i / 2] = parseInt(hex.slice(i, i + 2), 16);
+  return buffer;
+}
+
+//#endregion
+//#region src/RequestResponseType.ts
+/**
+* The response type of the request.
+*
+* @enum
+*
+* @public
+*/
+const RequestResponseType = {
+  TEXT: "text",
+  JSON: "json",
+  BLOB: "blob",
+  ARRAY_BUFFER: "arrayBuffer",
+  DOCUMENT: "document",
+  STREAM: "stream"
+};
+
+//#endregion
+//#region src/roundToEven.ts
+/**
+* This implements the rounding procedure described in step 2 of the "Serializing a Decimal" specification.
+* This rounding style is known as "even rounding", "banker's rounding", or "commercial rounding".
+*
+* @param value - The value to round
+* @param precision - The number of decimal places to round to
+* @returns The rounded value
+*
+* @public
+*/
+function roundToEven(value, precision) {
+  if (value < 0) return -roundToEven(-value, precision);
+  const decimalShift = Math.pow(10, precision);
+  if (Math.abs(value * decimalShift % 1 - .5) < Number.EPSILON) {
+    const flooredValue = Math.floor(value * decimalShift);
+    return (flooredValue % 2 === 0 ? flooredValue : flooredValue + 1) / decimalShift;
+  } else return Math.round(value * decimalShift) / decimalShift;
+}
+
+//#endregion
+//#region src/stringToUint16.ts
+/**
+* Converts a string to a Uint16Array.
+*
+* @param str - The string to convert
+* @returns A Uint16Array representation of the string
+*
+* @public
+*
+* @example
+* {@includeCode ../test/stringToUint16.test.ts#example}
+*/
+function stringToUint16(str) {
+  const buffer = /* @__PURE__ */new ArrayBuffer(str.length * 2);
+  const view = new DataView(buffer);
+  for (let i = 0; i < str.length; i++) view.setUint16(i * 2, str.charCodeAt(i), true);
+  return new Uint16Array(buffer);
+}
+
+//#endregion
+//#region src/unescapeHtml.ts
+const escapedHtml = /&(?:amp|lt|gt|quot|apos|nbsp|lrm|rlm|#[xX]?[0-9a-fA-F]+);/g;
+/**
+* Unescapes HTML entities
+*
+* @param text - The text to unescape
+* @returns The unescaped text
+*
+* @public
+*
+* @example
+* {@includeCode ../test/unescapeHtml.test.ts#example}
+*/
+function unescapeHtml(text) {
+  if (text.indexOf("&") === -1) return text;
+  return text.replace(escapedHtml, match => {
+    switch (match) {
+      case "&amp;":
+        return "&";
+      case "&lt;":
+        return "<";
+      case "&gt;":
+        return ">";
+      case "&quot;":
+        return "\"";
+      case "&apos;":
+        return "'";
+      case "&nbsp;":
+        return "\xA0";
+      case "&lrm;":
+        return "‎";
+      case "&rlm;":
+        return "‏";
+      default:
+        if (match[1] === "#") {
+          const code = match[2] === "x" || match[2] === "X" ? parseInt(match.slice(3), 16) : parseInt(match.slice(2), 10);
+          return String.fromCodePoint(code);
+        }
+        return match;
+    }
+  });
+}
+
+//#endregion
+//#region src/urlToRelativePath.ts
+/**
+* Constructs a relative path from a URL.
+*
+* If `url` is already a relative path, or its origin differs from `base`, it is returned unchanged.
+*
+* @param url - The destination URL
+* @param base - The base URL
+* @returns The relative path
+*
+* @public
+*
+* @example
+* {@includeCode ../test/urlToRelativePath.test.ts#example}
+*/
+function urlToRelativePath(url, base) {
+  let to;
+  try {
+    to = new URL(url);
+  } catch {
+    return url;
+  }
+  const from = new URL(base);
+  if (to.origin !== from.origin) return url;
+  const toPath = to.pathname.split("/").slice(1);
+  const fromPath = from.pathname.split("/").slice(1, -1);
+  const length = Math.min(toPath.length, fromPath.length);
+  for (let i = 0; i < length; i++) {
+    if (toPath[i] !== fromPath[i]) break;
+    toPath.shift();
+    fromPath.shift();
+  }
+  while (fromPath.length) {
+    fromPath.shift();
+    toPath.unshift("..");
+  }
+  return toPath.join("/") + to.search + to.hash;
+}
+
+//#endregion
+//#region src/uuid.ts
+/**
+* Generate a random v4 UUID
+*
+* @returns A random v4 UUID
+*
+* @public
+*/
+function uuid() {
+  try {
+    return crypto.randomUUID();
+  } catch (error) {
+    try {
+      const url = URL.createObjectURL(new Blob());
+      const uuid$1 = url.toString();
+      URL.revokeObjectURL(url);
+      return uuid$1.slice(uuid$1.lastIndexOf("/") + 1);
+    } catch (error$1) {
+      let dt = (/* @__PURE__ */new Date()).getTime();
+      return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = (dt + Math.random() * 16) % 16 | 0;
+        dt = Math.floor(dt / 16);
+        return (c == "x" ? r : r & 3 | 8).toString(16);
+      });
+    }
+  }
+}
+
+//#endregion
+//#region src/uuidToArrayBuffer.ts
+/**
+* Converts a UUID string to an ArrayBuffer.
+*
+* @param uuid - The UUID string to convert.
+* @returns The ArrayBuffer representation.
+*
+* @public
+*
+* @example
+* {@includeCode ../test/uuidToArrayBuffer.test.ts#example}
+*/
+function uuidToArrayBuffer(uuid$1) {
+  return hexToArrayBuffer(uuid$1.replace(/-/g, ""));
+}
+
+//#endregion
+
 
 /***/ }),
 
@@ -1254,7 +4488,6 @@ var __WEBPACK_AMD_DEFINE_RESULT__;//////////////////////////////////////////////
   \***************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventBus.js */ "./src/core/EventBus.js");
 /* harmony import */ var _events_Events_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./events/Events.js */ "./src/core/events/Events.js");
@@ -1445,7 +4678,6 @@ _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].updateSingletonFactory(
   \******************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _streaming_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
@@ -1536,7 +4768,7 @@ function EventBus() {
     if (idx < 0) {
       return;
     }
-    handlers[type][idx] = null;
+    handlers[type].splice(idx, 1);
   }
   function trigger(type, payload = {}, filters = {}) {
     if (!type || !handlers[type]) {
@@ -1619,7 +4851,6 @@ _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].updateSingletonFactory(
   \**********************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -1881,7 +5112,6 @@ const FactoryMaker = function () {
   \******************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _Utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./Utils.js */ "./src/core/Utils.js");
@@ -1957,6 +5187,7 @@ __webpack_require__.r(__webpack_exports__);
  *            manifestUpdateRetryInterval: 100,
  *            liveUpdateTimeThresholdInMilliseconds: 0,
  *            cacheInitSegments: false,
+ *            cacheInitSegmentsLimit: 50,
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
@@ -1975,8 +5206,8 @@ __webpack_require__.r(__webpack_exports__);
  *                   ...Constants.THUMBNAILS_SCHEME_ID_URIS.map(ep => { return { 'schemeIdUri': ep }; })
  *               ],
  *               useMediaCapabilitiesApi: true,
- *               filterVideoColorimetryEssentialProperties: false,
- *               filterHDRMetadataFormatEssentialProperties: false,
+ *               filterVideoColorimetryEssentialProperties: true,
+ *               filterHDRMetadataFormatEssentialProperties: true,
  *               filterAudioChannelConfiguration: false
  *            },
  *            events: {
@@ -2000,7 +5231,7 @@ __webpack_require__.r(__webpack_exports__);
  *                keepProtectionMediaKeysMaximumOpenSessions: -1,
  *                ignoreEmeEncryptedEvent: false,
  *                detectPlayreadyMessageFormat: true,
- *                ignoreKeyStatuses: false
+ *                ignoreKeyStatuses: false,
  *            },
  *            buffer: {
  *                enableSeekDecorrelationFix: false,
@@ -2073,6 +5304,11 @@ __webpack_require__.r(__webpack_exports__);
  *            liveCatchup: {
  *                maxDrift: NaN,
  *                playbackRate: {min: NaN, max: NaN},
+ *                step: {
+ *                  start: { min: NaN, max: NaN },
+ *                  stop: { min: NaN, max: NaN }
+ *                },
+ *                liveThreshold: -1,
  *                playbackBufferMin: 0.5,
  *                enabled: null,
  *                mode: Constants.LIVE_CATCHUP_MODE_DEFAULT
@@ -2091,6 +5327,7 @@ __webpack_require__.r(__webpack_exports__);
  *            prioritizeRoleMain: true,
  *            assumeDefaultRoleAsMain: true,
  *            selectionModeForInitialTrack: Constants.TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+ *            blacklistExpiryTime: -1,
  *            fragmentRequestTimeout: 20000,
  *            fragmentRequestProgressTimeout: -1,
  *            manifestRequestTimeout: 10000,
@@ -2103,6 +5340,7 @@ __webpack_require__.r(__webpack_exports__);
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
  *                [HTTPRequest.LICENSE]: 1000,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 1000,
  *                [HTTPRequest.OTHER_TYPE]: 1000,
  *                lowLatencyReductionFactor: 10
  *            },
@@ -2115,6 +5353,7 @@ __webpack_require__.r(__webpack_exports__);
  *                [HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
  *                [HTTPRequest.LICENSE]: 3,
+ *                [HTTPRequest.LICENSE_CERTIFICATE]: 3,
  *                [HTTPRequest.OTHER_TYPE]: 3,
  *                lowLatencyMultiplyFactor: 5
  *            },
@@ -2209,6 +5448,7 @@ __webpack_require__.r(__webpack_exports__);
  *                 }
  *             },
  *            cmcd: {
+ *                applyParametersFromMpd: true,
  *                enabled: false,
  *                sid: null,
  *                cid: null,
@@ -2217,7 +5457,8 @@ __webpack_require__.r(__webpack_exports__);
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
  *                includeInRequests: ['segment', 'mpd'],
- *                version: 1
+ *                version: 1,
+ *                eventTargets: []
  *            },
  *            cmsd: {
  *                enabled: false,
@@ -2235,7 +5476,10 @@ __webpack_require__.r(__webpack_exports__);
  *                audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
  *                role: 'urn:mpeg:dash:role:2011',
  *                accessibility: 'urn:mpeg:dash:role:2011'
- *            }
+ *            },
+ *            dvbReporting: {
+ *                reportingUrl: null,
+ *            },
  *          },
  *          errors: {
  *            recoverAttempts: {
@@ -2249,7 +5493,7 @@ __webpack_require__.r(__webpack_exports__);
  * @typedef {Object} TimeShiftBuffer
  * @property {boolean} [calcFromSegmentTimeline=false]
  * Enable calculation of the DVR window for SegmentTimeline manifests based on the entries in \<SegmentTimeline\>.
- *  * @property {boolean} [fallbackToSegmentTimeline=true]
+ * @property {boolean} [fallbackToSegmentTimeline=true]
  * In case the MPD uses \<SegmentTimeline\ and no segment is found within the DVR window the DVR window is calculated based on the entries in \<SegmentTimeline\>.
  */
 
@@ -2453,6 +5697,8 @@ __webpack_require__.r(__webpack_exports__);
  * Value to be used in case enableStallFix is set to true
  * @property {number} [seekOffset=0]
  * An additional offset in seconds that is applied when performing a seek to jump a gap.
+ * @property {number} [checkInterval=250]
+ * The interval in milliseconds at which the gap handler checks for gaps in the buffer. Lower values detect gaps faster but increase CPU usage. Default is 250ms.
  */
 
 /**
@@ -2535,7 +5781,19 @@ __webpack_require__.r(__webpack_exports__);
  *
  * LowLatencyMaxDriftBeforeSeeking should be provided in seconds.
  *
- * If 0, then seeking operations won't be used for fixing latency deviations.
+ * If a value less than zero is set (-1), then seeking operations won't be used for fixing latency deviations.
+ *
+ * Note: Catch-up mechanism is only applied when playing low latency live streams.
+ * @property {number} [step={start:{min: NaN, max: NaN},stop:{min: NaN, max: NaN}}]
+ * This object is used for setting the window parameters for "step" mode.
+ *
+ * It is only applicable if the Catchup mechanism used is of mode "step".
+ *
+ * The parameters are all percentages of the target latency. Where 1 is on target.
+ *
+ * The start object sets the window within which catchup should begin. In the range of (0-2) (0% to 200% of the target latency).
+ *
+ * The stop window is only applicable if a non-unity playback speed is in use. Again in the range of (0-2) (0% to 200% of the target latency). It sets the point at which playback should return to unity (or stop catching up). This parameter prevents instability when using higher min and max playback rates and should be tuned to prevent overshooting the target.
  *
  * Note: Catch-up mechanism is only applied when playing low latency live streams.
  * @property {number} [playbackRate={min: NaN, max: NaN}]
@@ -2555,6 +5813,8 @@ __webpack_require__.r(__webpack_exports__);
  * @property {number} [playbackBufferMin=0.5]
  * Use this parameter to specify the minimum buffer which is used for LoL+ based playback rate reduction.
  *
+ * @property {boolean} [liveThreshold=-1]
+ * Accelerated playback is reset to 1.0 (no speed-up) once the latency difference (currentLatency - initiallyDefinedTargetLatency) is above the configured liveThreshold value. liveThreshold is disabled by setting the value to -1
  *
  * @property {boolean} [enabled=null]
  * Use this parameter to enable the catchup mode for non low-latency streams.
@@ -2562,7 +5822,7 @@ __webpack_require__.r(__webpack_exports__);
  * @property {string} [mode="liveCatchupModeDefault"]
  * Use this parameter to switch between different catchup modes.
  *
- * Options: "liveCatchupModeDefault" or "liveCatchupModeLOLP".
+ * Options: One of "liveCatchupModeDefault", "liveCatchupModeLOLP" or "liveCatchupModeStep".
  *
  * Note: Catch-up mechanism is automatically applied when playing low latency live streams.
  */
@@ -2612,7 +5872,7 @@ __webpack_require__.r(__webpack_exports__);
  *
  * @property {boolean} [ignoreKeyStatuses=false]
  * If set to true the player will ignore the status of a key and try to play the corresponding track regardless whether the key is usable or not.
- */
+ *
 
 /**
  * @typedef {Object} Capabilities
@@ -2622,10 +5882,10 @@ __webpack_require__.r(__webpack_exports__);
  * List of supported \<EssentialProperty\> elements
  * @property {boolean} [useMediaCapabilitiesApi=true]
  * Enable to use the MediaCapabilities API to check whether codecs are supported. If disabled MSE.isTypeSupported will be used instead.
- * @property {boolean} [filterVideoColorimetryEssentialProperties=false]
+ * @property {boolean} [filterVideoColorimetryEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled Colorimetry EssentialProperties (per schemeIdUris: 'urn:mpeg:mpegB:cicp:ColourPrimaries', 'urn:mpeg:mpegB:cicp:TransferCharacteristics').
  * If disabled, registered properties per supportedEssentialProperties will be allowed without any further checking (including 'urn:mpeg:mpegB:cicp:MatrixCoefficients').
- * @property {boolean} [filterHDRMetadataFormatEssentialProperties=false]
+ * @property {boolean} [filterHDRMetadataFormatEssentialProperties=true]
  * Enable dash.js to query MediaCapabilities API for signalled HDR-MetadataFormat EssentialProperty (per schemeIdUri:'urn:dvb:dash:hdr-dmi').
  * @property {boolean} [filterAudioChannelConfiguration=false]
  * Enable dash.js to query MediaCapabilities API for signalled AudioChannelConfiguration.
@@ -2637,6 +5897,8 @@ __webpack_require__.r(__webpack_exports__);
  * If true, the size of the video portal will limit the max chosen video resolution.
  * @property {boolean} [usePixelRatioInLimitBitrateByPortal=false]
  * Sets whether to take into account the device's pixel ratio when defining the portal dimensions.
+ * @property {number} [limitBitrateByPortalMinimum=0]
+ * Sets a minimum bitrate in kbps for limitBitrateByPortal. Representations at this bitrate or below it will not be limited by the portal size. Useful if the player can be resized.
  *
  * Useful on, for example, retina displays.
  * @property {module:Settings~AbrRules} [rules]
@@ -2831,6 +6093,26 @@ __webpack_require__.r(__webpack_exports__);
  * The version of the CMCD to use.
  *
  * If not specified this value defaults to 1.
+ * @property {Array.<CmcdEventTarget>} [eventTargets]
+ * List of CMCD reporting targets.
+ */
+
+/**
+ * @typedef {Object} CmcdEventTarget
+ * @property {boolean} [enabled]
+ * Whether the CMCD reporting is enabled for this target.
+ * @property {string} [url]
+ * The reporting endpoint URL.
+ * @property {string} [events]
+ * The events that should trigger the CMCD reporting.
+ * @property {number} [interval]
+ * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
+ * @property {Array.<string>} [enabledKeys]
+ * CMCD keys to include in the report.
+ * @property {Array.<string>} [includeInRequests]
+ * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {number} [batchSize]
+ * The batch size for the CMCD reporting.
  */
 
 /**
@@ -2847,6 +6129,12 @@ __webpack_require__.r(__webpack_exports__);
  * Set to true if dash.js should apply CMSD maximum suggested bitrate in ABR logic.
  * @property {number} [etpWeightRatio=0]
  * Sets the weight ratio (between 0 and 1) that shall be applied on CMSD estimated throuhgput compared to measured throughput when calculating throughput.
+ */
+
+/**
+ * @typedef {Object} module:Settings~DvbReportingSettings
+ * @property {string} [reportingUrl]
+ * Override DVB reporting url in manifest with a custom one
  */
 
 /**
@@ -2879,6 +6167,8 @@ __webpack_require__.r(__webpack_exports__);
  * For live streams, postpone syncing time updates until the threshold is passed. Increase if problems occurs during live streams on low end devices.
  * @property {boolean} [cacheInitSegments=false]
  * Enables the caching of init segments to avoid requesting the init segments before each representation switch.
+ * @property {number} [cacheInitSegmentsLimit=50]
+ * Maximum number of entries to keep in the init segment cache. When the cache exceeds this limit, the least recently used entries are evicted.
  * @property {boolean} [applyServiceDescription=true]
  * Set to true if dash.js should use the parameters defined in ServiceDescription elements
  * @property {boolean} [applyProducerReferenceTime=true]
@@ -2960,6 +6250,10 @@ __webpack_require__.r(__webpack_exports__);
  * - Constants.TRACK_SELECTION_MODE_WIDEST_RANGE
  * This mode makes the player select the track with a widest range of bitrates.
  *
+ * @property {number} [blacklistExpiryTime=-1]
+ * The time in seconds that a Service Location remains on the blacklist.
+ * After this period expires, the Service Location becomes eligible for selection again during a subsequent failover. However, the system will not proactively switch back to it on its own.
+ * When Content Steering is enabled, this setting is ignored: the blacklist duration is automatically set to the steering response’s TTL, and the steering algorithm may actively switch back to that Service Location as needed.
  *
  * @property {number} [fragmentRequestTimeout=20000]
  * Time in milliseconds before timing out on loading a media fragment.
@@ -2990,6 +6284,8 @@ __webpack_require__.r(__webpack_exports__);
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
  * Default schemeIdUri for descriptor type elements
  * These strings are used when not provided with setInitialMediaSettingsFor()
+ * @property {module:Settings~DvbReportingSettings} dvbReporting
+ * Settings related to DVB metrics reporting.
  */
 
 /**
@@ -3035,6 +6331,7 @@ function Settings() {
       manifestUpdateRetryInterval: 100,
       liveUpdateTimeThresholdInMilliseconds: 0,
       cacheInitSegments: false,
+      cacheInitSegmentsLimit: 50,
       applyServiceDescription: true,
       applyProducerReferenceTime: true,
       applyContentSteering: true,
@@ -3066,8 +6363,8 @@ function Settings() {
           };
         })],
         useMediaCapabilitiesApi: true,
-        filterVideoColorimetryEssentialProperties: false,
-        filterHDRMetadataFormatEssentialProperties: false,
+        filterVideoColorimetryEssentialProperties: true,
+        filterHDRMetadataFormatEssentialProperties: true,
         filterAudioChannelConfiguration: false
       },
       events: {
@@ -3126,7 +6423,8 @@ function Settings() {
         enableSeekFix: true,
         enableStallFix: false,
         stallSeek: 0.1,
-        seekOffset: 0
+        seekOffset: 0,
+        checkInterval: 250
       },
       utcSynchronization: {
         enabled: true,
@@ -3167,6 +6465,17 @@ function Settings() {
           min: NaN,
           max: NaN
         },
+        step: {
+          start: {
+            min: NaN,
+            max: NaN
+          },
+          stop: {
+            min: NaN,
+            max: NaN
+          }
+        },
+        liveThreshold: -1,
         playbackBufferMin: 0.5,
         enabled: null,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].LIVE_CATCHUP_MODE_DEFAULT
@@ -3194,6 +6503,7 @@ function Settings() {
       prioritizeRoleMain: true,
       assumeDefaultRoleAsMain: true,
       selectionModeForInitialTrack: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].TRACK_SELECTION_MODE_LOWEST_STARTUP_DELAY,
+      blacklistExpiryTime: -1,
       fragmentRequestTimeout: 20000,
       fragmentRequestProgressTimeout: -1,
       manifestRequestTimeout: 10000,
@@ -3206,6 +6516,7 @@ function Settings() {
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE]: 1000,
+        [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE_CERTIFICATE]: 1000,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE]: 1000,
         lowLatencyReductionFactor: 10
       },
@@ -3218,12 +6529,14 @@ function Settings() {
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INDEX_SEGMENT_TYPE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE]: 3,
+        [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.LICENSE_CERTIFICATE]: 3,
         [_streaming_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.OTHER_TYPE]: 3,
         lowLatencyMultiplyFactor: 5
       },
       abr: {
         limitBitrateByPortal: false,
         usePixelRatioInLimitBitrateByPortal: false,
+        limitBitrateByPortalMinimum: 0,
         enableSupplementalPropertyAdaptationSetSwitching: true,
         rules: {
           throughputRule: {
@@ -3328,9 +6641,10 @@ function Settings() {
         rtp: null,
         rtpSafetyFactor: 5,
         mode: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_MODE_QUERY,
-        enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_AVAILABLE_KEYS,
+        enabledKeys: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_KEYS,
         includeInRequests: ['segment', 'mpd'],
-        version: 1
+        version: 1,
+        eventTargets: []
       },
       cmsd: {
         enabled: false,
@@ -3348,6 +6662,9 @@ function Settings() {
         audioChannelConfiguration: 'urn:mpeg:mpegB:cicp:ChannelConfiguration',
         role: 'urn:mpeg:dash:role:2011',
         accessibility: 'urn:mpeg:dash:role:2011'
+      },
+      dvbReporting: {
+        reportingUrl: null
       }
     },
     errors: {
@@ -3433,11 +6750,9 @@ let factory = _FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingle
   \***************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var path_browserify__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! path-browserify */ "./node_modules/path-browserify/index.js");
-/* harmony import */ var ua_parser_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ua-parser-js */ "./node_modules/ua-parser-js/src/ua-parser.js");
-/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -3473,7 +6788,6 @@ __webpack_require__.r(__webpack_exports__);
  * @class
  * @ignore
  */
-
 
 
 
@@ -3659,8 +6973,24 @@ class Utils {
   }
   static parseUserAgent(ua = null) {
     try {
-      const uaString = ua === null ? typeof navigator !== 'undefined' ? navigator.userAgent.toLowerCase() : '' : '';
-      return (0,ua_parser_js__WEBPACK_IMPORTED_MODULE_1__.UAParser)(uaString);
+      const uaString = typeof ua === 'string' ? ua.toLowerCase() : typeof navigator !== 'undefined' && navigator.userAgent ? navigator.userAgent.toLowerCase() : '';
+      const browser = {
+        name: ''
+      };
+      if (/edg/.test(uaString)) {
+        browser.name = 'edge';
+      } else if (/opr|opios/.test(uaString)) {
+        browser.name = 'opera';
+      } else if (/chrome|crios/.test(uaString)) {
+        browser.name = 'chrome';
+      } else if (/firefox|fxios/.test(uaString)) {
+        browser.name = 'firefox';
+      } else if (/safari/.test(uaString)) {
+        browser.name = 'safari';
+      }
+      return {
+        browser
+      };
     } catch (e) {
       return {};
     }
@@ -3726,7 +7056,7 @@ class Utils {
           case '69':
           case '6b':
           case '40.34':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.MP3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.MP3;
           case '66':
           case '67':
           case '68':
@@ -3736,23 +7066,23 @@ class Utils {
           case '40.05':
           case '40.29':
           case '40.42':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AAC;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AAC;
           case 'a5':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AC3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AC3;
           case 'e6':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.EC3;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.EC3;
           case 'b2':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.DTSX;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.DTSX;
           case 'a9':
-            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.DTSC;
+            return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.DTSC;
         }
         break;
       case 'avc1':
       case 'avc3':
-        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.AVC;
+        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.AVC;
       case 'hvc1':
       case 'hvc3':
-        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CODEC_FAMILIES.HEVC;
+        return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CODEC_FAMILIES.HEVC;
       default:
         return base;
     }
@@ -3771,13 +7101,268 @@ class Utils {
 
 /***/ }),
 
+/***/ "./src/core/errors/Errors.js":
+/*!***********************************!*\
+  !*** ./src/core/errors/Errors.js ***!
+  \***********************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _ErrorsBase_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./ErrorsBase.js */ "./src/core/errors/ErrorsBase.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+/**
+ * Errors declaration
+ * @class
+ */
+class Errors extends _ErrorsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor() {
+    super();
+
+    /**
+     * Error code returned when a manifest parsing error occurs
+     */
+    this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_CODE = 10;
+
+    /**
+     * Error code returned when a manifest loading error occurs
+     */
+    this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_CODE = 11;
+
+    /**
+     * Error code returned when a xlink loading error occurs
+     */
+    this.XLINK_LOADER_LOADING_FAILURE_ERROR_CODE = 12;
+
+    /**
+     * Error code returned when no segment ranges could be determined from the sidx box
+     */
+    this.SEGMENT_BASE_LOADER_ERROR_CODE = 15;
+
+    /**
+     * Error code returned when the time synchronization failed
+     */
+    this.TIME_SYNC_FAILED_ERROR_CODE = 16;
+
+    /**
+     * Error code returned when loading a fragment failed
+     */
+    this.FRAGMENT_LOADER_LOADING_FAILURE_ERROR_CODE = 17;
+
+    /**
+     * Error code returned when the FragmentLoader did not receive a request object
+     */
+    this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_CODE = 18;
+
+    /**
+     * Error code returned when the BaseUrl resolution failed
+     */
+    this.URL_RESOLUTION_FAILED_GENERIC_ERROR_CODE = 19;
+
+    /**
+     * Error code returned when the append operation in the SourceBuffer failed
+     */
+    this.APPEND_ERROR_CODE = 20;
+
+    /**
+     * Error code returned when the remove operation in the SourceBuffer failed
+     */
+    this.REMOVE_ERROR_CODE = 21;
+
+    /**
+     * Error code returned when updating the internal objects after loading an MPD failed
+     */
+    this.DATA_UPDATE_FAILED_ERROR_CODE = 22;
+
+    /**
+     * Error code returned when MediaSource is not supported by the browser
+     */
+    this.CAPABILITY_MEDIASOURCE_ERROR_CODE = 23;
+
+    /**
+     * Error code returned when Protected contents are not supported
+     */
+    this.CAPABILITY_MEDIAKEYS_ERROR_CODE = 24;
+
+    /**
+     * Error code returned when loading the manifest failed
+     */
+    this.DOWNLOAD_ERROR_ID_MANIFEST_CODE = 25;
+
+    /**
+     * Error code returned when loading the sidx failed
+     */
+    this.DOWNLOAD_ERROR_ID_SIDX_CODE = 26;
+
+    /**
+     * Error code returned when loading the media content failed
+     */
+    this.DOWNLOAD_ERROR_ID_CONTENT_CODE = 27;
+
+    /**
+     * Error code returned when loading the init segment failed
+     */
+    this.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE = 28;
+
+    /**
+     * Error code returned when loading the XLink content failed
+     */
+    this.DOWNLOAD_ERROR_ID_XLINK_CODE = 29;
+
+    /**
+     * Error code returned when parsing the MPD resulted in a logical error
+     */
+    this.MANIFEST_ERROR_ID_PARSE_CODE = 31;
+
+    /**
+     * Error code returned when no stream (period) has been detected in the manifest
+     */
+    this.MANIFEST_ERROR_ID_NOSTREAMS_CODE = 32;
+
+    /**
+     * Error code returned when something wrong has happened during parsing and appending subtitles (TTML or VTT)
+     */
+    this.TIMED_TEXT_ERROR_ID_PARSE_CODE = 33;
+
+    /**
+     * Error code returned when a 'muxed' media type has been detected in the manifest. This type is not supported
+     */
+
+    this.MANIFEST_ERROR_ID_MULTIPLEXED_CODE = 34;
+
+    /**
+     * Error code returned when a media source type is not supported
+     */
+    this.MEDIASOURCE_TYPE_UNSUPPORTED_CODE = 35;
+
+    /**
+     * Error code returned when the available Adaptation Sets can not be selected because the corresponding key ids have an invalid key status
+     * @type {number}
+     */
+    this.NO_SUPPORTED_KEY_IDS = 36;
+    this.MANIFEST_LOADER_PARSING_FAILURE_ERROR_MESSAGE = 'parsing failed for ';
+    this.MANIFEST_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading manifest: ';
+    this.XLINK_LOADER_LOADING_FAILURE_ERROR_MESSAGE = 'Failed loading Xlink element: ';
+    this.SEGMENTS_UPDATE_FAILED_ERROR_MESSAGE = 'Segments update failed';
+    this.SEGMENTS_UNAVAILABLE_ERROR_MESSAGE = 'no segments are available yet';
+    this.SEGMENT_BASE_LOADER_ERROR_MESSAGE = 'error loading segment ranges from sidx';
+    this.TIME_SYNC_FAILED_ERROR_MESSAGE = 'Failed to synchronize client and server time';
+    this.FRAGMENT_LOADER_NULL_REQUEST_ERROR_MESSAGE = 'request is null';
+    this.URL_RESOLUTION_FAILED_GENERIC_ERROR_MESSAGE = 'Failed to resolve a valid URL';
+    this.APPEND_ERROR_MESSAGE = 'chunk is not defined';
+    this.REMOVE_ERROR_MESSAGE = 'Removing data from the SourceBuffer';
+    this.DATA_UPDATE_FAILED_ERROR_MESSAGE = 'Data update failed';
+    this.CAPABILITY_MEDIASOURCE_ERROR_MESSAGE = 'mediasource is not supported';
+    this.CAPABILITY_MEDIAKEYS_ERROR_MESSAGE = 'mediakeys is not supported';
+    this.TIMED_TEXT_ERROR_MESSAGE_PARSE = 'parsing error :';
+    this.MEDIASOURCE_TYPE_UNSUPPORTED_MESSAGE = 'Error creating source buffer of type : ';
+    this.NO_SUPPORTED_KEY_IDS_MESSAGE = 'All possible Adaptation Sets have an invalid key status';
+  }
+}
+let errors = new Errors();
+/* harmony default export */ __webpack_exports__["default"] = (errors);
+
+/***/ }),
+
+/***/ "./src/core/errors/ErrorsBase.js":
+/*!***************************************!*\
+  !*** ./src/core/errors/ErrorsBase.js ***!
+  \***************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class ErrorsBase {
+  extend(errors, config) {
+    if (!errors) {
+      return;
+    }
+    let override = config ? config.override : false;
+    let publicOnly = config ? config.publicOnly : false;
+    for (const err in errors) {
+      if (!errors.hasOwnProperty(err) || this[err] && !override) {
+        continue;
+      }
+      if (publicOnly && errors[err].indexOf('public_') === -1) {
+        continue;
+      }
+      this[err] = errors[err];
+    }
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (ErrorsBase);
+
+/***/ }),
+
 /***/ "./src/core/events/CoreEvents.js":
 /*!***************************************!*\
   !*** ./src/core/events/CoreEvents.js ***!
   \***************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventsBase.js */ "./src/core/events/EventsBase.js");
 /**
@@ -3888,7 +7473,6 @@ class CoreEvents extends _EventsBase_js__WEBPACK_IMPORTED_MODULE_0__["default"] 
   \***********************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _CoreEvents_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CoreEvents.js */ "./src/core/events/CoreEvents.js");
 /**
@@ -3938,7 +7522,6 @@ let events = new Events();
   \***************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4002,7 +7585,6 @@ class EventsBase {
   \*********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4106,8 +7688,10 @@ __webpack_require__.r(__webpack_exports__);
   INDEX_RANGE: 'indexRange',
   INITIALIZATION: 'Initialization',
   INITIALIZATION_MINUS: 'initialization',
+  K: 'k',
   LA_URL: 'Laurl',
   LA_URL_LOWER_CASE: 'laurl',
+  CERT_URL: 'Certurl',
   LABEL: 'Label',
   LANG: 'lang',
   LOCATION: 'Location',
@@ -4209,13 +7793,2660 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/dash/models/DashManifestModel.js":
+/*!**********************************************!*\
+  !*** ./src/dash/models/DashManifestModel.js ***!
+  \**********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _vo_AdaptationSet_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/AdaptationSet.js */ "./src/dash/vo/AdaptationSet.js");
+/* harmony import */ var _vo_BaseURL_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/BaseURL.js */ "./src/dash/vo/BaseURL.js");
+/* harmony import */ var _vo_CMCDParameters_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/CMCDParameters.js */ "./src/dash/vo/CMCDParameters.js");
+/* harmony import */ var _vo_ClientDataReporting_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../vo/ClientDataReporting.js */ "./src/dash/vo/ClientDataReporting.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _vo_ContentProtection_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/ContentProtection.js */ "./src/dash/vo/ContentProtection.js");
+/* harmony import */ var _vo_ContentSteering_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/ContentSteering.js */ "./src/dash/vo/ContentSteering.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _streaming_vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../streaming/vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../vo/DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _vo_Event_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../vo/Event.js */ "./src/dash/vo/Event.js");
+/* harmony import */ var _vo_EventStream_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../vo/EventStream.js */ "./src/dash/vo/EventStream.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _vo_Mpd_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../vo/Mpd.js */ "./src/dash/vo/Mpd.js");
+/* harmony import */ var _vo_MpdLocation_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../vo/MpdLocation.js */ "./src/dash/vo/MpdLocation.js");
+/* harmony import */ var _streaming_utils_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ../../streaming/utils/ObjectUtils.js */ "./src/streaming/utils/ObjectUtils.js");
+/* harmony import */ var _vo_PatchLocation_js__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ../vo/PatchLocation.js */ "./src/dash/vo/PatchLocation.js");
+/* harmony import */ var _vo_Period_js__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ../vo/Period.js */ "./src/dash/vo/Period.js");
+/* harmony import */ var _vo_Preselection_js__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ../vo/Preselection.js */ "./src/dash/vo/Preselection.js");
+/* harmony import */ var _vo_ProducerReferenceTime_js__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ../vo/ProducerReferenceTime.js */ "./src/dash/vo/ProducerReferenceTime.js");
+/* harmony import */ var _vo_Representation_js__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ../vo/Representation.js */ "./src/dash/vo/Representation.js");
+/* harmony import */ var _streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ../../streaming/utils/URLUtils.js */ "./src/streaming/utils/URLUtils.js");
+/* harmony import */ var _vo_UTCTiming_js__WEBPACK_IMPORTED_MODULE_24__ = __webpack_require__(/*! ../vo/UTCTiming.js */ "./src/dash/vo/UTCTiming.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_25__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _vo_SegmentSequenceProperties_js__WEBPACK_IMPORTED_MODULE_26__ = __webpack_require__(/*! ../vo/SegmentSequenceProperties.js */ "./src/dash/vo/SegmentSequenceProperties.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+function DashManifestModel() {
+  let instance, logger, errHandler, BASE64;
+  const context = this.context;
+  const urlUtils = (0,_streaming_utils_URLUtils_js__WEBPACK_IMPORTED_MODULE_23__["default"])(context).getInstance();
+  const isInteger = Number.isInteger || function (value) {
+    return typeof value === 'number' && isFinite(value) && Math.floor(value) === value;
+  };
+  function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).getInstance().getLogger(instance);
+  }
+  function getIsTypeOf(adaptation, type) {
+    if (!adaptation) {
+      throw new Error('adaptation is not defined');
+    }
+    if (!type) {
+      throw new Error('type is not defined');
+    }
+
+    // Check for thumbnail images
+    if (adaptation.Representation && adaptation.Representation.length) {
+      const essentialProperties = getEssentialProperties(adaptation.Representation[0]);
+      if (essentialProperties && essentialProperties.some(essentialProperty => _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].THUMBNAILS_SCHEME_ID_URIS.indexOf(essentialProperty.schemeIdUri) >= 0)) {
+        return type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].IMAGE;
+      }
+    }
+
+    // Check ContentComponent.contentType
+    if (adaptation.ContentComponent && adaptation.ContentComponent.length > 0) {
+      if (adaptation.ContentComponent.length > 1) {
+        return type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].MUXED;
+      } else if (adaptation.ContentComponent[0].contentType === type) {
+        return true;
+      }
+    }
+    const mimeTypeRegEx = type === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].TEXT ? new RegExp('(ttml|vtt|wvtt|stpp)') : new RegExp(type);
+
+    // Check codecs
+    if (adaptation.Representation && adaptation.Representation.length) {
+      const codecs = adaptation.Representation[0].codecs;
+      if (mimeTypeRegEx.test(codecs)) {
+        return true;
+      }
+    }
+
+    // Check Adaptation's mimeType
+    if (adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MIME_TYPE)) {
+      return mimeTypeRegEx.test(adaptation.mimeType);
+    }
+
+    // Check Representation's mimeType
+    if (adaptation.Representation) {
+      let representation;
+      for (let i = 0; i < adaptation.Representation.length; i++) {
+        representation = adaptation.Representation[i];
+        if (representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MIME_TYPE)) {
+          return mimeTypeRegEx.test(representation.mimeType);
+        }
+      }
+    }
+    return false;
+  }
+  function getPreselectionIsTypeOf(preselection, adaptations, type) {
+    if (!preselection) {
+      throw new Error('preselection is not defined');
+    }
+    if (!adaptations) {
+      throw new Error('adaptations is not defined');
+    }
+    if (!type) {
+      throw new Error('type is not defined');
+    }
+    const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+    return mainAdaptationSet ? getIsTypeOf(mainAdaptationSet, type) : false;
+  }
+  function getIsFragmented(adaptation) {
+    if (!adaptation) {
+      throw new Error('adaptation is not defined');
+    }
+    if (adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TEMPLATE) || adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE) || adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_LIST) || adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_BASE)) {
+      return true;
+    }
+    if (adaptation.Representation && adaptation.Representation.length > 0) {
+      const representation = adaptation.Representation[0];
+      if (representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TEMPLATE) || representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE) || representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_LIST) || representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_BASE)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  function getIsAudio(adaptation) {
+    return getIsTypeOf(adaptation, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+  }
+  function getIsVideo(adaptation) {
+    return getIsTypeOf(adaptation, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+  }
+  function getIsText(adaptation) {
+    return getIsTypeOf(adaptation, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].TEXT);
+  }
+  function getIsMuxed(adaptation) {
+    return getIsTypeOf(adaptation, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].MUXED);
+  }
+  function getIsImage(adaptation) {
+    return getIsTypeOf(adaptation, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].IMAGE);
+  }
+  function getProducerReferenceTimesForAdaptation(adaptation) {
+    const prtArray = adaptation && adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRODUCER_REFERENCE_TIME) ? adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRODUCER_REFERENCE_TIME] : [];
+
+    // ProducerReferenceTime elements can also be contained in Representations
+    const representationsArray = adaptation && adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].REPRESENTATION) ? adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].REPRESENTATION] : [];
+    representationsArray.forEach(rep => {
+      if (rep.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRODUCER_REFERENCE_TIME)) {
+        prtArray.push(...rep[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRODUCER_REFERENCE_TIME]);
+      }
+    });
+    const prtsForAdaptation = [];
+
+    // Unlikely to have multiple ProducerReferenceTimes.
+    prtArray.forEach(prt => {
+      const entry = new _vo_ProducerReferenceTime_js__WEBPACK_IMPORTED_MODULE_21__["default"]();
+      if (prt.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID)) {
+        entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID] = parseInt(prt[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID]);
+      } else {
+        // Ignore. Missing mandatory attribute
+        return;
+      }
+      if (prt.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].WALL_CLOCK_TIME)) {
+        entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].WALL_CLOCK_TIME] = prt[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].WALL_CLOCK_TIME];
+      } else {
+        // Ignore. Missing mandatory attribute
+        return;
+      }
+      if (prt.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME)) {
+        entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME] = prt[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME];
+      } else {
+        // Ignore. Missing mandatory attribute
+        return;
+      }
+      if (prt.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INBAND)) {
+        entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INBAND] = prt[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INBAND] !== 'false';
+      }
+      if (prt.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TYPE)) {
+        entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TYPE] = prt[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TYPE];
+      }
+
+      // Not interested in other attributes for now
+      // UTC element contained must be same as that in the MPD
+      prtsForAdaptation.push(entry);
+    });
+    return prtsForAdaptation;
+  }
+  function getLanguageForAdaptation(adaptation) {
+    let lang = '';
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].LANG)) {
+      lang = adaptation.lang;
+    }
+    return lang;
+  }
+  function getViewpointForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].length) {
+      return [];
+    }
+    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VIEWPOINT].map(viewpoint => {
+      const vp = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      vp.init(viewpoint);
+      return vp;
+    });
+  }
+  function getRolesForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].length) {
+      return [];
+    }
+    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ROLE].map(role => {
+      // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+      if (role.schemeIdUri === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+        role.value = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAIN;
+      }
+      const r = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      r.init(role);
+      return r;
+    });
+  }
+  function getAccessibilityForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].length) {
+      return [];
+    }
+    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ACCESSIBILITY].map(accessibility => {
+      const a = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      a.init(accessibility);
+      return a;
+    });
+  }
+  function getAudioChannelConfigurationForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
+      return [];
+    }
+    return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
+      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      acc.init(audioChanCfg);
+      return acc;
+    });
+  }
+  function getAudioChannelConfigurationForRepresentation(representation) {
+    if (!representation || !representation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION) || !representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].length) {
+      return [];
+    }
+    return representation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AUDIO_CHANNEL_CONFIGURATION].map(audioChanCfg => {
+      const acc = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      acc.init(audioChanCfg);
+      return acc;
+    });
+  }
+  function getRepresentationSortFunction() {
+    return (a, b) => a.bandwidth - b.bandwidth;
+  }
+  function processAdaptation(realAdaptation) {
+    if (realAdaptation && realAdaptation.Representation) {
+      realAdaptation.Representation.sort(getRepresentationSortFunction());
+    }
+    return realAdaptation;
+  }
+  function getRealAdaptations(manifest, periodIndex) {
+    return manifest && manifest.Period && isInteger(periodIndex) ? manifest.Period[periodIndex] ? manifest.Period[periodIndex].AdaptationSet : [] : [];
+  }
+  function getRealPeriods(manifest) {
+    return manifest && manifest.Period ? manifest.Period : [];
+  }
+  function getRealPeriodForIndex(index, manifest) {
+    const realPeriods = getRealPeriods(manifest);
+    if (realPeriods.length > 0 && isInteger(index)) {
+      return realPeriods[index];
+    } else {
+      return null;
+    }
+  }
+  function getAdaptationForId(id, manifest, periodIndex) {
+    const realAdaptations = getRealAdaptations(manifest, periodIndex);
+    let i, len;
+    for (i = 0, len = realAdaptations.length; i < len; i++) {
+      if (realAdaptations[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID) && realAdaptations[i].id === id) {
+        return realAdaptations[i];
+      }
+    }
+    return null;
+  }
+  function getAdaptationForIndex(index, manifest, periodIndex) {
+    const realAdaptations = getRealAdaptations(manifest, periodIndex);
+    if (realAdaptations.length > 0 && isInteger(index)) {
+      return realAdaptations[index];
+    } else {
+      return null;
+    }
+  }
+  function getIndexForAdaptation(realAdaptation, manifest, periodIndex) {
+    if (!realAdaptation) {
+      return -1;
+    }
+    const realAdaptations = getRealAdaptations(manifest, periodIndex);
+    for (let i = 0; i < realAdaptations.length; i++) {
+      let objectUtils = (0,_streaming_utils_ObjectUtils_js__WEBPACK_IMPORTED_MODULE_17__["default"])(context).getInstance();
+      if (objectUtils.areEqual(realAdaptations[i], realAdaptation)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+  function getAdaptationsForType(manifest, periodIndex, type) {
+    const realAdaptations = getRealAdaptations(manifest, periodIndex);
+    let i, len;
+    const adaptations = [];
+    for (i = 0, len = realAdaptations.length; i < len; i++) {
+      if (getIsTypeOf(realAdaptations[i], type)) {
+        adaptations.push(processAdaptation(realAdaptations[i]));
+      }
+    }
+    return adaptations;
+  }
+  function getCodec(adaptation, representationIndex, addResolutionInfo) {
+    let codec = null;
+    if (adaptation && adaptation.Representation && adaptation.Representation.length > 0) {
+      const representation = isInteger(representationIndex) && representationIndex >= 0 && representationIndex < adaptation.Representation.length ? adaptation.Representation[representationIndex] : adaptation.Representation[0];
+      if (representation) {
+        codec = representation.mimeType + ';codecs="' + representation.codecs + '"';
+        if (addResolutionInfo && representation.width !== undefined) {
+          codec += ';width="' + representation.width + '";height="' + representation.height + '"';
+        }
+      }
+    }
+
+    // If the codec contains a profiles parameter we remove it. Otherwise, it will cause problems when checking for codec capabilities of the platform
+    if (codec) {
+      codec = codec.replace(/\sprofiles=[^;]*/g, '');
+    }
+    return codec;
+  }
+  function getCodecForPreselection(preselection, adaptations, addResolutionInfo) {
+    let codec = null;
+    if (preselection && adaptations) {
+      const mainAdaptationSet = getMainAdaptationSetForPreselection(preselection, adaptations);
+      let mainAsCodec = getCodec(mainAdaptationSet, 0, addResolutionInfo);
+      // we just take the subparameters from the first Representation of the main AdaptationSet
+
+      if (preselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CODECS)) {
+        let sCodecs = preselection.codecs;
+
+        // Since Preselection elements don't get the @mimeType attribute assigned, this
+        // copies the media type from the main adaptationSet but takes the codec from
+        // the preselection.
+        codec = mainAsCodec.replace(/(codecs=")[^"]*(")/, `$1${sCodecs}$2`);
+        logger.info('Preselection has own codecs-attribute: replacing in MainAdaptationSet (was: ' + mainAsCodec + '), new Preselection codec is: ' + codec);
+      } else {
+        codec = mainAsCodec;
+      }
+    }
+    return codec;
+  }
+  function getMimeType(adaptation) {
+    return adaptation && adaptation.Representation && adaptation.Representation.length > 0 ? adaptation.Representation[0].mimeType : null;
+  }
+  function getSegmentAlignment(adaptation) {
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_ALIGNMENT)) {
+      return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_ALIGNMENT] === 'true';
+    }
+    return false;
+  }
+  function getSubSegmentAlignment(adaptation) {
+    if (adaptation && adaptation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUB_SEGMENT_ALIGNMENT)) {
+      return adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUB_SEGMENT_ALIGNMENT] === 'true';
+    }
+    return false;
+  }
+  function getLabelsForAdaptation(adaptation) {
+    if (!adaptation || !adaptation.Label) {
+      return [];
+    }
+    const labelArray = [];
+    for (let i = 0; i < adaptation.Label.length; i++) {
+      labelArray.push({
+        lang: adaptation.Label[i].lang,
+        text: adaptation.Label[i].__text || adaptation.Label[i]
+      });
+    }
+    return labelArray;
+  }
+  function isPeriodEncrypted(period) {
+    const contentProtectionElements = getContentProtectionByPeriod(period);
+    return contentProtectionElements && contentProtectionElements.length > 0;
+  }
+  function getContentProtectionByManifest(manifest) {
+    let protectionElements = [];
+    if (!manifest) {
+      return protectionElements;
+    }
+    const mpdElements = _getContentProtectionFromElement(manifest);
+    protectionElements = protectionElements.concat(mpdElements);
+    if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PERIOD) && manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PERIOD].length > 0) {
+      manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PERIOD].forEach(period => {
+        const curr = getContentProtectionByPeriod(period);
+        protectionElements = protectionElements.concat(curr);
+      });
+    }
+    return protectionElements;
+  }
+  function getContentProtectionByPeriod(period) {
+    let protectionElements = [];
+    if (!period) {
+      return protectionElements;
+    }
+    const periodProtectionElements = _getContentProtectionFromElement(period);
+    protectionElements = protectionElements.concat(periodProtectionElements);
+    if (period.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SET) && period[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SET].length > 0) {
+      period[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SET].forEach(adaptation => {
+        const curr = _getContentProtectionFromElement(adaptation);
+        protectionElements = protectionElements.concat(curr);
+      });
+    }
+    return protectionElements;
+  }
+  function getContentProtectionByAdaptation(adaptation) {
+    return _getContentProtectionFromElement(adaptation);
+  }
+  function _getContentProtectionFromElement(element) {
+    if (!element || !element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_PROTECTION) || element.ContentProtection.length === 0) {
+      return [];
+    }
+    return element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_PROTECTION].map(contentProtectionData => {
+      const contentProtection = new _vo_ContentProtection_js__WEBPACK_IMPORTED_MODULE_5__["default"]();
+      contentProtection.init(contentProtectionData);
+      return contentProtection;
+    });
+  }
+  function getIsDynamic(manifest) {
+    let isDynamic = false;
+    if (manifest && manifest.hasOwnProperty('type')) {
+      isDynamic = manifest.type === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DYNAMIC;
+    }
+    return isDynamic;
+  }
+  function getId(manifest) {
+    return manifest && manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID] || null;
+  }
+  function hasProfile(manifest, profile) {
+    let has = false;
+    if (manifest && manifest.profiles && manifest.profiles.length > 0) {
+      has = manifest.profiles.indexOf(profile) !== -1;
+    }
+    return has;
+  }
+  function getDuration(manifest) {
+    let mpdDuration;
+    //@mediaPresentationDuration specifies the duration of the entire Media Presentation.
+    //If the attribute is not present, the duration of the Media Presentation is unknown.
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MEDIA_PRESENTATION_DURATION)) {
+      mpdDuration = manifest.mediaPresentationDuration;
+    } else if (manifest && manifest.type === 'dynamic') {
+      mpdDuration = Number.POSITIVE_INFINITY;
+    } else {
+      mpdDuration = Number.MAX_SAFE_INTEGER || Number.MAX_VALUE;
+    }
+    return mpdDuration;
+  }
+  function getBandwidth(representation) {
+    return representation && representation.bandwidth ? representation.bandwidth : NaN;
+  }
+  function getFramerate(realRepresentation) {
+    if (!realRepresentation) {
+      return null;
+    }
+    const frameRate = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FRAMERATE];
+    if (!frameRate) {
+      return null;
+    }
+    if (typeof frameRate === 'string' && frameRate.includes('/')) {
+      const [numerator, denominator] = frameRate.split('/').map(value => parseInt(value, 10));
+      if (!isNaN(numerator) && !isNaN(denominator) && denominator !== 0) {
+        return numerator / denominator;
+      }
+    }
+    return parseInt(frameRate);
+  }
+  function getManifestUpdatePeriod(manifest, latencyOfLastUpdate = 0) {
+    let delay = NaN;
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MINIMUM_UPDATE_PERIOD)) {
+      delay = manifest.minimumUpdatePeriod;
+    }
+    return isNaN(delay) ? delay : Math.max(delay - latencyOfLastUpdate, 1);
+  }
+  function getPublishTime(manifest) {
+    return manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PUBLISH_TIME) ? new Date(manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PUBLISH_TIME]) : null;
+  }
+  function getRepresentationCount(adaptation) {
+    return adaptation && adaptation.Representation ? adaptation.Representation.length : 0;
+  }
+  function getBitrateListForAdaptation(realAdaptation) {
+    const processedRealAdaptation = processAdaptation(realAdaptation);
+    const realRepresentations = processedRealAdaptation && processedRealAdaptation.Representation ? processedRealAdaptation.Representation : [];
+    return realRepresentations.map(realRepresentation => {
+      return {
+        bandwidth: realRepresentation.bandwidth,
+        width: realRepresentation.width || 0,
+        height: realRepresentation.height || 0,
+        scanType: realRepresentation.scanType || null,
+        id: realRepresentation.id || null
+      };
+    });
+  }
+  function getSelectionPriority(realAdaption) {
+    try {
+      const priority = realAdaption && typeof realAdaption.selectionPriority !== 'undefined' ? parseInt(realAdaption.selectionPriority) : 1;
+      return isNaN(priority) ? 1 : priority;
+    } catch (e) {
+      return 1;
+    }
+  }
+
+  // propertyType is one of { DashConstants.ESSENTIAL_PROPERTY, DashConstants.SUPPLEMENTAL_PROPERTY }
+  function _getProperties(propertyType, element) {
+    if (!element || !element.hasOwnProperty(propertyType) || !element[propertyType].length) {
+      return [];
+    }
+    return element[propertyType].map(property => {
+      const s = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      s.init(property);
+      return s;
+    });
+  }
+  function _getPropertiesCommonToAllRepresentations(propertyType, repr) {
+    if (!repr || !repr.length) {
+      return [];
+    }
+    let propertiesOfFirstRepresentation = repr[0][propertyType] || [];
+    if (propertiesOfFirstRepresentation.length === 0) {
+      return [];
+    }
+    if (repr.length === 1) {
+      return propertiesOfFirstRepresentation;
+    }
+
+    // now, only return properties present on all Representations
+    // repr.length is always >= 2
+    return propertiesOfFirstRepresentation.filter(prop => {
+      return repr.slice(1).every(currRep => {
+        return currRep.hasOwnProperty(propertyType) && currRep[propertyType].some(e => {
+          return e.schemeIdUri === prop.schemeIdUri && e.value === prop.value;
+        });
+      });
+    });
+  }
+  function _getCombinedPropertiesForAdaptationSet(propertyType, adaptation) {
+    if (!adaptation) {
+      return [];
+    }
+    let allProperties = _getPropertiesCommonToAllRepresentations(propertyType, adaptation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].REPRESENTATION]);
+
+    // now, only take those Properties from AdaptationSet which we didn't already get from Representations
+    if (adaptation.hasOwnProperty(propertyType) && adaptation[propertyType].length) {
+      adaptation[propertyType].forEach(adaptationProp => {
+        const alreadyPresent = allProperties.some(d => {
+          return d.schemeIdUri === adaptationProp.schemeIdUri && d.value === adaptationProp.value;
+        });
+        if (!alreadyPresent) {
+          allProperties.push(adaptationProp);
+        }
+      });
+    }
+    return allProperties.map(essentialProperty => {
+      const s = new _vo_DescriptorType_js__WEBPACK_IMPORTED_MODULE_10__["default"]();
+      s.init(essentialProperty);
+      return s;
+    });
+  }
+  function getEssentialProperties(element) {
+    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, element);
+  }
+  function getCombinedEssentialPropertiesForAdaptationSet(adaptation) {
+    return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ESSENTIAL_PROPERTY, adaptation);
+  }
+  function getSupplementalProperties(element) {
+    return _getProperties(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, element);
+  }
+  function getCombinedSupplementalPropertiesForAdaptationSet(adaptation) {
+    return _getCombinedPropertiesForAdaptationSet(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUPPLEMENTAL_PROPERTY, adaptation);
+  }
+  function getSegmentSequencePropertiesForAdaptationSet(adaptation) {
+    const segmentSequenceProperties = [];
+    if (!adaptation) {
+      return segmentSequenceProperties;
+    }
+    segmentSequenceProperties.push(..._getSegmentSequencePropertiesForElement(adaptation));
+    if (adaptation.Representation && adaptation.Representation.length) {
+      adaptation.Representation.forEach(representation => {
+        segmentSequenceProperties.push(..._getSegmentSequencePropertiesForElement(representation));
+      });
+    }
+    return segmentSequenceProperties;
+  }
+  function _getSegmentSequencePropertiesForElement(element) {
+    if (!element || !element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_SEQUENCE_PROPERTIES) || !element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_SEQUENCE_PROPERTIES].length) {
+      return [];
+    }
+    return element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_SEQUENCE_PROPERTIES].map(property => {
+      const segmentSequenceProperties = new _vo_SegmentSequenceProperties_js__WEBPACK_IMPORTED_MODULE_26__["default"](property);
+      segmentSequenceProperties.init(property);
+      return segmentSequenceProperties;
+    });
+  }
+  function getRepresentationFor(index, adaptation) {
+    return adaptation && adaptation.Representation && adaptation.Representation.length > 0 && isInteger(index) ? adaptation.Representation[index] : null;
+  }
+  function getRealAdaptationFor(voAdaptation) {
+    if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
+      const periodArray = voAdaptation.period.mpd.manifest.Period[voAdaptation.period.index];
+      if (periodArray && periodArray.AdaptationSet && isInteger(voAdaptation.index)) {
+        return processAdaptation(periodArray.AdaptationSet[voAdaptation.index]);
+      }
+    }
+  }
+  function getRepresentationsForAdaptation(voAdaptation, mediaInfo) {
+    const voRepresentations = [];
+    const processedRealAdaptation = getRealAdaptationFor(voAdaptation);
+    let baseUrl;
+    if (processedRealAdaptation && processedRealAdaptation.Representation) {
+      // TODO: TO BE REMOVED. We should get just the baseUrl elements that affects to the representations
+      // that we are processing. Making it works properly will require much further changes and given
+      // parsing base Urls parameters is needed for our ultra low latency examples, we will
+      // keep this "tricky" code until the real (and good) solution comes
+      if (voAdaptation && voAdaptation.period && isInteger(voAdaptation.period.index)) {
+        const baseUrls = getBaseURLsFromElement(voAdaptation.period.mpd.manifest);
+        if (baseUrls) {
+          baseUrl = baseUrls[0];
+        }
+      }
+      for (let i = 0, len = processedRealAdaptation.Representation.length; i < len; ++i) {
+        const realRepresentation = processedRealAdaptation.Representation[i];
+        const voRepresentation = _createVoRepresentation(mediaInfo, realRepresentation, voAdaptation, processedRealAdaptation, baseUrl, i);
+        voRepresentations.push(voRepresentation);
+      }
+    }
+    return voRepresentations;
+  }
+  function _createVoRepresentation(mediaInfo, realRepresentation, voAdaptation, processedRealAdaptation, baseUrl, index) {
+    const voRepresentation = new _vo_Representation_js__WEBPACK_IMPORTED_MODULE_22__["default"]();
+    _assignDefaultAttributesToVoRepresentation(voRepresentation, realRepresentation, voAdaptation, mediaInfo, index);
+    const {
+      segmentInfo,
+      segmentInfoType
+    } = _deriveSegmentInfo(realRepresentation);
+    voRepresentation.segmentInfoType = segmentInfoType;
+    _processSegmentInfo(segmentInfo, segmentInfoType, voRepresentation, processedRealAdaptation, realRepresentation, baseUrl);
+    _assignPixelValues(voRepresentation);
+    return voRepresentation;
+  }
+  function _assignDefaultAttributesToVoRepresentation(voRepresentation, realRepresentation, voAdaptation, mediaInfo, index) {
+    voRepresentation.index = index;
+    voRepresentation.adaptation = voAdaptation;
+    voRepresentation.mediaInfo = mediaInfo;
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID)) {
+      voRepresentation.id = realRepresentation.id;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CODECS)) {
+      voRepresentation.codecs = realRepresentation.codecs;
+      voRepresentation.codecFamily = _core_Utils_js__WEBPACK_IMPORTED_MODULE_25__["default"].getCodecFamily(voRepresentation.codecs);
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DEPENDENCY_ID)) {
+      // According to spec, the DEPENDENCY_ID attribute is a space-separated list of ID values
+      // Only using the first ID from this list as the handling of multiple IDs is not supported yet
+      const dependencyIdListString = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DEPENDENCY_ID].toString();
+      const dependencyIds = dependencyIdListString.split(' ');
+      const dependencyId = dependencyIds[0];
+      voRepresentation.dependencyId = dependencyId;
+      voRepresentation.dependentRepresentation = new _vo_Representation_js__WEBPACK_IMPORTED_MODULE_22__["default"]();
+      voRepresentation.dependentRepresentation.id = dependencyId;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MIME_TYPE)) {
+      voRepresentation.mimeType = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MIME_TYPE];
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CODEC_PRIVATE_DATA)) {
+      voRepresentation.codecPrivateData = realRepresentation.codecPrivateData;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].BANDWITH)) {
+      voRepresentation.bandwidth = realRepresentation.bandwidth;
+      voRepresentation.bitrateInKbit = realRepresentation.bandwidth / 1000;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].WIDTH)) {
+      voRepresentation.width = realRepresentation.width;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].HEIGHT)) {
+      voRepresentation.height = realRepresentation.height;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SCAN_TYPE)) {
+      voRepresentation.scanType = realRepresentation.scanType;
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].FRAMERATE)) {
+      voRepresentation.frameRate = getFramerate(realRepresentation);
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUALITY_RANKING)) {
+      voRepresentation.qualityRanking = realRepresentation[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUALITY_RANKING];
+    }
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAX_PLAYOUT_RATE)) {
+      voRepresentation.maxPlayoutRate = realRepresentation.maxPlayoutRate;
+    }
+    voRepresentation.essentialProperties = getEssentialProperties(realRepresentation);
+    voRepresentation.supplementalProperties = getSupplementalProperties(realRepresentation);
+    voRepresentation.segmentSequenceProperties = _getSegmentSequencePropertiesForElement(realRepresentation);
+    voRepresentation.path = [voAdaptation.period.index, voAdaptation.index, index];
+  }
+  function _deriveSegmentInfo(realRepresentation) {
+    let segmentInfo;
+    let segmentInfoType;
+    if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_BASE)) {
+      segmentInfo = realRepresentation.SegmentBase;
+      segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_BASE;
+    } else if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_LIST)) {
+      segmentInfo = realRepresentation.SegmentList;
+      if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE)) {
+        segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE;
+      } else {
+        segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_LIST;
+      }
+    } else if (realRepresentation.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TEMPLATE)) {
+      segmentInfo = realRepresentation.SegmentTemplate;
+      if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE)) {
+        segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE;
+      } else {
+        segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TEMPLATE;
+      }
+    } else {
+      segmentInfoType = _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].BASE_URL;
+    }
+    return {
+      segmentInfo,
+      segmentInfoType
+    };
+  }
+  function _processSegmentInfo(segmentInfo, segmentInfoType, voRepresentation, processedRealAdaptation, realRepresentation, baseUrl) {
+    if (!segmentInfo) {
+      return;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INITIALIZATION_MINUS)) {
+      voRepresentation.initialization = segmentInfo.initialization.split('$Bandwidth$').join(realRepresentation.bandwidth).split('$RepresentationID$').join(realRepresentation.id);
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INITIALIZATION)) {
+      const initialization = segmentInfo.Initialization;
+      if (initialization.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SOURCE_URL)) {
+        voRepresentation.initialization = initialization.sourceURL;
+      }
+      if (initialization.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].RANGE)) {
+        voRepresentation.range = initialization.range;
+        // initialization source url will be determined from
+        // BaseURL when resolved at load time.
+      }
+    } else if (getIsText(processedRealAdaptation) && getIsFragmented(processedRealAdaptation) && processedRealAdaptation.mimeType && processedRealAdaptation.mimeType.indexOf('application/mp4') === -1) {
+      voRepresentation.range = 0;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TIMESCALE)) {
+      voRepresentation.timescale = segmentInfo.timescale;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DURATION)) {
+      // TODO according to the spec @maxSegmentDuration specifies the maximum duration of any Segment in any Representation in the Media Presentation
+      // It is also said that for a SegmentTimeline any @d value shall not exceed the value of MPD@maxSegmentDuration, but nothing is said about
+      // SegmentTemplate @duration attribute. We need to find out if @maxSegmentDuration should be used instead of calculated duration if the the duration
+      // exceeds @maxSegmentDuration
+      voRepresentation.segmentDuration = segmentInfo.duration / voRepresentation.timescale;
+    } else if (segmentInfoType === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SEGMENT_TIMELINE) {
+      voRepresentation.segmentDuration = calcSegmentDuration(segmentInfo.SegmentTimeline) / voRepresentation.timescale;
+      voRepresentation.k = _getKValue(segmentInfo.SegmentTimeline);
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MEDIA)) {
+      voRepresentation.media = segmentInfo.media;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K)) {
+      voRepresentation.k = segmentInfo.k || 1;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].START_NUMBER)) {
+      voRepresentation.startNumber = parseInt(segmentInfo.startNumber);
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].INDEX_RANGE)) {
+      voRepresentation.indexRange = segmentInfo.indexRange;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME_OFFSET)) {
+      voRepresentation.presentationTimeOffset = segmentInfo.presentationTimeOffset / voRepresentation.timescale;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_OFFSET)) {
+      voRepresentation.availabilityTimeOffset = segmentInfo.availabilityTimeOffset;
+    } else if (baseUrl && baseUrl.availabilityTimeOffset !== undefined) {
+      voRepresentation.availabilityTimeOffset = baseUrl.availabilityTimeOffset;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_COMPLETE)) {
+      voRepresentation.availabilityTimeComplete = segmentInfo.availabilityTimeComplete !== 'false';
+    } else if (baseUrl && baseUrl.availabilityTimeComplete !== undefined) {
+      voRepresentation.availabilityTimeComplete = baseUrl.availabilityTimeComplete;
+    }
+    if (segmentInfo.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].END_NUMBER)) {
+      voRepresentation.endNumber = segmentInfo[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].END_NUMBER];
+    }
+    voRepresentation.mseTimeOffset = _calcMseTimeOffset(voRepresentation);
+  }
+  function _assignPixelValues(voRepresentation) {
+    if (!isNaN(voRepresentation.width) && !isNaN(voRepresentation.height) && !isNaN(voRepresentation.frameRate)) {
+      voRepresentation.pixelsPerSecond = Math.max(1, voRepresentation.width * voRepresentation.height * voRepresentation.frameRate);
+      if (!isNaN(voRepresentation.bandwidth)) {
+        voRepresentation.bitsPerPixel = voRepresentation.bandwidth / voRepresentation.pixelsPerSecond;
+      }
+    }
+  }
+  function calcSegmentDuration(segmentTimeline) {
+    if (!segmentTimeline || !segmentTimeline.S) {
+      return NaN;
+    }
+    let s0 = segmentTimeline.S[0];
+    let s1 = segmentTimeline.S[1];
+    return s0.hasOwnProperty('d') ? s0.d : s1.t - s0.t;
+  }
+  function _getKValue(segmentTimeline) {
+    if (!segmentTimeline || !segmentTimeline.S) {
+      return 1;
+    }
+    const s0 = segmentTimeline.S[0];
+    return s0.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].K) ? s0.k : 1;
+  }
+  function _calcMseTimeOffset(representation) {
+    // The MSEOffset is offset from AST for media. It is Period@start - presentationTimeOffset
+    const presentationOffset = representation.presentationTimeOffset;
+    const periodStart = representation.adaptation.period.start;
+    return periodStart - presentationOffset;
+  }
+  function _convertType(element) {
+    if (getIsMuxed(element)) {
+      return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].MUXED;
+    } else if (getIsAudio(element)) {
+      return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO;
+    } else if (getIsVideo(element)) {
+      return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO;
+    } else if (getIsText(element)) {
+      return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].TEXT;
+    } else if (getIsImage(element)) {
+      return _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].IMAGE;
+    } else {
+      logger.warn('Unknown Preselection stream type');
+    }
+    return null;
+  }
+  function getAdaptationsForPeriod(voPeriod) {
+    const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
+    const voAdaptations = [];
+    let voAdaptationSet, realAdaptationSet, i;
+    if (realPeriod && realPeriod.AdaptationSet) {
+      for (i = 0; i < realPeriod.AdaptationSet.length; i++) {
+        realAdaptationSet = realPeriod.AdaptationSet[i];
+        voAdaptationSet = new _vo_AdaptationSet_js__WEBPACK_IMPORTED_MODULE_0__["default"]();
+        if (realAdaptationSet.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID)) {
+          voAdaptationSet.id = realAdaptationSet.id;
+        }
+        voAdaptationSet.index = i;
+        voAdaptationSet.period = voPeriod;
+        voAdaptationSet.type = _convertType(realAdaptationSet);
+        voAdaptations.push(voAdaptationSet);
+      }
+    }
+    return voAdaptations;
+  }
+  function _getAllAdaptationSetsForPreselection(preselection, adaptations) {
+    if (!preselection || !preselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+      return undefined;
+    }
+    const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+    return preselectionComponentIds.map(c => adaptations.find(adaptation => adaptation.id === c));
+  }
+  function getMainAdaptationSetForPreselection(preselection, adaptations) {
+    if (!preselection || !preselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESELECTION_COMPONENTS) || !Array.isArray(adaptations)) {
+      return undefined;
+    }
+    const preselectionComponentIds = String(preselection.preselectionComponents).split(' ');
+    return adaptations.find(adaptation => adaptation.id === preselectionComponentIds[0]);
+  }
+  function getCommonRepresentationForPreselection(preselection, adaptations) {
+    if (!preselection || !Array.isArray(adaptations)) {
+      return undefined;
+    }
+    const mainAS = getMainAdaptationSetForPreselection(preselection, adaptations);
+    return mainAS ? mainAS.Representation[0] : undefined;
+  }
+  function getPreselectionsForPeriod(voPeriod) {
+    const realPeriod = voPeriod && isInteger(voPeriod.index) ? voPeriod.mpd.manifest.Period[voPeriod.index] : null;
+    const voPreselections = [];
+    let voPreselection, realPreselection, i;
+    if (realPeriod && realPeriod.Preselection) {
+      for (i = 0; i < realPeriod.Preselection.length; i++) {
+        realPreselection = realPeriod.Preselection[i];
+        voPreselection = new _vo_Preselection_js__WEBPACK_IMPORTED_MODULE_20__["default"]();
+        const preselectionAdaptationSets = _getAllAdaptationSetsForPreselection(realPreselection, realPeriod.AdaptationSet);
+        let allComponentsAvailable = preselectionAdaptationSets.every(adaptation => !!adaptation);
+
+        // up to now, we only support single-representation preselections, not multi-representation
+        if (allComponentsAvailable && preselectionAdaptationSets.length === 1) {
+          if (realPreselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID)) {
+            voPreselection.id = realPreselection.id;
+          }
+          voPreselection.index = i;
+          voPreselection.period = voPeriod;
+          if (realPreselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TAG)) {
+            voPreselection.tag = realPreselection.tag;
+          }
+          if (realPreselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESELECTION_COMPONENTS)) {
+            voPreselection.preselectionComponents = preselectionAdaptationSets;
+          } else {
+            logger.warn('Preselection (index: ' + voPreselection.index + ') missing component(s)');
+          }
+          if (realPreselection.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ORDER)) {
+            voPreselection.order = realPreselection.order;
+          }
+          voPreselection.type = _convertType(preselectionAdaptationSets[0]);
+          voPreselections.push(voPreselection);
+        } else {
+          logger.warn('Preselection removed because we don\'t support multi-representation preselections or not all components available.');
+        }
+      }
+    }
+    return voPreselections;
+  }
+  function getRegularPeriods(mpd) {
+    const isDynamic = mpd ? getIsDynamic(mpd.manifest) : false;
+    const voPeriods = [];
+    let realPreviousPeriod = null;
+    let realPeriod = null;
+    let voPreviousPeriod = null;
+    let voPeriod = null;
+    let len, i;
+    for (i = 0, len = mpd && mpd.manifest && mpd.manifest.Period ? mpd.manifest.Period.length : 0; i < len; i++) {
+      realPeriod = mpd.manifest.Period[i];
+
+      // If the attribute @start is present in the Period, then the
+      // Period is a regular Period and the PeriodStart is equal
+      // to the value of this attribute.
+      if (realPeriod.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].START)) {
+        voPeriod = new _vo_Period_js__WEBPACK_IMPORTED_MODULE_19__["default"]();
+        voPeriod.start = realPeriod.start;
+      }
+      // If the @start attribute is absent, but the previous Period element contains a @duration attribute then this new Period is also a regular Period. The start time of the new Period PeriodStart is the sum of the start time of the previous Period PeriodStart and the value of the attribute @duration of the previous Period.
+      else if (realPreviousPeriod !== null && realPreviousPeriod.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DURATION) && voPreviousPeriod !== null) {
+        voPeriod = new _vo_Period_js__WEBPACK_IMPORTED_MODULE_19__["default"]();
+        voPeriod.start = parseFloat((voPreviousPeriod.start + voPreviousPeriod.duration).toFixed(5));
+      }
+      // If (i) @start attribute is absent, and (ii) the Period element is the first in the MPD, and (iii) the MPD@type is 'static', then the PeriodStart time shall be set to zero.
+      else if (i === 0 && !isDynamic) {
+        voPeriod = new _vo_Period_js__WEBPACK_IMPORTED_MODULE_19__["default"]();
+        voPeriod.start = 0;
+      }
+
+      // The Period extends until the PeriodStart of the next Period.
+      // The difference between the PeriodStart time of a Period and
+      // the PeriodStart time of the following Period.
+      if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+        if (voPeriod !== null) {
+          voPreviousPeriod.duration = parseFloat((voPeriod.start - voPreviousPeriod.start).toFixed(5));
+        } else {
+          logger.warn('First period duration could not be calculated because lack of start and duration period properties. This will cause timing issues during playback');
+        }
+      }
+      if (voPeriod !== null) {
+        voPeriod.id = getPeriodId(realPeriod, i);
+        voPeriod.index = i;
+        voPeriod.mpd = mpd;
+        voPeriod.isEncrypted = isPeriodEncrypted(realPeriod);
+        if (realPeriod.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DURATION)) {
+          voPeriod.duration = realPeriod.duration;
+        }
+        if (voPreviousPeriod) {
+          voPreviousPeriod.nextPeriodId = voPeriod.id;
+        }
+        voPeriods.push(voPeriod);
+        realPreviousPeriod = realPeriod;
+        voPreviousPeriod = voPeriod;
+      }
+      realPeriod = null;
+      voPeriod = null;
+    }
+    if (voPeriods.length === 0) {
+      return voPeriods;
+    }
+
+    // The last Period extends until the end of the Media Presentation.
+    // The difference between the PeriodStart time of the last Period
+    // and the mpd duration
+    if (voPreviousPeriod !== null && isNaN(voPreviousPeriod.duration)) {
+      voPreviousPeriod.duration = parseFloat((getEndTimeForLastPeriod(voPreviousPeriod) - voPreviousPeriod.start).toFixed(5));
+    }
+    return voPeriods;
+  }
+  function getPeriodId(realPeriod, i) {
+    if (!realPeriod) {
+      throw new Error('Period cannot be null or undefined');
+    }
+    let id = _vo_Period_js__WEBPACK_IMPORTED_MODULE_19__["default"].DEFAULT_ID + '_' + i;
+    if (realPeriod.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID) && realPeriod.id.toString().length > 0 && realPeriod.id !== '__proto__') {
+      id = realPeriod.id.toString();
+    }
+    return id;
+  }
+  function getMpd(manifest) {
+    const mpd = new _vo_Mpd_js__WEBPACK_IMPORTED_MODULE_15__["default"]();
+    if (manifest) {
+      mpd.manifest = manifest;
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_START_TIME)) {
+        mpd.availabilityStartTime = new Date(manifest.availabilityStartTime.getTime());
+      } else {
+        if (manifest.loadedTime) {
+          mpd.availabilityStartTime = new Date(manifest.loadedTime.getTime());
+        }
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_END_TIME)) {
+        mpd.availabilityEndTime = new Date(manifest.availabilityEndTime.getTime());
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MINIMUM_UPDATE_PERIOD)) {
+        mpd.minimumUpdatePeriod = manifest.minimumUpdatePeriod;
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MEDIA_PRESENTATION_DURATION)) {
+        mpd.mediaPresentationDuration = manifest.mediaPresentationDuration;
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUGGESTED_PRESENTATION_DELAY)) {
+        mpd.suggestedPresentationDelay = manifest.suggestedPresentationDelay;
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TIMESHIFT_BUFFER_DEPTH)) {
+        mpd.timeShiftBufferDepth = manifest.timeShiftBufferDepth;
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].MAX_SEGMENT_DURATION)) {
+        mpd.maxSegmentDuration = manifest.maxSegmentDuration;
+      }
+      if (manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PUBLISH_TIME)) {
+        mpd.publishTime = new Date(manifest.publishTime);
+      }
+    }
+    return mpd;
+  }
+  function checkConfig() {
+    if (!errHandler || !errHandler.hasOwnProperty('error')) {
+      throw new Error(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].MISSING_CONFIG_ERROR);
+    }
+  }
+  function getEndTimeForLastPeriod(voPeriod) {
+    checkConfig();
+    const isDynamic = getIsDynamic(voPeriod.mpd.manifest);
+    let periodEnd;
+    if (voPeriod.mpd.manifest.mediaPresentationDuration) {
+      periodEnd = voPeriod.mpd.manifest.mediaPresentationDuration;
+    } else if (voPeriod.duration) {
+      periodEnd = voPeriod.duration;
+    } else if (isDynamic) {
+      periodEnd = Number.POSITIVE_INFINITY;
+    } else {
+      errHandler.error(new _streaming_vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_8__["default"](_core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__["default"].MANIFEST_ERROR_ID_PARSE_CODE, 'Must have @mediaPresentationDuration on MPD or an explicit @duration on the last period.', voPeriod));
+    }
+    return periodEnd;
+  }
+  function getEventsForPeriod(period) {
+    const manifest = period && period.mpd && period.mpd.manifest ? period.mpd.manifest : null;
+    const periodArray = manifest ? manifest.Period : null;
+    const eventStreams = periodArray && period && isInteger(period.index) ? periodArray[period.index].EventStream : null;
+    const events = [];
+    let i, j;
+    if (eventStreams) {
+      for (i = 0; i < eventStreams.length; i++) {
+        const eventStream = new _vo_EventStream_js__WEBPACK_IMPORTED_MODULE_13__["default"]();
+        eventStream.period = period;
+        eventStream.timescale = 1;
+        if (eventStreams[i].hasOwnProperty(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SCHEME_ID_URI)) {
+          eventStream.schemeIdUri = eventStreams[i][_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SCHEME_ID_URI];
+        } else {
+          throw new Error('Invalid EventStream. SchemeIdUri has to be set');
+        }
+        if (eventStreams[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TIMESCALE)) {
+          eventStream.timescale = eventStreams[i][_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TIMESCALE];
+        }
+        if (eventStreams[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VALUE)) {
+          eventStream.value = eventStreams[i][_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VALUE];
+        }
+        if (eventStreams[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME_OFFSET)) {
+          eventStream.presentationTimeOffset = eventStreams[i][_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME_OFFSET];
+        }
+        for (j = 0; eventStreams[i].Event && j < eventStreams[i].Event.length; j++) {
+          const currentMpdEvent = eventStreams[i].Event[j];
+          const event = new _vo_Event_js__WEBPACK_IMPORTED_MODULE_12__["default"]();
+          event.presentationTime = 0;
+          event.eventStream = eventStream;
+          if (currentMpdEvent.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PRESENTATION_TIME)) {
+            event.presentationTime = currentMpdEvent.presentationTime;
+          }
+          const presentationTimeOffset = eventStream.presentationTimeOffset ? eventStream.presentationTimeOffset / eventStream.timescale : 0;
+          event.calculatedPresentationTime = event.presentationTime / eventStream.timescale + period.start - presentationTimeOffset;
+          if (currentMpdEvent.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DURATION)) {
+            event.duration = currentMpdEvent.duration / eventStream.timescale;
+          }
+          if (currentMpdEvent.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID)) {
+            event.id = parseInt(currentMpdEvent.id);
+          } else {
+            event.id = null;
+          }
+          if (currentMpdEvent.Signal && currentMpdEvent.Signal.Binary && currentMpdEvent.Signal.Binary.__text) {
+            // toString is used to manage both regular and namespaced tags
+            event.messageData = BASE64.decodeArray(currentMpdEvent.Signal.Binary.__text.toString());
+          } else {
+            // From Cor.1: 'NOTE: this attribute is an alternative
+            // to specifying a complete XML element(s) in the Event.
+            // It is useful when an event leans itself to a compact
+            // string representation'.
+            event.messageData = currentMpdEvent.messageData || currentMpdEvent.__cdata || currentMpdEvent.__text;
+          }
+          events.push(event);
+        }
+      }
+    }
+    return events;
+  }
+  function getEventStreams(inbandStreams, representation, period) {
+    const eventStreams = [];
+    let i;
+    if (!inbandStreams) {
+      return eventStreams;
+    }
+    for (i = 0; i < inbandStreams.length; i++) {
+      const eventStream = new _vo_EventStream_js__WEBPACK_IMPORTED_MODULE_13__["default"]();
+      eventStream.timescale = 1;
+      eventStream.representation = representation;
+      if (inbandStreams[i].hasOwnProperty(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SCHEME_ID_URI)) {
+        eventStream.schemeIdUri = inbandStreams[i].schemeIdUri;
+      } else {
+        throw new Error('Invalid EventStream. SchemeIdUri has to be set');
+      }
+      if (inbandStreams[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TIMESCALE)) {
+        eventStream.timescale = inbandStreams[i].timescale;
+      }
+      if (inbandStreams[i].hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VALUE)) {
+        eventStream.value = inbandStreams[i].value;
+      }
+      eventStreams.push(eventStream);
+      eventStream.period = period;
+    }
+    return eventStreams;
+  }
+  function getEventStreamForAdaptationSet(manifest, adaptation, period) {
+    let inbandStreams, periodArray, adaptationArray;
+    if (manifest && manifest.Period && adaptation && adaptation.period && isInteger(adaptation.period.index)) {
+      periodArray = manifest.Period[adaptation.period.index];
+      if (periodArray && periodArray.AdaptationSet && isInteger(adaptation.index)) {
+        adaptationArray = periodArray.AdaptationSet[adaptation.index];
+        if (adaptationArray) {
+          inbandStreams = adaptationArray.InbandEventStream;
+        }
+      }
+    }
+    return getEventStreams(inbandStreams, null, period);
+  }
+  function getEventStreamForRepresentation(manifest, representation, period) {
+    let inbandStreams, periodArray, adaptationArray, representationArray;
+    if (manifest && manifest.Period && representation && representation.adaptation && representation.adaptation.period && isInteger(representation.adaptation.period.index)) {
+      periodArray = manifest.Period[representation.adaptation.period.index];
+      if (periodArray && periodArray.AdaptationSet && isInteger(representation.adaptation.index)) {
+        adaptationArray = periodArray.AdaptationSet[representation.adaptation.index];
+        if (adaptationArray && adaptationArray.Representation && isInteger(representation.index)) {
+          representationArray = adaptationArray.Representation[representation.index];
+          if (representationArray) {
+            inbandStreams = representationArray.InbandEventStream;
+          }
+        }
+      }
+    }
+    return getEventStreams(inbandStreams, representation, period);
+  }
+  function getUTCTimingSources(manifest) {
+    const isDynamic = getIsDynamic(manifest);
+    const hasAST = manifest ? manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_START_TIME) : false;
+    const utcTimingsArray = manifest ? manifest.UTCTiming : null;
+    const utcTimingEntries = [];
+
+    // do not bother synchronizing the clock unless MPD is live,
+    // or it is static and has availabilityStartTime attribute
+    if (isDynamic || hasAST) {
+      if (utcTimingsArray) {
+        // the order is important here - 23009-1 states that the order
+        // in the manifest "indicates relative preference, first having
+        // the highest, and the last the lowest priority".
+        utcTimingsArray.forEach(function (utcTiming) {
+          const entry = new _vo_UTCTiming_js__WEBPACK_IMPORTED_MODULE_24__["default"]();
+          if (utcTiming.hasOwnProperty(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].SCHEME_ID_URI)) {
+            entry.schemeIdUri = utcTiming.schemeIdUri;
+          } else {
+            // entries of type DescriptorType with no schemeIdUri
+            // are meaningless. let's just ignore this entry and
+            // move on.
+            return;
+          }
+
+          // this is (incorrectly) interpreted as a number - schema
+          // defines it as a string
+          if (utcTiming.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].VALUE)) {
+            entry.value = utcTiming.value.toString();
+          } else {
+            // without a value, there's not a lot we can do with
+            // this entry. let's just ignore this one and move on
+            return;
+          }
+
+          // we're not interested in the optional id or any other
+          // attributes which might be attached to the entry
+
+          utcTimingEntries.push(entry);
+        });
+      }
+    }
+    return utcTimingEntries;
+  }
+  function getBaseURLsFromElement(node) {
+    const baseUrls = [];
+    // if node.BaseURL and node.baseUri are undefined entries
+    // will be [undefined] which entries.some will just skip
+    const entries = node.BaseURL || [node.baseUri];
+    let earlyReturn = false;
+    entries.some(entry => {
+      if (entry) {
+        const baseUrl = new _vo_BaseURL_js__WEBPACK_IMPORTED_MODULE_1__["default"]();
+        let text = entry.__text || entry;
+        if (urlUtils.isRelative(text)) {
+          // it doesn't really make sense to have relative and
+          // absolute URLs at the same level, or multiple
+          // relative URLs at the same level, so assume we are
+          // done from this level of the MPD
+          earlyReturn = true;
+
+          // deal with the specific case where the MPD@BaseURL
+          // is specified and is relative. when no MPD@BaseURL
+          // entries exist, that case is handled by the
+          // [node.baseUri] in the entries definition.
+          if (node.baseUri) {
+            text = urlUtils.resolve(text, node.baseUri);
+          }
+        }
+        baseUrl.url = text;
+
+        // serviceLocation is optional, but we need it in order
+        // to blacklist correctly. if it's not available, use
+        // anything unique since there's no relationship to any
+        // other BaseURL and, in theory, the url should be
+        // unique so use this instead.
+        if (entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATION) && entry.serviceLocation.length) {
+          baseUrl.serviceLocation = entry.serviceLocation;
+        } else {
+          baseUrl.serviceLocation = text;
+        }
+        if (entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DVB_PRIORITY)) {
+          baseUrl.dvbPriority = entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DVB_PRIORITY];
+        }
+        if (entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DVB_WEIGHT)) {
+          baseUrl.dvbWeight = entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DVB_WEIGHT];
+        }
+        if (entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_OFFSET)) {
+          baseUrl.availabilityTimeOffset = entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_OFFSET];
+        }
+        if (entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_COMPLETE)) {
+          baseUrl.availabilityTimeComplete = entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_TIME_COMPLETE] !== 'false';
+        }
+        /* NOTE: byteRange currently unused
+         */
+
+        baseUrls.push(baseUrl);
+        return earlyReturn;
+      }
+    });
+    return baseUrls;
+  }
+  function getContentSteering(manifest) {
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_STEERING)) {
+      // Only one ContentSteering element is supported on MPD level
+      const element = manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_STEERING][0];
+      return _createContentSteeringInstance(element);
+    }
+    return undefined;
+  }
+  function _createContentSteeringInstance(element) {
+    const entry = new _vo_ContentSteering_js__WEBPACK_IMPORTED_MODULE_6__["default"]();
+    entry.serverUrl = element.__text;
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DEFAULT_SERVICE_LOCATION)) {
+      entry.defaultServiceLocation = element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].DEFAULT_SERVICE_LOCATION];
+      entry.defaultServiceLocationArray = entry.defaultServiceLocation.split(' ');
+    }
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUERY_BEFORE_START)) {
+      entry.queryBeforeStart = element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].QUERY_BEFORE_START].toLowerCase() === 'true';
+    }
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CLIENT_REQUIREMENT)) {
+      entry.clientRequirement = element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CLIENT_REQUIREMENT].toLowerCase() !== 'false';
+    }
+    return entry;
+  }
+  function _createClientDataReportingInstance(element) {
+    const entry = new _vo_ClientDataReporting_js__WEBPACK_IMPORTED_MODULE_3__["default"]();
+
+    // Check if schemeIdUri is either in ClientDataReporting (v2) or CMCDParameters (v1)
+    const schemeIdUri = element.schemeIdUri || element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS]?.schemeIdUri;
+    const isCmcdSupported = [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CTA_5004_2023_SCHEME, _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CTA_5004_2025_SCHEME].includes(schemeIdUri);
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS) && isCmcdSupported) {
+      entry.cmcdParameters = new _vo_CMCDParameters_js__WEBPACK_IMPORTED_MODULE_2__["default"]();
+      entry.cmcdParameters.init(element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CMCD_PARAMETERS]);
+    }
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATIONS) && element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATIONS] !== '') {
+      entry.serviceLocations = element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATIONS];
+      entry.serviceLocationsArray = entry.serviceLocations.toString().split(' ');
+    }
+    if (element.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SETS) && element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SETS] !== '') {
+      entry.adaptationSets = element[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ADAPTATION_SETS];
+      entry.adaptationSetsArray = entry.adaptationSets.toString().split(' ');
+    }
+    return entry;
+  }
+  function getLocation(manifest) {
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].LOCATION)) {
+      return manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].LOCATION].map(entry => {
+        const text = entry.__text || entry;
+        const serviceLocation = entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATION) ? entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATION] : null;
+        return new _vo_MpdLocation_js__WEBPACK_IMPORTED_MODULE_16__["default"](text, serviceLocation);
+      });
+    }
+    return [];
+  }
+  function getPatchLocation(manifest) {
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PATCH_LOCATION)) {
+      return manifest[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].PATCH_LOCATION].map(entry => {
+        const text = entry.__text || entry;
+        const serviceLocation = entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATION) ? entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_LOCATION] : null;
+        let ttl = entry.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TTL) ? parseFloat(entry[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].TTL]) * 1000 : NaN;
+        return new _vo_PatchLocation_js__WEBPACK_IMPORTED_MODULE_18__["default"](text, serviceLocation, ttl);
+      });
+    }
+    return [];
+  }
+  function getSuggestedPresentationDelay(mpd) {
+    return mpd && mpd.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SUGGESTED_PRESENTATION_DELAY) ? mpd.suggestedPresentationDelay : null;
+  }
+  function getAvailabilityStartTime(mpd) {
+    return mpd && mpd.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].AVAILABILITY_START_TIME) && mpd.availabilityStartTime !== null ? mpd.availabilityStartTime.getTime() : null;
+  }
+  function getServiceDescriptions(manifest) {
+    const serviceDescriptions = [];
+    if (manifest && manifest.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION)) {
+      for (const sd of manifest.ServiceDescription) {
+        // Convert each of the properties defined in
+        let id = null,
+          schemeIdUri = null,
+          latency = null,
+          playbackRate = null,
+          operatingQuality = null,
+          operatingBandwidth = null,
+          contentSteering = null,
+          clientDataReporting = null;
+        for (const prop in sd) {
+          if (sd.hasOwnProperty(prop)) {
+            if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].ID) {
+              id = sd[prop];
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION_SCOPE) {
+              schemeIdUri = sd[prop].schemeIdUri;
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION_LATENCY) {
+              latency = {
+                target: parseInt(sd[prop].target),
+                max: parseInt(sd[prop].max),
+                min: parseInt(sd[prop].min),
+                referenceId: parseInt(sd[prop].referenceId)
+              };
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION_PLAYBACK_RATE) {
+              playbackRate = {
+                max: parseFloat(sd[prop].max),
+                min: parseFloat(sd[prop].min)
+              };
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION_OPERATING_QUALITY) {
+              operatingQuality = {
+                mediaType: sd[prop].mediaType,
+                max: parseInt(sd[prop].max),
+                min: parseInt(sd[prop].min),
+                target: parseInt(sd[prop].target),
+                type: sd[prop].type,
+                maxQualityDifference: parseInt(sd[prop].maxQualityDifference)
+              };
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].SERVICE_DESCRIPTION_OPERATING_BANDWIDTH) {
+              operatingBandwidth = {
+                mediaType: sd[prop].mediaType,
+                max: parseInt(sd[prop].max),
+                min: parseInt(sd[prop].min),
+                target: parseInt(sd[prop].target)
+              };
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CONTENT_STEERING) {
+              let element = sd[prop];
+              element = Array.isArray(element) ? element.at(element.length - 1) : element;
+              contentSteering = _createContentSteeringInstance(element);
+            } else if (prop === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_7__["default"].CLIENT_DATA_REPORTING) {
+              clientDataReporting = _createClientDataReportingInstance(sd[prop]);
+            }
+          }
+        }
+        serviceDescriptions.push({
+          id,
+          schemeIdUri,
+          latency,
+          playbackRate,
+          operatingQuality,
+          operatingBandwidth,
+          contentSteering,
+          clientDataReporting
+        });
+      }
+    }
+    return serviceDescriptions;
+  }
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.errHandler) {
+      errHandler = config.errHandler;
+    }
+    if (config.BASE64) {
+      BASE64 = config.BASE64;
+    }
+  }
+  instance = {
+    getAccessibilityForAdaptation,
+    getAdaptationForId,
+    getAdaptationForIndex,
+    getAdaptationsForPeriod,
+    getAdaptationsForType,
+    getAudioChannelConfigurationForAdaptation,
+    getAudioChannelConfigurationForRepresentation,
+    getAvailabilityStartTime,
+    getBandwidth,
+    getBaseURLsFromElement,
+    getBitrateListForAdaptation,
+    getCodec,
+    getCodecForPreselection,
+    getCombinedEssentialPropertiesForAdaptationSet,
+    getCombinedSupplementalPropertiesForAdaptationSet,
+    getContentProtectionByAdaptation,
+    getContentProtectionByManifest,
+    getContentProtectionByPeriod,
+    getContentSteering,
+    getDuration,
+    getEssentialProperties,
+    getEventStreamForAdaptationSet,
+    getEventStreamForRepresentation,
+    getEventsForPeriod,
+    getFramerate,
+    getId,
+    getIndexForAdaptation,
+    getIsDynamic,
+    getIsFragmented,
+    getIsText,
+    getIsTypeOf,
+    getLabelsForAdaptation,
+    getLanguageForAdaptation,
+    getLocation,
+    getMainAdaptationSetForPreselection,
+    getCommonRepresentationForPreselection,
+    getManifestUpdatePeriod,
+    getMimeType,
+    getMpd,
+    getPatchLocation,
+    getPreselectionIsTypeOf,
+    getPreselectionsForPeriod,
+    getProducerReferenceTimesForAdaptation,
+    getPublishTime,
+    getRealPeriodForIndex,
+    getRealPeriods,
+    getRegularPeriods,
+    getRepresentationCount,
+    getRepresentationFor,
+    getRepresentationSortFunction,
+    getRepresentationsForAdaptation,
+    getRolesForAdaptation,
+    getSegmentAlignment,
+    getSegmentSequencePropertiesForAdaptationSet,
+    getSelectionPriority,
+    getServiceDescriptions,
+    getSubSegmentAlignment,
+    getSuggestedPresentationDelay,
+    getSupplementalProperties,
+    getUTCTimingSources,
+    getViewpointForAdaptation,
+    hasProfile,
+    isPeriodEncrypted,
+    setConfig
+  };
+  setup();
+  return instance;
+}
+DashManifestModel.__dashjs_factory_name = 'DashManifestModel';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_14__["default"].getSingletonFactory(DashManifestModel));
+
+/***/ }),
+
+/***/ "./src/dash/vo/AdaptationSet.js":
+/*!**************************************!*\
+  !*** ./src/dash/vo/AdaptationSet.js ***!
+  \**************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class AdaptationSet {
+  constructor() {
+    this.period = null;
+    this.index = -1;
+    this.id = null;
+    this.type = null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (AdaptationSet);
+
+/***/ }),
+
+/***/ "./src/dash/vo/BaseURL.js":
+/*!********************************!*\
+  !*** ./src/dash/vo/BaseURL.js ***!
+  \********************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+
+const DEFAULT_DVB_PRIORITY = 1;
+const DEFAULT_DVB_WEIGHT = 1;
+class BaseURL {
+  constructor(url, serviceLocation, priority, weight) {
+    this.url = url || '';
+    this.serviceLocation = serviceLocation || url || '';
+
+    // DVB extensions
+    this.dvbPriority = priority || DEFAULT_DVB_PRIORITY;
+    this.dvbWeight = weight || DEFAULT_DVB_WEIGHT;
+    this.availabilityTimeOffset = 0;
+    this.availabilityTimeComplete = true;
+    this.queryParams = {}; // This is an attribute that might be set when synthesizing BaseURLs with content steering
+
+    /* currently unused:
+     * byteRange,
+     */
+  }
+}
+BaseURL.DEFAULT_DVB_PRIORITY = DEFAULT_DVB_PRIORITY;
+BaseURL.DEFAULT_DVB_WEIGHT = DEFAULT_DVB_WEIGHT;
+/* harmony default export */ __webpack_exports__["default"] = (BaseURL);
+
+/***/ }),
+
+/***/ "./src/dash/vo/CMCDParameters.js":
+/*!***************************************!*\
+  !*** ./src/dash/vo/CMCDParameters.js ***!
+  \***************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+/**
+ * @class
+ * @ignore
+ */
+class CMCDParameters extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor() {
+    super();
+    this.version = null;
+    this.sessionID = null;
+    this.contentID = null;
+    this.mode = null;
+    this.keys = null;
+    this.includeInRequests = null;
+  }
+  init(data) {
+    super.init(data);
+    if (data) {
+      this.version = data.version ? parseInt(data.version) : null;
+      this.sessionID = data.sessionID;
+      this.contentID = data.contentID;
+      this.mode = data.mode ?? 'query';
+      this.keys = data.keys ? data.keys.split(' ') : null;
+      this.includeInRequests = data.includeInRequests ? data.includeInRequests.split(' ') : [_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].CMCD_DEFAULT_INCLUDE_IN_REQUESTS];
+      this.schemeIdUri = data.schemeIdUri;
+    }
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CMCDParameters);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ClientDataReporting.js":
+/*!********************************************!*\
+  !*** ./src/dash/vo/ClientDataReporting.js ***!
+  \********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class ClientDataReporting {
+  constructor() {
+    this.adaptationSets = null;
+    this.adaptationSetsArray = [];
+    this.cmcdParameters = null;
+    this.serviceLocations = null;
+    this.serviceLocationsArray = [];
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (ClientDataReporting);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ContentProtection.js":
+/*!******************************************!*\
+  !*** ./src/dash/vo/ContentProtection.js ***!
+  \******************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _streaming_utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../streaming/utils/CertUrlUtils.js */ "./src/streaming/utils/CertUrlUtils.js");
+/* harmony import */ var _DescriptorType_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DescriptorType.js */ "./src/dash/vo/DescriptorType.js");
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+/**
+ * @class
+ * @ignore
+ */
+class ContentProtection extends _DescriptorType_js__WEBPACK_IMPORTED_MODULE_1__["default"] {
+  constructor() {
+    super();
+    this.ref = null;
+    this.refId = null;
+    this.robustness = null;
+    this.keyId = null;
+    this.cencDefaultKid = null;
+    this.pssh = null;
+    this.pro = null;
+    this.laUrl = null;
+    this.certUrls = []; // Array of certificate URL descriptors: [{url: string, certType: string|null}]. dash.js treats certType as an opaque label.
+  }
+  init(data) {
+    super.init(data);
+    if (data) {
+      this.ref = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF] : null;
+      this.refId = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF_ID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REF_ID] : null;
+      this.robustness = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ROBUSTNESS) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ROBUSTNESS] : null;
+      this.cencDefaultKid = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CENC_DEFAULT_KID) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CENC_DEFAULT_KID] : null;
+      this.pssh = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PSSH) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PSSH] : null;
+      this.pro = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PRO) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PRO] : null;
+      this.laUrl = data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL] : data.hasOwnProperty(_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL_LOWER_CASE) ? data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LA_URL_LOWER_CASE] : null;
+      const certKey = Object.keys(data).find(k => k.toLowerCase() === _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].CERT_URL.toLowerCase());
+      const rawCert = certKey ? data[certKey] : null;
+      this.certUrls = _streaming_utils_CertUrlUtils_js__WEBPACK_IMPORTED_MODULE_0__["default"].normalizeCertUrls(rawCert);
+    }
+  }
+  mergeAttributesFromReference(reference) {
+    let attributesToBeMerged = ['schemeIdUri', 'value', 'id', 'robustness', 'cencDefaultKid', 'pro', 'pssh', 'laUrl'];
+    attributesToBeMerged.forEach(attribute => {
+      if (this[attribute] === null) {
+        this[attribute] = reference[attribute];
+      }
+    });
+    // Merge certUrls: append any from reference that we don't already have (by URL + certType)
+    if (reference.certUrls && reference.certUrls.length) {
+      const existing = new Set(this.certUrls.map(c => `${c.url}||${c.certType || ''}`));
+      reference.certUrls.forEach(c => {
+        const key = `${c.url}||${c.certType || ''}`;
+        if (!existing.has(key)) {
+          this.certUrls.push({
+            url: c.url,
+            certType: c.certType || null
+          });
+        }
+      });
+    }
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (ContentProtection);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ContentSteering.js":
+/*!****************************************!*\
+  !*** ./src/dash/vo/ContentSteering.js ***!
+  \****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class ContentSteering {
+  constructor() {
+    this.defaultServiceLocation = null;
+    this.defaultServiceLocationArray = [];
+    this.queryBeforeStart = false;
+    this.serverUrl = null;
+    this.clientRequirement = true;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (ContentSteering);
+
+/***/ }),
+
+/***/ "./src/dash/vo/DescriptorType.js":
+/*!***************************************!*\
+  !*** ./src/dash/vo/DescriptorType.js ***!
+  \***************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+
+class DescriptorType {
+  constructor() {
+    this.schemeIdUri = null;
+    this.value = null;
+    this.id = null;
+  }
+  init(data) {
+    if (data) {
+      this.schemeIdUri = data.schemeIdUri ? data.schemeIdUri : null;
+      this.value = data.value !== null && data.value !== undefined ? data.value.toString() : null;
+      this.id = data.id ? data.id : null;
+      // Only add the DVB extensions if they exist
+      if (data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL]) {
+        this.dvbUrl = data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_URL];
+      }
+      if (data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE]) {
+        this.dvbMimeType = data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_MIMETYPE];
+      }
+      if (data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY]) {
+        this.dvbFontFamily = data[_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].DVB_FONTFAMILY];
+      }
+    }
+  }
+  inArray(arr) {
+    if (arr) {
+      return arr.some(entry => {
+        return this.schemeIdUri === entry.schemeIdUri && (this.value ? this.value.toString().match(entry.value) :
+        // check if provided value matches RegExp
+        ''.match(entry.value) // check if RegExp allows absent value
+        );
+      });
+    }
+    return false;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (DescriptorType);
+
+/***/ }),
+
+/***/ "./src/dash/vo/Event.js":
+/*!******************************!*\
+  !*** ./src/dash/vo/Event.js ***!
+  \******************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class Event {
+  constructor() {
+    this.type = '';
+    this.duration = NaN;
+    this.presentationTime = NaN;
+    this.id = NaN;
+    this.messageData = '';
+    this.eventStream = null;
+    this.presentationTimeDelta = NaN; // Specific EMSG Box parameter
+    this.parsedMessageData = null; // Parsed value of the event message
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (Event);
+
+/***/ }),
+
+/***/ "./src/dash/vo/EventStream.js":
+/*!************************************!*\
+  !*** ./src/dash/vo/EventStream.js ***!
+  \************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class EventStream {
+  constructor() {
+    this.adaptionSet = null;
+    this.representation = null;
+    this.period = null;
+    this.timescale = 1;
+    this.value = '';
+    this.schemeIdUri = '';
+    this.presentationTimeOffset = 0;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (EventStream);
+
+/***/ }),
+
+/***/ "./src/dash/vo/Mpd.js":
+/*!****************************!*\
+  !*** ./src/dash/vo/Mpd.js ***!
+  \****************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class Mpd {
+  constructor() {
+    this.availabilityEndTime = Number.POSITIVE_INFINITY;
+    this.availabilityStartTime = null;
+    this.manifest = null;
+    this.maxSegmentDuration = Number.POSITIVE_INFINITY;
+    this.mediaPresentationDuration = NaN;
+    this.minimumUpdatePeriod = NaN;
+    this.publishTime = null;
+    this.suggestedPresentationDelay = 0;
+    this.timeShiftBufferDepth = Number.POSITIVE_INFINITY;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (Mpd);
+
+/***/ }),
+
+/***/ "./src/dash/vo/MpdLocation.js":
+/*!************************************!*\
+  !*** ./src/dash/vo/MpdLocation.js ***!
+  \************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class MpdLocation {
+  constructor(url, serviceLocation) {
+    this.url = url || '';
+    this.serviceLocation = serviceLocation || null;
+    this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (MpdLocation);
+
+/***/ }),
+
+/***/ "./src/dash/vo/PatchLocation.js":
+/*!**************************************!*\
+  !*** ./src/dash/vo/PatchLocation.js ***!
+  \**************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2023, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class PatchLocation {
+  constructor(url, serviceLocation, ttl) {
+    this.url = url || '';
+    this.serviceLocation = serviceLocation || null;
+    this.ttl = ttl || NaN;
+    this.queryParams = {}; // This is an attribute that might be set when synthesizing Locations with content steering
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (PatchLocation);
+
+/***/ }),
+
+/***/ "./src/dash/vo/Period.js":
+/*!*******************************!*\
+  !*** ./src/dash/vo/Period.js ***!
+  \*******************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class Period {
+  constructor() {
+    this.id = null;
+    this.index = -1;
+    this.duration = NaN;
+    this.start = NaN;
+    this.mpd = null;
+    this.nextPeriodId = null;
+    this.isEncrypted = false;
+  }
+}
+Period.DEFAULT_ID = 'defaultId';
+/* harmony default export */ __webpack_exports__["default"] = (Period);
+
+/***/ }),
+
+/***/ "./src/dash/vo/Preselection.js":
+/*!*************************************!*\
+  !*** ./src/dash/vo/Preselection.js ***!
+  \*************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2025, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class Preselection {
+  constructor() {
+    this.period = null;
+    this.index = -1;
+    this.id = 1;
+    this.type = null;
+    this.tag = null;
+    this.order = 'undefined';
+    this.preselectionComponents = [];
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (Preselection);
+
+/***/ }),
+
+/***/ "./src/dash/vo/ProducerReferenceTime.js":
+/*!**********************************************!*\
+  !*** ./src/dash/vo/ProducerReferenceTime.js ***!
+  \**********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class ProducerReferenceTime {
+  constructor() {
+    this.id = null;
+    this.inband = false;
+    this.type = 'encoder';
+    this.applicationScheme = null;
+    this.wallClockTime = null;
+    this.presentationTime = NaN;
+    this.UTCTiming = null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (ProducerReferenceTime);
+
+/***/ }),
+
+/***/ "./src/dash/vo/Representation.js":
+/*!***************************************!*\
+  !*** ./src/dash/vo/Representation.js ***!
+  \***************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+
+
+class Representation {
+  constructor() {
+    this.absoluteIndex = NaN;
+    this.adaptation = null;
+    this.availabilityTimeComplete = true;
+    this.availabilityTimeOffset = 0;
+    this.bandwidth = NaN;
+    this.bitrateInKbit = NaN;
+    this.bitsPerPixel = NaN;
+    this.codecFamily = null;
+    this.codecPrivateData = null;
+    this.codecs = null;
+    this.dependencyId = null;
+    this.dependentRepresentation = null;
+    this.endNumber = null;
+    this.essentialProperties = [];
+    this.fragmentDuration = null;
+    this.frameRate = null;
+    this.height = NaN;
+    this.id = null;
+    this.indexRange = null;
+    this.initialization = null;
+    this.k = 1;
+    this.maxPlayoutRate = NaN;
+    this.mediaFinishedInformation = {
+      numberOfSegments: 0,
+      mediaTimeOfLastSignaledSegment: NaN
+    };
+    this.mediaInfo = null;
+    this.mimeType = null;
+    this.mseTimeOffset = NaN;
+    this.pixelsPerSecond = NaN;
+    this.presentationTimeOffset = 0;
+    this.qualityRanking = NaN;
+    this.range = null;
+    this.scanType = null;
+    this.segments = null;
+    this.segmentDuration = NaN;
+    this.segmentInfoType = null;
+    this.segmentSequenceProperties = [];
+    this.supplementalProperties = [];
+    this.startNumber = 1;
+    this.timescale = 1;
+    this.width = NaN;
+  }
+  hasInitialization() {
+    return this.initialization !== null || this.range !== null;
+  }
+  hasSegments() {
+    return this.segmentInfoType !== _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].BASE_URL && this.segmentInfoType !== _constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__["default"].SEGMENT_BASE && !this.indexRange;
+  }
+  isBootstrapRepresentation() {
+    if (!this.segmentSequenceProperties || this.segmentSequenceProperties.length === 0) {
+      return false;
+    }
+    return this.segmentSequenceProperties.some(ssp => {
+      return ssp.isBootstrapConfiguration();
+    });
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (Representation);
+
+/***/ }),
+
+/***/ "./src/dash/vo/SegmentSequenceProperties.js":
+/*!**************************************************!*\
+  !*** ./src/dash/vo/SegmentSequenceProperties.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * @class
+ * @ignore
+ */
+class SegmentSequenceProperties {
+  constructor() {
+    this.cadence = 1;
+    this.sapType = 0;
+    this.event = true;
+    this.alignment = null;
+  }
+  init(data) {
+    if (data) {
+      this.cadence = data.cadence !== undefined && !isNaN(data.cadence) ? data.cadence : 1;
+      this.sapType = data.sapType !== undefined && !isNaN(data.sapType) ? data.sapType : 0;
+      this.event = data.event !== undefined ? data.event : true;
+      this.alignment = data.alignment !== undefined ? data.alignment : null;
+    }
+  }
+  isBootstrapConfiguration() {
+    return this.cadence === 1 && (this.sapType === 0 || this.sapType === 1);
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (SegmentSequenceProperties);
+
+/***/ }),
+
 /***/ "./src/dash/vo/UTCTiming.js":
 /*!**********************************!*\
   !*** ./src/dash/vo/UTCTiming.js ***!
   \**********************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -4268,7 +10499,6 @@ class UTCTiming {
   \********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_EventsBase_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../core/events/EventsBase.js */ "./src/core/events/EventsBase.js");
 /**
@@ -4772,14 +11002,858 @@ let mediaPlayerEvents = new MediaPlayerEvents();
 
 /***/ }),
 
+/***/ "./src/streaming/cmcd/config/CmcdConfigAccessor.js":
+/*!*********************************************************!*\
+  !*** ./src/streaming/cmcd/config/CmcdConfigAccessor.js ***!
+  \*********************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _CmcdPropertyMap_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CmcdPropertyMap.js */ "./src/streaming/cmcd/config/CmcdPropertyMap.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+/**
+ * @module CmcdConfigAccessor
+ * @description Provides unified access to CMCD configuration properties.
+ *
+ * This accessor abstracts away the differences between:
+ * - Player settings (settings.get().streaming.cmcd)
+ * - Manifest parameters (CMCDParameters from MPD)
+ * - CMCD versions (v1 and v2)
+ *
+ * It uses CmcdPropertyMap for declarative configuration and provides
+ * a version-agnostic API for accessing CMCD properties with automatic
+ * fallback resolution.
+ *
+ * @example
+ * const cmcdConfig = CmcdConfigAccessor(context).getInstance();
+ * cmcdConfig.setManifestParams(manifestParams);
+ *
+ * const version = cmcdConfig.getVersion();        // 1 or 2
+ * const keys = cmcdConfig.get('keys');            // Resolves with fallback
+ * const isEnabled = cmcdConfig.isEnabled();       // Boolean
+ *
+ * @ignore
+ */
+function CmcdConfigAccessor() {
+  let instance;
+  let settings;
+  let manifestParams;
+  let manifestParamsProviderFunction;
+  const context = this.context;
+
+  /**
+   * Initialize the accessor
+   * @private
+   */
+  function setup() {
+    settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
+    manifestParams = null;
+    manifestParamsProviderFunction = null;
+  }
+
+  /**
+   * Set a provider function for live access to manifest params
+   * This enables lazy loading of CMCDParameters, resolving timing issues
+   * where params are needed before they're available in the manifest
+   *
+   * @param {Function} providerFn - Function that returns CMCDParameters object or null
+   * @public
+   *
+   * @example
+   * cmcdConfig.setManifestParamsProvider(() => {
+   *   return serviceDescriptionController.getServiceDescriptionSettings()
+   *     ?.clientDataReporting?.cmcdParameters || null;
+   * });
+   */
+  function setManifestParamsProviderFunction(providerFn) {
+    manifestParamsProviderFunction = providerFn;
+  }
+
+  /**
+   * Get CMCDParameters from the provider function
+   * @returns {Object|null} CMCDParameters or null if provider not set or returns nothing
+   * @private
+   */
+  function _getManifestParamsFromProvider() {
+    if (typeof manifestParamsProviderFunction !== 'function') {
+      return null;
+    }
+    try {
+      return manifestParamsProviderFunction();
+    } catch (e) {
+      // Provider not ready yet or threw an error
+      return null;
+    }
+  }
+
+  /**
+   * Get the effective manifest params (live from provider, or cached)
+   * Prefers live access from provider when available
+   * @returns {Object|null} CMCDParameters
+   * @private
+   */
+  function _getEffectiveManifestParams() {
+    // Try live access first (resolves timing issues)
+    const liveParams = _getManifestParamsFromProvider();
+    if (liveParams && Object.keys(liveParams).length > 0) {
+      return liveParams;
+    }
+    // Fall back to cached params
+    return manifestParams;
+  }
+
+  /**
+   * Set manifest parameters from MPD CMCDParameters
+   * @param {Object} params - CMCDParameters from manifest
+   * @public
+   */
+  function setManifestParams(params) {
+    manifestParams = params;
+  }
+
+  /**
+   * Detect the CMCD version from available sources
+   * Priority: manifest > settings > default (1)
+   * @returns {number} CMCD version (1 or 2)
+   * @private
+   */
+  function _detectVersion() {
+    // Check manifest parameters first (use live access for timing safety)
+    const effectiveManifestParams = _getEffectiveManifestParams();
+    if (effectiveManifestParams && effectiveManifestParams.version) {
+      return parseInt(effectiveManifestParams.version, 10);
+    }
+
+    // Check settings (don't cache - settings can change dynamically)
+    const cmcdSettings = settings.get().streaming.cmcd;
+    if (cmcdSettings && cmcdSettings.version) {
+      return parseInt(cmcdSettings.version, 10);
+    }
+
+    // Default
+    return _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].CMCD_DEFAULT_VERSION;
+  }
+
+  /**
+   * Resolve a dot-notation path in an object with support for array notation and context variables
+   * @param {Object} obj - Object to traverse
+   * @param {string} path - Dot-notation path (e.g., 'streaming.cmcd.version')
+   * @param {Object} pathContext - Context variables for path interpolation (e.g., {targetIndex: 0})
+   * @returns {*} Resolved value or undefined
+   * @private
+   *
+   * @example
+   * // Simple path
+   * _resolvePath(obj, 'settings.streaming.cmcd.version')
+   *
+   * // Array notation
+   * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[0].url')
+   *
+   * // Context variables
+   * _resolvePath(obj, 'settings.streaming.cmcd.eventTargets[{targetIndex}].url', {targetIndex: 0})
+   */
+  function _resolvePath(obj, path, pathContext = {}) {
+    if (!obj || !path) {
+      return undefined;
+    }
+
+    // Replace contextual variables in the path
+    // Example: 'eventTargets[{targetIndex}].batchSize' with {targetIndex: 0} -> 'eventTargets[0].batchSize'
+    let resolvedPath = path;
+    for (const [key, value] of Object.entries(pathContext)) {
+      resolvedPath = resolvedPath.replace(`{${key}}`, value);
+    }
+
+    // Split path by dots
+    const parts = resolvedPath.split('.');
+    let current = obj;
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (current === null || current === undefined) {
+        return undefined;
+      }
+
+      // Handle array notation: eventTargets[0]
+      const arrayMatch = part.match(/^([^\[]+)\[(\d+)\]$/);
+      if (arrayMatch) {
+        const [, arrayName, arrayIndex] = arrayMatch;
+
+        // First get the array
+        current = current[arrayName];
+
+        // Check if it's actually an array
+        if (!Array.isArray(current)) {
+          return undefined;
+        }
+
+        // Then access the specific index
+        const index = parseInt(arrayIndex, 10);
+        current = current[index];
+      } else {
+        // Normal property access
+        current = current[part];
+      }
+    }
+    return current;
+  }
+
+  /**
+   * Get the available data context for property resolution
+   * @returns {Object} Context object with settings and manifestParams
+   * @private
+   */
+  function _getContext() {
+    return {
+      settings: settings.get(),
+      manifestParams: _getEffectiveManifestParams() || {}
+    };
+  }
+
+  /**
+   * Get a CMCD property value with automatic fallback resolution
+   * @param {string} property - Property name from CmcdPropertyMap
+   * @param {Object} options - Optional configuration
+   * @param {*} options.defaultValue - Override default value
+   * @param {number} options.targetIndex - Target index for V2 contextual properties
+   * @returns {*} Property value or default
+   * @public
+   */
+  function get(property, options = {}) {
+    const propertyMapping = _CmcdPropertyMap_js__WEBPACK_IMPORTED_MODULE_1__["default"][property];
+    if (!propertyMapping) {
+      return options.defaultValue !== undefined ? options.defaultValue : undefined;
+    }
+    const version = _detectVersion();
+    const dataContext = _getContext();
+
+    // Check if this mapping applies to the current version
+    if (propertyMapping.version && !propertyMapping.version.includes(version)) {
+      return options.defaultValue !== undefined ? options.defaultValue : undefined;
+    }
+
+    // Build path context for interpolation (e.g., {targetIndex: 0})
+    const pathContext = {};
+    if (options.targetIndex !== undefined) {
+      pathContext.targetIndex = options.targetIndex;
+    }
+
+    // Check if we should skip manifest params (avoid circular dependency by checking settings directly)
+    const applyParametersFromMpd = property === 'applyParametersFromMpd' ? true : dataContext.settings?.streaming?.cmcd?.applyParametersFromMpd ?? true;
+
+    // Sort sources by priority (lower number = higher priority)
+    const sortedSources = [...propertyMapping.sources].sort((a, b) => a.priority - b.priority);
+
+    // First pass: Try to find an actual value from any source
+    for (const source of sortedSources) {
+      // Skip manifestParams sources if applyParametersFromMpd is false
+      if (!applyParametersFromMpd && source.path.startsWith('manifestParams')) {
+        continue;
+      }
+      const value = _resolvePath(dataContext, source.path, pathContext);
+
+      // Check if value exists and is not null/undefined
+      if (value !== null && value !== undefined) {
+        // Apply transformation if provided
+        if (typeof source.transform === 'function') {
+          return source.transform(value);
+        }
+        return value;
+      }
+    }
+
+    // Second pass: If no actual value found, look for the highest-priority default
+    for (const source of sortedSources) {
+      // Skip manifestParams sources if applyParametersFromMpd is false
+      if (!applyParametersFromMpd && source.path.startsWith('manifestParams')) {
+        continue;
+      }
+      if (source.default !== undefined) {
+        return source.default;
+      }
+    }
+
+    // No value or default found in any source, return override default or undefined
+    return options.defaultValue !== undefined ? options.defaultValue : undefined;
+  }
+
+  /**
+   * Check if a property has a non-null/undefined value
+   * @param {string} property - Property name from CmcdPropertyMap
+   * @returns {boolean} True if property has a value
+   * @public
+   */
+  function has(property) {
+    const value = get(property);
+    return value !== null && value !== undefined;
+  }
+
+  /**
+   * Get the detected CMCD version
+   * @returns {number} CMCD version (1 or 2)
+   * @public
+   */
+  function getVersion() {
+    return _detectVersion();
+  }
+
+  /**
+   * Check if manifest CMCDParameters are available
+   * @returns {boolean} True if manifest params exist with a version
+   * @public
+   */
+  function hasManifestParams() {
+    const effectiveManifestParams = _getEffectiveManifestParams();
+    return !!(effectiveManifestParams && effectiveManifestParams.version);
+  }
+
+  /**
+   * Check if CMCD is enabled
+   *
+   * CMCD is considered enabled if:
+   * 1. Manifest has CMCDParameters configured (presence implies enabled), OR
+   * 2. Player settings explicitly set enabled: true
+   *
+   * Note: 'enabled' attribute does not exist in the manifest standard,
+   * only in player configuration.
+   *
+   * @returns {boolean} True if CMCD is enabled
+   * @public
+   */
+  function isEnabled() {
+    const cmcdSettings = settings.get().streaming.cmcd;
+
+    // Check if manifest has CMCDParameters (only if applyParametersFromMpd is not false)
+    // Manifest CMCDParameters override player settings including enabled: false
+    const applyFromMpd = cmcdSettings?.applyParametersFromMpd ?? true;
+    if (applyFromMpd) {
+      const effectiveManifestParams = _getEffectiveManifestParams();
+      if (effectiveManifestParams && effectiveManifestParams.version) {
+        return true;
+      }
+    }
+
+    // No manifest params (or applyParametersFromMpd is false) — use player settings
+    if (cmcdSettings && cmcdSettings.enabled === false) {
+      return false;
+    }
+
+    // Fall back to player settings configuration
+    return get('enabled') === true;
+  }
+
+  /**
+   * Reset the accessor state
+   * @public
+   */
+  function reset() {
+    manifestParams = null;
+    manifestParamsProviderFunction = null;
+  }
+
+  /**
+   * Get the array of reporting targets (V2 only)
+   * @returns {Array} Array of target objects, empty array if V1 or no targets
+   * @public
+   *
+   * @example
+   * const targets = cmcdConfig.getEventTargets();
+   * targets.forEach((target, index) => {
+   *   const targetAccessor = cmcdConfig.getEventTarget(index);
+   *   const keys = targetAccessor.get('targetKeys');
+   * });
+   */
+  function getEventTargets() {
+    const version = _detectVersion();
+
+    // Only V2 supports targets
+    if (version !== 2) {
+      return [];
+    }
+    const targets = get('eventTargets');
+    return Array.isArray(targets) ? targets : [];
+  }
+
+  /**
+   * Get a target accessor for a specific target index (V2 only)
+   * @param {number} index - Target index
+   * @returns {Object|null} Target accessor object or null if invalid index
+   * @public
+   *
+   * @example
+   * const target = cmcdConfig.getEventTarget(0);
+   * if (target) {
+   *   const url = target.get('targetUrl');
+   *   const keys = target.get('targetKeys');
+   *   const events = target.get('targetEvents');
+   * }
+   */
+  function getEventTarget(index) {
+    const targets = getEventTargets();
+
+    // Validate index
+    if (index < 0 || index >= targets.length) {
+      return null;
+    }
+
+    // Return accessor object for this specific target
+    return {
+      /**
+       * Get a target-specific property value
+       * @param {string} property - Property name (should be target-specific like 'targetUrl', 'targetKeys', etc.)
+       * @returns {*} Property value
+       */
+      get: property => {
+        return get(property, {
+          targetIndex: index
+        });
+      },
+      /**
+       * Check if a target-specific property has a value
+       * @param {string} property - Property name
+       * @returns {boolean} True if property has a value
+       */
+      has: property => {
+        const value = get(property, {
+          targetIndex: index
+        });
+        return value !== null && value !== undefined;
+      },
+      /**
+       * Target index
+       * @type {number}
+       */
+      index: index,
+      /**
+       * Raw target object from settings/manifest
+       * @type {Object}
+       */
+      raw: targets[index]
+    };
+  }
+  instance = {
+    get,
+    getEventTarget,
+    getEventTargets,
+    getVersion,
+    has,
+    hasManifestParams,
+    isEnabled,
+    reset,
+    setManifestParams,
+    setManifestParamsProviderFunction
+  };
+  setup();
+  return instance;
+}
+CmcdConfigAccessor.__dashjs_factory_name = 'CmcdConfigAccessor';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(CmcdConfigAccessor));
+
+/***/ }),
+
+/***/ "./src/streaming/cmcd/config/CmcdPropertyMap.js":
+/*!******************************************************!*\
+  !*** ./src/streaming/cmcd/config/CmcdPropertyMap.js ***!
+  \******************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2024, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @module CmcdPropertyMap
+ * @description Declarative configuration for CMCD property mappings.
+ *
+ * Maps logical property names to physical paths in different sources (manifest, settings)
+ * with version awareness, priority-based fallback, and optional transformations.
+ *
+ * This centralized configuration allows handling structure changes in CMCD settings
+ * without modifying business logic across the codebase.
+ *
+ * @typedef {Object} PropertySource
+ * @property {string} path - Dot-notation path to property (e.g., 'settings.streaming.cmcd.version')
+ * @property {number} priority - Order of precedence (1 = highest)
+ * @property {string} [type] - Expected data type ('string', 'number', 'boolean', 'array', 'object')
+ * @property {Function} [transform] - Optional transformation function
+ * @property {*} [default] - Default value if not found
+ * @property {boolean} [deprecated] - Mark as deprecated for backward compatibility
+ *
+ * @typedef {Object} PropertyMapping
+ * @property {number[]} [version] - CMCD versions this mapping applies to (omit for all versions)
+ * @property {PropertySource[]} sources - Ordered list of sources to check
+ */
+
+/**
+ * Property mappings for CMCD configuration
+ * @type {Object.<string, PropertyMapping>}
+ */
+const CmcdPropertyMap = {
+  /**
+   * CMCD version number
+   * Priority: manifest > settings > default (1)
+   */
+  version: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.version',
+      priority: 1,
+      type: 'number'
+    }, {
+      path: 'settings.streaming.cmcd.version',
+      priority: 2,
+      type: 'number',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_DEFAULT_VERSION
+    }]
+  },
+  /**
+   * CMCD enabled flag
+   * Note: This only exists in player settings, not in manifest.
+   * Manifest presence (CMCDParameters tag) implies enabled=true.
+   * Priority: settings > default (false)
+   */
+  enabled: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.enabled',
+      priority: 1,
+      type: 'boolean',
+      default: false
+    }]
+  },
+  /**
+   * Session ID (sid)
+   * Priority: manifest > settings > null
+   */
+  sessionID: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.sessionID',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.sid',
+      priority: 2,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * Content ID (cid)
+   * Priority: manifest > settings > null
+   */
+  contentID: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.contentID',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.cid',
+      priority: 2,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * Transmission mode (query, header, body)
+   * Priority: manifest > settings > default (query)
+   *
+   * V1: Single global mode
+   * V2: Can be per-target or global
+   */
+  mode: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.mode',
+      priority: 1,
+      type: 'string'
+    }, {
+      path: 'settings.streaming.cmcd.mode',
+      priority: 2,
+      type: 'string',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_MODE_QUERY
+    }]
+  },
+  /**
+   * Requested throughput (rtp)
+   * Priority: settings > null (calculated dynamically if null)
+   */
+  rtp: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.rtp',
+      priority: 1,
+      type: 'number',
+      default: null
+    }]
+  },
+  /**
+   * RTP safety factor for throughput calculation
+   * Priority: settings > default (5)
+   */
+  rtpSafetyFactor: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.rtpSafetyFactor',
+      priority: 1,
+      type: 'number',
+      default: 5
+    }]
+  },
+  /**
+   * Global enabled CMCD keys
+   * Priority: manifest > settings > default (all keys)
+   *
+   * Note: In V1, this is a global setting.
+   * In V2, keys can be per-target (see targetKeys), and this serves as a fallback.
+   */
+  keys: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.keys',
+      priority: 1,
+      type: 'array',
+      transform: val => {
+        // If string with spaces, split into array
+        if (typeof val === 'string') {
+          return val.split(' ');
+        }
+        return val;
+      }
+    }, {
+      path: 'settings.streaming.cmcd.enabledKeys',
+      priority: 2,
+      type: 'array',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_KEYS
+    }]
+  },
+  /**
+   * Request types to include CMCD data in
+   * Priority: manifest > settings > default (['segment', 'mpd'])
+   */
+  includeInRequests: {
+    version: [1, 2],
+    sources: [{
+      path: 'manifestParams.includeInRequests',
+      priority: 1,
+      type: 'array',
+      transform: val => {
+        // If string with spaces, split into array
+        if (typeof val === 'string') {
+          return val.split(' ');
+        }
+        return val;
+      }
+    }, {
+      path: 'settings.streaming.cmcd.includeInRequests',
+      priority: 2,
+      type: 'array',
+      default: ['segment', 'mpd']
+    }]
+  },
+  /**
+   * Apply CMCD parameters from MPD manifest
+   * Priority: settings > default (true)
+   */
+  applyParametersFromMpd: {
+    version: [1, 2],
+    sources: [{
+      path: 'settings.streaming.cmcd.applyParametersFromMpd',
+      priority: 1,
+      type: 'boolean',
+      default: true
+    }]
+  },
+  /**
+   * V2: Reporting eventTargets array
+   * Priority: settings > default ([])
+   */
+  eventTargets: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target enabled flag
+   * Note: This is target-specific, requires context
+   */
+  targetEnabled: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabled',
+      priority: 1,
+      type: 'boolean',
+      default: true
+    }]
+  },
+  /**
+   * V2: Target URL for event reporting
+   * Note: This is target-specific, requires context
+   */
+  targetUrl: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].url',
+      priority: 1,
+      type: 'string',
+      default: null
+    }]
+  },
+  /**
+   * V2: Target enabled keys (can override global keys)
+   * Note: This is target-specific, requires context
+   */
+  targetKeys: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabledKeys',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target events to report
+   * Note: This is target-specific, requires context
+   */
+  targetEvents: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].events',
+      priority: 1,
+      type: 'array',
+      default: []
+    }]
+  },
+  /**
+   * V2: Target time interval for periodic reporting
+   * Note: This is target-specific, requires context
+   */
+  targetInterval: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].interval',
+      priority: 1,
+      type: 'number',
+      default: _constants_Constants_js__WEBPACK_IMPORTED_MODULE_0__["default"].CMCD_DEFAULT_TIME_INTERVAL
+    }]
+  },
+  /**
+   * V2: Target batch size for batched reporting
+   * Note: This is target-specific, requires context
+   */
+  targetBatchSize: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].batchSize',
+      priority: 1,
+      type: 'number',
+      default: 0
+    }]
+  },
+  /**
+   * V2: Target includeInRequests filter
+   * Note: This is target-specific, requires context
+   */
+  targetIncludeInRequests: {
+    version: [2],
+    sources: [{
+      path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeInRequests',
+      priority: 1,
+      type: 'array'
+    }, {
+      path: 'settings.streaming.cmcd.includeInRequests',
+      priority: 2,
+      type: 'array',
+      default: ['segment', 'mpd']
+    }]
+  }
+};
+/* harmony default export */ __webpack_exports__["default"] = (CmcdPropertyMap);
+
+/***/ }),
+
 /***/ "./src/streaming/constants/Constants.js":
 /*!**********************************************!*\
   !*** ./src/streaming/constants/Constants.js ***!
   \**********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -4810,6 +11884,7 @@ __webpack_require__.r(__webpack_exports__);
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+
 
 /**
  * Constants declaration
@@ -4900,6 +11975,12 @@ __webpack_require__.r(__webpack_exports__);
    */
   LIVE_CATCHUP_MODE_LOLP: 'liveCatchupModeLoLP',
   /**
+   *  @constant {string} LIVE_CATCHUP_MODE_STEP Throughput calculation based on moof parsing
+   *  @memberof Constants#
+   *  @static
+   */
+  LIVE_CATCHUP_MODE_STEP: 'liveCatchupModeStep',
+  /**
    *  @constant {string} MOVING_AVERAGE_SLIDING_WINDOW Moving average sliding window
    *  @memberof Constants#
    *  @static
@@ -4970,37 +12051,81 @@ __webpack_require__.r(__webpack_exports__);
    *  @memberof Constants#
    *  @static
    */
-  CMCD_QUERY_KEY: 'CMCD',
+  CMCD_QUERY_KEY: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_PARAM,
   /**
    *  @constant {string} CMCD_MODE_QUERY specifies to attach CMCD metrics as query parameters.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_MODE_QUERY: 'query',
+  CMCD_MODE_QUERY: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdTransmissionMode.QUERY,
   /**
-   *  @constant {string} CMCD_MODE_HEADER specifies to attach CMCD metrics as HTTP headers.
+   *  @constant {string} CMCD_MODE_HEADERS specifies to attach CMCD metrics as HTTP headers.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_MODE_HEADER: 'header',
+  CMCD_MODE_HEADERS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdTransmissionMode.HEADERS,
   /**
-   *  @constant {string} CMCD_AVAILABLE_KEYS specifies all the available keys for CMCD metrics.
+   *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
    *  @memberof Constants#
    *  @static
    */
-  CMCD_AVAILABLE_KEYS: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v'],
-  /**
-   *  @constant {string} CMCD_AVAILABLE_KEYS_V2 specifies all the available keys for CMCD version 2 metrics.
-   *  @memberof Constants#
-   *  @static
-   */
-  CMCD_V2_AVAILABLE_KEYS: ['msd', 'ltc'],
+  CMCD_MODE_BODY: 'body',
   /**
    *  @constant {string} CMCD_AVAILABLE_REQUESTS specifies all the available requests type for CMCD metrics.
    *  @memberof Constants#
    *  @static
    */
   CMCD_AVAILABLE_REQUESTS: ['segment', 'mpd', 'xlink', 'steering', 'other'],
+  /**
+   *  @constant {integer} CMCD_DEFAULT_TIME_INTERVAL specifies the default value for time interval in seconds.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_DEFAULT_TIME_INTERVAL: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_DEFAULT_TIME_INTERVAL,
+  /**
+   *  @constant {string} CMCD_REPORTING_MODE specifies all the available modes for CMCD.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_REPORTING_MODE: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdReportingMode,
+  /**
+   *  @constant {string} CMCD_KEYS specifies all the available keys for CMCD.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_KEYS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CMCD_KEYS,
+  /**
+   *  @constant {string} CMCD_REPORTING_EVENTS specifies all the available events for CMCD event mode.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_REPORTING_EVENTS: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdEventType,
+  /**
+   *  @constant {string} CMCD_PLAYER_STATES specifies available player states for CMCD sta key.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_PLAYER_STATES: _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdPlayerState,
+  /**
+   *  @constant {integer} CMCD_DEFAULT_VERSION specifies default CMCD version.
+   *  @memberof Constants#
+   *  @static
+   */
+  CMCD_DEFAULT_VERSION: 1,
+  /**
+   *  @constant {string} CMCD_DEFAULT_INCLUDE_IN_REQUESTS specifies default requests type to include CMCD data.
+   *  @memberof Constants#
+   *  @static
+  */
+  CMCD_DEFAULT_INCLUDE_IN_REQUESTS: 'segment',
+  /**
+   *  @constant {string} CMCD_CONTENT_TYPE_HEADER specifies content type for cmcd batching
+   *  @memberof Constants#
+   *  @static
+  */
+  CMCD_CONTENT_TYPE_HEADER: {
+    'Content-Type': 'text/cmcd'
+  },
   INITIALIZE: 'initialize',
   TEXT_SHOWING: 'showing',
   TEXT_HIDDEN: 'hidden',
@@ -5014,11 +12139,14 @@ __webpack_require__.r(__webpack_exports__);
   SERVICE_DESCRIPTION_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:scope:2019',
   SUPPLEMENTAL_PROPERTY_DVB_LL_SCHEME: 'urn:dvb:dash:lowlatency:critical:2019',
   CTA_5004_2023_SCHEME: 'urn:mpeg:dash:cta-5004:2023',
+  CTA_5004_2025_SCHEME: 'urn:dashif:cta-5004:2025',
   THUMBNAILS_SCHEME_ID_URIS: ['http://dashif.org/thumbnail_tile', 'http://dashif.org/guidelines/thumbnail_tile'],
   FONT_DOWNLOAD_DVB_SCHEME: 'urn:dvb:dash:fontdownload:2014',
   COLOUR_PRIMARIES_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:ColourPrimaries',
   URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2014',
   EXT_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2016',
+  ADV_URL_QUERY_INFO_SCHEME: 'urn:mpeg:dash:urlparam:2025',
+  URL_QUERY_STATE_PREFIX: /urn:mpeg:dash:state:/,
   MATRIX_COEFFICIENTS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:MatrixCoefficients',
   TRANSFER_CHARACTERISTICS_SCHEME_ID_URI: 'urn:mpeg:mpegB:cicp:TransferCharacteristics',
   SEGMENT_SEQUENCE_REPRESENTATION_SCHEME_ID_URI: 'urn:mpeg:dash:ssr:2023',
@@ -5119,13 +12247,850 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
+/***/ "./src/streaming/controllers/CmcdController.js":
+/*!*****************************************************!*\
+  !*** ./src/streaming/controllers/CmcdController.js ***!
+  \*****************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../metrics/MetricsReportingEvents.js */ "./src/streaming/metrics/MetricsReportingEvents.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _streaming_vo_CmcdReportRequest_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../streaming/vo/CmcdReportRequest.js */ "./src/streaming/vo/CmcdReportRequest.js");
+/* harmony import */ var _net_URLLoader_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../net/URLLoader.js */ "./src/streaming/net/URLLoader.js");
+/* harmony import */ var _models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../models/CmcdModel.js */ "./src/streaming/models/CmcdModel.js");
+/* harmony import */ var _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../../core/errors/Errors.js */ "./src/core/errors/Errors.js");
+/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+function CmcdController() {
+  let cmcdConfigAccessor, cmcdModel, cmcdReporter, dashMetrics, errHandler, instance, logger, mediaPlayerModel, reporterNeedsRebuild, urlLoader;
+  let context = this.context;
+  let eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).getInstance();
+  let debug = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+  const playbackStateMap = {
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_INITIALIZED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.STARTING,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PAUSED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.PAUSED,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_ERROR]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.FATAL_ERROR,
+    [_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_ENDED]: _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.ENDED
+  };
+  let playbackStateHandlers = {};
+  cmcdModel = (0,_models_CmcdModel_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
+  cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+  function _setup() {
+    logger = debug.getLogger(instance);
+    reset();
+  }
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.dashMetrics) {
+      dashMetrics = config.dashMetrics;
+    }
+    if (config.mediaPlayerModel) {
+      mediaPlayerModel = config.mediaPlayerModel;
+    }
+    if (config.errHandler) {
+      errHandler = config.errHandler;
+    }
+    if (config.urlLoader) {
+      urlLoader = config.urlLoader;
+    }
+
+    // Set up a provider function for CmcdConfigAccessor to get manifest params
+    // This resolves timing issues where CMCDParameters are needed before they're available
+    // Using a provider pattern keeps CmcdConfigAccessor decoupled from ServiceDescriptionController
+    if (config.serviceDescriptionController) {
+      cmcdConfigAccessor.setManifestParamsProviderFunction(() => {
+        const serviceDescription = config.serviceDescriptionController.getServiceDescriptionSettings();
+        return serviceDescription?.clientDataReporting?.cmcdParameters || null;
+      });
+    }
+    cmcdModel.setConfig(config);
+  }
+  function initialize(autoPlay) {
+    _resetInitialSettings();
+    _initializeEventBus(autoPlay);
+    if (!urlLoader) {
+      urlLoader = (0,_net_URLLoader_js__WEBPACK_IMPORTED_MODULE_9__["default"])(context).create({
+        errHandler,
+        mediaPlayerModel,
+        errors: _core_errors_Errors_js__WEBPACK_IMPORTED_MODULE_11__["default"],
+        dashMetrics
+      });
+    }
+    cmcdReporter = _createCmcdReporter();
+    cmcdReporter.start();
+    _initializePlaybackStateListeners();
+  }
+  function _resetInitialSettings() {
+    reporterNeedsRebuild = false;
+  }
+  function _initializeEventBus(autoPlay) {
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+    if (autoPlay) {
+      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+    } else {
+      eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
+    }
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].ERROR, _onPlayerError, instance);
+  }
+  function _initializePlaybackStateListeners() {
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+    eventBus.on(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+    Object.entries(playbackStateMap).forEach(([event, state]) => {
+      if (!playbackStateHandlers[event]) {
+        playbackStateHandlers[event] = () => _onPlaybackStateChange(state);
+      }
+      eventBus.on(event, playbackStateHandlers[event], instance);
+    });
+  }
+  function _onPlaybackStateChange(state) {
+    // Update CmcdReporter with the new player state
+    if (cmcdReporter) {
+      cmcdReporter.update({
+        sta: state
+      });
+    }
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.PLAY_STATE);
+  }
+  function _createCmcdReporter() {
+    const cmcdConfig = {
+      version: cmcdConfigAccessor.getVersion(),
+      transmissionMode: cmcdConfigAccessor.get('mode') === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS ? _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_HEADERS : _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_QUERY,
+      enabledKeys: cmcdConfigAccessor.get('keys'),
+      eventTargets: _buildReporterTargets()
+    };
+
+    // Only pass sid/cid if they have actual values, so CmcdReporter
+    // uses its own defaults (e.g., auto-generated uuid for sid)
+    const sid = cmcdConfigAccessor.get('sessionID');
+    if (sid) {
+      cmcdConfig.sid = sid;
+    }
+    const cid = cmcdConfigAccessor.get('contentID');
+    if (cid) {
+      cmcdConfig.cid = cid;
+    }
+    return new _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CmcdReporter(cmcdConfig, _customRequester);
+  }
+  function _buildReporterTargets() {
+    const targets = cmcdConfigAccessor.getEventTargets();
+    return targets.reduce((result, _target, index) => {
+      if (!isCmcdEnabled(index)) {
+        return result;
+      }
+      const accessor = cmcdConfigAccessor.getEventTarget(index);
+      result.push({
+        url: accessor.get('targetUrl'),
+        events: accessor.get('targetEvents'),
+        interval: accessor.get('targetInterval') ?? _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_DEFAULT_TIME_INTERVAL,
+        batchSize: accessor.get('targetBatchSize') || 1,
+        enabledKeys: accessor.get('targetKeys')
+      });
+      return result;
+    }, []);
+  }
+  function _customRequester(request) {
+    return new Promise(resolve => {
+      const httpRequest = new _streaming_vo_CmcdReportRequest_js__WEBPACK_IMPORTED_MODULE_8__["default"]();
+      httpRequest.url = request.url;
+      httpRequest.method = request.method;
+      httpRequest.headers = request.headers;
+      httpRequest.body = request.body;
+      httpRequest.type = _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT;
+      urlLoader.load({
+        request: httpRequest,
+        success: () => resolve({
+          status: 200
+        }),
+        error: e => resolve({
+          status: e?.status || 500
+        })
+      });
+    });
+  }
+  function _onPeriodSwitchComplete() {
+    cmcdModel.onPeriodSwitchComplete();
+  }
+  function _onPlaybackStarted() {
+    cmcdModel.onPlaybackStarted();
+  }
+  function _onPlaybackPlaying() {
+    cmcdModel.onPlaybackPlaying();
+    _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.PLAYING);
+  }
+  function _onPlayerError(errorData) {
+    if (errorData.error?.data?.request?.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
+      return;
+    }
+    // Update CmcdReporter with the error code
+    if (cmcdReporter) {
+      const errorCode = errorData.error?.code || errorData.error?.data?.code;
+      if (errorCode) {
+        cmcdReporter.update({
+          ec: errorCode
+        });
+      }
+    }
+    triggerCmcdEventMode(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_REPORTING_EVENTS.ERROR);
+  }
+  function _rebuildReporterIfNeeded() {
+    if (!reporterNeedsRebuild || !cmcdReporter) {
+      return;
+    }
+
+    // Only rebuild if manifest params are available and enabled.
+    // Without manifest params, the reporter config hasn't changed
+    // and rebuilding would unnecessarily reset sid and sn.
+    // IMPORTANT: Don't reset reporterNeedsRebuild until we actually rebuild,
+    // otherwise a race condition can occur where params aren't available yet
+    // and we never get another chance to rebuild.
+    const applyFromMpd = cmcdConfigAccessor.get('applyParametersFromMpd') ?? true;
+    if (!applyFromMpd || !cmcdConfigAccessor.hasManifestParams()) {
+      return;
+    }
+
+    // Reset flag only after confirming we will rebuild
+    reporterNeedsRebuild = false;
+    cmcdReporter.stop(true);
+    cmcdReporter = _createCmcdReporter();
+    cmcdReporter.start();
+  }
+
+  /**
+   * The handler that is triggered for CMCD event mode events (e.g., play, pause, error). Note that response recevived (rr) events are handled by getCmcdResponseReceivedInterceptors.
+   * @param event
+   */
+  function triggerCmcdEventMode(event) {
+    if (!cmcdReporter) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+    const cmcdData = cmcdModel.getEventModeData();
+
+    // Route media start delay (MSD) through update() for the reporter's internal send-once tracking
+    const msdData = cmcdModel.calculateMsd();
+    if (msdData.msd !== undefined) {
+      cmcdReporter.update(msdData);
+    }
+
+    // Pass event-mode data as transient per-event data (not persisted)
+    cmcdReporter.recordEvent(event, cmcdData);
+  }
+
+  /**
+   * Applies CMCD data to a request by decorating its URL and/or headers.
+   * Delegates to CmcdReporter.createRequestReport() which handles
+   * transmission mode (query vs header) internally.
+   *
+   * @param {object} request - The request object with at least { url, type }.
+   *                           Will be mutated with CMCD-decorated url/headers.
+   */
+  function applyCmcdToRequest(request) {
+    if (!cmcdReporter || !isCmcdEnabled()) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+    try {
+      const cmcdData = cmcdModel.deriveCmcdDataForRequest(request);
+
+      // Route MSD through update() for the reporter's internal send-once tracking
+      const msdData = cmcdModel.calculateMsd();
+      if (msdData.msd !== undefined) {
+        cmcdReporter.update(msdData);
+      }
+      const decorated = cmcdReporter.createRequestReport(request, cmcdData);
+      request.url = decorated.url;
+      request.headers = decorated.headers;
+      request.cmcd = decorated.customData?.cmcd || {};
+      _triggerCmcdDataGeneratedEvent(request);
+    } catch (e) {
+      logger.warn(e);
+      return null;
+    }
+  }
+  function _triggerCmcdDataGeneratedEvent(request) {
+    const effectiveMode = cmcdConfigAccessor.get('mode');
+    const eventData = {
+      url: request.url,
+      mediaType: request.mediaType,
+      requestType: request.type,
+      cmcdData: request.cmcd,
+      mode: effectiveMode
+    };
+    if (effectiveMode === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_MODE_HEADERS) {
+      eventData.headers = request.headers;
+    } else {
+      try {
+        const url = new URL(request.url);
+        eventData.cmcdString = url.searchParams.get(_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_6__.CMCD_PARAM) || '';
+      } catch (e) {
+        eventData.cmcdString = '';
+      }
+    }
+    eventBus.trigger(_metrics_MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"].CMCD_DATA_GENERATED, eventData);
+  }
+  function isCmcdEnabled(targetIndex = null) {
+    if (targetIndex !== null) {
+      return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+    } else {
+      return _canBeEnabled() && _checkIncludeInRequests();
+    }
+  }
+  function _canBeEnabled() {
+    const version = cmcdConfigAccessor.getVersion();
+    if (version !== 1 && version !== 2) {
+      logger.error(`version parameter must be 1 or 2, got ${version}.`);
+      return false;
+    }
+    return cmcdConfigAccessor.isEnabled();
+  }
+  function _checkIncludeInRequests() {
+    const version = cmcdConfigAccessor.getVersion();
+    if (version === 2) {
+      return true; // Skip this validation for version 2
+    }
+
+    // Version 1 validation
+    const enabledRequests = cmcdConfigAccessor.get('includeInRequests');
+    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
+    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+    if (invalidRequests.length === enabledRequests.length) {
+      logger.error(`None of the request types are supported.`);
+      return false;
+    }
+    invalidRequests.forEach(k => {
+      logger.warn(`request type ${k} is not supported.`);
+    });
+    return true;
+  }
+  function _targetCanBeEnabled(targetIndex) {
+    const cmcdVersion = cmcdConfigAccessor.getVersion();
+    if (cmcdVersion !== 2) {
+      logger.warn('CMCD version 2 is required for target configuration');
+      return false;
+    }
+    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
+    const enabled = targetAccessor.get('targetEnabled');
+    const url = targetAccessor.get('targetUrl');
+    if (!url) {
+      logger.warn('Target URL is not configured');
+      return false;
+    }
+    return enabled && url;
+  }
+  function _checkTargetIncludeInRequests(targetIndex) {
+    const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
+    let enabledRequests = targetAccessor.get('targetIncludeInRequests');
+    if (!enabledRequests) {
+      return true;
+    }
+    const defaultAvailableRequests = _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_AVAILABLE_REQUESTS;
+    const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
+    if (invalidRequests.length === enabledRequests.length) {
+      logger.error(`None of the request types are supported.`);
+      return false;
+    }
+    invalidRequests.forEach(k => {
+      logger.warn(`request type ${k} is not supported.`);
+    });
+    return true;
+  }
+  function _onPlaybackRateChanged(data) {
+    const prData = cmcdModel.onPlaybackRateChanged(data);
+    if (cmcdReporter && prData) {
+      cmcdReporter.update(prData);
+    }
+  }
+  function _onManifestLoaded(data) {
+    _updateCmcdManifestParamsInCmcdConfigAccessor();
+
+    // Mark reporter for rebuild so it picks up sid, cid, and keys from manifest params.
+    // We can't rebuild here because ServiceDescriptionController may not have processed
+    // the manifest yet (MANIFEST_LOADED fires before service description is available).
+    // The reporter will be rebuilt lazily before the next request or event.
+    reporterNeedsRebuild = true;
+    if (cmcdReporter) {
+      const streamFormatInfo = cmcdModel.onManifestLoaded(data);
+      cmcdReporter.update(streamFormatInfo);
+    }
+  }
+  function _onBufferLevelStateChanged(data) {
+    cmcdModel.onBufferLevelStateChanged(data);
+  }
+  function _onPlaybackSeeking() {
+    cmcdModel.onPlaybackSeeking();
+    _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.SEEKING);
+  }
+  function _onPlaybackSeeked() {
+    cmcdModel.onPlaybackSeeked();
+  }
+  function _onPlaybackWaiting() {
+    if (cmcdModel.wasPlaying()) {
+      const mediaType = cmcdModel.getLastMediaTypeRequest();
+      cmcdModel.onRebufferingStarted(mediaType);
+      _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.REBUFFERING);
+    } else {
+      _onPlaybackStateChange(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].CMCD_PLAYER_STATES.WAITING);
+    }
+  }
+  function getCmcdRequestInterceptors() {
+    return [_cmcdRequestModeInterceptor];
+  }
+  function _cmcdRequestModeInterceptor(commonMediaRequest) {
+    const requestType = commonMediaRequest.customData.request.type;
+    if (!cmcdReporter || !isCmcdEnabled() || !cmcdModel.isIncludedInRequestFilter(requestType)) {
+      commonMediaRequest.cmcd = commonMediaRequest.customData.request.cmcd;
+      return commonMediaRequest;
+    }
+    let request = commonMediaRequest.customData.request;
+    applyCmcdToRequest(request);
+    commonMediaRequest = {
+      ...commonMediaRequest,
+      url: request.url,
+      headers: request.headers,
+      cmcd: request.cmcd,
+      customData: {
+        ...commonMediaRequest.customData,
+        cmcd: request.cmcd
+      }
+    };
+    return commonMediaRequest;
+  }
+  function getCmcdResponseReceivedInterceptors() {
+    return [_cmcdResponseReceivedInterceptor];
+  }
+  function _cmcdResponseReceivedInterceptor(response) {
+    const requestType = response.request?.customData?.request?.type;
+    if (requestType === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_5__.HTTPRequest.CMCD_EVENT) {
+      return response;
+    }
+    _handleResponseReceived(response);
+    return response;
+  }
+  function _handleResponseReceived(response) {
+    if (!cmcdReporter) {
+      return;
+    }
+    _rebuildReporterIfNeeded();
+
+    // Collect event-mode data from the model
+    const eventData = cmcdModel.getEventModeData();
+
+    // Route MSD through update() for the reporter's internal send-once tracking
+    const msdData = cmcdModel.calculateMsd();
+    if (msdData.msd !== undefined) {
+      cmcdReporter.update(msdData);
+    }
+
+    // Collect dash.js-specific additional data
+    const additionalData = {};
+    if (response.headers) {
+      try {
+        const cmsdStaticHeader = response.headers['cmsd-static'];
+        if (cmsdStaticHeader) {
+          additionalData.cmsds = btoa(cmsdStaticHeader);
+        }
+        const cmsdDynamicHeader = response.headers['cmsd-dynamic'];
+        if (cmsdDynamicHeader) {
+          additionalData.cmsdd = btoa(cmsdDynamicHeader);
+        }
+      } catch (e) {
+        logger.warn('Failed to base64 encode CMSD headers, ignoring.', e);
+      }
+    }
+    try {
+      cmcdReporter.recordResponseReceived(response, {
+        ...eventData,
+        ...additionalData
+      });
+    } catch (e) {
+      logger.error(e);
+    }
+  }
+  function getCmcdParametersFromManifest() {
+    return cmcdModel.getCmcdParametersFromManifest();
+  }
+  function _updateCmcdManifestParamsInCmcdConfigAccessor() {
+    cmcdModel.updateCmcdManifestParamsInCmcdConfigAccessor();
+  }
+  function reset() {
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_RATE_CHANGED, _onPlaybackRateChanged, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADED, _onManifestLoaded, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].BUFFER_LEVEL_STATE_CHANGED, _onBufferLevelStateChanged, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKED, _onPlaybackSeeked, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PERIOD_SWITCH_COMPLETED, _onPeriodSwitchComplete, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_STARTED, _onPlaybackStarted, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].MANIFEST_LOADING_STARTED, _onPlaybackStarted, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].ERROR, _onPlayerError, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_PLAYING, _onPlaybackPlaying, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_SEEKING, _onPlaybackSeeking, instance);
+    eventBus.off(_MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_3__["default"].PLAYBACK_WAITING, _onPlaybackWaiting, instance);
+    Object.keys(playbackStateMap).forEach(event => {
+      eventBus.off(event, playbackStateHandlers[event], instance);
+    });
+    if (cmcdReporter) {
+      cmcdReporter.stop(true);
+      cmcdReporter = null;
+    }
+    cmcdModel.resetInitialSettings();
+  }
+  instance = {
+    applyCmcdToRequest,
+    getCmcdRequestInterceptors,
+    getCmcdResponseReceivedInterceptors,
+    getCmcdParametersFromManifest,
+    initialize,
+    isCmcdEnabled,
+    reset,
+    setConfig
+  };
+  _setup();
+  return instance;
+}
+CmcdController.__dashjs_factory_name = 'CmcdController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_2__["default"].getSingletonFactory(CmcdController));
+
+/***/ }),
+
+/***/ "./src/streaming/controllers/CommonAccessTokenController.js":
+/*!******************************************************************!*\
+  !*** ./src/streaming/controllers/CommonAccessTokenController.js ***!
+  \******************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+function CommonAccessTokenController() {
+  let instance, hostTokenMap;
+  function processResponseHeaders(httpResponse) {
+    if (!httpResponse || !httpResponse.headers || !httpResponse.request || !httpResponse.request.url) {
+      return;
+    }
+    const commonAccessTokenHeader = httpResponse.headers[_constants_Constants_js__WEBPACK_IMPORTED_MODULE_1__["default"].COMMON_ACCESS_TOKEN_HEADER];
+    if (commonAccessTokenHeader) {
+      const host = _core_Utils_js__WEBPACK_IMPORTED_MODULE_2__["default"].getHostFromUrl(httpResponse.request.url);
+      if (host) {
+        hostTokenMap[host] = commonAccessTokenHeader;
+      }
+    }
+  }
+  function getCommonAccessTokenForUrl(url) {
+    if (!url) {
+      return null;
+    }
+    const host = _core_Utils_js__WEBPACK_IMPORTED_MODULE_2__["default"].getHostFromUrl(url);
+    if (host) {
+      return hostTokenMap[host] ? hostTokenMap[host] : null;
+    }
+  }
+  function setup() {
+    _resetInitialSettings();
+  }
+  function reset() {
+    _resetInitialSettings();
+  }
+  function _resetInitialSettings() {
+    hostTokenMap = {};
+  }
+  instance = {
+    reset,
+    processResponseHeaders,
+    getCommonAccessTokenForUrl
+  };
+  setup();
+  return instance;
+}
+CommonAccessTokenController.__dashjs_factory_name = 'CommonAccessTokenController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(CommonAccessTokenController));
+
+/***/ }),
+
+/***/ "./src/streaming/controllers/ExtUrlQueryInfoController.js":
+/*!****************************************************************!*\
+  !*** ./src/streaming/controllers/ExtUrlQueryInfoController.js ***!
+  \****************************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+function ExtUrlQueryInfoController() {
+  let instance, logger, mpdQueryStringInformation;
+  const context = this.context;
+  function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance().getLogger(instance);
+  }
+  function _generateQueryParams(resultObject, manifestObject, mpdUrlQuery, parentLevelInfo, mpdElement) {
+    const property = _getDescriptorTypeFromManifestObject(manifestObject, mpdElement);
+    _generateInitialQueryString(property, parentLevelInfo.initialQueryString, resultObject, mpdUrlQuery);
+    _generateFinalQueryString(property, resultObject, parentLevelInfo.finalQueryString);
+    resultObject.sameOriginOnly = property?.ExtUrlQueryInfo?.sameOriginOnly;
+    resultObject.queryParams = _core_Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].parseQueryParams(resultObject?.finalQueryString);
+    resultObject.includeInRequests = _getIncludeInRequestFromProperty(property, parentLevelInfo.includeInRequests);
+  }
+  function _getDescriptorTypeFromManifestObject(manifestObject, mpdElement) {
+    let properties = [];
+    if (mpdElement === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PERIOD) {
+      properties = manifestObject[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].SUPPLEMENTAL_PROPERTY] || [];
+    } else {
+      properties = [...(manifestObject[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ESSENTIAL_PROPERTY] || []), ...(manifestObject[_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].SUPPLEMENTAL_PROPERTY] || [])];
+    }
+    return properties.find(prop => prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].URL_QUERY_INFO_SCHEME && prop.UrlQueryInfo || prop.schemeIdUri === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_3__["default"].EXT_URL_QUERY_INFO_SCHEME && prop.ExtUrlQueryInfo);
+  }
+  function _generateInitialQueryString(property, defaultInitialString, dst, mpdUrlQuery) {
+    dst.initialQueryString = '';
+    let initialQueryString = '';
+    const queryInfo = property?.ExtUrlQueryInfo || property?.UrlQueryInfo;
+    if (queryInfo && queryInfo.queryString) {
+      if (defaultInitialString && defaultInitialString.length > 0) {
+        initialQueryString = defaultInitialString + '&' + queryInfo.queryString;
+      } else {
+        initialQueryString = queryInfo.queryString;
+      }
+    } else {
+      initialQueryString = defaultInitialString;
+    }
+    if (queryInfo?.useMPDUrlQuery === 'true' && mpdUrlQuery) {
+      initialQueryString = initialQueryString ? initialQueryString + '&' + mpdUrlQuery : mpdUrlQuery;
+    }
+    dst.initialQueryString = initialQueryString;
+  }
+
+  // The logic for supporting templates with queryTemplate=$query:<param>$ is not in place yet, this only support queryTemplate="$querypart$".
+  function _generateFinalQueryString(property, resultObject, parentQueryString) {
+    if (!property) {
+      resultObject.finalQueryString = parentQueryString;
+      return;
+    }
+    const queryTemplate = property?.ExtUrlQueryInfo?.queryTemplate || property?.UrlQueryInfo?.queryTemplate || '';
+    resultObject.finalQueryString = queryTemplate === _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].QUERY_PART ? resultObject?.initialQueryString : '';
+  }
+  function _getIncludeInRequestFromProperty(property, parentIncludeInRequests) {
+    if (!property) {
+      return parentIncludeInRequests;
+    }
+    if (property.ExtUrlQueryInfo?.includeInRequests) {
+      return property.ExtUrlQueryInfo.includeInRequests.split(' ');
+    } else {
+      return [_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].SEGMENT_TYPE];
+    }
+  }
+  function createFinalQueryStrings(manifest) {
+    mpdQueryStringInformation = {
+      origin: new URL(manifest.url).origin,
+      period: []
+    };
+    const mpdUrlQuery = manifest.url.split('?')[1];
+    const initialMpdObject = {
+      initialQueryString: '',
+      includeInRequests: []
+    };
+    _generateQueryParams(mpdQueryStringInformation, manifest, mpdUrlQuery, initialMpdObject, _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MPD);
+    manifest.Period.forEach(period => {
+      const periodObject = {
+        adaptation: []
+      };
+      _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].PERIOD);
+      period.AdaptationSet.forEach(adaptationSet => {
+        const adaptationObject = {
+          representation: []
+        };
+        _generateQueryParams(adaptationObject, adaptationSet, mpdUrlQuery, periodObject, _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].ADAPTATION_SET);
+        adaptationSet.Representation.forEach(representation => {
+          const representationObject = {};
+          _generateQueryParams(representationObject, representation, mpdUrlQuery, adaptationObject, _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].REPRESENTATION);
+          adaptationObject.representation.push(representationObject);
+        });
+        periodObject.adaptation.push(adaptationObject);
+      });
+      mpdQueryStringInformation.period.push(periodObject);
+    });
+  }
+  function getFinalQueryString(request) {
+    try {
+      if (!mpdQueryStringInformation) {
+        return null;
+      }
+      if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.INIT_SEGMENT_TYPE) {
+        const representation = request.representation;
+        if (!representation) {
+          return null;
+        }
+        const adaptation = representation.adaptation;
+        const period = adaptation.period;
+        const queryInfo = mpdQueryStringInformation.period[period.index].adaptation[adaptation.index].representation[representation.index];
+        const requestUrl = new URL(request.url);
+        const canSendToOrigin = !queryInfo.sameOriginOnly || mpdQueryStringInformation.origin === requestUrl.origin;
+        const inRequest = queryInfo.includeInRequests.includes(_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].SEGMENT_TYPE);
+        if (inRequest && canSendToOrigin) {
+          return queryInfo.queryParams;
+        }
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.MPD_TYPE) {
+        const inRequest = [_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MPD_TYPE, _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].MPD_PATCH_TYPE].some(r => mpdQueryStringInformation.includeInRequests.includes(r));
+        if (inRequest) {
+          return mpdQueryStringInformation.queryParams;
+        }
+      } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_4__.HTTPRequest.CONTENT_STEERING_TYPE) {
+        const inRequest = mpdQueryStringInformation.includeInRequests.includes(_dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_2__["default"].STEERING_TYPE);
+        if (inRequest) {
+          return mpdQueryStringInformation.queryParams;
+        }
+      }
+    } catch (e) {
+      logger.error(e);
+      return null;
+    }
+  }
+  setup();
+  instance = {
+    getFinalQueryString,
+    createFinalQueryStrings
+  };
+  return instance;
+}
+ExtUrlQueryInfoController.__dashjs_factory_name = 'ExtUrlQueryInfoController';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ExtUrlQueryInfoController));
+
+/***/ }),
+
 /***/ "./src/streaming/metrics/MetricsReportingEvents.js":
 /*!*********************************************************!*\
   !*** ./src/streaming/metrics/MetricsReportingEvents.js ***!
   \*********************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_events_EventsBase_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/events/EventsBase.js */ "./src/core/events/EventsBase.js");
 /**
@@ -5188,7 +13153,6 @@ let metricsReportingEvents = new MetricsReportingEvents();
   \**************************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MetricsController_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./MetricsController.js */ "./src/streaming/metrics/controllers/MetricsController.js");
 /* harmony import */ var _utils_ManifestParsing_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../utils/ManifestParsing.js */ "./src/streaming/metrics/utils/ManifestParsing.js");
@@ -5301,7 +13265,6 @@ MetricsCollectionController.__dashjs_factory_name = 'MetricsCollectionController
   \****************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _RangeController_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./RangeController.js */ "./src/streaming/metrics/controllers/RangeController.js");
 /* harmony import */ var _ReportingController_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./ReportingController.js */ "./src/streaming/metrics/controllers/ReportingController.js");
@@ -5398,7 +13361,6 @@ MetricsController.__dashjs_factory_name = 'MetricsController';
   \************************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _metrics_MetricsHandlerFactory_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../metrics/MetricsHandlerFactory.js */ "./src/streaming/metrics/metrics/MetricsHandlerFactory.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -5499,7 +13461,6 @@ MetricsHandlersController.__dashjs_factory_name = 'MetricsHandlersController';
   \**************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_CustomTimeRanges_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/CustomTimeRanges.js */ "./src/streaming/utils/CustomTimeRanges.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -5596,7 +13557,6 @@ RangeController.__dashjs_factory_name = 'RangeController';
   \******************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _reporting_ReportingFactory_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../reporting/ReportingFactory.js */ "./src/streaming/metrics/reporting/ReportingFactory.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -5675,7 +13635,6 @@ ReportingController.__dashjs_factory_name = 'ReportingController';
   \****************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _handlers_BufferLevelHandler_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./handlers/BufferLevelHandler.js */ "./src/streaming/metrics/metrics/handlers/BufferLevelHandler.js");
 /* harmony import */ var _handlers_DVBErrorsHandler_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./handlers/DVBErrorsHandler.js */ "./src/streaming/metrics/metrics/handlers/DVBErrorsHandler.js");
@@ -5776,7 +13735,6 @@ MetricsHandlerFactory.__dashjs_factory_name = 'MetricsHandlerFactory';
   \**********************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_HandlerHelpers_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/HandlerHelpers.js */ "./src/streaming/metrics/utils/HandlerHelpers.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -5857,7 +13815,11 @@ function BufferLevelHandler(config) {
   }
   function handleNewMetric(metric, vo, type) {
     if (metric === metricsConstants.BUFFER_LEVEL) {
-      storedVOs[type] = vo;
+      if (vo.level < 0) {
+        delete storedVOs[type];
+      } else {
+        storedVOs[type] = vo;
+      }
     }
   }
   instance = {
@@ -5878,7 +13840,6 @@ BufferLevelHandler.__dashjs_factory_name = 'BufferLevelHandler';
   \********************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../MetricsReportingEvents.js */ "./src/streaming/metrics/MetricsReportingEvents.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -5962,7 +13923,6 @@ function DVBErrorsHandler(config) {
   \************************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
@@ -6037,7 +13997,6 @@ GenericMetricHandler.__dashjs_factory_name = 'GenericMetricHandler';
   \*******************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_HandlerHelpers_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/HandlerHelpers.js */ "./src/streaming/metrics/utils/HandlerHelpers.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -6135,7 +14094,6 @@ HttpListHandler.__dashjs_factory_name = 'HttpListHandler';
   \*************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _reporters_DVBReporting_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./reporters/DVBReporting.js */ "./src/streaming/metrics/reporting/reporters/DVBReporting.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
@@ -6220,12 +14178,12 @@ ReportingFactory.__dashjs_factory_name = 'ReportingFactory';
   \*******************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _utils_MetricSerialiser_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../utils/MetricSerialiser.js */ "./src/streaming/metrics/utils/MetricSerialiser.js");
 /* harmony import */ var _utils_RNG_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../utils/RNG.js */ "./src/streaming/metrics/utils/RNG.js");
 /* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../../../core/Settings.js */ "./src/core/Settings.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -6261,11 +14219,13 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
 function DVBReporting(config) {
   config = config || {};
   let instance;
   let context = this.context;
   let metricSerialiser, customParametersModel, randomNumberGenerator, reportingPlayerStatusDecided, isReportingPlayer, reportingUrl, rangeController;
+  let settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_4__["default"])(context).getInstance();
   let USE_DRAFT_DVB_SPEC = true;
   let allowPendingRequestsToCompleteOnReset = true;
   let pendingRequests = [];
@@ -6348,12 +14308,12 @@ function DVBReporting(config) {
   function initialize(entry, rc) {
     let probability;
     rangeController = rc;
-    reportingUrl = entry.dvbReportingUrl;
+    reportingUrl = settings.get().streaming.dvbReporting.reportingUrl || entry.dvbReportingUrl;
 
     // If a required attribute is missing, the Reporting descriptor may
     // be ignored by the Player
     if (!reportingUrl) {
-      throw new Error('required parameter missing (dvb:reportingUrl)');
+      throw new Error('MPD parameter missing "dvb:reportingUrl" or URL not provided in player settings');
     }
 
     // A Player's status, as a reporting Player or not, shall remain
@@ -6404,7 +14364,6 @@ DVBReporting.__dashjs_factory_name = 'DVBReporting';
   \************************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_DVBErrors_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/DVBErrors.js */ "./src/streaming/metrics/vo/DVBErrors.js");
 /* harmony import */ var _MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../MetricsReportingEvents.js */ "./src/streaming/metrics/MetricsReportingEvents.js");
@@ -6564,7 +14523,6 @@ DVBErrorsTranslator.__dashjs_factory_name = 'DVBErrorsTranslator';
   \*******************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
@@ -6644,7 +14602,6 @@ HandlerHelpers.__dashjs_factory_name = 'HandlerHelpers';
   \********************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _vo_Metrics_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../vo/Metrics.js */ "./src/streaming/metrics/vo/Metrics.js");
 /* harmony import */ var _vo_Range_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/Range.js */ "./src/streaming/metrics/vo/Range.js");
@@ -6758,7 +14715,6 @@ ManifestParsing.__dashjs_factory_name = 'ManifestParsing';
   \*********************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
@@ -6863,7 +14819,6 @@ MetricSerialiser.__dashjs_factory_name = 'MetricSerialiser';
   \********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
@@ -6961,7 +14916,6 @@ RNG.__dashjs_factory_name = 'RNG';
   \***********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -7067,7 +15021,6 @@ DVBErrors.BECAME_REPORTER = 'S00';
   \*********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -7120,7 +15073,6 @@ class Metrics {
   \*******************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -7176,7 +15128,6 @@ class Range {
   \***********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /**
  * The copyright in this software is being made available under the BSD License,
@@ -7229,20 +15180,21 @@ class Reporting {
 
 /***/ }),
 
-/***/ "./src/streaming/models/CustomParametersModel.js":
-/*!*******************************************************!*\
-  !*** ./src/streaming/models/CustomParametersModel.js ***!
-  \*******************************************************/
+/***/ "./src/streaming/models/CmcdModel.js":
+/*!*******************************************!*\
+  !*** ./src/streaming/models/CmcdModel.js ***!
+  \*******************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
-/* harmony import */ var _dash_vo_UTCTiming_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../dash/vo/UTCTiming.js */ "./src/dash/vo/UTCTiming.js");
-/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
-/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
-/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
-/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
-/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
+/* harmony import */ var _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @svta/cml-cmcd */ "./node_modules/@svta/cml-cmcd/dist/index.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../MediaPlayerEvents.js */ "./src/streaming/MediaPlayerEvents.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../../streaming/constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../dash/models/DashManifestModel.js */ "./src/dash/models/DashManifestModel.js");
+/* harmony import */ var _cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../cmcd/config/CmcdConfigAccessor.js */ "./src/streaming/cmcd/config/CmcdConfigAccessor.js");
 /**
  * The copyright in this software is being made available under the BSD License,
  * included below. This software may be subject to other third party and contributor
@@ -7279,26 +15231,1017 @@ __webpack_require__.r(__webpack_exports__);
 
 
 
+
+
+
+const RTP_SAFETY_FACTOR = 5;
+const REQUEST_TYPE_TO_CMCD_FILTER = {
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE]: 'segment',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE]: 'segment',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE]: 'xlink',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE]: 'mpd',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE]: 'steering',
+  [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE]: 'other'
+};
+function CmcdModel() {
+  let instance,
+    dashMetrics,
+    serviceDescriptionController,
+    playbackController,
+    abrController,
+    throughputController,
+    cmcdConfigAccessor,
+    _lastMediaTypeRequest,
+    _isStartup,
+    _bufferLevelStarved,
+    _initialMediaRequestsDone,
+    _playbackStartedTime,
+    _isSeeking,
+    streamProcessors,
+    _rebufferingStartTime = {},
+    _rebufferingDuration = {},
+    _streamType,
+    _streamingFormat;
+  let context = this.context;
+  function setup() {
+    cmcdConfigAccessor = (0,_cmcd_config_CmcdConfigAccessor_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance();
+    resetInitialSettings();
+  }
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.abrController) {
+      abrController = config.abrController;
+    }
+    if (config.dashMetrics) {
+      dashMetrics = config.dashMetrics;
+    }
+    if (config.playbackController) {
+      playbackController = config.playbackController;
+    }
+    if (config.throughputController) {
+      throughputController = config.throughputController;
+    }
+    if (config.serviceDescriptionController) {
+      serviceDescriptionController = config.serviceDescriptionController;
+    }
+  }
+  function _isValidValue(value) {
+    return value !== null && value !== undefined && !isNaN(value) && isFinite(value);
+  }
+  function _toInnerList(videoValue, audioValue) {
+    const values = [];
+    if (_isValidValue(videoValue)) {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(videoValue, {
+        v: true
+      }));
+    }
+    if (_isValidValue(audioValue)) {
+      values.push((0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(audioValue, {
+        a: true
+      }));
+    }
+    return values.length > 0 ? values : null;
+  }
+  function _calculateCmcdDataForRequestForMediaSegment(request, mediaType) {
+    _initForMediaType(mediaType);
+    const data = getGenericCmcdData(mediaType);
+    const encodedBitrate = _getBitrateByRequest(request);
+    const d = _getObjectDurationByRequest(request);
+    const mtp = _getMeasuredThroughputByType(mediaType);
+    const dl = _getDeadlineByType(mediaType);
+    const bl = _getBufferLevelByType(mediaType);
+    const tb = _getTopBitrateByType(request.representation?.mediaInfo);
+    const tpb = _getTopPlayableBitrate(mediaType);
+    const pb = _getPlayheadBitrate(mediaType);
+    const nextRequest = _probeNextRequest(mediaType);
+    let ot;
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.VIDEO;
+    }
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.AUDIO;
+    }
+    if (request.mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].ENHANCEMENT) {
+      ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
+    }
+    if (mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].TEXT) {
+      if (request.representation.mediaInfo.mimeType === 'application/mp4') {
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.TIMED_TEXT;
+      } else {
+        ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.CAPTION;
+      }
+    }
+    const rtp = cmcdConfigAccessor.has('rtp') ? cmcdConfigAccessor.get('rtp') : _calculateRtp(request);
+    if (!isNaN(rtp)) {
+      data.rtp = rtp;
+    }
+    if (nextRequest) {
+      if (request.url !== nextRequest.url) {
+        const relativeUrl = _core_Utils_js__WEBPACK_IMPORTED_MODULE_3__["default"].getRelativeUrl(request.url, nextRequest.url);
+        const params = nextRequest.range ? {
+          r: nextRequest.range
+        } : undefined;
+        data.nor = [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(relativeUrl, params)];
+      }
+    }
+    if (encodedBitrate) {
+      const videoBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? encodedBitrate : null;
+      const audioBr = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? encodedBitrate : null;
+      data.br = _toInnerList(videoBr, audioBr) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(encodedBitrate, {})];
+    }
+    if (ot) {
+      data.ot = ot;
+    }
+    if (!isNaN(d)) {
+      data.d = d;
+    }
+    if (!isNaN(mtp)) {
+      const videoMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? mtp : null;
+      const audioMtp = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? mtp : null;
+      data.mtp = _toInnerList(videoMtp, audioMtp) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(mtp, {})];
+    }
+    if (!isNaN(dl)) {
+      data.dl = dl;
+    }
+    if (!isNaN(bl)) {
+      const videoBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? bl : null;
+      const audioBl = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? bl : null;
+      data.bl = _toInnerList(videoBl, audioBl) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(bl, {})];
+    }
+    if (!isNaN(tb) && isFinite(tb)) {
+      const videoTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? tb : null;
+      const audioTb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? tb : null;
+      data.tb = _toInnerList(videoTb, audioTb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(tb, {})];
+    }
+    if (tpb !== null && !isNaN(tpb)) {
+      const videoTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? tpb : null;
+      const audioTpb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? tpb : null;
+      data.tpb = _toInnerList(videoTpb, audioTpb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(tpb, {})];
+    }
+    if (pb !== null && !isNaN(pb)) {
+      const videoPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? pb : null;
+      const audioPb = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? pb : null;
+      data.pb = _toInnerList(videoPb, audioPb) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(pb, {})];
+    }
+    if (_bufferLevelStarved[mediaType]) {
+      data.bs = true;
+      _bufferLevelStarved[mediaType] = false;
+    }
+    if (_rebufferingDuration[mediaType]) {
+      const videoBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO ? _rebufferingDuration[mediaType] : null;
+      const audioBsd = mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO ? _rebufferingDuration[mediaType] : null;
+      data.bsd = _toInnerList(videoBsd, audioBsd) || [(0,_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.toCmcdValue)(_rebufferingDuration[mediaType], {})];
+      delete _rebufferingDuration[mediaType];
+    }
+    if (_isStartup[mediaType] || !_initialMediaRequestsDone[mediaType]) {
+      data.su = true;
+      _isStartup[mediaType] = false;
+      _initialMediaRequestsDone[mediaType] = true;
+    }
+    Object.assign(data, _getAggregatedBitrateData());
+    return data;
+  }
+  function _initForMediaType(mediaType) {
+    if (!_initialMediaRequestsDone.hasOwnProperty(mediaType)) {
+      _initialMediaRequestsDone[mediaType] = false;
+    }
+    if (!_isStartup.hasOwnProperty(mediaType)) {
+      _isStartup[mediaType] = false;
+    }
+    if (!_bufferLevelStarved.hasOwnProperty(mediaType)) {
+      _bufferLevelStarved[mediaType] = false;
+    }
+  }
+  function _calculateCmcdDataForRequestForInitSegment() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.INIT;
+    data.su = true;
+    return data;
+  }
+  function _calculateCmcdDataForRequestForOther() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
+    return data;
+  }
+  function _getEncodedBitrateData() {
+    const data = {};
+    const activeStream = playbackController.getStreamController()?.getActiveStream();
+    if (!activeStream) {
+      return data;
+    }
+    const videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const videoBr = videoRep ? Math.round(videoRep.bitrateInKbit) : null;
+    const audioBr = audioRep ? Math.round(audioRep.bitrateInKbit) : null;
+    const brValues = _toInnerList(videoBr, audioBr);
+    if (brValues) {
+      data.br = brValues;
+    }
+    return data;
+  }
+  function _getBitrateByRequest(request) {
+    try {
+      return parseInt(request.bandwidth / 1000);
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getTopBitrateByType(mediaInfo) {
+    try {
+      const bitrates = abrController.getPossibleVoRepresentationsFilteredBySettings(mediaInfo).map(rep => {
+        return rep.bitrateInKbit;
+      });
+      return Math.max(...bitrates);
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getPlayheadBitrate(mediaType) {
+    try {
+      if (!streamProcessors || streamProcessors.length === 0) {
+        return null;
+      }
+      const streamProcessor = streamProcessors.find(sp => sp.getType() === mediaType);
+      const bitrate = streamProcessor?.getRepresentationController()?.getCurrentRepresentation()?.bitrateInKbit;
+      if (bitrate !== undefined && !isNaN(bitrate)) {
+        return Math.round(bitrate);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getPlayheadBitrateData() {
+    const data = {};
+    const videoPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioPb = _getPlayheadBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const pbValues = _toInnerList(videoPb, audioPb);
+    if (pbValues) {
+      data.pb = pbValues;
+    }
+    return data;
+  }
+  function _getTopBitrateDataForType(mediaType) {
+    if (!streamProcessors || streamProcessors.length === 0) {
+      return null;
+    }
+    const sp = streamProcessors.find(p => p.getType() === mediaType);
+    if (!sp) {
+      return null;
+    }
+    const mediaInfo = sp.getMediaInfo();
+    const tb = _getTopBitrateByType(mediaInfo);
+    return isFinite(tb) && tb > 0 ? tb : null;
+  }
+  function _getTopBitrateData() {
+    const data = {};
+    const videoTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioTb = _getTopBitrateDataForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const tbValues = _toInnerList(videoTb, audioTb);
+    if (tbValues) {
+      data.tb = tbValues;
+    }
+    const videoTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioTpb = _getTopPlayableBitrate(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const tpbValues = _toInnerList(videoTpb, audioTpb);
+    if (tpbValues) {
+      data.tpb = tpbValues;
+    }
+    return data;
+  }
+  function _getTopPlayableBitrate(mediaType) {
+    try {
+      if (!streamProcessors || streamProcessors.length === 0) {
+        return null;
+      }
+      const streamProcessor = streamProcessors.find(p => p.getType() === mediaType);
+      if (streamProcessor) {
+        const mediaInfo = streamProcessor.getMediaInfo();
+        const topBitrate = _getTopBitrateByType(mediaInfo);
+
+        // _getTopBitrateByType can return -Infinity for empty arrays, which is not a valid bitrate.
+        return isFinite(topBitrate) && topBitrate > 0 ? topBitrate : null;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getObjectDurationByRequest(request) {
+    try {
+      return !isNaN(request.duration) ? Math.round(request.duration * 1000) : NaN;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getMeasuredThroughputByType(mediaType) {
+    try {
+      return parseInt(throughputController.getSafeAverageThroughput(mediaType) / 100) * 100;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getMeasuredThroughputData() {
+    const data = {};
+    const videoMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioMtp = _getMeasuredThroughputByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const mtpValues = _toInnerList(videoMtp, audioMtp);
+    if (mtpValues) {
+      data.mtp = mtpValues;
+    }
+    return data;
+  }
+  function _getDeadlineByType(mediaType) {
+    try {
+      const playbackRate = playbackController ? playbackController.getPlaybackRate() : 1;
+      const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+      if (!isNaN(playbackRate) && !isNaN(bufferLevel)) {
+        return parseInt(bufferLevel / playbackRate * 10) * 100;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getBufferLevelByType(mediaType) {
+    try {
+      const bufferLevel = dashMetrics.getCurrentBufferLevel(mediaType);
+      if (!isNaN(bufferLevel)) {
+        return parseInt(bufferLevel * 10) * 100;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getBufferLevelData() {
+    const data = {};
+    const videoBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioBl = _getBufferLevelByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const blValues = _toInnerList(videoBl, audioBl);
+    if (blValues) {
+      data.bl = blValues;
+    }
+    return data;
+  }
+  function onBufferLevelStateChanged(data) {
+    try {
+      if (data.state && data.mediaType) {
+        if (data.state === _MediaPlayerEvents_js__WEBPACK_IMPORTED_MODULE_2__["default"].BUFFER_EMPTY) {
+          if (!_bufferLevelStarved[data.mediaType]) {
+            _bufferLevelStarved[data.mediaType] = true;
+          }
+          if (!_isStartup[data.mediaType]) {
+            _isStartup[data.mediaType] = true;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+  function onPlaybackSeeking() {
+    _isSeeking = true;
+  }
+  function onPlaybackSeeked() {
+    _isSeeking = false;
+    for (let key in _bufferLevelStarved) {
+      if (_bufferLevelStarved.hasOwnProperty(key)) {
+        _bufferLevelStarved[key] = true;
+      }
+    }
+    for (let key in _isStartup) {
+      if (_isStartup.hasOwnProperty(key)) {
+        _isStartup[key] = true;
+      }
+    }
+  }
+  function wasPlaying() {
+    return !_isSeeking && _playbackStartedTime;
+  }
+  function _probeNextRequest(mediaType) {
+    if (!streamProcessors || streamProcessors.length === 0) {
+      return;
+    }
+    for (let streamProcessor of streamProcessors) {
+      if (streamProcessor.getType() === mediaType) {
+        return streamProcessor.probeNextRequest();
+      }
+    }
+  }
+  function onPeriodSwitchComplete() {
+    _updateStreamProcessors();
+  }
+  function onPlaybackStarted() {
+    if (!_playbackStartedTime) {
+      _playbackStartedTime = Date.now();
+    }
+  }
+  function onPlaybackPlaying() {
+    for (const mediaType in _rebufferingStartTime) {
+      if (_rebufferingStartTime.hasOwnProperty(mediaType)) {
+        onRebufferingCompleted(mediaType);
+      }
+    }
+  }
+  function onRebufferingStarted(mediaType) {
+    if (mediaType && !_rebufferingStartTime[mediaType]) {
+      _rebufferingStartTime[mediaType] = Date.now();
+    }
+  }
+  function onRebufferingCompleted(mediaType) {
+    if (_rebufferingStartTime[mediaType] != null) {
+      _rebufferingDuration[mediaType] = Date.now() - _rebufferingStartTime[mediaType];
+      delete _rebufferingStartTime[mediaType];
+    }
+  }
+  function _calculateMsd() {
+    if (!_playbackStartedTime) {
+      return null;
+    }
+    return Date.now() - _playbackStartedTime;
+  }
+  function getGenericCmcdData(mediaType) {
+    const data = {};
+
+    // Note: ts, st, sf, pr are handled by CmcdReporter:
+    // - ts: auto-generated by recordEvent() / recordResponseReceived()
+    // - st, sf: persisted via cmcdReporter.update() in _onManifestLoaded
+    // - pr: persisted via cmcdReporter.update() in _onPlaybackRateChanged
+
+    let ltc = playbackController.getCurrentLiveLatency() * 1000;
+    if (!isNaN(ltc)) {
+      data.ltc = ltc;
+    }
+    if (typeof document !== 'undefined' && document.hidden) {
+      data.bg = true;
+    }
+    if (mediaType && _shouldIncludeDroppedFrames(mediaType)) {
+      const droppedFrames = dashMetrics.getCurrentDroppedFrames()?.droppedFrames;
+      if (droppedFrames > 0) {
+        data.df = droppedFrames;
+      }
+    }
+    return data;
+  }
+  function _shouldIncludeDroppedFrames(mediaType) {
+    return mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO || mediaType === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].OTHER;
+  }
+  function getEventModeData() {
+    const cmcdData = {
+      ...getGenericCmcdData(),
+      ..._getAggregatedBitrateData(),
+      ..._getEncodedBitrateData(),
+      ..._getBufferLevelData(),
+      ..._getMeasuredThroughputData(),
+      ..._getPlayheadBitrateData(),
+      ..._getTopBitrateData()
+    };
+    return cmcdData;
+  }
+  function resetInitialSettings() {
+    _bufferLevelStarved = {};
+    _isStartup = {};
+    _initialMediaRequestsDone = {};
+    _isSeeking = false;
+    _lastMediaTypeRequest = undefined;
+    _playbackStartedTime = undefined;
+    _rebufferingStartTime = {};
+    _rebufferingDuration = {};
+    _streamType = undefined;
+    _streamingFormat = undefined;
+    _updateStreamProcessors();
+  }
+  function _updateStreamProcessors() {
+    if (!playbackController) {
+      return;
+    }
+    const streamController = playbackController.getStreamController();
+    if (!streamController) {
+      return;
+    }
+    if (typeof streamController.getActiveStream !== 'function') {
+      return;
+    }
+    const activeStream = streamController.getActiveStream();
+    if (!activeStream) {
+      return;
+    }
+    streamProcessors = activeStream.getStreamProcessors();
+  }
+  function _calculateRtp(request) {
+    try {
+      let playbackRate = playbackController.getPlaybackRate();
+      if (!playbackRate) {
+        playbackRate = 1;
+      }
+      let {
+        bandwidth,
+        mediaType,
+        representation,
+        duration
+      } = request;
+      const mediaInfo = representation.mediaInfo;
+      if (!mediaInfo) {
+        return NaN;
+      }
+      let currentBufferLevel = _getBufferLevelByType(mediaType);
+      if (currentBufferLevel === 0) {
+        currentBufferLevel = 500;
+      }
+
+      // Calculate RTP
+      let segmentSize = bandwidth * duration / 1000; // Calculate file size in kilobits
+      let timeToLoad = currentBufferLevel / playbackRate / 1000; // Calculate time available to load file in seconds
+      let minBandwidth = segmentSize / timeToLoad; // Calculate the exact bandwidth required
+      const rtpSafetyFactor = cmcdConfigAccessor.get('rtpSafetyFactor', {
+        defaultValue: RTP_SAFETY_FACTOR
+      });
+      let maxBandwidth = minBandwidth * rtpSafetyFactor; // Include a safety buffer
+
+      // Round to the next multiple of 100
+      return (parseInt(maxBandwidth / 100) + 1) * 100;
+    } catch (e) {
+      return NaN;
+    }
+  }
+  function calculateMsd() {
+    const data = {};
+    const msd = _calculateMsd();
+    if (msd !== null && !isNaN(msd)) {
+      data.msd = msd;
+    }
+    return data;
+  }
+  function onPlaybackRateChanged(data) {
+    if (data.playbackRate !== undefined) {
+      return {
+        pr: data.playbackRate
+      };
+    }
+    return null;
+  }
+  function onManifestLoaded(data) {
+    try {
+      const dashManifestModel = (0,_dash_models_DashManifestModel_js__WEBPACK_IMPORTED_MODULE_6__["default"])(context).getInstance();
+      const isDynamic = dashManifestModel.getIsDynamic(data.data);
+      _streamType = isDynamic ? `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamType.LIVE}` : `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamType.VOD}`;
+      _streamingFormat = data.protocol && data.protocol === 'MSS' ? `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamingFormat.SMOOTH}` : `${_svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdStreamingFormat.DASH}`;
+      return {
+        st: _streamType,
+        sf: _streamingFormat
+      };
+    } catch (e) {
+      return {};
+    }
+  }
+  function getCmcdParametersFromManifest() {
+    let cmcdParametersFromManifest = {};
+    if (serviceDescriptionController) {
+      const serviceDescription = serviceDescriptionController.getServiceDescriptionSettings();
+      if (serviceDescription.clientDataReporting && serviceDescription.clientDataReporting.cmcdParameters) {
+        cmcdParametersFromManifest = serviceDescription.clientDataReporting.cmcdParameters;
+      }
+    }
+    return cmcdParametersFromManifest;
+  }
+  function updateCmcdManifestParamsInCmcdConfigAccessor() {
+    const cmcdParametersFromManifest = getCmcdParametersFromManifest();
+
+    // Update CmcdConfigAccessor with manifest parameters if available
+    // Note: Always update accessor when params exist, regardless of applyParametersFromMpd
+    // The accessor uses priority-based resolution, so manifest params will only be used
+    // when they have higher priority in the PropertyMap configuration
+    if (cmcdConfigAccessor && Object.keys(cmcdParametersFromManifest).length > 0) {
+      cmcdConfigAccessor.setManifestParams(cmcdParametersFromManifest);
+    } else if (cmcdConfigAccessor) {
+      // Clear manifest params if none are available
+      cmcdConfigAccessor.setManifestParams(null);
+    }
+  }
+  function deriveCmcdDataForRequest(request) {
+    try {
+      _updateLastMediaTypeRequest(request.type, request.mediaType);
+      let cmcdData = {};
+      if (isIncludedInRequestFilter(request.type)) {
+        if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MPD_TYPE) {
+          return _calculateCmcdDataForRequestForMpd(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+          _initForMediaType(request.mediaType);
+          return _calculateCmcdDataForRequestForMediaSegment(request, request.mediaType);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.INIT_SEGMENT_TYPE) {
+          return _calculateCmcdDataForRequestForInitSegment(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.OTHER_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.XLINK_EXPANSION_TYPE) {
+          return _calculateCmcdDataForRequestForOther(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.LICENSE) {
+          return _calculateCmcdDataForRequestForLicense(request);
+        } else if (request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_1__.HTTPRequest.CONTENT_STEERING_TYPE) {
+          return _calculateCmcdDataForRequestForSteering(request);
+        }
+      }
+      return cmcdData;
+    } catch (e) {
+      return null;
+    }
+  }
+  function isIncludedInRequestFilter(type, includeInRequests) {
+    const includeInRequestsArray = includeInRequests ?? cmcdConfigAccessor.get('includeInRequests');
+    const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
+    return filterType !== undefined && includeInRequestsArray.includes(filterType);
+  }
+  function reset() {
+    resetInitialSettings();
+  }
+  function _updateLastMediaTypeRequest(type, mediatype) {
+    // Video > Audio > None
+    if (mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO || mediatype === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+      if (!_lastMediaTypeRequest || _lastMediaTypeRequest === _streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) {
+        _lastMediaTypeRequest = mediatype;
+      }
+    }
+  }
+  function _calculateCmcdDataForRequestForSteering(request) {
+    const data = !_lastMediaTypeRequest ? getGenericCmcdData() : _calculateCmcdDataForRequestForMediaSegment(request, _lastMediaTypeRequest);
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.OTHER;
+    return data;
+  }
+  function _calculateCmcdDataForRequestForLicense() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.KEY;
+    return data;
+  }
+  function _calculateCmcdDataForRequestForMpd() {
+    const data = getGenericCmcdData();
+    data.ot = _svta_cml_cmcd__WEBPACK_IMPORTED_MODULE_0__.CmcdObjectType.MANIFEST;
+    return data;
+  }
+  function _getAggregatedBitrateData() {
+    // defining data to return
+    const data = {};
+    // accessing active stream
+    const activeStream = playbackController.getStreamController()?.getActiveStream();
+    if (!activeStream) {
+      return data;
+    }
+
+    // Get current representations
+    const videoRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO);
+    const audioRep = activeStream.getCurrentRepresentationForType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO);
+    const currentVideoBitrate = videoRep ? videoRep.bitrateInKbit : 0;
+    const currentAudioBitrate = audioRep ? audioRep.bitrateInKbit : 0;
+
+    // Calculate aggregated bitrate
+    const abValues = _toInnerList(currentVideoBitrate > 0 ? Math.round(currentVideoBitrate) : null, currentAudioBitrate > 0 ? Math.round(currentAudioBitrate) : null);
+    if (abValues) {
+      data.ab = abValues;
+    }
+
+    // Calculate top aggregated bitrate
+    const allVideoReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].VIDEO) || [];
+    const allAudioReps = activeStream.getRepresentationsByType(_streaming_constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__["default"].AUDIO) || [];
+    const topVideoBitrate = allVideoReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+    const topAudioBitrate = allAudioReps.reduce((max, rep) => Math.max(max, rep.bitrateInKbit), 0);
+    const tabValues = _toInnerList(topVideoBitrate > 0 ? Math.round(topVideoBitrate) : null, topAudioBitrate > 0 ? Math.round(topAudioBitrate) : null);
+    if (tabValues) {
+      data.tab = tabValues;
+    }
+
+    // Calculate lowest aggregated bitrate
+    const lowestVideoBitrate = allVideoReps.length > 0 ? Math.min(...allVideoReps.map(rep => rep.bitrateInKbit)) : 0;
+    const lowestAudioBitrate = allAudioReps.length > 0 ? Math.min(...allAudioReps.map(rep => rep.bitrateInKbit)) : 0;
+    const labValues = _toInnerList(lowestVideoBitrate > 0 ? Math.round(lowestVideoBitrate) : null, lowestAudioBitrate > 0 ? Math.round(lowestAudioBitrate) : null);
+    if (labValues) {
+      data.lab = labValues;
+    }
+    return data;
+  }
+  function getLastMediaTypeRequest() {
+    return _lastMediaTypeRequest;
+  }
+  instance = {
+    calculateMsd,
+    deriveCmcdDataForRequest,
+    getCmcdParametersFromManifest,
+    getEventModeData,
+    getLastMediaTypeRequest,
+    isIncludedInRequestFilter,
+    onBufferLevelStateChanged,
+    onManifestLoaded,
+    onPeriodSwitchComplete,
+    onPlaybackPlaying,
+    onPlaybackRateChanged,
+    onPlaybackSeeked,
+    onPlaybackSeeking,
+    onPlaybackStarted,
+    onRebufferingCompleted,
+    onRebufferingStarted,
+    reset,
+    resetInitialSettings,
+    setConfig,
+    setup,
+    updateCmcdManifestParamsInCmcdConfigAccessor,
+    wasPlaying
+  };
+  setup();
+  return instance;
+}
+CmcdModel.__dashjs_factory_name = 'CmcdModel';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__["default"].getSingletonFactory(CmcdModel));
+
+/***/ }),
+
+/***/ "./src/streaming/models/CmsdModel.js":
+/*!*******************************************!*\
+  !*** ./src/streaming/models/CmsdModel.js ***!
+  \*******************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! @svta/cml-cmsd */ "./node_modules/@svta/cml-cmsd/dist/index.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2022, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+// Note: in modern browsers, the header names are returned in all lower case
+const CMSD_STATIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC.toLowerCase();
+const CMSD_DYNAMIC_RESPONSE_FIELD_NAME = _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC.toLowerCase();
+const CMSD_KEYS = {
+  AVAILABILITY_TIME: 'at',
+  DURESS: 'du',
+  ENCODED_BITRATE: 'br',
+  ESTIMATED_THROUGHPUT: 'etp',
+  HELD_TIME: 'ht',
+  INTERMEDIARY_IDENTIFIER: 'n',
+  MAX_SUGGESTED_BITRATE: 'mb',
+  NEXT_OBJECT_RESPONSE: 'nor',
+  NEXT_RANGE_RESPONSE: 'nrr',
+  OBJECT_DURATION: 'd',
+  OBJECT_TYPE: 'ot',
+  RESPONSE_DELAY: 'rd',
+  ROUND_TRIP_TIME: 'rtt',
+  STARTUP: 'su',
+  STREAM_TYPE: 'st',
+  STREAMING_FORMAT: 'sf',
+  VERSION: 'v'
+};
+const PERSISTENT_PARAMS = [CMSD_KEYS.MAX_SUGGESTED_BITRATE, CMSD_KEYS.STREAM_TYPE, CMSD_KEYS.STREAMING_FORMAT, CMSD_KEYS.VERSION];
+const STREAM = 'stream';
+const MEDIATYPE_TO_OBJECTTYPE = {
+  'video': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.VIDEO,
+  'audio': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.AUDIO,
+  'text': _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.TIMED_TEXT,
+  'stream': STREAM // Specific value for parameters without object type, which apply for all media/objects
+};
+function CmsdModel() {
+  const context = this.context;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  let instance, logger, _staticParamsDict, _dynamicParamsDict;
+  function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().getLogger(instance);
+    _resetInitialSettings();
+  }
+  function initialize() {}
+  function setConfig(/*config*/) {}
+  function _resetInitialSettings() {
+    _staticParamsDict = {};
+    _dynamicParamsDict = {};
+  }
+  function _clearParams(params) {
+    if (!params) {
+      return;
+    }
+    Object.keys(params).forEach(key => {
+      if (!PERSISTENT_PARAMS.includes(key)) {
+        delete params[key];
+      }
+    });
+  }
+  function _parseCMSDStatic(value) {
+    try {
+      return (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdStatic)(value);
+    } catch (e) {
+      logger.error('Failed to parse CMSD-Static response header value:', e);
+    }
+  }
+  function _parseCMSDDynamic(value) {
+    try {
+      const items = (0,_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.decodeCmsdDynamic)(value);
+      const last = items[items.length - 1];
+      return last?.params || {};
+    } catch (e) {
+      logger.error('Failed to parse CMSD-Dynamic response header value:', e);
+      return {};
+    }
+  }
+  function _mediaTypetoObjectType(mediaType) {
+    return MEDIATYPE_TO_OBJECTTYPE[mediaType] || _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CmsdObjectType.OTHER;
+  }
+  function _getParamValueForObjectType(paramsType, ot, key) {
+    const params = paramsType === _svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_STATIC ? _staticParamsDict : _dynamicParamsDict;
+    const otParams = params[ot] || {};
+    const streamParams = params[STREAM] || {};
+    const value = otParams[key] || streamParams[key];
+    return value;
+  }
+  function parseResponseHeaders(responseHeaders, mediaType) {
+    let staticParams = null;
+    let dynamicParams = null;
+
+    // Note: responseHeaders as a record of key:value
+    for (const key in responseHeaders) {
+      const value = responseHeaders[key];
+      switch (key) {
+        case CMSD_STATIC_RESPONSE_FIELD_NAME:
+          staticParams = _parseCMSDStatic(value);
+          eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_2__["default"].CMSD_STATIC_HEADER, staticParams);
+          break;
+        case CMSD_DYNAMIC_RESPONSE_FIELD_NAME:
+          if (!dynamicParams) {
+            dynamicParams = _parseCMSDDynamic(value);
+          }
+          break;
+        default:
+          break;
+      }
+    }
+
+    // Get object type
+    let ot = STREAM;
+    if (staticParams && staticParams[CMSD_KEYS.OBJECT_TYPE]) {
+      ot = staticParams[CMSD_KEYS.OBJECT_TYPE];
+    } else if (mediaType) {
+      ot = _mediaTypetoObjectType(mediaType);
+    }
+
+    // Clear previously received params except persistent ones
+    _clearParams(_staticParamsDict[ot]);
+    _clearParams(_dynamicParamsDict[ot]);
+
+    // Merge params with previously received params
+    if (staticParams) {
+      _staticParamsDict[ot] = Object.assign(_staticParamsDict[ot] || {}, staticParams);
+    }
+    if (dynamicParams) {
+      _dynamicParamsDict[ot] = Object.assign(_dynamicParamsDict[ot] || {}, dynamicParams);
+    }
+    return {
+      static: staticParams,
+      dynamic: dynamicParams
+    };
+  }
+  function getMaxBitrate(type) {
+    let ot = _mediaTypetoObjectType(type);
+    let mb = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.MAX_SUGGESTED_BITRATE);
+    return mb ? mb : -1;
+  }
+  function getEstimatedThroughput(type) {
+    let ot = _mediaTypetoObjectType(type);
+    let etp = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ESTIMATED_THROUGHPUT);
+    return etp ? etp : null;
+  }
+  function getResponseDelay(type) {
+    let ot = _mediaTypetoObjectType(type);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.RESPONSE_DELAY);
+    return rd ? rd : null;
+  }
+  function getRoundTripTime(type) {
+    let ot = _mediaTypetoObjectType(type);
+    let rd = _getParamValueForObjectType(_svta_cml_cmsd__WEBPACK_IMPORTED_MODULE_4__.CMSD_DYNAMIC, ot, CMSD_KEYS.ROUND_TRIP_TIME);
+    return rd ? rd : null;
+  }
+  function reset() {
+    _resetInitialSettings();
+  }
+  instance = {
+    setConfig,
+    initialize,
+    reset,
+    parseResponseHeaders,
+    getMaxBitrate,
+    getEstimatedThroughput,
+    getResponseDelay,
+    getRoundTripTime
+  };
+  setup();
+  return instance;
+}
+CmsdModel.__dashjs_factory_name = 'CmsdModel';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(CmsdModel));
+
+/***/ }),
+
+/***/ "./src/streaming/models/CustomParametersModel.js":
+/*!*******************************************************!*\
+  !*** ./src/streaming/models/CustomParametersModel.js ***!
+  \*******************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _dash_vo_UTCTiming_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../dash/vo/UTCTiming.js */ "./src/dash/vo/UTCTiming.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _utils_SupervisorTools_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../utils/SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../controllers/CmcdController.js */ "./src/streaming/controllers/CmcdController.js");
+/* harmony import */ var _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../vo/ExternalSubtitle.js */ "./src/streaming/vo/ExternalSubtitle.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
 const DEFAULT_XHR_WITH_CREDENTIALS = false;
 function CustomParametersModel() {
-  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules;
+  let instance, utcTimingSources, xhrWithCredentials, requestInterceptors, responseInterceptors, licenseRequestFilters, certificateRequestFilters, certificateResponseFilters, licenseResponseFilters, customCapabilitiesFilters, customInitialTrackSelectionFunction, externalSubtitles, customAbrRules, cmcdController;
   const context = this.context;
   const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_2__["default"])(context).getInstance();
   function setup() {
     xhrWithCredentials = {
       default: DEFAULT_XHR_WITH_CREDENTIALS
     };
+    cmcdController = (0,_controllers_CmcdController_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
     _resetInitialSettings();
   }
   function _resetInitialSettings() {
-    requestInterceptors = [];
-    responseInterceptors = [];
     licenseRequestFilters = [];
     licenseResponseFilters = [];
+    certificateRequestFilters = [];
+    certificateResponseFilters = [];
     customCapabilitiesFilters = [];
     customAbrRules = [];
     customInitialTrackSelectionFunction = null;
     utcTimingSources = [];
+
+    // Initialize request interceptors with default CMCD interceptors
+    requestInterceptors = cmcdController.getCmcdRequestInterceptors();
+    responseInterceptors = cmcdController.getCmcdResponseReceivedInterceptors();
     externalSubtitles = new Set();
   }
   function reset() {
@@ -7330,6 +16273,58 @@ function CustomParametersModel() {
    */
   function getCustomInitialTrackSelectionFunction() {
     return customInitialTrackSelectionFunction;
+  }
+
+  /**
+   * Returns all certificate request filters
+   * @return {array}
+   */
+  function getCertificateRequestFilters() {
+    return certificateRequestFilters;
+  }
+
+  /**
+   * Returns all certificate response filters
+   * @return {array}
+   */
+  function getCertificateResponseFilters() {
+    return certificateResponseFilters;
+  }
+
+  /**
+   * Registers a certificate request filter. This enables application to manipulate/overwrite any request parameter and/or request data.
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license request filter callback
+   */
+  function registerCertificateRequestFilter(filter) {
+    certificateRequestFilters.push(filter);
+  }
+
+  /**
+   * Registers a certificate response filter. This enables application to manipulate/overwrite the response data
+   * The provided callback function shall return a promise that shall be resolved once the filter process is completed.
+   * The filters are applied in the order they are registered.
+   * @param {function} filter - the license response filter callback
+   */
+  function registerCertificateResponseFilter(filter) {
+    certificateResponseFilters.push(filter);
+  }
+
+  /**
+   * Unregisters a certificate request filter.
+   * @param {function} filter - the license request filter callback
+   */
+  function unregisterCertificateRequestFilter(filter) {
+    _unregisterFilter(certificateRequestFilters, filter);
+  }
+
+  /**
+   * Unregisters a certificate response filter.
+   * @param {function} filter - the license response filter callback
+   */
+  function unregisterCertificateResponseFilter(filter) {
+    _unregisterFilter(certificateResponseFilters, filter);
   }
 
   /**
@@ -7562,7 +16557,7 @@ function CustomParametersModel() {
     if (!externalSubtitleObj || typeof externalSubtitleObj.id === 'undefined' || !externalSubtitleObj.url || !externalSubtitleObj.language || !externalSubtitleObj.mimeType || typeof externalSubtitleObj.bandwidth === 'undefined') {
       return;
     }
-    const externalSubtitle = new _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_5__["default"](externalSubtitleObj);
+    const externalSubtitle = new _vo_ExternalSubtitle_js__WEBPACK_IMPORTED_MODULE_6__["default"](externalSubtitleObj);
     if (!_hasExternalSubtitleByKeyValue('url', externalSubtitle.url) && !_hasExternalSubtitleByKeyValue('id', externalSubtitle.id)) {
       externalSubtitles.add(externalSubtitle);
     }
@@ -7665,6 +16660,8 @@ function CustomParametersModel() {
     addUTCTimingSource,
     clearDefaultUTCTimingSources,
     getAbrCustomRules,
+    getCertificateRequestFilters,
+    getCertificateResponseFilters,
     getCustomCapabilitiesFilters,
     getCustomInitialTrackSelectionFunction,
     getExternalSubtitles,
@@ -7674,6 +16671,8 @@ function CustomParametersModel() {
     getResponseInterceptors,
     getUTCTimingSources,
     getXHRWithCredentialsForType,
+    registerCertificateRequestFilter,
+    registerCertificateResponseFilter,
     registerCustomCapabilitiesFilter,
     registerLicenseRequestFilter,
     registerLicenseResponseFilter,
@@ -7691,6 +16690,8 @@ function CustomParametersModel() {
     setConfig,
     setCustomInitialTrackSelectionFunction,
     setXHRWithCredentialsForType,
+    unregisterCertificateRequestFilter,
+    unregisterCertificateResponseFilter,
     unregisterCustomCapabilitiesFilter,
     unregisterLicenseRequestFilter,
     unregisterLicenseResponseFilter
@@ -7703,13 +16704,1459 @@ CustomParametersModel.__dashjs_factory_name = 'CustomParametersModel';
 
 /***/ }),
 
+/***/ "./src/streaming/net/FetchLoader.js":
+/*!******************************************!*\
+  !*** ./src/streaming/net/FetchLoader.js ***!
+  \******************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+/**
+ * @module FetchLoader
+ * @ignore
+ * @description Manages download of resources via HTTP using fetch.
+ */
+function FetchLoader() {
+  const context = this.context;
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  let instance, boxParser, logger;
+  function setConfig(cfg) {
+    boxParser = cfg.boxParser;
+  }
+  function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_3__["default"])(context).getInstance().getLogger(instance);
+  }
+
+  /**
+   * Load request
+   * With HTTP responses that use chunked transfer encoding, the promise returned by fetch will resolve as soon as the response's headers are received.
+   * @param {CommonMediaRequest} commonMediaRequest
+   * @param {CommonMediaResponse} commonMediaResponse
+   */
+  function load(commonMediaRequest, commonMediaResponse) {
+    const headers = _getHeaders(commonMediaRequest);
+    const abortController = _setupAbortMechanism(commonMediaRequest);
+    const fetchResourceRequestObject = _getFetchResourceRequestObject(commonMediaRequest, headers, abortController);
+    fetch(fetchResourceRequestObject).then(fetchResponse => {
+      _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse);
+    }).catch(() => {
+      _handleFetchError(commonMediaRequest);
+    });
+  }
+  function _handleFetchResponse(fetchResponse, commonMediaRequest, commonMediaResponse) {
+    _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse);
+    let totalBytesReceived = 0;
+    let signaledFirstByte = false;
+    let receivedData = new Uint8Array();
+    let endPositionOfLastProcessedBoxInReceivedData = 0;
+    commonMediaRequest.customData.reader = fetchResponse.body.getReader();
+    let downloadedData = [];
+    let moofStartTimeData = [];
+    let mdatEndTimeData = [];
+    let lastChunkWasFinished = true;
+    const calculationMode = settings.get().streaming.abr.throughput.lowLatencyDownloadTimeCalculationMode;
+
+    /**
+     * Callback function for ReadableStreamDefaultReader
+     * @param value - chunk data. Always undefined when done is true.
+     * @param done - true if the stream has already given you all its data.
+     */
+    const _processResult = ({
+      value,
+      done
+    }) => {
+      if (done) {
+        _handleRequestComplete();
+        return;
+      }
+      if (value && value.length > 0) {
+        _handleReceivedChunkData(value);
+      }
+      _readResponseBody(commonMediaRequest, commonMediaResponse, _processResult);
+    };
+
+    /**
+     * Once a request is completed throw final progress event with the calculated bytes and download time
+     * @private
+     */
+    function _handleRequestComplete() {
+      if (receivedData) {
+        const calculatedDownloadTime = _calculateDownloadTime();
+
+        // In this case we push an entry to the traces.
+        // This is the only entry we push as the other calls to onprogress use noTrace = true
+        commonMediaRequest.customData.onprogress({
+          loaded: totalBytesReceived,
+          total: totalBytesReceived,
+          lengthComputable: true,
+          time: calculatedDownloadTime
+        });
+        commonMediaResponse.data = receivedData.buffer;
+      }
+      commonMediaRequest.customData.onloadend();
+    }
+    function _calculateDownloadTime() {
+      // If there is pending data, call progress so network metrics
+      // are correctly generated
+      // Same structure as https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequestEventTarget/
+      let downloadTime = null;
+      if (calculationMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING) {
+        downloadTime = _getDownloadTimeForMoofParsing();
+      } else if (calculationMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.DOWNLOADED_DATA) {
+        downloadTime = _getDownloadTimeForDownloadedData();
+      }
+      return downloadTime;
+    }
+    function _getDownloadTimeForMoofParsing() {
+      const calculatedThroughput = _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData);
+      if (calculatedThroughput) {
+        return totalBytesReceived * 8 / calculatedThroughput;
+      }
+      return null;
+    }
+    function _getDownloadTimeForDownloadedData() {
+      return calculateDownloadedTime(downloadedData, totalBytesReceived);
+    }
+
+    /**
+     * Called every time we received data if the request is not completed
+     * @param value
+     * @private
+     */
+    function _handleReceivedChunkData(value) {
+      receivedData = _concatTypedArray(receivedData, value);
+      totalBytesReceived += value.length;
+      downloadedData.push({
+        timestamp: _getCurrentTimestamp(),
+        bytes: value.length
+      });
+      if (calculationMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && lastChunkWasFinished) {
+        _findMoofBoxInChunkData();
+      }
+      const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moov', 'mdat'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
+      if (boxesInfo.found) {
+        _handleTopIsoBoxCompleted(boxesInfo);
+      } else {
+        _handleNoCompletedTopIsoBox(boxesInfo);
+      }
+    }
+    function _findMoofBoxInChunkData() {
+      const boxesInfo = boxParser.findLastTopIsoBoxCompleted(['moof'], receivedData, endPositionOfLastProcessedBoxInReceivedData);
+      if (boxesInfo.found) {
+        lastChunkWasFinished = false;
+        moofStartTimeData.push({
+          timestamp: _getCurrentTimestamp()
+        });
+      }
+    }
+    function _handleTopIsoBoxCompleted(boxesInfo) {
+      const endPositionOfLastTargetBox = boxesInfo.startOffsetOfLastFoundTargetBox + boxesInfo.sizeOfLastFoundTargetBox;
+      const data = _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox);
+
+      // Store the end time of each chunk download  with its size in array EndTimeData
+      if (calculationMode === _constants_Constants_js__WEBPACK_IMPORTED_MODULE_2__["default"].LOW_LATENCY_DOWNLOAD_TIME_CALCULATION_MODE.MOOF_PARSING && !lastChunkWasFinished) {
+        lastChunkWasFinished = true;
+        mdatEndTimeData.push({
+          timestamp: _getCurrentTimestamp(),
+          bytes: data.length
+        });
+      }
+
+      // Announce progress but don't track traces. Throughput measures are quite unstable
+      // when they are based in small amount of data
+      commonMediaRequest.customData.onprogress({
+        data: data.buffer,
+        lengthComputable: false,
+        noTrace: true
+      });
+      endPositionOfLastProcessedBoxInReceivedData = 0;
+    }
+
+    /**
+     * Make the data that we received available for playback
+     * If we are going to pass full buffer, avoid copying it and pass
+     * complete buffer. Otherwise, clone the part of the buffer that is completed
+     * and adjust remaining buffer. A clone is needed because ArrayBuffer of a typed-array
+     * keeps a reference to the original data
+     * @param endPositionOfLastTargetBox
+     * @returns {Uint8Array}
+     * @private
+     */
+    function _getDataForMediaSourceBufferAndAdjustReceivedData(endPositionOfLastTargetBox) {
+      let data;
+      if (endPositionOfLastTargetBox === receivedData.length) {
+        data = receivedData;
+        receivedData = new Uint8Array();
+      } else {
+        data = new Uint8Array(receivedData.subarray(0, endPositionOfLastTargetBox));
+        receivedData = receivedData.subarray(endPositionOfLastTargetBox);
+      }
+      return data;
+    }
+    function _handleNoCompletedTopIsoBox(boxesInfo) {
+      endPositionOfLastProcessedBoxInReceivedData = boxesInfo.startOffsetOfLastCompletedBox + boxesInfo.sizeOfLastCompletedBox;
+      // Call progress, so it generates traces that will be later used to know when the first byte
+      // were received
+      if (!signaledFirstByte) {
+        commonMediaRequest.customData.onprogress({
+          lengthComputable: false,
+          noTrace: true
+        });
+        signaledFirstByte = true;
+      }
+    }
+    _readResponseBody(commonMediaRequest, commonMediaResponse, _processResult);
+  }
+
+  /**
+   * Reads the response of the request. For details refer to https://developer.mozilla.org/en-US/docs/Web/API/ReadableStreamDefaultReader/read
+   * @param {CommonMediaRequest} commonMediaRequest
+   * @param {CommonMediaResponse} commonMediaResponse
+   * @param processResult
+   * @private
+   */
+  function _readResponseBody(commonMediaRequest, commonMediaResponse, processResult) {
+    commonMediaRequest.customData.reader.read().then(processResult).catch(function () {
+      _handleFetchError(commonMediaRequest);
+    });
+  }
+  function _handleFetchError(commonMediaRequest) {
+    if (commonMediaRequest.customData.onloadend) {
+      commonMediaRequest.customData.onloadend();
+    }
+  }
+  function _updateCommonMediaResponseInstance(commonMediaResponse, fetchResponse) {
+    commonMediaResponse.status = fetchResponse.status;
+    commonMediaResponse.statusText = fetchResponse.statusText;
+    commonMediaResponse.url = fetchResponse.url;
+    const responseHeaders = {};
+    for (const key of fetchResponse.headers.keys()) {
+      responseHeaders[key] = fetchResponse.headers.get(key);
+    }
+    commonMediaResponse.headers = responseHeaders;
+  }
+  function _getHeaders(commonMediaRequest) {
+    const headers = new Headers();
+    if (commonMediaRequest.headers) {
+      for (let header in commonMediaRequest.headers) {
+        let value = commonMediaRequest.headers[header];
+        if (value) {
+          headers.append(header, value);
+        }
+      }
+    }
+    return headers;
+  }
+  function _setupAbortMechanism(commonMediaRequest) {
+    let abortController;
+    if (typeof window.AbortController === 'function') {
+      abortController = new AbortController();
+      commonMediaRequest.customData.abortController = abortController;
+      abortController.signal.onabort = commonMediaRequest.customData.onabort;
+    }
+    commonMediaRequest.customData.abort = abort.bind(commonMediaRequest);
+    return abortController;
+  }
+  function _getFetchResourceRequestObject(commonMediaRequest, headers, abortController) {
+    const fetchResourceRequestObject = new Request(commonMediaRequest.url, {
+      method: commonMediaRequest.method,
+      headers: headers,
+      credentials: commonMediaRequest.credentials,
+      signal: abortController ? abortController.signal : undefined
+    });
+    return fetchResourceRequestObject;
+  }
+  function _getCurrentTimestamp() {
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function') {
+      return performance.now();
+    } else {
+      return Date.now();
+    }
+  }
+
+  /**
+   * Creates a new Uint8 array and adds the existing data as well as new data
+   * @param receivedData
+   * @param data
+   * @returns {Uint8Array|*}
+   * @private
+   */
+  function _concatTypedArray(receivedData, data) {
+    if (receivedData.length === 0) {
+      return data;
+    }
+    const result = new Uint8Array(receivedData.length + data.length);
+    result.set(receivedData);
+
+    // set(typedarray, targetOffset)
+    result.set(data, receivedData.length);
+    return result;
+  }
+
+  /**
+   * Use the AbortController to abort a request
+   * @param request
+   */
+  function abort() {
+    // this = httpRequest (CommonMediaRequest)
+    if (this.customData.abortController) {
+      // For firefox and edge
+      this.customData.abortController.abort();
+    } else if (this.customData.reader) {
+      // For Chrome
+      try {
+        this.customData.reader.cancel();
+        this.onabort();
+      } catch (e) {
+        // throw exceptions (TypeError) when reader was previously closed,
+        // for example, because a network issue
+      }
+    }
+  }
+  function reset() {}
+
+  /**
+   * Default throughput calculation
+   * @param downloadedData
+   * @param bytesReceived
+   * @returns {number|null}
+   * @private
+   */
+  function calculateDownloadedTime(downloadedData, bytesReceived) {
+    try {
+      downloadedData = downloadedData.filter(data => data.bytes > bytesReceived / 4 / downloadedData.length);
+      if (downloadedData.length > 1) {
+        let time = 0;
+        const avgTimeDistance = (downloadedData[downloadedData.length - 1].timestamp - downloadedData[0].timestamp) / downloadedData.length;
+        downloadedData.forEach((data, index) => {
+          // To be counted the data has to be over a threshold
+          const next = downloadedData[index + 1];
+          if (next) {
+            const distance = next.timestamp - data.timestamp;
+            time += distance < avgTimeDistance ? distance : 0;
+          }
+        });
+        return time;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _calculateThroughputByMoofMdatTimes(moofStartTimeData, mdatEndTimeData) {
+    try {
+      let filteredMoofStartTimeData, filteredMdatEndTimeData;
+
+      // Filter the last chunks in a segment in both arrays [StartTimeData and EndTimeData]
+      filteredMoofStartTimeData = moofStartTimeData.slice(0, -1);
+      filteredMdatEndTimeData = mdatEndTimeData.slice(0, -1);
+      if (filteredMoofStartTimeData.length !== filteredMdatEndTimeData.length) {
+        logger.warn(`[FetchLoader] Moof and Mdat data arrays have different lengths. Moof: ${filteredMoofStartTimeData.length}, Mdat: ${filteredMdatEndTimeData.length}`);
+      }
+      if (filteredMoofStartTimeData.length <= 1) {
+        return null;
+      }
+      let chunkThroughputValues = [];
+      let shortDurationBytesReceived = 0;
+      let shortDurationStartTime = 0;
+      for (let i = 0; i < filteredMoofStartTimeData.length; i++) {
+        if (filteredMoofStartTimeData[i] && filteredMdatEndTimeData[i]) {
+          let chunkDownloadTime = filteredMdatEndTimeData[i].timestamp - filteredMoofStartTimeData[i].timestamp;
+          if (chunkDownloadTime > 1) {
+            const throughput = _getThroughputInBitPerMs(filteredMdatEndTimeData[i].bytes, chunkDownloadTime);
+            chunkThroughputValues.push(throughput);
+            shortDurationStartTime = 0;
+          } else {
+            if (shortDurationStartTime === 0) {
+              shortDurationStartTime = filteredMoofStartTimeData[i].timestamp;
+              shortDurationBytesReceived = 0;
+            }
+            let cumulatedChunkDownloadTime = filteredMdatEndTimeData[i].timestamp - shortDurationStartTime;
+            if (cumulatedChunkDownloadTime > 1) {
+              shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
+              const throughput = _getThroughputInBitPerMs(shortDurationBytesReceived, cumulatedChunkDownloadTime);
+              chunkThroughputValues.push(throughput);
+              shortDurationStartTime = 0;
+            } else {
+              // continue cumulating short duration data
+              shortDurationBytesReceived += filteredMdatEndTimeData[i].bytes;
+            }
+          }
+        }
+      }
+      if (chunkThroughputValues.length > 0) {
+        const sumOfChunkThroughputValues = chunkThroughputValues.reduce((a, b) => a + b, 0);
+        return sumOfChunkThroughputValues / chunkThroughputValues.length;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function _getThroughputInBitPerMs(bytes, timeInMs) {
+    return 8 * bytes / timeInMs;
+  }
+  setup();
+  instance = {
+    abort,
+    calculateDownloadedTime,
+    load,
+    reset,
+    setConfig
+  };
+  return instance;
+}
+FetchLoader.__dashjs_factory_name = 'FetchLoader';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(FetchLoader);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
+/***/ "./src/streaming/net/HTTPLoader.js":
+/*!*****************************************!*\
+  !*** ./src/streaming/net/HTTPLoader.js ***!
+  \*****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _XHRLoader_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./XHRLoader.js */ "./src/streaming/net/XHRLoader.js");
+/* harmony import */ var _FetchLoader_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./FetchLoader.js */ "./src/streaming/net/FetchLoader.js");
+/* harmony import */ var _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ../vo/metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! ../vo/DashJSError.js */ "./src/streaming/vo/DashJSError.js");
+/* harmony import */ var _models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! ../models/CmsdModel.js */ "./src/streaming/models/CmsdModel.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/* harmony import */ var _core_Debug_js__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! ../../core/Debug.js */ "./src/core/Debug.js");
+/* harmony import */ var _core_EventBus_js__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! ../../core/EventBus.js */ "./src/core/EventBus.js");
+/* harmony import */ var _core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__ = __webpack_require__(/*! ../../core/events/Events.js */ "./src/core/events/Events.js");
+/* harmony import */ var _core_Settings_js__WEBPACK_IMPORTED_MODULE_10__ = __webpack_require__(/*! ../../core/Settings.js */ "./src/core/Settings.js");
+/* harmony import */ var _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__ = __webpack_require__(/*! ../constants/Constants.js */ "./src/streaming/constants/Constants.js");
+/* harmony import */ var _models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__ = __webpack_require__(/*! ../models/CustomParametersModel.js */ "./src/streaming/models/CustomParametersModel.js");
+/* harmony import */ var _controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_13__ = __webpack_require__(/*! ../controllers/CommonAccessTokenController.js */ "./src/streaming/controllers/CommonAccessTokenController.js");
+/* harmony import */ var _controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_14__ = __webpack_require__(/*! ../controllers/ExtUrlQueryInfoController.js */ "./src/streaming/controllers/ExtUrlQueryInfoController.js");
+/* harmony import */ var _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_15__ = __webpack_require__(/*! ../vo/CommonMediaRequest.js */ "./src/streaming/vo/CommonMediaRequest.js");
+/* harmony import */ var _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_16__ = __webpack_require__(/*! ../vo/CommonMediaResponse.js */ "./src/streaming/vo/CommonMediaResponse.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/**
+ * @module HTTPLoader
+ * @ignore
+ * @description Manages download of resources via HTTP.
+ * @param {Object} cfg - dependencies from parent
+ */
+function HTTPLoader(cfg) {
+  cfg = cfg || {};
+  const context = this.context;
+  const errHandler = cfg.errHandler;
+  const dashMetrics = cfg.dashMetrics;
+  const mediaPlayerModel = cfg.mediaPlayerModel;
+  const boxParser = cfg.boxParser;
+  const errors = cfg.errors;
+  const eventBus = (0,_core_EventBus_js__WEBPACK_IMPORTED_MODULE_8__["default"])(context).getInstance();
+  const settings = (0,_core_Settings_js__WEBPACK_IMPORTED_MODULE_10__["default"])(context).getInstance();
+  let instance, httpRequests, delayedRequests, retryRequests, downloadErrorToRequestTypeMap, cmsdModel, xhrLoader, fetchLoader, customParametersModel, commonAccessTokenController, extUrlQueryInfoController, logger;
+  function setup() {
+    logger = (0,_core_Debug_js__WEBPACK_IMPORTED_MODULE_7__["default"])(context).getInstance().getLogger(instance);
+    httpRequests = [];
+    delayedRequests = [];
+    retryRequests = [];
+    cmsdModel = (0,_models_CmsdModel_js__WEBPACK_IMPORTED_MODULE_5__["default"])(context).getInstance();
+    customParametersModel = (0,_models_CustomParametersModel_js__WEBPACK_IMPORTED_MODULE_12__["default"])(context).getInstance();
+    commonAccessTokenController = (0,_controllers_CommonAccessTokenController_js__WEBPACK_IMPORTED_MODULE_13__["default"])(context).getInstance();
+    extUrlQueryInfoController = (0,_controllers_ExtUrlQueryInfoController_js__WEBPACK_IMPORTED_MODULE_14__["default"])(context).getInstance();
+    downloadErrorToRequestTypeMap = {
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE]: errors.DOWNLOAD_ERROR_ID_MANIFEST_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.XLINK_EXPANSION_TYPE]: errors.DOWNLOAD_ERROR_ID_XLINK_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INIT_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_INITIALIZATION_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INDEX_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE,
+      [_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.OTHER_TYPE]: errors.DOWNLOAD_ERROR_ID_CONTENT_CODE
+    };
+  }
+  function setConfig(config) {
+    if (!config) {
+      return;
+    }
+    if (config.commonAccessTokenController) {
+      commonAccessTokenController = config.commonAccessTokenController;
+    }
+    if (config.extUrlQueryInfoController) {
+      extUrlQueryInfoController = config.extUrlQueryInfoController;
+    }
+  }
+
+  /**
+   * Initiates a download of the resource described by config.request.
+   * @param {Object} config - contains request (FragmentRequest or derived type), and callbacks
+   * @memberof module:HTTPLoader
+   * @instance
+   */
+  function load(config) {
+    if (config.request) {
+      const retryAttempts = mediaPlayerModel.getRetryAttemptsForType(config.request.type);
+      return _internalLoad(config, retryAttempts);
+    } else {
+      if (config.error) {
+        config.error(config.request, 'error');
+      }
+      return Promise.resolve();
+    }
+  }
+
+  /**
+   * Initiates or re-initiates a download of the resource
+   * @param {object} config
+   * @param {number} remainingAttempts
+   * @private
+   */
+  function _internalLoad(config, remainingAttempts) {
+    /**
+     * Fired when a request has completed, whether successfully (after load) or unsuccessfully (after abort, timeout or error).
+     */
+    const _onloadend = function () {
+      _onRequestEnd();
+    };
+
+    /**
+     * Fired when a request has started to load data.
+     * @param event
+     */
+    const _onprogress = function (event) {
+      const currentTime = new Date();
+
+      // If we did not transfer all data yet and this is the first time we are getting a progress event we use this time as firstByteDate.
+      if (firstProgress) {
+        firstProgress = false;
+        // event.loaded: the amount of data currently transferred
+        // event.total: the total amount of data to be transferred.
+        // If lengthComputable is false within the XMLHttpRequestProgressEvent, that means the server never sent a Content-Length header in the response.
+        if (!event.lengthComputable || event.lengthComputable && event.total !== event.loaded) {
+          requestObject.firstByteDate = currentTime;
+          commonMediaResponse.resourceTiming.responseStart = currentTime.getTime();
+        }
+      }
+
+      // lengthComputable indicating if the resource concerned by the ProgressEvent has a length that can be calculated. If not, the ProgressEvent.total property has no significant value.
+      if (event.lengthComputable) {
+        requestObject.bytesLoaded = commonMediaResponse.length = event.loaded;
+        requestObject.bytesTotal = commonMediaResponse.resourceTiming.encodedBodySize = event.total;
+        commonMediaResponse.length = event.total;
+        commonMediaResponse.resourceTiming.encodedBodySize = event.loaded;
+      }
+      if (!event.noTrace) {
+        traces.push({
+          s: lastTraceTime,
+          d: event.time ? event.time : currentTime.getTime() - lastTraceTime.getTime(),
+          b: [event.loaded ? event.loaded - lastTraceReceivedCount : 0],
+          // event.loaded: When downloading a resource using HTTP, this value is specified in bytes (not bits), and only represents the part of the content itself, not headers and other overhead
+          t: event.throughput
+        });
+        requestObject.traces = traces;
+        lastTraceTime = currentTime;
+        lastTraceReceivedCount = event.loaded;
+      }
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
+      if (settings.get().streaming.fragmentRequestProgressTimeout > 0) {
+        progressTimeout = setTimeout(function () {
+          // No more progress => abort request and treat as an error
+          logger.warn('Abort request ' + commonMediaRequest.url + ' due to progress timeout');
+          loader.abort(commonMediaRequest);
+          _onloadend();
+        }, settings.get().streaming.fragmentRequestProgressTimeout);
+      }
+      if (config.progress && event) {
+        config.progress(event);
+      }
+    };
+
+    /**
+     * Fired when a request has been aborted, for example because the program called XMLHttpRequest.abort().
+     */
+    const _onabort = function () {
+      _onRequestEnd(true);
+    };
+
+    /**
+     * Fired when progress is terminated due to preset time expiring.
+     * @param event
+     */
+    const _ontimeout = function (event) {
+      let timeoutMessage;
+      // We know how much we already downloaded by looking at the timeout event
+      if (event.lengthComputable) {
+        let percentageComplete = event.loaded / event.total * 100;
+        timeoutMessage = 'Request timeout: loaded: ' + event.loaded + ', out of: ' + event.total + ' : ' + percentageComplete.toFixed(3) + '% Completed';
+      } else {
+        timeoutMessage = 'Request timeout: non-computable download size';
+      }
+      logger.warn(timeoutMessage);
+    };
+    const _onRequestEnd = function (aborted = false) {
+      // Remove the request from our list of requests
+      if (httpRequests.indexOf(commonMediaRequest) !== -1) {
+        httpRequests.splice(httpRequests.indexOf(commonMediaRequest), 1);
+      }
+      if (progressTimeout) {
+        clearTimeout(progressTimeout);
+        progressTimeout = null;
+      }
+      commonAccessTokenController.processResponseHeaders(commonMediaResponse);
+      _updateRequestTimingInfo();
+      _updateResourceTimingInfo();
+      _applyResponseInterceptors(commonMediaResponse).then(_httpResponse => {
+        commonMediaResponse = _httpResponse;
+        _addHttpRequestMetric(commonMediaRequest, commonMediaResponse, traces);
+
+        // Ignore aborted requests
+        if (aborted) {
+          if (config.abort) {
+            config.abort(requestObject);
+          }
+          return;
+        }
+        if (requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
+          dashMetrics.addManifestUpdate(requestObject);
+          eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__["default"].MANIFEST_LOADING_FINISHED, {
+            requestObject
+          });
+        }
+
+        // POST requests are allowed to have empty response bodies (e.g. CMCD event reporting endpoints).
+        // GET requests still need a body since dash.js consumes it (manifests, segments).
+        const hasUsableBody = !!commonMediaResponse.data || requestObject.method === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.POST;
+        if (commonMediaResponse.status >= 200 && commonMediaResponse.status <= 299 && hasUsableBody) {
+          if (config.success) {
+            config.success(commonMediaResponse.data, commonMediaResponse.statusText, commonMediaResponse.url);
+          }
+          if (config.complete) {
+            config.complete(requestObject, commonMediaResponse.statusText);
+          }
+        } else {
+          // If we get a 404 to a media segment we should check the client clock again and perform a UTC sync in the background.
+          try {
+            if (commonMediaResponse.status === 404 && settings.get().streaming.utcSynchronization.enableBackgroundSyncAfterSegmentDownloadError && requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+              // Only trigger a sync if the loading failed for the first time
+              const initialNumberOfAttempts = mediaPlayerModel.getRetryAttemptsForType(_vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE);
+              if (initialNumberOfAttempts === remainingAttempts) {
+                eventBus.trigger(_core_events_Events_js__WEBPACK_IMPORTED_MODULE_9__["default"].ATTEMPT_BACKGROUND_SYNC);
+              }
+            }
+          } catch (e) {}
+          _retriggerRequest();
+        }
+      });
+    };
+    const _updateRequestTimingInfo = function () {
+      requestObject.startDate = requestStartTime;
+      requestObject.endDate = new Date();
+      requestObject.firstByteDate = requestObject.firstByteDate || requestStartTime;
+    };
+    const _updateResourceTimingInfo = function () {
+      commonMediaResponse.resourceTiming.responseEnd = performance.now();
+      commonMediaResponse.resourceTiming.duration = commonMediaResponse.resourceTiming.responseEnd - commonMediaResponse.resourceTiming.startTime;
+
+      // If enabled the ResourceTimingApi we add the corresponding information to the request object.
+      // These values are more accurate and can be used by the ThroughputController later
+      _addResourceTimingValues(commonMediaRequest, commonMediaResponse);
+    };
+    const _loadRequest = function (loader, httpRequest, httpResponse) {
+      return new Promise(resolve => {
+        _applyRequestInterceptors(httpRequest).then(_httpRequest => {
+          httpRequest = _httpRequest;
+          httpResponse.request = httpRequest;
+          httpRequest.customData.onloadend = _onloadend;
+          httpRequest.customData.onprogress = _onprogress;
+          httpRequest.customData.onabort = _onabort;
+          httpRequest.customData.ontimeout = _ontimeout;
+          httpResponse.resourceTiming.startTime = performance.now();
+          loader.load(httpRequest, httpResponse);
+          resolve();
+        });
+      });
+    };
+
+    /**
+     * Retriggers the request in case we did not exceed the number of retry attempts
+     * @private
+     */
+    const _retriggerRequest = function () {
+      if (remainingAttempts > 0) {
+        remainingAttempts--;
+        if (config && config.request) {
+          config.request.retryAttempts += 1;
+        }
+        let retryRequest = {
+          config: config
+        };
+        retryRequests.push(retryRequest);
+        retryRequest.timeout = setTimeout(function () {
+          if (retryRequests.indexOf(retryRequest) === -1) {
+            return;
+          } else {
+            retryRequests.splice(retryRequests.indexOf(retryRequest), 1);
+          }
+          _internalLoad(config, remainingAttempts);
+        }, mediaPlayerModel.getRetryIntervalsForType(requestObject.type));
+      } else {
+        if (requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+          return;
+        }
+        errHandler.error(new _vo_DashJSError_js__WEBPACK_IMPORTED_MODULE_4__["default"](downloadErrorToRequestTypeMap[requestObject.type], requestObject.url + ' is not available', {
+          request: requestObject,
+          response: commonMediaResponse
+        }));
+        if (config.error) {
+          config.error(requestObject, 'error', commonMediaResponse.statusText, commonMediaResponse);
+        }
+        if (config.complete) {
+          config.complete(requestObject, commonMediaResponse.statusText);
+        }
+      }
+    };
+
+    /**
+     * Returns the request timeout value from Settings based on the request type.
+     * This reads the value dynamically so that runtime changes via updateSettings() take effect.
+     * @param {Object} requestObject
+     * @returns {number}
+     * @private
+     */
+    function _getRequestTimeout(requestObject) {
+      if (requestObject.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MPD_TYPE) {
+        return settings.get().streaming.manifestRequestTimeout || 0;
+      }
+      if (_isFragmentRequest(requestObject)) {
+        return settings.get().streaming.fragmentRequestTimeout || 0;
+      }
+      return 0;
+    }
+
+    // Main code after inline functions
+    const requestObject = config.request;
+    const traces = [];
+    let firstProgress, requestStartTime, lastTraceTime, lastTraceReceivedCount, progressTimeout;
+    let commonMediaRequest;
+    let commonMediaResponse;
+    requestObject.bytesLoaded = NaN;
+    requestObject.bytesTotal = NaN;
+    requestObject.firstByteDate = null;
+    requestObject.traces = [];
+    firstProgress = true;
+    requestStartTime = new Date();
+    lastTraceTime = requestStartTime;
+    lastTraceReceivedCount = 0;
+    progressTimeout = null;
+    if (!dashMetrics || !errHandler) {
+      throw new Error('config object is not correct or missing');
+    }
+    const loaderInformation = _getLoader(requestObject);
+    const loader = loaderInformation.loader;
+    requestObject.fileLoaderType = loaderInformation.fileLoaderType;
+    requestObject.headers = requestObject.headers || {};
+    _updateRequestUrlAndHeaders(requestObject);
+    if (requestObject.range) {
+      requestObject.headers['Range'] = 'bytes=' + requestObject.range;
+    }
+    const withCredentials = customParametersModel.getXHRWithCredentialsForType(requestObject.type);
+    commonMediaRequest = new _vo_CommonMediaRequest_js__WEBPACK_IMPORTED_MODULE_15__["default"]({
+      url: requestObject.url,
+      method: requestObject.method || _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.GET,
+      responseType: requestObject.responseType,
+      headers: requestObject.headers,
+      credentials: withCredentials ? 'include' : 'omit',
+      timeout: _getRequestTimeout(requestObject),
+      body: requestObject.body,
+      customData: {
+        request: requestObject
+      }
+    });
+    commonMediaResponse = new _vo_CommonMediaResponse_js__WEBPACK_IMPORTED_MODULE_16__["default"]({
+      request: commonMediaRequest,
+      resourceTiming: {
+        startTime: performance.now(),
+        encodedBodySize: 0
+      },
+      status: 0
+    });
+
+    // Adds the ability to delay single fragment loading time to control buffer.
+    let now = new Date().getTime();
+    if (isNaN(requestObject.delayLoadingTime) || now >= requestObject.delayLoadingTime) {
+      // no delay - just send
+      httpRequests.push(commonMediaRequest);
+      return _loadRequest(loader, commonMediaRequest, commonMediaResponse);
+    } else {
+      // delay
+      let delayedRequest = {
+        httpRequest: commonMediaRequest,
+        httpResponse: commonMediaResponse
+      };
+      delayedRequests.push(delayedRequest);
+      delayedRequest.delayTimeout = setTimeout(function () {
+        if (delayedRequests.indexOf(delayedRequest) === -1) {
+          return;
+        } else {
+          delayedRequests.splice(delayedRequests.indexOf(delayedRequest), 1);
+        }
+        try {
+          requestStartTime = new Date();
+          lastTraceTime = requestStartTime;
+          httpRequests.push(delayedRequest.httpRequest);
+          _loadRequest(loader, delayedRequest.httpRequest, delayedRequest.httpResponse);
+        } catch (e) {
+          delayedRequest.httpRequest.onloadend();
+        }
+      }, requestObject.delayLoadingTime - now);
+      return Promise.resolve();
+    }
+  }
+  function _isFragmentRequest(request) {
+    return request && request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INIT_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.INDEX_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE || request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE;
+  }
+  function _applyRequestInterceptors(httpRequest) {
+    const interceptors = customParametersModel.getRequestInterceptors();
+    if (!interceptors) {
+      return Promise.resolve(httpRequest);
+    }
+    return interceptors.reduce((prev, next) => {
+      return prev.then(request => {
+        return next(request);
+      });
+    }, Promise.resolve(httpRequest));
+  }
+  function _applyResponseInterceptors(response) {
+    const interceptors = customParametersModel.getResponseInterceptors();
+    if (!interceptors) {
+      return Promise.resolve(response);
+    }
+    return interceptors.reduce((prev, next) => {
+      return prev.then(resp => {
+        return next(resp);
+      });
+    }, Promise.resolve(response));
+  }
+  function _addHttpRequestMetric(httpRequest, httpResponse, traces) {
+    const requestObject = httpRequest.customData.request;
+    const cmsd = settings.get().streaming.cmsd && settings.get().streaming.cmsd.enabled ? cmsdModel.parseResponseHeaders(httpResponse.headers, requestObject.mediaType) : null;
+    dashMetrics.addHttpRequest(requestObject, httpResponse.url, httpResponse.status, httpResponse.headers, traces, cmsd);
+  }
+
+  /**
+   * Adds the values from the Resource Timing API, see https://developer.mozilla.org/en-US/docs/Web/API/Resource_Timing_API/Using_the_Resource_Timing_API
+   * @param requestObject
+   * @private
+   */
+  function _addResourceTimingValues(httpRequest, httpResponse) {
+    if (!settings.get().streaming.abr.throughput.useResourceTimingApi) {
+      return;
+    }
+    // Check performance support. We do not support range requests, needs to figure out how to find the right resource here.
+    if (typeof performance === 'undefined' || httpRequest.range) {
+      return;
+    }
+
+    // Get a list of "resource" performance entries
+    const resources = performance.getEntriesByType?.('resource');
+    if (resources === undefined || resources.length <= 0) {
+      return;
+    }
+
+    // Find the right resource
+    let i = 0;
+    let resource = null;
+    while (i < resources.length) {
+      if (resources[i].name === httpRequest.url) {
+        resource = resources[i];
+        break;
+      }
+      i += 1;
+    }
+
+    // Check if PerformanceResourceTiming values are usable
+    // Note: to allow seeing cross-origin timing information, the Timing-Allow-Origin HTTP response header needs to be set
+    // See https://developer.mozilla.org/en-US/docs/Web/API/PerformanceResourceTiming#cross-origin_timing_information
+    if (!_areResourceTimingValuesUsable(resource)) {
+      return;
+    }
+    httpRequest.customData.request.resourceTimingValues = resource;
+
+    // Update CommonMediaResponse Resource Timing info
+    httpResponse.resourceTiming.startTime = resource.startTime;
+    httpResponse.resourceTiming.encodedBodySize = resource.encodedBodySize;
+    httpResponse.resourceTiming.responseStart = resource.responseStart;
+    httpResponse.resourceTiming.responseEnd = resource.responseEnd;
+    httpResponse.resourceTiming.duration = resource.duration;
+  }
+
+  /**
+   * Checks if we got usable ResourceTimingAPI values
+   * @param httpRequest
+   * @returns {boolean}
+   * @private
+   */
+  function _areResourceTimingValuesUsable(resource) {
+    return resource && !isNaN(resource.responseStart) && resource.responseStart > 0 && !isNaN(resource.responseEnd) && resource.responseEnd > 0 && !isNaN(resource.transferSize) && resource.transferSize > 0;
+  }
+
+  /**
+   * Returns either the FetchLoader or the XHRLoader depending on the request type and playback mode.
+   * @param {object} request
+   * @return {*}
+   * @private
+   */
+  function _getLoader(request) {
+    let loader;
+    let fileLoaderType;
+    if (!request.isPartialSegmentRequest && request.hasOwnProperty('availabilityTimeComplete') && request.availabilityTimeComplete === false && window.fetch && request.responseType === 'arraybuffer' && request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MEDIA_SEGMENT_TYPE) {
+      if (!fetchLoader) {
+        fetchLoader = (0,_FetchLoader_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).create();
+        fetchLoader.setConfig({
+          dashMetrics,
+          boxParser
+        });
+      }
+      loader = fetchLoader;
+      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FILE_LOADER_TYPES.FETCH;
+    } else {
+      if (!xhrLoader) {
+        xhrLoader = (0,_XHRLoader_js__WEBPACK_IMPORTED_MODULE_0__["default"])(context).create();
+      }
+      loader = xhrLoader;
+      fileLoaderType = _constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].FILE_LOADER_TYPES.XHR;
+    }
+    return {
+      loader,
+      fileLoaderType
+    };
+  }
+
+  /**
+   * Updates the request url and headers according to CMCD and content steering (pathway cloning)
+   * @param request
+   * @private
+   */
+  function _updateRequestUrlAndHeaders(request) {
+    if (request.retryAttempts === 0) {
+      _addExtUrlQueryParameters(request);
+    }
+    _addPathwayCloningParameters(request);
+    _addCommonAccessToken(request);
+  }
+  function _addExtUrlQueryParameters(request) {
+    // Add ExtUrlQueryInfo parameters
+    let finalQueryString = extUrlQueryInfoController.getFinalQueryString(request);
+    if (finalQueryString) {
+      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].addAdditionalQueryParameterToUrl(request.url, finalQueryString);
+    }
+  }
+  function _addPathwayCloningParameters(request) {
+    // Add queryParams that came from pathway cloning
+    if (request.queryParams) {
+      const queryParams = [];
+      for (const key in request.queryParams) {
+        queryParams.push({
+          key,
+          value: request.queryParams[key]
+        });
+      }
+      request.url = _core_Utils_js__WEBPACK_IMPORTED_MODULE_6__["default"].addAdditionalQueryParameterToUrl(request.url, queryParams);
+    }
+  }
+  function _addCommonAccessToken(request) {
+    const commonAccessToken = commonAccessTokenController.getCommonAccessTokenForUrl(request.url);
+    if (commonAccessToken) {
+      request.headers[_constants_Constants_js__WEBPACK_IMPORTED_MODULE_11__["default"].COMMON_ACCESS_TOKEN_HEADER] = commonAccessToken;
+    }
+  }
+
+  /**
+   * Aborts any inflight downloads
+   * @memberof module:HTTPLoader
+   * @instance
+   */
+  function abort() {
+    retryRequests.forEach(t => {
+      clearTimeout(t.timeout);
+      // abort request in order to trigger LOADING_ABANDONED event
+      if (t.config.request && t.config.abort) {
+        t.config.abort(t.config.request);
+      }
+    });
+    retryRequests = [];
+    delayedRequests.forEach(x => clearTimeout(x.delayTimeout));
+    delayedRequests = [];
+    httpRequests.forEach(req => {
+      const reqData = req.customData;
+      if (!reqData) {
+        return;
+      }
+      // MSS patch: ignore FragmentInfo requests
+      if (reqData.request && reqData.request.type === _vo_metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_2__.HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE) {
+        return;
+      }
+
+      // abort will trigger onloadend which we don't want
+      // when deliberately aborting inflight requests -
+      // set them to undefined so they are not called
+      reqData.onloadend = reqData.onprogress = undefined;
+      if (reqData.abort) {
+        reqData.abort();
+      }
+    });
+    httpRequests = [];
+  }
+  function resetInitialSettings() {
+    if (xhrLoader) {
+      xhrLoader.resetInitialSettings();
+    }
+  }
+  function reset() {
+    httpRequests = [];
+    delayedRequests = [];
+    retryRequests = [];
+    if (xhrLoader) {
+      xhrLoader.reset();
+    }
+    if (fetchLoader) {
+      fetchLoader.reset();
+    }
+    xhrLoader = null;
+    fetchLoader = null;
+  }
+  instance = {
+    abort,
+    load,
+    reset,
+    resetInitialSettings,
+    setConfig
+  };
+  setup();
+  return instance;
+}
+HTTPLoader.__dashjs_factory_name = 'HTTPLoader';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_3__["default"].getClassFactory(HTTPLoader);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
+/***/ "./src/streaming/net/SchemeLoaderFactory.js":
+/*!**************************************************!*\
+  !*** ./src/streaming/net/SchemeLoaderFactory.js ***!
+  \**************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _streaming_net_HTTPLoader_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../streaming/net/HTTPLoader.js */ "./src/streaming/net/HTTPLoader.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @module
+ * @description Choose right url loader for scheme
+ * @ignore
+ */
+function SchemeLoaderFactory() {
+  let instance;
+  let schemeLoaderMap;
+  function registerLoader(scheme, loader) {
+    schemeLoaderMap[scheme] = loader;
+  }
+  function unregisterLoader(scheme) {
+    if (schemeLoaderMap[scheme]) {
+      delete schemeLoaderMap[scheme];
+    }
+  }
+  function unregisterAllLoader() {
+    schemeLoaderMap = {};
+  }
+  function getLoader(url) {
+    // iterates through schemeLoaderMap to find a loader for the scheme
+    for (var scheme in schemeLoaderMap) {
+      if (schemeLoaderMap.hasOwnProperty(scheme) && url.startsWith(scheme)) {
+        return schemeLoaderMap[scheme];
+      }
+    }
+    return _streaming_net_HTTPLoader_js__WEBPACK_IMPORTED_MODULE_1__["default"];
+  }
+  function reset() {
+    unregisterAllLoader();
+  }
+  function setup() {
+    reset();
+  }
+  setup();
+  instance = {
+    getLoader,
+    registerLoader,
+    unregisterLoader,
+    unregisterAllLoader,
+    reset
+  };
+  return instance;
+}
+SchemeLoaderFactory.__dashjs_factory_name = 'SchemeLoaderFactory';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(SchemeLoaderFactory);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
+/***/ "./src/streaming/net/URLLoader.js":
+/*!****************************************!*\
+  !*** ./src/streaming/net/URLLoader.js ***!
+  \****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _streaming_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../streaming/net/SchemeLoaderFactory.js */ "./src/streaming/net/SchemeLoaderFactory.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @class URLLoader
+ * @description  Call Offline Loader or Online Loader depending on URL
+ * @param {Object} cfg - dependencies
+ * @ignore
+ */
+function URLLoader(cfg) {
+  cfg = cfg || {};
+  const context = this.context;
+  let instance, schemeLoaderFactory, loader;
+  schemeLoaderFactory = (0,_streaming_net_SchemeLoaderFactory_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  function load(config) {
+    if (!loader) {
+      let loaderFactory = schemeLoaderFactory.getLoader(config && config.request ? config.request.url : null);
+      loader = loaderFactory(context).create({
+        errHandler: cfg.errHandler,
+        mediaPlayerModel: cfg.mediaPlayerModel,
+        dashMetrics: cfg.dashMetrics,
+        boxParser: cfg.boxParser ? cfg.boxParser : null,
+        constants: cfg.constants ? cfg.constants : null,
+        dashConstants: cfg.dashConstants ? cfg.dashConstants : null,
+        urlUtils: cfg.urlUtils ? cfg.urlUtils : null,
+        errors: cfg.errors
+      });
+    }
+    loader.load(config);
+  }
+  function abort() {
+    if (loader) {
+      loader.abort();
+    }
+  }
+  function resetInitialSettings() {
+    if (loader && typeof loader.resetInitialSettings === 'function') {
+      loader.resetInitialSettings();
+    }
+  }
+  function reset() {
+    if (schemeLoaderFactory) {
+      schemeLoaderFactory.reset();
+      schemeLoaderFactory = null;
+    }
+    if (loader && typeof loader.reset === 'function') {
+      loader.reset();
+    }
+    loader = null;
+  }
+  instance = {
+    abort,
+    load,
+    reset,
+    resetInitialSettings
+  };
+  return instance;
+}
+URLLoader.__dashjs_factory_name = 'URLLoader';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(URLLoader);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
+/***/ "./src/streaming/net/XHRLoader.js":
+/*!****************************************!*\
+  !*** ./src/streaming/net/XHRLoader.js ***!
+  \****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _core_Utils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ../../core/Utils.js */ "./src/core/Utils.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @module XHRLoader
+ * @ignore
+ * @description Manages download of resources via HTTP.
+ */
+function XHRLoader() {
+  let instance;
+  let xhr;
+
+  /**
+   * Load request
+   * @param {CommonMediaRequest} commonMediaRequest
+   * @param {CommonMediaResponse} commonMediaResponse
+   */
+  function load(commonMediaRequest, commonMediaResponse) {
+    xhr = null;
+    xhr = new XMLHttpRequest();
+    xhr.open(commonMediaRequest.method, commonMediaRequest.url, true);
+    if (commonMediaRequest.responseType) {
+      xhr.responseType = commonMediaRequest.responseType;
+    }
+    if (commonMediaRequest.headers) {
+      for (let header in commonMediaRequest.headers) {
+        let value = commonMediaRequest.headers[header];
+        if (value) {
+          xhr.setRequestHeader(header, value);
+        }
+      }
+    }
+    xhr.withCredentials = commonMediaRequest.credentials === 'include';
+    xhr.timeout = commonMediaRequest.timeout;
+    xhr.onload = function () {
+      commonMediaResponse.url = this.responseURL;
+      commonMediaResponse.status = this.status;
+      commonMediaResponse.statusText = this.statusText;
+      commonMediaResponse.headers = _core_Utils_js__WEBPACK_IMPORTED_MODULE_1__["default"].parseHttpHeaders(this.getAllResponseHeaders());
+      commonMediaResponse.data = this.response;
+    };
+    if (commonMediaRequest.customData) {
+      xhr.onloadend = commonMediaRequest.customData.onloadend;
+      xhr.onprogress = commonMediaRequest.customData.onprogress;
+      xhr.onabort = commonMediaRequest.customData.onabort;
+      xhr.ontimeout = commonMediaRequest.customData.ontimeout;
+    }
+    let body = commonMediaRequest.body || null;
+    xhr.send(body);
+    commonMediaRequest.customData.abort = abort.bind(this);
+    return true;
+  }
+  function abort() {
+    if (xhr) {
+      // Clear most handlers before abort to prevent unwanted callbacks
+      xhr.onloadend = xhr.onerror = xhr.onprogress = xhr.onload = null;
+      // Call abort - this will trigger onabort callback if set
+      xhr.abort();
+      // Clear remaining handlers after abort to prevent memory leaks
+      xhr.onabort = xhr.ontimeout = null;
+      xhr = null;
+    }
+  }
+  function getXhr() {
+    return xhr;
+  }
+  function resetInitialSettings() {
+    abort();
+  }
+  function reset() {
+    abort();
+    instance = null;
+  }
+  instance = {
+    load,
+    abort,
+    getXhr,
+    reset,
+    resetInitialSettings
+  };
+  return instance;
+}
+XHRLoader.__dashjs_factory_name = 'XHRLoader';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getClassFactory(XHRLoader);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
 /***/ "./src/streaming/rules/SwitchRequest.js":
 /*!**********************************************!*\
   !*** ./src/streaming/rules/SwitchRequest.js ***!
   \**********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /**
@@ -7786,13 +18233,155 @@ _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].updateClassFactory
 
 /***/ }),
 
+/***/ "./src/streaming/utils/CertUrlUtils.js":
+/*!*********************************************!*\
+  !*** ./src/streaming/utils/CertUrlUtils.js ***!
+  \*********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+/**
+ * Utility functions for DASH Certurl normalization.
+ * Shared by ContentProtection parsing and protData handling.
+ *
+ * A Certurl entry may appear as:
+ *  - String: 'https://example.com/cert'
+ *  - Object parsed from XML: { __text: 'https://example.com/cert', '@certType': 'primary' }
+ *  - Pre-normalized object: { url: 'https://example.com/cert', certType: 'primary' }
+ *  - Array of any of the above
+ *
+ * The normalization returns an array of objects: { url: string, certType: string|null }
+ * Empty or invalid entries are filtered out. Whitespace is trimmed.
+ */
+function normalizeCertUrls(raw) {
+  if (!raw) {
+    return [];
+  }
+  const arr = Array.isArray(raw) ? raw : [raw];
+  return arr.map(item => {
+    if (!item) {
+      return null;
+    }
+    if (typeof item === 'string') {
+      const url = item.trim();
+      return url ? {
+        url,
+        certType: null
+      } : null;
+    }
+    if (typeof item === 'object') {
+      let url = (item.__text || item.text || '').trim();
+      if (!url && typeof item.url === 'string') {
+        // fallback if pre-normalized
+        url = item.url.trim();
+      }
+      let certType = item.certType || item['@certType'] || null;
+      if (certType && typeof certType === 'string') {
+        certType = certType.trim();
+        if (certType === '') {
+          certType = null;
+        }
+      } else {
+        certType = null;
+      }
+      return url ? {
+        url,
+        certType
+      } : null;
+    }
+    return null;
+  }).filter(Boolean);
+}
+
+/**
+ * Deduplicates an array of Certurl descriptor objects by URL + certType combination.
+ * Keeps first occurrence order stable.
+ * @param {Array<{url:string, certType:string|null}>} list
+ * @returns {Array<{url:string, certType:string|null}>}
+ */
+function dedupeCertUrls(list) {
+  if (!Array.isArray(list) || list.length === 0) {
+    return [];
+  }
+  const seen = new Set();
+  const result = [];
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (!item || !item.url) {
+      continue;
+    }
+    const key = item.url + '||' + (item.certType || '');
+    if (seen.has(key)) {
+      continue;
+    }
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
+/**
+ * Iterates over a ProtectionDataSet object and normalizes & deduplicates any certUrls arrays in-place.
+ * Returns the same object reference for convenience.
+ * @param {Object} protData - keySystem -> config object
+ * @returns {Object} protData
+ */
+function sanitizeProtectionDataCertUrls(protData) {
+  if (protData && typeof protData === 'object') {
+    Object.keys(protData).forEach(keySystem => {
+      const entry = protData[keySystem];
+      if (entry && Array.isArray(entry.certUrls)) {
+        entry.certUrls = dedupeCertUrls(normalizeCertUrls(entry.certUrls));
+      }
+    });
+  }
+  return protData;
+}
+/* harmony default export */ __webpack_exports__["default"] = ({
+  normalizeCertUrls,
+  dedupeCertUrls,
+  sanitizeProtectionDataCertUrls
+});
+
+/***/ }),
+
 /***/ "./src/streaming/utils/CustomTimeRanges.js":
 /*!*************************************************!*\
   !*** ./src/streaming/utils/CustomTimeRanges.js ***!
   \*************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
 /* harmony import */ var _SupervisorTools_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./SupervisorTools.js */ "./src/streaming/utils/SupervisorTools.js");
@@ -7950,13 +18539,355 @@ CustomTimeRanges.__dashjs_factory_name = 'CustomTimeRanges';
 
 /***/ }),
 
+/***/ "./src/streaming/utils/DefaultURLUtils.js":
+/*!************************************************!*\
+  !*** ./src/streaming/utils/DefaultURLUtils.js ***!
+  \************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @module DefaultURLUtils
+ * @description Provides utility functions for operating on URLs.
+ * Initially this is simply a method to determine the Base URL of a URL, but
+ * should probably include other things provided all over the place such as
+ * determining whether a URL is relative/absolute, resolving two paths etc.
+ * @ignore
+ */
+function DefaultURLUtils() {
+  let resolveFunction;
+  const schemeRegex = /^[a-z][a-z0-9+\-_.]*:/i;
+  const httpUrlRegex = /^https?:\/\//i;
+  const httpsUrlRegex = /^https:\/\//i;
+  const originRegex = /^([a-z][a-z0-9+\-_.]*:\/\/[^\/]+)\/?/i;
+
+  /**
+   * Resolves a url given an optional base url
+   * Uses window.URL to do the resolution.
+   *
+   * @param {string} url
+   * @param {string} [baseUrl]
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   * @private
+   */
+  const nativeURLResolver = (url, baseUrl) => {
+    try {
+      return new window.URL(url, baseUrl).toString();
+    } catch (e) {
+      return url;
+    }
+  };
+
+  /**
+   * Resolves a url given an optional base url
+   * Does not resolve ./, ../ etc but will do enough to construct something
+   * which will satisfy XHR etc when window.URL is not available ie
+   * IE11/node etc.
+   *
+   * @param {string} url
+   * @param {string} [baseUrl]
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   * @private
+   */
+  const dumbURLResolver = (url, baseUrl) => {
+    let baseUrlParseFunc = parseBaseUrl;
+    if (!baseUrl) {
+      return url;
+    }
+    if (!isRelative(url)) {
+      return url;
+    }
+    if (isPathAbsolute(url)) {
+      baseUrlParseFunc = parseOrigin;
+    }
+    if (isSchemeRelative(url)) {
+      baseUrlParseFunc = parseScheme;
+    }
+    const base = baseUrlParseFunc(baseUrl);
+    const joinChar = base.charAt(base.length - 1) !== '/' && url.charAt(0) !== '/' ? '/' : '';
+    return [base, url].join(joinChar);
+  };
+  function setup() {
+    try {
+      const u = new window.URL('x', 'http://y'); // eslint-disable-line
+      resolveFunction = nativeURLResolver;
+    } catch (e) {
+      // must be IE11/Node etc
+    } finally {
+      resolveFunction = resolveFunction || dumbURLResolver;
+    }
+  }
+
+  /**
+   * Returns a string that contains the Base URL of a URL, if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function parseBaseUrl(url) {
+    const slashIndex = url.indexOf('/');
+    const lastSlashIndex = url.lastIndexOf('/');
+    if (slashIndex !== -1) {
+      // if there is only '//'
+      if (lastSlashIndex === slashIndex + 1) {
+        return url;
+      }
+      if (url.indexOf('?') !== -1) {
+        url = url.substring(0, url.indexOf('?'));
+      }
+      return url.substring(0, lastSlashIndex + 1);
+    }
+    return '';
+  }
+
+  /**
+   * Returns a string that contains the scheme and origin of a URL,
+   * if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function parseOrigin(url) {
+    const matches = url.match(originRegex);
+    if (matches) {
+      return matches[1];
+    }
+    return '';
+  }
+
+  /**
+   * Returns a string that contains the fragment of a URL without scheme,
+   * if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function removeHostname(url) {
+    let urlParts = /^(?:\w+\:\/\/)?([^\/]+)(.*)$/.exec(url); //[1] = host / [2] = path
+    return urlParts[2].substring(1);
+  }
+
+  /**
+   * Returns a string that contains the scheme of a URL, if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function parseScheme(url) {
+    const matches = url.match(schemeRegex);
+    if (matches) {
+      return matches[0];
+    }
+    return '';
+  }
+
+  /**
+   * Determines whether the url is relative.
+   * @return {boolean}
+   * @param {string} url
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function isRelative(url) {
+    return !schemeRegex.test(url);
+  }
+
+  /**
+   * Determines whether the url is path-absolute.
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function isPathAbsolute(url) {
+    return isRelative(url) && url.charAt(0) === '/';
+  }
+
+  /**
+   * Determines whether the url is scheme-relative.
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function isSchemeRelative(url) {
+    return url.indexOf('//') === 0;
+  }
+
+  /**
+   * Determines whether the url is an HTTP-URL as defined in ISO/IEC
+   * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function isHTTPURL(url) {
+    return httpUrlRegex.test(url);
+  }
+
+  /**
+   * Determines whether the supplied url has https scheme
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function isHTTPS(url) {
+    return httpsUrlRegex.test(url);
+  }
+
+  /**
+   * Resolves a url given an optional base url
+   * @return {string}
+   * @param {string} url
+   * @param {string} [baseUrl]
+   * @memberof module:DefaultURLUtils
+   * @instance
+   */
+  function resolve(url, baseUrl) {
+    return resolveFunction(url, baseUrl);
+  }
+  setup();
+  const instance = {
+    parseBaseUrl: parseBaseUrl,
+    parseOrigin: parseOrigin,
+    parseScheme: parseScheme,
+    isRelative: isRelative,
+    isPathAbsolute: isPathAbsolute,
+    isSchemeRelative: isSchemeRelative,
+    isHTTPURL: isHTTPURL,
+    isHTTPS: isHTTPS,
+    removeHostname: removeHostname,
+    resolve: resolve
+  };
+  return instance;
+}
+DefaultURLUtils.__dashjs_factory_name = 'DefaultURLUtils';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(DefaultURLUtils));
+
+/***/ }),
+
+/***/ "./src/streaming/utils/ObjectUtils.js":
+/*!********************************************!*\
+  !*** ./src/streaming/utils/ObjectUtils.js ***!
+  \********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var fast_deep_equal__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! fast-deep-equal */ "./node_modules/fast-deep-equal/index.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+/**
+ * @module ObjectUtils
+ * @ignore
+ * @description Provides utility functions for objects
+ */
+function ObjectUtils() {
+  let instance;
+
+  /**
+   * Returns true if objects are equal
+   * @return {boolean}
+   * @param {object} obj1
+   * @param {object} obj2
+   * @memberof module:ObjectUtils
+   * @instance
+   */
+  function areEqual(obj1, obj2) {
+    return fast_deep_equal__WEBPACK_IMPORTED_MODULE_1__(obj1, obj2);
+  }
+  instance = {
+    areEqual
+  };
+  return instance;
+}
+ObjectUtils.__dashjs_factory_name = 'ObjectUtils';
+/* harmony default export */ __webpack_exports__["default"] = (_core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(ObjectUtils));
+
+/***/ }),
+
 /***/ "./src/streaming/utils/SupervisorTools.js":
 /*!************************************************!*\
   !*** ./src/streaming/utils/SupervisorTools.js ***!
   \************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   checkInteger: function() { return /* binding */ checkInteger; },
@@ -8020,13 +18951,412 @@ function checkIsVideoOrAudioType(type) {
 
 /***/ }),
 
+/***/ "./src/streaming/utils/URLUtils.js":
+/*!*****************************************!*\
+  !*** ./src/streaming/utils/URLUtils.js ***!
+  \*****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../core/FactoryMaker.js */ "./src/core/FactoryMaker.js");
+/* harmony import */ var _DefaultURLUtils_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./DefaultURLUtils.js */ "./src/streaming/utils/DefaultURLUtils.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+
+/**
+ * @module URLUtils
+ * @ignore
+ * @description Provides utility functions for operating on URLs.
+ * Initially this is simply a method to determine the Base URL of a URL, but
+ * should probably include other things provided all over the place such as
+ * determining whether a URL is relative/absolute, resolving two paths etc.
+ */
+function URLUtils() {
+  let instance;
+  let defaultURLUtils;
+  let regexUtils = [];
+  const context = this.context;
+  function getUtils(url) {
+    let i;
+    for (i = 0; i < regexUtils.length; i++) {
+      let regex = regexUtils[i].regex;
+      if (regex.test(url)) {
+        return regexUtils[i].utils;
+      }
+    }
+    return defaultURLUtils;
+  }
+  function setup() {
+    defaultURLUtils = (0,_DefaultURLUtils_js__WEBPACK_IMPORTED_MODULE_1__["default"])(context).getInstance();
+  }
+
+  /**
+   * Register a module to handle specific url.
+   * @param {regex} regex - url regex
+   * @param {object} utils - object that handles the regex
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function registerUrlRegex(regex, utils) {
+    regexUtils.push({
+      regex: regex,
+      utils: utils
+    });
+  }
+  function internalCall(functionName, url, baseUrl) {
+    let utils = getUtils(baseUrl || url);
+    return utils && typeof utils[functionName] === 'function' ? utils[functionName](url, baseUrl) : defaultURLUtils[functionName](url, baseUrl);
+  }
+
+  /**
+   * Returns a string that contains the Base URL of a URL, if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function parseBaseUrl(url) {
+    return internalCall('parseBaseUrl', url);
+  }
+
+  /**
+   * Returns a string that contains the scheme and origin of a URL,
+   * if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function parseOrigin(url) {
+    return internalCall('parseOrigin', url);
+  }
+
+  /**
+   * Returns a string that contains the fragment of a URL without scheme,
+   * if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function removeHostname(url) {
+    return internalCall('removeHostname', url);
+  }
+
+  /**
+   * Returns a string that contains the scheme of a URL, if determinable.
+   * @param {string} url - full url
+   * @return {string}
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function parseScheme(url) {
+    return internalCall('parseScheme', url);
+  }
+
+  /**
+   * Determines whether the url is relative.
+   * @return {boolean}
+   * @param {string} url
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function isRelative(url) {
+    return internalCall('isRelative', url);
+  }
+
+  /**
+   * Determines whether the url is path-absolute.
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function isPathAbsolute(url) {
+    return internalCall('isPathAbsolute', url);
+  }
+
+  /**
+   * Determines whether the url is scheme-relative.
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function isSchemeRelative(url) {
+    return internalCall('isSchemeRelative', url);
+  }
+
+  /**
+   * Determines whether the url is an HTTP-URL as defined in ISO/IEC
+   * 23009-1:2014 3.1.15. ie URL with a fixed scheme of http or https
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function isHTTPURL(url) {
+    return internalCall('isHTTPURL', url);
+  }
+
+  /**
+   * Determines whether the supplied url has https scheme
+   * @return {bool}
+   * @param {string} url
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function isHTTPS(url) {
+    return internalCall('isHTTPS', url);
+  }
+
+  /**
+   * Resolves a url given an optional base url
+   * @return {string}
+   * @param {string} url
+   * @param {string} [baseUrl]
+   * @memberof module:URLUtils
+   * @instance
+   */
+  function resolve(url, baseUrl) {
+    return internalCall('resolve', url, baseUrl);
+  }
+  setup();
+  instance = {
+    registerUrlRegex: registerUrlRegex,
+    parseBaseUrl: parseBaseUrl,
+    parseOrigin: parseOrigin,
+    parseScheme: parseScheme,
+    isRelative: isRelative,
+    isPathAbsolute: isPathAbsolute,
+    isSchemeRelative: isSchemeRelative,
+    isHTTPURL: isHTTPURL,
+    isHTTPS: isHTTPS,
+    removeHostname: removeHostname,
+    resolve: resolve
+  };
+  return instance;
+}
+URLUtils.__dashjs_factory_name = 'URLUtils';
+const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_0__["default"].getSingletonFactory(URLUtils);
+/* harmony default export */ __webpack_exports__["default"] = (factory);
+
+/***/ }),
+
+/***/ "./src/streaming/vo/CmcdReportRequest.js":
+/*!***********************************************!*\
+  !*** ./src/streaming/vo/CmcdReportRequest.js ***!
+  \***********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _FragmentRequest_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./FragmentRequest.js */ "./src/streaming/vo/FragmentRequest.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+
+class CmcdReportRequest extends _FragmentRequest_js__WEBPACK_IMPORTED_MODULE_0__["default"] {
+  constructor(method) {
+    super();
+    this.method = method || null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CmcdReportRequest);
+
+/***/ }),
+
+/***/ "./src/streaming/vo/CommonMediaRequest.js":
+/*!************************************************!*\
+  !*** ./src/streaming/vo/CommonMediaRequest.js ***!
+  \************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+class CommonMediaRequest {
+  /**
+   * @param {Object} params
+   * @param {string} params.url
+   * @param {string} params.method
+   * @param {BodyInit} [params.body]
+   * @param {string} [params.responseType]
+   * @param {Object<string, string>} [params.headers]
+   * @param {RequestCredentials} [params.credentials]
+   * @param {RequestMode} [params.mode]
+   * @param {number} [params.timeout]
+   * @param {Object} [params.customData]
+   */
+  constructor(params) {
+    this.url = params.url;
+    this.method = params.method;
+    this.body = params.body !== undefined ? params.body : null;
+    this.responseType = params.responseType !== undefined ? params.responseType : null;
+    this.headers = params.headers !== undefined ? params.headers : {};
+    this.credentials = params.credentials !== undefined ? params.credentials : null;
+    this.mode = params.mode !== undefined ? params.mode : null;
+    this.timeout = params.timeout !== undefined ? params.timeout : 0;
+    this.customData = params.customData !== undefined ? params.customData : {};
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CommonMediaRequest);
+
+/***/ }),
+
+/***/ "./src/streaming/vo/CommonMediaResponse.js":
+/*!*************************************************!*\
+  !*** ./src/streaming/vo/CommonMediaResponse.js ***!
+  \*************************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+class CommonMediaResponse {
+  /**
+   * @param {Object} params
+   * @param {CommonMediaRequest} params.request
+   * @param {string} [params.url]
+   * @param {boolean} [params.redirected]
+   * @param {number} [params.status]
+   * @param {string} [params.statusText]
+   * @param {string} [params.type]
+   * @param {Object<string, string>} [params.headers]
+   * @param {any} [params.data]
+   * @param {ResourceTiming} [params.resourceTiming]
+   */
+  constructor(params) {
+    this.request = params.request;
+    this.url = params.url !== undefined ? params.url : null;
+    this.redirected = params.redirected !== undefined ? params.redirected : false;
+    this.status = params.status !== undefined ? params.status : null;
+    this.statusText = params.statusText !== undefined ? params.statusText : '';
+    this.type = params.type !== undefined ? params.type : '';
+    this.headers = params.headers !== undefined ? params.headers : {};
+    this.data = params.data !== undefined ? params.data : null;
+    this.resourceTiming = params.resourceTiming !== undefined ? params.resourceTiming : null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (CommonMediaResponse);
+
+/***/ }),
+
+/***/ "./src/streaming/vo/DashJSError.js":
+/*!*****************************************!*\
+  !*** ./src/streaming/vo/DashJSError.js ***!
+  \*****************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+/**
+ * @class
+ * @ignore
+ */
+class DashJSError {
+  constructor(code, message, data) {
+    this.code = code || null;
+    this.message = message || null;
+    this.data = data || null;
+  }
+}
+/* harmony default export */ __webpack_exports__["default"] = (DashJSError);
+
+/***/ }),
+
 /***/ "./src/streaming/vo/ExternalSubtitle.js":
 /*!**********************************************!*\
   !*** ./src/streaming/vo/ExternalSubtitle.js ***!
   \**********************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _dash_constants_DashConstants_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../dash/constants/DashConstants.js */ "./src/dash/constants/DashConstants.js");
 /**
@@ -8095,13 +19425,103 @@ class ExternalSubtitle {
 
 /***/ }),
 
+/***/ "./src/streaming/vo/FragmentRequest.js":
+/*!*********************************************!*\
+  !*** ./src/streaming/vo/FragmentRequest.js ***!
+  \*********************************************/
+/***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./metrics/HTTPRequest.js */ "./src/streaming/vo/metrics/HTTPRequest.js");
+/**
+ * The copyright in this software is being made available under the BSD License,
+ * included below. This software may be subject to other third party and contributor
+ * rights, including patent rights, and no such rights are granted under this license.
+ *
+ * Copyright (c) 2013, Dash Industry Forum.
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *  * Redistributions of source code must retain the above copyright notice, this
+ *  list of conditions and the following disclaimer.
+ *  * Redistributions in binary form must reproduce the above copyright notice,
+ *  this list of conditions and the following disclaimer in the documentation and/or
+ *  other materials provided with the distribution.
+ *  * Neither the name of Dash Industry Forum nor the names of its
+ *  contributors may be used to endorse or promote products derived from this software
+ *  without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS AS IS AND ANY
+ *  EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+ *  WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ *  IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+ *  INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ *  NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ *  WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ *  POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+
+/**
+ * @class
+ * @ignore
+ */
+class FragmentRequest {
+  constructor(url) {
+    this.action = FragmentRequest.ACTION_DOWNLOAD;
+    this.availabilityEndTime = null;
+    this.availabilityStartTime = null;
+    this.bandwidth = NaN;
+    this.bytesLoaded = NaN;
+    this.bytesTotal = NaN;
+    this.delayLoadingTime = NaN;
+    this.duration = NaN;
+    this.endDate = null;
+    this.firstByteDate = null;
+    this.index = NaN;
+    this.isPartialSegmentRequest = false;
+    this.mediaStartTime = NaN;
+    this.mediaType = null;
+    this.presentationStartTime = NaN;
+    this.range = null;
+    this.representation = null;
+    this.responseType = 'arraybuffer';
+    this.retryAttempts = 0;
+    this.serviceLocation = null;
+    this.startDate = null;
+    this.startTime = NaN;
+    this.timescale = NaN;
+    this.type = null;
+    this.url = url || null;
+    this.wallStartTime = null;
+  }
+  isInitializationRequest() {
+    return this.type && this.type === _metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_0__.HTTPRequest.INIT_SEGMENT_TYPE;
+  }
+  setInfo(info) {
+    this.type = info && info.init ? _metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_0__.HTTPRequest.INIT_SEGMENT_TYPE : _metrics_HTTPRequest_js__WEBPACK_IMPORTED_MODULE_0__.HTTPRequest.MEDIA_SEGMENT_TYPE;
+    this.url = info && info.url ? info.url : null;
+    this.range = info && info.range ? info.range.start + '-' + info.range.end : null;
+    this.mediaType = info && info.mediaType ? info.mediaType : null;
+    this.representation = info && info.representation ? info.representation : null;
+  }
+}
+FragmentRequest.ACTION_DOWNLOAD = 'download';
+FragmentRequest.ACTION_COMPLETE = 'complete';
+/* harmony default export */ __webpack_exports__["default"] = (FragmentRequest);
+
+/***/ }),
+
 /***/ "./src/streaming/vo/metrics/HTTPRequest.js":
 /*!*************************************************!*\
   !*** ./src/streaming/vo/metrics/HTTPRequest.js ***!
   \*************************************************/
 /***/ (function(__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) {
 
-"use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   HTTPRequest: function() { return /* binding */ HTTPRequest; },
@@ -8162,6 +19582,7 @@ class HTTPRequest {
      * - Index Fragment
      * - Media Fragment
      * - Bitstream Switching Fragment
+     * - CMCD Response
      * - other
      * @public
      */
@@ -8274,19 +19695,22 @@ class HTTPRequestTrace {
     this.b = [];
   }
 }
-HTTPRequest.GET = 'GET';
-HTTPRequest.HEAD = 'HEAD';
-HTTPRequest.MPD_TYPE = 'MPD';
-HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
-HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
-HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
-HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
 HTTPRequest.BITSTREAM_SWITCHING_SEGMENT_TYPE = 'BitstreamSwitchingSegment';
-HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
-HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
-HTTPRequest.LICENSE = 'license';
 HTTPRequest.CONTENT_STEERING_TYPE = 'ContentSteering';
+HTTPRequest.DVB_REPORTING_TYPE = 'DVBReporting';
+HTTPRequest.GET = 'GET';
+HTTPRequest.POST = 'POST';
+HTTPRequest.HEAD = 'HEAD';
+HTTPRequest.INDEX_SEGMENT_TYPE = 'IndexSegment';
+HTTPRequest.INIT_SEGMENT_TYPE = 'InitializationSegment';
+HTTPRequest.LICENSE = 'license';
+HTTPRequest.LICENSE_CERTIFICATE = 'licenseCertificate';
+HTTPRequest.MEDIA_SEGMENT_TYPE = 'MediaSegment';
+HTTPRequest.MPD_TYPE = 'MPD';
+HTTPRequest.MSS_FRAGMENT_INFO_SEGMENT_TYPE = 'FragmentInfoSegment';
+HTTPRequest.CMCD_EVENT = 'CmcdEvent';
 HTTPRequest.OTHER_TYPE = 'other';
+HTTPRequest.XLINK_EXPANSION_TYPE = 'XLinkExpansion';
 
 
 /***/ })
@@ -8311,18 +19735,13 @@ HTTPRequest.OTHER_TYPE = 'other';
 /******/ 		};
 /******/ 	
 /******/ 		// Execute the module function
-/******/ 		__webpack_modules__[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+/******/ 		__webpack_modules__[moduleId](module, module.exports, __webpack_require__);
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/amd options */
-/******/ 	!function() {
-/******/ 		__webpack_require__.amdO = {};
-/******/ 	}();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	!function() {
 /******/ 		// define getter functions for harmony exports
@@ -8353,9 +19772,6 @@ HTTPRequest.OTHER_TYPE = 'other';
 /******/ 	
 /************************************************************************/
 var __webpack_exports__ = {};
-// This entry need to be wrapped in an IIFE because it need to be in strict mode.
-!function() {
-"use strict";
 /*!***************************************************!*\
   !*** ./src/streaming/metrics/MetricsReporting.js ***!
   \***************************************************/
@@ -8450,7 +19866,6 @@ const factory = _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__["default"].ge
 factory.events = _MetricsReportingEvents_js__WEBPACK_IMPORTED_MODULE_1__["default"];
 _core_FactoryMaker_js__WEBPACK_IMPORTED_MODULE_5__["default"].updateClassFactory(MetricsReporting.__dashjs_factory_name, factory);
 /* harmony default export */ __webpack_exports__["default"] = (factory);
-}();
 __webpack_exports__ = __webpack_exports__["default"];
 /******/ 	return __webpack_exports__;
 /******/ })()
