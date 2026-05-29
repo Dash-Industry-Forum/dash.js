@@ -336,6 +336,15 @@
       ]
     },
     {
+      "name": "L3D-DASH LiveSim2",
+      "url": "https://livesim2.dashif.org/livesim2/segtimelinenr_1/chunkdur_0.5/ssras_2,1/chunkdurssr_2,0.2/testpic_2s_low_delay/Manifest.mpd",
+      "provider": "dashif",
+      "type": "live",
+      "includedTestfiles": [
+        "playback/*"
+      ]
+    },
+    {
       "name": "Segment Base",
       "type": "vod",
       "url": "https://dash.akamaized.net/dash264/TestCases/1a/sony/SNE_DASH_SD_CASE1A_REVISED.mpd",
