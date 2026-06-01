@@ -320,6 +320,9 @@ export class SettingsController {
         if (this._isChecked('opt-muted')) {
             params.set('muted', 'true');
         }
+        if (this._isChecked('opt-autoload')) {
+            params.set('autoLoad', 'true');
+        }
 
         const url = new URL(window.location.href.split('?')[0]);
         url.search = params.toString();
@@ -363,14 +366,14 @@ export class SettingsController {
             return;
         }
 
-        // Handle stream URL
-        const streamUrl = params.get('stream');
+        // Handle stream URL (support legacy 'mpd' parameter as well)
+        const streamUrl = params.get('stream') || params.get('mpd');
         if (streamUrl) {
             $('#stream-url').value = streamUrl;
         }
 
         // Handle external settings
-        if (params.get('autoplay') === 'true') {
+        if (params.get('autoplay') === 'true' || params.get('autoPlay') === 'true') {
             $('#opt-autoplay').checked = true;
             this._autoPlay = true;
         }
@@ -380,6 +383,9 @@ export class SettingsController {
         }
         if (params.get('muted') === 'true') {
             $('#opt-muted').checked = true;
+        }
+        if (params.get('autoLoad') === 'true') {
+            $('#opt-autoload').checked = true;
         }
 
         // Handle DRM protection data
@@ -395,7 +401,7 @@ export class SettingsController {
         // Handle dash.js settings
         const settingsObj = {};
         for (const [key, value] of params.entries()) {
-            if (['stream', 'autoplay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key)) {
+            if (['stream', 'mpd', 'autoplay', 'autoPlay', 'loop', 'muted', 'autoLoad', 'protData'].includes(key)) {
                 continue;
             }
             this._setNestedValue(settingsObj, key, this._coerceType(value));
@@ -436,6 +442,10 @@ export class SettingsController {
 
         this._bindCheckbox('opt-loop', () => {
             this._loop = this._isChecked('opt-loop');
+        });
+
+        this._bindCheckbox('opt-autoload', () => {
+            // Auto-load is only meaningful on page load, no runtime action needed
         });
 
         this._bindCheckbox('opt-muted', () => {
