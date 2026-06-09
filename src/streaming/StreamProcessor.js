@@ -1577,6 +1577,7 @@ function StreamProcessor(config) {
             controller = BufferController(context).create({
                 abrController,
                 capabilities,
+                dashHandler,
                 errHandler,
                 fragmentModel,
                 manifestModel,
