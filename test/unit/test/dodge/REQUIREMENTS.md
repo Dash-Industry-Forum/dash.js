@@ -720,6 +720,74 @@ The optional `period` field on stream entries must be a non-negative integer whe
 | `dodge.DodgeDashHandlerOverride.js` | Multi-period support | updateDefendedStreamInfo returns false for unmatched period |
 | `dodge.DodgeDashHandlerOverride.js` | Multi-period support | stream without period field matches any period |
 
+### R9.10 - Progressive flag validation and self-contained seed requirement
+
+A stream entry may carry an optional `progressive` boolean (string `'true'`/`'false'` accepted and coerced; other values rejected). When `progressive` is true, the stream's data cycles are incomplete and will be extended at runtime (progressive defense generation). The initial data (seed) in a progressive stream, in the original extended manifest, MUST be self-contained: `checkDataCycles` runs the `full` pass with the "require fully flushed" mode, so every non-padding segment index the seed introduces must be flushed within the seed. This is because later appended batches cannot flush an earlier batch's indices. A complete (non-progressive) manifest keeps the implicit end-of-stream flush.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with progressive = true, true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with progressive = false, true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with progressive string "true", coerced to boolean, true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with progressive string "false", coerced to boolean, true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with non-boolean progressive (number), false |
+| `dodge.DefenseRegistry.js` | progressive flag validation | stream with non-parseable string progressive, false |
+| `dodge.DefenseRegistry.js` | progressive flag validation | progressive stream with self-contained data (all introduced indices flushed), true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | progressive stream leaving an introduced index unflushed, false |
+| `dodge.DefenseRegistry.js` | progressive flag validation | progressive stream with empty data (init-only seed), true |
+| `dodge.DefenseRegistry.js` | progressive flag validation | non-progressive counterpart of the same unflushed data is valid (implicit end-of-stream flush) |
+
+### R9.11 - Runtime append and finalize of progressive manifests
+
+`appendDataCycles(label, period, cycles)` extends a progressive stream at runtime. The append is atomic and self-contained: the stream must exist and be progressive; every cycle is structurally validated on a clone (a failure changes nothing); `full` flags are computed over the batch alone, and every non-padding index the batch introduces must be flushed within the batch (a selective buffer array may only reference indices introduced by the batch, so a batch is a complete buffer window). On success, the cycles are appended with correct `full` flags, `maxNoPad` is recomputed, and the already-consumed prefix is never touched. Because `getDefendedStreamInfo` returns the stored stream by reference, appended cycles are visible to the override immediately. `finalizeStream(label, period, paddingCycles)` requires the stream to exist and still be progressive (a non-progressive or already-finalized stream is rejected, so a double finalize changes nothing); it appends optional trailing padding (which must be padding cycles), clears the `progressive` flag, and recomputes `maxNoPad`; after finalize, both `appendDataCycles` and a further `finalizeStream` fail.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles returns false when no stream matches the label |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles returns false when the stream is not progressive |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles returns false for an empty batch |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles appends a self-contained batch and returns true |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles makes new cycles visible via the live stream reference |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles computes full flags over the batch alone |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles updates maxNoPad |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles rejects a batch that leaves an introduced index unflushed, changing nothing |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles rejects a batch whose buffer array references an index outside the batch, changing nothing |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles rejects a structurally invalid batch, changing nothing |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles does not mutate the caller batch buffer array |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream returns false when no stream matches the label |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream clears the progressive flag and returns true |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream appends trailing padding and excludes it from maxNoPad |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream rejects a non-padding trailing cycle, changing nothing |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | appendDataCycles returns false after finalizeStream |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream returns false on a second (double) finalize, changing nothing |
+| `dodge.DefenseRegistry.js` | progressive append and finalize | finalizeStream returns false for a non-progressive (complete) stream |
+
+### R9.12 - Override stalls (does not finish) while a manifest is progressive
+
+When `defendedStreamInfo.progressive` is true, `getNextSegmentRequest` stalls (returns `null` without setting `mediaHasFinished`, not advancing `lastCycleIndex`) when playback runs off the end of the cycles generated so far - including the empty-data case - rather than declaring the stream finished. `isLastSegmentRequested` returns `false` while progressive. This reuses the existing missing-segment stall path, so the scheduler retries once the next batch is appended. After `finalizeStream` clears the flag, the override resumes normal finish behavior (serving any trailing padding, then ending).
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | getNextSegmentRequest stalls (returns null, no parent call) when running off the end while progressive |
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | isLastSegmentRequested returns false while progressive, even at the last generated cycle |
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | getNextSegmentRequest with empty progressive data stalls instead of finishing |
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | appended cycles become available to getNextSegmentRequest via the stream reference |
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | after finalizeStream, getNextSegmentRequest finishes when running off the end |
+| `dodge.DodgeDashHandlerOverride.js` | Progressive (incremental) manifests | after finalizeStream with trailing padding, the padding cycles are downloaded then the stream finishes |
+
+### R9.13 - `DodgeHandler` exposes progressive append/finalize via delegation
+
+`DodgeHandler.appendDataCycles(label, period, cycles)` and `DodgeHandler.finalizeStream(label, period, paddingCycles)` are thin pass-throughs to the corresponding `DefenseRegistry` methods, returning the registry's result unchanged. They are the in-module surface for progressive defense generation; `MediaPlayer.appendDodgeDataCycles` / `MediaPlayer.finalizeDodgeStream` expose them publicly (guarded by `playbackInitialized`, returning `false` when the Dodge module is not loaded). Because the registry stores the stream by reference, an accepted append is visible to the override on the next request with no further modifications.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | appendDataCycles appends a self-contained batch and returns true |
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | appendDataCycles returns false for an unknown label |
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | appendDataCycles returns false for a non-progressive stream |
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | finalizeStream clears the progressive flag and returns true |
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | finalizeStream appends trailing padding cycles |
+| `dodge.DodgeHandler.js` | progressive append and finalize delegation | appendDataCycles returns false after finalizeStream |
+
 ---
 
 ## 10. Extended Manifest Processing
@@ -1050,6 +1118,10 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R9.7 Period field validation | 6 |
 | R9.8 Period-scoped stream lookup | 4 |
 | R9.9 Override passes period index to registry | 3 |
+| R9.10 Progressive flag validation and self-contained seed | 10 |
+| R9.11 Runtime append and finalize of progressive manifests | 18 |
+| R9.12 Override stalls (does not finish) while progressive | 6 |
+| R9.13 DodgeHandler progressive append/finalize delegation | 6 |
 | R10.1 Manifest parsing and graceful degradation | 4 |
 | R10.2 Strict mode manifest error firing | 4 |
 | R10.3 Non-strict mode no error | 1 |
@@ -1073,4 +1145,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **419** |
+| **Total** | **459** |

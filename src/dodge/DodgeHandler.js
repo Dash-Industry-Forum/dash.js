@@ -431,6 +431,33 @@ function DodgeHandler(config) {
             .some(sp => sp.getDashHandler() && sp.getDashHandler().getIsTrailing());
     }
 
+    /**
+     * Append data cycles to a progressive stream at runtime.
+     * Delegates to DefenseRegistry.appendDataCycles. The append is atomic and
+     * self-contained: a rejected batch changes nothing.
+     * @param {string} label - Stream label (representation ID).
+     * @param {number|null} periodIndex - Optional period index for multi-period MPDs.
+     * @param {Array} cycles - Data cycles to append.
+     * @returns {boolean} True if the batch was accepted.
+     */
+    function appendDataCycles(label, periodIndex, cycles) {
+        return defenseRegistry.appendDataCycles(label, periodIndex, cycles);
+    }
+
+    /**
+     * Finalize a progressive stream: append optional trailing
+     * padding cycles and clear the progressive flag so the override finishes
+     * (rather than stalls) when it runs off the end of the data. Delegates to
+     * DefenseRegistry.finalizeStream.
+     * @param {string} label - Stream label (representation ID).
+     * @param {number|null} periodIndex - Optional period index for multi-period MPDs.
+     * @param {Array} [paddingCycles] - Trailing padding cycles to append.
+     * @returns {boolean} True if the stream was finalized.
+     */
+    function finalizeStream(label, periodIndex, paddingCycles) {
+        return defenseRegistry.finalizeStream(label, periodIndex, paddingCycles);
+    }
+
     function reset() {
         eventBus.off(events.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted, instance);
         eventBus.off(events.INIT_FRAGMENT_PARTIAL, _onPartialSegment, instance);
@@ -866,6 +893,8 @@ function DodgeHandler(config) {
         getStreamStats,
         isDodgeActive,
         isDodgeTrailing,
+        appendDataCycles,
+        finalizeStream,
         reset,
     };
 

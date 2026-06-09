@@ -152,6 +152,72 @@ describe('DodgeDashHandlerOverride', function () {
         });
     });
 
+    // Progressive manifests
+
+    describe('Progressive manifests', function () {
+
+        function addProgressive(data) {
+            defenseController.addExtendedManifest({
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{ label: 'rep0', progressive: true, init: [{ range: '0-855', buffer: true }], data }]
+            });
+            override.updateDefendedStreamInfo(rep);
+        }
+
+        it('getNextSegmentRequest stalls (returns null, no parent call) when running off the end while progressive', function () {
+            addProgressive([{ index: 0, buffer: true }]);
+            const first = override.getNextSegmentRequest({}, rep); // cycle 0
+            expect(first).to.exist; // jshint ignore:line
+            const second = override.getNextSegmentRequest({}, rep); // off end, progressive -> stall
+            expect(second).to.be.null; // jshint ignore:line
+            expect(mockParent.getNextSegmentRequest.called).to.be.false; // jshint ignore:line
+        });
+
+        it('isLastSegmentRequested returns false while progressive, even at the last generated cycle', function () {
+            addProgressive([{ index: 0, buffer: true }]);
+            override.getNextSegmentRequest({}, rep); // consume the only cycle
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.false; // jshint ignore:line
+        });
+
+        it('getNextSegmentRequest with empty progressive data stalls instead of finishing', function () {
+            addProgressive([]);
+            expect(override.getNextSegmentRequest({}, rep)).to.be.null; // jshint ignore:line
+            // not finished: a later append can still serve cycles
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.false; // jshint ignore:line
+        });
+
+        it('appended cycles become available to getNextSegmentRequest via the stream reference', function () {
+            addProgressive([{ index: 0, buffer: true }]);
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            override.getNextSegmentRequest({}, rep); // stall (off end)
+            defenseController.appendDataCycles('rep0', 0, [{ index: 1, buffer: true }]);
+            const next = override.getNextSegmentRequest({}, rep); // now cycle 1 exists
+            expect(next).to.exist; // jshint ignore:line
+            expect(next.index).to.equal(1);
+        });
+
+        it('after finalizeStream, getNextSegmentRequest finishes when running off the end', function () {
+            addProgressive([{ index: 0, buffer: true }]);
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            defenseController.finalizeStream('rep0', 0); // no trailing padding
+            const off = override.getNextSegmentRequest({}, rep); // off end, not progressive -> finish
+            expect(off).to.be.null; // jshint ignore:line
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.true; // jshint ignore:line
+        });
+
+        it('after finalizeStream with trailing padding, the padding cycles are downloaded then the stream finishes', function () {
+            addProgressive([{ index: 0, buffer: true }]);
+            override.getNextSegmentRequest({}, rep); // cycle 0
+            defenseController.finalizeStream('rep0', 0, [{ index: 1, padding: true }]);
+            const pad = override.getNextSegmentRequest({}, rep); // trailing padding cycle
+            expect(pad).to.exist; // jshint ignore:line
+            expect(pad.padding).to.be.true; // jshint ignore:line
+            const off = override.getNextSegmentRequest({}, rep); // off end -> finish
+            expect(off).to.be.null; // jshint ignore:line
+            expect(override.isLastSegmentRequested(rep, NaN)).to.be.true; // jshint ignore:line
+        });
+    });
+
     // Defended behavior with extended manifest
 
     describe('Defended behavior with extended manifest', function () {

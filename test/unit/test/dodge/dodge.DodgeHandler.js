@@ -1,4 +1,5 @@
 import { DodgeHandler } from '../../../../src/dodge/index.js';
+import DefenseRegistry from '../../../../src/dodge/DefenseRegistry.js';
 import DodgeErrors from '../../../../src/dodge/errors/DodgeErrors.js';
 import DodgeEvents from '../../../../src/dodge/events/DodgeEvents.js';
 import EventBus from '../../../../src/core/EventBus.js';
@@ -1137,6 +1138,68 @@ describe('DodgeHandler', function () {
             });
             expect(handler.isDodgeActive()).to.be.false; // jshint ignore:line
             expect(handler.isDodgeTrailing()).to.be.false; // jshint ignore:line
+        });
+    });
+
+    // Progressive append / finalize delegation to DefenseRegistry
+
+    describe('progressive append and finalize delegation', function () {
+
+        function makeProgressiveManifest(data) {
+            return {
+                start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                streams: [{
+                    label: 'video_1000k',
+                    progressive: true,
+                    init: [{ range: '-855' }],
+                    data: data
+                }]
+            };
+        }
+
+        function loadProgressive(data) {
+            dodgeHandler.tryProcessExtendedManifest(JSON.stringify(makeProgressiveManifest(data)));
+            return DefenseRegistry(context).getInstance();
+        }
+
+        it('appendDataCycles appends a self-contained batch and returns true', function () {
+            const registry = loadProgressive([{ index: 0, range: '0-100', buffer: true }]);
+            expect(registry.getDefendedStreamInfo('video_1000k', null).data.length).to.equal(1);
+
+            const ok = dodgeHandler.appendDataCycles('video_1000k', null, [{ index: 1, range: '0-100', buffer: true }]);
+            expect(ok).to.be.true; // jshint ignore:line
+            expect(registry.getDefendedStreamInfo('video_1000k', null).data.length).to.equal(2);
+        });
+
+        it('appendDataCycles returns false for an unknown label', function () {
+            loadProgressive([{ index: 0, range: '0-100', buffer: true }]);
+            expect(dodgeHandler.appendDataCycles('nonexistent', null, [{ index: 1, range: '0-100', buffer: true }])).to.be.false; // jshint ignore:line
+        });
+
+        it('appendDataCycles returns false for a non-progressive stream', function () {
+            // makeValidManifest has no progressive flag
+            dodgeHandler.tryProcessExtendedManifest(JSON.stringify(makeValidManifest()));
+            expect(dodgeHandler.appendDataCycles('video_1000k', null, [{ index: 1, range: '0-100', buffer: true }])).to.be.false; // jshint ignore:line
+        });
+
+        it('finalizeStream clears the progressive flag and returns true', function () {
+            const registry = loadProgressive([{ index: 0, range: '0-100', buffer: true }]);
+            expect(registry.getDefendedStreamInfo('video_1000k', null).progressive).to.be.true; // jshint ignore:line
+
+            expect(dodgeHandler.finalizeStream('video_1000k', null)).to.be.true; // jshint ignore:line
+            expect(registry.getDefendedStreamInfo('video_1000k', null).progressive).to.be.false; // jshint ignore:line
+        });
+
+        it('finalizeStream appends trailing padding cycles', function () {
+            const registry = loadProgressive([{ index: 0, range: '0-100', buffer: true }]);
+            expect(dodgeHandler.finalizeStream('video_1000k', null, [{ index: 5, range: '0-100', padding: true }])).to.be.true; // jshint ignore:line
+            expect(registry.getDefendedStreamInfo('video_1000k', null).data.length).to.equal(2);
+        });
+
+        it('appendDataCycles returns false after finalizeStream', function () {
+            loadProgressive([{ index: 0, range: '0-100', buffer: true }]);
+            dodgeHandler.finalizeStream('video_1000k', null);
+            expect(dodgeHandler.appendDataCycles('video_1000k', null, [{ index: 1, range: '0-100', buffer: true }])).to.be.false; // jshint ignore:line
         });
     });
 

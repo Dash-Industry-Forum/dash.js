@@ -826,6 +826,64 @@ describe('DefenseRegistry', function () {
         });
     });
 
+    describe('progressive flag validation', function () {
+        function progressiveManifest(data) {
+            return {
+                start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
+                streams: [{ label: 'a', progressive: true, init: [{ range: '0-99' }], data }]
+            };
+        }
+
+        it('stream with progressive = true, true', function () {
+            expect(isValidExtendedManifest(progressiveManifest([{ index: 0, buffer: true }]))).to.be.true; // jshint ignore:line
+        });
+
+        it('stream with progressive = false, true', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', progressive: false, init: [{}], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+
+        it('stream with progressive string "true", coerced to boolean, true', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', progressive: 'true', init: [{}], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+            expect(m.streams[0].progressive).to.equal(true);
+        });
+
+        it('stream with progressive string "false", coerced to boolean, true', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', progressive: 'false', init: [{}], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+            expect(m.streams[0].progressive).to.equal(false);
+        });
+
+        it('stream with non-boolean progressive (number), false', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', progressive: 1, init: [{}], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('stream with non-parseable string progressive, false', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', progressive: 'yes', init: [{}], data: [{ index: 0, buffer: true }] }] };
+            expect(isValidExtendedManifest(m)).to.be.false; // jshint ignore:line
+        });
+
+        it('progressive stream with self-contained data (all introduced indices flushed), true', function () {
+            expect(isValidExtendedManifest(progressiveManifest([{ index: 0 }, { index: 1, buffer: true }]))).to.be.true; // jshint ignore:line
+        });
+
+        it('progressive stream leaving an introduced index unflushed, false', function () {
+            // A progressive seed must flush every index it introduces; index 0 is never buffered.
+            expect(isValidExtendedManifest(progressiveManifest([{ index: 0 }]))).to.be.false; // jshint ignore:line
+        });
+
+        it('progressive stream with empty data (init-only seed), true', function () {
+            expect(isValidExtendedManifest(progressiveManifest([]))).to.be.true; // jshint ignore:line
+        });
+
+        it('non-progressive counterpart of the same unflushed data is valid (implicit end-of-stream flush)', function () {
+            const m = { start: { mpd: '<MPD/>', base_uri: 'x' }, streams: [{ label: 'a', init: [{}], data: [{ index: 0 }] }] };
+            expect(isValidExtendedManifest(m)).to.be.true; // jshint ignore:line
+        });
+    });
+
     // getCycleIndexBySegmentIndex
 
     describe('getCycleIndexBySegmentIndex', function () {
@@ -984,6 +1042,138 @@ describe('DefenseRegistry', function () {
                 ]
             });
             expect(registry.getMaxLabelLength()).to.equal('video_very_long_label'.length);
+        });
+
+        describe('progressive append and finalize', function () {
+            function addProgressive(data) {
+                registry.addExtendedManifest({
+                    start: { mpd: '<MPD/>', base_uri: 'https://example.com/' },
+                    streams: [{ label: 'video_1000k', progressive: true, init: [{ range: '0-99' }], data }]
+                });
+            }
+
+            it('appendDataCycles returns false when no stream matches the label', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.appendDataCycles('nope', null, [{ index: 1, buffer: true }])).to.be.false; // jshint ignore:line
+            });
+
+            it('appendDataCycles returns false when the stream is not progressive', function () {
+                registry.addExtendedManifest(makeValidManifest()); // no progressive flag
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: 3, buffer: true }])).to.be.false; // jshint ignore:line
+            });
+
+            it('appendDataCycles returns false for an empty batch', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.appendDataCycles('video_1000k', null, [])).to.be.false; // jshint ignore:line
+            });
+
+            it('appendDataCycles appends a self-contained batch and returns true', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: 1, buffer: true }])).to.be.true; // jshint ignore:line
+                expect(registry.getDefendedStreamInfo('video_1000k').data.length).to.equal(before + 1);
+            });
+
+            it('appendDataCycles makes new cycles visible via the live stream reference', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const ref = registry.getDefendedStreamInfo('video_1000k'); // captured before append
+                registry.appendDataCycles('video_1000k', null, [{ index: 1, buffer: true }]);
+                expect(ref.data[ref.data.length - 1].index).to.equal(1);
+            });
+
+            it('appendDataCycles computes full flags over the batch alone', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                registry.appendDataCycles('video_1000k', null, [{ index: 1 }, { index: 1, buffer: true }]);
+                const data = registry.getDefendedStreamInfo('video_1000k').data;
+                // batch [ {1}, {1, buffer} ]: first occurrence not full, last occurrence full
+                expect(data[1].full).to.be.false; // jshint ignore:line
+                expect(data[2].full).to.be.true; // jshint ignore:line
+            });
+
+            it('appendDataCycles updates maxNoPad', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                registry.appendDataCycles('video_1000k', null, [{ index: 1, buffer: true }]);
+                expect(registry.getDefendedStreamInfo('video_1000k').maxNoPad).to.equal(1);
+            });
+
+            it('appendDataCycles rejects a batch that leaves an introduced index unflushed, changing nothing', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: 1 }])).to.be.false; // jshint ignore:line
+                expect(registry.getDefendedStreamInfo('video_1000k').data.length).to.equal(before);
+            });
+
+            it('appendDataCycles rejects a batch whose buffer array references an index outside the batch, changing nothing', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                // index 0 belongs to the frozen prefix, not this batch
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: 1, buffer: [0, 1] }])).to.be.false; // jshint ignore:line
+                expect(registry.getDefendedStreamInfo('video_1000k').data.length).to.equal(before);
+            });
+
+            it('appendDataCycles rejects a structurally invalid batch, changing nothing', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: -1, buffer: true }])).to.be.false; // jshint ignore:line
+                expect(registry.getDefendedStreamInfo('video_1000k').data.length).to.equal(before);
+            });
+
+            it('appendDataCycles does not mutate the caller batch buffer array', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const batch = [{ index: 1, buffer: ['1'] }]; // string element coerced internally
+                registry.appendDataCycles('video_1000k', null, batch);
+                expect(batch[0].buffer[0]).to.equal('1'); // original preserved (clone is coerced, not caller)
+            });
+
+            it('finalizeStream returns false when no stream matches the label', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.finalizeStream('nope', null)).to.be.false; // jshint ignore:line
+            });
+
+            it('finalizeStream clears the progressive flag and returns true', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.finalizeStream('video_1000k', null)).to.be.true; // jshint ignore:line
+                expect(registry.getDefendedStreamInfo('video_1000k').progressive).to.be.false; // jshint ignore:line
+            });
+
+            it('finalizeStream appends trailing padding and excludes it from maxNoPad', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.finalizeStream('video_1000k', null, [{ index: 1, padding: true }])).to.be.true; // jshint ignore:line
+                const s = registry.getDefendedStreamInfo('video_1000k');
+                expect(s.data[s.data.length - 1].padding).to.be.true; // jshint ignore:line
+                expect(s.maxNoPad).to.equal(0); // trailing padding excluded
+            });
+
+            it('finalizeStream rejects a non-padding trailing cycle, changing nothing', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                expect(registry.finalizeStream('video_1000k', null, [{ index: 1, buffer: true }])).to.be.false; // jshint ignore:line
+                const s = registry.getDefendedStreamInfo('video_1000k');
+                expect(s.data.length).to.equal(before);
+                expect(s.progressive).to.be.true; // still progressive on failure
+            });
+
+            it('appendDataCycles returns false after finalizeStream', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                registry.finalizeStream('video_1000k', null);
+                expect(registry.appendDataCycles('video_1000k', null, [{ index: 1, buffer: true }])).to.be.false; // jshint ignore:line
+            });
+
+            it('finalizeStream returns false on a second (double) finalize, changing nothing', function () {
+                addProgressive([{ index: 0, buffer: true }]);
+                expect(registry.finalizeStream('video_1000k', null, [{ index: 1, padding: true }])).to.be.true; // jshint ignore:line
+                const before = registry.getDefendedStreamInfo('video_1000k').data.length;
+                expect(registry.finalizeStream('video_1000k', null, [{ index: 2, padding: true }])).to.be.false; // jshint ignore:line
+                const s = registry.getDefendedStreamInfo('video_1000k');
+                expect(s.data.length).to.equal(before); // no extra padding appended
+            });
+
+            it('finalizeStream returns false for a non-progressive (complete) stream', function () {
+                // A complete (non-progressive) manifest stream must not be finalizable.
+                registry.addExtendedManifest(makeValidManifest()); // no progressive flag
+                expect(registry.getDefendedStreamInfo('video_1000k').progressive).to.not.equal(true); // jshint ignore:line
+                expect(registry.finalizeStream('video_1000k', null, [{ index: 1, padding: true }])).to.be.false; // jshint ignore:line
+            });
         });
     });
 });

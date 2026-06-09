@@ -1039,6 +1039,49 @@ function MediaPlayer() {
     }
 
     /**
+     * Append data cycles to a progressive Dodge stream at runtime.
+     * This drives progressive defense generation: provide a `progressive: true`
+     * extended manifest, start playback, then keep appending cycle batches ahead
+     * of the playhead. Each batch must be a complete, self-contained buffer window
+     * (every non-padding index it introduces is flushed within the batch); a
+     * rejected batch changes nothing. Returns false when the Dodge module
+     * is not loaded.
+     * @param {string} label - Stream label (representation ID).
+     * @param {number|null} periodIndex - Optional period index for multi-period MPDs.
+     * @param {Array} cycles - Data cycles to append.
+     * @returns {boolean} True if the batch was accepted.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function appendDodgeDataCycles(label, periodIndex, cycles) {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.appendDataCycles(label, periodIndex, cycles) : false;
+    }
+
+    /**
+     * Finalize a progressive Dodge stream: append optional trailing
+     * padding cycles and end progressive generation so playback can finish
+     * normally (the override stalls at the end of a progressive stream until
+     * this is called). Returns false when the Dodge module is not loaded.
+     * @param {string} label - Stream label (representation ID).
+     * @param {number|null} periodIndex - Optional period index for multi-period MPDs.
+     * @param {Array} [paddingCycles] - Trailing padding cycles to append.
+     * @returns {boolean} True if the stream was finalized.
+     * @throws {@link module:MediaPlayer~PLAYBACK_NOT_INITIALIZED_ERROR PLAYBACK_NOT_INITIALIZED_ERROR} if called before initializePlayback function
+     * @memberof module:MediaPlayer
+     * @instance
+     */
+    function finalizeDodgeStream(label, periodIndex, paddingCycles) {
+        if (!playbackInitialized) {
+            throw PLAYBACK_NOT_INITIALIZED_ERROR;
+        }
+        return dodgeHandler ? dodgeHandler.finalizeStream(label, periodIndex, paddingCycles) : false;
+    }
+
+    /**
      * Returns information about the current DVR window including the start time, the end time, the window size.
      * @returns {{startAsUtc: (*|number), size: number, endAsUtc: (*|number), start, end}|{}}
      */
@@ -3108,6 +3151,8 @@ function MediaPlayer() {
         timeSinceEnd,
         isDodgeActive,
         isDodgeTrailing,
+        appendDodgeDataCycles,
+        finalizeDodgeStream,
         timeInDvrWindow,
         trigger,
         triggerSteeringRequest,

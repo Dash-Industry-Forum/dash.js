@@ -521,6 +521,11 @@ function DodgeDashHandlerOverride(config) {
 
         // Init-only defended stream (e.g. non-fragmented text): no data cycles to serve.
         if (defendedStreamInfo['data'].length === 0) {
+            // A progressive manifest may not have its first data batch yet:
+            // stall (await the next append) rather than finishing.
+            if (defendedStreamInfo['progressive']) {
+                return null;
+            }
             mediaHasFinished = true;
             return null;
         }
@@ -529,6 +534,15 @@ function DodgeDashHandlerOverride(config) {
         const cycleIndex = lastCycleIndex + 1;
         const cycle = defendedStreamInfo['data'][cycleIndex];
         if (!cycle) {
+            // Progressive (incomplete) manifest: playback has caught up to the
+            // end of the cycles generated so far. Stall (return null without
+            // setting mediaHasFinished) so the scheduler retries once the next
+            // batch is appended; finalizeStream() turns progressive off when the
+            // defense is complete.
+            if (defendedStreamInfo['progressive']) {
+                logger.debug('No cycle at index ' + cycleIndex + ' yet; progressive manifest not finalized, stalling');
+                return null;
+            }
             logger.debug('No cycle found with index ' + cycleIndex);
             mediaHasFinished = true;
             return null;
@@ -608,6 +622,15 @@ function DodgeDashHandlerOverride(config) {
             }
             // Fall back to vanilla DashHandler.
             return _parentIsLastSegmentRequested.call(parent, representation, bufferingTime);
+        }
+
+        // Progressive (incomplete) manifest: never report the last segment as
+        // requested until finalizeStream() clears the flag, even if playback
+        // has temporarily caught up to the last generated cycle. Otherwise the
+        // player would declare the stream finished while more cycles are still
+        // being generated.
+        if (defendedStreamInfo['progressive']) {
+            return false;
         }
 
         // Init-only defended stream: finished once getNextSegmentRequest has been called.
