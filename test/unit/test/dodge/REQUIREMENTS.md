@@ -171,6 +171,16 @@ On any resolution failure - no sibling representations available, string ID not 
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle quality override with no siblings available stalls (returns null) |
 | `dodge.DodgeDashHandlerOverride.js` | Per-cycle quality override | cycle with quality: null uses the current representation (no override) |
 
+### R2.11 - Request generation stalls without advancing when URL resolution fails
+
+The index/`lastSegment` invariants are advanced only *after* a request is successfully built. When the final request builder fails to produce a request - `_generateInitRequest` / `_getRequestForSegment` return `undefined` because `_setRequestUrlWithPadding` could not resolve an absolute URL - the override returns `null` (stall) **without** advancing `lastInitIndex` / `lastCycleIndex` or mutating `lastSegment`. This ensures the scheduler retries the *same* cycle rather than skipping it, preserving the defense traffic pattern (mirroring the "no segment found" stall). Applies to all three request generation methods.
+
+| File | Description | Test |
+|---|---|---|
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getNextSegmentRequest() stalls without advancing the cycle when URL resolution fails |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getInitRequest() stalls without advancing the init cycle when URL resolution fails |
+| `dodge.DodgeDashHandlerOverride.js` | Defended behavior with extended manifest | getSegmentRequestForTime() stalls without advancing the cycle when URL resolution fails |
+
 ---
 
 ## 3. Media Type Coverage
@@ -1079,6 +1089,7 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R2.8 Defense state management | 8 |
 | R2.9 Selective buffer | 10 |
 | R2.10 Per-cycle quality override on data cycles | 12 |
+| R2.11 Request generation stalls without advancing on URL failure | 3 |
 | R3.1 Video streams | (implicit) |
 | R3.2 Audio streams | 7 |
 | R3.3 Fragmented text streams | 7 |
@@ -1147,4 +1158,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **461** |
+| **Total** | **464** |

@@ -260,6 +260,55 @@ describe('DodgeDashHandlerOverride', function () {
             expect(request.index).to.equal(0);
         });
 
+        it('getNextSegmentRequest() stalls without advancing the cycle when URL resolution fails', function () {
+            // Force _setRequestUrlWithPadding to fail: a relative segment media
+            // with no absolute BaseURL resolves to a relative URL, so the
+            // builder returns undefined. The override must stall.
+            segmentsController.getSegmentByIndex.callsFake((r, idx) => {
+                const seg = makeSegment(r, idx);
+                seg.media = 'seg-relative.m4s';
+                return seg;
+            });
+            expect(override.getNextSegmentRequest({}, rep)).to.be.null; // jshint ignore:line
+
+            // Recover: the next call must re-serve cycle 0 (index 0), proving
+            // the failed attempt did not advance lastCycleIndex past it.
+            segmentsController.getSegmentByIndex.callsFake((r, idx) => makeSegment(r, idx));
+            const retry = override.getNextSegmentRequest({}, rep);
+            expect(retry).to.exist; // jshint ignore:line
+            expect(retry.index).to.equal(0);
+        });
+
+        it('getInitRequest() stalls without advancing the init cycle when URL resolution fails', function () {
+            // Relative initialization URL with no absolute BaseURL -> no request.
+            rep.initialization = 'init-relative.m4s';
+            expect(override.getInitRequest({}, rep)).to.be.null; // jshint ignore:line
+
+            // Recover: the next call must re-serve init[0] (full=false), proving
+            // the failed attempt did not advance lastInitIndex to init[1]
+            // (which would be the last cycle, full=true).
+            rep.initialization = 'https://example.com/init.m4s';
+            const retry = override.getInitRequest({}, rep);
+            expect(retry).to.exist; // jshint ignore:line
+            expect(retry.full).to.be.false; // jshint ignore:line
+            expect(retry.buffer).to.be.false; // jshint ignore:line
+        });
+
+        it('getSegmentRequestForTime() stalls without advancing the cycle when URL resolution fails', function () {
+            segmentsController.getSegmentByTime.callsFake((r, time) => {
+                const seg = makeSegment(r, Math.floor(time / 4));
+                seg.media = 'seg-relative.m4s';
+                return seg;
+            });
+            expect(override.getSegmentRequestForTime({}, rep, 0)).to.be.null; // jshint ignore:line
+
+            // Recover: re-serve the same cycle (index 0).
+            segmentsController.getSegmentByTime.callsFake((r, time) => makeSegment(r, Math.floor(time / 4)));
+            const retry = override.getSegmentRequestForTime({}, rep, 0);
+            expect(retry).to.exist; // jshint ignore:line
+            expect(retry.index).to.equal(0);
+        });
+
         it('getNextSegmentRequest() at a cycle without buffer, sets buffer = false on the request', function () {
             const request = override.getNextSegmentRequest({}, rep); // cycle 0 { index: 0, buffer: false }
             expect(request.buffer).to.be.false; // jshint ignore:line

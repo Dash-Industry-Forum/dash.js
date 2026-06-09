@@ -232,15 +232,20 @@ function DodgeDashHandlerOverride(config) {
             return null;
         }
 
+        const request = _generateInitRequest(mediaInfo, effectiveRep, representation.mediaInfo.type, cycle.range, cycle.padding);
+        if (!request) {
+            // URL resolution failed: stall without advancing lastInitIndex, so
+            // the scheduler retries this same init cycle. Advancing here would
+            // skip the cycle and corrupt the defense's init sequence.
+            return null;
+        }
+
         lastInitIndex = initIndex;
 
-        const request = _generateInitRequest(mediaInfo, effectiveRep, representation.mediaInfo.type, cycle.range, cycle.padding);
-        if (request) {
-            request.full = !!cycle.full;
-            request.buffer = !!cycle.buffer;
-            if (effectiveRep.id !== representation.id) {
-                request.homeRepresentationId = representation.id;
-            }
+        request.full = !!cycle.full;
+        request.buffer = !!cycle.buffer;
+        if (effectiveRep.id !== representation.id) {
+            request.homeRepresentationId = representation.id;
         }
         return request;
     }
@@ -496,17 +501,21 @@ function DodgeDashHandlerOverride(config) {
         // Determine whether a quality override changed the representation.
         const homeRep = (segment.representation.id !== representation.id) ? representation : null;
 
-        // Update invariants.
+        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
+        if (!request) {
+            // URL resolution failed: stall without advancing lastCycleIndex or
+            // mutating lastSegment, so the scheduler retries this same cycle.
+            return null;
+        }
+
+        // Update invariants only after a request was successfully built.
         lastCycleIndex = cycleIndex;
         lastSegment = segment;
 
-        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
-        if (request) {
-            request.full = !!cycle.full;
-            request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
-            request.padding = !!cycle.padding;
-            request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
-        }
+        request.full = !!cycle.full;
+        request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
+        request.padding = !!cycle.padding;
+        request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
         return request;
     }
 
@@ -582,19 +591,23 @@ function DodgeDashHandlerOverride(config) {
         // Determine whether a quality override changed the representation.
         const homeRep = (effectiveRep.id !== representation.id) ? representation : null;
 
-        // Update invariants.
+        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
+        if (!request) {
+            // URL resolution failed: stall without advancing lastCycleIndex or
+            // mutating lastSegment, so the scheduler retries this same cycle.
+            return null;
+        }
+
+        // Update invariants only after a request was successfully built.
         lastCycleIndex = cycleIndex;
         if (!cycle.padding) {
             lastSegment = segment;
         }
 
-        const request = _getRequestForSegment(mediaInfo, segment, cycle.range, cycle.padding, homeRep);
-        if (request) {
-            request.full = !!cycle.full;
-            request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
-            request.padding = !!cycle.padding;
-            request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
-        }
+        request.full = !!cycle.full;
+        request.buffer = Array.isArray(cycle.buffer) ? cycle.buffer : !!cycle.buffer;
+        request.padding = !!cycle.padding;
+        request.trail = cycleIndex > defendedStreamInfo['maxNoPad'];
         return request;
     }
 
