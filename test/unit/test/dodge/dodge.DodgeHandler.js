@@ -184,6 +184,42 @@ describe('DodgeHandler', function () {
         });
     });
 
+    describe('tryProcessExtendedManifest with strictMode = max', function () {
+        // 'max' inherits 'manifest' abort behavior: a source that is not a
+        // valid extended manifest must abort, not silently degrade to vanilla.
+        let eventBus, settings, errorSpy, listener;
+
+        beforeEach(function () {
+            eventBus = EventBus(context).getInstance();
+            settings = Settings(context).getInstance();
+            settings.update({ dodge: { strictMode: 'max' } });
+
+            listener = {};
+            errorSpy = sinon.spy();
+            eventBus.on(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
+        });
+
+        afterEach(function () {
+            eventBus.off(Events.INTERNAL_MANIFEST_LOADED, errorSpy, listener);
+            settings.update({ dodge: { strictMode: false } });
+        });
+
+        it('non-JSON input: returns false and fires INTERNAL_MANIFEST_LOADED with error', function () {
+            const result = dodgeHandler.tryProcessExtendedManifest('<MPD/>', 'http://example.com/video.mpd');
+            expect(result).to.be.false; // jshint ignore:line
+            expect(errorSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(errorSpy.firstCall.args[0].error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
+        });
+
+        it('invalid extended manifest JSON: returns false and fires INTERNAL_MANIFEST_LOADED with error', function () {
+            const bad = JSON.stringify({ start: { mpd: '<MPD/>', base_uri: 'https://example.com/' } });
+            const result = dodgeHandler.tryProcessExtendedManifest(bad, 'http://example.com/video.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            expect(errorSpy.calledOnce).to.be.true; // jshint ignore:line
+            expect(errorSpy.firstCall.args[0].error.code).to.equal(DodgeErrors.DODGE_STRICT_MODE_ERROR_CODE);
+        });
+    });
+
     describe('tryProcessExtendedManifest without strictMode = manifest', function () {
         it('non-JSON input: returns null (no error)', function () {
             const eventBus = EventBus(context).getInstance();

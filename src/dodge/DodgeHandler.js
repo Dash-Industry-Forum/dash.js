@@ -149,15 +149,18 @@ function DodgeHandler(config) {
      * Called by ManifestLoader before parsing. If `bytes` is a valid extended
      * manifest JSON, register it with DefenseRegistry and return the embedded
      * MPD string and base URI. If not a valid extended manifest, returns null
-     * (graceful degradation). If strict mode 'manifest' is enabled and no
-     * defense can be applied, generates an error and returns false to
-     * signal an abort to ManifestLoader.
+     * (graceful degradation). If strict mode 'manifest' or 'max' is enabled
+     * and no defense can be applied, generates an error and returns false
+     * to signal an abort to ManifestLoader.
      * @param {string} bytes - Raw response body.
      * @param {string} [url] - Original request URL, included in error messages.
      * @returns {{ mpd: string, baseUri: string }|null|false}
      */
     function tryProcessExtendedManifest(bytes, url) {
-        const strict = (settings.get().dodge || {}).strictMode === 'manifest';
+        // 'max' inherits 'manifest' behavior: abort (rather than degrade to
+        // vanilla DASH) when the source is not a valid extended manifest.
+        const strictModeSetting = (settings.get().dodge || {}).strictMode;
+        const strict = strictModeSetting === 'manifest' || strictModeSetting === 'max';
 
         let extended;
         try {

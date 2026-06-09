@@ -813,9 +813,9 @@ Without strict mode, invalid JSON or invalid extended manifests return `null` (g
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest | valid extended manifest JSON returns { mpd, baseUri } matching embedded values |
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest | two successive valid manifests: each returns its own mpd and baseUri independently |
 
-### R10.2 - `tryProcessExtendedManifest` with `strictMode = manifest` fires an error for non-extended manifest sources
+### R10.2 - `tryProcessExtendedManifest` with `strictMode = manifest` or `'max'` fires an error for non-extended manifest sources
 
-When `strictMode` is `'manifest'`, non-JSON or invalid extended manifest input causes `tryProcessExtendedManifest` to return `false` and fire `INTERNAL_MANIFEST_LOADED` with `DODGE_STRICT_MODE_ERROR_CODE`. The error message includes the source URL. Valid extended manifests still succeed normally.
+When `strictMode` is `'manifest'` or `'max'`, non-JSON or invalid extended manifest input causes `tryProcessExtendedManifest` to return `false` and fire `INTERNAL_MANIFEST_LOADED` with `DODGE_STRICT_MODE_ERROR_CODE`. The error message includes the source URL. Valid extended manifests still succeed normally. `'max'` inherits `'manifest'`'s abort behavior — it must not silently degrade to vanilla DASH on an undefendable source.
 
 | File | Description | Test |
 |---|---|---|
@@ -823,6 +823,8 @@ When `strictMode` is `'manifest'`, non-JSON or invalid extended manifest input c
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | invalid extended manifest JSON: returns false and fires INTERNAL_MANIFEST_LOADED with error |
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | error message includes the URL |
 | `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = manifest | valid extended manifest: returns { mpd, baseUri } and does not fire error |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = max | non-JSON input: returns false and fires INTERNAL_MANIFEST_LOADED with error |
+| `dodge.DodgeHandler.js` | tryProcessExtendedManifest with strictMode = max | invalid extended manifest JSON: returns false and fires INTERNAL_MANIFEST_LOADED with error |
 
 ### R10.3 - `tryProcessExtendedManifest` without `strictMode = manifest` does not fire errors
 
@@ -1136,7 +1138,7 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R9.12 Override stalls (does not finish) while progressive | 6 |
 | R9.13 DodgeHandler progressive append/finalize delegation | 6 |
 | R10.1 Manifest parsing and graceful degradation | 4 |
-| R10.2 Strict mode manifest error firing | 4 |
+| R10.2 Strict mode manifest/max error firing | 6 |
 | R10.3 Non-strict mode no error | 1 |
 | R10.4 Partial segment combination event routing | 8 |
 | R10.5 isDodgeActive and isDodgeTrailing status | 7 |
@@ -1158,4 +1160,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **464** |
+| **Total** | **466** |
