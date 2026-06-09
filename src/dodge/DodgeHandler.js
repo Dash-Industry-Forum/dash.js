@@ -136,11 +136,9 @@ function DodgeHandler(config) {
         eventBus.on(events.INIT_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.on(events.MEDIA_FRAGMENT_PARTIAL, _onPartialSegment, instance);
         eventBus.on(events.PADDING_LOADED, _onPaddingLoaded, instance);
-        // Protection module events (only present if the module is loaded).
-        // NEED_KEY fires before ProtectionController creates a key session;
-        // intercepting at high priority lets us block DRM in strict mode.
+        // NEED_KEY is observed for diagnostics only.
         if (events.NEED_KEY) {
-            eventBus.on(events.NEED_KEY, _onNeedKey, instance, { priority: EventBus.EVENT_PRIORITY_HIGH });
+            eventBus.on(events.NEED_KEY, _onNeedKey, instance);
         }
         if (events.KEY_SESSION_CREATED) {
             eventBus.on(events.KEY_SESSION_CREATED, _onKeySessionCreated, instance);
@@ -322,8 +320,8 @@ function DodgeHandler(config) {
         if (!mpd || typeof mpd !== 'string') {
             return false;
         }
-        return mpd.includes('mimeType="application/ttml+xml"') ||
-            mpd.includes('mimeType="text/vtt"');
+        return mpd.includes('application/ttml+xml') ||
+            mpd.includes('text/vtt');
     }
 
     /**

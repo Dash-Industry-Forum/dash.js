@@ -865,7 +865,7 @@ Thumbnail tracks bypass DashHandler entirely (ThumbnailTracks fetches via its ow
 
 ### R10.7 - Non-fragmented text detection in extended manifests
 
-Non-fragmented text tracks (e.g. `mimeType="application/ttml+xml"` or `mimeType="text/vtt"`) are fetched outside DashHandler and could leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD via `_mpdContainsNonFragmentedText()`. Only in `'max'` mode are manifests containing non-fragmented text rejected. In `'representation'` and `'manifest'` modes, a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
+Non-fragmented text tracks (e.g. `application/ttml+xml` or `text/vtt`) are fetched outside DashHandler and could leak content-identifying information. `tryProcessExtendedManifest` scans the embedded MPD via `_mpdContainsNonFragmentedText()`. The scan matches the bare mimeType token, so it is robust to quote style (`'` vs `"`) and attribute spacing — a differently-serialized but valid MPD cannot bypass `'max'`-mode rejection. Only in `'max'` mode are manifests containing non-fragmented text rejected. In `'representation'` and `'manifest'` modes, a warning is logged but the manifest is accepted. When strict mode is off, no warning is logged.
 
 | File | Description | Test |
 |---|---|---|
@@ -874,6 +874,8 @@ Non-fragmented text tracks (e.g. `mimeType="application/ttml+xml"` or `mimeType=
 | `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode manifest: accepts manifest containing non-fragmented text with warning |
 | `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode off: accepts manifest containing non-fragmented text without warning |
 | `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | manifest without non-fragmented text: accepted in all modes |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode max: rejects single-quote non-fragmented text (quote-agnostic scan) |
+| `dodge.DodgeHandler.js` | Non-fragmented text detection in tryProcessExtendedManifest | strict mode max: rejects WebVTT text with extra attribute spacing (quote-agnostic scan) |
 
 ### R10.8 - XLink detection in extended manifests
 
@@ -1128,7 +1130,7 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R10.4 Partial segment combination event routing | 8 |
 | R10.5 isDodgeActive and isDodgeTrailing status | 7 |
 | R10.6 Thumbnail track detection | 5 |
-| R10.7 Non-fragmented text detection | 5 |
+| R10.7 Non-fragmented text detection | 7 |
 | R10.8 XLink detection | 5 |
 | R10.9 DRM content detection | 3 |
 | R10.10 Content Steering detection | 3 |
@@ -1145,4 +1147,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **459** |
+| **Total** | **461** |

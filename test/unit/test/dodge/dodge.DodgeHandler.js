@@ -1804,6 +1804,25 @@ describe('DodgeHandler', function () {
             expect(result).to.exist; // jshint ignore:line
             handler.reset();
         });
+
+        it('strict mode max: rejects single-quote non-fragmented text (quote-agnostic scan)', function () {
+            // A valid MPD serialized with single quotes must not bypass the scan.
+            const manifest = makeNonFragmentedTextManifest();
+            manifest.start.mpd = manifest.start.mpd.replace('mimeType="application/ttml+xml"', 'mimeType=\'application/ttml+xml\'');
+            const handler = createDodgeHandler('max');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(manifest), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
+
+        it('strict mode max: rejects WebVTT text with extra attribute spacing (quote-agnostic scan)', function () {
+            const manifest = makeNonFragmentedTextManifest();
+            manifest.start.mpd = manifest.start.mpd.replace('mimeType="application/ttml+xml"', 'mimeType = "text/vtt"');
+            const handler = createDodgeHandler('max');
+            const result = handler.tryProcessExtendedManifest(JSON.stringify(manifest), 'test.exmfst.json');
+            expect(result).to.be.false; // jshint ignore:line
+            handler.reset();
+        });
     });
 
     // CMCD warning in tryProcessExtendedManifest
