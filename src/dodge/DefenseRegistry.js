@@ -559,8 +559,11 @@ function isValidExtendedManifest(manifest, logger) {
         return false;
     }
 
-    // An extended manifest MUST contain defended stream info.
-    if (!manifest['streams']) {
+    // An extended manifest MUST contain defended stream info: a non-empty
+    // array of stream entries. An empty array (or a non-array value) would
+    // pass a plain truthiness check but match no representation, which under
+    // strict mode permanently blocks all playback with no error fired.
+    if (!Array.isArray(manifest['streams']) || manifest['streams'].length === 0) {
         if (logger) {
             logger.error('Extended manifest rejected: no defended stream info');
         }

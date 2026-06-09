@@ -571,6 +571,8 @@ After scheduling, `_onPaddingLoaded` calls `onPaddingLoaded()` on the stream pro
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing start.base_uri, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | dynamic MPD, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | missing streams, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | empty streams array with valid start, false |
+| `dodge.DefenseRegistry.js` | isValidExtendedManifest | non-array streams with valid start, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing label, false |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing init (data-only stream), true |
 | `dodge.DefenseRegistry.js` | isValidExtendedManifest | stream missing data (init-only stream), true |
@@ -1124,7 +1126,7 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R8.2 Request padding normalizes wire size | 13 |
 | R8.3 FetchLoader applies padding | 4 |
 | R8.4 XHRLoader applies padding | 4 |
-| R9.1 Structural validation rejects malformed manifests | 46 |
+| R9.1 Structural validation rejects malformed manifests | 48 |
 | R9.2 Init cycle validation | 16 |
 | R9.3 Init cycle quality validation and explicit buffer requirement | 9 |
 | R9.4 Data cycle validation, maxNoPad, and cycle.full precomputation | 11 |
@@ -1160,4 +1162,4 @@ When `_onFragmentLoadingCompleted` receives an errored Dodge request (`e.error` 
 | R12.2 _createDataChunk population | 4 |
 | R12.3 getStreamStats counts | 3 |
 | R12.4 Error fragment stalling | 3 |
-| **Total** | **466** |
+| **Total** | **468** |

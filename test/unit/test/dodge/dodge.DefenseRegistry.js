@@ -56,6 +56,17 @@ describe('DefenseRegistry', function () {
             expect(isValidExtendedManifest({ start: { mpd: '<MPD/>', base_uri: 'https://x.com/' } })).to.be.false; // jshint ignore:line
         });
 
+        it('empty streams array with valid start, false', function () {
+            // An empty array passes a plain truthiness check but matches no
+            // representation; accepting it would make hasContent() true and
+            // permanently block all playback under strict mode.
+            expect(isValidExtendedManifest({ start: { mpd: '<MPD/>', base_uri: 'https://x.com/' }, streams: [] })).to.be.false; // jshint ignore:line
+        });
+
+        it('non-array streams with valid start, false', function () {
+            expect(isValidExtendedManifest({ start: { mpd: '<MPD/>', base_uri: 'https://x.com/' }, streams: {} })).to.be.false; // jshint ignore:line
+        });
+
         it('stream missing label, false', function () {
             const m = {
                 start: { mpd: '<MPD/>', base_uri: 'https://x.com/' },
