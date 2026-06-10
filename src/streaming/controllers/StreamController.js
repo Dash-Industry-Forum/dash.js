@@ -435,11 +435,20 @@ function StreamController() {
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
-            let sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+            // Only reuse the previous period's SourceBuffers when the platform supports
+            // SourceBuffer.changeType(). On platforms without it (e.g. Chrome 68 / LG WebOS <= 5)
+            // reusing a buffer across a period boundary fails with MEDIA_ERR_SRC_NOT_SUPPORTED at
+            // the first period transition, so fall back to a fresh-SourceBuffer ("cold") switch.
+            // This restores the pre-5.1.0 behaviour for those platforms while leaving the reuse
+            // path unchanged where changeType() is available.
+            let sourceBufferSinksFromPreviousPeriod = new Map();
             activeStream = targetStream;
 
             if (previousStream) {
                 keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
+                if (capabilities.supportsChangeType()) {
+                    sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
+                }
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
                 previousStream.deactivate(keepBuffers);
             }
