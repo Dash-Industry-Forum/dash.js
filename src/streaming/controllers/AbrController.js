@@ -992,9 +992,9 @@ function AbrController() {
      */
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
         try {
-            const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
-            const switchOnThreshold = bufferTimeDefault;
-            const switchOffThreshold = 0.5 * bufferTimeDefault;
+            const hybridSwitchBufferTime = settings.get().streaming.abr.hybridSwitchBufferTime;
+            const switchOnThreshold = hybridSwitchBufferTime;
+            const switchOffThreshold = 0.5 * hybridSwitchBufferTime;
 
             const isUsingBolaRule = abrRulesCollection.getBolaState(mediaType)
             const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules
