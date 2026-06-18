@@ -859,6 +859,7 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
+        cea608parser = null;
     }
 
     /**
