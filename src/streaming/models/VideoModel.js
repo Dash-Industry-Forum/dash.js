@@ -100,6 +100,7 @@ function VideoModel() {
                 resizeObserver.unobserve(element);
                 resizeObserver.disconnect();
                 resizeObserver = null;
+                element = null;
             }
         } catch (e) {
 
@@ -209,12 +210,22 @@ function VideoModel() {
 
     function setElement(value) {
         //add check of value type
-        if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
+        if (value === null || value === undefined) {
+            _disposeResizeObserver();
+            return;
+        }
+        if (value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
+            // In case there was already an element stored in model
+            const isNewElement = element !== value;
+            if (element && !isNewElement) {
+                _unregisterResizeObserver(element);
+                return;
+            }
             element = value;
             _registerResizeObserver(element);
-        } else {
-            throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
+            return;
         }
+        throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
     }
 
     function _registerResizeObserver(element) {
@@ -226,6 +237,15 @@ function VideoModel() {
         } catch (e) {
 
         }
+    }
+
+    function _unregisterResizeObserver(element) {
+        try {
+            if (!resizeObserver || !element) {
+                return;
+            }
+            resizeObserver.unobserve(element);
+        } catch (e) {}
     }
 
     function setSource(source) {

@@ -484,6 +484,11 @@ function MediaPlayer() {
             retrieveManifestRequest.resetLoader();
             retrieveManifestRequest = null;
         }
+
+        if (videoModel) {
+            videoModel.reset();
+            videoModel = null;
+        }
     }
 
     /**
