@@ -94,13 +94,21 @@ function VideoModel() {
         _disposeResizeObserver();
     }
 
+    function destroy() {
+        reset();
+        element = null;
+        TTMLRenderingDiv = null;
+        vttRenderingDiv = null;
+    }
+
     function _disposeResizeObserver() {
         try {
             if (resizeObserver && element) {
                 resizeObserver.unobserve(element);
+            }
+            if (resizeObserver) {
                 resizeObserver.disconnect();
                 resizeObserver = null;
-                element = null;
             }
         } catch (e) {
 
@@ -209,19 +217,21 @@ function VideoModel() {
     }
 
     function setElement(value) {
-        //add check of value type
-        if (value === null || value === undefined) {
-            _disposeResizeObserver();
+        // In case there was already an element stored in model
+        const isNewElement = element !== value;
+        if (element && !isNewElement) {
             return;
         }
+
+        _unregisterResizeObserver(element);
+        element = value;
+
+        //add check of value type
+        if (value === null || value === undefined) {
+            return;
+        }
+
         if (value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
-            // In case there was already an element stored in model
-            const isNewElement = element !== value;
-            if (element && !isNewElement) {
-                _unregisterResizeObserver(element);
-                return;
-            }
-            element = value;
             _registerResizeObserver(element);
             return;
         }
@@ -577,6 +587,7 @@ function VideoModel() {
         addEventListener,
         addTextTrack,
         appendChild,
+        destroy,
         getBufferRange,
         getClientHeight,
         getClientWidth,

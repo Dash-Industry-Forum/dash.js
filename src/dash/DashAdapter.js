@@ -859,6 +859,9 @@ function DashAdapter() {
 
     function reset() {
         voPeriods = [];
+    }
+
+    function destroy() {
         cea608parser = null;
     }
 
@@ -1316,6 +1319,7 @@ function DashAdapter() {
         applyPatchToManifest,
         areMediaInfosEqual,
         convertAdaptationToMediaInfo,
+        destroy,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,
