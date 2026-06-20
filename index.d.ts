@@ -1863,6 +1863,7 @@ export class MediaPlayerSettingClass {
             usePixelRatioInLimitBitrateByPortal?: boolean;
             limitBitrateByPortalMinimum?: number,
             enableSupplementalPropertyAdaptationSetSwitching?: boolean,
+            hybridSwitchBufferTime?: number,
             rules?: {
                 throughputRule?: {
                     active?: boolean
