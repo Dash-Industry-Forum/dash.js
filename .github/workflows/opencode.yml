@@ -21,7 +21,7 @@ jobs:
       - name: Run opencode
         uses: anomalyco/opencode/github@latest
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN_OPENCODE }}
+          GITHUB_TOKEN: ${{ secrets.TOKEN_OPENCODE }}
         with:
           model: github-models/openai/gpt-4.1-mini
           use_github_token: true
