@@ -9,6 +9,10 @@ on:
             - '!v4_main'
             - '!v4_development'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
 jobs:
     build_and_unit_test:
         runs-on: ubuntu-24.04

@@ -5,6 +5,10 @@ on:
         branches:
             - 'development'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+    cancel-in-progress: true
+
 jobs:
     merge_build_and_unit_test:
         runs-on: ubuntu-24.04
