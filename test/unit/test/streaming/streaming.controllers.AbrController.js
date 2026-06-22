@@ -84,6 +84,7 @@ describe('AbrController', function () {
         abrCtrl.reset();
         settings.reset();
         eventBus.reset();
+        dummyRepresentations[0].segmentSequenceProperties = undefined;
     });
 
     describe('getOptimalRepresentationForBitrate()', function () {

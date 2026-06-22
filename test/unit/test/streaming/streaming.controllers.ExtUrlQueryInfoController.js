@@ -134,7 +134,7 @@ describe('ExtUrlQueryInfoController', () => {
 
             const expectedResult = [{key: 'urlParam1' , value: 'urlValue1'}, {key: 'urlParam2' , value: 'urlValue2'}];
             const result = extUrlQueryInfoController.getFinalQueryString(request);
-            console.log(result)
+
             expect(result).to.have.deep.members(expectedResult);
         });
     
@@ -269,7 +269,7 @@ describe('ExtUrlQueryInfoController', () => {
             }; 
             
             const result = extUrlQueryInfoController.getFinalQueryString(request);
-            console.log(result)
+
             expect(result).to.be.undefined;
         });
 

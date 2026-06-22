@@ -27,29 +27,24 @@ class FileLoader {
     }
 
     static async _loadFile(url, options, returnType) {
-        try {
-            url = HTTP_SERVER + url;
-            const response = await fetch(url, options);
+        url = HTTP_SERVER + url;
+        const response = await fetch(url, options);
 
-            if (!response.ok) {
-                console.log('Network response was not OK');
-            }
+        if (!response.ok) {
+            throw new Error(`FileLoader: ${url} returned ${response.status}`);
+        }
 
-            switch (returnType) {
-                case TYPES.TEXT:
-                    return response.text();
-                case TYPES.JSON:
-                    return response.json();
-                case TYPES.ARRAY_BUFFER:
-                    return response.arrayBuffer();
-                case TYPES.BLOB:
-                    return response.blob();
-                default:
-                    return response.text();
-
-            }
-        } catch (e) {
-            console.log(e);
+        switch (returnType) {
+            case TYPES.TEXT:
+                return response.text();
+            case TYPES.JSON:
+                return response.json();
+            case TYPES.ARRAY_BUFFER:
+                return response.arrayBuffer();
+            case TYPES.BLOB:
+                return response.blob();
+            default:
+                return response.text();
         }
     }
 }
