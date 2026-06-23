@@ -47,7 +47,7 @@ function ObjectIron(mappers) {
         if (exception) {
             for (const [key, values] of Object.entries(exception)) {
                 let attr = element[key];
-                if (values.some(v => attr.match(v))) {
+                if (attr && values.some(v => attr.match(v))) {
                     allowMapping = false;
                 }
             }
@@ -55,7 +55,7 @@ function ObjectIron(mappers) {
 
         return allowMapping;
     }
-    
+
     function _conditionallyMapProperty(exception, propertyName, propertyIsArray, propertyElementFromParent, childNode) {
         if (_mappingAllowed(propertyElementFromParent, exception)) {
             if (childNode[propertyName]) {
@@ -64,7 +64,7 @@ function ObjectIron(mappers) {
                     childNode[propertyName].push(propertyElementFromParent);
                 } else {
                     // non-Array Properties can be:
-                    // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or 
+                    // - certain elements (e.g. SegmentList, see ISO 23009-1 (6th ed), clause 5.3.9.1) or
                     // - attributes (e.g. codecs)
                     _mergeValues(propertyElementFromParent, childNode[propertyName]);
                 }
