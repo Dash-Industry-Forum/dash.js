@@ -21,6 +21,8 @@
 
     <!-- Chart.js (UMD, exposes global Chart) -->
     <script src="vendor/chart.js/chart.umd.js"></script>
+    <!-- LCEVC Decoder -->
+    <script src="https://unpkg.com/lcevc_dec.js@latest/dist/lcevc_dec.min.js"></script>
 </head>
 <body>
 <div class="main-container">
@@ -490,6 +492,7 @@
         <div class="col-lg-8">
             <div id="video-wrapper">
                 <video id="video-element" disableRemotePlayback="true"></video>
+                <canvas id="enhancement-canvas" class="d-none"></canvas>
                 <div id="video-caption"></div>
                 <!-- Controlbar is injected here by ControlBar.js from contrib/controlbar -->
             </div>

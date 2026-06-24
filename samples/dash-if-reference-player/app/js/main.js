@@ -13,6 +13,7 @@ import {DrmController} from './DrmController.js';
 import {MetricsDisplay} from './MetricsDisplay.js';
 import {ChartController} from './ChartController.js';
 import {NotificationPanel} from './NotificationPanel.js';
+import {LcevcController} from './LcevcController.js';
 
 // ---- State ----
 let playerController;
@@ -23,6 +24,7 @@ let drmController;
 let metricsDisplay;
 let chartController;
 let notificationPanel;
+let lcevcController;
 
 // ---- Initialization ----
 async function init() {
@@ -40,6 +42,7 @@ async function init() {
     }
 
     const videoElement = $('#video-element');
+    const enhancementCanvas = $('#enhancement-canvas');
 
     // 1. Create PlayerController and initialize dash.js
     playerController = new PlayerController();
@@ -71,6 +74,13 @@ async function init() {
     settingsController = new SettingsController(playerController);
     settingsController.init();
 
+    lcevcController = new LcevcController(playerController);
+    lcevcController.init({
+        videoElement,
+        canvasElement: enhancementCanvas,
+        toggleElement: $('#opt-enhancement-enabled')
+    });
+
     drmController = new DrmController();
     drmController.init();
 
@@ -88,7 +98,9 @@ async function init() {
     notificationPanel.init();
 
     // 5. Wire up button handlers
-    $('#btn-load').addEventListener('click', doLoad);
+    $('#btn-load').addEventListener('click', () => {
+        void doLoad();
+    });
     $('#btn-stop').addEventListener('click', doStop);
 
     // Copy URL (includes DRM protData from the DRM controller or the selected stream)
@@ -101,7 +113,7 @@ async function init() {
     // Allow Enter key in URL field to trigger load
     $('#stream-url').addEventListener('keydown', (e) => {
         if (e.key === 'Enter') {
-            doLoad();
+            void doLoad();
         }
     });
 
@@ -175,24 +187,30 @@ function onStreamSelected(item) {
     } else {
         drmController.clearAll();
     }
+
+    lcevcController.setSelectedItem(item);
 }
 
 // ---- Load / Stop ----
-function doLoad() {
+async function doLoad() {
     const url = streamCatalog.getUrl();
     if (!url) {
         return;
     }
 
+    const selectedItem = streamCatalog.getSelectedItem();
+    lcevcController.setSelectedItem(selectedItem);
+    const enhancementEnabled = await lcevcController.prepareForPlayback();
+
     // Build config from settings UI
     const config = settingsController.buildConfig();
+    config.streaming.enhancement.enabled = enhancementEnabled;
     playerController.updateSettings(config);
 
     // Set auto-play
     playerController.player.setAutoPlay(settingsController.autoPlay);
 
     // Build DRM protection data
-    const selectedItem = streamCatalog.getSelectedItem();
     let protData = drmController.buildProtectionData();
 
     // If stream item has embedded protData and user hasn't overridden, use stream's
@@ -225,6 +243,7 @@ function doLoad() {
 function doStop() {
     controlBar.disable();
     controlBar.reset();
+    lcevcController.stop();
     playerController.stop();
     chartController.clearAllData();
 }
