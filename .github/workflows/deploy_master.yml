@@ -34,7 +34,7 @@ jobs:
                     for sample in "network-interceptor"; do
                       echo "Building sample: $sample"
                       cd samples/$sample
-                      npm install
+                      npm ci
                       npm run build
                       rm -rf node_modules
                     done
