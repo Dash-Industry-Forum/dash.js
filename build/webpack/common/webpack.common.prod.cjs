@@ -3,7 +3,6 @@ const { prodEntries } = require('../common/webpack.common.base.cjs');
 const configCommonDebugProdUmd = {
     mode: 'development',
     entry: prodEntries,
-    cache: { type: 'filesystem' },
     output: {
         filename: '[name].debug.js'
     }
@@ -12,7 +11,6 @@ const configCommonDebugProdUmd = {
 const configCommonMinProdUmd = {
     mode: 'production',
     entry: prodEntries,
-    cache: { type: 'filesystem' },
     output: {
         filename: '[name].min.js'
     },
@@ -22,7 +20,6 @@ const configCommonMinProdUmd = {
 const configCommonDebugProdEsm = {
     mode: 'development',
     entry: prodEntries,
-    cache: { type: 'filesystem' },
     output: {
         filename: '[name].debug.js'
     }
@@ -31,7 +28,6 @@ const configCommonDebugProdEsm = {
 const configCommonMinProdEsm = {
     mode: 'production',
     entry: prodEntries,
-    cache: { type: 'filesystem' },
     output: {
         filename: '[name].min.js'
     },
