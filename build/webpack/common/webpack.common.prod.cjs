@@ -1,20 +1,9 @@
-const EsLintWebpackPlugin = require('eslint-webpack-plugin');
 const { prodEntries } = require('../common/webpack.common.base.cjs');
-
-const plugins = [
-    new EsLintWebpackPlugin({
-        configType: 'flat',
-        files: [
-            'src/**/*.js',
-            'test/unit/mocks/*.js',
-            'test/unit/test/**/*.js'
-        ]
-    })
-]
 
 const configCommonDebugProdUmd = {
     mode: 'development',
     entry: prodEntries,
+    cache: { type: 'filesystem' },
     output: {
         filename: '[name].debug.js'
     }
@@ -23,16 +12,17 @@ const configCommonDebugProdUmd = {
 const configCommonMinProdUmd = {
     mode: 'production',
     entry: prodEntries,
+    cache: { type: 'filesystem' },
     output: {
         filename: '[name].min.js'
     },
-    performance: { hints: false },
-    plugins
+    performance: { hints: false }
 };
 
 const configCommonDebugProdEsm = {
     mode: 'development',
     entry: prodEntries,
+    cache: { type: 'filesystem' },
     output: {
         filename: '[name].debug.js'
     }
@@ -41,14 +31,14 @@ const configCommonDebugProdEsm = {
 const configCommonMinProdEsm = {
     mode: 'production',
     entry: prodEntries,
+    cache: { type: 'filesystem' },
     output: {
         filename: '[name].min.js'
     },
     optimization: {
         usedExports: false,
     },
-    performance: { hints: false },
-    plugins
+    performance: { hints: false }
 };
 
 module.exports = { configCommonDebugProdEsm, configCommonMinProdEsm, configCommonDebugProdUmd, configCommonMinProdUmd };

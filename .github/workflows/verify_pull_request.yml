@@ -10,7 +10,7 @@ concurrency:
     cancel-in-progress: true
 
 jobs:
-    merge_build_and_unit_test:
+    validate_and_unit_test:
         runs-on: ubuntu-24.04
         steps:
             # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
@@ -20,11 +20,41 @@ jobs:
                 uses: actions/checkout@v4
             -   name: Setup dash.js
                 uses: ./.github/actions/setup-dashjs
-            -   name: Build and run unit tests
-                run: npm run build
+            -   name: Validate and run unit tests
+                run: npm run ci:verify
+
+    build_modern_artifact:
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Build modern bundle
+                run: npm run webpack-build-modern
+            -   name: Upload modern dist artifacts
+                uses: actions/upload-artifact@v4
+                with:
+                    name: dist-modern
+                    path: dist/
+                    retention-days: 1
+
+    build_legacy_bundle:
+        needs: validate_and_unit_test
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Build legacy bundle
+                run: npm run webpack-build-legacy
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false
+        needs:
+            - validate_and_unit_test
+            - build_modern_artifact
         runs-on: ubuntu-24.04
         steps:
             # actions/checkout on pull_request events checks out the merge commit (refs/pull/<PR#>/merge),
@@ -36,8 +66,11 @@ jobs:
                 uses: ./.github/actions/setup-dashjs
             -   name: Install karma-webdriver-launcher
                 run: npm install karma-webdriver-launcher
-            -   name: Build modern bundle
-                run: npm run webpack-build-modern
+            -   name: Download dist artifacts
+                uses: actions/download-artifact@v4
+                with:
+                    name: dist-modern
+                    path: dist/
             -   name: Start Tunnel
                 uses: LambdaTest/LambdaTest-tunnel-action@v2
                 id: tunnel
