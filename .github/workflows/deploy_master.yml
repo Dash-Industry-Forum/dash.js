@@ -93,7 +93,7 @@ jobs:
             -   name: Prepare deploy directory
                 run: |
                     mkdir -p latest
-                    cp -R artifacts/docs/jsdoc latest/jsdoc
+                    if [ -d artifacts/docs/jsdoc ]; then cp -R artifacts/docs/jsdoc latest/jsdoc; fi
                     cp -R artifacts/dist/modern/umd/* latest
                     cp -R artifacts/dist/* artifacts/index.d.ts latest
             -   name: Install SSH Key
@@ -155,7 +155,7 @@ jobs:
             -   name: Prepare deploy directory
                 run: |
                     mkdir -p "$ENVNAME"
-                    cp -R artifacts/docs/jsdoc "$ENVNAME/jsdoc"
+                    if [ -d artifacts/docs/jsdoc ]; then cp -R artifacts/docs/jsdoc "$ENVNAME/jsdoc"; fi
                     cp -R artifacts/dist/modern/umd/* "$ENVNAME"
                     cp -R artifacts/dist/* artifacts/index.d.ts "$ENVNAME"
             -   name: Install SSH Key
