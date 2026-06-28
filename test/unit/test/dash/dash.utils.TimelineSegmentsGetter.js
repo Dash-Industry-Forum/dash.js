@@ -321,6 +321,21 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.duration).to.equal(2);
         });
 
+        it('should resolve non-monotonic timelines with the linear fallback', () => {
+            const representation = createTimelineRepresentation({
+                timescale: 1,
+                S: [
+                    { t: 20, d: 10 },
+                    { t: 0, d: 10 }
+                ]
+            });
+
+            const seg = timelineSegmentsGetter.getSegmentByTime(representation, 5);
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.index).to.equal(1);
+            expect(seg.presentationStartTime).to.equal(0);
+        });
+
         it('should fall back to full segment (not partial) when time is exactly at end boundary of a segment with partials', () => {
             const representation = createTimelineRepresentation({
                 timescale: 3,
