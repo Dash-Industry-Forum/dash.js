@@ -264,6 +264,50 @@ describe('TimelineSegmentsGetter', () => {
             expect(seg.replacementSubNumber).to.equal(1);
         });
 
+        it('should resolve segment indexes correctly across repeated S blocks', () => {
+            const voHelper = new VoHelper();
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.timescale = 10;
+            representation.presentationTimeOffset = 0;
+            representation.adaptation.period.duration = 11;
+            representation.SegmentTemplate = {
+                timescale: 10,
+                initialization: 'init-$RepresentationID$.m4s',
+                SegmentTimeline: {
+                    S: [
+                        { t: 0, d: 10, r: 4 },
+                        { t: 50, d: 20, r: 2 }
+                    ]
+                },
+                media: 'seg-$Time$.m4s'
+            };
+            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+
+            let seg = timelineSegmentsGetter.getSegmentByTime(representation, 3.1);
+            expect(seg).to.exist;
+            expect(seg.index).to.equal(3);
+            expect(seg.presentationStartTime).to.equal(3);
+            expect(seg.duration).to.equal(1);
+
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 5.1);
+            expect(seg).to.exist;
+            expect(seg.index).to.equal(5);
+            expect(seg.presentationStartTime).to.equal(5);
+            expect(seg.duration).to.equal(2);
+
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 8.5);
+            expect(seg).to.exist;
+            expect(seg.index).to.equal(6);
+            expect(seg.presentationStartTime).to.equal(7);
+            expect(seg.duration).to.equal(2);
+
+            seg = timelineSegmentsGetter.getSegmentByTime(representation, 10.5);
+            expect(seg).to.exist;
+            expect(seg.index).to.equal(7);
+            expect(seg.presentationStartTime).to.equal(9);
+            expect(seg.duration).to.equal(2);
+        });
+
         it('should fall back to full segment (not partial) when time is exactly at end boundary of a segment with partials', () => {
             const voHelper = new VoHelper();
             const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
@@ -277,6 +321,73 @@ describe('TimelineSegmentsGetter', () => {
             representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
             // Request time exactly at end (1.0s) -> outside first and only segment -> null
             const seg = timelineSegmentsGetter.getSegmentByTime(representation, 1.0);
+            expect(seg).to.be.null; // jshint ignore:line
+        });
+    });
+
+    describe('cache invalidation and edge cases', () => {
+        it('should not cache open-ended negative @r counts so the advancing DVR window is tracked', () => {
+            const dvr = { end: 50 };
+            const getter = TimelineSegmentsGetter(context).create({
+                timelineConverter: timelineConverter,
+                dashMetrics: { getCurrentDVRInfo: () => dvr }
+            }, false);
+            const voHelper = new VoHelper();
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.timescale = 100;
+            representation.presentationTimeOffset = 0;
+            representation.adaptation.period.start = 0;
+            representation.adaptation.period.duration = NaN; // force the DVR-window branch
+            representation.SegmentTemplate = {
+                timescale: 100,
+                initialization: 'init-$RepresentationID$.m4s',
+                SegmentTimeline: { S: [{ t: 0, d: 100, r: -1 }] }, // 1s segments, open-ended
+                media: 'seg-$Time$.m4s'
+            };
+            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+
+            expect(getter.getMediaFinishedInformation(representation).numberOfSegments).to.equal(50);
+            expect(getter.getSegmentByTime(representation, 60)).to.be.null; // jshint ignore:line
+
+            dvr.end = 70; // the live DVR window advances
+            expect(getter.getMediaFinishedInformation(representation).numberOfSegments).to.equal(70);
+            const seg = getter.getSegmentByTime(representation, 60);
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.index).to.equal(60);
+        });
+
+        it('should invalidate the cache when the S array is updated in place with the same length', () => {
+            const voHelper = new VoHelper();
+            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+            representation.timescale = 1;
+            representation.presentationTimeOffset = 0;
+            representation.adaptation.period.start = 0;
+            const S = [{ t: 0, d: 10 }, { t: 10, d: 10 }, { t: 20, d: 10 }];
+            representation.SegmentTemplate = {
+                timescale: 1,
+                initialization: 'init.m4s',
+                SegmentTimeline: { S },
+                media: 'seg-$Time$.m4s'
+            };
+            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+
+            expect(timelineSegmentsGetter.getMediaFinishedInformation(representation).mediaTimeOfLastSignaledSegment).to.equal(30);
+            // slide the window: drop the oldest, append the newest, length unchanged
+            S.shift();
+            S.push({ t: 30, d: 10 });
+            expect(timelineSegmentsGetter.getMediaFinishedInformation(representation).mediaTimeOfLastSignaledSegment).to.equal(40);
+            const seg = timelineSegmentsGetter.getSegmentByTime(representation, 35);
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.presentationStartTime).to.equal(30);
+        });
+
+        it('should return null when the requested time resolves to NaN', () => {
+            const representation = createRepresentationMock();
+            const seg = timelineSegmentsGetter.getSegmentByIndex(representation, {
+                presentationStartTime: 8.008,
+                mediaStartTime: 8.008,
+                duration: NaN
+            });
             expect(seg).to.be.null; // jshint ignore:line
         });
     });
