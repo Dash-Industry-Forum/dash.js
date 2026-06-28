@@ -37,6 +37,32 @@ function createRepresentationMock() {
     return representation;
 }
 
+function createTimelineRepresentation({
+    timescale,
+    S,
+    duration = NaN,
+    start = 0,
+    presentationTimeOffset = 0,
+    initialization = 'init.m4s',
+    media = 'seg-$Time$.m4s'
+}) {
+    const voHelper = new VoHelper();
+    const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
+    representation.timescale = timescale;
+    representation.presentationTimeOffset = presentationTimeOffset;
+    representation.adaptation.period.start = start;
+    representation.adaptation.period.duration = duration;
+    representation.SegmentTemplate = {
+        timescale,
+        initialization,
+        SegmentTimeline: { S },
+        media
+    };
+    representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+
+    return representation;
+}
+
 describe('TimelineSegmentsGetter', () => {
     const context = {};
 
@@ -81,23 +107,17 @@ describe('TimelineSegmentsGetter', () => {
         });
 
         it('should handle negative repeat count using next S element (r = -1)', () => {
-            const voHelper = new VoHelper();
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.timescale = 100; // 100 units per second
-            representation.adaptation.period.duration = 50; // seconds
             // S[0] repeats until start time of next S (t=5000 units => 50 seconds) with d=100 (1 second)
-            representation.SegmentTemplate = {
+            const representation = createTimelineRepresentation({
                 timescale: 100,
+                duration: 50, // seconds
                 initialization: 'init-$RepresentationID$.m4s',
-                SegmentTimeline: {
-                    S: [
-                        { t: 0, d: 100, r: -1 },
-                        { t: 5000, d: 100 } // next fragment defines end of negative repeat range
-                    ]
-                },
+                S: [
+                    { t: 0, d: 100, r: -1 },
+                    { t: 5000, d: 100 } // next fragment defines end of negative repeat range
+                ],
                 media: 'seg-$Time$.m4s'
-            };
-            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            });
 
             const info = timelineSegmentsGetter.getMediaFinishedInformation(representation);
             // From 0 to <50s with 1s duration -> 50 segments (first S produces 50 segments), plus the final S element yields 1 more
@@ -265,23 +285,16 @@ describe('TimelineSegmentsGetter', () => {
         });
 
         it('should resolve segment indexes correctly across repeated S blocks', () => {
-            const voHelper = new VoHelper();
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.timescale = 10;
-            representation.presentationTimeOffset = 0;
-            representation.adaptation.period.duration = 11;
-            representation.SegmentTemplate = {
+            const representation = createTimelineRepresentation({
                 timescale: 10,
+                duration: 11,
                 initialization: 'init-$RepresentationID$.m4s',
-                SegmentTimeline: {
-                    S: [
-                        { t: 0, d: 10, r: 4 },
-                        { t: 50, d: 20, r: 2 }
-                    ]
-                },
+                S: [
+                    { t: 0, d: 10, r: 4 },
+                    { t: 50, d: 20, r: 2 }
+                ],
                 media: 'seg-$Time$.m4s'
-            };
-            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            });
 
             let seg = timelineSegmentsGetter.getSegmentByTime(representation, 3.1);
             expect(seg).to.exist;
@@ -309,16 +322,12 @@ describe('TimelineSegmentsGetter', () => {
         });
 
         it('should fall back to full segment (not partial) when time is exactly at end boundary of a segment with partials', () => {
-            const voHelper = new VoHelper();
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.timescale = 3; // simple timescale
-            representation.SegmentTemplate = {
+            const representation = createTimelineRepresentation({
                 timescale: 3,
                 initialization: 'init.m4s',
-                SegmentTimeline: { S: [{ t: 0, d: 3, k: 3 }] }, // segment duration = 1s (3/3)
+                S: [{ t: 0, d: 3, k: 3 }], // segment duration = 1s (3/3)
                 media: 's-$Time$-$SubNumber$.m4s'
-            };
-            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            });
             // Request time exactly at end (1.0s) -> outside first and only segment -> null
             const seg = timelineSegmentsGetter.getSegmentByTime(representation, 1.0);
             expect(seg).to.be.null; // jshint ignore:line
@@ -332,19 +341,13 @@ describe('TimelineSegmentsGetter', () => {
                 timelineConverter: timelineConverter,
                 dashMetrics: { getCurrentDVRInfo: () => dvr }
             }, false);
-            const voHelper = new VoHelper();
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.timescale = 100;
-            representation.presentationTimeOffset = 0;
-            representation.adaptation.period.start = 0;
-            representation.adaptation.period.duration = NaN; // force the DVR-window branch
-            representation.SegmentTemplate = {
+            const representation = createTimelineRepresentation({
                 timescale: 100,
+                duration: NaN, // force the DVR-window branch
                 initialization: 'init-$RepresentationID$.m4s',
-                SegmentTimeline: { S: [{ t: 0, d: 100, r: -1 }] }, // 1s segments, open-ended
+                S: [{ t: 0, d: 100, r: -1 }], // 1s segments, open-ended
                 media: 'seg-$Time$.m4s'
-            };
-            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+            });
 
             expect(getter.getMediaFinishedInformation(representation).numberOfSegments).to.equal(50);
             expect(getter.getSegmentByTime(representation, 60)).to.be.null; // jshint ignore:line
@@ -357,19 +360,11 @@ describe('TimelineSegmentsGetter', () => {
         });
 
         it('should invalidate the cache when the S array is updated in place with the same length', () => {
-            const voHelper = new VoHelper();
-            const representation = voHelper.getDummyRepresentation(Constants.VIDEO);
-            representation.timescale = 1;
-            representation.presentationTimeOffset = 0;
-            representation.adaptation.period.start = 0;
             const S = [{ t: 0, d: 10 }, { t: 10, d: 10 }, { t: 20, d: 10 }];
-            representation.SegmentTemplate = {
+            const representation = createTimelineRepresentation({
                 timescale: 1,
-                initialization: 'init.m4s',
-                SegmentTimeline: { S },
-                media: 'seg-$Time$.m4s'
-            };
-            representation.adaptation.period.mpd.manifest.Period[0].AdaptationSet[0].Representation[0] = representation;
+                S
+            });
 
             expect(timelineSegmentsGetter.getMediaFinishedInformation(representation).mediaTimeOfLastSignaledSegment).to.equal(30);
             // slide the window: drop the oldest, append the newest, length unchanged
@@ -379,6 +374,23 @@ describe('TimelineSegmentsGetter', () => {
             const seg = timelineSegmentsGetter.getSegmentByTime(representation, 35);
             expect(seg).to.exist; // jshint ignore:line
             expect(seg.presentationStartTime).to.equal(30);
+        });
+
+        it('should invalidate the cache when boundary S timing is mutated in place', () => {
+            const S = [{ t: 0, d: 10 }, { t: 10, d: 10 }];
+            const representation = createTimelineRepresentation({
+                timescale: 1,
+                S
+            });
+
+            expect(timelineSegmentsGetter.getSegmentByTime(representation, 15).duration).to.equal(10);
+            S[1].d = 20;
+
+            expect(timelineSegmentsGetter.getMediaFinishedInformation(representation).mediaTimeOfLastSignaledSegment).to.equal(30);
+            const seg = timelineSegmentsGetter.getSegmentByTime(representation, 25);
+            expect(seg).to.exist; // jshint ignore:line
+            expect(seg.presentationStartTime).to.equal(10);
+            expect(seg.duration).to.equal(20);
         });
 
         it('should return null when the requested time resolves to NaN', () => {

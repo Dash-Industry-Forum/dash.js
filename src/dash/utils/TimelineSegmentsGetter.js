@@ -40,7 +40,7 @@ function TimelineSegmentsGetter(config, isDynamic) {
     const dashMetrics = config.dashMetrics;
     // Per-representation index of the SegmentTimeline. Keyed on the representation so it is dropped
     // automatically when the representation is. Invalidated in _getCachedLookup when the parsed S
-    // array changes; never stored for open-ended (negative-@r) timelines, see _computeLookup.
+    // array or its timing boundaries change; never stored for open-ended (negative-@r) timelines, see _computeLookup.
     const segmentLookupCache = new WeakMap();
 
     let instance;
@@ -145,17 +145,22 @@ function TimelineSegmentsGetter(config, isDynamic) {
         const parsedSElements = segmentBase.SegmentTimeline.S;
         const cached = segmentLookupCache.get(representation);
         const length = parsedSElements.length;
+        const firstSElement = parsedSElements[0];
+        const lastSElement = parsedSElements[length - 1];
 
         // Validate the cache against the parsed timeline. The identity of the S array does not change
         // on in-place updates (MSS appends/splices the same array), so we also compare its length and
-        // first/last element identity to catch a sliding window that keeps the same length.
+        // first/last element identity/timing to catch a sliding window that keeps the same length.
         if (
             cached &&
             cached.segmentBase === segmentBase &&
+            cached.segmentURL === segmentBase.SegmentURL &&
             cached.parsedSElements === parsedSElements &&
             cached.numberOfSElements === length &&
-            cached.firstSElement === parsedSElements[0] &&
-            cached.lastSElement === parsedSElements[length - 1] &&
+            cached.firstSElement === firstSElement &&
+            cached.lastSElement === lastSElement &&
+            cached.firstSElementSignature === _getSElementSignature(firstSElement) &&
+            cached.lastSElementSignature === _getSElementSignature(lastSElement) &&
             cached.fTimescale === representation.timescale
         ) {
             return cached;
@@ -253,7 +258,9 @@ function TimelineSegmentsGetter(config, isDynamic) {
             blocks,
             fTimescale,
             firstSElement: parsedSElements[0],
+            firstSElementSignature: _getSElementSignature(parsedSElements[0]),
             lastSElement: parsedSElements[numberOfSElements - 1],
+            lastSElementSignature: _getSElementSignature(parsedSElements[numberOfSElements - 1]),
             mediaTimeOfLastSignaledSegment,
             monotonic,
             numberOfSElements,
@@ -263,6 +270,16 @@ function TimelineSegmentsGetter(config, isDynamic) {
             segmentURL,
             timeDependent
         };
+    }
+
+    function _getSElementSignature(sElement) {
+        if (!sElement) {
+            return '';
+        }
+
+        const t = sElement.hasOwnProperty('t') ? sElement.t : '';
+        const r = sElement.hasOwnProperty('r') ? sElement.r : '';
+        return `${t}|${sElement.d}|${r}`;
     }
 
     function _blockContainsMediaTime(block, requiredMediaTimeInTimescaleUnits) {
