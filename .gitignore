@@ -193,6 +193,8 @@ build/typings/
 
 # Karma Unit Tets
 test/unit/results
+# Screenshot artifacts created by IDE visual testing tools
+test/unit/test/**/__screenshots__
 # Karma Functional tests
 test/functional/results
 test/functional/config/selenium/jars
