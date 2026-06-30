@@ -517,8 +517,10 @@ function StreamProcessor(config) {
             const period = representation.adaptation.period;
             const periodEnd = period.start + period.duration;
 
-            // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it
-            if (isFinite(periodEnd) && bufferingTime < periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
+            // If there is no valid target time ahead and the buffering time is within the duration of one segment we slightly adjust it.
+            // Restrict the tail-time fallback to the final period — for any earlier period, an inter-period gap jump should advance into the
+            // next period rather than seeking backward inside the current one.
+            if (streamInfo.isLast && isFinite(periodEnd) && bufferingTime < periodEnd && bufferingTime >= periodEnd - representation.segmentDuration) {
                 adjustedTime = Math.max(period.start, bufferingTime - 0.1);
             }
         }
