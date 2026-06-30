@@ -27,6 +27,14 @@ StreamMock.prototype.setStreamInfo = function (streamInfo) {
     this.streamInfo = streamInfo;
 };
 
+StreamMock.prototype.getStartTime = function () {
+    return this.streamInfo ? this.streamInfo.start : NaN;
+};
+
+StreamMock.prototype.getDuration = function () {
+    return this.streamInfo ? this.streamInfo.duration : NaN;
+};
+
 StreamMock.prototype.getFragmentController = function () {
     return {
         getModel: () => {
