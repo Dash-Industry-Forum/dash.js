@@ -37,6 +37,7 @@ import DashConstants from '../../dash/constants/DashConstants.js';
 
 const RESOLVE_TYPE_ONLOAD = 'onLoad';
 const RESOLVE_TYPE_ONACTUATE = 'onActuate';
+const RESOLVE_TYPE_ONREQUEST = 'onRequest';
 const RESOLVE_TO_ZERO = 'urn:mpeg:dash:resolve-to-zero:2013';
 
 function XlinkController(config) {
@@ -49,10 +50,13 @@ function XlinkController(config) {
     let instance,
         parser,
         manifest,
-        xlinkLoader;
+        xlinkLoader,
+        baseURLController;
 
     function setup() {
         eventBus.on(Events.XLINK_ELEMENT_LOADED, onXlinkElementLoaded, instance);
+
+        baseURLController = config.baseURLController;
 
         xlinkLoader = XlinkLoader(context).create({
             errHandler: config.errHandler,
@@ -72,17 +76,33 @@ function XlinkController(config) {
      * <p>Triggers the resolution of the xlink.onLoad attributes in the manifest file </p>
      * @param {Object} mpd - the manifest
      */
-    function resolveManifestOnLoad(mpd) {
+    function resolveManifestOnLoad(mpd, previousMpd) {
         let elements;
-        // First resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
-        manifest = mpd;
 
+        // First merge all periods previsouly resolved (in case iof manifest update)
+        manifest = mergeResolvedPeriods(mpd, previousMpd)
+
+        // Resolve all periods, so unnecessary requests inside onLoad Periods with Default content are avoided
         if (manifest.Period) {
             elements = getElementsToResolve(manifest.Period, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
             resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONLOAD);
         } else {
             eventBus.trigger(Events.XLINK_READY, {manifest: manifest});
         }
+    }
+
+    /**
+     * <p>Triggers the resolution of the period(s) with xlink.onRequest attributes and optionnaly identified by provided period id </p>
+     * @param {Object} mpd - the manifest
+     */
+    function resolvePeriodOnRequest(periodId) {
+        let elements;
+        if (!manifest.Period) {
+            return;
+        }
+
+        elements = getElementsToResolve(manifest.Period, manifest, DashConstants.PERIOD, RESOLVE_TYPE_ONREQUEST, periodId);
+        resolve(elements, DashConstants.PERIOD, RESOLVE_TYPE_ONREQUEST);
     }
 
     function reset() {
@@ -111,7 +131,9 @@ function XlinkController(config) {
             if (urlUtils.isHTTPURL(element.url)) {
                 url = element.url;
             } else {
-                url = element.originalContent.BaseURL + element.url;
+                // url = element.originalContent.BaseURL + element.url;
+                const baseUrl = baseURLController.resolve(element.path);
+                url = urlUtils.resolve(element.url, baseUrl ? baseUrl.url : element.originalContent.BaseURL);
             }
             xlinkLoader.load(url, element, resolveObject);
         }
@@ -149,7 +171,7 @@ function XlinkController(config) {
             obj;
 
         mergeElementsBack(resolveObject);
-        if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE) {
+        if (resolveObject.resolveType === RESOLVE_TYPE_ONACTUATE || resolveObject.resolveType === RESOLVE_TYPE_ONREQUEST) {
             eventBus.trigger(Events.XLINK_READY, { manifest: manifest });
         }
         if (resolveObject.resolveType === RESOLVE_TYPE_ONLOAD) {
@@ -176,7 +198,7 @@ function XlinkController(config) {
     }
 
     // Returns the elements with the specific resolve Type
-    function getElementsToResolve(elements, parentElement, type, resolveType) {
+    function getElementsToResolve(elements, parentElement, type, resolveType, id) {
         let toResolve = [];
         let element,
             i,
@@ -192,8 +214,10 @@ function XlinkController(config) {
         for (i = 0; i < elements.length; i++) {
             element = elements[i];
             if (element.hasOwnProperty('xlink:href') && element.hasOwnProperty('xlink:actuate') && element['xlink:actuate'] === resolveType) {
-                xlinkObject = createXlinkObject(element['xlink:href'], parentElement, type, i, resolveType, element);
-                toResolve.push(xlinkObject);
+                if (!id || element['id'] === id) {
+                    xlinkObject = createXlinkObject(element['xlink:href'], parentElement, type, i, resolveType, element);
+                    toResolve.push(xlinkObject);
+                }
             }
         }
         return toResolve;
@@ -238,6 +262,31 @@ function XlinkController(config) {
         }
     }
 
+    function mergeResolvedPeriods(mpd, previousMpd) {
+        if (!previousMpd) {
+            return mpd;
+        }
+        let i;
+
+        for (i = 0; i < mpd.Period.length; i++) {
+            if (isLinkedElement(mpd.Period[i])) {
+                const resolvedPeriod = getResolvedPeriod(previousMpd, mpd.Period[i].id)
+                if (resolvedPeriod) {
+                    mpd.Period[i] = resolvedPeriod
+                }
+            }
+        }
+        return mpd;
+    }
+
+    function isLinkedElement(element) {
+        return element.hasOwnProperty('xlink:href') && element.hasOwnProperty('xlink:actuate') 
+    }
+
+    function getResolvedPeriod(mpd, id) {
+        return mpd.Period.find(period => period.id === id && !isLinkedElement(period))
+    }
+
     function createXlinkObject(url, parentElement, type, index, resolveType, originalContent) {
         return {
             url: url,
@@ -271,6 +320,7 @@ function XlinkController(config) {
 
     instance = {
         resolveManifestOnLoad: resolveManifestOnLoad,
+        resolvePeriodOnRequest: resolvePeriodOnRequest,
         setParser: setParser,
         reset: reset
     };

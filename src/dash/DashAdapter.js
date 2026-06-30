@@ -1248,6 +1248,7 @@ function DashAdapter() {
         streamInfo.manifestInfo = convertMpdToManifestInfo(period.mpd);
         streamInfo.isLast = period.mpd.manifest.Period.length === 1 || Math.abs((streamInfo.start + streamInfo.duration) - streamInfo.manifestInfo.duration) < THRESHOLD;
         streamInfo.isEncrypted = period.isEncrypted;
+        streamInfo.isResolved = period.isResolved;
 
         return streamInfo;
     }

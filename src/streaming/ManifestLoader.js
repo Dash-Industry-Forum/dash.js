@@ -55,7 +55,8 @@ function ManifestLoader(config) {
         logger,
         urlLoader,
         xlinkController,
-        parser;
+        parser,
+        mpd;
 
     let mssHandler = config.mssHandler;
     let errHandler = config.errHandler;
@@ -78,13 +79,16 @@ function ManifestLoader(config) {
             errHandler: errHandler,
             dashMetrics: config.dashMetrics,
             mediaPlayerModel: config.mediaPlayerModel,
+            baseURLController: config.baseURLController,
             settings: config.settings
         });
 
         parser = null;
+        mpd = null;
     }
 
     function onXlinkReady(event) {
+        mpd = event.manifest;
         eventBus.trigger(Events.INTERNAL_MANIFEST_LOADED, { manifest: event.manifest });
     }
 
@@ -223,7 +227,7 @@ function ManifestLoader(config) {
 
                     manifest.baseUri = baseUri;
                     manifest.loadedTime = new Date();
-                    xlinkController.resolveManifestOnLoad(manifest);
+                    xlinkController.resolveManifestOnLoad(manifest, mpd);
 
                     eventBus.trigger(Events.ORIGINAL_MANIFEST_LOADED, { originalManifest: data });
                 } else {
@@ -248,6 +252,14 @@ function ManifestLoader(config) {
         });
     }
 
+    function resolvePeriod(periodId) {
+        if (!xlinkController) {
+            return;
+        }
+        logger.info('Resolve period ' + periodId);
+        xlinkController.resolvePeriodOnRequest(periodId)
+    }
+
     function reset() {
         eventBus.off(Events.XLINK_READY, onXlinkReady, instance);
 
@@ -268,6 +280,7 @@ function ManifestLoader(config) {
 
     instance = {
         load: load,
+        resolvePeriod: resolvePeriod,
         reset: reset
     };
 

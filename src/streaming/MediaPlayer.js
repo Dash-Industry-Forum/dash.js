@@ -2695,6 +2695,7 @@ function MediaPlayer() {
             dashMetrics: dashMetrics,
             mediaPlayerModel: mediaPlayerModel,
             mssHandler: mssHandler,
+            baseURLController: baseURLController,
             settings: settings
         });
     }

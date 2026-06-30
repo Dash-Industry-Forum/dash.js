@@ -133,7 +133,7 @@ function ExtUrlQueryInfoController() {
             };
             _generateQueryParams(periodObject, period, mpdUrlQuery, mpdQueryStringInformation, DashConstants.PERIOD);
 
-            period.AdaptationSet.forEach((adaptationSet) => {
+            period.AdaptationSet?.forEach((adaptationSet) => {
                 const adaptationObject = {
                     representation: []
                 };
