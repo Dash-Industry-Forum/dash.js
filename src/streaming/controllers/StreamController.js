@@ -435,18 +435,20 @@ function StreamController() {
 
             let keepBuffers = false;
             let representationsFromPreviousPeriod = [];
-            // Only reuse the previous period's SourceBuffers when the platform supports
-            // SourceBuffer.changeType(). On platforms without it (e.g. Chrome 68 / LG WebOS <= 5)
-            // reusing a buffer across a period boundary fails with MEDIA_ERR_SRC_NOT_SUPPORTED at
-            // the first period transition, so fall back to a fresh-SourceBuffer ("cold") switch.
-            // This restores the pre-5.1.0 behaviour for those platforms while leaving the reuse
-            // path unchanged where changeType() is available.
+            // Only reuse the previous period's SourceBuffers when the buffers can actually be kept
+            // (keepBuffers). _canSourceBuffersBeKept() already requires SourceBuffer.changeType()
+            // support, so on platforms without it (e.g. Chrome 68 / LG WebOS <= 5) keepBuffers is
+            // false and we fall back to a fresh-SourceBuffer ("cold") switch. keepBuffers is also
+            // false when the transition is incompatible (e.g. clear -> encrypted): in that case the
+            // previous SourceBufferSinks are reset/aborted by previousStream.deactivate(false), so
+            // they must NOT be handed to the next period - doing so would make the new stream reuse
+            // an already-cleared buffer and stall playback at the period boundary.
             let sourceBufferSinksFromPreviousPeriod = new Map();
             activeStream = targetStream;
 
             if (previousStream) {
                 keepBuffers = _canSourceBuffersBeKept(targetStream, previousStream);
-                if (capabilities.supportsChangeType()) {
+                if (keepBuffers) {
                     sourceBufferSinksFromPreviousPeriod = _getSourceBufferSinksFromPreviousPeriod(previousStream);
                 }
                 representationsFromPreviousPeriod = _getRepresentationsFromPreviousPeriod(previousStream);
@@ -714,6 +716,7 @@ function StreamController() {
             // Seamless period switch allowed only if:
             // - none of the periods uses contentProtection.
             // - AND changeType method is implemented
+            // TODO: If the codec family is the same or if there is period connectivity we can also use the same SourceBuffer
             return (settings.get().streaming.buffer.reuseExistingSourceBuffers
                 && (capabilities.isProtectionCompatible(previousStream.getStreamInfo(), nextStream.getStreamInfo()) || firstLicenseIsFetched)
                 && (capabilities.supportsChangeType() && settings.get().streaming.buffer.useChangeType));
