@@ -45,6 +45,7 @@ jobs:
                 uses: actions/upload-artifact@v4
                 with:
                     name: build-output
+                    include-hidden-files: true
                     path: |
                         contrib/
                         dist/
