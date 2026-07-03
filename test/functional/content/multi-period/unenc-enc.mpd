@@ -5,7 +5,7 @@
      profiles="urn:mpeg:dash:profile:isoff-on-demand:2011" minBufferTime="PT2S" type="static"
      xmlns:dashif="https://dashif.org/"
      mediaPresentationDuration="PT16S">
-    <Period id="0" duration="PT4S">
+    <Period id="0" duration="PT6S">
         <BaseURL>https://dash.akamaized.net/dash264/TestCases/5a/nomor/</BaseURL>
         <AdaptationSet segmentAlignment="true" maxWidth="1280" maxHeight="720" maxFrameRate="24" par="16:9">
             <Representation id="1" mimeType="video/mp4" codecs="avc1.4d401f" width="1280" height="720" frameRate="24"

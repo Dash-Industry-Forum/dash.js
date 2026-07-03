@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<!-- MPD file Generated with GPAC version 1.1.0-DEV-rev737-g7ee960336-master at 2021-04-19T14:18:41.035Z -->
+<MPD xmlns="urn:mpeg:dash:schema:mpd:2011" minBufferTime="PT1.920S" type="static"
+     mediaPresentationDuration="PT0H0M28.800S" maxSegmentDuration="PT0H0M1.920S"
+     profiles="urn:mpeg:dash:profile:full:2011,urn:mpeg:dash:profile:cmaf:2019">
+    <Period duration="PT0H0M9.600S">
+        <BaseURL>https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/a/</BaseURL>
+        <AdaptationSet segmentAlignment="true" lang="eng" startWithSAP="1">
+            <SegmentTemplate media="m1_audio_$Number$.m4s" initialization="m1_audio_init.mp4" timescale="48000"
+                             startNumber="1">
+                <SegmentTimeline>
+                    <S t="0" d="92160" r="4"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation id="1" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="48000" bandwidth="128000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+                                           value="2"/>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet segmentAlignment="true" maxWidth="960" maxHeight="426" maxFrameRate="25" par="480:213" lang="eng"
+                       startWithSAP="1">
+            <SegmentTemplate media="m1_video_$Number$.m4s" initialization="m1_video_init.mp4" timescale="12800"
+                             startNumber="1">
+                <SegmentTimeline>
+                    <S t="0" d="24576" r="4"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation id="4" mimeType="video/mp4" codecs="avc1.64001E" width="960" height="426" frameRate="25"
+                            sar="1:1" bandwidth="100000">
+            </Representation>
+        </AdaptationSet>
+    </Period>
+    <Period start="PT0H0M9.600S" duration="PT0H0M9.600S">
+        <BaseURL>
+            https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/
+        </BaseURL>
+        <AdaptationSet segmentAlignment="true" lang="und" startWithSAP="1">
+            <SegmentTemplate media="m2_audio_$Number$.m4s" initialization="m2_audio_init.mp4" timescale="48000"
+                             startNumber="1">
+                <SegmentTimeline>
+                    <S t="0" d="92160" r="4"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation id="2" mimeType="audio/mp4" codecs="mp4a.40.2" audioSamplingRate="48000" bandwidth="128000">
+                <AudioChannelConfiguration schemeIdUri="urn:mpeg:dash:23003:3:audio_channel_configuration:2011"
+                                           value="2"/>
+                <BaseURL>https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/</BaseURL>
+            </Representation>
+        </AdaptationSet>
+        <AdaptationSet segmentAlignment="true" maxWidth="960" maxHeight="426" maxFrameRate="25" par="480:213" lang="und"
+                       startWithSAP="1">
+            <SegmentTemplate media="m2_video_$Number$.m4s" initialization="m2_video_init.mp4" timescale="12800"
+                             startNumber="1">
+                <SegmentTimeline>
+                    <S t="0" d="24576" r="4"/>
+                </SegmentTimeline>
+            </SegmentTemplate>
+            <Representation id="5" mimeType="video/mp4" codecs="avc1.64001E" width="960" height="426" frameRate="25"
+                            sar="1:1" bandwidth="100000">
+                <BaseURL>https://dash.akamaized.net/dashif/ad-insertion-testcase1/batch2/real/b/</BaseURL>
+            </Representation>
+        </AdaptationSet>
+    </Period>
+</MPD>

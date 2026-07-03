@@ -1,6 +1,5 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
-import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 
 import {
     checkIsNotProgressing,
@@ -11,34 +10,23 @@ import {
 } from '../common/common.js';
 import {expect} from 'chai';
 
-const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.PRELOAD_MULTIPLE_PERIODS;
+const TESTCASE = Constants.TESTCASES.PLAYBACK_ADVANCED.PRELOAD_SINGLE_PERIOD_PLAY_MULTIPERIOD;
 
 Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
     const mpd = item.url;
 
     describe(`${TESTCASE} - ${item.name} - ${mpd}`, () => {
         let playerAdapter;
-        const preloadedPeriodIds = new Set();
-
-        const _onFragmentLoadingCompleted = (e) => {
-            if (e && e.request && e.request.type === Constants.SEGMENT_TYPES.MEDIA
-                && e.request.representation && e.request.representation.mediaInfo
-                && e.request.representation.mediaInfo.streamInfo) {
-                preloadedPeriodIds.add(e.request.representation.mediaInfo.streamInfo.id);
-            }
-        }
 
         before(function () {
-            if (item.drm || !item.testdata || !item.testdata.preloadMultiplePeriods) {
+            if (item.drm || !item.testdata || !item.testdata.preloadSingleperiodPlayMultiperiod || !item.testdata.preloadSingleperiodPlayMultiperiod.waitingTimeForPeriodSwitch) {
                 this.skip();
             }
             playerAdapter = initializeDashJsAdapterForPreload(item, mpd);
-            playerAdapter.registerEvent(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted);
         })
 
         after(() => {
             if (playerAdapter) {
-                playerAdapter.unregisterEvent(MediaPlayerEvents.FRAGMENT_LOADING_COMPLETED, _onFragmentLoadingCompleted);
                 playerAdapter.destroy();
             }
         })
@@ -53,17 +41,17 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
             await checkIsNotProgressing(playerAdapter);
         });
 
-
-        it(`Should preload segments from multiple periods`, async () => {
-            await playForDuration(item.testdata.preloadMultiplePeriods.preloadDuration);
-
-            expect(preloadedPeriodIds.size).to.be.at.least(item.testdata.preloadMultiplePeriods.numberOfPeriods);
-        });
-
         it(`Attach view and expect to progress`, async () => {
             playerAdapter.attachView();
             await checkIsPlaying(playerAdapter, true);
             await checkIsProgressing(playerAdapter);
+        });
+
+        it(`Expect player to transition to second period`, async () => {
+            const timeout = item.testdata.preloadSingleperiodPlayMultiperiod.waitingTimeForPeriodSwitch;
+            const numberOfPeriodSwitches = await playerAdapter.performedPeriodTransitions(timeout);
+
+            expect(numberOfPeriodSwitches).to.be.at.least(1);
         });
 
         it(`Expect no critical errors to be thrown`, () => {
