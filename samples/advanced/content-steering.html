@@ -42,7 +42,7 @@
 
     <script class="code">
         let player;
-        let mpd = "";
+        let mpd = '';
         let currentSelectedServiceLocation = {}
         let cdnSelectionImgDomElements = {};
         let locationSelectionImgDomElements = {};
@@ -52,7 +52,7 @@
             document.getElementById('load-button').addEventListener('click', function () {
                 _load();
             })
-            player.initialize(document.querySelector("video"), null, true);
+            player.initialize(document.querySelector('video'), null, true);
 
             player.on(dashjs.MediaPlayer.events.FRAGMENT_LOADING_STARTED, _onFragmentLoadingStarted, null);
             player.on(dashjs.MediaPlayer.events.MANIFEST_LOADING_STARTED, _onManifestLoadingStarted, null);
@@ -249,7 +249,7 @@
             <div class="col-md-12">
                 <div class="input-group mb-3">
                     <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
-                           value="https://www.content-steering.com/bbb/playlist_steering_cloudfront_https.mpd">
+                           value="https://livesim2.dashif.org/livesim2/steer_alpha,beta,gamma;ttl=10;mode=rotate;qbs=1;default=beta/testpic_2s/Manifest.mpd?sessionId=dashjs">
                     <button type="button" id="load-button" class="btn btn-success">Load MPD
                     </button>
                 </div>

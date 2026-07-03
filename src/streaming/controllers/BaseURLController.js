@@ -84,8 +84,91 @@ function BaseURLController() {
         baseURLTreeModel.update(manifest);
         baseURLSelector.chooseSelector(adapter.getIsDVB(manifest));
         eventBus.trigger(MediaPlayerEvents.BASE_URLS_UPDATED, {
-            baseUrls: getBaseUrls(manifest)
+            baseUrls: getBaseUrlsForEventPayload(manifest)
         });
+    }
+
+    function getBaseUrlsForEventPayload(manifest) {
+        const rootBaseUrls = getBaseUrls(manifest);
+        const childBaseUrls = [];
+        const uniqueBaseUrls = [];
+        const addedBaseUrls = {};
+
+        if (manifest && manifest.Period) {
+            manifest.Period.forEach((period) => {
+                _collectChildBaseUrls(period, childBaseUrls);
+            });
+        }
+
+        const includeRootBaseUrls = _shouldIncludeRootBaseUrls(manifest, childBaseUrls);
+        const targetBaseUrls = includeRootBaseUrls ? rootBaseUrls.concat(childBaseUrls) : childBaseUrls;
+
+        targetBaseUrls.forEach((baseUrl) => {
+            const key = `${baseUrl.serviceLocation}_${baseUrl.url}`;
+            if (!addedBaseUrls[key]) {
+                uniqueBaseUrls.push(baseUrl);
+                addedBaseUrls[key] = true;
+            }
+        });
+
+        return uniqueBaseUrls;
+    }
+
+    function _collectChildBaseUrls(element, baseUrls) {
+        if (!element) {
+            return;
+        }
+
+        const elementBaseUrls = adapter.getBaseURLsFromElement(element) || [];
+        const synthesizedBaseUrls = contentSteeringController ? contentSteeringController.getSynthesizedBaseUrlElements(elementBaseUrls) : [];
+
+        if (synthesizedBaseUrls && synthesizedBaseUrls.length > 0) {
+            synthesizedBaseUrls.forEach((synthesizedBaseUrl) => {
+                const foundIndex = elementBaseUrls.findIndex((elem) => elem.serviceLocation === synthesizedBaseUrl.serviceLocation);
+
+                if (foundIndex !== -1) {
+                    elementBaseUrls[foundIndex] = synthesizedBaseUrl;
+                } else {
+                    elementBaseUrls.push(synthesizedBaseUrl);
+                }
+            });
+        }
+
+        baseUrls.push(...elementBaseUrls);
+
+        const children = element.AdaptationSet || element.Representation;
+        if (children) {
+            children.forEach((child) => _collectChildBaseUrls(child, baseUrls));
+        }
+    }
+
+    function _shouldIncludeRootBaseUrls(manifest, childBaseUrls) {
+        if (!manifest || manifest.BaseURL || childBaseUrls.length === 0) {
+            return true;
+        }
+
+        if (childBaseUrls.some((baseUrl) => urlUtils.isRelative(baseUrl.url))) {
+            return true;
+        }
+
+        if (!manifest.Period || manifest.Period.length === 0) {
+            return true;
+        }
+
+        return manifest.Period.some((period) => _usesInheritedBaseUrl(period));
+    }
+
+    function _usesInheritedBaseUrl(element) {
+        if (!element || element.BaseURL) {
+            return false;
+        }
+
+        const children = element.AdaptationSet || element.Representation;
+        if (!children || children.length === 0) {
+            return true;
+        }
+
+        return children.some((child) => _usesInheritedBaseUrl(child));
     }
 
     function resolve(path) {
