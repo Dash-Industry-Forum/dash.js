@@ -97,6 +97,16 @@ body {
     min-width: 0;
 }
 
+.sample-header-logo-link {
+    display: inline-flex;
+    flex-shrink: 0;
+    transition: opacity 0.15s ease;
+}
+
+.sample-header-logo-link:hover {
+    opacity: 0.8;
+}
+
 .sample-header-left img {
     height: 40px;
     background: var(--rp-logo-bg);
@@ -372,7 +382,40 @@ body {
     border-bottom: 1px solid var(--rp-border);
 }
 
-.sample-code-header h6 {
+/* Collapsible code section (<details>/<summary>) */
+summary.sample-code-header {
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+}
+
+summary.sample-code-header::-webkit-details-marker {
+    display: none;
+}
+
+.sample-code-title {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.sample-code-chevron {
+    color: var(--rp-text-muted);
+    font-size: 0.75rem;
+    transition: transform 0.15s ease;
+}
+
+details.sample-code-section[open] .sample-code-chevron {
+    transform: rotate(90deg);
+}
+
+/* Collapsed sections have no bottom border on the header */
+details.sample-code-section:not([open]) .sample-code-header {
+    border-bottom: none;
+}
+
+.sample-code-header h6,
+.sample-code-title-text {
     margin: 0;
     font-size: 0.85rem;
     color: var(--rp-text);

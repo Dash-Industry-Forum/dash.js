@@ -85,14 +85,20 @@ function el(tag, attrs) {
 function buildHeader(opts) {
     var header = el('div', { className: 'sample-header' });
 
-    // Left side: logo + title
+    // Left side: logo (links back to the samples overview) + title
     var left = el('div', { className: 'sample-header-left' });
+    var logoLink = el('a', {
+        href: libPath + '../index.html',
+        className: 'sample-header-logo-link',
+        title: 'Back to samples overview'
+    });
     var logo = el('img', {
         src: libPath + 'img/dashjs-logo.png',
         alt: 'dash.js',
         height: '40'
     });
-    left.appendChild(logo);
+    logoLink.appendChild(logo);
+    left.appendChild(logoLink);
 
     var title = el('h1', { className: 'sample-header-title', textContent: opts.title || 'dash.js Sample' });
     left.appendChild(title);

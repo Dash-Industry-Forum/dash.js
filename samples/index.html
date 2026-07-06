@@ -62,6 +62,7 @@
             background: transparent;
         }
         .sample-card {
+            position: relative;
             background: var(--rp-bg-card);
             border: 1px solid var(--rp-border);
             border-radius: 8px;
@@ -70,6 +71,7 @@
             height: 100%;
             display: flex;
             flex-direction: column;
+            cursor: pointer;
         }
         .sample-card:hover {
             box-shadow: var(--rp-shadow);
@@ -94,7 +96,13 @@
             color: var(--rp-text);
             text-decoration: none;
         }
-        .sample-card-title a:hover {
+        .sample-card-title a::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+        }
+        .sample-card:hover .sample-card-title a {
             color: var(--rp-accent);
         }
         .sample-card-desc {

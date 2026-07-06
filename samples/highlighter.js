@@ -28,16 +28,16 @@
         }
     }
 
-    // Build the code output UI
-    var section = document.createElement('div');
+    // Build the code output UI (collapsed by default via <details>)
+    var section = document.createElement('details');
     section.className = 'sample-code-section';
     section.innerHTML =
-        '<div class="sample-code-header">' +
-        '  <h6>Source Code</h6>' +
+        '<summary class="sample-code-header">' +
+        '  <span class="sample-code-title"><i class="bi bi-chevron-right sample-code-chevron"></i> <span class="sample-code-title-text">Source Code</span></span>' +
         '  <button class="sample-code-copy-btn" id="clipboard-copy">' +
         '    <i class="bi bi-clipboard"></i> <span>Copy</span>' +
         '  </button>' +
-        '</div>' +
+        '</summary>' +
         '<div class="sample-code-body">' +
         '  <pre><code class="html javascript" id="code"></code></pre>' +
         '</div>';
@@ -79,7 +79,10 @@
     // Copy to clipboard
     var copyBtn = document.getElementById('clipboard-copy');
     if (copyBtn) {
-        copyBtn.addEventListener('click', function () {
+        copyBtn.addEventListener('click', function (event) {
+            // Prevent the click from toggling the surrounding <details> element.
+            event.preventDefault();
+            event.stopPropagation();
             var text = codeEl.textContent;
 
             if (navigator.clipboard && navigator.clipboard.writeText) {
