@@ -185,7 +185,7 @@
             {
                 "title": "Low latency testplayer",
                 "description": "Shows how to use dash.js to play low latency streams. All low-latency related settings, such as the different ABR algorithms (LoL+, L2A), are selectable.",
-                "href": "low-latency/testplayer/testplayer.html",
+                "href": "low-latency/low-latency-testplayer.html",
                 "image": "lib/img/akamai-ll-4.jpg",
                 "labels": [
                     "Live",
