@@ -94,10 +94,19 @@ function VideoModel() {
         _disposeResizeObserver();
     }
 
+    function destroy() {
+        reset();
+        element = null;
+        TTMLRenderingDiv = null;
+        vttRenderingDiv = null;
+    }
+
     function _disposeResizeObserver() {
         try {
             if (resizeObserver && element) {
                 resizeObserver.unobserve(element);
+            }
+            if (resizeObserver) {
                 resizeObserver.disconnect();
                 resizeObserver = null;
             }
@@ -208,13 +217,25 @@ function VideoModel() {
     }
 
     function setElement(value) {
-        //add check of value type
-        if (value === null || value === undefined || (value && (/^(VIDEO|AUDIO)$/i).test(value.nodeName))) {
-            element = value;
-            _registerResizeObserver(element);
-        } else {
-            throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
+        // In case there was already an element stored in model
+        const isNewElement = element !== value;
+        if (element && !isNewElement) {
+            return;
         }
+
+        _unregisterResizeObserver(element);
+        element = value;
+
+        //add check of value type
+        if (value === null || value === undefined) {
+            return;
+        }
+
+        if (value && /^(VIDEO|AUDIO)$/i.test(value.nodeName)) {
+            _registerResizeObserver(element);
+            return;
+        }
+        throw VIDEO_MODEL_WRONG_ELEMENT_TYPE;
     }
 
     function _registerResizeObserver(element) {
@@ -226,6 +247,15 @@ function VideoModel() {
         } catch (e) {
 
         }
+    }
+
+    function _unregisterResizeObserver(element) {
+        try {
+            if (!resizeObserver || !element) {
+                return;
+            }
+            resizeObserver.unobserve(element);
+        } catch (e) {}
     }
 
     function setSource(source) {
@@ -557,6 +587,7 @@ function VideoModel() {
         addEventListener,
         addTextTrack,
         appendChild,
+        destroy,
         getBufferRange,
         getClientHeight,
         getClientWidth,

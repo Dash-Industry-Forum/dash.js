@@ -500,6 +500,10 @@ function AbrController() {
     }
 
     function _sortForSameMediaInfos(a, b) {
+        return _sortForSameCodecs(a, b);
+    }
+
+    function _sortForSameCodecs(a, b) {
         if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
             return a.pixelsPerSecond - b.pixelsPerSecond;
         }
@@ -513,6 +517,11 @@ function AbrController() {
     }
 
     function _sortForDifferentMediaInfos(a, b) {
+        // if the codec family is the same we can sort by pixelsPerSecond. But should take bootstrap and non-bootstrap Representations into account (L3D-DASH)
+        if (a.codecFamily && b.codecFamily && a.codecFamily === b.codecFamily) {
+            return _sortForSameCodecFamilyInDifferentMediaInfos(a, b);
+        }
+
         if (!isNaN(a.pixelsPerSecond) && !isNaN(b.pixelsPerSecond) && a.pixelsPerSecond !== b.pixelsPerSecond) {
             return a.pixelsPerSecond - b.pixelsPerSecond;
         }
@@ -529,12 +538,30 @@ function AbrController() {
         return _sortBySegmentSequenceProperties(a, b);
     }
 
-    function _sortBySegmentSequenceProperties(a, b) {
+    function _compareBootstrapRepresentations(a, b) {
         const isABootstrapRepresentation = a.isBootstrapRepresentation();
         const isBBootstrapRepresentation = b.isBootstrapRepresentation();
 
-        if (isABootstrapRepresentation !== isBBootstrapRepresentation) {
-            return isABootstrapRepresentation ? -1 : 1;
+        if (isABootstrapRepresentation === isBBootstrapRepresentation) {
+            return 0;
+        }
+
+        return isABootstrapRepresentation ? -1 : 1;
+    }
+
+    function _sortForSameCodecFamilyInDifferentMediaInfos(a, b) {
+        const bootstrapComparison = _compareBootstrapRepresentations(a, b);
+        if (bootstrapComparison !== 0) {
+            return bootstrapComparison;
+        }
+
+        return _sortForSameCodecs(a, b);
+    }
+
+    function _sortBySegmentSequenceProperties(a, b) {
+        const bootstrapComparison = _compareBootstrapRepresentations(a, b);
+        if (bootstrapComparison !== 0) {
+            return bootstrapComparison;
         }
 
         return b.k - a.k;
@@ -965,9 +992,9 @@ function AbrController() {
      */
     function _updateDynamicAbrStrategy(mediaType, bufferLevel) {
         try {
-            const bufferTimeDefault = mediaPlayerModel.getBufferTimeDefault();
-            const switchOnThreshold = bufferTimeDefault;
-            const switchOffThreshold = 0.5 * bufferTimeDefault;
+            const hybridSwitchBufferTime = settings.get().streaming.abr.hybridSwitchBufferTime;
+            const switchOnThreshold = hybridSwitchBufferTime;
+            const switchOffThreshold = 0.5 * hybridSwitchBufferTime;
 
             const isUsingBolaRule = abrRulesCollection.getBolaState(mediaType)
             const shouldUseBolaRule = bufferLevel >= (isUsingBolaRule ? switchOffThreshold : switchOnThreshold); // use hysteresis to avoid oscillating rules

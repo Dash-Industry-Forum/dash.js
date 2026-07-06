@@ -2,6 +2,7 @@ import VoHelper from '../../helpers/VOHelper.js';
 import ObjectsHelper from '../../helpers/ObjectsHelper.js';
 import AbrController from '../../../../src/streaming/controllers/AbrController.js';
 import Constants from '../../../../src/streaming/constants/Constants.js';
+import MetricsConstants from '../../../../src/streaming/constants/MetricsConstants.js';
 import Settings from '../../../../src/core/Settings.js';
 import VideoModelMock from '../../mocks/VideoModelMock.js';
 import DomStorageMock from '../../mocks/DomStorageMock.js';
@@ -16,6 +17,7 @@ import PlaybackControllerMock from '../../mocks/PlaybackControllerMock.js';
 import ThroughputControllerMock from '../../mocks/ThroughputControllerMock.js';
 import {expect, assert} from 'chai';
 import EventBus from '../../../../src/core/EventBus.js';
+import FactoryMaker from '../../../../src/core/FactoryMaker.js';
 import MediaPlayerEvents from '../../../../src/streaming/MediaPlayerEvents.js';
 import sinon from 'sinon';
 import CapabilitiesMock from '../../mocks/CapabilitiesMock.js';
@@ -82,6 +84,7 @@ describe('AbrController', function () {
         abrCtrl.reset();
         settings.reset();
         eventBus.reset();
+        dummyRepresentations[0].segmentSequenceProperties = undefined;
     });
 
     describe('getOptimalRepresentationForBitrate()', function () {
@@ -669,6 +672,70 @@ describe('AbrController', function () {
     })
 
     describe('Additional Tests', function () {
+        it('should apply hybridSwitchBufferTime thresholds when toggling dynamic ABR strategy', function () {
+            let capturedAbrRulesCollection = null;
+
+            FactoryMaker.extend('ABRRulesCollection', function () {
+                capturedAbrRulesCollection = this.parent;
+                return {};
+            }, true, context);
+
+            try {
+                settings.update({
+                    streaming: {
+                        abr: {
+                            hybridSwitchBufferTime: 10,
+                            rules: {
+                                bolaRule: {
+                                    active: true
+                                },
+                                throughputRule: {
+                                    active: true
+                                }
+                            }
+                        }
+                    }
+                });
+
+                abrCtrl.reset();
+                abrCtrl.initialize();
+                abrCtrl.registerStreamType(Constants.VIDEO, streamProcessor);
+
+                expect(capturedAbrRulesCollection).to.exist;
+                expect(capturedAbrRulesCollection.getBolaState(Constants.VIDEO)).to.be.false;
+
+                eventBus.trigger(MediaPlayerEvents.METRIC_ADDED, {
+                    metric: MetricsConstants.BUFFER_LEVEL,
+                    mediaType: Constants.VIDEO,
+                    value: {
+                        level: 10000
+                    }
+                });
+                expect(capturedAbrRulesCollection.getBolaState(Constants.VIDEO)).to.be.true;
+
+                // With BOLA already active, switch-off threshold is 0.5 * hybridSwitchBufferTime.
+                eventBus.trigger(MediaPlayerEvents.METRIC_ADDED, {
+                    metric: MetricsConstants.BUFFER_LEVEL,
+                    mediaType: Constants.VIDEO,
+                    value: {
+                        level: 6000
+                    }
+                });
+                expect(capturedAbrRulesCollection.getBolaState(Constants.VIDEO)).to.be.true;
+
+                eventBus.trigger(MediaPlayerEvents.METRIC_ADDED, {
+                    metric: MetricsConstants.BUFFER_LEVEL,
+                    mediaType: Constants.VIDEO,
+                    value: {
+                        level: 4000
+                    }
+                });
+                expect(capturedAbrRulesCollection.getBolaState(Constants.VIDEO)).to.be.false;
+            } finally {
+                delete context.ABRRulesCollection;
+            }
+        });
+
         it('should return null when attempting to get abandonment state when abandonmentStateDict array is empty', function () {
             const state = abrCtrl.getAbandonmentStateFor('1', Constants.AUDIO);
             expect(state).to.be.null;

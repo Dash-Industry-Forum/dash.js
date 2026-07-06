@@ -25,7 +25,7 @@ module.exports = function (config) {
         ],
 
         // list of files / patterns to exclude
-        exclude: [],
+        exclude: ['test/unit/test/**/__screenshots__/**'],
 
         client: {
             useIframe: false,

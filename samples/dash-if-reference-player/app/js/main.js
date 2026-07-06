@@ -131,7 +131,7 @@ async function init() {
 
     // 9. Handle stream URL from query param
     const params = new URLSearchParams(window.location.search);
-    const streamParam = params.get('stream');
+    const streamParam = params.get('stream') || params.get('mpd');
     if (streamParam) {
         streamCatalog.setUrl(streamParam);
     }

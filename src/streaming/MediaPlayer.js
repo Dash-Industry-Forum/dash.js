@@ -494,6 +494,16 @@ function MediaPlayer() {
      */
     function destroy() {
         reset();
+
+        if (videoModel) {
+            videoModel.destroy();
+            videoModel = null;
+        }
+
+        if (adapter) {
+            adapter.destroy();
+        }
+
         FactoryMaker.deleteSingletonInstances(context);
     }
 

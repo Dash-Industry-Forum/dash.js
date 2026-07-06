@@ -861,6 +861,10 @@ function DashAdapter() {
         voPeriods = [];
     }
 
+    function destroy() {
+        cea608parser = null;
+    }
+
     /**
      * Checks if the given Preselection is from the given media type
      * @param {object} preselection
@@ -1315,6 +1319,7 @@ function DashAdapter() {
         applyPatchToManifest,
         areMediaInfosEqual,
         convertAdaptationToMediaInfo,
+        destroy,
         getAllMediaInfoForType,
         getAvailabilityStartTime,
         getBandwidthForRepresentation,
