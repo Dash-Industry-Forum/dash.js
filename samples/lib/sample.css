@@ -498,6 +498,133 @@ body {
     resize: vertical;
 }
 
+/* ---- Metrics / debug panel (matches reference player) ---- */
+.sample-metrics {
+    background: var(--rp-bg-secondary);
+    border: 1px solid var(--rp-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.sample-metrics-header {
+    background: var(--rp-bg-card-header);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border-bottom: 1px solid var(--rp-border);
+}
+
+.sample-metrics-body {
+    padding: 0.75rem;
+}
+
+.metric-section-title {
+    font-size: 0.7rem;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+    margin-top: 0.5rem;
+    margin-bottom: 0.25rem;
+}
+
+.metric-section-title:first-child {
+    margin-top: 0;
+}
+
+.metric-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.3rem 0;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--rp-separator);
+}
+
+.metric-row:last-child {
+    border-bottom: none;
+}
+
+.metric-label {
+    color: var(--rp-text-muted);
+    flex: 1;
+    font-size: 0.75rem;
+}
+
+.metric-value {
+    font-variant-numeric: tabular-nums;
+    color: var(--rp-text);
+    text-align: right;
+    font-size: 0.8rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.metric-buffer-bar {
+    width: 60px;
+    height: 6px;
+    background: var(--rp-buffer-bar-bg, rgba(0, 0, 0, 0.08));
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.metric-buffer-bar-fill {
+    height: 100%;
+    background: var(--rp-accent);
+    border-radius: 3px;
+    transition: width 0.5s;
+}
+
+/* ---- Wall-clock display ---- */
+.sample-clock {
+    font-variant-numeric: tabular-nums;
+    color: var(--rp-text);
+    font-size: 2.5rem;
+    font-weight: 600;
+    line-height: 1.1;
+}
+
+/* ---- Themed key/value metric table ---- */
+.sample-metric-table {
+    width: 100%;
+    font-size: 0.8rem;
+    color: var(--rp-text);
+    border-collapse: collapse;
+}
+
+.sample-metric-table th {
+    font-size: 0.7rem;
+    color: var(--rp-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    font-weight: 600;
+    text-align: left;
+    padding: 0.35rem 0.5rem;
+    border-bottom: 1px solid var(--rp-border);
+}
+
+.sample-metric-table td {
+    padding: 0.3rem 0.5rem;
+    border-bottom: 1px solid var(--rp-separator);
+    vertical-align: top;
+    word-break: break-word;
+}
+
+.sample-metric-table tbody tr:last-child td,
+.sample-metric-table tr:last-child td {
+    border-bottom: none;
+}
+
+.sample-metric-table .metric-value,
+.sample-metric-table td.metric-value {
+    text-align: left;
+}
+
 /* ---- Responsive ---- */
 @media (max-width: 991.98px) {
     .sample-content {

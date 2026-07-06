@@ -28,25 +28,6 @@
             color: var(--rp-text-muted);
         }
 
-        .info-table {
-            background: var(--rp-bg-secondary);
-            border: 1px solid var(--rp-border);
-            border-radius: 8px;
-            padding: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .info-table h5 {
-            font-size: 0.9rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-        }
-
-        .info-table .table {
-            font-size: 0.8rem;
-            margin-bottom: 0;
-        }
-
         #mpd-output pre {
             background: var(--rp-bg-primary);
             border: 1px solid var(--rp-border);
@@ -370,100 +351,108 @@
             </div>
         </div>
 
-        <div class="info-table">
-            <h5>MPD Source</h5>
-            <div id="mpd-output"></div>
+        <div class="sample-metrics mb-3">
+            <div class="sample-metrics-header">MPD Source</div>
+            <div class="sample-metrics-body">
+                <div id="mpd-output"></div>
+            </div>
         </div>
 
         <div style="display:flex; gap:1rem; flex-wrap:wrap;">
-            <div class="info-table" style="flex:1; min-width:280px;">
-                <h5>Fragment Requests</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Type</th>
-                                <th scope="col">Service Location</th>
-                                <th scope="col">Request URL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td>Audio</td>
-                                <td id="audio-service-location"></td>
-                                <td id="audio-request-url"></td>
-                            </tr>
-                            <tr>
-                                <td>Video</td>
-                                <td id="video-service-location"></td>
-                                <td id="video-request-url"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="sample-metrics mb-3" style="flex:1; min-width:280px;">
+                <div class="sample-metrics-header">Fragment Requests</div>
+                <div class="sample-metrics-body">
+                    <div class="table-responsive">
+                        <table class="sample-metric-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Type</th>
+                                    <th scope="col">Service Location</th>
+                                    <th scope="col">Request URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Audio</td>
+                                    <td id="audio-service-location"></td>
+                                    <td id="audio-request-url"></td>
+                                </tr>
+                                <tr>
+                                    <td>Video</td>
+                                    <td id="video-service-location"></td>
+                                    <td id="video-request-url"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
-            <div class="info-table" style="flex:1; min-width:280px;">
-                <h5>Manifest Requests</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                            <tr>
-                                <th scope="col">Service Location</th>
-                                <th scope="col">Request URL</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <td id="manifest-service-location"></td>
-                                <td id="manifest-request-url"></td>
-                            </tr>
-                        </tbody>
-                    </table>
+            <div class="sample-metrics mb-3" style="flex:1; min-width:280px;">
+                <div class="sample-metrics-header">Manifest Requests</div>
+                <div class="sample-metrics-body">
+                    <div class="table-responsive">
+                        <table class="sample-metric-table">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Service Location</th>
+                                    <th scope="col">Request URL</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td id="manifest-service-location"></td>
+                                    <td id="manifest-request-url"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="info-table">
-            <h5>Steering Data</h5>
-            <div class="table-responsive">
-                <table class="table table-sm">
-                    <thead>
-                        <tr>
-                            <th scope="col">Attribute</th>
-                            <th scope="col">Value</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>Timestamp</td>
-                            <td id="steering-request-timestamp"></td>
-                        </tr>
-                        <tr>
-                            <td>Request URL</td>
-                            <td><span id="steering-request-url"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Version</td>
-                            <td><span id="steering-version"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Reload URI</td>
-                            <td><span id="steering-reload-uri"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Pathway Priority</td>
-                            <td><span id="steering-pathway-priority"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Pathway Clones</td>
-                            <td><pre style="margin:0; font-size:0.75rem;"><span id="steering-pathway-cloning"></span></pre></td>
-                        </tr>
-                        <tr>
-                            <td>Response - TTL</td>
-                            <td><span id="steering-ttl"></span></td>
-                        </tr>
-                    </tbody>
-                </table>
+        <div class="sample-metrics mb-3">
+            <div class="sample-metrics-header">Steering Data</div>
+            <div class="sample-metrics-body">
+                <div class="table-responsive">
+                    <table class="sample-metric-table">
+                        <thead>
+                            <tr>
+                                <th scope="col">Attribute</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Timestamp</td>
+                                <td id="steering-request-timestamp"></td>
+                            </tr>
+                            <tr>
+                                <td>Request URL</td>
+                                <td><span id="steering-request-url"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Version</td>
+                                <td><span id="steering-version"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Reload URI</td>
+                                <td><span id="steering-reload-uri"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Priority</td>
+                                <td><span id="steering-pathway-priority"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Clones</td>
+                                <td><pre style="margin:0; font-size:0.75rem;"><span id="steering-pathway-cloning"></span></pre></td>
+                            </tr>
+                            <tr>
+                                <td>Response - TTL</td>
+                                <td><span id="steering-ttl"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     `;

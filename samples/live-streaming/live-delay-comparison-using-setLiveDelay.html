@@ -9,109 +9,118 @@
     <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
     <link href="../lib/sample.css" rel="stylesheet">
 
-    <style>
-        table {
-            border-spacing: 10px;
-        }
-
-        video {
-            width: 256px;
-            height: 144px;
-        }
-
-        .clock {
-            color: var(--rp-text);
-            font-size: 60pt
-        }
-    </style>
 </head>
 <body>
 
 <div class="sample-content-custom">
     <div class="row">
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h3>Wall Clock reference time</h3>
-                <div class="clock">
-                    <span id="min"> </span><span id="sec"></span>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Wall Clock reference time</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row mt-2">
+    <div class="row mt-3">
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 2s segment, 2s target latency</h5>
-                <div class="code">
-                    <video id="video1" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video1delay"></span></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video1buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">2s segment, 2s target latency</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video1" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video1delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video1buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 2s segment, 4s target latency</h5>
-                <div class="code">
-                    <video id="video2" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video2delay"></span></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video2buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">2s segment, 4s target latency</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video2" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video2delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video2buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 2s segment, 8s target latency</h5><span
-                class="badge bg-info text-dark">Default</span>
-                <div class="code">
-                    <video id="video3" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video3delay"></span></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video3buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">2s segment, 8s target latency &mdash; Default</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video3" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video3delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video3buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="row mt-2">
+    <div class="row mt-3">
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 6s segment, 6s target latency</h5>
-                <div class="code">
-                    <video id="video4" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video4delay"></span></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video4buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">6s segment, 6s target latency</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video4" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video4delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video4buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 6s segment, 12s target latency</h5>
-                <div class="code">
-                    <video id="video5" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video5delay"></span></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video5buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">6s segment, 12s target latency</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video5" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video5delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video5buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-4">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> 6s segment, 24s target latency</h5><span
-                class="badge bg-info text-dark">Default</span>
-                <div class="code">
-                    <video id="video6" controls="true" muted></video>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span
-                        id="video6delay"></span><br/></div>
-                    <div><i class="bi bi-arrow-right-square"></i> Buffer length: <span
-                        id="video6buffer"></span></div>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">6s segment, 24s target latency &mdash; Default</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-video-wrapper mb-2"><video id="video6" muted></video></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="video6delay">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer length</span>
+                        <span class="metric-value" id="video6buffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>

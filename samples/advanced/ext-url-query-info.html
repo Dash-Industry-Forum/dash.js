@@ -13,14 +13,11 @@
     <style>
         #trace {
             height: 500px;
-            margin-top: 20px;
-            font-size: 10px;
             overflow-y: auto;
         }
 
         #manifestContent {
-            margin-top: 20px;
-            font-size: 10px;
+            font-size: 0.75rem;
             white-space: pre-wrap;
             word-wrap: break-word;
         }
@@ -39,16 +36,22 @@
             <div class="sample-video-wrapper mt-3"><video></video></div>
         </div>
         <div class="col-md-6">
-            <div class="form-floating">
-                <div class="form-control" id="trace"></div>
-                <label for="trace">Requests Made by Player</label>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Requests Made by Player</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="trace"></div>
+                </div>
             </div>
         </div>
     </div>
     <div class="row mt-2">
         <div class="col-md-12">
-            <h5>Manifest Content:</h5>
-            <pre id="manifestContent" class="border p-3"></pre>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Manifest Content</div>
+                <div class="sample-metrics-body">
+                    <pre id="manifestContent" class="sample-log mb-0"></pre>
+                </div>
+            </div>
         </div>
     </div>
 </div>

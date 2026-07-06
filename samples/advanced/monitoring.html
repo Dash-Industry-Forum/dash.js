@@ -30,23 +30,29 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="p-5 border rounded-3">
-                <h4>Metrics</h4>
-                <div>
-                    <strong>Reported bitrate:</strong>
-                    <span id="reportedBitrate"></span>
-                    <br/>
-                    <strong>Buffer level:</strong>
-                    <span id="bufferLevel"></span>
-                    <div id="chrome-only">
-                        <strong>Calculated bitrate:</strong>
-                        <span id="calculatedBitrate"></span>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Metrics</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Reported bitrate</span>
+                        <span class="metric-value" id="reportedBitrate">-</span>
                     </div>
-                    <strong>Framerate:</strong>
-                    <span id="framerate"></span>
-                    </br>
-                    <strong>Resolution:</strong>
-                    <span id="resolution"></span>
+                    <div class="metric-row">
+                        <span class="metric-label">Buffer level</span>
+                        <span class="metric-value" id="bufferLevel">-</span>
+                    </div>
+                    <div class="metric-row" id="chrome-only">
+                        <span class="metric-label">Calculated bitrate</span>
+                        <span class="metric-value" id="calculatedBitrate">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Framerate</span>
+                        <span class="metric-value" id="framerate">-</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Resolution</span>
+                        <span class="metric-value" id="resolution">-</span>
+                    </div>
                 </div>
             </div>
         </div>

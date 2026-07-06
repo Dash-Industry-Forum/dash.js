@@ -11,10 +11,10 @@
     <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
     <style>
-        #start,#receive {
-            height:500px;
-            margin-top: 20px;
-            font-size: 10px;
+        #start, #receive {
+            height: 500px;
+            overflow-y: auto;
+            white-space: pre-wrap;
         }
     </style>
 </head>
@@ -26,17 +26,21 @@
             <div class="sample-video-wrapper"><video></video></div>
         </div>
     </div>
-    <div class="row">
+    <div class="row mt-2">
         <div class="col-md-6">
-            <div class="form-floating">
-                <textarea class="form-control" placeholder="Trapped on_receive events will be displayed here" id="receive"></textarea>
-                <label for="receive">Received Events</label>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Received Events</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="receive"></div>
+                </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="form-floating">
-                <textarea class="form-control" placeholder="Trapped on_start events will be displayed here" id="start"></textarea>
-                <label for="start">Started Events</label>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Started Events</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-log" id="start"></div>
+                </div>
             </div>
         </div>
     </div>

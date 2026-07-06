@@ -10,12 +10,6 @@
     <link href="../lib/sample.css" rel="stylesheet">
     <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
-    <style>
-        .clock {
-            color: var(--rp-text);
-            font-size: 60pt
-        }
-    </style>
 </head>
 <body>
 
@@ -27,9 +21,10 @@
     </div>
     <div class="row mt-4">
         <div class="col-md-12">
-            <div class="p-5 border rounded-3 mt-1">
-                <h4>Last MPD update</h4>
-                <div id="output-container">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Last MPD update</div>
+                <div class="sample-metrics-body">
+                    <pre id="output-container" class="sample-log mb-0"></pre>
                 </div>
             </div>
         </div>

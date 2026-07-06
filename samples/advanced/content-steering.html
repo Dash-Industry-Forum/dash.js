@@ -32,9 +32,11 @@
 <div class="sample-content-custom">
     <div class="row">
         <div class="col-md-12">
-            <div class="h-100 p-5 border rounded-3">
-                <h4>Architecture</h4>
-                <img src="../common/img/steering.png" class="img-fluid" alt="Steering architecture illustration">
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Architecture</div>
+                <div class="sample-metrics-body">
+                    <img src="../common/img/steering.png" class="img-fluid" alt="Steering architecture illustration">
+                </div>
             </div>
         </div>
     </div>
@@ -55,111 +57,119 @@
             </div>
         </div>
         <div class="col-md-6">
-            <div class="h-100 p-5 border rounded-3">
-                <h5>CDN Selection</h5>
-                <div id="cdn-selection-container"></div>
-                <h5 style="margin-top: 20px">Location Selection</h5>
-                <div id="location-selection-container">
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">CDN &amp; Location Selection</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-section-title">CDN Selection</div>
+                    <div id="cdn-selection-container"></div>
+                    <div class="metric-section-title">Location Selection</div>
+                    <div id="location-selection-container"></div>
                 </div>
             </div>
         </div>
     </div>
     <div class="row mt-2">
         <div class="col-md-6">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> Fragment Requests</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                        <tr>
-                            <th scope="col">Type</th>
-                            <th scope="col">Service Location</th>
-                            <th scope="col">Request URL</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Audio</td>
-                            <td id="audio-service-location"></td>
-                            <td id="audio-request-url"></td>
-                        </tr>
-                        <tr>
-                            <td>Video</td>
-                            <td id="video-service-location"></td>
-                            <td id="video-request-url"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">Fragment Requests</div>
+                <div class="sample-metrics-body">
+                    <div class="table-responsive">
+                        <table class="sample-metric-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Type</th>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Audio</td>
+                                <td id="audio-service-location"></td>
+                                <td id="audio-request-url"></td>
+                            </tr>
+                            <tr>
+                                <td>Video</td>
+                                <td id="video-service-location"></td>
+                                <td id="video-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-6">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> Manifest Requests</h5>
-                <div class="table-responsive">
-                    <table class="table table-sm">
-                        <thead>
-                        <tr>
-                            <th scope="col">Service Location</th>
-                            <th scope="col">Request URL</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td id="manifest-service-location"></td>
-                            <td id="manifest-request-url"></td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <div class="sample-metrics h-100">
+                <div class="sample-metrics-header">Manifest Requests</div>
+                <div class="sample-metrics-body">
+                    <div class="table-responsive">
+                        <table class="sample-metric-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Service Location</th>
+                                <th scope="col">Request URL</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td id="manifest-service-location"></td>
+                                <td id="manifest-request-url"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
         <div class="col-md-12 mt-2">
-            <div class="h-100 p-5 border rounded-3">
-                <h5> Steering Data</h5>
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                        <tr>
-                            <th scope="col">Attribute</th>
-                            <th scope="col">Value</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>Timestamp</td>
-                            <td id="steering-request-timestamp"></td>
-                        </tr>
-                        <tr>
-                            <td>Request URL</td>
-                            <td>
-                                <span id="steering-request-url"></span>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Response - Version</td>
-                            <td><span id="steering-version"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Reload URI</td>
-                            <td><span id="steering-reload-uri"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Pathway Priority</td>
-                            <td><span id="steering-pathway-priority"></span></td>
-                        </tr>
-                        <tr>
-                            <td>Response - Pathway Clones</td>
-                            <td>
-                                <pre><span id="steering-pathway-cloning"></span></pre>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>Response - TTL</td>
-                            <td><span id="steering-ttl"></span></td>
-                        </tr>
-                        </tbody>
-                    </table>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Steering Data</div>
+                <div class="sample-metrics-body">
+                    <div class="table-responsive">
+                        <table class="sample-metric-table">
+                            <thead>
+                            <tr>
+                                <th scope="col">Attribute</th>
+                                <th scope="col">Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Timestamp</td>
+                                <td id="steering-request-timestamp"></td>
+                            </tr>
+                            <tr>
+                                <td>Request URL</td>
+                                <td>
+                                    <span id="steering-request-url"></span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Response - Version</td>
+                                <td><span id="steering-version"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Reload URI</td>
+                                <td><span id="steering-reload-uri"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Priority</td>
+                                <td><span id="steering-pathway-priority"></span></td>
+                            </tr>
+                            <tr>
+                                <td>Response - Pathway Clones</td>
+                                <td>
+                                    <pre class="mb-0"><span id="steering-pathway-cloning"></span></pre>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Response - TTL</td>
+                                <td><span id="steering-ttl"></span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>

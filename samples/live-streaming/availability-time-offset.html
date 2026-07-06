@@ -10,22 +10,18 @@
     <link href="../lib/sample.css" rel="stylesheet">
     <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 
-    <style>
-        .clock {
-            color: var(--rp-text);
-            font-size: 60pt
-        }
-    </style>
 </head>
 <body>
 
 <div class="sample-content-custom">
     <div class="row">
         <div class="col-md-6">
-            <div class="p-5 border rounded-3 mt-1">
-                <h3>Wall Clock reference time</h3>
-                <div class="clock">
-                    <span id="min"> </span><span id="sec"></span>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Wall Clock reference time</div>
+                <div class="sample-metrics-body">
+                    <div class="sample-clock">
+                        <span id="min"> </span><span id="sec"></span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -35,12 +31,17 @@
             <div class="sample-video-wrapper"><video></video></div>
         </div>
         <div class="col-md-5">
-            <div class="p-5 border rounded-3 mt-1">
-                <h4>Debug information</h4>
-                <div>
-                    <div><i class="bi bi-arrow-right-square"></i> Seconds behind live: <span id="videoDelay"></span>
+            <div class="sample-metrics">
+                <div class="sample-metrics-header">Debug information</div>
+                <div class="sample-metrics-body">
+                    <div class="metric-row">
+                        <span class="metric-label">Seconds behind live</span>
+                        <span class="metric-value" id="videoDelay">-</span>
                     </div>
-                    <div><i class="bi bi-arrow-right-square"></i> Video Buffer: <span id="videoBuffer"></span></div>
+                    <div class="metric-row">
+                        <span class="metric-label">Video Buffer</span>
+                        <span class="metric-value" id="videoBuffer">-</span>
+                    </div>
                 </div>
             </div>
         </div>
