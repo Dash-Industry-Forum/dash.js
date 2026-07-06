@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MPEG-5 Part 2 LCEVC example</title>
+    <title>LCEVC using SEI carriage</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -36,20 +36,20 @@
 
 <script class="code">
     /**
-     * MPEG-5 LCEVC Integration for Dash.js Player.
+     * MPEG-5 LCEVC Integration for dash.js player.
      *
      * These are the changes needed for passing the correct data to lcevc_dec.js.
     */
     dashjs.Extensions = {
         ...dashjs.Extensions,
         /**
-         * Attaches LCEVC functionality and methods to the provided Dash.js player instance.
+         * Attaches LCEVC functionality and methods to the provided dash.js player instance.
          *
-         * @param {object} player the Dash.js player instance to attach LCEVC
+         * @param {object} player the dash.js player instance to attach LCEVC
          */
         useLcevc: function useLcevc(player) {
             if (!player) {
-                throw new TypeError('The provided Dash.js player instance was null or undefined.');
+                throw new TypeError('The provided dash.js player instance was null or undefined.');
             }
             const { LCEVCdec } = window;
             if (!LCEVCdec) {
@@ -91,7 +91,7 @@
         /* Configuration for LCEVC Decoder */
         const LCEVCdecConfig = {};
         LCEVCdec.ready.then(async () => {
-            /* Attach LCEVC to the Dash.js player instance */
+            /* Attach LCEVC to the dash.js player instance */
             dashjs.Extensions.useLcevc(player);
             player.attachLcevc(video, canvas, LCEVCdecConfig);
             player.initialize(video, url, false);
@@ -102,7 +102,7 @@
 <script type="module">
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
-        title: 'MPEG-5 Part 2 LCEVC Decoding with SEI carriage',
+        title: 'LCEVC using SEI carriage',
         description: 'This example illustrates how MPEG-5 LCEVC-enhanced streams can be decoded in dash.js. In this implementation, enhancements are carried as Supplemental Enhancement Information within the same track as the base video. The base frames are decoded by the HTML5 Video Tag, with the LCEVC Decoder libraries processing the enhancement and rendering it to an HTML5 Canvas element. This example is a debug test stream, which will show moving squares when the LCEVC enhancement is being decoded and displayed successfully.',
         category: 'LCEVC',
         layout: 'custom',

@@ -76,7 +76,7 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'Live stream with availabilityTimeOffset',
-        description: 'Example showing how dash.js handles live streams with an availabilityTimeOffset(ATO). In this case the ATO is set to 10 seconds. Consequently media segments are available 10 seconds earlier compared to their usual availability start time. As a result, the buffer level will be up to 10 seconds higher than the live latency.',
+        description: 'Shows how dash.js handles live streams with an availabilityTimeOffset (ATO). In this case the ATO is set to 10 seconds. Consequently media segments are available 10 seconds earlier compared to their usual availability start time. As a result, the buffer level will be up to 10 seconds higher than the live latency.',
         category: 'Live',
         layout: 'custom',
         onInit: () => init()

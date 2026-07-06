@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMCD Reporting from Manifest</title>
+    <title>CMCD v1 reporting from manifest</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -457,7 +457,7 @@
         </div>
     `;
 
-    var descriptionHtml = '<p>This sample shows how to configure Common Media Client Data (CMCD - CTA 5004) reporting from a manifest file. '
+    var descriptionHtml = '<p>This sample shows how to configure Common Media Client Data (CMCD - CTA-5004) reporting from a manifest file. '
         + 'It also shows how to enable or disable the configuration for CMCD from the manifest, being able to configure it '
         + 'from player settings and ignore whatever the manifest configures for CMCD.</p>'
         + '<p>If <b>applyParametersFromMpd</b> is true, the player will use the CMCD settings from the MPD if specified, ignoring the player\'s own settings. '
@@ -470,7 +470,7 @@
     descEl.innerHTML = descriptionHtml;
 
     initSamplePage({
-        title: 'CMCD Reporting from Manifest',
+        title: 'CMCD v1 reporting from manifest',
         description: descEl,
         category: 'CMCD',
         layout: 'custom',

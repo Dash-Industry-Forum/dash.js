@@ -167,7 +167,7 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'Live delay comparison custom manifest',
-        description: 'This sample allows you to explore the two MediaPlayer APIS which control live delay - <b>setLiveDelay</b> and <b>setLiveDelayFragmentCount.</b> The first takes the desired delay in seconds. The second takes the delay in terms of fragment count. If you use both together, setLiveDelay will take priority. If you set neither, the default delay of 4 segment durations will be used. Note that using either method will not result in the offset exactly matching the requested settings. The final delay depends on the time to fill the source buffers and the amount of data required to begin decoding.',
+        description: 'This sample allows you to explore the two settings that control live delay - <b>streaming.delay.liveDelay</b> and <b>streaming.delay.liveDelayFragmentCount</b>. The first takes the desired delay in seconds. The second takes the delay in terms of fragment count. If you set both, liveDelay takes priority. If you set neither, the default delay of 4 segment durations is used. Note that using either setting will not result in the offset exactly matching the requested value. The final delay depends on the time to fill the source buffers and the amount of data required to begin decoding.',
         category: 'Live',
         layout: 'custom',
         onInit: () => init()

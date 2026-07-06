@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CMCD v2 Reporting</title>
+    <title>CMCD v2 reporting</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -46,7 +46,7 @@
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
         var defaultEventTargetDefinitions = [
             {
-                title: 'Response received remote reporting',
+                title: 'CMCD v2 reporting',
                 description: 'Sends response-received (rr) events for segment requests.',
                 config: {
                     enabled: false,
@@ -531,8 +531,8 @@
     `;
 
     initSamplePage({
-        title: 'CMCD v2 Reporting',
-        description: 'This sample shows how to use dash.js in order to enhance requests to the CDN with Common Media Client Data (CMCD - CTA 5004). In this sample we also enable the CMCD v2 event mode next to the common request mode. The predefined event targets are disabled by default so the sample can be used without a local collector. To demonstrate the event mode, enable the targets you want to test and point them to a running collector such as the local dummy server in <code>samples/simple-express-server</code>.',
+        title: 'CMCD v2 reporting',
+        description: 'Shows how to use dash.js to enhance requests to the CDN with Common Media Client Data (CMCD - CTA-5004). In this sample we also enable the CMCD v2 event mode next to the common request mode. The predefined event targets are disabled by default so the sample can be used without a local collector. To demonstrate the event mode, enable the targets you want to test and point them to a running collector such as the local dummy server in <code>samples/simple-express-server</code>.',
         category: 'CMCD',
         layout: 'custom',
         content: content,

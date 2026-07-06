@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Configuration of ABR Rules</title>
+    <title>Changing the default ABR algorithm</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -57,8 +57,8 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
 
     initSamplePage({
-        title: 'Configuration of ABR Rules',
-        description: 'Example showing how to define the target ABR rules in dash.js. In this demo we enable the throughput based ABR decision logic and the InsufficientBufferRule. <b>Note:</b> If both BOLA and ThroughputRule are enabled, dash.js automatically switches to a <i>dynamic mode</i>: starting with ThroughputRule and switching to BOLA once the buffer target is reached.',
+        title: 'Changing the default ABR algorithm',
+        description: 'Shows how to define the target ABR rules in dash.js. In this demo we enable the throughput based ABR decision logic and the InsufficientBufferRule. <b>Note:</b> If both BOLA and ThroughputRule are enabled, dash.js automatically switches to a <i>dynamic mode</i>: starting with ThroughputRule and switching to BOLA once the buffer target is reached.',
         category: 'ABR',
         onInit: (video, container, wrapper) => init(video, wrapper)
     });

@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebVTT example</title>
+    <title>WebVTT captions</title>
 
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
 
@@ -27,7 +27,7 @@
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
 
     initSamplePage({
-        title: 'WebVTT example',
+        title: 'WebVTT captions',
         description: 'This example shows how content with VTT captions can be played back by the dash.js player. First captions appear at the 15s mark.<br>Note: This sample will only work when using http as the subtitles are not hosted via https.',
         category: 'Captioning',
         onInit: (video, container, wrapper) => init(video, wrapper)
