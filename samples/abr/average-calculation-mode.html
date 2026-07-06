@@ -37,16 +37,61 @@
 
         player.initialize(video, url, true);
         await createControlBar(player, video, wrapper);
+
+        // Poll the throughput calculated by the ThroughputController using the
+        // configured averageCalculationMode. getAverageThroughput() returns kbit/s.
+        var throughputPoller = setInterval(function () {
+            var videoThroughput = Math.round(player.getAverageThroughput('video') || 0);
+            var audioThroughput = Math.round(player.getAverageThroughput('audio') || 0);
+            document.getElementById('throughputVideo').innerText = videoThroughput + ' kbit/s';
+            document.getElementById('throughputAudio').innerText = audioThroughput + ' kbit/s';
+        }, 1000);
+
+        player.on(dashjs.MediaPlayer.events.PLAYBACK_ENDED, function () {
+            clearInterval(throughputPoller);
+        });
     }
 </script>
 
 <script type="module">
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
 
+    var content = document.createElement('div');
+    content.innerHTML = `
+        <div class="sample-content">
+            <div class="sample-content-main" style="flex: 0 1 640px;">
+                <div class="sample-video-wrapper" id="video-wrapper">
+                    <video></video>
+                </div>
+            </div>
+            <div class="sample-content-side" style="flex: 1 1 0; min-width: 260px;">
+                <div class="sample-metrics">
+                    <div class="sample-metrics-header">Metrics</div>
+                    <div class="sample-metrics-body">
+                        <div class="metric-row">
+                            <span class="metric-label">Calculated throughput (video)</span>
+                            <span class="metric-value" id="throughputVideo">-</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Calculated throughput (audio)</span>
+                            <span class="metric-value" id="throughputAudio">-</span>
+                        </div>
+                        <div class="metric-row">
+                            <span class="metric-label">Calculation mode</span>
+                            <span class="metric-value" id="calcMode" style="white-space: normal; word-break: break-word;">BYTE_SIZE_WEIGHTED_HARMONIC_MEAN</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+
     initSamplePage({
         title: 'Average Throughput Calculation Mode',
-        description: 'dash.js provides multiple options to configure the calculation of the current average throughput, an important input for most ABR rules. This example changes the default mode to byte size weighted harmonic mean, sets the number of samples to five, and disables automatic sample size adjustment.',
+        description: 'dash.js provides multiple options to configure the calculation of the current average throughput, an important input for most ABR rules. This example changes the default mode to byte size weighted harmonic mean, sets the number of samples to five, and disables automatic sample size adjustment. The calculated throughput reported by the ThroughputController is shown live in the metrics panel.',
         category: 'ABR',
+        layout: 'custom',
+        content: content,
         onInit: (video, container, wrapper) => init(video, wrapper)
     });
 </script>
