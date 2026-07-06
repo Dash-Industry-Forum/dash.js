@@ -90,35 +90,97 @@
                         <p style="font-size:0.8rem; color:var(--rp-text-muted); margin-bottom:0.5rem;">Choose events to monitor before starting playback:</p>
                         <select class="form-select form-select-sm" id="availableEvents" onchange="setListener(this.options[this.selectedIndex].text)">
                             <option selected disabled>Select an event ..</option>
-                            <option>BUFFER_EMPTY</option>
-                            <option>BUFFER_LOADED</option>
-                            <option>CAN_PLAY</option>
-                            <option>DYNAMIC_TO_STATIC</option>
-                            <option>ERROR</option>
-                            <option>LOG</option>
-                            <option>MANIFEST_LOADED</option>
-                            <option>METRIC_ADDED</option>
-                            <option>METRIC_CHANGED</option>
-                            <option>METRIC_UPDATED</option>
-                            <option>METRICS_CHANGED</option>
-                            <option>PERIOD_SWITCH_COMPLETED</option>
-                            <option>PERIOD_SWITCH_STARTED</option>
-                            <option>PLAYBACK_ENDED</option>
-                            <option>PLAYBACK_ERROR</option>
-                            <option>PLAYBACK_METADATA_LOADED</option>
-                            <option>PLAYBACK_PAUSED</option>
-                            <option>PLAYBACK_PLAYING</option>
-                            <option>PLAYBACK_PROGRESS</option>
-                            <option>PLAYBACK_RATE_CHANGED</option>
-                            <option>PLAYBACK_SEEKED</option>
-                            <option>PLAYBACK_SEEKING</option>
-                            <option>PLAYBACK_STARTED</option>
-                            <option>PLAYBACK_TIME_UPDATED</option>
-                            <option>PLAYBACK_WAITING</option>
-                            <option>STREAM_UPDATED</option>
-                            <option>STREAM_INITIALIZED</option>
-                            <option>TEXT_TRACK_ADDED</option>
-                            <option>TEXT_TRACKS_ADDED</option>
+                            <optgroup label="Playback">
+                                <option>AST_IN_FUTURE</option>
+                                <option>DYNAMIC_TO_STATIC</option>
+                                <option>CAN_PLAY</option>
+                                <option>CAN_PLAY_THROUGH</option>
+                                <option>PLAYBACK_ENDED</option>
+                                <option>PLAYBACK_ERROR</option>
+                                <option>PLAYBACK_INITIALIZED</option>
+                                <option>PLAYBACK_NOT_ALLOWED</option>
+                                <option>PLAYBACK_METADATA_LOADED</option>
+                                <option>PLAYBACK_LOADED_DATA</option>
+                                <option>PLAYBACK_PAUSED</option>
+                                <option>PLAYBACK_PLAYING</option>
+                                <option>PLAYBACK_PROGRESS</option>
+                                <option>PLAYBACK_RATE_CHANGED</option>
+                                <option>PLAYBACK_SEEKED</option>
+                                <option>PLAYBACK_SEEKING</option>
+                                <option>PLAYBACK_STALLED</option>
+                                <option>PLAYBACK_STARTED</option>
+                                <option>PLAYBACK_TIME_UPDATED</option>
+                                <option>PLAYBACK_VOLUME_CHANGED</option>
+                                <option>PLAYBACK_WAITING</option>
+                            </optgroup>
+                            <optgroup label="Buffer">
+                                <option>BUFFER_EMPTY</option>
+                                <option>BUFFER_LOADED</option>
+                                <option>BUFFER_LEVEL_STATE_CHANGED</option>
+                                <option>BUFFER_LEVEL_UPDATED</option>
+                            </optgroup>
+                            <optgroup label="Fragment">
+                                <option>FRAGMENT_LOADING_STARTED</option>
+                                <option>FRAGMENT_LOADING_PROGRESS</option>
+                                <option>FRAGMENT_LOADING_COMPLETED</option>
+                                <option>FRAGMENT_LOADING_ABANDONED</option>
+                            </optgroup>
+                            <optgroup label="Manifest">
+                                <option>MANIFEST_LOADING_STARTED</option>
+                                <option>MANIFEST_LOADING_FINISHED</option>
+                                <option>MANIFEST_LOADED</option>
+                                <option>MANIFEST_VALIDITY_CHANGED</option>
+                            </optgroup>
+                            <optgroup label="Stream &amp; Period">
+                                <option>PERIOD_SWITCH_STARTED</option>
+                                <option>PERIOD_SWITCH_COMPLETED</option>
+                                <option>STREAM_INITIALIZING</option>
+                                <option>STREAM_INITIALIZED</option>
+                                <option>STREAM_UPDATED</option>
+                                <option>STREAM_ACTIVATED</option>
+                                <option>STREAM_DEACTIVATED</option>
+                                <option>STREAM_TEARDOWN_COMPLETE</option>
+                            </optgroup>
+                            <optgroup label="Track &amp; Quality">
+                                <option>QUALITY_CHANGE_REQUESTED</option>
+                                <option>QUALITY_CHANGE_RENDERED</option>
+                                <option>NEW_TRACK_SELECTED</option>
+                                <option>TRACK_CHANGE_RENDERED</option>
+                                <option>REPRESENTATION_SWITCH</option>
+                                <option>ADAPTATION_SET_REMOVED_NO_CAPABILITIES</option>
+                            </optgroup>
+                            <optgroup label="Text &amp; Caption">
+                                <option>TEXT_TRACK_ADDED</option>
+                                <option>TEXT_TRACKS_ADDED</option>
+                                <option>CUE_ENTER</option>
+                                <option>CUE_EXIT</option>
+                                <option>TTML_PARSED</option>
+                                <option>TTML_TO_PARSE</option>
+                                <option>CAPTION_RENDERED</option>
+                                <option>CAPTION_CONTAINER_RESIZE</option>
+                            </optgroup>
+                            <optgroup label="Metrics">
+                                <option>METRICS_CHANGED</option>
+                                <option>METRIC_CHANGED</option>
+                                <option>METRIC_ADDED</option>
+                                <option>METRIC_UPDATED</option>
+                            </optgroup>
+                            <optgroup label="DVB Font">
+                                <option>DVB_FONT_DOWNLOAD_ADDED</option>
+                                <option>DVB_FONT_DOWNLOAD_COMPLETE</option>
+                                <option>DVB_FONT_DOWNLOAD_FAILED</option>
+                            </optgroup>
+                            <optgroup label="Other">
+                                <option>ERROR</option>
+                                <option>LOG</option>
+                                <option>BASE_URLS_UPDATED</option>
+                                <option>THROUGHPUT_MEASUREMENT_STORED</option>
+                                <option>CONFORMANCE_VIOLATION</option>
+                                <option>CONTENT_STEERING_REQUEST_COMPLETED</option>
+                                <option>INBAND_PRFT</option>
+                                <option>MANAGED_MEDIA_SOURCE_START_STREAMING</option>
+                                <option>MANAGED_MEDIA_SOURCE_END_STREAMING</option>
+                            </optgroup>
                         </select>
                         <div style="margin-top:0.5rem;">
                             <strong style="font-size:0.75rem; color:var(--rp-text-muted);">Active:</strong>
