@@ -202,7 +202,7 @@ function buildCodeOutput() {
 function buildFooter() {
     return el('div', {
         className: 'sample-footer',
-        innerHTML: '&copy; DASH Industry Forum'
+        innerHTML: '&copy; <a href="https://www.svta.org/working-group/dash-if-dash-js/" target="_blank" rel="noopener">Streaming Video Technology Alliance (SVTA)</a>'
     });
 }
 
@@ -249,8 +249,8 @@ export function initSamplePage(opts) {
     // Header
     container.appendChild(buildHeader(opts));
 
-    // Description (for non-custom layouts)
-    if (layout !== 'custom' && opts.description) {
+    // Description (rendered for all layouts, including 'custom')
+    if (opts.description) {
         container.appendChild(buildDescription(opts));
     }
 
