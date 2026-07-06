@@ -716,8 +716,8 @@
                 ]
             },
             {
-                "title": "Network interceptor",
-                "description": "Shows how to apply network request and response interceptors based on the CommonMediaLibrary API.",
+                "title": "Network interceptors",
+                "description": "Shows how to apply network request and response interceptors based on the Common Media Library API.",
                 "href": "network-interceptor/index.html",
                 "image": "lib/img/bbb-1.jpg",
                 "labels": [
