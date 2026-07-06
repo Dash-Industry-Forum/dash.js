@@ -142,8 +142,8 @@ function BaseURLTreeModel() {
         return targetBaseUrls;
     }
 
-    function getBaseUrls(manifest) {
-        return _getAvailableBaseUrls(manifest);
+    function getAvailableBaseUrlsForElement(element) {
+        return _getAvailableBaseUrls(element);
     }
 
     function walk(callback, node) {
@@ -192,12 +192,12 @@ function BaseURLTreeModel() {
     }
 
     instance = {
-        reset,
-        update,
+        getAvailableBaseUrlsForElement,
         getForPath,
         invalidateSelectedIndexes,
+        reset,
         setConfig,
-        getBaseUrls
+        update
     };
 
     setup();

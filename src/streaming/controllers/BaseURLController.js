@@ -119,21 +119,7 @@ function BaseURLController() {
             return;
         }
 
-        const elementBaseUrls = adapter.getBaseURLsFromElement(element) || [];
-        const synthesizedBaseUrls = contentSteeringController ? contentSteeringController.getSynthesizedBaseUrlElements(elementBaseUrls) : [];
-
-        if (synthesizedBaseUrls && synthesizedBaseUrls.length > 0) {
-            synthesizedBaseUrls.forEach((synthesizedBaseUrl) => {
-                const foundIndex = elementBaseUrls.findIndex((elem) => elem.serviceLocation === synthesizedBaseUrl.serviceLocation);
-
-                if (foundIndex !== -1) {
-                    elementBaseUrls[foundIndex] = synthesizedBaseUrl;
-                } else {
-                    elementBaseUrls.push(synthesizedBaseUrl);
-                }
-            });
-        }
-
+        const elementBaseUrls = baseURLTreeModel.getAvailableBaseUrlsForElement(element);
         baseUrls.push(...elementBaseUrls);
 
         const children = element.AdaptationSet || element.Representation;
@@ -205,7 +191,7 @@ function BaseURLController() {
     }
 
     function getBaseUrls(manifest) {
-        return baseURLTreeModel.getBaseUrls(manifest);
+        return baseURLTreeModel.getAvailableBaseUrlsForElement(manifest);
     }
 
     function initialize(data) {
@@ -220,11 +206,11 @@ function BaseURLController() {
     }
 
     instance = {
-        reset,
+        getBaseUrls,
         initialize,
+        reset,
         resolve,
         setConfig,
-        getBaseUrls,
         update
     };
 

@@ -29,13 +29,9 @@ const dummyBaseURLTreeModel = {
             selectedIdx: NaN
         }];
     },
-    getBaseUrls: () => {
+    getAvailableBaseUrlsForElement: () => {
         return [];
     }
-};
-
-const contentSteeringControllerMock = {
-    getSynthesizedBaseUrlElements: () => []
 };
 
 const dummyBlacklistController = {
@@ -87,25 +83,24 @@ describe('BaseURLController', function () {
         ];
         const baseURLTreeModel = {
             update: sinon.spy(),
-            getBaseUrls: sinon.stub().withArgs(manifest).returns([new BaseURL('https://example.com/manifest.mpd', 'https://example.com/manifest.mpd')])
+            getAvailableBaseUrlsForElement: sinon.stub()
         };
         const baseURLSelector = {
             chooseSelector: sinon.spy()
         };
         const adapter = {
-            getIsDVB: sinon.stub().withArgs(manifest).returns(false),
-            getBaseURLsFromElement: sinon.stub()
+            getIsDVB: sinon.stub().withArgs(manifest).returns(false)
         };
         const baseURLController = BaseURLController(context).create();
 
-        adapter.getBaseURLsFromElement.withArgs(manifest.Period[0]).returns(baseUrls);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest).returns([new BaseURL('https://example.com/manifest.mpd', 'https://example.com/manifest.mpd')]);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[0]).returns(baseUrls);
 
         eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
         baseURLController.setConfig({
             baseURLTreeModel,
             baseURLSelector,
-            adapter,
-            contentSteeringController: contentSteeringControllerMock
+            adapter
         });
 
         baseURLController.update(manifest);
@@ -166,28 +161,26 @@ describe('BaseURLController', function () {
         const periodBaseUrl = new BaseURL('https://example.com/cdn_alpha/', 'alpha');
         const baseURLTreeModel = {
             update: () => {},
-            getBaseUrls: sinon.stub()
+            getAvailableBaseUrlsForElement: sinon.stub()
         };
         const adapter = {
-            getIsDVB: sinon.stub(),
-            getBaseURLsFromElement: sinon.stub()
+            getIsDVB: sinon.stub()
         };
         const baseURLController = BaseURLController(context).create();
         const spy = sinon.spy();
 
         eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
-        baseURLTreeModel.getBaseUrls.withArgs(firstManifest).returns([rootBaseUrl]);
-        baseURLTreeModel.getBaseUrls.withArgs(secondManifest).returns([rootBaseUrl]);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(firstManifest).returns([rootBaseUrl]);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(secondManifest).returns([rootBaseUrl]);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(firstManifest.Period[0]).returns([periodBaseUrl]);
         adapter.getIsDVB.withArgs(firstManifest).returns(false);
         adapter.getIsDVB.withArgs(secondManifest).returns(false);
-        adapter.getBaseURLsFromElement.withArgs(firstManifest.Period[0]).returns([periodBaseUrl]);
         baseURLController.setConfig({
             baseURLTreeModel,
             baseURLSelector: {
                 chooseSelector: () => {}
             },
-            adapter,
-            contentSteeringController: contentSteeringControllerMock
+            adapter
         });
 
         baseURLController.update(firstManifest);
@@ -202,28 +195,27 @@ describe('BaseURLController', function () {
 function _updateAndGetBaseUrlsUpdatedEvent(manifest, rootBaseUrl, periodBaseUrls) {
     const baseURLTreeModel = {
         update: () => {},
-        getBaseUrls: sinon.stub().withArgs(manifest).returns([rootBaseUrl])
+        getAvailableBaseUrlsForElement: sinon.stub()
     };
     const baseURLSelector = {
         chooseSelector: () => {}
     };
     const adapter = {
-        getIsDVB: sinon.stub().withArgs(manifest).returns(false),
-        getBaseURLsFromElement: sinon.stub()
+        getIsDVB: sinon.stub().withArgs(manifest).returns(false)
     };
     const baseURLController = BaseURLController(context).create();
     const spy = sinon.spy();
 
     eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
-    adapter.getBaseURLsFromElement.withArgs(manifest.Period[0]).returns(periodBaseUrls);
+    baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest).returns([rootBaseUrl]);
+    baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[0]).returns(periodBaseUrls);
     if (manifest.Period[1]) {
-        adapter.getBaseURLsFromElement.withArgs(manifest.Period[1]).returns([]);
+        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[1]).returns([]);
     }
     baseURLController.setConfig({
         baseURLTreeModel,
         baseURLSelector,
-        adapter,
-        contentSteeringController: contentSteeringControllerMock
+        adapter
     });
     baseURLController.update(manifest);
 
