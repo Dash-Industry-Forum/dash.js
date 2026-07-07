@@ -13,7 +13,10 @@
 <body>
 
 <script class="code">
-    async function init(video, wrapper) {
+    async function init() {
+        var video = document.querySelector('video');
+        var wrapper = document.getElementById('video-wrapper');
+
         if (location.protocol === 'http:' && location.hostname !== 'localhost') {
             var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
                 'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
@@ -65,16 +68,30 @@
     }
 </script>
 
-<button class="btn-primary" id="attach_button">(Re)attach Source</button>
-<div class="sample-warning" id="http-warning" style="display:none"></div>
+<div class="sample-content-custom">
+    <div class="sample-warning" id="http-warning" style="display:none"></div>
+    <div class="row mt-2">
+        <div class="col-md-12">
+            <button type="button" class="btn btn-primary" id="attach_button">(Re)attach source</button>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="sample-video-wrapper" id="video-wrapper">
+                <video></video>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script type="module">
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'Keep MediaKeySession',
-        description: 'This example shows how to use the keepProtectionKeys setting to persist DRM sessions across source changes. For a detailed explanation on DRM playback in dash.js checkout the <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.',
+        description: 'Shows how to use the keepProtectionKeys setting to persist DRM sessions across source changes. For a detailed explanation on DRM playback in dash.js see the <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.',
         category: 'DRM',
-        onInit: (video, container, wrapper) => init(video, wrapper)
+        layout: 'custom',
+        onInit: () => init()
     });
 </script>
 </body>
