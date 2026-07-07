@@ -467,6 +467,17 @@
                     "Video",
                     "Audio"
                 ]
+            },
+            {
+                "title": "Headless license acquisition",
+                "description": "Acquires a DRM license using the ProtectionController API directly, without video playback. Demonstrates the full EME key session lifecycle.",
+                "href": "drm/get-license.html",
+                "image": "lib/img/dashjs-logo-border.png",
+                "labels": [
+                    "DRM",
+                    "Widevine",
+                    "Protection"
+                ]
             }
         ]
     },
