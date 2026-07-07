@@ -16,10 +16,12 @@
 <body>
 
 <script class="code">
-    async function init(video, container, wrapper) {
+    async function init() {
+        var video = document.querySelector('video');
+        var wrapper = document.getElementById('video-wrapper');
         var url = 'https://dash.akamaized.net/akamai/test/caption_test/ElephantsDream/elephants_dream_480p_heaac5_1_https.mpd';
 
-        var player = dashjs.MediaPlayer({}).create();
+        var player = dashjs.MediaPlayer().create();
         player.updateSettings({
             debug: {
                 logLevel: 5
@@ -39,36 +41,28 @@
     }
 </script>
 
+<div class="sample-content-custom">
+    <div class="sample-content">
+        <div class="sample-content-main">
+            <div class="sample-video-wrapper" id="video-wrapper">
+                <video preload="auto" muted></video>
+                <div id="vtt-rendering-div"
+                     style="position:absolute; bottom:0; left:0; width:100%; height:30%; pointer-events:none; z-index:1;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script type="module">
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
 
-    // Build custom content with a VTT rendering div inside the video wrapper
-    var content = document.createElement('div');
-    content.innerHTML = `
-        <div class="sample-content">
-            <div class="sample-content-main">
-                <div class="sample-video-wrapper" id="video-wrapper">
-                    <video preload="auto" muted></video>
-                    <div style="position: relative">
-                        <div id="vtt-rendering-div" style="min-width: 600px; min-height: 100px;"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    `;
-
     initSamplePage({
         title: 'WebVTT custom rendering',
-        description: 'This example shows how content with VTT captions can be played back by the dash.js player using the external vtt.js library. This enables VTT support on devices that do not provide native VTT support. The first captions appear at the 15s mark.<br>Note: This sample will only work when using http as the subtitles are not hosted via https.',
+        description: 'Shows how content with VTT captions can be played back by the dash.js player using the external vtt.js library. This enables VTT support on devices that do not provide native VTT support. The first captions appear at the 15s mark.<br>Note: This sample will only work when using http as the subtitles are not hosted via https.',
         category: 'Captioning',
         codeExpanded: true,
         layout: 'custom',
-        content: content,
-        onInit: (video, container, wrapper) => {
-            video = document.querySelector('video');
-            wrapper = document.querySelector('.sample-video-wrapper');
-            init(video, container, wrapper);
-        }
+        onInit: () => init()
     });
 </script>
 </body>
