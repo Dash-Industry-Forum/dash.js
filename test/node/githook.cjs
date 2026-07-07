@@ -16,9 +16,10 @@ function run(command, args, cwd) {
     }).trim();
 }
 
-function runNodeGithook(cwd) {
+function runNodeGithook(cwd, env) {
     execFileSync(process.execPath, ['githook.cjs'], {
         cwd,
+        env: { ...process.env, ...env },
         stdio: ['ignore', 'pipe', 'pipe']
     });
 }
@@ -32,6 +33,19 @@ function assertPreCommitHook(cwd) {
     const preCommitPath = getPreCommitPath(cwd);
     assert.strictEqual(fs.readFileSync(preCommitPath, 'utf8'), expectedHookContent);
     assert.strictEqual((fs.statSync(preCommitPath).mode & 0o777), 0o755);
+}
+
+function assertSkippedOutsideGitRepo(tmpDir) {
+    const nonRepoPath = path.join(tmpDir, 'not-a-repo');
+    fs.mkdirSync(nonRepoPath);
+    fs.copyFileSync(sourceHookScript, path.join(nonRepoPath, 'githook.cjs'));
+
+    // GIT_CEILING_DIRECTORIES stops git's upward repo search at tmpDir, so the
+    // result does not depend on whether os.tmpdir() happens to sit in a repo.
+    runNodeGithook(nonRepoPath, { GIT_CEILING_DIRECTORIES: fs.realpathSync(tmpDir) });
+
+    assert.ok(!fs.existsSync(path.join(nonRepoPath, '.git')),
+        'githook.cjs must not create a .git directory outside a repository');
 }
 
 function setupRepo(tmpDir) {
@@ -61,6 +75,8 @@ function main() {
 
         runNodeGithook(worktreePath);
         assertPreCommitHook(worktreePath);
+
+        assertSkippedOutsideGitRepo(tmpDir);
     } finally {
         fs.rmSync(tmpDir, { recursive: true, force: true });
     }

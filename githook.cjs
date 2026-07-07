@@ -23,10 +23,19 @@ exec('npm run lint', {
 });
 `;
 
-const precommitFile = path.resolve(__dirname, execFileSync('git', ['rev-parse', '--git-path', 'hooks/pre-commit'], {
-    cwd: __dirname,
-    encoding: 'utf8'
-}).trim());
+let precommitFile;
+try {
+    precommitFile = path.resolve(__dirname, execFileSync('git', ['rev-parse', '--git-path', 'hooks/pre-commit'], {
+        cwd: __dirname,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'ignore']
+    }).trim());
+} catch {
+    // Not a git repository, or git is unavailable (e.g. installing dependencies
+    // in CI or a Docker layer without the .git dir). The hook is a dev-only
+    // convenience, so skip it rather than failing `npm install`.
+    process.exit(0);
+}
 const pathToHooksFolder = path.dirname(precommitFile);
 
 function writeHook(content) {
