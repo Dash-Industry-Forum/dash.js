@@ -14,14 +14,6 @@
 
 <script class="code">
     async function init(video, wrapper) {
-        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-            var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
-                'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
-            var div = document.getElementById('http-warning');
-            div.innerHTML = out;
-            div.style.display = ''
-        }
-
         var player,
             url = 'https://livesim2.dashif.org/livesim2/drm_EZDRM-1-key-cbcs/testpic_2s/Manifest.mpd';
 
@@ -45,14 +37,13 @@
     }
 </script>
 
-<div class="sample-warning" id="http-warning" style="display:none"></div>
-
 <script type="module">
     import { initSamplePage, createControlBar } from '../lib/sample-template.js';
     initSamplePage({
         title: 'Certificate wrapping',
         description: 'This example shows how to use dash.js to modify the license certificate request and response. For a detailed explanation on DRM playback in dash.js checkout the <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.',
         category: 'DRM',
+        httpWarning: true,
         codeExpanded: true,
         onInit: (video, container, wrapper) => init(video, wrapper)
     });

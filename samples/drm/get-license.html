@@ -23,7 +23,6 @@
 <body>
 
 <div class="sample-content-custom">
-    <div class="sample-warning" id="http-warning" style="display:none"></div>
 
     <div class="row mt-2">
         <div class="col-md-12">
@@ -45,14 +44,6 @@
 
 <script class="code">
     function init() {
-        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-            var out = 'This page has been loaded under http. This might result in the EME APIs not being available and the license request failing. ' +
-                'If you wish to test DRM, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.';
-            var div = document.getElementById('http-warning');
-            div.innerHTML = out;
-            div.style.display = '';
-        }
-
         document.getElementById('get-license-btn').addEventListener('click', getLicense);
     }
 
@@ -204,6 +195,7 @@
         title: 'Headless license acquisition',
         description: 'Acquires a DRM license using the ProtectionController API directly, without video playback. Demonstrates the full EME key session lifecycle: key system access, session creation, license request, and key status changes. Open the browser console for the raw event objects.',
         category: 'DRM',
+        httpWarning: true,
         layout: 'custom',
         onInit: () => init()
     });

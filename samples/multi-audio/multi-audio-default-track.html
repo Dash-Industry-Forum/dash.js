@@ -37,16 +37,6 @@
             player.play();
         }
     }
-
-    function check() {
-        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-            var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
-                'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
-            var div = document.getElementById('http-warning');
-            div.innerHTML = out;
-            div.style.display = ''
-        }
-    }
 </script>
 
 <script type="module">
@@ -56,12 +46,11 @@
     content.innerHTML = `
         <div class="sample-content">
             <div class="sample-content-main">
-                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning"></div>
                 <div class="sample-video-wrapper" id="video-wrapper">
                     <video></video>
                 </div>
                 <div style="margin-top: 0.5rem;">
-                    <button class="btn btn-sm btn-primary" id="attach_button">(Re)attach Source</button>
+                    <button class="btn btn-sm btn-primary" id="attach_button">(Re)attach source</button>
                 </div>
             </div>
         </div>
@@ -72,12 +61,12 @@
         description: 'This example illustrates how to select a default audio language for playback.',
         category: 'Multi-Audio',
         codeExpanded: true,
+        httpWarning: true,
         layout: 'custom',
         content: content,
         onInit: async () => {
             var video = document.querySelector('video');
             var wrapper = document.getElementById('video-wrapper');
-            check();
             await init(video, wrapper);
         }
     });

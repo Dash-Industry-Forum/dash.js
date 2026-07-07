@@ -244,6 +244,7 @@ function loadHighlighter() {
  * @param {HTMLElement|string} [opts.content] - Content for 'custom' layout
  * @param {boolean} [opts.showCodeOutput=true] - Show source code section
  * @param {boolean} [opts.codeExpanded=false] - Expand the source code section by default
+ * @param {boolean} [opts.httpWarning=false] - Show a warning when loaded over http (for DRM samples)
  * @param {Function} [opts.onInit] - Callback(videoElement, containerElement) on DOMContentLoaded
  */
 export function initSamplePage(opts) {
@@ -263,6 +264,21 @@ export function initSamplePage(opts) {
     // Description (rendered for all layouts, including 'custom')
     if (opts.description) {
         container.appendChild(buildDescription(opts));
+    }
+
+    // HTTP/DRM warning (for DRM samples loaded over http)
+    if (opts.httpWarning) {
+        var warning = el('div', {
+            className: 'sample-warning',
+            id: 'http-warning',
+            style: 'display:none'
+        });
+        if (location.protocol === 'http:' && location.hostname !== 'localhost') {
+            warning.innerHTML = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
+                'If you wish to test manifest URLs that require EME support, then <a href="https:' + window.location.href.substring(window.location.protocol.length) + '">reload this page under https</a>.';
+            warning.style.display = '';
+        }
+        container.appendChild(warning);
     }
 
     var videoElement = null;
