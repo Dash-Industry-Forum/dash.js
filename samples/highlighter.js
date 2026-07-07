@@ -28,9 +28,13 @@
         }
     }
 
-    // Build the code output UI (collapsed by default via <details>)
+    // Build the code output UI (collapsed by default via <details>).
+    // Pages can opt in to an expanded section via data-code-expanded on #code-output.
     var section = document.createElement('details');
     section.className = 'sample-code-section';
+    if (codeOutput.hasAttribute('data-code-expanded')) {
+        section.setAttribute('open', '');
+    }
     section.innerHTML =
         '<summary class="sample-code-header">' +
         '  <span class="sample-code-title"><i class="bi bi-chevron-right sample-code-chevron"></i> <span class="sample-code-title-text">Source Code</span></span>' +

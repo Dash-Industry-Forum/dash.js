@@ -198,8 +198,12 @@ function buildVideoWrapper(opts) {
 /**
  * Build the code output container.
  */
-function buildCodeOutput() {
-    return el('div', { id: 'code-output' });
+function buildCodeOutput(opts) {
+    var div = el('div', { id: 'code-output' });
+    if (opts && opts.codeExpanded) {
+        div.setAttribute('data-code-expanded', 'true');
+    }
+    return div;
 }
 
 /**
@@ -239,6 +243,7 @@ function loadHighlighter() {
  * @param {HTMLElement|string} [opts.sidePanel] - Content for right-side panel
  * @param {HTMLElement|string} [opts.content] - Content for 'custom' layout
  * @param {boolean} [opts.showCodeOutput=true] - Show source code section
+ * @param {boolean} [opts.codeExpanded=false] - Expand the source code section by default
  * @param {Function} [opts.onInit] - Callback(videoElement, containerElement) on DOMContentLoaded
  */
 export function initSamplePage(opts) {
@@ -320,7 +325,7 @@ export function initSamplePage(opts) {
 
     // Code output
     if (showCode) {
-        container.appendChild(buildCodeOutput());
+        container.appendChild(buildCodeOutput(opts));
     }
 
     // Footer

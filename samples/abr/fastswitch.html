@@ -41,6 +41,7 @@
         title: 'Fast bitrate switch',
         description: 'Shows how to aggressively replace existing segments in the buffer when switching up to a higher bitrate. When <b>fastswitch</b> is enabled, the next fragment is appended closer to the current time rather than at the end of the buffer range. On down-switch, the lower bitrate is appended at the end to preserve higher bitrate media.',
         category: 'ABR',
+        codeExpanded: true,
         onInit: (video, container, wrapper) => init(video, wrapper)
     });
 </script>
