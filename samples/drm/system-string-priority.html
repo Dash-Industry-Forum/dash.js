@@ -1,119 +1,61 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-bs-theme="light">
 <head>
     <meta charset="utf-8">
-    <title>DRM system string priority example</title>
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DRM system string priority</title>
     <script src="../../dist/modern/umd/dash.all.debug.js"></script>
-
-    <!-- Bootstrap core CSS -->
     <link href="../lib/bootstrap/bootstrap.min.css" rel="stylesheet">
-    <link href="../lib/main.css" rel="stylesheet">
-
-    <style>
-        video {
-            width: 640px;
-            height: 360px;
-        }
-    </style>
-
-    <script class="code">
-        function init() {
-            var protData = {
-                'com.widevine.alpha': {
-                    'serverURL': 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
-                    'systemStringPriority': ['com.widevine.something', 'com.widevine.alpha'],
-                    'priority': 2,
-                    'httpRequestHeaders': {
-                        'X-AxDRM-Message': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICIzMDJmODBkZC00MTFlLTQ4ODYtYmNhNS1iYjFmODAxOGEwMjQiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAicm9LQWcwdDdKaTFpNDNmd3YremZ0UT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ._NfhLVY7S6k8TJDWPeMPhUawhympnrk6WAZHOVjER6M"
-                    }
-                },
-                'com.microsoft.playready': {
-                    'serverURL': 'https://drm-playready-licensing.axtest.net/AcquireLicense',
-                    'systemStringPriority': ['com.microsoft.playready.something', 'com.microsoft.playready.recommendation', 'com.microsoft.playready.hardware', 'com.microsoft.playready'],
-                    'priority': 1,
-                    'httpRequestHeaders': {
-                        'X-AxDRM-Message': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU'
-                    }
-                }
-            };
-            var video,
-                player,
-                url = "https://media.axprod.net/TestVectors/Cmaf/protected_1080p_h264_cbcs/manifest.mpd";
-
-            video = document.querySelector('video');
-            player = dashjs.MediaPlayer().create();
-            player.updateSettings({
-                debug: {
-                    logLevel: 5
-                }
-            });
-            player.initialize(video, url, true);
-            player.setProtectionData(protData);
-        }
-
-        function check() {
-            if (location.protocol === 'http:' && location.hostname !== 'localhost') {
-                var out = 'This page has been loaded under http. This might result in the EME APIs not being available to the player and any DRM-protected content will fail to play. ' +
-                    'If you wish to test manifest URLs that require EME support, then <a href=\'https:' + window.location.href.substring(window.location.protocol.length) + '\'>reload this page under https</a>.'
-                var div = document.getElementById('http-warning');
-                div.innerHTML = out;
-                div.style.display = ''
-            }
-        }
-    </script>
+    <link href="../lib/bootstrap-icons/bootstrap-icons.min.css" rel="stylesheet">
+    <link href="../lib/sample.css" rel="stylesheet">
+    <link href="../../contrib/controlbar/controlbar.css" rel="stylesheet">
 </head>
 <body>
 
-<main>
-    <div class="container py-4">
-        <header class="pb-3 mb-4 border-bottom">
-            <img class=""
-                 src="../lib/img/dashjs-logo.png"
-                 width="200">
-        </header>
-        <div class="row">
-            <div class="col-md-12">
-                <div class="alert alert-danger" role="alert" style="display: none" id="http-warning">
+<script class="code">
+    async function init(video, wrapper) {
+        var protData = {
+            'com.widevine.alpha': {
+                'serverURL': 'https://drm-widevine-licensing.axtest.net/AcquireLicense',
+                'systemStringPriority': ['com.widevine.something', 'com.widevine.alpha'],
+                'priority': 2,
+                'httpRequestHeaders': {
+                    'X-AxDRM-Message': "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.ewogICJ2ZXJzaW9uIjogMSwKICAiY29tX2tleV9pZCI6ICI2OWU1NDA4OC1lOWUwLTQ1MzAtOGMxYS0xZWI2ZGNkMGQxNGUiLAogICJtZXNzYWdlIjogewogICAgInR5cGUiOiAiZW50aXRsZW1lbnRfbWVzc2FnZSIsCiAgICAidmVyc2lvbiI6IDIsCiAgICAibGljZW5zZSI6IHsKICAgICAgImFsbG93X3BlcnNpc3RlbmNlIjogdHJ1ZQogICAgfSwKICAgICJjb250ZW50X2tleXNfc291cmNlIjogewogICAgICAiaW5saW5lIjogWwogICAgICAgIHsKICAgICAgICAgICJpZCI6ICIzMDJmODBkZC00MTFlLTQ4ODYtYmNhNS1iYjFmODAxOGEwMjQiLAogICAgICAgICAgImVuY3J5cHRlZF9rZXkiOiAicm9LQWcwdDdKaTFpNDNmd3YremZ0UT09IiwKICAgICAgICAgICJ1c2FnZV9wb2xpY3kiOiAiUG9saWN5IEEiCiAgICAgICAgfQogICAgICBdCiAgICB9LAogICAgImNvbnRlbnRfa2V5X3VzYWdlX3BvbGljaWVzIjogWwogICAgICB7CiAgICAgICAgIm5hbWUiOiAiUG9saWN5IEEiLAogICAgICAgICJwbGF5cmVhZHkiOiB7CiAgICAgICAgICAibWluX2RldmljZV9zZWN1cml0eV9sZXZlbCI6IDE1MCwKICAgICAgICAgICJwbGF5X2VuYWJsZXJzIjogWwogICAgICAgICAgICAiNzg2NjI3RDgtQzJBNi00NEJFLThGODgtMDhBRTI1NUIwMUE3IgogICAgICAgICAgXQogICAgICAgIH0KICAgICAgfQogICAgXQogIH0KfQ._NfhLVY7S6k8TJDWPeMPhUawhympnrk6WAZHOVjER6M"
+                }
+            },
+            'com.microsoft.playready': {
+                'serverURL': 'https://drm-playready-licensing.axtest.net/AcquireLicense',
+                'systemStringPriority': ['com.microsoft.playready.something', 'com.microsoft.playready.recommendation', 'com.microsoft.playready.hardware', 'com.microsoft.playready'],
+                'priority': 1,
+                'httpRequestHeaders': {
+                    'X-AxDRM-Message': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ2ZXJzaW9uIjoxLCJjb21fa2V5X2lkIjoiYjMzNjRlYjUtNTFmNi00YWUzLThjOTgtMzNjZWQ1ZTMxYzc4IiwibWVzc2FnZSI6eyJ0eXBlIjoiZW50aXRsZW1lbnRfbWVzc2FnZSIsImZpcnN0X3BsYXlfZXhwaXJhdGlvbiI6NjAsInBsYXlyZWFkeSI6eyJyZWFsX3RpbWVfZXhwaXJhdGlvbiI6dHJ1ZX0sImtleXMiOlt7ImlkIjoiOWViNDA1MGQtZTQ0Yi00ODAyLTkzMmUtMjdkNzUwODNlMjY2IiwiZW5jcnlwdGVkX2tleSI6ImxLM09qSExZVzI0Y3Iya3RSNzRmbnc9PSJ9XX19.FAbIiPxX8BHi9RwfzD7Yn-wugU19ghrkBFKsaCPrZmU'
+                }
+            }
+        };
+        var player,
+            url = "https://media.axprod.net/TestVectors/Cmaf/protected_1080p_h264_cbcs/manifest.mpd";
 
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-4">
-                <div class="h-100 p-5 bg-light border rounded-3">
-                    <h3>DRM system string priority example</h3>
-                    <p>This example shows how to specify the system string priority for the call to
-                        requestMediaKeySystemAccess. For example, Playready might be supported
-                        with the system strings "com.microsoft.playready.recommendation" and
-                        "com.microsoft.playready". </p>
-                    <p>For a detailed explanation on DRM playback in dash.js checkout the
-                        <a href="https://dashif.org/dash.js/pages/usage/drm.html"
-                           target="_blank">documentation</a>.</p>
-                </div>
-            </div>
-            <div class="col-md-8">
-                <video controls="true"></video>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-12">
-                <div id="code-output"></div>
-            </div>
-        </div>
-        <footer class="pt-3 mt-4 text-muted border-top">
-            &copy; DASH-IF
-        </footer>
-    </div>
-</main>
+        player = dashjs.MediaPlayer().create();
+        player.updateSettings({
+            debug: {
+                logLevel: 5
+            }
+        });
+        player.initialize(video, url, true);
+        player.setProtectionData(protData);
+        await createControlBar(player, video, wrapper);
+    }
+</script>
 
-
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        check();
-        init();
+<script type="module">
+    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    initSamplePage({
+        title: 'DRM system string priority',
+        description: 'This example shows how to specify the system string priority for requestMediaKeySystemAccess. For example, PlayReady might be supported with multiple system strings. For a detailed explanation on DRM playback in dash.js checkout the <a href="https://dashif.org/dash.js/pages/usage/drm.html" target="_blank">documentation</a>.',
+        category: 'DRM',
+        httpWarning: true,
+        onInit: (video, container, wrapper) => init(video, wrapper)
     });
 </script>
-<script src="../highlighter.js"></script>
 </body>
 </html>

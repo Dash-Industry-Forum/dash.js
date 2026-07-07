@@ -40,16 +40,6 @@ jobs:
                     find: "<!-- commit-info -->"
                     replace: ${{env.replacement_string}}
                     include: "samples/dash-if-reference-player*/index.html"
-            -   name: Build all samples
-                if: inputs.deploy_type == 'samples'
-                run: |
-                    for sample in "network-interceptor"; do
-                      echo "Building sample: $sample"
-                      cd samples/$sample
-                      npm ci
-                      npm run build
-                      rm -rf node_modules
-                    done
             -   name: Build JSDoc
                 if: inputs.deploy_type == 'build'
                 run: npm run doc
