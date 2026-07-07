@@ -1,7 +1,5 @@
 /simple.html
 samples/mpds
-samples/network-interceptor/node_modules
-samples/network-interceptor/dist
 #################
 ## Node.js
 #################
