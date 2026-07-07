@@ -17,15 +17,13 @@
 <script class="code">
     async function init(video, wrapper) {
         var player,
-            url = "https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd";
+            url = 'https://media.axprod.net/TestVectors/v7-Clear/Manifest_1080p.mpd';
         var attachSourceButton = document.getElementById('attach_button');
 
         player = dashjs.MediaPlayer().create();
         player.updateSettings({
-            streaming: {
-                debug: {
-                    logLevel: 5
-                }
+            debug: {
+                logLevel: 5
             }
         })
         player.initialize(video, null, false);
@@ -52,7 +50,7 @@
 </script>
 
 <script type="module">
-    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    import {initSamplePage, createControlBar} from '../lib/sample-template.js';
 
     var content = document.createElement('div');
     content.innerHTML = `
