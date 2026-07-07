@@ -11,7 +11,8 @@ The source files are placed in multiple folders:
   as a wrapper around dash.js functionality.
 * `config`: Test configuration files that define a set of testcases to be executed. The target configuration file is
   imported in `Utils.js`
-* `content`: Contains static MPDs that serve as input for testcases.
+* `content`: Contains static MPDs that serve as input for testcases. These MPDs are served automatically by Karma under
+  `/base/test/functional/content/` with CORS headers when functional tests are started.
 * `helper`: Helper classes that define constant values and filter the relevant testvectors for a specific testcase.
 * `results`: The summary of the test results is placed in this folder.
 * `test`: The implementation of the testcases.
@@ -30,4 +31,3 @@ To execute the functional tests run the following steps:
 2. `npm run build` to build the `dist` files of dash.js. 
 3. `npm run test-functional-mocha` to execute the tests.
 4. The results will be available after the test execution in `test/functional-karma/results`
-

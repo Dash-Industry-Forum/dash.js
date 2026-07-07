@@ -8,6 +8,11 @@ on:
             - '!development'
             - '!v4_main'
             - '!v4_development'
+        paths-ignore:
+            - '*.md'
+            - 'docs/**'
+            - 'proposals/**'
+            - 'LICENSES/**'
 
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}

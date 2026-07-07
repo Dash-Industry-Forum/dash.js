@@ -28,6 +28,7 @@
   },
   "scripts": {
     "build": "concurrently \"npm run webpack-build-modern\" \"npm run webpack-build-legacy\"",
+    "build:dist": "rimraf dist && tsc && npm run webpack-build-modern && npm run webpack-build-legacy",
     "build-legacy": "npm run prebuild && npm run webpack-build-legacy",
     "build-modern": "npm run prebuild && npm run webpack-build-modern",
     "ci:verify": "rimraf dist && tsc && npm run test && npm run lint",

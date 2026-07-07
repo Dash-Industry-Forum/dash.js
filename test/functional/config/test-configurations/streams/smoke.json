@@ -308,6 +308,36 @@
       ]
     },
     {
+      "name": "Multiperiod encrypted to unencrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/enc-unenc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 16000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
+      "name": "Multiperiod unencrypted to encrypted",
+      "type": "vod",
+      "url": "/base/test/functional/content/multi-period/unenc-enc.mpd",
+      "testdata": {
+        "periods": {
+          "waitingTimeForPeriodSwitches": 10000,
+          "minimumNumberOfPeriodSwitches": 1,
+          "maximumNumberOfPeriodSwitches": 1
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
       "name": "DASH-IF Multiperiod Segment Template",
       "type": "live",
       "url": "https://livesim2.dashif.org/livesim2/periods_60/continuous_1/testpic_2s/Manifest.mpd",
@@ -320,6 +350,19 @@
       },
       "includedTestfiles": [
         "playback-advanced/multiperiod-playback"
+      ]
+    },
+    {
+      "name": "Preload single period then play multiperiod",
+      "type": "vod",
+      "url": "/base/test/functional/content/preload/preload-singleperiod-play-multiperiod.mpd",
+      "testdata": {
+        "preloadSingleperiodPlayMultiperiod": {
+          "waitingTimeForPeriodSwitch": 15000
+        }
+      },
+      "includedTestfiles": [
+        "playback-advanced/preload-singleperiod-play-multiperiod"
       ]
     },
     {
