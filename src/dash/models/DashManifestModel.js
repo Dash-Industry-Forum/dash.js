@@ -328,7 +328,7 @@ function DashManifestModel() {
     }
 
     function getRealAdaptations(manifest, periodIndex) {
-        return manifest && manifest.Period && isInteger(periodIndex) ? manifest.Period[periodIndex] ? manifest.Period[periodIndex].AdaptationSet : [] : [];
+        return manifest && manifest.Period && isInteger(periodIndex) ? manifest.Period[periodIndex] ? manifest.Period[periodIndex].AdaptationSet ? manifest.Period[periodIndex].AdaptationSet : [] : [] : [];
     }
 
     function getRealPeriods(manifest) {
@@ -486,6 +486,10 @@ function DashManifestModel() {
         const contentProtectionElements = getContentProtectionByPeriod(period);
 
         return contentProtectionElements && contentProtectionElements.length > 0;
+    }
+
+    function isPeriodResolved(period) {
+        return !period.hasOwnProperty('xlink:href');
     }
 
     function getContentProtectionByManifest(manifest) {
@@ -1172,6 +1176,7 @@ function DashManifestModel() {
                 voPeriod.index = i;
                 voPeriod.mpd = mpd;
                 voPeriod.isEncrypted = isPeriodEncrypted(realPeriod);
+                voPeriod.isResolved = isPeriodResolved(realPeriod);
 
                 if (realPeriod.hasOwnProperty(DashConstants.DURATION)) {
                     voPeriod.duration = realPeriod.duration;

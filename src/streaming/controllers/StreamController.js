@@ -65,7 +65,8 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
-        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
+        switchSeekTime, switchTargetStream;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -265,6 +266,11 @@ function StreamController() {
                     return new Promise((resolve, reject) => {
                         if (!activeStream) {
                             _initializeForFirstStream(streamsInfo, resolve, reject);
+                        } else if (switchSeekTime !== null && switchTargetStream !== null) {
+                            // On-going stream switching on a remote period (onRequest)
+                            _switchStream(switchTargetStream, activeStream, switchSeekTime);
+                            switchTargetStream = switchSeekTime = null;
+                            resolve();
                         } else {
                             resolve();
                         }
@@ -424,6 +430,15 @@ function StreamController() {
     function _switchStream(targetStream, previousStream, seekTime) {
         try {
             if (isStreamSwitchingInProgress || !targetStream || (previousStream === targetStream && targetStream.getIsActive())) {
+                return;
+            }
+
+            // Resolve period in case of onRequest xlink
+            const targetStreamInfo = targetStream.getStreamInfo();
+            if (!targetStreamInfo.isResolved) {
+                switchSeekTime = seekTime;
+                switchTargetStream = targetStream;
+                manifestLoader.resolvePeriod(targetStreamInfo.id);
                 return;
             }
 
@@ -945,10 +960,17 @@ function StreamController() {
 
         while (i < upcomingStreams.length) {
             const stream = upcomingStreams[i];
+            const streamInfo = stream.getStreamInfo();
             const previousStream = i === 0 ? activeStream : upcomingStreams[i - 1];
 
             // If the preloading for the current stream is not scheduled, but its predecessor has finished buffering we can start prebuffering this stream
             if (!stream.getPreloaded() && previousStream.getHasFinishedBuffering()) {
+                // If the stream's period is not resolved yet (onRequest xlink) then load it first
+                if (!streamInfo.isResolved) {
+                    manifestLoader.resolvePeriod(streamInfo.id);
+                    return;
+                }
+
                 _onStreamCanLoadNext(stream, previousStream);
             }
             i += 1;
@@ -1681,6 +1703,8 @@ function StreamController() {
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;
+        switchSeekTime = null;
+        switchTargetStream = null;
         errorInformation = {
             counts: {
                 mediaErrorDecode: 0

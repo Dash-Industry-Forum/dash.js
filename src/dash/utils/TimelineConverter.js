@@ -268,6 +268,10 @@ function TimelineConverter() {
                     periodRange.start = currentVoPeriod.start;
                     periodRange.end = Math.max(now, currentVoPeriod.start + currentVoPeriod.duration);
                 }
+            } else {
+                // If period is not resolved yet, use signaled start and duration
+                periodRange.start = stream.getStartTime();
+                periodRange.end = periodRange.start + stream.getDuration();
             }
 
             if (!isNaN(periodRange.start) && (isNaN(range.start) || range.start > periodRange.start)) {
