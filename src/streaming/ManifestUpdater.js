@@ -104,6 +104,8 @@ function ManifestUpdater() {
     function initialize() {
         resetInitialSettings();
 
+        locationSelector.initialize();
+
         eventBus.on(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
         eventBus.on(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
@@ -123,11 +125,12 @@ function ManifestUpdater() {
     }
 
     function reset() {
-
         eventBus.off(MediaPlayerEvents.PLAYBACK_STARTED, _onPlaybackStarted, this);
         eventBus.off(MediaPlayerEvents.PLAYBACK_PAUSED, _onPlaybackPaused, this);
         eventBus.off(Events.STREAMS_COMPOSED, _onStreamsComposed, this);
         eventBus.off(Events.INTERNAL_MANIFEST_LOADED, _onManifestLoaded, this);
+
+        locationSelector.reset();
 
         resetInitialSettings();
     }
