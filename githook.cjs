@@ -3,24 +3,8 @@ const path = require('path');
 const { execFileSync } = require('child_process');
 
 
-const precommitTemplate = `#!/usr/bin/env node
-
-var exec = require('child_process').exec;
-
-exec('npm run lint', {
-       cwd: '${__dirname.toString().replace(/\\/g, '\\\\').replace(/'/g, '\\\'')}'
-     }, function (err, stdout, stderr) {
-
-  var exitCode = 0;
-  if (err) {
-    console.log(stderr || err);
-    exitCode = -1;
-  }
-
-  process.exit(exitCode);
-}).stdout.on('data', function (chunk){
-    process.stdout.write(chunk);
-});
+const precommitTemplate = `#!/bin/sh
+npm run lint
 `;
 
 let precommitFile;

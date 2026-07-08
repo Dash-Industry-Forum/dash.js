@@ -35,6 +35,21 @@ function assertPreCommitHook(cwd) {
     assert.strictEqual((fs.statSync(preCommitPath).mode & 0o777), 0o755);
 }
 
+function assertHookRunsOnCommit(cwd) {
+    const marker = path.join(cwd, '.lint-ran');
+    fs.rmSync(marker, { force: true });
+    fs.writeFileSync(path.join(cwd, 'trigger.txt'), '');
+    run('git', ['add', '-A'], cwd);
+
+    // Point core.hooksPath at the generated hook so the commit fires it
+    // regardless of any global hooksPath the contributor may have configured.
+    const hooksDir = path.dirname(getPreCommitPath(cwd));
+    run('git', ['-c', `core.hooksPath=${hooksDir}`, 'commit', '--no-gpg-sign', '-m', 'trigger pre-commit'], cwd);
+
+    assert.ok(fs.existsSync(marker),
+        'git commit did not run the generated pre-commit hook in the working tree');
+}
+
 function assertSkippedOutsideGitRepo(tmpDir) {
     const nonRepoPath = path.join(tmpDir, 'not-a-repo');
     fs.mkdirSync(nonRepoPath);
@@ -52,11 +67,18 @@ function setupRepo(tmpDir) {
     const repoPath = path.join(tmpDir, 'repo');
     fs.mkdirSync(repoPath);
     fs.copyFileSync(sourceHookScript, path.join(repoPath, 'githook.cjs'));
+    // A dependency-free `lint` script the generated hook can run; it drops a
+    // marker so a commit can prove the hook actually fired.
+    fs.writeFileSync(path.join(repoPath, 'package.json'),
+        JSON.stringify({ name: 'githook-fixture', scripts: { lint: 'node lint-marker.cjs' } }));
+    fs.writeFileSync(path.join(repoPath, 'lint-marker.cjs'),
+        "require('fs').writeFileSync('.lint-ran', '');\n");
     run('git', ['init'], repoPath);
     run('git', ['config', 'user.email', 'test@example.com'], repoPath);
     run('git', ['config', 'user.name', 'Test User'], repoPath);
-    run('git', ['add', 'githook.cjs'], repoPath);
-    run('git', ['-c', 'core.hooksPath=/dev/null', 'commit', '--no-gpg-sign', '-m', 'init'], repoPath);
+    run('git', ['add', '-A'], repoPath);
+    // os.devNull neutralises any global core.hooksPath during setup, portably.
+    run('git', ['-c', `core.hooksPath=${os.devNull}`, 'commit', '--no-gpg-sign', '-m', 'init'], repoPath);
     return repoPath;
 }
 
@@ -75,6 +97,7 @@ function main() {
 
         runNodeGithook(worktreePath);
         assertPreCommitHook(worktreePath);
+        assertHookRunsOnCommit(worktreePath);
 
         assertSkippedOutsideGitRepo(tmpDir);
     } finally {
