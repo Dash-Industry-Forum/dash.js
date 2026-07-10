@@ -142,6 +142,7 @@ function HTTPLoader(cfg) {
         };
 
         const onloadend = function () {
+            console.log('onloadend', httpRequest, httpRequest.response ? httpRequest.response.status : null, httpRequest.response ? httpRequest.response.responseURL : null, needFailureReport, remainingAttempts);
             if (progressTimeout) {
                 clearTimeout(progressTimeout);
                 progressTimeout = null;
@@ -238,7 +239,14 @@ function HTTPLoader(cfg) {
                 progressTimeout = setTimeout(function () {
                     // No more progress => abort request and treat as an error
                     logger.warn('Abort request ' + httpRequest.url + ' due to progress timeout');
-                    httpRequest.response.onabort = null;
+                    // Suppress onabort across all loader paths so config.abort is not called.
+                    if (httpRequest.response) {
+                        httpRequest.response.onabort = null;  // Suppress XHR path
+                    }
+                    if (httpRequest.abortController) {
+                        httpRequest.abortController.signal.onabort = null;  // Suppress Fetch AbortController path
+                    }
+                    httpRequest.onabort = null;  // Suppress calling this directly from Fetch abort reader path
                     httpRequest.loader.abort(httpRequest);
                     onloadend();
                 }, settings.get().streaming.fragmentRequestProgressTimeout);
@@ -250,6 +258,7 @@ function HTTPLoader(cfg) {
         };
 
         const onload = function () {
+            console.log('onload', httpRequest.response.status, httpRequest.response.responseURL);
             if (httpRequest.response.status >= 200 && httpRequest.response.status <= 299) {
                 if (hasContentLengthMismatch(httpRequest.response)) {
                     const responseUrl = httpRequest.response.responseURL;
