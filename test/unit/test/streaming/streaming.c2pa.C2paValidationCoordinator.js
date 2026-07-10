@@ -336,6 +336,70 @@ describe('C2paValidationCoordinator', function () {
         });
     });
 
+    describe('lean per-track sequence checks', function () {
+
+        function segmentStatuses(events) {
+            return events
+                .filter((event) => event.type === MediaPlayerEvents.C2PA_SEGMENT_VALIDATED)
+                .map((event) => [event.payload.segmentNumber, event.payload.status]);
+        }
+
+        function createValidVsiCoordinator() {
+            const {engine, calls} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            return {calls, ...createCoordinator({engine})};
+        }
+
+        it('should mark a duplicate sequence number as replayed and not re-validate it', async () => {
+            const {coordinator, events, calls} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [289, 'replayed']]);
+            expect(calls.vsi).to.equal(1);
+        });
+
+        it('should mark a lower sequence number as reordered', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 288));
+
+            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [288, 'reordered']]);
+        });
+
+        it('should emit missing records for a gap and then validate the current segment', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 292));
+
+            expect(segmentStatuses(events)).to.deep.equal([
+                [289, 'valid'],
+                [290, 'missing'],
+                [291, 'missing'],
+                [292, 'valid']
+            ]);
+        });
+
+        it('should keep sequence state independent per track', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(initInput('stream4'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream4', 5));
+
+            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [5, 'valid']]);
+        });
+    });
+
     describe('forced-method routing', function () {
 
         it('should emit a mismatch diagnostic when forcing §19.4 on a §19.3 segment', async () => {

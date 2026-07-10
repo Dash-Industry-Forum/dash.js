@@ -36,6 +36,10 @@ import { C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI } from './C
 const SEGMENT_KIND_INIT = 'init';
 const STATUS_VALID = 'valid';
 const STATUS_INVALID = 'invalid';
+const STATUS_REPLAYED = 'replayed';
+const STATUS_REORDERED = 'reordered';
+const STATUS_MISSING = 'missing';
+const SEQUENCE_OK = 'ok';
 
 // Diagnostic emitted when a forced method does not match a segment's actual structure
 // (AC#12) — e.g. method '19.4' forced on a §19.3 segment. Not a CML code.
@@ -79,10 +83,12 @@ function C2paValidationCoordinator(config) {
 
     let instance,
         trackStates,
+        sequenceTracker,
         enginePromise;
 
     function setup() {
         trackStates = {};
+        sequenceTracker = {};
         enginePromise = null;
     }
 
@@ -129,11 +135,72 @@ function C2paValidationCoordinator(config) {
         }
         const forced = _forcedMethod() !== null;
         const method = _resolveMediaMethod(input, state);
+
+        const sequence = _checkSequence(input.trackKey, input.segmentNumber);
+        sequence.missing.forEach((missingNumber) => {
+            // AC#8: report every skipped segment number in the track.
+            _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, method, missingNumber));
+        });
+        if (sequence.status !== SEQUENCE_OK) {
+            // AC#7: a replayed or reordered segment is surfaced with that status and not
+            // re-validated — the sequence anomaly is the finding.
+            _emitSegmentValidated(_sequenceRecord(input, sequence.status, method, input.segmentNumber));
+            return;
+        }
+
         if (method === C2PA_METHOD_VSI) {
             await _validateVsiSegment(input, state, forced);
         } else if (method === C2PA_METHOD_MANIFEST_BOX) {
             await _validateManifestBoxSegment(input, state, forced);
         }
+    }
+
+    /**
+     * Lean per-track sequence check driven by the URL-derived segment number. Detects
+     * replays (same as last), reorders (below last) and gaps (skipped numbers). No
+     * cross-track correlation. Segments without a number (NaN) are not sequence-checked.
+     * @returns {{status: string, missing: Array.<number>}}
+     */
+    function _checkSequence(trackKey, segmentNumber) {
+        if (isNaN(segmentNumber)) {
+            return { status: SEQUENCE_OK, missing: [] };
+        }
+
+        const lastSequenceNumber = sequenceTracker[trackKey];
+        if (lastSequenceNumber === undefined) {
+            sequenceTracker[trackKey] = segmentNumber;
+            return { status: SEQUENCE_OK, missing: [] };
+        }
+
+        if (segmentNumber === lastSequenceNumber) {
+            return { status: STATUS_REPLAYED, missing: [] };
+        }
+        if (segmentNumber < lastSequenceNumber) {
+            return { status: STATUS_REORDERED, missing: [] };
+        }
+
+        const missing = [];
+        for (let skipped = lastSequenceNumber + 1; skipped < segmentNumber; skipped++) {
+            missing.push(skipped);
+        }
+        sequenceTracker[trackKey] = segmentNumber;
+        return { status: SEQUENCE_OK, missing };
+    }
+
+    function _sequenceRecord(input, status, method, segmentNumber) {
+        return {
+            segmentNumber,
+            mediaType: input.mediaType,
+            method: method || null,
+            status,
+            keyId: null,
+            hash: null,
+            manifestId: null,
+            issuer: null,
+            previousManifestId: null,
+            errorCodes: [],
+            timestamp: Date.now()
+        };
     }
 
     /**
@@ -349,6 +416,7 @@ function C2paValidationCoordinator(config) {
 
     function reset() {
         trackStates = {};
+        sequenceTracker = {};
         enginePromise = null;
     }
 
