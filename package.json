@@ -121,6 +121,9 @@
     "localforage": "^1.10.0",
     "path-browserify": "^1.0.1"
   },
+  "optionalDependencies": {
+    "@svta/cml-c2pa": "1.0.1"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/Dash-Industry-Forum/dash.js.git"

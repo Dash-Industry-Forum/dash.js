@@ -347,6 +347,11 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                    etpWeightRatio: 0
  *                }
  *            },
+ *            c2pa: {
+ *                enabled: false,
+ *                method: 'auto',
+ *                mediaTypes: ['video', 'audio']
+ *            },
  *            enhancement: {
  *                enabled: false,
  *                codecs: ['lvc1']
@@ -1016,6 +1021,22 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  */
 
 /**
+ * @typedef {Object} module:Settings~C2paSettings
+ * @property {boolean} [enabled=false]
+ * Enable or disable per-segment C2PA provenance scanning and validation.
+ *
+ * Disabled by default: while disabled, no init or media segment is parsed and no C2PA event is emitted.
+ * @property {string} [method="auto"]
+ * Selects the C2PA signing method to validate against. Possible values:
+ *
+ * - "auto": determine C2PA presence and signing method through the detection strategy.
+ * - "19.3": force the per-segment Manifest Box method and skip detection.
+ * - "19.4": force the VSI (COSE_Sign1 in emsg) method and skip detection.
+ * @property {Array.<string>} [mediaTypes=['video', 'audio']]
+ * Restricts C2PA scanning to the listed media types.
+ */
+
+/**
  * @typedef {Object} module:Settings~DvbReportingSettings
  * @property {string} [reportingUrl]
  * Override DVB reporting url in manifest with a custom one
@@ -1165,6 +1186,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Settings related to Common Media Client Data reporting.
  * @property {module:Settings~CmsdSettings} cmsd
  * Settings related to Common Media Server Data parsing.
+ * @property {module:Settings~C2paSettings} c2pa
+ * Settings related to per-segment C2PA provenance scanning and validation.
  * @property {module:Settings~EnhancementSettings} enhancement
  * Settings related to scalable enhancement playback (e.g. LCEVC).
  * @property {module:Settings~defaultSchemeIdUri} defaultSchemeIdUri
@@ -1525,6 +1548,11 @@ function Settings() {
                     applyMb: false,
                     etpWeightRatio: 0
                 }
+            },
+            c2pa: {
+                enabled: false,
+                method: 'auto',
+                mediaTypes: ['video', 'audio']
             },
             enhancement: {
                 enabled: false,
