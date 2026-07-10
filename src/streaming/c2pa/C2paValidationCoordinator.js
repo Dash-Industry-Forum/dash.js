@@ -34,6 +34,8 @@ import MediaPlayerEvents from '../MediaPlayerEvents.js';
 import { C2PA_METHOD_AUTO, C2PA_METHOD_MANIFEST_BOX, C2PA_METHOD_VSI } from './C2paOptions.js';
 
 const SEGMENT_KIND_INIT = 'init';
+const STATUS_VALID = 'valid';
+const STATUS_INVALID = 'invalid';
 
 /**
  * Guarded dynamic import of the validation engine. Keeps `@svta/cml-c2pa` out of both
@@ -101,8 +103,10 @@ function C2paValidationCoordinator(config) {
             method,
             sessionKeys: validation ? validation.sessionKeys : [],
             manifestId: validation ? validation.manifestId : null,
+            issuer: _issuerOf(validation),
             hasC2pa: method !== null,
-            skip: !_forcedMethod() && method === null
+            skip: !_forcedMethod() && method === null,
+            sequenceState: undefined
         };
 
         _emitInitProcessed(input, validation, method);
@@ -114,7 +118,49 @@ function C2paValidationCoordinator(config) {
             // AC#16: a non-C2PA track in auto mode is never parsed or validated again.
             return;
         }
-        // Media-segment validation (§19.3 / §19.4 / forced) is implemented by later slices.
+        if (state && state.method === C2PA_METHOD_VSI) {
+            await _validateVsiSegment(input, state);
+        }
+        // §19.3 ManifestBox and forced-method routing are implemented by later slices.
+    }
+
+    async function _validateVsiSegment(input, state) {
+        const engine = await _getEngine();
+        if (!engine || typeof engine.validateC2paSegment !== 'function') {
+            return;
+        }
+
+        let outcome;
+        try {
+            outcome = await engine.validateC2paSegment(input.bytes, state.sessionKeys, state.sequenceState);
+        } catch (e) {
+            // Degradation to `unverified` / C2PA_ERROR is added by the error-handling slice.
+            return;
+        }
+
+        if (!outcome) {
+            // No C2PA emsg box in this segment; forced-method mismatch is handled later.
+            return;
+        }
+
+        state.sequenceState = outcome.nextSequenceState;
+        _emitSegmentValidated(_toVsiSegmentRecord(input, outcome.result, state));
+    }
+
+    function _toVsiSegmentRecord(input, result, state) {
+        return {
+            segmentNumber: input.segmentNumber,
+            mediaType: input.mediaType,
+            method: C2PA_METHOD_VSI,
+            status: result.isValid ? STATUS_VALID : STATUS_INVALID,
+            keyId: result.kidHex,
+            hash: result.bmffHashHex,
+            manifestId: result.manifestId,
+            issuer: state.issuer,
+            previousManifestId: null,
+            errorCodes: _mapErrorCodes(result.errorCodes),
+            timestamp: Date.now()
+        };
     }
 
     async function _validateInit(engine, bytes) {
@@ -157,17 +203,25 @@ function C2paValidationCoordinator(config) {
     }
 
     function _emitInitProcessed(input, validation, method) {
-        const manifest = validation ? validation.manifest : null;
         const payload = {
             trackKey: input.trackKey,
             method,
             manifestId: validation ? validation.manifestId : null,
-            issuer: manifest && manifest.signatureInfo ? manifest.signatureInfo.issuer : null,
+            issuer: _issuerOf(validation),
             sessionKeyCount: validation && validation.sessionKeys ? validation.sessionKeys.length : 0,
             isValid: validation ? validation.isValid : false,
             errorCodes: _mapErrorCodes(validation ? validation.errorCodes : [])
         };
         eventBus.trigger(MediaPlayerEvents.C2PA_INIT_PROCESSED, payload, { mediaType: input.mediaType });
+    }
+
+    function _emitSegmentValidated(record) {
+        eventBus.trigger(MediaPlayerEvents.C2PA_SEGMENT_VALIDATED, record, { mediaType: record.mediaType });
+    }
+
+    function _issuerOf(validation) {
+        const manifest = validation ? validation.manifest : null;
+        return manifest && manifest.signatureInfo ? manifest.signatureInfo.issuer : null;
     }
 
     /**

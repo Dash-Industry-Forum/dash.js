@@ -4,7 +4,7 @@ import {expect} from 'chai';
 
 const context = {};
 
-function createEngine({initValidation, throwOnInit}) {
+function createEngine({initValidation, throwOnInit, segmentOutcome}) {
     const calls = {init: 0, vsi: 0, manifestBox: 0};
     const engine = {
         validateC2paInitSegment: async () => {
@@ -16,7 +16,7 @@ function createEngine({initValidation, throwOnInit}) {
         },
         validateC2paSegment: async () => {
             calls.vsi++;
-            return {};
+            return segmentOutcome !== undefined ? segmentOutcome : null;
         },
         validateC2paManifestBoxSegment: async () => {
             calls.manifestBox++;
@@ -24,6 +24,31 @@ function createEngine({initValidation, throwOnInit}) {
         }
     };
     return {engine, calls};
+}
+
+function vsiInitValidation(sessionKeys) {
+    return {
+        manifest: {signatureInfo: {issuer: 'CN=Test Issuer'}, assertions: []},
+        manifestId: 'urn:c2pa:manifest-1',
+        sessionKeys,
+        isValid: true,
+        errorCodes: []
+    };
+}
+
+function vsiSegmentOutcome({isValid, errorCodes}) {
+    return {
+        result: {
+            sequenceNumber: 289,
+            manifestId: 'urn:c2pa:manifest-1',
+            bmffHashHex: 'abcd',
+            kidHex: 'key-1',
+            sequenceResult: {isValid: true, reason: 'valid'},
+            isValid,
+            errorCodes
+        },
+        nextSequenceState: {lastSequenceNumber: 289, seenSequences: new Set([289])}
+    };
 }
 
 function createCoordinator({engine, method = 'auto'}) {
@@ -138,6 +163,66 @@ describe('C2paValidationCoordinator', function () {
             expect(calls.init).to.equal(1);
             expect(calls.vsi).to.equal(0);
             expect(calls.manifestBox).to.equal(0);
+        });
+    });
+
+    describe('VSI (§19.4) media-segment validation', function () {
+
+        it('should emit a valid SegmentRecord for a valid VSI segment', async () => {
+            const {engine, calls} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(calls.vsi).to.equal(1);
+            expect(events.length).to.equal(2);
+            const record = events[1];
+            expect(record.type).to.equal(MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(record.payload.status).to.equal('valid');
+            expect(record.payload.method).to.equal('19.4');
+            expect(record.payload.segmentNumber).to.equal(289);
+            expect(record.payload.keyId).to.equal('key-1');
+            expect(record.payload.hash).to.equal('abcd');
+            expect(record.payload.manifestId).to.equal('urn:c2pa:manifest-1');
+            expect(record.payload.issuer).to.equal('CN=Test Issuer');
+            expect(record.payload.errorCodes).to.deep.equal([]);
+            expect(record.payload.timestamp).to.be.a('number');
+        });
+
+        it('should emit an invalid SegmentRecord with the CML error code for a tampered segment', async () => {
+            const {engine} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: false, errorCodes: ['livevideo.segment.invalid']})
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const record = events[1];
+            expect(record.payload.status).to.equal('invalid');
+            expect(record.payload.errorCodes).to.deep.equal(['livevideo.segment.invalid']);
+        });
+
+        it('should thread the sequence state returned by the engine into the next call', async () => {
+            let seenSequenceState = 'unset';
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            engine.validateC2paSegment = async (bytes, sessionKeys, sequenceState) => {
+                seenSequenceState = sequenceState;
+                return vsiSegmentOutcome({isValid: true, errorCodes: []});
+            };
+            const {coordinator} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            expect(seenSequenceState).to.equal(undefined);
+
+            await coordinator.handleSegment(mediaInput('stream3', 290));
+            expect(seenSequenceState).to.deep.equal({lastSequenceNumber: 289, seenSequences: new Set([289])});
         });
     });
 });
