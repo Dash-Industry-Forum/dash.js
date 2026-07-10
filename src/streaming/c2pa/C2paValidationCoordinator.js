@@ -37,6 +37,10 @@ const SEGMENT_KIND_INIT = 'init';
 const STATUS_VALID = 'valid';
 const STATUS_INVALID = 'invalid';
 
+// Diagnostic emitted when a forced method does not match a segment's actual structure
+// (AC#12) — e.g. method '19.4' forced on a §19.3 segment. Not a CML code.
+const FORCED_METHOD_MISMATCH_CODE = 'c2pa.forcedMethodMismatch';
+
 /**
  * Guarded dynamic import of the validation engine. Keeps `@svta/cml-c2pa` out of both
  * default bundles (code-split, loaded only when C2PA is enabled). A missing package
@@ -62,6 +66,8 @@ function loadC2paEngine() {
  * @param {Object} [config.settings] dash.js Settings, read for `streaming.c2pa.method`.
  * @param {function(): Promise<Object>} [config.loadEngine] Loads the CML engine; defaults to
  * the guarded dynamic import. Injectable for testing.
+ * @param {Object} [config.detector] A {@link module:C2paDetector} used in `auto` mode to
+ * classify each media segment. When the method is forced the detector is skipped.
  */
 function C2paValidationCoordinator(config) {
     config = config || {};
@@ -69,6 +75,7 @@ function C2paValidationCoordinator(config) {
     const eventBus = config.eventBus || EventBus(context).getInstance();
     const settings = config.settings;
     const loadEngine = config.loadEngine || loadC2paEngine;
+    const detector = config.detector;
 
     let instance,
         trackStates,
@@ -120,58 +127,113 @@ function C2paValidationCoordinator(config) {
             // AC#16: a non-C2PA track in auto mode is never parsed or validated again.
             return;
         }
-        if (state && state.method === C2PA_METHOD_VSI) {
-            await _validateVsiSegment(input, state);
-        } else if (state && state.method === C2PA_METHOD_MANIFEST_BOX) {
-            await _validateManifestBoxSegment(input, state);
+        const forced = _forcedMethod() !== null;
+        const method = _resolveMediaMethod(input, state);
+        if (method === C2PA_METHOD_VSI) {
+            await _validateVsiSegment(input, state, forced);
+        } else if (method === C2PA_METHOD_MANIFEST_BOX) {
+            await _validateManifestBoxSegment(input, state, forced);
         }
-        // Forced-method routing is implemented by a later slice.
     }
 
-    async function _validateVsiSegment(input, state) {
+    /**
+     * Resolves which method validates a media segment. A forced method (AC#11) is used
+     * directly and the detector is skipped; in `auto` mode the injected detector classifies
+     * the segment, falling back to the track's init classification when no detector is set.
+     * @returns {?string}
+     */
+    function _resolveMediaMethod(input, state) {
+        const forced = _forcedMethod();
+        if (forced) {
+            return forced;
+        }
+        if (detector && typeof detector.detect === 'function') {
+            return detector.detect(input).method;
+        }
+        return state ? state.method : null;
+    }
+
+    async function _validateVsiSegment(input, state, forced) {
         const engine = await _getEngine();
         if (!engine || typeof engine.validateC2paSegment !== 'function') {
             return;
         }
 
+        const sessionKeys = state ? state.sessionKeys : [];
+        const sequenceState = state ? state.sequenceState : undefined;
+
         let outcome;
         try {
-            outcome = await engine.validateC2paSegment(input.bytes, state.sessionKeys, state.sequenceState);
+            outcome = await engine.validateC2paSegment(input.bytes, sessionKeys, sequenceState);
         } catch (e) {
             // Degradation to `unverified` / C2PA_ERROR is added by the error-handling slice.
             return;
         }
 
         if (!outcome) {
-            // No C2PA emsg box in this segment; forced-method mismatch is handled later.
+            // No C2PA emsg box. Under a forced method this is a mismatch (AC#12); in auto
+            // mode the segment simply carries no VSI provenance.
+            if (forced) {
+                _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_VSI));
+            }
             return;
         }
 
-        state.sequenceState = outcome.nextSequenceState;
+        if (state) {
+            state.sequenceState = outcome.nextSequenceState;
+        }
         _emitSegmentValidated(_toVsiSegmentRecord(input, outcome.result, state));
     }
 
-    async function _validateManifestBoxSegment(input, state) {
+    async function _validateManifestBoxSegment(input, state, forced) {
         const engine = await _getEngine();
         if (!engine || typeof engine.validateC2paManifestBoxSegment !== 'function') {
             return;
         }
 
+        const lastManifestId = state ? state.lastManifestId : null;
+        const manifestBoxState = state ? state.manifestBoxState : undefined;
+
         let outcome;
         try {
-            outcome = await engine.validateC2paManifestBoxSegment(input.bytes, state.lastManifestId, state.manifestBoxState);
+            outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState);
         } catch (e) {
-            // Degradation to `unverified` / C2PA_ERROR is added by the error-handling slice.
+            // A throw means no C2PA manifest box. Under a forced method this is a mismatch
+            // (AC#12); richer error degradation is added by the error-handling slice.
+            if (forced) {
+                _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_MANIFEST_BOX));
+            }
             return;
         }
 
         if (!outcome) {
+            if (forced) {
+                _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_MANIFEST_BOX));
+            }
             return;
         }
 
-        state.lastManifestId = outcome.nextManifestId;
-        state.manifestBoxState = outcome.nextState;
+        if (state) {
+            state.lastManifestId = outcome.nextManifestId;
+            state.manifestBoxState = outcome.nextState;
+        }
         _emitSegmentValidated(_toManifestBoxSegmentRecord(input, outcome));
+    }
+
+    function _forcedMismatchRecord(input, method) {
+        return {
+            segmentNumber: input.segmentNumber,
+            mediaType: input.mediaType,
+            method,
+            status: STATUS_INVALID,
+            keyId: null,
+            hash: null,
+            manifestId: null,
+            issuer: null,
+            previousManifestId: null,
+            errorCodes: [FORCED_METHOD_MISMATCH_CODE],
+            timestamp: Date.now()
+        };
     }
 
     function _toManifestBoxSegmentRecord(input, outcome) {
@@ -200,7 +262,7 @@ function C2paValidationCoordinator(config) {
             keyId: result.kidHex,
             hash: result.bmffHashHex,
             manifestId: result.manifestId,
-            issuer: state.issuer,
+            issuer: state ? state.issuer : null,
             previousManifestId: null,
             errorCodes: _mapErrorCodes(result.errorCodes),
             timestamp: Date.now()

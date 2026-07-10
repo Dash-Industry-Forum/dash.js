@@ -79,7 +79,7 @@ function vsiSegmentOutcome({isValid, errorCodes}) {
     };
 }
 
-function createCoordinator({engine, method = 'auto'}) {
+function createCoordinator({engine, method = 'auto', detector}) {
     const events = [];
     const eventBus = {
         trigger: (type, payload, filters) => events.push({type, payload, filters})
@@ -90,9 +90,21 @@ function createCoordinator({engine, method = 'auto'}) {
     const coordinator = C2paValidationCoordinator(context).create({
         eventBus,
         settings,
+        detector,
         loadEngine: () => Promise.resolve(engine)
     });
     return {coordinator, events};
+}
+
+function countingDetector(method) {
+    const calls = {count: 0};
+    const detector = {
+        detect: () => {
+            calls.count++;
+            return {hasC2pa: method !== null, method};
+        }
+    };
+    return {detector, calls};
 }
 
 function initInput(trackKey, mediaType) {
@@ -321,6 +333,73 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(mediaInput('stream3', 290));
 
             expect(seenLastManifestIds).to.deep.equal(['urn:c2pa:manifest-0', 'urn:c2pa:manifest-1']);
+        });
+    });
+
+    describe('forced-method routing', function () {
+
+        it('should emit a mismatch diagnostic when forcing §19.4 on a §19.3 segment', async () => {
+            const {engine, calls} = createEngine({
+                initValidation: manifestBoxInitValidation(),
+                segmentOutcome: null
+            });
+            const {detector, calls: detectorCalls} = countingDetector('19.3');
+            const {coordinator, events} = createCoordinator({engine, method: '19.4', detector});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(detectorCalls.count).to.equal(0);
+            expect(calls.vsi).to.equal(1);
+            expect(events[1].payload.status).to.equal('invalid');
+            expect(events[1].payload.method).to.equal('19.4');
+            expect(events[1].payload.errorCodes).to.deep.equal(['c2pa.forcedMethodMismatch']);
+        });
+
+        it('should emit a mismatch diagnostic when forcing §19.3 on a §19.4 segment', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            engine.validateC2paManifestBoxSegment = async () => {
+                throw new Error('No C2PA UUID box found in the provided bytes');
+            };
+            const {detector, calls: detectorCalls} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, method: '19.3', detector});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(detectorCalls.count).to.equal(0);
+            expect(events[1].payload.status).to.equal('invalid');
+            expect(events[1].payload.method).to.equal('19.3');
+            expect(events[1].payload.errorCodes).to.deep.equal(['c2pa.forcedMethodMismatch']);
+        });
+
+        it('should validate against the forced method even without prior init state', async () => {
+            const {engine} = createEngine({
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const {coordinator, events} = createCoordinator({engine, method: '19.4'});
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(events.length).to.equal(1);
+            expect(events[0].payload.status).to.equal('valid');
+            expect(events[0].payload.method).to.equal('19.4');
+        });
+
+        it('should use the detector to classify media segments in auto mode', async () => {
+            const {engine} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const {detector, calls: detectorCalls} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({engine, method: 'auto', detector});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(detectorCalls.count).to.equal(1);
+            expect(events[1].payload.status).to.equal('valid');
+            expect(events[1].payload.method).to.equal('19.4');
         });
     });
 });
