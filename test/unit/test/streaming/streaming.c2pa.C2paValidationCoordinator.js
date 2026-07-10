@@ -405,6 +405,46 @@ describe('C2paValidationCoordinator', function () {
         });
     });
 
+    describe('lifecycle', function () {
+
+        function createValidVsiCoordinator() {
+            const {engine} = createEngine({
+                initValidation: vsiInitValidation([{kid: 'key-1'}]),
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            return createCoordinator({engine});
+        }
+
+        it('should not leak sequence state across sources after reset', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            coordinator.reset();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const statuses = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED).map((record) => record.status);
+            expect(statuses).to.deep.equal(['valid', 'valid']);
+        });
+
+        it('should reset one track\'s sequence while keeping its classification', async () => {
+            const {coordinator, events} = createValidVsiCoordinator();
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            coordinator.resetSequenceForTrack('stream3');
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const statuses = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED).map((record) => record.status);
+            expect(statuses).to.deep.equal(['valid', 'valid']);
+        });
+    });
+
     describe('error handling and unverified degradation', function () {
 
         it('should emit unverified without calling the engine when Web Crypto is unavailable', async () => {

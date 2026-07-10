@@ -494,15 +494,36 @@ function C2paValidationCoordinator(config) {
         return enginePromise;
     }
 
+    /**
+     * Clears all per-track state. Called on teardown / source change so nothing leaks
+     * across sources.
+     */
     function reset() {
         trackStates = {};
         sequenceTracker = {};
         enginePromise = null;
     }
 
+    /**
+     * Clears the sequence and continuity state of a single track. Called on seek / period
+     * change so the jump does not read as a replay, reorder, gap or continuity break; the
+     * track's classification and session keys are kept.
+     * @param {string} trackKey
+     */
+    function resetSequenceForTrack(trackKey) {
+        delete sequenceTracker[trackKey];
+        const state = trackStates[trackKey];
+        if (state) {
+            state.sequenceState = undefined;
+            state.manifestBoxState = undefined;
+            state.lastManifestId = null;
+        }
+    }
+
     instance = {
         handleSegment,
-        reset
+        reset,
+        resetSequenceForTrack
     };
 
     setup();

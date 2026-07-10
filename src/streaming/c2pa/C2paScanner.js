@@ -96,9 +96,10 @@ function C2paScanner(config) {
     }
 
     /**
-     * Removes the response interceptor. Idempotent when not registered.
+     * Teardown: removes the response interceptor through the public API so no scanning
+     * hook is left registered. Idempotent when not registered.
      */
-    function deregisterInterceptor() {
+    function detach() {
         if (!registered || !customParametersModel) {
             return;
         }
@@ -203,15 +204,10 @@ function C2paScanner(config) {
         return match ? parseInt(match[1], 10) : NaN;
     }
 
-    function reset() {
-        deregisterInterceptor();
-    }
-
     instance = {
         registerInterceptor,
-        deregisterInterceptor,
-        isRegistered,
-        reset
+        detach,
+        isRegistered
     };
 
     setup();

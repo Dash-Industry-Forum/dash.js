@@ -63,17 +63,16 @@ describe('C2paScanner', function () {
             expect(scanner.isRegistered()).to.equal(true);
         });
 
-        it('should deregister the interceptor', () => {
+        it('should detach the interceptor, leaving none registered', () => {
             scanner.registerInterceptor();
-            scanner.deregisterInterceptor();
+            scanner.detach();
 
             expect(customParametersModel.interceptors.length).to.equal(0);
             expect(scanner.isRegistered()).to.equal(false);
         });
 
-        it('should remove the interceptor on reset', () => {
-            scanner.registerInterceptor();
-            scanner.reset();
+        it('should be idempotent when detaching without a prior registration', () => {
+            scanner.detach();
 
             expect(customParametersModel.interceptors.length).to.equal(0);
             expect(scanner.isRegistered()).to.equal(false);
