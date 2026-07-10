@@ -1,4 +1,5 @@
 import C2paScanner from '../../../../src/streaming/c2pa/C2paScanner.js';
+import C2paValidationCoordinator from '../../../../src/streaming/c2pa/C2paValidationCoordinator.js';
 import {HTTPRequest} from '../../../../src/streaming/vo/metrics/HTTPRequest.js';
 import {expect} from 'chai';
 
@@ -226,6 +227,43 @@ describe('C2paScanner', function () {
             const returned = await intercept(response);
 
             expect(returned).to.equal(response);
+        });
+    });
+
+    describe('non-interference when validation degrades', function () {
+
+        it('should pass the response through untouched while C2PA degrades to unverified without Web Crypto', async () => {
+            const events = [];
+            const coordinator = C2paValidationCoordinator(context).create({
+                eventBus: {trigger: (type, payload) => events.push({type, payload})},
+                settings: {get: () => ({streaming: {c2pa: {method: '19.4'}}})},
+                isCryptoAvailable: () => false,
+                loadEngine: () => Promise.resolve({
+                    validateC2paSegment: async () => {
+                        throw new Error('engine must not be called without Web Crypto');
+                    }
+                })
+            });
+            scanner = C2paScanner(context).create({
+                customParametersModel,
+                segmentHandler: coordinator.handleSegment
+            });
+            const values = [9, 8, 7, 6];
+            const response = createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://cdn.example/live/chunk-stream3-00289.m4s',
+                data: bufferFrom(values)
+            });
+
+            scanner.registerInterceptor();
+            const returned = await customParametersModel.interceptors[0](response);
+            await Promise.resolve();
+
+            expect(returned).to.equal(response);
+            expect(Array.from(new Uint8Array(returned.data))).to.deep.equal(values);
+            const record = events.find((event) => event.type === 'c2paSegmentValidated');
+            expect(record.payload.status).to.equal('unverified');
         });
     });
 });

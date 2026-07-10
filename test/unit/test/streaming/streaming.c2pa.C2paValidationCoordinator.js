@@ -79,7 +79,7 @@ function vsiSegmentOutcome({isValid, errorCodes}) {
     };
 }
 
-function createCoordinator({engine, method = 'auto', detector}) {
+function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable}) {
     const events = [];
     const eventBus = {
         trigger: (type, payload, filters) => events.push({type, payload, filters})
@@ -91,9 +91,14 @@ function createCoordinator({engine, method = 'auto', detector}) {
         eventBus,
         settings,
         detector,
+        isCryptoAvailable: isCryptoAvailable || (() => true),
         loadEngine: () => Promise.resolve(engine)
     });
     return {coordinator, events};
+}
+
+function eventsOfType(events, type) {
+    return events.filter((event) => event.type === type).map((event) => event.payload);
 }
 
 function countingDetector(method) {
@@ -397,6 +402,62 @@ describe('C2paValidationCoordinator', function () {
             await coordinator.handleSegment(mediaInput('stream4', 5));
 
             expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [5, 'valid']]);
+        });
+    });
+
+    describe('error handling and unverified degradation', function () {
+
+        it('should emit unverified without calling the engine when Web Crypto is unavailable', async () => {
+            const {engine, calls} = createEngine({
+                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
+            });
+            const {detector} = countingDetector('19.4');
+            const {coordinator, events} = createCoordinator({
+                engine,
+                detector,
+                isCryptoAvailable: () => false
+            });
+
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records.length).to.equal(1);
+            expect(records[0].status).to.equal('unverified');
+            expect(records[0].errorCodes).to.deep.equal(['c2pa.cryptoUnavailable']);
+            expect(calls.vsi).to.equal(0);
+
+            const errors = eventsOfType(events, MediaPlayerEvents.C2PA_ERROR);
+            expect(errors.length).to.equal(1);
+            expect(errors[0].errorCodes).to.deep.equal(['c2pa.cryptoUnavailable']);
+        });
+
+        it('should report crypto unavailability on the init event without calling the engine', async () => {
+            const {engine, calls} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            const {coordinator, events} = createCoordinator({engine, isCryptoAvailable: () => false});
+
+            await coordinator.handleSegment(initInput('stream3'));
+
+            expect(calls.init).to.equal(0);
+            const initEvents = eventsOfType(events, MediaPlayerEvents.C2PA_INIT_PROCESSED);
+            expect(initEvents[0].method).to.be.null;
+            expect(initEvents[0].errorCodes).to.deep.equal(['c2pa.cryptoUnavailable']);
+        });
+
+        it('should surface an engine throw as unverified and a C2PA_ERROR, never throwing', async () => {
+            const {engine} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+            engine.validateC2paSegment = async () => {
+                throw new Error('engine exploded');
+            };
+            const {coordinator, events} = createCoordinator({engine, isCryptoAvailable: () => true});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            const records = eventsOfType(events, MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(records[0].status).to.equal('unverified');
+            expect(records[0].errorCodes).to.deep.equal(['c2pa.validationError']);
+            const errors = eventsOfType(events, MediaPlayerEvents.C2PA_ERROR);
+            expect(errors[0].message).to.equal('engine exploded');
         });
     });
 

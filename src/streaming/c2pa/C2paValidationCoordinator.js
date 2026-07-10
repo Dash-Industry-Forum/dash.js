@@ -39,11 +39,16 @@ const STATUS_INVALID = 'invalid';
 const STATUS_REPLAYED = 'replayed';
 const STATUS_REORDERED = 'reordered';
 const STATUS_MISSING = 'missing';
+const STATUS_UNVERIFIED = 'unverified';
 const SEQUENCE_OK = 'ok';
 
-// Diagnostic emitted when a forced method does not match a segment's actual structure
-// (AC#12) — e.g. method '19.4' forced on a §19.3 segment. Not a CML code.
+// dash.js-side diagnostic codes (not CML codes).
+// Emitted when a forced method does not match a segment's actual structure (AC#12).
 const FORCED_METHOD_MISMATCH_CODE = 'c2pa.forcedMethodMismatch';
+// Emitted when the runtime lacks a secure context / Web Crypto (AC#15).
+const CRYPTO_UNAVAILABLE_CODE = 'c2pa.cryptoUnavailable';
+// Emitted when the validation engine throws unexpectedly.
+const VALIDATION_ERROR_CODE = 'c2pa.validationError';
 
 /**
  * Guarded dynamic import of the validation engine. Keeps `@svta/cml-c2pa` out of both
@@ -53,6 +58,15 @@ const FORCED_METHOD_MISMATCH_CODE = 'c2pa.forcedMethodMismatch';
  */
 function loadC2paEngine() {
     return import('@svta/cml-c2pa');
+}
+
+/**
+ * Whether Web Crypto is usable. Browsers only expose `crypto.subtle` in secure contexts,
+ * so its presence covers both the "no secure context" and "no Web Crypto" cases (AC#15).
+ * @returns {boolean}
+ */
+function _defaultCryptoAvailable() {
+    return typeof globalThis !== 'undefined' && !!(globalThis.crypto && globalThis.crypto.subtle);
 }
 
 /**
@@ -72,6 +86,8 @@ function loadC2paEngine() {
  * the guarded dynamic import. Injectable for testing.
  * @param {Object} [config.detector] A {@link module:C2paDetector} used in `auto` mode to
  * classify each media segment. When the method is forced the detector is skipped.
+ * @param {function(): boolean} [config.isCryptoAvailable] Reports whether Web Crypto is
+ * usable; defaults to a real secure-context check. Injectable for testing.
  */
 function C2paValidationCoordinator(config) {
     config = config || {};
@@ -80,6 +96,7 @@ function C2paValidationCoordinator(config) {
     const settings = config.settings;
     const loadEngine = config.loadEngine || loadC2paEngine;
     const detector = config.detector;
+    const isCryptoAvailable = config.isCryptoAvailable || _defaultCryptoAvailable;
 
     let instance,
         trackStates,
@@ -108,6 +125,24 @@ function C2paValidationCoordinator(config) {
     }
 
     async function _handleInitSegment(input) {
+        if (!isCryptoAvailable()) {
+            // AC#15: without Web Crypto we cannot validate; keep the track active (skip:false)
+            // so its media segments surface as `unverified` rather than being dropped.
+            trackStates[input.trackKey] = {
+                method: null,
+                sessionKeys: [],
+                manifestId: null,
+                issuer: null,
+                hasC2pa: false,
+                skip: false,
+                sequenceState: undefined,
+                lastManifestId: null,
+                manifestBoxState: undefined
+            };
+            _emitInitProcessed(input, null, null, [CRYPTO_UNAVAILABLE_CODE]);
+            return;
+        }
+
         const engine = await _getEngine();
         const validation = await _validateInit(engine, input.bytes);
         const method = _classify(validation);
@@ -148,9 +183,19 @@ function C2paValidationCoordinator(config) {
             return;
         }
 
+        if (method !== C2PA_METHOD_VSI && method !== C2PA_METHOD_MANIFEST_BOX) {
+            return;
+        }
+
+        if (!isCryptoAvailable()) {
+            // AC#15: emit `unverified` rather than calling the engine (which would throw).
+            _emitUnverified(input, method, CRYPTO_UNAVAILABLE_CODE, 'Web Crypto is unavailable in this context');
+            return;
+        }
+
         if (method === C2PA_METHOD_VSI) {
             await _validateVsiSegment(input, state, forced);
-        } else if (method === C2PA_METHOD_MANIFEST_BOX) {
+        } else {
             await _validateManifestBoxSegment(input, state, forced);
         }
     }
@@ -233,7 +278,8 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paSegment(input.bytes, sessionKeys, sequenceState);
         } catch (e) {
-            // Degradation to `unverified` / C2PA_ERROR is added by the error-handling slice.
+            // AC#6: never propagate a validation failure to the pipeline; surface it instead.
+            _emitUnverified(input, C2PA_METHOD_VSI, VALIDATION_ERROR_CODE, _errorMessage(e));
             return;
         }
 
@@ -265,10 +311,12 @@ function C2paValidationCoordinator(config) {
         try {
             outcome = await engine.validateC2paManifestBoxSegment(input.bytes, lastManifestId, manifestBoxState);
         } catch (e) {
-            // A throw means no C2PA manifest box. Under a forced method this is a mismatch
-            // (AC#12); richer error degradation is added by the error-handling slice.
+            // Under a forced method a throw means the forced structure is absent (AC#12);
+            // in auto mode it is an unexpected engine failure surfaced as `unverified` (AC#6).
             if (forced) {
                 _emitSegmentValidated(_forcedMismatchRecord(input, C2PA_METHOD_MANIFEST_BOX));
+            } else {
+                _emitUnverified(input, C2PA_METHOD_MANIFEST_BOX, VALIDATION_ERROR_CODE, _errorMessage(e));
             }
             return;
         }
@@ -375,7 +423,7 @@ function C2paValidationCoordinator(config) {
         return c2pa && c2pa.method ? c2pa.method : C2PA_METHOD_AUTO;
     }
 
-    function _emitInitProcessed(input, validation, method) {
+    function _emitInitProcessed(input, validation, method, errorCodes) {
         const payload = {
             trackKey: input.trackKey,
             method,
@@ -383,13 +431,45 @@ function C2paValidationCoordinator(config) {
             issuer: _issuerOf(validation),
             sessionKeyCount: validation && validation.sessionKeys ? validation.sessionKeys.length : 0,
             isValid: validation ? validation.isValid : false,
-            errorCodes: _mapErrorCodes(validation ? validation.errorCodes : [])
+            errorCodes: errorCodes || _mapErrorCodes(validation ? validation.errorCodes : [])
         };
         eventBus.trigger(MediaPlayerEvents.C2PA_INIT_PROCESSED, payload, { mediaType: input.mediaType });
     }
 
     function _emitSegmentValidated(record) {
         eventBus.trigger(MediaPlayerEvents.C2PA_SEGMENT_VALIDATED, record, { mediaType: record.mediaType });
+    }
+
+    function _emitUnverified(input, method, errorCode, message) {
+        _emitSegmentValidated({
+            segmentNumber: input.segmentNumber,
+            mediaType: input.mediaType,
+            method: method || null,
+            status: STATUS_UNVERIFIED,
+            keyId: null,
+            hash: null,
+            manifestId: null,
+            issuer: null,
+            previousManifestId: null,
+            errorCodes: [errorCode],
+            timestamp: Date.now()
+        });
+        _emitError(input, input.segmentNumber, errorCode, message);
+    }
+
+    function _emitError(input, segmentNumber, errorCode, message) {
+        eventBus.trigger(MediaPlayerEvents.C2PA_ERROR, {
+            trackKey: input.trackKey,
+            segmentNumber,
+            mediaType: input.mediaType,
+            errorCodes: [errorCode],
+            message,
+            timestamp: Date.now()
+        }, { mediaType: input.mediaType });
+    }
+
+    function _errorMessage(error) {
+        return error && error.message ? error.message : String(error);
     }
 
     function _issuerOf(validation) {
