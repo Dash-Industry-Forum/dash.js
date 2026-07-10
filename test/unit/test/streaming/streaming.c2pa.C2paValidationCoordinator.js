@@ -4,7 +4,7 @@ import {expect} from 'chai';
 
 const context = {};
 
-function createEngine({initValidation, throwOnInit, segmentOutcome}) {
+function createEngine({initValidation, throwOnInit, segmentOutcome, manifestBoxOutcome}) {
     const calls = {init: 0, vsi: 0, manifestBox: 0};
     const engine = {
         validateC2paInitSegment: async () => {
@@ -20,10 +20,38 @@ function createEngine({initValidation, throwOnInit, segmentOutcome}) {
         },
         validateC2paManifestBoxSegment: async () => {
             calls.manifestBox++;
-            return {};
+            return manifestBoxOutcome !== undefined ? manifestBoxOutcome : null;
         }
     };
     return {engine, calls};
+}
+
+function manifestBoxInitValidation() {
+    return {
+        manifest: {signatureInfo: {issuer: 'CN=Test Issuer'}, assertions: []},
+        manifestId: 'urn:c2pa:manifest-0',
+        sessionKeys: [],
+        isValid: true,
+        errorCodes: []
+    };
+}
+
+function manifestBoxOutcomeFor({isValid, errorCodes, previousManifestId, nextManifestId}) {
+    return {
+        result: {
+            manifest: {signatureInfo: {issuer: 'CN=Test Issuer'}, assertions: []},
+            issuer: 'CN=Test Issuer',
+            sequenceNumber: 289,
+            previousManifestId,
+            streamId: 'stream3',
+            continuityMethod: 'manifest-id',
+            bmffHashHex: 'beef',
+            isValid,
+            errorCodes
+        },
+        nextManifestId,
+        nextState: {lastStreamId: 'stream3', lastSequenceNumber: 289}
+    };
 }
 
 function vsiInitValidation(sessionKeys) {
@@ -223,6 +251,76 @@ describe('C2paValidationCoordinator', function () {
 
             await coordinator.handleSegment(mediaInput('stream3', 290));
             expect(seenSequenceState).to.deep.equal({lastSequenceNumber: 289, seenSequences: new Set([289])});
+        });
+    });
+
+    describe('ManifestBox (§19.3) media-segment validation', function () {
+
+        it('should emit a valid SegmentRecord for a valid ManifestBox segment', async () => {
+            const {engine, calls} = createEngine({
+                initValidation: manifestBoxInitValidation(),
+                manifestBoxOutcome: manifestBoxOutcomeFor({
+                    isValid: true,
+                    errorCodes: [],
+                    previousManifestId: 'urn:c2pa:manifest-0',
+                    nextManifestId: 'urn:c2pa:manifest-1'
+                })
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(calls.manifestBox).to.equal(1);
+            const record = events[1];
+            expect(record.type).to.equal(MediaPlayerEvents.C2PA_SEGMENT_VALIDATED);
+            expect(record.payload.status).to.equal('valid');
+            expect(record.payload.method).to.equal('19.3');
+            expect(record.payload.manifestId).to.equal('urn:c2pa:manifest-1');
+            expect(record.payload.previousManifestId).to.equal('urn:c2pa:manifest-0');
+            expect(record.payload.issuer).to.equal('CN=Test Issuer');
+            expect(record.payload.hash).to.equal('beef');
+            expect(record.payload.keyId).to.be.null;
+        });
+
+        it('should emit invalid with the CML error code for a broken manifest-id chain', async () => {
+            const {engine} = createEngine({
+                initValidation: manifestBoxInitValidation(),
+                manifestBoxOutcome: manifestBoxOutcomeFor({
+                    isValid: false,
+                    errorCodes: ['livevideo.continuityMethod.invalid'],
+                    previousManifestId: 'urn:c2pa:unexpected',
+                    nextManifestId: 'urn:c2pa:manifest-1'
+                })
+            });
+            const {coordinator, events} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+
+            expect(events[1].payload.status).to.equal('invalid');
+            expect(events[1].payload.errorCodes).to.deep.equal(['livevideo.continuityMethod.invalid']);
+        });
+
+        it('should thread lastManifestId from the init anchor through the chain', async () => {
+            const seenLastManifestIds = [];
+            const {engine} = createEngine({initValidation: manifestBoxInitValidation()});
+            engine.validateC2paManifestBoxSegment = async (bytes, lastManifestId) => {
+                seenLastManifestIds.push(lastManifestId);
+                return manifestBoxOutcomeFor({
+                    isValid: true,
+                    errorCodes: [],
+                    previousManifestId: lastManifestId,
+                    nextManifestId: 'urn:c2pa:manifest-' + seenLastManifestIds.length
+                });
+            };
+            const {coordinator} = createCoordinator({engine});
+
+            await coordinator.handleSegment(initInput('stream3'));
+            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 290));
+
+            expect(seenLastManifestIds).to.deep.equal(['urn:c2pa:manifest-0', 'urn:c2pa:manifest-1']);
         });
     });
 });

@@ -106,7 +106,9 @@ function C2paValidationCoordinator(config) {
             issuer: _issuerOf(validation),
             hasC2pa: method !== null,
             skip: !_forcedMethod() && method === null,
-            sequenceState: undefined
+            sequenceState: undefined,
+            lastManifestId: validation ? validation.manifestId : null,
+            manifestBoxState: undefined
         };
 
         _emitInitProcessed(input, validation, method);
@@ -120,8 +122,10 @@ function C2paValidationCoordinator(config) {
         }
         if (state && state.method === C2PA_METHOD_VSI) {
             await _validateVsiSegment(input, state);
+        } else if (state && state.method === C2PA_METHOD_MANIFEST_BOX) {
+            await _validateManifestBoxSegment(input, state);
         }
-        // §19.3 ManifestBox and forced-method routing are implemented by later slices.
+        // Forced-method routing is implemented by a later slice.
     }
 
     async function _validateVsiSegment(input, state) {
@@ -145,6 +149,46 @@ function C2paValidationCoordinator(config) {
 
         state.sequenceState = outcome.nextSequenceState;
         _emitSegmentValidated(_toVsiSegmentRecord(input, outcome.result, state));
+    }
+
+    async function _validateManifestBoxSegment(input, state) {
+        const engine = await _getEngine();
+        if (!engine || typeof engine.validateC2paManifestBoxSegment !== 'function') {
+            return;
+        }
+
+        let outcome;
+        try {
+            outcome = await engine.validateC2paManifestBoxSegment(input.bytes, state.lastManifestId, state.manifestBoxState);
+        } catch (e) {
+            // Degradation to `unverified` / C2PA_ERROR is added by the error-handling slice.
+            return;
+        }
+
+        if (!outcome) {
+            return;
+        }
+
+        state.lastManifestId = outcome.nextManifestId;
+        state.manifestBoxState = outcome.nextState;
+        _emitSegmentValidated(_toManifestBoxSegmentRecord(input, outcome));
+    }
+
+    function _toManifestBoxSegmentRecord(input, outcome) {
+        const result = outcome.result;
+        return {
+            segmentNumber: input.segmentNumber,
+            mediaType: input.mediaType,
+            method: C2PA_METHOD_MANIFEST_BOX,
+            status: result.isValid ? STATUS_VALID : STATUS_INVALID,
+            keyId: null,
+            hash: result.bmffHashHex,
+            manifestId: outcome.nextManifestId,
+            issuer: result.issuer,
+            previousManifestId: result.previousManifestId,
+            errorCodes: _mapErrorCodes(result.errorCodes),
+            timestamp: Date.now()
+        };
     }
 
     function _toVsiSegmentRecord(input, result, state) {
