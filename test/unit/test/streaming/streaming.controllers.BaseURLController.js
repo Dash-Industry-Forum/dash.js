@@ -83,7 +83,7 @@ describe('BaseURLController', function () {
         ];
         const baseURLTreeModel = {
             update: sinon.spy(),
-            getAvailableBaseUrlsForElement: sinon.stub()
+            getBaseUrlsForPayload: sinon.stub()
         };
         const baseURLSelector = {
             chooseSelector: sinon.spy()
@@ -93,8 +93,10 @@ describe('BaseURLController', function () {
         };
         const baseURLController = BaseURLController(context).create();
 
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest).returns([new BaseURL('https://example.com/manifest.mpd', 'https://example.com/manifest.mpd')]);
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[0]).returns(baseUrls);
+        baseURLTreeModel.getBaseUrlsForPayload.returns({
+            rootBaseUrls: [new BaseURL('https://example.com/manifest.mpd', 'https://example.com/manifest.mpd')],
+            childBaseUrls: baseUrls
+        });
 
         eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
         baseURLController.setConfig({
@@ -161,7 +163,7 @@ describe('BaseURLController', function () {
         const periodBaseUrl = new BaseURL('https://example.com/cdn_alpha/', 'alpha');
         const baseURLTreeModel = {
             update: () => {},
-            getAvailableBaseUrlsForElement: sinon.stub()
+            getBaseUrlsForPayload: sinon.stub()
         };
         const adapter = {
             getIsDVB: sinon.stub()
@@ -170,9 +172,8 @@ describe('BaseURLController', function () {
         const spy = sinon.spy();
 
         eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(firstManifest).returns([rootBaseUrl]);
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(secondManifest).returns([rootBaseUrl]);
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(firstManifest.Period[0]).returns([periodBaseUrl]);
+        baseURLTreeModel.getBaseUrlsForPayload.onFirstCall().returns({ rootBaseUrls: [rootBaseUrl], childBaseUrls: [periodBaseUrl] });
+        baseURLTreeModel.getBaseUrlsForPayload.onSecondCall().returns({ rootBaseUrls: [rootBaseUrl], childBaseUrls: [] });
         adapter.getIsDVB.withArgs(firstManifest).returns(false);
         adapter.getIsDVB.withArgs(secondManifest).returns(false);
         baseURLController.setConfig({
@@ -195,7 +196,7 @@ describe('BaseURLController', function () {
 function _updateAndGetBaseUrlsUpdatedEvent(manifest, rootBaseUrl, periodBaseUrls) {
     const baseURLTreeModel = {
         update: () => {},
-        getAvailableBaseUrlsForElement: sinon.stub()
+        getBaseUrlsForPayload: sinon.stub()
     };
     const baseURLSelector = {
         chooseSelector: () => {}
@@ -207,11 +208,7 @@ function _updateAndGetBaseUrlsUpdatedEvent(manifest, rootBaseUrl, periodBaseUrls
     const spy = sinon.spy();
 
     eventBus.on(MediaPlayerEvents.BASE_URLS_UPDATED, spy);
-    baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest).returns([rootBaseUrl]);
-    baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[0]).returns(periodBaseUrls);
-    if (manifest.Period[1]) {
-        baseURLTreeModel.getAvailableBaseUrlsForElement.withArgs(manifest.Period[1]).returns([]);
-    }
+    baseURLTreeModel.getBaseUrlsForPayload.returns({ rootBaseUrls: [rootBaseUrl], childBaseUrls: periodBaseUrls });
     baseURLController.setConfig({
         baseURLTreeModel,
         baseURLSelector,

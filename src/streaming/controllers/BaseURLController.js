@@ -89,16 +89,11 @@ function BaseURLController() {
     }
 
     function getBaseUrlsForEventPayload(manifest) {
-        const rootBaseUrls = getBaseUrls(manifest);
-        const childBaseUrls = [];
+        // Reuse the BaseURLs the tree model already collected during update() instead of
+        // re-extracting them from every manifest node.
+        const { rootBaseUrls, childBaseUrls } = baseURLTreeModel.getBaseUrlsForPayload();
         const uniqueBaseUrls = [];
         const addedBaseUrls = {};
-
-        if (manifest && manifest.Period) {
-            manifest.Period.forEach((period) => {
-                _collectChildBaseUrls(period, childBaseUrls);
-            });
-        }
 
         const includeRootBaseUrls = _shouldIncludeRootBaseUrls(manifest, childBaseUrls);
         const targetBaseUrls = includeRootBaseUrls ? rootBaseUrls.concat(childBaseUrls) : childBaseUrls;
@@ -112,20 +107,6 @@ function BaseURLController() {
         });
 
         return uniqueBaseUrls;
-    }
-
-    function _collectChildBaseUrls(element, baseUrls) {
-        if (!element) {
-            return;
-        }
-
-        const elementBaseUrls = baseURLTreeModel.getAvailableBaseUrlsForElement(element);
-        baseUrls.push(...elementBaseUrls);
-
-        const children = element.AdaptationSet || element.Representation;
-        if (children) {
-            children.forEach((child) => _collectChildBaseUrls(child, baseUrls));
-        }
     }
 
     function _shouldIncludeRootBaseUrls(manifest, childBaseUrls) {
