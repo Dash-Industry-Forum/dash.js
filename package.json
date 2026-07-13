@@ -8,18 +8,18 @@
     ".": {
       "types": "./index.d.ts",
       "import": "./dist/modern/esm/dash.all.min.js",
-      "default": "./dist/modern/esm/dash.all.min.js",
       "browser": "./dist/modern/umd/dash.all.min.js",
       "script": "./dist/modern/umd/dash.all.min.js",
-      "require": "./dist/modern/umd/dash.all.min.js"
+      "require": "./dist/modern/umd/dash.all.min.js",
+      "default": "./dist/modern/esm/dash.all.min.js"
     },
     "./mss": {
       "types": "./index.d.ts",
       "import": "./dist/modern/esm/dash.mss.min.js",
-      "default": "./dist/modern/esm/dash.mss.min.js",
       "browser": "./dist/modern/umd/dash.mss.min.js",
       "script": "./dist/modern/umd/dash.mss.min.js",
-      "require": "./dist/modern/umd/dash.mss.min.js"
+      "require": "./dist/modern/umd/dash.mss.min.js",
+      "default": "./dist/modern/esm/dash.mss.min.js"
     }
   },
   "type": "module",
@@ -40,6 +40,11 @@
     "prepare": "node githook.cjs",
     "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
+    "test:compliance": "npm run test:compliance:esm && npm run test:compliance:es5 && npm run test:compliance:package",
+    "test:compliance:es5": "es-check es5 \"dist/legacy/umd/*.js\"",
+    "test:compliance:esm": "es-check es2021 \"dist/modern/esm/*.js\" --module",
+    "test:compliance:package": "publint",
+    "test:compliance:vite": "npm --prefix test/compliance/vite-consumer install --no-audit --no-fund && npm --prefix test/compliance/vite-consumer run build",
     "test-refplayer": "karma start test/unit/config/karma.unit.conf.cjs --grep \"Reference Player\"",
     "test-functional": "karma start test/functional/config/karma.functional.conf.cjs --configfile=local --streamsfile=smoke",
     "webpack-build-legacy": "webpack --config build/webpack/legacy/webpack.legacy.prod.cjs",
@@ -62,6 +67,7 @@
     "clean-jsdoc-theme": "^4.3.0",
     "concurrently": "^9.2.1",
     "core-js": "^3.47.0",
+    "es-check": "^9.6.4",
     "eslint": "^9.39.1",
     "globals": "^16.5.0",
     "jsdoc": "^4.0.5",
@@ -79,6 +85,7 @@
     "karma-webpack": "^5.0.1",
     "mocha": "^11.7.5",
     "nise": "^6.1.1",
+    "publint": "^0.3.21",
     "rimraf": "^6.1.2",
     "sinon": "^21.0.0",
     "stream-browserify": "^3.0.0",
