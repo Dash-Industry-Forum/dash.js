@@ -132,6 +132,7 @@ function Stream(config) {
      * Initialize the events
      */
     function initialize() {
+        segmentBlacklistController.initialize();
         registerEvents();
         registerProtectionEvents();
         textController.initializeForStream(streamInfo);

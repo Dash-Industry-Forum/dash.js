@@ -93,6 +93,7 @@ describe('BlacklistController', function () {
             addBlacklistEventName: EVENT_NAME
         };
         const blacklistController = BlacklistController(context).create(config);
+        blacklistController.initialize();
 
         eventBus.trigger(EVENT_NAME, {
             entry: SERVICE_LOCATION
@@ -101,6 +102,35 @@ describe('BlacklistController', function () {
         const contains = blacklistController.contains(SERVICE_LOCATION);
 
         expect(contains).to.be.true; // jshint ignore:line
+    });
+
+    it('should add event handlers again after reset', () => {
+        const config = {
+            updateEventName: '',
+            addBlacklistEventName: EVENT_NAME
+        };
+        const blacklistController = BlacklistController(context).create(config);
+        blacklistController.initialize();
+
+        eventBus.trigger(EVENT_NAME, {
+            entry: SERVICE_LOCATION
+        });
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.true;
+
+        blacklistController.reset();
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.false;
+
+        // Listener has been removed by reset(), so this event should be ignored.
+        eventBus.trigger(EVENT_NAME, {
+            entry: SERVICE_LOCATION
+        });
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.false;
+
+        blacklistController.initialize();
+        eventBus.trigger(EVENT_NAME, {
+            entry: SERVICE_LOCATION
+        });
+        expect(blacklistController.contains(SERVICE_LOCATION)).to.be.true;
     });
 
     it('should not trigger an update event if a duplicate entry is added', () => {
