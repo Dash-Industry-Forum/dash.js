@@ -1,0 +1,15 @@
+{
+  "name": "dashjs-vite-consumer-test",
+  "private": true,
+  "type": "module",
+  "description": "Consumer test: bundles dashjs with Vite (Rolldown) and fails on CommonJS-in-ESM warnings, see https://github.com/Dash-Industry-Forum/dash.js/issues/5026",
+  "scripts": {
+    "build": "vite build"
+  },
+  "dependencies": {
+    "dashjs": "file:../../.."
+  },
+  "devDependencies": {
+    "vite": "^8.1.4"
+  }
+}
