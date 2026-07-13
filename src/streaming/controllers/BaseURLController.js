@@ -58,8 +58,6 @@ function BaseURLController() {
     function setup() {
         baseURLTreeModel = BaseURLTreeModel(context).create();
         baseURLSelector = BaseURLSelector(context).create();
-
-        eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
     }
 
     function setConfig(config) {
@@ -117,6 +115,7 @@ function BaseURLController() {
     }
 
     function reset() {
+        eventBus.off(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
         baseURLTreeModel.reset();
         baseURLSelector.reset();
     }
@@ -126,12 +125,14 @@ function BaseURLController() {
     }
 
     function initialize(data) {
-
+        eventBus.on(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, onBlackListChanged, instance);
         // report config to baseURLTreeModel and baseURLSelector
         baseURLTreeModel.setConfig({
             adapter,
             contentSteeringController
         });
+
+        baseURLSelector.initialize();
 
         update(data);
     }

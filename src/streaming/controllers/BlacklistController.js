@@ -93,7 +93,7 @@ function BlackListController(config) {
         return settings.get().streaming.blacklistExpiryTime;
     }
 
-    function setup() {
+    function initialize() {
         if (addBlacklistEventName) {
             eventBus.on(addBlacklistEventName, onAddBlackList, instance);
         }
@@ -115,10 +115,10 @@ function BlackListController(config) {
         add: add,
         remove: remove,
         contains: contains,
+        initialize: initialize,
         reset: reset
     };
 
-    setup();
     return instance;
 }
 

@@ -2,6 +2,8 @@ import BaseURLController from '../../../../src/streaming/controllers/BaseURLCont
 import BasicSelector from '../../../../src/streaming/utils/baseUrlResolution/BasicSelector.js';
 import BaseURLSelector from '../../../../src/streaming/utils/BaseURLSelector.js';
 import BaseURL from '../../../../src/dash/vo/BaseURL.js';
+import EventBus from '../../../../src/core/EventBus.js';
+import Events from '../../../../src/core/events/Events.js';
 import ContentSteeringSelectorMock from '../../mocks/ContentSteeringSelectorMock.js';
 import chai from 'chai';
 
@@ -32,6 +34,57 @@ const dummyBlacklistController = {
 };
 
 describe('BaseURLController', function () {
+
+    it('should add event handlers again after reset', () => {
+        const localContext = {};
+        const localEventBus = EventBus(localContext).getInstance();
+        const invalidateSpy = chai.spy();
+        const localAdapter = {
+            getIsDVB: () => false
+        };
+        const localBaseURLTreeModel = {
+            invalidateSelectedIndexes: invalidateSpy,
+            setConfig: () => {
+            },
+            update: () => {
+            },
+            reset: () => {
+            },
+            getForPath: () => [],
+            getBaseUrls: () => []
+        };
+        const localBaseURLSelector = {
+            chooseSelector: () => {
+            },
+            initialize: () => {
+            },
+            reset: () => {
+            },
+            select: () => {
+            }
+        };
+
+        const localBaseURLController = BaseURLController(localContext).create();
+        localBaseURLController.setConfig({
+            adapter: localAdapter,
+            baseURLTreeModel: localBaseURLTreeModel,
+            baseURLSelector: localBaseURLSelector
+        });
+        localBaseURLController.initialize({});
+
+        localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'a' });
+        expect(invalidateSpy).to.have.been.called.exactly(1);
+
+        localBaseURLController.reset();
+        localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'b' });
+        expect(invalidateSpy).to.have.been.called.exactly(1);
+
+        localBaseURLController.initialize({});
+        localEventBus.trigger(Events.SERVICE_LOCATION_BASE_URL_BLACKLIST_CHANGED, { entry: 'c' });
+        expect(invalidateSpy).to.have.been.called.exactly(2);
+
+        localBaseURLController.reset();
+    });
 
     it('should return undefined if resolution fails at any level', () => {
 
