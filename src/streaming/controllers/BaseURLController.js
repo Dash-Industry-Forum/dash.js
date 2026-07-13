@@ -82,8 +82,58 @@ function BaseURLController() {
         baseURLTreeModel.update(manifest);
         baseURLSelector.chooseSelector(adapter.getIsDVB(manifest));
         eventBus.trigger(MediaPlayerEvents.BASE_URLS_UPDATED, {
-            baseUrls: getBaseUrls(manifest)
+            baseUrls: getBaseUrlsForEventPayload(manifest)
         });
+    }
+
+    function getBaseUrlsForEventPayload(manifest) {
+        // Reuse the BaseURLs the tree model already collected during update() instead of
+        // re-extracting them from every manifest node.
+        const { rootBaseUrls, childBaseUrls } = baseURLTreeModel.getBaseUrlsForPayload();
+        const uniqueBaseUrls = [];
+        const addedBaseUrls = {};
+
+        const includeRootBaseUrls = _shouldIncludeRootBaseUrls(manifest, childBaseUrls);
+        const targetBaseUrls = includeRootBaseUrls ? rootBaseUrls.concat(childBaseUrls) : childBaseUrls;
+
+        targetBaseUrls.forEach((baseUrl) => {
+            const key = `${baseUrl.serviceLocation}_${baseUrl.url}`;
+            if (!addedBaseUrls[key]) {
+                uniqueBaseUrls.push(baseUrl);
+                addedBaseUrls[key] = true;
+            }
+        });
+
+        return uniqueBaseUrls;
+    }
+
+    function _shouldIncludeRootBaseUrls(manifest, childBaseUrls) {
+        if (!manifest || manifest.BaseURL || childBaseUrls.length === 0) {
+            return true;
+        }
+
+        if (childBaseUrls.some((baseUrl) => urlUtils.isRelative(baseUrl.url))) {
+            return true;
+        }
+
+        if (!manifest.Period || manifest.Period.length === 0) {
+            return true;
+        }
+
+        return manifest.Period.some((period) => _usesInheritedBaseUrl(period));
+    }
+
+    function _usesInheritedBaseUrl(element) {
+        if (!element || element.BaseURL) {
+            return false;
+        }
+
+        const children = element.AdaptationSet || element.Representation;
+        if (!children || children.length === 0) {
+            return true;
+        }
+
+        return children.some((child) => _usesInheritedBaseUrl(child));
     }
 
     function resolve(path) {
@@ -121,7 +171,7 @@ function BaseURLController() {
     }
 
     function getBaseUrls(manifest) {
-        return baseURLTreeModel.getBaseUrls(manifest);
+        return baseURLTreeModel.getAvailableBaseUrlsForElement(manifest);
     }
 
     function initialize(data) {
@@ -138,11 +188,11 @@ function BaseURLController() {
     }
 
     instance = {
-        reset,
+        getBaseUrls,
         initialize,
+        reset,
         resolve,
         setConfig,
-        getBaseUrls,
         update
     };
 

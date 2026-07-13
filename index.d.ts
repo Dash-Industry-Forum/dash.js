@@ -2018,6 +2018,8 @@ export interface MediaPlayerClass {
 
     on(type: AstInFutureEvent['type'], listener: (e: AstInFutureEvent) => void, scope?: object): void;
 
+    on(type: BaseUrlsUpdatedEvent['type'], listener: (e: BaseUrlsUpdatedEvent) => void, scope?: object): void;
+
     on(type: BufferEvent['type'], listener: (e: BufferEvent) => void, scope?: object): void;
 
     on(type: CaptionRenderedEvent['type'], listener: (e: CaptionRenderedEvent) => void, scope?: object): void;
@@ -2492,6 +2494,11 @@ export interface MediaPlayerEvent {
 export interface AstInFutureEvent extends MediaPlayerEvent {
     delay: number;
     type: MediaPlayerEvents['AST_IN_FUTURE'];
+}
+
+export interface BaseUrlsUpdatedEvent extends MediaPlayerEvent {
+    baseUrls: BaseURL[];
+    type: MediaPlayerEvents['BASE_URLS_UPDATED'];
 }
 
 export interface BufferEvent extends MediaPlayerEvent {

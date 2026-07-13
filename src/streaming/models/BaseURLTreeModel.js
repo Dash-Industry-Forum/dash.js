@@ -47,6 +47,7 @@ class Node {
 function BaseURLTreeModel() {
     let instance,
         root,
+        payloadBaseUrls,
         adapter,
         contentSteeringController;
 
@@ -75,6 +76,11 @@ function BaseURLTreeModel() {
     function updateChildData(node, index, element) {
         const baseUrls = _getAvailableBaseUrls(element);
 
+        // Collect BaseURLs from the elements of the current manifest for the BASE_URLS_UPDATED payload.
+        // Doing this inside the live-manifest traversal avoids a second walk and ignores stale tree
+        // nodes left behind when a Period/AdaptationSet/Representation is removed across updates.
+        payloadBaseUrls.childBaseUrls.push(...baseUrls);
+
         if (!node[index]) {
             node[index] = new Node(baseUrls);
         } else {
@@ -89,6 +95,7 @@ function BaseURLTreeModel() {
         checkConfig();
 
         const baseUrls = _getAvailableBaseUrls(manifest)
+        payloadBaseUrls = { rootBaseUrls: baseUrls, childBaseUrls: [] };
 
         if (!objectUtils.areEqual(baseUrls, root.data.baseUrls)) {
             root.data.baseUrls = baseUrls;
@@ -142,8 +149,21 @@ function BaseURLTreeModel() {
         return targetBaseUrls;
     }
 
-    function getBaseUrls(manifest) {
-        return _getAvailableBaseUrls(manifest);
+    function getAvailableBaseUrlsForElement(element) {
+        return _getAvailableBaseUrls(element);
+    }
+
+    /**
+     * Returns the root- and child-level BaseURLs collected from the manifest during the last
+     * update() call. Collected inline while traversing the live manifest, so it reflects removed
+     * or changed BaseURLs and never re-extracts them from the tree a second time.
+     * @returns {{rootBaseUrls: BaseURL[], childBaseUrls: BaseURL[]}}
+     */
+    function getBaseUrlsForPayload() {
+        return {
+            rootBaseUrls: payloadBaseUrls.rootBaseUrls.slice(),
+            childBaseUrls: payloadBaseUrls.childBaseUrls.slice()
+        };
     }
 
     function walk(callback, node) {
@@ -172,6 +192,7 @@ function BaseURLTreeModel() {
 
     function reset() {
         root = new Node();
+        payloadBaseUrls = { rootBaseUrls: [], childBaseUrls: [] };
     }
 
     function getForPath(path) {
@@ -192,12 +213,13 @@ function BaseURLTreeModel() {
     }
 
     instance = {
-        reset,
-        update,
+        getAvailableBaseUrlsForElement,
+        getBaseUrlsForPayload,
         getForPath,
         invalidateSelectedIndexes,
+        reset,
         setConfig,
-        getBaseUrls
+        update
     };
 
     setup();
