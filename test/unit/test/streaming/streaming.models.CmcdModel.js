@@ -105,6 +105,39 @@ describe('CmcdModel', function () {
             expect(data.d).to.equal(4000); // duration in ms
         });
 
+        it('should rebuild the top-bitrate list once when tb and tpb share the media info', function () {
+            const mediaInfo = { type: Constants.VIDEO };
+            let rebuilds = 0;
+            abrControllerMock.getPossibleVoRepresentationsFilteredBySettings = () => {
+                rebuilds++;
+                return [{ bitrateInKbit: 2000 }];
+            };
+            // A video stream processor whose media info is the same object the request carries, so
+            // tb (request media info) and tpb (processor media info) resolve the same list.
+            const videoSp = {
+                getType: () => Constants.VIDEO,
+                getMediaInfo: () => mediaInfo,
+                probeNextRequest: () => undefined
+            };
+            playbackControllerMock.getStreamController().getActiveStream().getStreamProcessors = () => [videoSp];
+            cmcdModel.reset(); // repopulates streamProcessors from the configured playback controller
+
+            const request = {
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: Constants.VIDEO,
+                bandwidth: 1000000,
+                duration: 4,
+                url: 'http://example.com/seg.m4s',
+                representation: { mediaInfo }
+            };
+
+            const data = cmcdModel.deriveCmcdDataForRequest(request);
+            expect(data).to.exist;
+            expect(data).to.have.property('tb');
+            expect(data).to.have.property('tpb');
+            expect(rebuilds).to.equal(1);
+        });
+
         it('should return CMCD data for init segment requests', function () {
             const request = {
                 type: HTTPRequest.INIT_SEGMENT_TYPE,
