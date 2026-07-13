@@ -64,10 +64,10 @@ function vsiInitValidation(sessionKeys) {
     };
 }
 
-function vsiSegmentOutcome({isValid, errorCodes}) {
+function vsiSegmentOutcome({isValid, errorCodes, seq = 289}) {
     return {
         result: {
-            sequenceNumber: 289,
+            sequenceNumber: seq,
             manifestId: 'urn:c2pa:manifest-1',
             bmffHashHex: 'abcd',
             kidHex: 'key-1',
@@ -75,8 +75,18 @@ function vsiSegmentOutcome({isValid, errorCodes}) {
             isValid,
             errorCodes
         },
-        nextSequenceState: {lastSequenceNumber: 289, seenSequences: new Set([289])}
+        nextSequenceState: {lastSequenceNumber: seq, seenSequences: new Set([seq])}
     };
+}
+
+function vsiEngineReturningSequences(seqs) {
+    const {engine, calls} = createEngine({initValidation: vsiInitValidation([{kid: 'key-1'}])});
+    let index = 0;
+    engine.validateC2paSegment = async () => {
+        calls.vsi++;
+        return vsiSegmentOutcome({isValid: true, errorCodes: [], seq: seqs[index++]});
+    };
+    return {engine, calls};
 }
 
 function createCoordinator({engine, method = 'auto', detector, isCryptoAvailable}) {
@@ -349,59 +359,54 @@ describe('C2paValidationCoordinator', function () {
                 .map((event) => [event.payload.segmentNumber, event.payload.status]);
         }
 
-        function createValidVsiCoordinator() {
-            const {engine, calls} = createEngine({
-                initValidation: vsiInitValidation([{kid: 'key-1'}]),
-                segmentOutcome: vsiSegmentOutcome({isValid: true, errorCodes: []})
-            });
-            return {calls, ...createCoordinator({engine})};
-        }
-
-        it('should mark a duplicate sequence number as replayed and not re-validate it', async () => {
-            const {coordinator, events, calls} = createValidVsiCoordinator();
+        it('should mark a duplicate signed sequence number as replayed', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 10]);
+            const {coordinator, events} = createCoordinator({engine});
 
             await coordinator.handleSegment(initInput('stream3'));
-            await coordinator.handleSegment(mediaInput('stream3', 289));
-            await coordinator.handleSegment(mediaInput('stream3', 289));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
 
-            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [289, 'replayed']]);
-            expect(calls.vsi).to.equal(1);
+            expect(segmentStatuses(events)).to.deep.equal([[10, 'valid'], [10, 'replayed']]);
         });
 
-        it('should mark a lower sequence number as reordered', async () => {
-            const {coordinator, events} = createValidVsiCoordinator();
+        it('should mark a lower signed sequence number as reordered', async () => {
+            const {engine} = vsiEngineReturningSequences([10, 9]);
+            const {coordinator, events} = createCoordinator({engine});
 
             await coordinator.handleSegment(initInput('stream3'));
-            await coordinator.handleSegment(mediaInput('stream3', 289));
-            await coordinator.handleSegment(mediaInput('stream3', 288));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
 
-            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [288, 'reordered']]);
+            expect(segmentStatuses(events)).to.deep.equal([[10, 'valid'], [9, 'reordered']]);
         });
 
         it('should emit missing records for a gap and then validate the current segment', async () => {
-            const {coordinator, events} = createValidVsiCoordinator();
+            const {engine} = vsiEngineReturningSequences([10, 13]);
+            const {coordinator, events} = createCoordinator({engine});
 
             await coordinator.handleSegment(initInput('stream3'));
-            await coordinator.handleSegment(mediaInput('stream3', 289));
-            await coordinator.handleSegment(mediaInput('stream3', 292));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream3', 2000));
 
             expect(segmentStatuses(events)).to.deep.equal([
-                [289, 'valid'],
-                [290, 'missing'],
-                [291, 'missing'],
-                [292, 'valid']
+                [10, 'valid'],
+                [11, 'missing'],
+                [12, 'missing'],
+                [13, 'valid']
             ]);
         });
 
         it('should keep sequence state independent per track', async () => {
-            const {coordinator, events} = createValidVsiCoordinator();
+            const {engine} = vsiEngineReturningSequences([10, 10]);
+            const {coordinator, events} = createCoordinator({engine});
 
             await coordinator.handleSegment(initInput('stream3'));
             await coordinator.handleSegment(initInput('stream4'));
-            await coordinator.handleSegment(mediaInput('stream3', 289));
-            await coordinator.handleSegment(mediaInput('stream4', 5));
+            await coordinator.handleSegment(mediaInput('stream3', 1000));
+            await coordinator.handleSegment(mediaInput('stream4', 1000));
 
-            expect(segmentStatuses(events)).to.deep.equal([[289, 'valid'], [5, 'valid']]);
+            expect(segmentStatuses(events)).to.deep.equal([[10, 'valid'], [10, 'valid']]);
         });
     });
 

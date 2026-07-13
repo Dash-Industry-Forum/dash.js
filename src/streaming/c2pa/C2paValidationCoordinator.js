@@ -171,18 +171,6 @@ function C2paValidationCoordinator(config) {
         const forced = _forcedMethod() !== null;
         const method = _resolveMediaMethod(input, state);
 
-        const sequence = _checkSequence(input.trackKey, input.segmentNumber);
-        sequence.missing.forEach((missingNumber) => {
-            // AC#8: report every skipped segment number in the track.
-            _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, method, missingNumber));
-        });
-        if (sequence.status !== SEQUENCE_OK) {
-            // AC#7: a replayed or reordered segment is surfaced with that status and not
-            // re-validated — the sequence anomaly is the finding.
-            _emitSegmentValidated(_sequenceRecord(input, sequence.status, method, input.segmentNumber));
-            return;
-        }
-
         if (method !== C2PA_METHOD_VSI && method !== C2PA_METHOD_MANIFEST_BOX) {
             return;
         }
@@ -201,7 +189,27 @@ function C2paValidationCoordinator(config) {
     }
 
     /**
-     * Lean per-track sequence check driven by the URL-derived segment number. Detects
+     * Emits a validated media record, applying the lean per-track sequence check on the
+     * authoritative signed sequence number (AC#7, AC#8): reports gaps as `missing` records
+     * and overrides the status to `replayed` / `reordered` on a duplicate / out-of-order
+     * sequence. Records without a sequence number are emitted unchanged.
+     */
+    function _emitValidatedWithSequence(input, record) {
+        const sequenceNumber = record.segmentNumber;
+        if (typeof sequenceNumber === 'number' && !isNaN(sequenceNumber)) {
+            const sequence = _checkSequence(input.trackKey, sequenceNumber);
+            sequence.missing.forEach((missingNumber) => {
+                _emitSegmentValidated(_sequenceRecord(input, STATUS_MISSING, record.method, missingNumber));
+            });
+            if (sequence.status !== SEQUENCE_OK) {
+                record.status = sequence.status;
+            }
+        }
+        _emitSegmentValidated(record);
+    }
+
+    /**
+     * Lean per-track sequence check driven by the signed sequence number. Detects
      * replays (same as last), reorders (below last) and gaps (skipped numbers). No
      * cross-track correlation. Segments without a number (NaN) are not sequence-checked.
      * @returns {{status: string, missing: Array.<number>}}
@@ -295,7 +303,7 @@ function C2paValidationCoordinator(config) {
         if (state) {
             state.sequenceState = outcome.nextSequenceState;
         }
-        _emitSegmentValidated(_toVsiSegmentRecord(input, outcome.result, state));
+        _emitValidatedWithSequence(input, _toVsiSegmentRecord(input, outcome.result, state));
     }
 
     async function _validateManifestBoxSegment(input, state, forced) {
@@ -332,7 +340,7 @@ function C2paValidationCoordinator(config) {
             state.lastManifestId = outcome.nextManifestId;
             state.manifestBoxState = outcome.nextState;
         }
-        _emitSegmentValidated(_toManifestBoxSegmentRecord(input, outcome));
+        _emitValidatedWithSequence(input, _toManifestBoxSegmentRecord(input, outcome));
     }
 
     function _forcedMismatchRecord(input, method) {
@@ -354,7 +362,7 @@ function C2paValidationCoordinator(config) {
     function _toManifestBoxSegmentRecord(input, outcome) {
         const result = outcome.result;
         return {
-            segmentNumber: input.segmentNumber,
+            segmentNumber: _sequenceNumberOf(result, input),
             mediaType: input.mediaType,
             method: C2PA_METHOD_MANIFEST_BOX,
             status: result.isValid ? STATUS_VALID : STATUS_INVALID,
@@ -370,7 +378,7 @@ function C2paValidationCoordinator(config) {
 
     function _toVsiSegmentRecord(input, result, state) {
         return {
-            segmentNumber: input.segmentNumber,
+            segmentNumber: _sequenceNumberOf(result, input),
             mediaType: input.mediaType,
             method: C2PA_METHOD_VSI,
             status: result.isValid ? STATUS_VALID : STATUS_INVALID,
@@ -475,6 +483,12 @@ function C2paValidationCoordinator(config) {
     function _issuerOf(validation) {
         const manifest = validation ? validation.manifest : null;
         return manifest && manifest.signatureInfo ? manifest.signatureInfo.issuer : null;
+    }
+
+    // The authoritative sequence number is the one carried in the signed segment; the
+    // URL-derived number is only a fallback (it may be a time value for some packagers).
+    function _sequenceNumberOf(result, input) {
+        return result && typeof result.sequenceNumber === 'number' ? result.sequenceNumber : input.segmentNumber;
     }
 
     /**

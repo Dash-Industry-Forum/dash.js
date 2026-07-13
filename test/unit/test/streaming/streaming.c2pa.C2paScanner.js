@@ -159,6 +159,26 @@ describe('C2paScanner', function () {
             expect(handledSegments[0].trackKey).to.equal('stream3');
         });
 
+        it('should derive a matching trackKey for Unified Streaming .dash naming', async () => {
+            await intercept(createResponse({
+                type: HTTPRequest.INIT_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://live.example/wdr.ism/dash/wdr-video=4045695.dash',
+                data: bufferFrom([1])
+            }));
+            await intercept(createResponse({
+                type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                mediaType: 'video',
+                url: 'https://live.example/wdr.ism/dash/wdr-video=4045695-31200.dash',
+                data: bufferFrom([2])
+            }));
+
+            expect(handledSegments[0].trackKey).to.equal('wdr-video=4045695');
+            expect(handledSegments[0].segmentNumber).to.be.NaN;
+            expect(handledSegments[1].trackKey).to.equal('wdr-video=4045695');
+            expect(handledSegments[1].segmentNumber).to.equal(31200);
+        });
+
         it('should hand the segment a private copy of the bytes', async () => {
             const values = [5, 6, 7];
             const response = createResponse({

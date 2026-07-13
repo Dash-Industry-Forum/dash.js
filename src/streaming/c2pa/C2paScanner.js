@@ -36,14 +36,18 @@ const SEGMENT_KIND_INIT = 'init';
 const SEGMENT_KIND_MEDIA = 'media';
 
 // dash.js 5.x does not reliably populate the representation id and req.index resets
-// per DASH period, so a stable per-representation trackKey and a globally-monotonic
-// segment number are derived from the segment URL filename instead.
-// The trailing segment number and the leading role prefix (init-/chunk-) are both
-// stripped so an init segment and its media segments map to the same trackKey:
-//   "init-stream3.m4s"        -> trackKey "stream3", segmentNumber NaN
-//   "chunk-stream3-00289.m4s" -> trackKey "stream3", segmentNumber 289
-const SEGMENT_EXTENSION_PATTERN = /\.m4s$/;
-const TRAILING_SEGMENT_NUMBER_PATTERN = /-(\d+)\.m4s$/;
+// per DASH period, so a stable per-representation trackKey is derived from the segment
+// URL filename instead. The file extension, the trailing segment number and the leading
+// role prefix (init-/chunk-) are stripped so an init segment and its media segments of
+// the same representation map to the same trackKey across common packager namings:
+//   "init-stream3.m4s"             -> trackKey "stream3",            segmentNumber NaN
+//   "chunk-stream3-00289.m4s"      -> trackKey "stream3",            segmentNumber 289
+//   "wdr-video=4045695.dash"       -> trackKey "wdr-video=4045695",  segmentNumber NaN
+//   "wdr-video=4045695-31200.dash" -> trackKey "wdr-video=4045695",  segmentNumber 31200
+// The URL-derived segment number is only per-representation metadata; the authoritative
+// sequence number used for provenance checks comes from the validated C2PA segment.
+const SEGMENT_EXTENSION_PATTERN = /\.(?:m4s|mp4|m4v|m4a|cmfv|cmfa|cmft|cmf|dash|fmp4|ts)$/i;
+const TRAILING_SEGMENT_NUMBER_PATTERN = /-(\d+)$/;
 const SEGMENT_ROLE_PREFIX_PATTERN = /^(?:init|chunk)-/;
 
 /**
@@ -192,15 +196,18 @@ function C2paScanner(config) {
         return withoutQuery.split('/').pop() || '';
     }
 
+    function _fileStem(url) {
+        return _fileNameFromUrl(url).replace(SEGMENT_EXTENSION_PATTERN, '');
+    }
+
     function _trackKeyFromUrl(url) {
-        return _fileNameFromUrl(url)
+        return _fileStem(url)
             .replace(TRAILING_SEGMENT_NUMBER_PATTERN, '')
-            .replace(SEGMENT_EXTENSION_PATTERN, '')
             .replace(SEGMENT_ROLE_PREFIX_PATTERN, '');
     }
 
     function _segmentNumberFromUrl(url) {
-        const match = _fileNameFromUrl(url).match(TRAILING_SEGMENT_NUMBER_PATTERN);
+        const match = _fileStem(url).match(TRAILING_SEGMENT_NUMBER_PATTERN);
         return match ? parseInt(match[1], 10) : NaN;
     }
 
