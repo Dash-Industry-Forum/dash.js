@@ -1011,5 +1011,21 @@
                 ]
             }
         ]
+    },
+    {
+        "section": "C2PA",
+        "samples": [
+            {
+                "title": "C2PA provenance validation",
+                "description": "Validates C2PA provenance of a live DASH stream per segment (§19.3 Manifest Box and §19.4 VSI), with runtime enable/disable and method selection, rendering a per-segment provenance indicator.",
+                "href": "c2pa/index.html",
+                "image": "lib/img/bbb-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
+            }
+        ]
     }
 ]
