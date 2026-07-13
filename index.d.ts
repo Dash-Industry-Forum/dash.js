@@ -2876,6 +2876,7 @@ export interface CueExitEvent extends MediaPlayerEvent {
 
 export interface AdaptationSetRemovedNoCapabilitiesEvent extends MediaPlayerEvent {
     adaptationSet: object;
+    remainingAdaptationSets: object[];
     type: MediaPlayerEvents['ADAPTATION_SET_REMOVED_NO_CAPABILITIES'];
 }
 
