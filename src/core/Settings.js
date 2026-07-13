@@ -1207,6 +1207,7 @@ function Settings() {
     const context = this.context;
     const eventBus = EventBus(context).getInstance();
     const DISPATCH_KEY_MAP = {
+        'streaming.c2pa.enabled': Events.SETTING_UPDATED_C2PA_ENABLED,
         'streaming.delay.liveDelay': Events.SETTING_UPDATED_LIVE_DELAY,
         'streaming.delay.liveDelayFragmentCount': Events.SETTING_UPDATED_LIVE_DELAY_FRAGMENT_COUNT,
         'streaming.liveCatchup.enabled': Events.SETTING_UPDATED_CATCHUP_ENABLED,
