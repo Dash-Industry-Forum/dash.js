@@ -61,7 +61,7 @@ describe('BaseURLController', function () {
             reset: () => {
             },
             getForPath: () => [],
-            getBaseUrls: () => []
+            getBaseUrlsForPayload: () => ({ rootBaseUrls: [], childBaseUrls: [] })
         };
         const localBaseURLSelector = {
             chooseSelector: () => {
