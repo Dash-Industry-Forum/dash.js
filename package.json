@@ -40,7 +40,7 @@
     "prepare": "node githook.cjs",
     "start": "webpack serve --config build/webpack/modern/webpack.modern.dev.cjs",
     "test": "karma start test/unit/config/karma.unit.conf.cjs",
-    "test:compliance": "npm run test:compliance:esm && npm run test:compliance:es5 && npm run test:compliance:package",
+    "test:compliance": "npm run test:compliance:esm && npm run test:compliance:es5 && npm run test:compliance:package && npm run test:compliance:vite",
     "test:compliance:es5": "es-check es5 \"dist/legacy/umd/*.js\"",
     "test:compliance:esm": "es-check es2021 \"dist/modern/esm/*.js\" --module",
     "test:compliance:package": "publint",
