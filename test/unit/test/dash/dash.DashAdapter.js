@@ -445,6 +445,42 @@ describe('DashAdapter', function () {
             expect(event.calculatedPresentationTime).to.be.equal(7);
         });
 
+        it('should calculate correct duration for an event with timescale > 1', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = {
+                scheme_id_uri: 'id',
+                value: 'value',
+                presentation_time_delta: 0,
+                event_duration: 100,
+                version: 0,
+                timescale: 10
+            };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.duration).to.be.equal(10);
+        });
+
+        it('should set duration to NaN for an event with an unknown duration of 0xFFFFFFFF', function () {
+            const representation = { adaptation: { period: { start: 10 } } };
+            const eventBox = {
+                scheme_id_uri: 'id',
+                value: 'value',
+                presentation_time_delta: 0,
+                event_duration: 0xFFFFFFFF,
+                version: 0,
+                timescale: 10
+            };
+            const eventStreams = { 'id/value': {} };
+            const mediaTime = 5;
+            const event = dashAdapter.getEvent(eventBox, eventStreams, mediaTime, representation);
+
+            expect(event).to.be.an('object');
+            expect(event.duration).to.be.NaN;
+        });
+
         it('should return undefined when getRealAdaptation is called and streamInfo parameter is null or undefined', function () {
             const realAdaptation = dashAdapter.getRealAdaptation(null, voHelper.getDummyMediaInfo(Constants.VIDEO));
 

@@ -515,6 +515,37 @@ describe('EventController', function () {
             playbackControllerMock.setTime(0);
         });
 
+        it('should not trigger an inband event with unknown (NaN) duration for which the presentation time has already passed', function () {
+            let triggerCount = 0;
+            const schemeIdUri = 'schemeIdUri';
+            const periodId = 'periodId';
+            let events = [{
+                eventStream: {
+                    timescale: 1,
+                    schemeIdUri: schemeIdUri,
+                    period: {
+                        id: periodId
+                    }
+                },
+                id: 'event0',
+                calculatedPresentationTime: 10,
+                duration: NaN
+            }];
+            const onStartEvent = function () {
+                triggerCount++;
+            };
+
+            eventBus.on(schemeIdUri, onStartEvent, this, { mode: MediaPlayerEvents.EVENT_MODE_ON_START });
+
+            playbackControllerMock.setTime(20);
+            eventController.addInbandEvents(events, periodId);
+            eventController.start();
+
+            expect(triggerCount).to.equal(0);
+            eventBus.off(schemeIdUri, onStartEvent, this);
+            playbackControllerMock.setTime(0);
+        });
+
         it('should not fire inline events in onReceive mode twice', function () {
             let triggerCount = 0;
             const schemeIdUri = 'schemeIdUri';
