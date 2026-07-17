@@ -100,12 +100,15 @@ describe('RepresentationController', function () {
                 expect(currentRepresentation.id).to.equal(voRepresentations[1].id); // jshint ignore:line
             });
 
-            it('when a MANIFEST_VALIDITY_CHANGED event occurs, should update current representation', function () {
+            it('when a MANIFEST_VALIDITY_CHANGED event occurs, should store the duration relative to the period start', function () {
                 let currentRepresentation = representationController.getCurrentRepresentation();
-                expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
+                currentRepresentation.adaptation.period.start = 50;
+                currentRepresentation.adaptation.period.duration = 40;
                 eventBus.trigger(Events.MANIFEST_VALIDITY_CHANGED, { sender: {}, newDuration: 150 });
 
-                expect(currentRepresentation.adaptation.period.duration).to.equal(150); // jshint ignore:line
+                expect(currentRepresentation.adaptation.period.duration).to.equal(100); // jshint ignore:line
+                currentRepresentation.adaptation.period.start = 0;
+                currentRepresentation.adaptation.period.duration = 100;
             });
 
             it('should switch correctly when prepareQualityChange is called with an enhancement representation', function () {

@@ -328,7 +328,16 @@ function RepresentationController(config) {
             const representation = getCurrentRepresentation();
             if (representation && representation.adaptation.period) {
                 const period = representation.adaptation.period;
-                period.duration = e.newDuration;
+                // e.newDuration (EventController._handleManifestReloadEvent) is an absolute point on the
+                // presentation timeline - the moment the manifest is valid until - not a length. period.duration
+                // is relative to period.start. Convert before storing, or period.duration ends up holding an
+                // absolute timestamp, which on presentation timelines anchored away from zero (e.g.
+                // availabilityStartTime far from the epoch, or a large period.start) silently produces a wildly
+                // oversized duration and defeats every isFinite(period.duration) guard downstream.
+                const relativeDuration = e.newDuration - period.start;
+                if (relativeDuration > 0) {
+                    period.duration = relativeDuration;
+                }
             }
         }
     }
