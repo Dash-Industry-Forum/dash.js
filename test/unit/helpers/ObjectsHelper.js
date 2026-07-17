@@ -68,6 +68,7 @@ class ObjectsHelper {
                 return { start, end };
             },
             calcMediaTimeFromPresentationTime: () => undefined,
+            calcPresentationTimeFromMediaTime: (mediaTime) => mediaTime,
             calcSegmentAvailabilityWindowForRepresentation: () => {
                 return { start: start, end: end };
             },

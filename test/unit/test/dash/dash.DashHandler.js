@@ -236,6 +236,20 @@ describe('DashHandler', function () {
             expect(result).to.be.NaN;
         })
 
+        it('should return NaN without probing ahead if requested time is beyond the last signaled segment', () => {
+            dummyRepresentation.adaptation.period.duration = 1000000000;
+            dummyRepresentation.mediaFinishedInformation = {
+                mediaTimeOfLastSignaledSegment: 30
+            };
+            segRequestStub.restore();
+            segRequestStub = sinon.stub(segmentsController, 'getSegmentByTime').returns(null);
+
+            const result = dashHandler.getValidTimeAheadOfTargetTime(31, dummyMediaInfo, dummyRepresentation, 0.5)
+
+            expect(result).to.be.NaN;
+            expect(segRequestStub.calledOnce).to.be.true;
+        })
+
         it('should return valid time if requested time is smaller than period start', () => {
             const result = dashHandler.getValidTimeAheadOfTargetTime(-0.5, dummyMediaInfo, dummyRepresentation, 0.5)
 

@@ -397,8 +397,27 @@ function DashHandler(config) {
                 return NaN;
             }
 
+            // For dynamic SegmentTimeline representations, segments are only ever appended at the end of
+            // the timeline as the manifest is refreshed. If the target time is beyond the last segment the
+            // manifest has signaled so far, no amount of probing ahead can find a valid time - the data
+            // simply does not exist yet. Detect this up front and bound the probe window to it, instead of
+            // scanning blindly. This also protects against a period.duration that is unexpectedly large or
+            // corrupted (see MANIFEST_VALIDITY_CHANGED handling in RepresentationController), which would
+            // otherwise turn the loop below into an effectively infinite scan.
+            let lastSignaledPresentationEndTime = NaN;
+            if (isDynamicManifest && representation.segmentInfoType === DashConstants.SEGMENT_TIMELINE &&
+                representation.mediaFinishedInformation && !isNaN(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment)) {
+                lastSignaledPresentationEndTime = timelineConverter.calcPresentationTimeFromMediaTime(representation.mediaFinishedInformation.mediaTimeOfLastSignaledSegment, representation);
+                if (time > lastSignaledPresentationEndTime) {
+                    return NaN;
+                }
+            }
+
             // If we have a duration look until the end of the duration, otherwise maximum 30 seconds
-            const end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
+            let end = isFinite(representation.adaptation.period.duration) ? representation.adaptation.period.start + representation.adaptation.period.duration : time + 30;
+            if (!isNaN(lastSignaledPresentationEndTime)) {
+                end = Math.min(end, lastSignaledPresentationEndTime);
+            }
             let currentUpperTime = Math.min(time + targetThreshold, end);
             let adjustedTime = NaN;
             let targetRequest = null;
