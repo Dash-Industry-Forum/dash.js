@@ -335,7 +335,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *                rtpSafetyFactor: 5,
  *                mode: Constants.CMCD_MODE_QUERY,
  *                enabledKeys: ['br', 'd', 'ot', 'tb' , 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su' , 'bs', 'rtp' , 'cid', 'pr', 'sf', 'sid', 'st', 'v']
- *                includeInRequests: ['segment', 'mpd'],
+ *                includeRequestTypes: ['segment', 'mpd'],
  *                version: 1,
  *                eventTargets: []
  *            },
@@ -968,8 +968,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
  * This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.
- * @property {Array.<string>} [includeInRequests]
- * Specifies which HTTP GET requests shall carry parameters.
+ * @property {Array.<string>} [includeRequestTypes]
+ * Specifies which request types shall carry CMCD parameters.
  *
  * If not specified this value defaults to ['segment', 'mpd].
  * @property {number} [version=1]
@@ -992,8 +992,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeInRequests]
- * Types of requests CMCD should be included on (e.g., 'mpd', 'segment').
+ * @property {Array.<string>} [includeRequestTypes]
+ * Types of responses for which response-received reports should be sent (e.g., 'mpd', 'segment').
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
  */
@@ -1511,7 +1511,7 @@ function Settings() {
                 rtpSafetyFactor: 5,
                 mode: Constants.CMCD_MODE_QUERY,
                 enabledKeys: Constants.CMCD_KEYS,
-                includeInRequests: ['segment', 'mpd'],
+                includeRequestTypes: ['segment', 'mpd'],
                 version: 1,
                 eventTargets: []
             },

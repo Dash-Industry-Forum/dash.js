@@ -257,7 +257,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     enabled: true,
                                     url: targetUrl,
                                     enabledKeys: ['url', 'rc', 'msd', 'e', 'ts', 'sn'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    includeRequestTypes: ['segment'],
                                     events: ['rr'],
                                 },
                             ],
@@ -288,6 +288,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                 const allEvents = events.flatMap((r) => validateCmcdEvents(r.httpRequest.body, { version: 2 }).data || []);
                 const rrEvents = allEvents.filter((d) => d.e === 'rr');
                 expect(rrEvents.length).to.be.at.least(1);
+                expect(rrEvents.every((d) => !d.url.includes('.mpd'))).to.be.true;
             });
         });
 
@@ -425,7 +426,7 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
                                     url: targetUrl,
                                     enabledKeys: ['e', 'ts', 'sn', 'sta', 'url', 'rc'],
                                     events: ['ps', 'rr'],
-                                    includeInRequests: ['mpd', 'segment'],
+                                    includeRequestTypes: ['mpd', 'segment'],
                                 },
                             ],
                         },

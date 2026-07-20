@@ -47,11 +47,14 @@ import URLLoader from '../net/URLLoader.js';
 import CmcdModel from '../models/CmcdModel.js'
 import Errors from '../../core/errors/Errors.js';
 import CmcdConfigAccessor from '../cmcd/config/CmcdConfigAccessor.js';
+import Utils from '../../core/Utils.js';
 
 function CmcdController() {
     let cmcdConfigAccessor,
         cmcdModel,
         cmcdReporter,
+        cmcdResponseReporters,
+        cmcdSessionId,
         dashMetrics,
         errHandler,
         instance,
@@ -126,14 +129,17 @@ function CmcdController() {
             });
         }
 
-        cmcdReporter = _createCmcdReporter();
+        _createCmcdReporters();
         cmcdReporter.start();
+        cmcdResponseReporters.forEach(({ reporter }) => reporter.start());
 
         _initializePlaybackStateListeners();
     }
 
     function _resetInitialSettings() {
         reporterNeedsRebuild = false;
+        cmcdResponseReporters = [];
+        cmcdSessionId = null;
     }
 
     function _initializeEventBus(autoPlay) {
@@ -169,21 +175,21 @@ function CmcdController() {
         // Update CmcdReporter with the new player state
         if (cmcdReporter) {
             cmcdReporter.update({ sta: state });
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.update({ sta: state }));
         }
         triggerCmcdEventMode(Constants.CMCD_REPORTING_EVENTS.PLAY_STATE);
     }
 
-    function _createCmcdReporter() {
+    function _createCmcdReporter(eventTargets) {
         const cmcdConfig = {
             version: cmcdConfigAccessor.getVersion(),
             transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
             enabledKeys: cmcdConfigAccessor.get('keys'),
-            eventTargets: _buildReporterTargets(),
+            eventTargets,
         };
 
-        // Only pass sid/cid if they have actual values, so CmcdReporter
-        // uses its own defaults (e.g., auto-generated uuid for sid)
-        const sid = cmcdConfigAccessor.get('sessionID');
+        const sid = cmcdConfigAccessor.get('sessionID') || cmcdSessionId || Utils.generateUuid();
+        cmcdSessionId = sid;
         if (sid) {
             cmcdConfig.sid = sid;
         }
@@ -193,6 +199,16 @@ function CmcdController() {
         }
 
         return new CmcdReporter(cmcdConfig, _customRequester);
+    }
+
+    function _createCmcdReporters() {
+        const targets = _buildReporterTargets();
+        cmcdReporter = _createCmcdReporter([]);
+        cmcdResponseReporters = targets
+            .map((target) => ({
+                includeRequestTypes: target.includeRequestTypes,
+                reporter: _createCmcdReporter([target]),
+            }));
     }
 
     function _buildReporterTargets() {
@@ -210,6 +226,7 @@ function CmcdController() {
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
+                includeRequestTypes: accessor.get('targetIncludeRequestTypes'),
             });
 
             return result;
@@ -255,6 +272,7 @@ function CmcdController() {
             const errorCode = errorData.error?.code || errorData.error?.data?.code;
             if (errorCode) {
                 cmcdReporter.update({ ec: errorCode });
+                cmcdResponseReporters.forEach(({ reporter }) => reporter.update({ ec: errorCode }));
             }
         }
 
@@ -281,8 +299,10 @@ function CmcdController() {
         reporterNeedsRebuild = false;
 
         cmcdReporter.stop(true);
-        cmcdReporter = _createCmcdReporter();
+        cmcdResponseReporters.forEach(({ reporter }) => reporter.stop(true));
+        _createCmcdReporters();
         cmcdReporter.start();
+        cmcdResponseReporters.forEach(({ reporter }) => reporter.start());
     }
 
     /**
@@ -302,10 +322,11 @@ function CmcdController() {
         const msdData = cmcdModel.calculateMsd();
         if (msdData.msd !== undefined) {
             cmcdReporter.update(msdData);
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.update(msdData));
         }
 
         // Pass event-mode data as transient per-event data (not persisted)
-        cmcdReporter.recordEvent(event, cmcdData);
+        cmcdResponseReporters.forEach(({ reporter }) => reporter.recordEvent(event, cmcdData));
     }
 
     /**
@@ -395,7 +416,7 @@ function CmcdController() {
         }
 
         // Version 1 validation
-        const enabledRequests = cmcdConfigAccessor.get('includeInRequests');
+        const enabledRequests = cmcdConfigAccessor.get('includeRequestTypes');
 
         const defaultAvailableRequests = Constants.CMCD_AVAILABLE_REQUESTS;
         const invalidRequests = enabledRequests.filter(k => !defaultAvailableRequests.includes(k));
@@ -434,7 +455,7 @@ function CmcdController() {
 
     function _checkTargetIncludeInRequests(targetIndex) {
         const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-        let enabledRequests = targetAccessor.get('targetIncludeInRequests');
+        let enabledRequests = targetAccessor.get('targetIncludeRequestTypes');
 
         if (!enabledRequests) {
             return true;
@@ -459,6 +480,7 @@ function CmcdController() {
         const prData = cmcdModel.onPlaybackRateChanged(data);
         if (cmcdReporter && prData) {
             cmcdReporter.update(prData);
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.update(prData));
         }
     }
 
@@ -474,6 +496,7 @@ function CmcdController() {
         if (cmcdReporter) {
             const streamFormatInfo = cmcdModel.onManifestLoaded(data);
             cmcdReporter.update(streamFormatInfo);
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.update(streamFormatInfo));
         }
     }
 
@@ -554,6 +577,7 @@ function CmcdController() {
         const msdData = cmcdModel.calculateMsd();
         if (msdData.msd !== undefined) {
             cmcdReporter.update(msdData);
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.update(msdData));
         }
 
         // Collect dash.js-specific additional data
@@ -576,7 +600,10 @@ function CmcdController() {
         }
 
         try {
-            cmcdReporter.recordResponseReceived(response, { ...eventData, ...additionalData });
+            const requestType = response.request?.customData?.request?.type;
+            cmcdResponseReporters
+                .filter(({ includeRequestTypes }) => cmcdModel.isIncludedInRequestFilter(requestType, includeRequestTypes))
+                .forEach(({ reporter }) => reporter.recordResponseReceived(response, { ...eventData, ...additionalData }));
         } catch (e) {
             logger.warn('Failed to record response received in CMCD reporter.', e);
         }
@@ -610,6 +637,10 @@ function CmcdController() {
         if (cmcdReporter) {
             cmcdReporter.stop(true);
             cmcdReporter = null;
+        }
+        if (cmcdResponseReporters) {
+            cmcdResponseReporters.forEach(({ reporter }) => reporter.stop(true));
+            cmcdResponseReporters = null;
         }
 
         cmcdModel.resetInitialSettings();

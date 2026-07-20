@@ -1960,7 +1960,7 @@ export class MediaPlayerSettingClass {
             rtpSafetyFactor?: number,
             mode?: 'query' | 'header',
             enabledKeys?: Array<string>,
-            includeInRequests?: Array<string>,
+            includeRequestTypes?: Array<string>,
             version?: number,
             eventTargets?: Array<{
                 enabled?: boolean,
@@ -1968,7 +1968,7 @@ export class MediaPlayerSettingClass {
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeInRequests?: Array<string>,
+                includeRequestTypes?: Array<string>,
                 batchSize?: number
             }>
         },
@@ -3866,7 +3866,7 @@ export interface CmcdModel {
 
     getGenericCmcdData(mediaType?: string): object;
 
-    isIncludedInRequestFilter(type: string, includeInRequests?: any): boolean;
+    isIncludedInRequestFilter(type: string, includeRequestTypes?: any): boolean;
 
     getLastMediaTypeRequest(): string;
 

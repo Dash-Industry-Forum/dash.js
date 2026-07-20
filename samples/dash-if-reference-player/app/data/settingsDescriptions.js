@@ -178,7 +178,7 @@ const SETTINGS_DESCRIPTIONS = {
         'This value is used to specify the desired CMCD parameters. Parameters not included in this list are not reported.',
 
     'opt-cmcd-include-in-requests':
-        'Specifies which HTTP GET requests shall carry CMCD parameters.\n\nIf not specified this value defaults to [\'segment\', \'mpd\'].',
+        'Specifies which request types shall carry CMCD parameters.\n\nIf not specified this value defaults to [\'segment\', \'mpd\'].',
 
     // ---- CMSD ----
 

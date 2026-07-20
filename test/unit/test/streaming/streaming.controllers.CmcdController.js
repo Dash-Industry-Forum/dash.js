@@ -642,7 +642,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
@@ -690,6 +690,98 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('ttlb');
         });
 
+        it('should only send response reports to targets matching the response request type', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.segment.collector/api',
+                            enabled: true,
+                            includeRequestTypes: ['segment'],
+                            events: ['rr']
+                        }, {
+                            url: 'https://cmcd.mpd.collector/api',
+                            enabled: true,
+                            includeRequestTypes: ['mpd'],
+                            events: ['rr']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+            interceptor({
+                status: 200,
+                request: {
+                    url: 'http://test.url/manifest.mpd',
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MPD_TYPE,
+                            url: 'http://test.url/manifest.mpd'
+                        }
+                    },
+                    cmcd: {}
+                }
+            });
+            interceptor({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: {}
+                }
+            });
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            expect(urlLoaderMock.load.firstCall.args[0].request.url).to.equal('https://cmcd.mpd.collector/api');
+            expect(urlLoaderMock.load.secondCall.args[0].request.url).to.equal('https://cmcd.segment.collector/api');
+        });
+
+        it('should increment sequence numbers across response and other target events', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.response.collector/api',
+                            enabled: true,
+                            includeRequestTypes: ['segment'],
+                            enabledKeys: ['sn'],
+                            events: ['ps', 'rr']
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_INITIALIZED);
+            const interceptor = cmcdController.getCmcdResponseReceivedInterceptors()[0];
+            interceptor({
+                status: 200,
+                request: {
+                    url: 'http://test.url/video.m4s',
+                    customData: {
+                        request: {
+                            type: HTTPRequest.MEDIA_SEGMENT_TYPE,
+                            url: 'http://test.url/video.m4s'
+                        }
+                    },
+                    cmcd: {}
+                }
+            });
+
+            expect(urlLoaderMock.load.calledTwice).to.be.true;
+            expect(decodeCmcd(decodeURIComponent(urlLoaderMock.load.firstCall.args[0].request.body))).to.have.property('sn', 0);
+            expect(decodeCmcd(decodeURIComponent(urlLoaderMock.load.secondCall.args[0].request.body))).to.have.property('sn', 1);
+        });
+
         it('should send a response report with cmsdd and cmsds keys when CMSD headers are present', () => {
             settings.update({
                 streaming: {
@@ -699,7 +791,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
@@ -750,7 +842,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -785,7 +877,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -820,7 +912,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
                         }]
@@ -874,7 +966,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeInRequests: ['segment'],
+                            includeRequestTypes: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['rr']
                         }]
@@ -1365,7 +1457,7 @@ describe('CmcdController', function () {
             expect(metrics).to.not.have.property('mtp');
         });
 
-        it('should not include CMCD on non-segment requests when includeInRequests is segment', function () {
+        it('should not include CMCD on non-segment requests when includeRequestTypes is segment', function () {
             const interceptor = cmcdController.getCmcdRequestInterceptors()[0];
             const result = interceptor(createCommonMediaRequest({
                 url: 'http://example.com/manifest.mpd',

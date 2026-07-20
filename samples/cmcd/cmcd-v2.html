@@ -52,7 +52,7 @@
                     enabled: false,
                     url: 'https://ea7e0b56-3623-420b-9d0b-2b39a4d3d4bb.fwf.app/',
                     enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-                    includeInRequests: ['segment'],
+                    includeRequestTypes: ['segment'],
                     events: ['rr']
                 }
             },
@@ -63,7 +63,7 @@
                     enabled: false,
                     url: 'http://localhost:3333/cmcd/response-received',
                     enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-                    includeInRequests: ['segment'],
+                    includeRequestTypes: ['segment'],
                     events: ['rr']
                 }
             },
@@ -116,7 +116,7 @@
                 cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* sample-only placeholder */
                 mode: 'query',
                 enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-                includeInRequests: ['segment', 'mpd'],
+                includeRequestTypes: ['segment', 'mpd'],
                 eventTargets: getDefaultEventTargets()
             };
         }
