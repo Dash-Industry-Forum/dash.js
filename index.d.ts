@@ -1968,7 +1968,7 @@ export class MediaPlayerSettingClass {
                 events?: Array<string>,
                 interval?: number,
                 enabledKeys?: Array<string>,
-                includeRequestTypes?: Array<string>,
+                sendResponseReceivedForRequestTypes?: Array<string>,
                 batchSize?: number
             }>
         },
@@ -3866,7 +3866,7 @@ export interface CmcdModel {
 
     getGenericCmcdData(mediaType?: string): object;
 
-    isIncludedInRequestFilter(type: string, includeRequestTypes?: any): boolean;
+    isIncludedInRequestFilter(type: string, requestTypes?: any): boolean;
 
     getLastMediaTypeRequest(): string;
 

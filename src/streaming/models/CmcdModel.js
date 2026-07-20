@@ -772,11 +772,11 @@ function CmcdModel() {
         }
     }
 
-    function isIncludedInRequestFilter(type, includeRequestTypes) {
-        const includeRequestTypesArray = includeRequestTypes ?? cmcdConfigAccessor.get('includeRequestTypes');
+    function isIncludedInRequestFilter(type, requestTypes) {
+        const requestTypesArray = requestTypes ?? cmcdConfigAccessor.get('includeRequestTypes');
         const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
 
-        return filterType !== undefined && includeRequestTypesArray.includes(filterType);
+        return filterType !== undefined && requestTypesArray.includes(filterType);
     }
 
     function reset() {

@@ -206,7 +206,7 @@ function CmcdController() {
         cmcdReporter = _createCmcdReporter([]);
         cmcdResponseReporters = targets
             .map((target) => ({
-                includeRequestTypes: target.includeRequestTypes,
+                sendResponseReceivedForRequestTypes: target.sendResponseReceivedForRequestTypes,
                 reporter: _createCmcdReporter([target]),
             }));
     }
@@ -226,7 +226,7 @@ function CmcdController() {
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
-                includeRequestTypes: accessor.get('targetIncludeRequestTypes'),
+                sendResponseReceivedForRequestTypes: accessor.get('targetSendResponseReceivedForRequestType'),
             });
 
             return result;
@@ -455,7 +455,7 @@ function CmcdController() {
 
     function _checkTargetIncludeInRequests(targetIndex) {
         const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-        let enabledRequests = targetAccessor.get('targetIncludeRequestTypes');
+        let enabledRequests = targetAccessor.get('targetSendResponseReceivedForRequestType');
 
         if (!enabledRequests) {
             return true;
@@ -602,7 +602,7 @@ function CmcdController() {
         try {
             const requestType = response.request?.customData?.request?.type;
             cmcdResponseReporters
-                .filter(({ includeRequestTypes }) => cmcdModel.isIncludedInRequestFilter(requestType, includeRequestTypes))
+                .filter(({ sendResponseReceivedForRequestTypes }) => cmcdModel.isIncludedInRequestFilter(requestType, sendResponseReceivedForRequestTypes))
                 .forEach(({ reporter }) => reporter.recordResponseReceived(response, { ...eventData, ...additionalData }));
         } catch (e) {
             logger.warn('Failed to record response received in CMCD reporter.', e);

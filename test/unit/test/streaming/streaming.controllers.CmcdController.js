@@ -642,7 +642,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             enabledKeys: ['rc', 'ttfb', 'ttlb', 'url', 'sid'],
                             events: ['rr']
                         }]
@@ -698,12 +698,12 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.segment.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             events: ['rr']
                         }, {
                             url: 'https://cmcd.mpd.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['mpd'],
+                            sendResponseReceivedForRequestTypes: ['mpd'],
                             events: ['rr']
                         }]
                     }
@@ -752,7 +752,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['ps', 'rr']
                         }]
@@ -791,7 +791,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             enabledKeys: ['cmsdd', 'cmsds'],
                             events: ['rr']
                         }]
@@ -842,7 +842,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: false,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -877,7 +877,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             events: ['rr']
                         }]
                     }
@@ -912,7 +912,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             enabledKeys: ['rc', 'e', 'd'],
                             events: ['rr']
                         }]
@@ -966,7 +966,7 @@ describe('CmcdController', function () {
                         eventTargets: [{
                             url: 'https://cmcd.response.collector/api',
                             enabled: true,
-                            includeRequestTypes: ['segment'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             enabledKeys: ['sn'],
                             events: ['rr']
                         }]

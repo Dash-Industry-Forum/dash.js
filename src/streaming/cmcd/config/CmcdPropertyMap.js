@@ -384,33 +384,17 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * V2: Target includeRequestTypes filter
-     * Note: This is target-specific, requires context
+     * V2: Target sendResponseReceivedForRequestTypes filter
+     * Note: This only applies to the rr event, and is target-specific, requires context
      */
-    targetIncludeRequestTypes: {
+    targetSendResponseReceivedForRequestType: {
         version: [2],
         sources: [
             {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].includeRequestTypes',
+                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].sendResponseReceivedForRequestTypes',
                 priority: 1,
-                type: 'array'
-            },
-            {
-                path: 'manifestParams.includeInRequests',
-                priority: 2,
                 type: 'array',
-                transform: (val) => {
-                    if (typeof val === 'string') {
-                        return val.split(' ');
-                    }
-                    return val;
-                }
-            },
-            {
-                path: 'settings.streaming.cmcd.includeRequestTypes',
-                priority: 3,
-                type: 'array',
-                default: ['segment', 'mpd']
+                default: []
             }
         ]
     }

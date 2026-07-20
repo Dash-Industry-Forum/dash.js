@@ -992,7 +992,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * The time interval for the CMCD reporting in event mode. The 't' event should be set in the events array to use this parameter.
  * @property {Array.<string>} [enabledKeys]
  * CMCD keys to include in the report.
- * @property {Array.<string>} [includeRequestTypes]
+ * @property {Array.<string>} [sendResponseReceivedForRequestTypes]
  * Types of responses for which response-received reports should be sent (e.g., 'mpd', 'segment').
  * @property {number} [batchSize]
  * The batch size for the CMCD reporting.
