@@ -392,7 +392,7 @@ function CmcdController() {
 
     function isCmcdEnabled(targetIndex = null) {
         if (targetIndex !== null) {
-            return _targetCanBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
+            return _canEventTargetBeEnabled(targetIndex) && _checkTargetIncludeInRequests(targetIndex);
         } else {
             return _canBeEnabled() && _checkIncludeInRequests();
         }
@@ -433,7 +433,7 @@ function CmcdController() {
         return true;
     }
 
-    function _targetCanBeEnabled(targetIndex) {
+    function _canEventTargetBeEnabled(targetIndex) {
         const cmcdVersion = cmcdConfigAccessor.getVersion();
 
         if (cmcdVersion !== 2) {
