@@ -46,7 +46,7 @@
         var defaultSourceUrl = 'https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd';
         var defaultEventTargetDefinitions = [
             {
-                title: 'CMCD v2 reporting',
+                title: 'Response received reporting - External Server',
                 description: 'Sends response-received (rr) events for segment requests.',
                 config: {
                     enabled: false,
@@ -57,7 +57,7 @@
                 }
             },
             {
-                title: 'Response received reporting',
+                title: 'Response received reporting- Local Server',
                 description: 'Sends response-received (rr) events for segment requests.',
                 config: {
                     enabled: false,
@@ -116,7 +116,7 @@
                 cid: '21cf726cfe3d937b5f974f72bb5bd06a', /* sample-only placeholder */
                 mode: 'query',
                 enabledKeys: ['br', 'd', 'ot', 'tb', 'bl', 'dl', 'mtp', 'nor', 'nrr', 'su', 'bs', 'rtp', 'cid', 'pr', 'sf', 'sid', 'st', 'v', 'msd'],
-                includeRequestTypes: ['segment', 'mpd'],
+                includeRequestTypes: ['mpd'],
                 eventTargets: getDefaultEventTargets()
             };
         }

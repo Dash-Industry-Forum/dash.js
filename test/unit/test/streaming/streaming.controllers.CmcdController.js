@@ -104,6 +104,34 @@ describe('CmcdController', function () {
             expect(metrics).to.have.property('e', 'ps');
         });
 
+        it('should send event reports for a target with an empty sendResponseReceivedForRequestTypes list', () => {
+            settings.update({
+                streaming: {
+                    cmcd: {
+                        version: 2,
+                        eventTargets: [{
+                            url: 'https://cmcd.event.collector/api',
+                            enabled: true,
+                            enabledKeys: ['e', 'sta'],
+                            events: ['ps'],
+                            sendResponseReceivedForRequestTypes: [],
+                            interval: 0
+                        }]
+                    }
+                }
+            });
+            cmcdController.initialize();
+
+            eventBus.trigger(MediaPlayerEvents.PLAYBACK_PLAYING);
+
+            expect(urlLoaderMock.load.calledOnce).to.be.true;
+            const requestSent = urlLoaderMock.load.firstCall.args[0].request;
+            expect(requestSent.url).to.equal('https://cmcd.event.collector/api');
+
+            const metrics = decodeCmcd(decodeURIComponent(requestSent.body));
+            expect(metrics).to.have.property('e', 'ps');
+        });
+
         it('should not send any event if they are undefined', () => {
             settings.update({
                 streaming: {
@@ -289,6 +317,7 @@ describe('CmcdController', function () {
                             enabled: true,
                             enabledKeys: [],
                             events: ['rr'],
+                            sendResponseReceivedForRequestTypes: ['segment'],
                             interval: 0
                         }]
                     }
