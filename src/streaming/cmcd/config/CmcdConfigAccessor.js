@@ -135,6 +135,10 @@ function CmcdConfigAccessor() {
         manifestParams = params;
     }
 
+    function clearManifestParams() {
+        manifestParams = null;
+    }
+
     /**
      * Detect the CMCD version from available sources
      * Priority: manifest > settings > default (1)
@@ -466,6 +470,7 @@ function CmcdConfigAccessor() {
     }
 
     instance = {
+        clearManifestParams,
         get,
         getEventTarget,
         getEventTargets,

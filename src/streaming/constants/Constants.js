@@ -246,9 +246,10 @@ export default {
     CMCD_MODE_HEADERS: CmcdTransmissionMode.HEADERS,
 
     /**
-     *  @constant {string} CMCD_MODE_BODY specifies to attach CMCD metrics on request body.
-     *  @memberof Constants#
-     *  @static
+     * @deprecated CMCD request-mode body transmission is unsupported and falls back to query mode.
+     * @constant {string}
+     * @memberof Constants#
+     * @static
      */
     CMCD_MODE_BODY: 'body',
 

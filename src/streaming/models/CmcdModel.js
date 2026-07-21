@@ -776,7 +776,7 @@ function CmcdModel() {
         const requestTypesArray = requestTypes ?? cmcdConfigAccessor.get('includeRequestTypes');
         const filterType = REQUEST_TYPE_TO_CMCD_FILTER[type];
 
-        return filterType !== undefined && requestTypesArray.includes(filterType);
+        return filterType !== undefined && Array.isArray(requestTypesArray) && requestTypesArray.includes(filterType);
     }
 
     function reset() {

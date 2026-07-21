@@ -962,8 +962,9 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * This value is used as a factor for the rtp value calculation: rtp = minBandwidth * rtpSafetyFactor
  *
  * If not specified this value defaults to 5. Note that this value is only used when no static rtp value is defined.
- * @property {number} [mode="query"]
- * The method to use to attach cmcd metrics to the requests. 'query' to use query parameters, 'header' to use http headers.
+ * @property {string} [mode="query"]
+ * The method to use to attach CMCD metrics to requests. Use 'query' for query parameters or 'headers' for HTTP headers.
+ * The legacy 'header' value is supported but deprecated.
  *
  * If not specified this value defaults to 'query'.
  * @property {Array.<string>} [enabledKeys]
@@ -983,7 +984,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
 /**
  * @typedef {Object} CmcdEventTarget
  * @property {boolean} [enabled]
- * Whether the CMCD reporting is enabled for this target.
+ * @deprecated This property is ignored. Remove the target from `eventTargets` to disable reporting.
  * @property {string} [url]
  * The reporting endpoint URL.
  * @property {string} [events]

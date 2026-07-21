@@ -59,7 +59,7 @@ import Utils from '../../core/Utils.js';
  *
  * EVENT MODE - CMCD reports are POSTed to the configured reporting targets
  * (`streaming.cmcd.eventTargets`), triggered by event types (ps, e, t, rr, ...).
- * One reporter per enabled target (`eventModeReporters`). The rr (response
+ * One reporter per configured target (`eventModeReporters`). The rr (response
  * received) event is additionally filtered per target by
  * `sendResponseReceivedForRequestTypes`.
  */
@@ -148,8 +148,7 @@ function CmcdController() {
         }
 
         _createReporters();
-        requestModeReporter.start();
-        eventModeReporters.forEach(({ reporter }) => reporter.start());
+        _startReporters();
 
         _initializePlaybackStateListeners();
     }
@@ -194,20 +193,13 @@ function CmcdController() {
             eventModeReporters = null;
         }
 
+        cmcdConfigAccessor.clearManifestParams();
         cmcdModel.resetInitialSettings();
     }
 
     /* ---------------------------------------------------------------------
      * Enablement & validation
      * ------------------------------------------------------------------ */
-
-    /**
-     * @param {number|null} targetIndex - null: is REQUEST MODE enabled (global config)?
-     *                                    number: is the EVENT MODE target at this index enabled?
-     */
-    function isCmcdEnabled(targetIndex = null) {
-        return targetIndex === null ? _isRequestModeEnabled() : _isEventTargetEnabled(targetIndex);
-    }
 
     function _isRequestModeEnabled() {
         const version = cmcdConfigAccessor.getVersion();
@@ -238,7 +230,6 @@ function CmcdController() {
         }
 
         const targetAccessor = cmcdConfigAccessor.getEventTarget(targetIndex);
-        const enabled = targetAccessor.get('targetEnabled');
         const url = targetAccessor.get('targetUrl');
 
         if (!url) {
@@ -246,18 +237,7 @@ function CmcdController() {
             return false;
         }
 
-        if (!enabled) {
-            return false;
-        }
-
-        const sendResponseReceivedForRequestTypes = targetAccessor.get('targetSendResponseReceivedForRequestType');
-
-        // An unset or empty list is valid: the target stays enabled but sends no rr reports.
-        if (!sendResponseReceivedForRequestTypes || sendResponseReceivedForRequestTypes.length === 0) {
-            return true;
-        }
-
-        return _validateRequestTypeNames(sendResponseReceivedForRequestTypes);
+        return true;
     }
 
     /**
@@ -266,6 +246,11 @@ function CmcdController() {
      * empty list - callers that allow empty lists must check before calling).
      */
     function _validateRequestTypeNames(requestTypes) {
+        if (!Array.isArray(requestTypes)) {
+            logger.error('Request types must be an array.');
+            return false;
+        }
+
         const invalidRequests = requestTypes.filter(k => !Constants.CMCD_AVAILABLE_REQUESTS.includes(k));
 
         if (invalidRequests.length === requestTypes.length) {
@@ -294,10 +279,15 @@ function CmcdController() {
             }));
     }
 
+    function _startReporters() {
+        requestModeReporter.start();
+        eventModeReporters.forEach(({ reporter }) => reporter.start())
+    }
+
     function _createReporter(eventTargets) {
         const cmcdConfig = {
             version: cmcdConfigAccessor.getVersion(),
-            transmissionMode: cmcdConfigAccessor.get('mode') === Constants.CMCD_MODE_HEADERS ? CMCD_HEADERS : CMCD_QUERY,
+            transmissionMode: _getTransmissionMode(),
             enabledKeys: cmcdConfigAccessor.get('keys'),
             eventTargets,
         };
@@ -316,22 +306,53 @@ function CmcdController() {
         return new CmcdReporter(cmcdConfig, _customRequester);
     }
 
+    function _getTransmissionMode() {
+        const mode = cmcdConfigAccessor.get('mode');
+
+        if (mode === Constants.CMCD_MODE_HEADERS) {
+            return CMCD_HEADERS;
+        }
+
+        if (mode === 'header') {
+            logger.warn('CMCD transmission mode "header" is deprecated. Use "headers" instead.');
+            return CMCD_HEADERS;
+        }
+
+        if (mode !== Constants.CMCD_MODE_QUERY) {
+            logger.warn(`Unsupported CMCD transmission mode "${mode}". Using "${Constants.CMCD_MODE_QUERY}".`);
+        }
+
+        return CMCD_QUERY;
+    }
+
     function _buildEnabledEventTargets() {
         const targets = cmcdConfigAccessor.getEventTargets();
 
         return targets.reduce((result, _target, index) => {
-            if (!isCmcdEnabled(index)) {
+            if (!_isEventTargetEnabled(index)) {
                 return result;
             }
 
             const accessor = cmcdConfigAccessor.getEventTarget(index);
+            const sendResponseReceivedForRequestTypes = accessor.get('targetSendResponseReceivedForRequestType');
+
+            if (_target && Object.prototype.hasOwnProperty.call(_target, 'enabled')) {
+                logger.warn('CMCD event target "enabled" is deprecated and ignored. Remove the target from eventTargets to disable it.');
+            }
+
+            // This player-specific filter only controls rr reports. It must not disable
+            // independently configured event reports for the target.
+            if (sendResponseReceivedForRequestTypes?.length) {
+                _validateRequestTypeNames(sendResponseReceivedForRequestTypes);
+            }
+
             result.push({
                 url: accessor.get('targetUrl'),
                 events: accessor.get('targetEvents'),
                 interval: accessor.get('targetInterval') ?? Constants.CMCD_DEFAULT_TIME_INTERVAL,
                 batchSize: accessor.get('targetBatchSize') || 1,
                 enabledKeys: accessor.get('targetKeys'),
-                sendResponseReceivedForRequestTypes: accessor.get('targetSendResponseReceivedForRequestType'),
+                sendResponseReceivedForRequestTypes,
             });
 
             return result;
@@ -457,7 +478,8 @@ function CmcdController() {
     }
 
     function _triggerCmcdDataGeneratedEvent(request) {
-        const effectiveMode = cmcdConfigAccessor.get('mode');
+        const configuredMode = cmcdConfigAccessor.get('mode');
+        const effectiveMode = configuredMode === 'header' ? Constants.CMCD_MODE_HEADERS : configuredMode;
         const eventData = {
             url: request.url,
             mediaType: request.mediaType,
@@ -494,6 +516,10 @@ function CmcdController() {
         }
 
         _rebuildReportersIfNeeded();
+
+        if (!eventModeReporters?.length) {
+            return;
+        }
 
         const cmcdData = cmcdModel.getEventModeData();
 
@@ -534,6 +560,10 @@ function CmcdController() {
         }
 
         _rebuildReportersIfNeeded();
+
+        if (!eventModeReporters?.length) {
+            return;
+        }
 
         // Collect event-mode data from the model
         const eventData = cmcdModel.getEventModeData();
@@ -698,7 +728,6 @@ function CmcdController() {
         getCmcdResponseReceivedInterceptors,
         getCmcdParametersFromManifest,
         initialize,
-        isCmcdEnabled,
         reset,
         setConfig
     };

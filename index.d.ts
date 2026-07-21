@@ -1958,11 +1958,12 @@ export class MediaPlayerSettingClass {
             cid?: string | null,
             rtp?: number | null,
             rtpSafetyFactor?: number,
-            mode?: 'query' | 'header',
+            mode?: 'query' | 'headers' | 'header', // 'header' is deprecated; use 'headers'.
             enabledKeys?: Array<string>,
             includeRequestTypes?: Array<string>,
             version?: number,
             eventTargets?: Array<{
+                /** @deprecated This property is ignored. Remove the target from eventTargets to disable reporting. */
                 enabled?: boolean,
                 url?: string,
                 events?: Array<string>,

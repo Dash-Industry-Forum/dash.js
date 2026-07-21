@@ -141,7 +141,7 @@ const CmcdPropertyMap = {
     },
 
     /**
-     * Transmission mode (query, header, body)
+     * Transmission mode (query, headers)
      * Priority: manifest > settings > default (query)
      *
      * V1: Single global mode
@@ -283,22 +283,6 @@ const CmcdPropertyMap = {
                 priority: 1,
                 type: 'array',
                 default: []
-            }
-        ]
-    },
-
-    /**
-     * V2: Target enabled flag
-     * Note: This is target-specific, requires context
-     */
-    targetEnabled: {
-        version: [2],
-        sources: [
-            {
-                path: 'settings.streaming.cmcd.eventTargets[{targetIndex}].enabled',
-                priority: 1,
-                type: 'boolean',
-                default: true
             }
         ]
     },
