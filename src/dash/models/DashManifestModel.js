@@ -271,13 +271,14 @@ function DashManifestModel() {
             return [];
         }
         return adaptation[DashConstants.ROLE].map(role => {
-            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
-            if (role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
-                role.value = DashConstants.MAIN;
-            }
-
             const r = new DescriptorType();
             r.init(role);
+
+            // conceal misspelled "Main" from earlier MPEG-DASH editions (fixed with 6th edition)
+            if (role.schemeIdUri === Constants.DASH_ROLE_SCHEME_ID && role.value === 'Main') {
+                r.value = DashConstants.MAIN;
+            }
+
             return r
         });
     }
