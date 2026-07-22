@@ -178,7 +178,7 @@ export class ControlBar {
         this.seekbarBuffer.style.width = '0%';
         this.timeDisplay.textContent = '00:00';
         this.durationDisplay.textContent = '00:00';
-        this.durationDisplay.classList.remove('cb-live-indicator', 'cb-static-indicator', 'cb-at-live-edge');
+        this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
         if (this.timeSeparator) {
             this.timeSeparator.classList.remove('cb-hidden-element');
         }
@@ -503,7 +503,6 @@ export class ControlBar {
 
                 this.durationDisplay.innerHTML = '<i class="bi bi-circle-fill"></i> LIVE';
                 this.durationDisplay.classList.add('cb-live-indicator');
-                this.durationDisplay.classList.remove('cb-static-indicator');
 
                 // Hide separator for live
                 if (this.timeSeparator) {
@@ -516,9 +515,12 @@ export class ControlBar {
                 this.durationDisplay.classList.toggle('cb-at-live-edge', atLiveEdge);
             } else {
                 this.timeDisplay.textContent = formatTime(time);
-                this.durationDisplay.textContent = 'STATIC';
                 this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
-                this.durationDisplay.classList.add('cb-static-indicator');
+                this.durationDisplay.textContent = formatTime(duration);
+                this.durationDisplay.appendChild(createElement('span', {
+                    className: 'cb-static-indicator',
+                    textContent: ' STATIC'
+                }));
 
                 // Show separator for VoD
                 if (this.timeSeparator) {
