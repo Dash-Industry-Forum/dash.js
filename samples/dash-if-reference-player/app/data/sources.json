@@ -473,7 +473,7 @@
                         "live",
                         "dashif"
                     ]
-                },                
+                },
                 {
                     "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
                     "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
@@ -603,7 +603,7 @@
                         "dashif"
                     ]
                 },
-              {
+                {
                     "url": "https://akamaibroadcasteruseast.akamaized.net/cmaf/live/657078/akasource/out.mpd",
                     "name": "Akamai Low Latency Stream (Single Rate)",
                     "provider": "akamai",
