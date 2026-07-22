@@ -38,10 +38,11 @@ import Events from '../../core/events/Events.js';
 import FactoryMaker from '../../core/FactoryMaker.js';
 import Debug from '../../core/Debug.js';
 import {
-    getBufferLength as calculateBufferLength,
-    getPruningRanges as calculateRangesForPruning,
+    getBufferLength,
+    getPruningRanges,
     getRangeAt as findRangeAt,
-    hasBufferAtTime as containsTime
+    hasBufferAtTime as containsTime,
+    isValidTargetTime
 } from '../utils/BufferRangeUtils.js';
 import InitCache from '../utils/InitCache.js';
 import { HTTPRequest } from '../vo/metrics/HTTPRequest.js';
@@ -639,30 +640,26 @@ function BufferController(config) {
     function getAllRangesWithSafetyFactor(seekTime) {
         const ranges = sourceBufferSink.getAllBufferRanges();
 
-        if (!ranges || ranges.length === 0 || (!seekTime && seekTime !== 0) || isNaN(seekTime)) {
-            return calculateRangesForPruning(ranges, seekTime).ranges;
+        if (!ranges || ranges.length === 0 || !isValidTargetTime(seekTime)) {
+            return getPruningRanges(ranges, seekTime);
         }
 
         const bufferSettings = settings.get().streaming.buffer;
         const isLongFormContent = streamInfo.manifestInfo.duration >= bufferSettings.longFormContentDurationThreshold;
-        const currentTimeRequest = fragmentModel.getRequests({
+        const currentTimeRequest = fragmentModel ? fragmentModel.getRequests({
             state: FragmentModel.FRAGMENT_MODEL_EXECUTED,
             time: seekTime,
             threshold: BUFFER_RANGE_CALCULATION_THRESHOLD
-        })[0];
-        const pruningResult = calculateRangesForPruning(ranges, seekTime, {
+        })[0] : null;
+
+        return getPruningRanges(ranges, seekTime, {
             bufferToKeepBehind: bufferSettings.bufferToKeep,
             bufferToKeepAhead: isLongFormContent ? bufferSettings.bufferTimeAtTopQualityLongForm : bufferSettings.bufferTimeAtTopQuality,
             continuousBufferTime: getContinuousBufferTimeForTargetTime(seekTime),
             currentTimeRequest,
-            avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning
+            avoidCurrentTimeRangePruning: bufferSettings.avoidCurrentTimeRangePruning,
+            logger
         });
-
-        if (pruningResult.currentRangeWasProtected) {
-            logger.debug('Adjusted pruning ranges to preserve the buffered range containing targetTime ' + seekTime);
-        }
-
-        return pruningResult.ranges;
     }
 
     function _onPlaybackProgression() {
@@ -705,7 +702,7 @@ function BufferController(config) {
         }
 
         const ranges = sourceBufferSink ? sourceBufferSink.getAllBufferRanges() : null;
-        return calculateBufferLength(ranges, time, tolerance);
+        return getBufferLength(ranges, time, tolerance);
     }
 
     function _updateBufferLevel() {

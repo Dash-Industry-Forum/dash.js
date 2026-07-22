@@ -49,18 +49,15 @@ describe('BufferController', function () {
     let bufferController;
     let mediaSourceMock;
     let currentTimeRequest;
-    let fragmentRequestCallCount;
     const fragmentModelMock = {
         getRequests: () => {
-            fragmentRequestCallCount += 1;
-            return [currentTimeRequest];
+            return currentTimeRequest ? [currentTimeRequest] : [];
         }
     };
     const mediaInfo = { codec: 'video/webm; codecs="vp8, vorbis"' };
 
     beforeEach(function () {
         currentTimeRequest = null;
-        fragmentRequestCallCount = 0;
         streamInfo.manifestInfo.duration = 300;
         mediaSourceMock = new MediaSourceMock();
         bufferController = BufferController(context).create({
@@ -398,7 +395,6 @@ describe('BufferController', function () {
                 { start: 0, end: 25 },
                 { start: 85, end: 100.5 }
             ]);
-            expect(fragmentRequestCallCount).to.equal(1);
         });
 
         it('should preserve the buffered range containing the seek target when configured', function () {

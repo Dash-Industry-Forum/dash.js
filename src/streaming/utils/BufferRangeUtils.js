@@ -32,6 +32,10 @@
 const BUFFER_END_THRESHOLD = 0.5;
 const DEFAULT_RANGE_TOLERANCE = 0.15;
 
+function isValidTargetTime(time) {
+    return typeof time === 'number' && !isNaN(time);
+}
+
 function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, currentTimeRequest) {
     const startOfBuffer = ranges.start(0);
 
@@ -55,21 +59,18 @@ function getRangeBehindForPruning(ranges, targetTime, bufferToKeepBehind, curren
 
 function getRangeAheadForPruning(ranges, targetTime, options) {
     const endOfLastRange = ranges.end(ranges.length - 1);
-    let currentRangeWasProtected = false;
     const {
         bufferToKeepAhead,
         continuousBufferTime,
         currentTimeRequest,
-        avoidCurrentTimeRangePruning
+        avoidCurrentTimeRangePruning,
+        logger
     } = options;
 
     let rangeStart = !isNaN(continuousBufferTime) ? Math.min(continuousBufferTime, targetTime + bufferToKeepAhead) : targetTime;
 
     if (rangeStart >= endOfLastRange) {
-        return {
-            range: null,
-            currentRangeWasProtected
-        };
+        return null;
     }
 
     if (currentTimeRequest) {
@@ -80,8 +81,12 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
         for (let i = 0; i < ranges.length; i++) {
             if (ranges.start(i) <= targetTime && targetTime <= ranges.end(i)
                 && ranges.start(i) <= rangeStart && rangeStart <= ranges.end(i)) {
-                currentRangeWasProtected = true;
+                const oldRangeStart = rangeStart;
                 rangeStart = i + 1 < ranges.length ? ranges.start(i + 1) : ranges.end(i) + 1;
+                if (logger) {
+                    const endOfBuffer = endOfLastRange + BUFFER_END_THRESHOLD;
+                    logger.debug('Buffered range [' + ranges.start(i) + ', ' + ranges.end(i) + '] overlaps with targetTime ' + targetTime + ' and range to be pruned [' + oldRangeStart + ', ' + endOfBuffer + '], using [' + rangeStart + ', ' + endOfBuffer + '] instead' + ((rangeStart < endOfBuffer) ? '' : ' (no actual pruning)'));
+                }
                 break;
             }
         }
@@ -89,61 +94,51 @@ function getRangeAheadForPruning(ranges, targetTime, options) {
 
     if (rangeStart < endOfLastRange) {
         return {
-            range: {
-                start: rangeStart,
-                end: endOfLastRange + BUFFER_END_THRESHOLD
-            },
-            currentRangeWasProtected
+            start: rangeStart,
+            end: endOfLastRange + BUFFER_END_THRESHOLD
         };
     }
 
-    return {
-        range: null,
-        currentRangeWasProtected
-    };
+    return null;
 }
 
 function getPruningRanges(ranges, seekTime, options) {
     const clearRanges = [];
 
     if (!ranges || ranges.length === 0) {
-        return {
-            ranges: clearRanges,
-            currentRangeWasProtected: false
-        };
+        return clearRanges;
     }
 
-    if ((!seekTime && seekTime !== 0) || isNaN(seekTime)) {
+    if (!isValidTargetTime(seekTime)) {
         clearRanges.push({
             start: ranges.start(0),
             end: ranges.end(ranges.length - 1) + BUFFER_END_THRESHOLD
         });
-        return {
-            ranges: clearRanges,
-            currentRangeWasProtected: false
-        };
+        return clearRanges;
+    }
+
+    const pruningOptions = options || {};
+    if (!Number.isFinite(pruningOptions.bufferToKeepBehind) || !Number.isFinite(pruningOptions.bufferToKeepAhead)) {
+        throw new Error('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead options when a valid seek time is provided');
     }
 
     const behindPruningRange = getRangeBehindForPruning(
         ranges,
         seekTime,
-        options.bufferToKeepBehind,
-        options.currentTimeRequest
+        pruningOptions.bufferToKeepBehind,
+        pruningOptions.currentTimeRequest
     );
-    const aheadPruningResult = getRangeAheadForPruning(ranges, seekTime, options);
+    const aheadPruningRange = getRangeAheadForPruning(ranges, seekTime, pruningOptions);
 
     if (behindPruningRange) {
         clearRanges.push(behindPruningRange);
     }
 
-    if (aheadPruningResult.range) {
-        clearRanges.push(aheadPruningResult.range);
+    if (aheadPruningRange) {
+        clearRanges.push(aheadPruningRange);
     }
 
-    return {
-        ranges: clearRanges,
-        currentRangeWasProtected: aheadPruningResult.currentRangeWasProtected
-    };
+    return clearRanges;
 }
 
 function hasBufferAtTime(ranges, time) {
@@ -163,7 +158,7 @@ function hasBufferAtTime(ranges, time) {
 function getRangeAt(ranges, time, tolerance) {
     let firstStart = null;
     let lastEnd = null;
-    const actualTolerance = !isNaN(tolerance) ? tolerance : DEFAULT_RANGE_TOLERANCE;
+    const actualTolerance = typeof tolerance === 'number' && !isNaN(tolerance) ? tolerance : DEFAULT_RANGE_TOLERANCE;
 
     if (ranges !== null && ranges !== undefined) {
         for (let i = 0; i < ranges.length; i++) {
@@ -199,5 +194,6 @@ export {
     getBufferLength,
     getPruningRanges,
     getRangeAt,
-    hasBufferAtTime
+    hasBufferAtTime,
+    isValidTargetTime
 };

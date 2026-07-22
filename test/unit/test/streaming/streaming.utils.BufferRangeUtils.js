@@ -4,19 +4,16 @@ import {
     getRangeAt,
     hasBufferAtTime
 } from '../../../../src/streaming/utils/BufferRangeUtils.js';
+import CustomTimeRanges from '../../../../src/streaming/utils/CustomTimeRanges.js';
 
 import {expect} from 'chai';
 
-function createTimeRanges(ranges = []) {
-    return {
-        length: ranges.length,
-        start: (index) => ranges[index].start,
-        end: (index) => ranges[index].end
-    };
-}
+const context = {};
 
-function getRangesForPruning(...args) {
-    return getPruningRanges(...args).ranges;
+function createTimeRanges(ranges = []) {
+    const timeRanges = CustomTimeRanges(context).create();
+    ranges.forEach((range) => timeRanges.add(range.start, range.end));
+    return timeRanges;
 }
 
 describe('BufferRangeUtils', function () {
@@ -31,29 +28,37 @@ describe('BufferRangeUtils', function () {
         };
 
         it('should return no ranges when the buffer is empty', function () {
-            expect(getRangesForPruning(createTimeRanges(), 10, pruningOptions)).to.deep.equal([]);
-            expect(getRangesForPruning(null, 10, pruningOptions)).to.deep.equal([]);
+            expect(getPruningRanges(createTimeRanges(), 10, pruningOptions)).to.deep.equal([]);
+            expect(getPruningRanges(null, 10, pruningOptions)).to.deep.equal([]);
         });
 
-        it('should clear the full buffer when the seek time is missing or not numeric', function () {
+        it('should clear the full buffer when the seek time is missing or not a number', function () {
             const ranges = createTimeRanges([{ start: 2, end: 5 }, { start: 8, end: 11 }]);
             const expected = [{ start: 2, end: 11.5 }];
 
-            expect(getRangesForPruning(ranges)).to.deep.equal(expected);
-            expect(getRangesForPruning(ranges, NaN)).to.deep.equal(expected);
-            expect(getRangesForPruning(ranges, 'invalid')).to.deep.equal(expected);
+            expect(getPruningRanges(ranges)).to.deep.equal(expected);
+            expect(getPruningRanges(ranges, NaN)).to.deep.equal(expected);
+            expect(getPruningRanges(ranges, 'invalid')).to.deep.equal(expected);
+            expect(getPruningRanges(ranges, '50')).to.deep.equal(expected);
         });
 
-        it('should require pruning options for a valid seek time', function () {
+        it('should reject a valid seek time without pruning options', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            expect(() => getPruningRanges(ranges, 50)).to.throw();
+            expect(() => getPruningRanges(ranges, 50)).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
+        });
+
+        it('should reject partial pruning options', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 100 }]);
+
+            expect(() => getPruningRanges(ranges, 50, { bufferToKeepBehind: 20 })).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
+            expect(() => getPruningRanges(ranges, 50, { bufferToKeepAhead: 30 })).to.throw('getPruningRanges requires numeric bufferToKeepBehind and bufferToKeepAhead');
         });
 
         it('should treat seek time zero as a valid pruning target', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            expect(getRangesForPruning(ranges, 0, pruningOptions)).to.deep.equal([
+            expect(getPruningRanges(ranges, 0, pruningOptions)).to.deep.equal([
                 { start: 30, end: 100.5 }
             ]);
         });
@@ -61,13 +66,10 @@ describe('BufferRangeUtils', function () {
         it('should calculate the ranges behind and ahead of the target time', function () {
             const ranges = createTimeRanges([{ start: 0, end: 100 }]);
 
-            const result = getPruningRanges(ranges, 50, pruningOptions);
-
-            expect(result.ranges).to.deep.equal([
+            expect(getPruningRanges(ranges, 50, pruningOptions)).to.deep.equal([
                 { start: 0, end: 30 },
                 { start: 80, end: 100.5 }
             ]);
-            expect(result.currentRangeWasProtected).to.be.false;
         });
 
         it('should keep the full range of the current fragment', function () {
@@ -77,7 +79,7 @@ describe('BufferRangeUtils', function () {
                 currentTimeRequest: { startTime: 25, duration: 60 }
             };
 
-            expect(getRangesForPruning(ranges, 50, options)).to.deep.equal([
+            expect(getPruningRanges(ranges, 50, options)).to.deep.equal([
                 { start: 0, end: 25 },
                 { start: 85, end: 100.5 }
             ]);
@@ -91,13 +93,27 @@ describe('BufferRangeUtils', function () {
                 avoidCurrentTimeRangePruning: true
             };
 
-            const result = getPruningRanges(ranges, 50, options);
-
-            expect(result.ranges).to.deep.equal([
+            expect(getPruningRanges(ranges, 50, options)).to.deep.equal([
                 { start: 0, end: 30 },
                 { start: 70, end: 120.5 }
             ]);
-            expect(result.currentRangeWasProtected).to.be.true;
+        });
+
+        it('should log the protected range when a logger is provided', function () {
+            const ranges = createTimeRanges([{ start: 0, end: 60 }, { start: 70, end: 120 }]);
+            const messages = [];
+            const options = {
+                ...pruningOptions,
+                continuousBufferTime: 60,
+                avoidCurrentTimeRangePruning: true,
+                logger: { debug: (message) => messages.push(message) }
+            };
+
+            getPruningRanges(ranges, 50, options);
+
+            expect(messages).to.deep.equal([
+                'Buffered range [0, 60] overlaps with targetTime 50 and range to be pruned [60, 120.5], using [70, 120.5] instead'
+            ]);
         });
 
         it('should start ahead pruning at the end of the continuous range', function () {
@@ -107,7 +123,7 @@ describe('BufferRangeUtils', function () {
                 continuousBufferTime: 60
             };
 
-            expect(getRangesForPruning(ranges, 50, options)).to.deep.equal([
+            expect(getPruningRanges(ranges, 50, options)).to.deep.equal([
                 { start: 0, end: 30 },
                 { start: 60, end: 120.5 }
             ]);
@@ -120,7 +136,7 @@ describe('BufferRangeUtils', function () {
                 continuousBufferTime: NaN
             };
 
-            expect(getRangesForPruning(ranges, 20, options)).to.deep.equal([
+            expect(getPruningRanges(ranges, 20, options)).to.deep.equal([
                 { start: 20, end: 100.5 }
             ]);
         });
@@ -132,12 +148,9 @@ describe('BufferRangeUtils', function () {
                 avoidCurrentTimeRangePruning: true
             };
 
-            const result = getPruningRanges(ranges, 50, options);
-
-            expect(result.ranges).to.deep.equal([
+            expect(getPruningRanges(ranges, 50, options)).to.deep.equal([
                 { start: 0, end: 30 }
             ]);
-            expect(result.currentRangeWasProtected).to.be.true;
         });
 
         it('should not prune behind when the retained duration equals bufferToKeepBehind', function () {
@@ -148,7 +161,7 @@ describe('BufferRangeUtils', function () {
                 bufferToKeepAhead: 100
             };
 
-            expect(getRangesForPruning(ranges, 50, options)).to.deep.equal([]);
+            expect(getPruningRanges(ranges, 50, options)).to.deep.equal([]);
         });
     });
 
@@ -189,6 +202,12 @@ describe('BufferRangeUtils', function () {
             const ranges = createTimeRanges([{ start: 10.14, end: 11 }]);
 
             expect(getRangeAt(ranges, 10)).to.deep.equal({ start: 10.14, end: 11 });
+        });
+
+        it('should use the default tolerance when the tolerance is null', function () {
+            const ranges = createTimeRanges([{ start: 10.14, end: 11 }]);
+
+            expect(getRangeAt(ranges, 10, null)).to.deep.equal({ start: 10.14, end: 11 });
         });
 
         it('should return null when the closest range exceeds the tolerance', function () {
