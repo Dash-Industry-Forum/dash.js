@@ -1,5 +1,6 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
+import { expect } from 'chai'
 import {
     checkEventHasBeenTriggered,
     checkIsPlaying,
@@ -53,6 +54,24 @@ Utils.getTestvectorsForTestcase(TESTCASE).forEach((item) => {
 
         it(`PLAYBACK_ENDED event has been thrown`, async () => {
             checkEventHasBeenTriggered(playerAdapter, dashjs.MediaPlayer.events.PLAYBACK_ENDED);
+        });
+
+        it(`Player is not dynamic anymore`, () => {
+            expect(playerAdapter.isDynamic()).to.be.false;
+        });
+
+        it(`Duration is finite`, () => {
+            expect(playerAdapter.getDuration()).to.be.a('number');
+            expect(playerAdapter.getDuration()).to.be.finite;
+        });
+
+        it(`Seek back to start replaying the stream`, async function () {
+            if (!item.testdata.dynamicToStatic.checkReplay) {
+                this.skip();
+            }
+            playerAdapter.seek(0);
+            playerAdapter.play();
+            await checkIsProgressing(playerAdapter);
         });
 
         it(`Expect no critical errors to be thrown`, () => {

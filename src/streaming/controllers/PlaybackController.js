@@ -865,6 +865,12 @@ function PlaybackController() {
      */
     function _onStreamsComposed() {
         manifestUpdateInProgress = false;
+
+        // Refresh the cached streamInfo so values such as the duration reflect the updated manifest
+        const activeStreamInfo = streamController ? streamController.getActiveStreamInfo() : null;
+        if (activeStreamInfo && streamInfo && activeStreamInfo.id === streamInfo.id) {
+            streamInfo = activeStreamInfo;
+        }
     }
 
     function _checkEnableLowLatency(mediaInfo) {

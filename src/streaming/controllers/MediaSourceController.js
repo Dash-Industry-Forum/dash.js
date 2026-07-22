@@ -108,12 +108,32 @@ function MediaSourceController() {
             value = Math.pow(2, 32);
         }
 
-        if (!isBufferUpdating(mediaSource)) {
+        if (!_isBufferUpdating(mediaSource)) {
+            // Setting the duration below the highest presentation timestamp of any buffered coded frames throws an InvalidStateError. Clamp the duration to the highest buffered end time, for instance when applying the final duration after a transition from dynamic to static.
+            const highestBufferedEnd = _getHighestBufferedEnd(mediaSource);
+            if (highestBufferedEnd > value) {
+                value = highestBufferedEnd;
+            }
             logger.info('Set MediaSource duration:' + value);
             mediaSource.duration = value;
         } else {
             setTimeout(setDuration.bind(null, value), 50);
         }
+    }
+
+    function _getHighestBufferedEnd(source) {
+        let highestBufferedEnd = NaN;
+        const buffers = source.sourceBuffers;
+        for (let i = 0; i < buffers.length; i++) {
+            const buffered = buffers[i].buffered;
+            if (buffered && buffered.length > 0) {
+                const end = buffered.end(buffered.length - 1);
+                if (isNaN(highestBufferedEnd) || end > highestBufferedEnd) {
+                    highestBufferedEnd = end;
+                }
+            }
+        }
+        return highestBufferedEnd;
     }
 
     function setSeekable(start, end) {
@@ -143,8 +163,8 @@ function MediaSourceController() {
         source.endOfStream();
     }
 
-    function isBufferUpdating(source) {
-        let buffers = source.sourceBuffers;
+    function _isBufferUpdating(mediaSource) {
+        let buffers = mediaSource.sourceBuffers;
         for (let i = 0; i < buffers.length; i++) {
             if (buffers[i].updating) {
                 return true;
