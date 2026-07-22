@@ -295,6 +295,10 @@ function StreamController() {
      * @private
      */
     function _onDynamicToStatic() {
+        if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {
+            // Legacy behavior: the final static manifest is not applied, no update required
+            return;
+        }
         pendingDynamicToStaticUpdate = true;
     }
 
@@ -310,10 +314,8 @@ function StreamController() {
         _setMediaDuration();
         // Recalculate the range using the final static manifest instead of the previous live DVR window.
         addDVRMetric();
-        const dvrInfo = dashMetrics.getCurrentDVRInfo();
-        if (dvrInfo && dvrInfo.range) {
-            mediaSourceController.setSeekable(dvrInfo.range.start, dvrInfo.range.end);
-        }
+        // With a finite duration the seekable range is derived from the duration, the live seekable range only applies while the duration is Infinity. Clear it so it does not linger.
+        mediaSourceController.clearSeekableRange();
     }
 
     /**

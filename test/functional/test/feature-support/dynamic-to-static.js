@@ -1,6 +1,6 @@
 import Constants from '../../src/Constants.js';
 import Utils from '../../src/Utils.js';
-import { expect } from 'chai'
+import { expect } from 'chai';
 import {
     checkEventHasBeenTriggered,
     checkIsPlaying,

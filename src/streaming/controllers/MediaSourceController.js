@@ -144,6 +144,12 @@ function MediaSourceController() {
         }
     }
 
+    function clearSeekableRange() {
+        if (mediaSource && typeof mediaSource.clearLiveSeekableRange === 'function' && mediaSource.readyState === 'open') {
+            mediaSource.clearLiveSeekableRange();
+        }
+    }
+
     function signalEndOfStream(source) {
         if (!source || source.readyState !== 'open') {
             return;
@@ -163,8 +169,8 @@ function MediaSourceController() {
         source.endOfStream();
     }
 
-    function _isBufferUpdating(mediaSource) {
-        let buffers = mediaSource.sourceBuffers;
+    function _isBufferUpdating(source) {
+        let buffers = source.sourceBuffers;
         for (let i = 0; i < buffers.length; i++) {
             if (buffers[i].updating) {
                 return true;
@@ -188,6 +194,7 @@ function MediaSourceController() {
 
     instance = {
         attachMediaSource,
+        clearSeekableRange,
         createMediaSource,
         detachMediaSource,
         setConfig,
