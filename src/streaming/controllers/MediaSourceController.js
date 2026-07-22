@@ -97,7 +97,7 @@ function MediaSourceController() {
         if (!mediaSource || mediaSource.readyState !== 'open') {
             return;
         }
-        if (value === null && isNaN(value)) {
+        if (value === null || isNaN(value)) {
             return;
         }
         if (mediaSource.duration === value) {
