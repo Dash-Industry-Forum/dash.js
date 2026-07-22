@@ -28,6 +28,36 @@ describe('DashParser', function () {
         expect(dashParser.parse(manifest)).to.be.instanceOf(Object);
     });
 
+    it('should parse a single Viewpoint as an array', () => {
+        const manifest = `<MPD>
+    <Period>
+        <AdaptationSet>
+            <Viewpoint schemeIdUri="urn:mpeg:dash:viewpoint:2011" value="front"/>
+        </AdaptationSet>
+    </Period>
+</MPD>`;
+        const adaptationSet = dashParser.parse(manifest).Period[0].AdaptationSet[0];
+
+        expect(adaptationSet.Viewpoint).to.be.instanceOf(Array);
+        expect(adaptationSet.Viewpoint).to.have.lengthOf(1);
+        expect(adaptationSet.Viewpoint[0].value).to.equal('front');
+    });
+
+    it('should preserve multiple Viewpoints in document order', () => {
+        const manifest = `<MPD>
+    <Period>
+        <AdaptationSet>
+            <Viewpoint schemeIdUri="urn:mpeg:dash:viewpoint:2011" value="front"/>
+            <Viewpoint schemeIdUri="urn:mpeg:dash:viewpoint:2011" value="rear"/>
+        </AdaptationSet>
+    </Period>
+</MPD>`;
+        const adaptationSet = dashParser.parse(manifest).Period[0].AdaptationSet[0];
+
+        expect(adaptationSet.Viewpoint).to.be.instanceOf(Array);
+        expect(adaptationSet.Viewpoint.map((viewpoint) => viewpoint.value)).to.deep.equal(['front', 'rear']);
+    });
+
     it('should return a parsed Patch object when parse is called with valid patch data', () => {
         const patchManifest = `<?xml version="1.0" encoding="UTF-8"?>
 <Patch mpdId="foobar"
@@ -136,5 +166,4 @@ describe('DashParser', function () {
 
     });
 })
-
 
