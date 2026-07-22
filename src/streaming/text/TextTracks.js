@@ -620,7 +620,15 @@ function TextTracks(config) {
             }
 
             if (cue) {
-                if (settings.get().streaming.text.extendSegmentedCues) {
+                // CEA-608 captions use a paint-on model: each screen is a
+                // self-contained caption with its own explicit timing and is
+                // never split across segments. The extendSegmentedCues logic is
+                // meant to stitch segmented TTML/WebVTT cues back together, so it
+                // must not run for 608 or it would merge distinct captions
+                // (their rendered content lives in cueHTMLElement, which the cue
+                // equality check does not inspect) and only the first caption of
+                // each segment would ever be shown.
+                if (settings.get().streaming.text.extendSegmentedCues && !currentItem.isFromCEA608) {
                     const cueToExtend = _findCueToExtend(cue, cueData.allCues);
                     if (cueToExtend) {
                         cueData.allCues.removeCue(cueToExtend);

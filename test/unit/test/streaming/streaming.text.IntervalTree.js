@@ -115,6 +115,31 @@ describe('IntervalTree', function () {
 
             expect(intervalTree.getSize()).to.equal(1);
         });
+
+        it('should keep HTML cues with identical timing and empty text but different content', function () {
+            // The two rows of a single CEA-608 screen share the same timing and
+            // have an empty VTTCue text; their content lives in cueHTMLElement and
+            // they are told apart by a unique cueID. Both must be kept.
+            const row1 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_0', cueHTMLElement: { outerHTML: '<div>12:00:00.000</div>' } };
+            const row2 = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_1', cueHTMLElement: { outerHTML: '<div>SEG 0</div>' } };
+
+            intervalTree.addCue(row1);
+            intervalTree.addCue(row2);
+
+            expect(intervalTree.getSize()).to.equal(2);
+            const ids = intervalTree.getAllCues().map(c => c.cueID);
+            expect(ids).to.include('sub_cea608_0');
+            expect(ids).to.include('sub_cea608_1');
+        });
+
+        it('should skip duplicate HTML cues with identical timing and cueID', function () {
+            const cue = { startTime: 0, endTime: 1, text: '', cueID: 'sub_cea608_0', cueHTMLElement: { outerHTML: '<div>x</div>' } };
+
+            intervalTree.addCue(cue);
+            intervalTree.addCue(cue);
+
+            expect(intervalTree.getSize()).to.equal(1);
+        });
     });
 
     describe('Method findCuesInRange', function () {

@@ -159,17 +159,30 @@ class CueIntervalTree {
             return cue1.endTime - cue2.endTime;
         }
 
-        // Finally compare by text content
+        // Compare by text content
+        let textComparison = 0;
         if (typeof VTTCue !== 'undefined' && cue1 instanceof VTTCue && cue2 instanceof VTTCue) {
-            return cue1.text.localeCompare(cue2.text);
+            textComparison = cue1.text.localeCompare(cue2.text);
+        } else if (cue1.text && cue2.text) {
+            // For non-VTTCue objects, compare by text property if available
+            textComparison = cue1.text.localeCompare(cue2.text);
+        }
+        if (textComparison !== 0) {
+            return textComparison;
         }
 
-        // For non-VTTCue objects, compare by text property if available
-        if (cue1.text && cue2.text) {
-            return cue1.text.localeCompare(cue2.text);
+        // CEA-608 (and other) HTML cues carry their rendered content in a DOM
+        // node (cueHTMLElement) and have an empty VTTCue text. Cues that differ
+        // only in that node would otherwise compare as equal here and be dropped
+        // as duplicates — e.g. the two rows of a single 608 screen share the same
+        // timing and empty text, so one row would disappear. Disambiguate such
+        // cues by their unique cueID. Cues without a cueHTMLElement (e.g. WebVTT)
+        // keep the previous behaviour of deduplicating on timing and text.
+        if (cue1.cueHTMLElement || cue2.cueHTMLElement) {
+            return (cue1.cueID || '').localeCompare(cue2.cueID || '');
         }
 
-        // If no text property, consider them equal if timing matches
+        // If no distinguishing content, consider them equal if timing matches
         return 0;
     }
 
