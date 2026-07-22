@@ -22,6 +22,10 @@
             width: 70px;
         }
 
+        img.steering-architecture {
+            max-width: 720px;
+        }
+
         #cdn-selection-container, #location-selection-container {
             margin: 30px 0 0 0;
         }
@@ -35,7 +39,7 @@
             <div class="sample-metrics">
                 <div class="sample-metrics-header">Architecture</div>
                 <div class="sample-metrics-body">
-                    <img src="../common/img/steering.png" class="img-fluid" alt="Steering architecture illustration">
+                    <img src="../common/img/steering.png" class="img-fluid steering-architecture" alt="Steering architecture illustration">
                 </div>
             </div>
         </div>
@@ -44,7 +48,7 @@
         <div class="col-md-12">
             <div class="input-group mb-3">
                 <input type="text" id="manifest" class="form-control" placeholder="MPD URL"
-                       value="https://www.content-steering.com/bbb/playlist_steering_cloudfront_https.mpd">
+                       value='https://livesim2.dashif.org/livesim2/steer_alpha,beta,gamma;ttl=10;mode=rotate;qbs=1;default=beta/testpic_2s/Manifest.mpd?sessionId=dashjs'>
                 <button type="button" id="load-button" class="btn btn-success">Load MPD
                 </button>
             </div>
@@ -178,7 +182,7 @@
 
 <script class="code">
     let player;
-    let mpd = "";
+    let mpd = '';
     let currentSelectedServiceLocation = {}
     let cdnSelectionImgDomElements = {};
     let locationSelectionImgDomElements = {};
@@ -344,7 +348,7 @@
     }
 </script>
 <script type="module">
-    import { initSamplePage, createControlBar } from '../lib/sample-template.js';
+    import {initSamplePage, createControlBar} from '../lib/sample-template.js';
 
     initSamplePage({
         title: 'Content steering',

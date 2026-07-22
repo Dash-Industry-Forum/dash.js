@@ -12,6 +12,48 @@
     <link href="lib/sample.css" rel="stylesheet">
 
     <style>
+        .reference-banner {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            background: var(--rp-accent-subtle);
+            border: 1px solid var(--rp-accent);
+            border-radius: 8px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .reference-banner .banner-icon {
+            font-size: 1.5rem;
+            color: var(--rp-accent);
+            line-height: 1;
+        }
+        .reference-banner .banner-text {
+            flex: 1;
+            min-width: 200px;
+            font-size: 0.9rem;
+            color: var(--rp-text);
+        }
+        .reference-banner .banner-text strong {
+            color: var(--rp-accent);
+        }
+        .reference-banner .banner-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            background: var(--rp-accent);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.45rem 0.9rem;
+            border-radius: 6px;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .reference-banner .banner-btn:hover {
+            opacity: 0.9;
+        }
         .samples-intro {
             margin-bottom: 1.5rem;
             line-height: 1.6;
@@ -169,14 +211,22 @@
             <h1 class="sample-header-title">Samples</h1>
         </div>
         <div class="sample-header-right">
-            <a href="dash-if-reference-player/index.html" style="font-size:0.85rem; color:var(--rp-accent); text-decoration:none;">
-                <i class="bi bi-play-circle"></i> Reference Player
-            </a>
             <select class="sample-theme-select" id="theme-select">
                 <option value="light">Light</option>
                 <option value="dark">Dark</option>
             </select>
         </div>
+    </div>
+
+    <!-- Reference Player banner -->
+    <div class="reference-banner">
+        <i class="bi bi-play-circle-fill banner-icon"></i>
+        <div class="banner-text">
+            <strong>dash.js Reference Player</strong> &mdash; the full-featured demo UI to explore playback, ABR, DRM and more.
+        </div>
+        <a href="dash-if-reference-player/index.html" class="banner-btn">
+            Launch Reference Player <i class="bi bi-arrow-right"></i>
+        </a>
     </div>
 
     <!-- Intro -->

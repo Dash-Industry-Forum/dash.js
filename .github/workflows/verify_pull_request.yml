@@ -54,6 +54,35 @@ jobs:
                 uses: ./.github/actions/setup-dashjs
             -   name: Build legacy bundle
                 run: npm run webpack-build-legacy
+            -   name: Upload legacy dist artifacts
+                uses: actions/upload-artifact@v4
+                with:
+                    name: dist-legacy
+                    path: dist/
+                    retention-days: 1
+
+    run_compliance_tests:
+        needs:
+            - build_modern_artifact
+            - build_legacy_bundle
+        runs-on: ubuntu-24.04
+        steps:
+            -   name: Checkout repository
+                uses: actions/checkout@v4
+            -   name: Setup dash.js
+                uses: ./.github/actions/setup-dashjs
+            -   name: Download modern dist artifacts
+                uses: actions/download-artifact@v4
+                with:
+                    name: dist-modern
+                    path: dist/
+            -   name: Download legacy dist artifacts
+                uses: actions/download-artifact@v4
+                with:
+                    name: dist-legacy
+                    path: dist/
+            -   name: Run compliance tests
+                run: npm run test:compliance
 
     run_functional_test_single_stream_lambdatest:
         if: github.event.pull_request.head.repo.fork == false
