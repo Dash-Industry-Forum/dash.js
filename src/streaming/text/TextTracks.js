@@ -455,6 +455,30 @@ function TextTracks(config) {
                     }
                 }
             }
+
+            // CEA-608 uses a fixed 32-column monospace grid, but the caption
+            // font is only sized by height (videoHeight/15), so its glyphs are
+            // narrower than a grid cell (videoWidth/32). Left-aligned at their
+            // start column, rows then drift left of where the 608 columns place
+            // them (e.g. a centered caption looks left-shifted). Stretch each
+            // row as a whole so it fills exactly the number of grid columns it
+            // occupies, anchored at its start column. Scaling the whole row (not
+            // letter-spacing) keeps every character's solid background rectangle
+            // contiguous with no gaps. offsetWidth is used so the measurement is
+            // not affected by a transform left over from a previous activation.
+            if (activeCue.isFromCEA608 && activeCue.cueHTMLElement) {
+                const wrappers = activeCue.cueHTMLElement.getElementsByClassName('cueUniWrapper');
+                for (let w = 0; w < wrappers.length; w++) {
+                    const wrapper = wrappers[w];
+                    const columns = wrapper.textContent.length;
+                    const naturalWidth = wrapper.offsetWidth;
+                    if (columns > 0 && naturalWidth > 0) {
+                        const targetWidth = columns * cellUnit[0];
+                        wrapper.style.transformOrigin = 'left';
+                        wrapper.style.transform = 'scaleX(' + (targetWidth / naturalWidth) + ')';
+                    }
+                }
+            }
         }
 
         if (activeCue.isd) {
@@ -786,6 +810,7 @@ function TextTracks(config) {
         cue.cueID = currentItem.cueID;
         cue.scaleCue = _scaleCue.bind(self);
         //useful parameters for cea608 subtitles, not for TTML one.
+        cue.isFromCEA608 = currentItem.isFromCEA608;
         cue.cellResolution = currentItem.cellResolution;
         cue.lineHeight = currentItem.lineHeight;
         cue.linePadding = currentItem.linePadding;
