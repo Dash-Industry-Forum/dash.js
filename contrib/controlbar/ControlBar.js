@@ -515,8 +515,12 @@ export class ControlBar {
                 this.durationDisplay.classList.toggle('cb-at-live-edge', atLiveEdge);
             } else {
                 this.timeDisplay.textContent = formatTime(time);
-                this.durationDisplay.textContent = formatTime(duration);
                 this.durationDisplay.classList.remove('cb-live-indicator', 'cb-at-live-edge');
+                this.durationDisplay.textContent = formatTime(duration);
+                this.durationDisplay.appendChild(createElement('span', {
+                    className: 'cb-static-indicator',
+                    textContent: ' STATIC'
+                }));
 
                 // Show separator for VoD
                 if (this.timeSeparator) {

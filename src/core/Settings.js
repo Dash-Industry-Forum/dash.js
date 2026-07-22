@@ -69,6 +69,7 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  *            applyServiceDescription: true,
  *            applyProducerReferenceTime: true,
  *            applyContentSteering: true,
+ *            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
  *            enableManifestDurationMismatchFix: true,
  *            parseInbandPrft: false,
  *            enableManifestTimescaleMismatchFix: false,
@@ -1058,6 +1059,8 @@ import SwitchRequest from '../streaming/rules/SwitchRequest.js';
  * Set to true if dash.js should use the parameters defined in ProducerReferenceTime elements in combination with ServiceDescription elements.
  * @property {boolean} [applyContentSteering=true]
  * Set to true if dash.js should apply content steering during playback.
+ * @property {boolean} [ignoreFinalStaticManifestOnDynamicToStaticTransition=false]
+ * Set to true if dash.js should ignore the final static manifest when a stream transitions from dynamic to static (legacy behavior up to v5.2.0). When set to false the duration, the seekable range and the segment information are derived from the final static manifest.
  * @property {boolean} [enableManifestDurationMismatchFix=true]
  * For multi-period streams, overwrite the manifest mediaPresentationDuration attribute with the sum of period durations if the manifest mediaPresentationDuration is greater than the sum of period durations
  * @property {boolean} [enableManifestTimescaleMismatchFix=false]
@@ -1219,6 +1222,7 @@ function Settings() {
             applyServiceDescription: true,
             applyProducerReferenceTime: true,
             applyContentSteering: true,
+            ignoreFinalStaticManifestOnDynamicToStaticTransition: false,
             enableManifestDurationMismatchFix: true,
             parseInbandPrft: false,
             enableManifestTimescaleMismatchFix: false,

@@ -145,6 +145,17 @@
                 ]
             },
             {
+                "title": "Dynamic to static transition",
+                "description": "Shows a live stream transitioning to a final static MPD.",
+                "href": "live-streaming/dynamic-to-static.html",
+                "image": "lib/img/livesim-1.jpg",
+                "labels": [
+                    "Live",
+                    "Video",
+                    "Audio"
+                ]
+            },
+            {
                 "title": "Synchronized live playback",
                 "description": "Shows synchronized live playback of two videos using the live playback catchup mode.",
                 "href": "live-streaming/synchronized-live-playback.html",

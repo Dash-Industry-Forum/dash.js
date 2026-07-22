@@ -65,7 +65,8 @@ function StreamController() {
         autoPlay, isStreamSwitchingInProgress, hasMediaError, hasInitialisationError, mediaSource, videoModel,
         playbackController, serviceDescriptionController, mediaPlayerModel, customParametersModel, isPaused,
         initialPlayback, initialSteeringRequest, playbackEndedTimerInterval, preloadingStreams, settings,
-        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation;
+        firstLicenseIsFetched, waitForPlaybackStartTimeout, providedStartTime, errorInformation,
+        pendingDynamicToStaticUpdate;
 
     function setup() {
         logger = Debug(context).getInstance().getLogger(instance);
@@ -134,6 +135,7 @@ function StreamController() {
         eventBus.on(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.on(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.on(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+        eventBus.on(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
 
         if (Events.KEY_SESSION_UPDATED) {
@@ -162,6 +164,7 @@ function StreamController() {
         eventBus.off(MediaPlayerEvents.BUFFER_LEVEL_UPDATED, _onBufferLevelUpdated, instance);
         eventBus.off(MediaPlayerEvents.QUALITY_CHANGE_REQUESTED, _onQualityChanged, instance);
         eventBus.off(MediaPlayerEvents.CONTENT_STEERING_REQUEST_COMPLETED, _onSteeringManifestUpdated, instance);
+        eventBus.off(MediaPlayerEvents.DYNAMIC_TO_STATIC, _onDynamicToStatic, instance);
 
         if (Events.KEY_SESSION_UPDATED) {
             eventBus.off(Events.KEY_SESSION_UPDATED, _onKeySessionUpdated, instance);
@@ -272,6 +275,7 @@ function StreamController() {
                 })
                 .then(() => {
                     eventBus.trigger(Events.STREAMS_COMPOSED);
+                    _handlePendingDynamicToStaticUpdate();
                     // Additional periods might have been added after an MPD update. Check again if we can start prebuffering.
                     _checkIfPrebufferingCanStart();
                 })
@@ -284,6 +288,34 @@ function StreamController() {
             hasInitialisationError = true;
             reset();
         }
+    }
+
+    /**
+     * The stream transitioned from dynamic to static. Once the final static manifest has been applied and the streams have been recomposed, update the MediaSource duration and the seekable range.
+     * @private
+     */
+    function _onDynamicToStatic() {
+        if (settings.get().streaming.ignoreFinalStaticManifestOnDynamicToStaticTransition) {
+            // Legacy behavior: the final static manifest is not applied, no update required
+            return;
+        }
+        pendingDynamicToStaticUpdate = true;
+    }
+
+    /**
+     * Updates the MediaSource duration and seekable range after the transition from dynamic to static.
+     * @private
+     */
+    function _handlePendingDynamicToStaticUpdate() {
+        if (!pendingDynamicToStaticUpdate || adapter.getIsDynamic() || !mediaSource) {
+            return;
+        }
+        pendingDynamicToStaticUpdate = false;
+        _setMediaDuration();
+        // Recalculate the range using the final static manifest instead of the previous live DVR window.
+        addDVRMetric();
+        // With a finite duration the seekable range is derived from the duration, the live seekable range only applies while the duration is Infinity. Clear it so it does not linger.
+        mediaSourceController.clearSeekableRange();
     }
 
     /**
@@ -1678,6 +1710,7 @@ function StreamController() {
         isPaused = false;
         autoPlay = true;
         playbackEndedTimerInterval = null;
+        pendingDynamicToStaticUpdate = false;
         firstLicenseIsFetched = false;
         preloadingStreams = [];
         waitForPlaybackStartTimeout = null;

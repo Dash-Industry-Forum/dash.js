@@ -431,6 +431,20 @@
       }
     },
     {
+      "name": "Dynamic to static transition with LiveSim2 using an MPD Location element",
+      "type": "live",
+      "url": "https://livesim2.dashif.org/livesim2/startrel_-20/stoprel_6/testpic_2s/Manifest.mpd",
+      "includedTestfiles": [
+        "feature-support/dynamic-to-static"
+      ],
+      "testdata": {
+        "dynamicToStatic": {
+          "runtime": 20000,
+          "checkReplay": true
+        }
+      }
+    },
+    {
       "name": "BBB 30fps VoD CMCD v2",
       "type": "vod",
       "url": "https://dash.akamaized.net/akamai/bbb_30fps/bbb_30fps.mpd",

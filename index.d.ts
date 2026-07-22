@@ -1680,6 +1680,7 @@ export class MediaPlayerSettingClass {
         applyServiceDescription?: boolean,
         applyProducerReferenceTime?: boolean,
         applyContentSteering?: boolean,
+        ignoreFinalStaticManifestOnDynamicToStaticTransition?: boolean,
         enableManifestDurationMismatchFix?: boolean,
         parseInbandPrft?: boolean,
         enableManifestTimescaleMismatchFix?: boolean,

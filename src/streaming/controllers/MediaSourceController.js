@@ -97,7 +97,7 @@ function MediaSourceController() {
         if (!mediaSource || mediaSource.readyState !== 'open') {
             return;
         }
-        if (value === null && isNaN(value)) {
+        if (value === null || isNaN(value)) {
             return;
         }
         if (mediaSource.duration === value) {
@@ -108,7 +108,12 @@ function MediaSourceController() {
             value = Math.pow(2, 32);
         }
 
-        if (!isBufferUpdating(mediaSource)) {
+        if (!_isBufferUpdating(mediaSource)) {
+            // Setting the duration below the highest presentation timestamp of any buffered coded frames throws an InvalidStateError. Clamp the duration to the highest buffered end time, for instance when applying the final duration after a transition from dynamic to static.
+            const highestBufferedEnd = _getHighestBufferedEnd(mediaSource);
+            if (highestBufferedEnd > value) {
+                value = highestBufferedEnd;
+            }
             logger.info('Set MediaSource duration:' + value);
             mediaSource.duration = value;
         } else {
@@ -116,11 +121,32 @@ function MediaSourceController() {
         }
     }
 
+    function _getHighestBufferedEnd(source) {
+        let highestBufferedEnd = NaN;
+        const buffers = source.sourceBuffers;
+        for (let i = 0; i < buffers.length; i++) {
+            const buffered = buffers[i].buffered;
+            if (buffered && buffered.length > 0) {
+                const end = buffered.end(buffered.length - 1);
+                if (isNaN(highestBufferedEnd) || end > highestBufferedEnd) {
+                    highestBufferedEnd = end;
+                }
+            }
+        }
+        return highestBufferedEnd;
+    }
+
     function setSeekable(start, end) {
         if (mediaSource && typeof mediaSource.setLiveSeekableRange === 'function' && typeof mediaSource.clearLiveSeekableRange === 'function' &&
             mediaSource.readyState === 'open' && start >= 0 && start < end) {
             mediaSource.clearLiveSeekableRange();
             mediaSource.setLiveSeekableRange(start, end);
+        }
+    }
+
+    function clearSeekableRange() {
+        if (mediaSource && typeof mediaSource.clearLiveSeekableRange === 'function' && mediaSource.readyState === 'open') {
+            mediaSource.clearLiveSeekableRange();
         }
     }
 
@@ -143,7 +169,7 @@ function MediaSourceController() {
         source.endOfStream();
     }
 
-    function isBufferUpdating(source) {
+    function _isBufferUpdating(source) {
         let buffers = source.sourceBuffers;
         for (let i = 0; i < buffers.length; i++) {
             if (buffers[i].updating) {
@@ -168,6 +194,7 @@ function MediaSourceController() {
 
     instance = {
         attachMediaSource,
+        clearSeekableRange,
         createMediaSource,
         detachMediaSource,
         setConfig,
